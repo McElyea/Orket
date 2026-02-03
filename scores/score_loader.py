@@ -4,7 +4,6 @@ import os
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-
 SCORES_DIR = os.path.join(os.getcwd(), "scores")
 
 

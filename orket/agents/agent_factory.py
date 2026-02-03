@@ -17,10 +17,7 @@ class AgentFactory:
 
         system_prompt = role_config["standard"]
 
-        return Agent(
-            role=role_name,
-            system_prompt=system_prompt
-        )
+        return Agent(role=role_name, system_prompt=system_prompt)
 
     @staticmethod
     def create_team(team_roles: list, merged_prompts: dict) -> dict:
@@ -37,4 +34,3 @@ class AgentFactory:
             agents[role] = AgentFactory.create(role, merged_prompts[role])
 
         return agents
-    

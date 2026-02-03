@@ -14,7 +14,9 @@ from orket.session import Session
 from orket.prelude import run_prelude
 
 
-def build_filesystem_policy(permissions_path: str, policy_path: str) -> FilesystemPolicy:
+def build_filesystem_policy(
+    permissions_path: str, policy_path: str
+) -> FilesystemPolicy:
     with open(permissions_path, "r", encoding="utf-8") as f:
         spaces = json.load(f)
 
@@ -24,7 +26,9 @@ def build_filesystem_policy(permissions_path: str, policy_path: str) -> Filesyst
     return FilesystemPolicy(spaces, policy)
 
 
-def route_by_status(agent_name: str, content: str, structured_status: dict, completed_agents: set):
+def route_by_status(
+    agent_name: str, content: str, structured_status: dict, completed_agents: set
+):
     if structured_status is None:
         return "continue"
 
@@ -52,7 +56,13 @@ def execute_tool(dispatcher: ToolDispatcher, tool_name: str, args: dict) -> dict
     return dispatcher.execute(tool_name, args)
 
 
-def handle_tool_wait(dispatcher: ToolDispatcher, agent_name: str, tool_name: str, tool_args: dict, session: Session):
+def handle_tool_wait(
+    dispatcher: ToolDispatcher,
+    agent_name: str,
+    tool_name: str,
+    tool_args: dict,
+    session: Session,
+):
     result = execute_tool(dispatcher, tool_name, tool_args)
 
     log_event(
@@ -95,7 +105,9 @@ def get_ready_roles(score, completed_agents: set, all_roles: List[str]) -> List[
     return ready
 
 
-def orchestrate(venue_name: str, task: str, max_rounds: int = 20, use_prelude: bool = True) -> dict:
+def orchestrate(
+    venue_name: str, task: str, max_rounds: int = 20, use_prelude: bool = True
+) -> dict:
     venue = load_venue(venue_name)
     band = load_band(venue.band)
     score = load_score(venue.score)
@@ -134,7 +146,9 @@ def orchestrate(venue_name: str, task: str, max_rounds: int = 20, use_prelude: b
             agent = agents[role]
 
             content = agent.run(
-                messages=[{"role": m.role, "content": m.content} for m in session.messages],
+                messages=[
+                    {"role": m.role, "content": m.content} for m in session.messages
+                ],
                 round_num=round_num,
             )
 
@@ -148,7 +162,9 @@ def orchestrate(venue_name: str, task: str, max_rounds: int = 20, use_prelude: b
             except Exception:
                 pass
 
-            decision = route_by_status(role, content, structured_status, completed_agents)
+            decision = route_by_status(
+                role, content, structured_status, completed_agents
+            )
 
             session.add_message(role=role, content=content)
 

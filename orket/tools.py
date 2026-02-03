@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 from orket.utils import log_event
 
-
 # ------------------------------------------------------------
 # Tool Implementations
 # ------------------------------------------------------------
+
 
 def read_file(args: dict) -> dict:
     """
@@ -31,11 +31,7 @@ def write_file(args: dict) -> dict:
 
     path.write_text(args["content"], encoding="utf-8")
 
-    return {
-        "status": "ok",
-        "path": str(path),
-        "bytes_written": len(args["content"])
-    }
+    return {"status": "ok", "path": str(path), "bytes_written": len(args["content"])}
 
 
 def list_dir(args: dict) -> dict:
@@ -70,6 +66,7 @@ TOOLS = {
 # Tool Execution
 # ------------------------------------------------------------
 
+
 def run_tool(tool_name: str, args: dict) -> dict:
     """
     Execute a tool by name.
@@ -79,11 +76,7 @@ def run_tool(tool_name: str, args: dict) -> dict:
 
     tool_fn = TOOLS[tool_name]
 
-    log_event({
-        "type": "tool_execute",
-        "tool": tool_name,
-        "args": args
-    })
+    log_event({"type": "tool_execute", "tool": tool_name, "args": args})
 
     try:
         result = tool_fn(args)
@@ -96,6 +89,7 @@ def run_tool(tool_name: str, args: dict) -> dict:
 # ------------------------------------------------------------
 # Tool Call Parsing
 # ------------------------------------------------------------
+
 
 def parse_tool_calls(content: str) -> list:
     """

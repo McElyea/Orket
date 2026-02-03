@@ -8,17 +8,15 @@ class FilesystemPolicy:
     """
 
     def __init__(self, config: dict):
-        self.work_domain = config.get("work_domain")              # string or None
-        self.workspaces = config.get("workspaces", [])            # list
-        self.reference_spaces = config.get("reference_spaces", [])# list
+        self.work_domain = config.get("work_domain")  # string or None
+        self.workspaces = config.get("workspaces", [])  # list
+        self.reference_spaces = config.get("reference_spaces", [])  # list
 
         # Progressive trust flags
         self.workspace_required_for_writes = config.get(
             "workspace_required_for_writes", True
         )
-        self.reference_space_read_only = config.get(
-            "reference_space_read_only", True
-        )
+        self.reference_space_read_only = config.get("reference_space_read_only", True)
         self.allow_writes_in_work_domain_if_no_workspace = config.get(
             "allow_writes_in_work_domain_if_no_workspace", True
         )
@@ -81,6 +79,7 @@ class FilesystemPolicy:
 # -------------------------------------------------------------
 # Loader
 # -------------------------------------------------------------
+
 
 def load_permissions():
     path = os.path.join(os.getcwd(), "permissions.json")

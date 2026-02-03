@@ -29,14 +29,11 @@ class Agent:
             "info",
             "agent",
             "agent_before_call",
-            {"agent": self.role, "round": round_num}
+            {"agent": self.role, "round": round_num},
         )
 
         # Build LLM input
-        llm_messages = [
-            {"role": "system", "content": self.system_prompt},
-            *messages
-        ]
+        llm_messages = [{"role": "system", "content": self.system_prompt}, *messages]
 
         # Call the model
         response = call_llm(llm_messages)
@@ -62,7 +59,7 @@ class Agent:
                 "round": round_num,
                 "content": content[:500],
                 "structured_status": structured_status,
-            }
+            },
         )
 
         return content

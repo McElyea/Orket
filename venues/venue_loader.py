@@ -4,7 +4,6 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-
 VENUES_DIR = os.path.join(os.getcwd(), "venues")
 
 

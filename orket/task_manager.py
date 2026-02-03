@@ -61,10 +61,7 @@ class TaskManager:
         # 3. Safety stop
         if self.round >= self.max_rounds:
             log_event(
-                "warn",
-                "orchestrator",
-                "max_rounds_reached",
-                {"round": self.round}
+                "warn", "orchestrator", "max_rounds_reached", {"round": self.round}
             )
             return True
 

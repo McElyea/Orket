@@ -25,11 +25,13 @@ class Task:
         self.round += 1
 
     def add_message(self, role: str, content: str):
-        self.messages.append({
-            "role": role,
-            "content": content,
-            "ts": datetime.utcnow().isoformat() + "Z"
-        })
+        self.messages.append(
+            {
+                "role": role,
+                "content": content,
+                "ts": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
     def get_messages(self):
         return self.messages
@@ -42,9 +44,14 @@ class Task:
 
         path = os.path.join(self.memory_dir, f"{self.id}.json")
         with open(path, "w", encoding="utf-8") as f:
-            json.dump({
-                "id": self.id,
-                "request": self.request,
-                "rounds": self.round,
-                "messages": self.messages,
-            }, f, indent=2, ensure_ascii=False)
+            json.dump(
+                {
+                    "id": self.id,
+                    "request": self.request,
+                    "rounds": self.round,
+                    "messages": self.messages,
+                },
+                f,
+                indent=2,
+                ensure_ascii=False,
+            )
