@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orket"
+version = "0.1.0"
+description = "Local-first multi-agent LLM automation platform"
+authors = [
+    { name = "Jonathan McElyea" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "jsonschema",
+    "ollama"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "ruff"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["orket*"]

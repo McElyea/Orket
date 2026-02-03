@@ -1,0 +1,12 @@
+{
+  "name": "standard",
+  "description": "Architect → coder → reviewer flow.",
+  "included_roles": ["architect", "coder", "reviewer"],
+  "dependencies": {
+    "coder": ["architect"],
+    "reviewer": ["coder"]
+  },
+  "completion": {
+    "require_all_roles_complete": true
+  }
+}

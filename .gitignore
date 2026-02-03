@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+env/
+venv/
+Scripts/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test and coverage
+.coverage
+htmlcov/
+.cache/
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~
+
+# Orket workspace and memory
+workspace/
+task_memory/
+sessions/
+
+# IDE files
+.vscode/
+.idea/
+
+# Local config overrides
+*.local.json
+*.env
+.env.*
+*.secret.json
+*.private.json

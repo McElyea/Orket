@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Venue",
+  "type": "object",
+  "required": ["name", "band", "score"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique venue name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of this venue."
+    },
+    "band": {
+      "type": "string",
+      "description": "Name of the band configuration to use."
+    },
+    "score": {
+      "type": "string",
+      "description": "Name of the score to perform."
+    },
+    "tempo": {
+      "type": "string",
+      "enum": ["lite", "standard", "heavy"],
+      "default": "standard",
+      "description": "High-level pacing / depth for this venue."
+    },
+    "filesystem": {
+      "type": "object",
+      "description": "Filesystem configuration for this venue.",
+      "properties": {
+        "permissions_file": {
+          "type": "string",
+          "default": "permissions.json",
+          "description": "Path to permissions config."
+        },
+        "policy_file": {
+          "type": "string",
+          "default": "policy.json",
+          "description": "Path to write policy config."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

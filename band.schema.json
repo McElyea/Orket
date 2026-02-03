@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Band",
+  "type": "object",
+  "required": ["name", "roles"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique band name."
+    },
+    "description": {
+      "type": "string"
+    },
+    "roles": {
+      "type": "object",
+      "description": "Role name → role config.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["prompt"],
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "System prompt for this role."
+          },
+          "tools_allowed": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tool names this role may invoke."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

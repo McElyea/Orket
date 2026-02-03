@@ -1,0 +1,11 @@
+{
+  "workspace_dir": "C:\\Source",
+  "task_memory_dir": "task_memory",
+  "max_rounds": 1,
+  "enable_path_translation": true,
+  "models": {
+    "architect": "deepseek-r1:32b",
+    "coder": "qwen3-coder:latest",
+    "reviewer": "llama3.1:8b"
+  }
+}
