@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Score",
+  "description": "Defines the sequencing of roles for an orchestration run. Does not define roles themselves.",
+  "type": "object",
+  "required": ["name", "steps"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the score."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description of the score's purpose."
+    },
+    "tempo": {
+      "type": "string",
+      "description": "Execution tempo or pacing. Optional.",
+      "default": "standard"
+    },
+    "steps": {
+      "type": "array",
+      "description": "Ordered list of steps, each referencing a role name from the Band.",
+      "items": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Name of the role to execute at this step."
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional annotation for this step."
+          }
+        }
+      }
+    }
+  }
+}

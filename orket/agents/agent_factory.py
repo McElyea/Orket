@@ -1,36 +1,29 @@
+# orket/agents/agent_factory.py
+from typing import Dict
 from orket.agents.agent import Agent
+from orket.llm import LocalModelProvider
+from orket.tools import TOOLS
 
 
-class AgentFactory:
-    """
-    Factory for constructing Agent instances from merged role configs.
-    """
+def build_band_agents(band, provider: LocalModelProvider) -> Dict[str, Agent]:
+    agents: Dict[str, Agent] = {}
 
-    @staticmethod
-    def create(role_name: str, role_config: dict) -> Agent:
-        """
-        role_config is expected to be:
-          { "standard": "<final merged prompt>" }
-        """
-        if "standard" not in role_config:
-            raise ValueError(f"Role '{role_name}' missing 'standard' prompt variant")
+    for role_name, role in band.roles.items():
+        resolved_tools = {}
 
-        system_prompt = role_config["standard"]
+        for tool_name in role.tools:
+            if tool_name not in TOOLS:
+                raise RuntimeError(
+                    f"Role '{role_name}' requires tool '{tool_name}', "
+                    f"but it is not present in the tool registry."
+                )
+            resolved_tools[tool_name] = TOOLS[tool_name]
 
-        return Agent(role=role_name, system_prompt=system_prompt)
+        agents[role_name] = Agent(
+            name=role_name,
+            description=role.description,
+            tools=resolved_tools,
+            provider=provider,
+        )
 
-    @staticmethod
-    def create_team(team_roles: list, merged_prompts: dict) -> dict:
-        """
-        Given a list of role names and the merged prompts from team_loader,
-        return a dict of { role_name: Agent instance }.
-        """
-        agents = {}
-
-        for role in team_roles:
-            if role not in merged_prompts:
-                raise ValueError(f"Role '{role}' missing from merged prompts")
-
-            agents[role] = AgentFactory.create(role, merged_prompts[role])
-
-        return agents
+    return agents

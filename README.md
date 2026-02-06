@@ -1,72 +1,89 @@
 # Orket
 
-Orket is a local‑first, multi‑agent automation platform for engineering work. It uses a musical metaphor to make complex orchestration explicit, inspectable, and contributor‑friendly.
+Orket is a local‑first, multi‑agent orchestration engine for long‑running engineering sessions.  
+It coordinates a team of AI agents through a deterministic Flow and exposes a Conductor that can steer the session in real time.
 
-Orket is not a chatbot wrapper. It is a conductor for deterministic, config‑driven workflows.
+Orket emphasizes transparency, traceability, and control. Every step is logged and auditable. It is designed for engineering work where structure and oversight matter.
 
-## The Orket Model
+---
 
-Orket organizes work using a musical architecture:
+## Why Orket
 
-Orket (the conductor)  
-→ Venue (the environment)  
-→ Band (the performers)  
-→ Score (the composition)  
-→ Prelude (optional warm‑up)  
-→ Session (the performance)
+Modern AI tools often operate as opaque, single‑shot systems. They produce results but offer limited visibility into how those results were created or how to correct drift.
 
-### Venue  
-Defines the environment: filesystem policy, tempo, Band, Score.
+Orket addresses those gaps:
 
-### Band  
-Defines the agents: roles, prompts, allowed tools.
+- **Local execution** — run models on your machine or local cluster.  
+- **Deterministic orchestration** — reproducible, step‑by‑step runs.  
+- **Role‑based agents** — explicit responsibilities for Architect, Coder, Reviewer, and others.  
+- **Session steering** — Conductor can enable/disable roles, patch prompts, and skip steps.  
+- **Long‑running sessions** — designed for iterative, multi‑cycle work.  
+- **Full traceability** — structured event logs and transcripts.
 
-### Score  
-Defines orchestration: dependencies, sequencing, completion rules.
+---
 
-### Prelude  
-Optional warm‑up stage before the Session.
+## What Orket is not
 
-### Session  
-A structured record of a single run.
+- Not a chatbot.  
+- Not a cloud service.  
+- Not a black box.  
+- Not a replacement for engineering judgment.  
+- Not an autonomous agent that acts without human oversight.
+
+---
+
+## Core concepts
+
+- **Flow** — orchestration structure and references to Band, Venue, Score.  
+- **Band** — role definitions and prompts.  
+- **Venue** — model backend configuration.  
+- **Score** — ordered steps the Orchestrator executes.  
+- **Conductor** — session governor that observes and adjusts between steps.  
+- **Orchestrator** — runtime that loads configuration, runs steps, and records events.  
+- **Workspace** — files and artifacts produced by a run.  
+- **Event Stream** — structured events for UI and auditing.
+
+---
+
+## Small flow diagram
+
+    ┌──────────┐     ┌────────┐     ┌──────────┐
+    │ Architect│ →   │ Coder  │ →   │ Reviewer │
+    └──────────┘     └────────┘     └──────────┘
+            ↑             ↑               ↑
+            └────────── Conductor ───────┘
+
+The Conductor sits above the loop and can adjust prompts, skip roles, or change behavior between steps.
+
+---
 
 ## Quickstart
 
-Install dependencies:
+1. Install dependencies:
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
-Run Orket:
+2. Run a Flow:
 
-python main.py --venue standard
+    python main.py --flow standard --task examples/hello/task.json
 
-You will be prompted for a task. Orket will load the Venue, assemble the Band, follow the Score, optionally run a Prelude, and execute a Session.
+3. Enable interactive Conductor controls:
 
-## CLI Options
+    python main.py --interactive-conductor
 
---venue <name>       Select a venue (default: standard)  
---max-rounds <n>     Limit orchestration rounds (default: 20)  
---no-prelude         Disable the Prelude stage  
+You will be prompted to adjust roles or patch prompts between steps.
 
-Example:
+---
 
-python main.py --venue standard --max-rounds 30
+## Example interaction
+
+A typical run produces a structured transcript and event log. Events include `step_start`, `step_end`, `step_skipped`, and workspace writes. The transcript records each agent's summary for later review.
+
+---
 
 ## Documentation
 
-Architecture: ARCHITECTURE.md  
-Security Model: SECURITY.md  
-Contributing: CONTRIBUTING.md  
-Project Roadmap: PROJECT.md
-
-## Philosophy
-
-Orket is built around:
-
-- determinism  
-- explicit configuration  
-- local‑first execution  
-- strong separation of concerns  
-- contributor‑friendly design  
-
-Every config, role, and flow is meant to be readable, copy‑pasteable, and auditable.
+- `docs/ARCHITECTURE.md` — system design, diagrams, and sequence interactions  
+- `docs/PROJECT.md` — roadmap and milestones  
+- `docs/SECURITY.md` — local execution and safety notes  
+- `CONTRIBUTING.md` — contributor guidelines

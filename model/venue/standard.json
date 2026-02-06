@@ -1,0 +1,8 @@
+{
+  "name": "standard",
+  "description": "Standard local development venue.",
+  "model": "qwen3-coder:latest",
+  "temperature": 0.2,
+  "seed": 42,
+  "params": {}
+}

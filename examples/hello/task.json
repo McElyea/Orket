@@ -1,0 +1,3 @@
+{
+  "description": "Build a small Python package named 'shapes'. Use write_file to create the following files in the workspace: shapes/__init__.py, shapes/area.py with functions for circle_area and square_area, and shapes/perimeter.py with functions for circle_perimeter and square_perimeter. Then create main.py at the workspace root that imports the package and demonstrates all functions."
+}

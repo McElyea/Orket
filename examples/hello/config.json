@@ -1,0 +1,5 @@
+{
+  "flow": "model/flow/standard.json",
+  "task": "examples/hello/task.json",
+  "workspace": "workspace/hello"
+}

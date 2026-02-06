@@ -1,24 +1,18 @@
-# orket/__init__.py
-"""
-Orket package initializer.
-
-This module exposes the public API surface for:
-- loading Venues
-- constructing the dispatcher
-- constructing the filesystem policy
-- running the orchestrator
-
-No side effects occur at import time.
-"""
-
 from .orket import orchestrate
-from venues.venue_loader import load_venue
-from .filesystem import FilesystemPolicy
+
+from model.flow.flow import load_flow, Flow
+from model.band.band import load_band, Band
+from model.score.score import load_score, Score
+from model.venue.venue import load_venue, Venue
 
 __all__ = [
     "orchestrate",
+    "load_flow",
+    "Flow",
+    "load_band",
+    "Band",
+    "load_score",
+    "Score",
     "load_venue",
-    "FilesystemPolicy",
+    "Venue",
 ]
-
-__version__ = "0.1.0"
