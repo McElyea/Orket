@@ -1,15 +1,13 @@
 import json
-import os
+from pathlib import Path
 from orket.filesystem import FilesystemPolicy
 
+def load_policy(config_path: Path | str = "orket/permissions.json") -> FilesystemPolicy:
+    path = Path(config_path)
+    with path.open("r", encoding="utf-8") as f:
+        cfg = json.load(f)
 
-def load_policy():
-    # Load spaces
-    with open("permissions.json", "r", encoding="utf-8") as f:
-        spaces = json.load(f)
+    spaces = cfg.get("spaces", {})
+    policy = cfg.get("policy", {})
 
-    # Load policy rules
-    with open("policy.json", "r", encoding="utf-8") as f:
-        policy = json.load(f)
-
-    return FilesystemPolicy(spaces, policy)
+    return FilesystemPolicy(spaces=spaces, policy=policy)

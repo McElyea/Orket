@@ -9,23 +9,29 @@
       "description": "Unique band name."
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description": "Optional human-readable description."
     },
     "roles": {
       "type": "object",
       "description": "Role name → role config.",
       "additionalProperties": {
         "type": "object",
-        "required": ["prompt"],
+        "required": ["description", "tools"],
         "properties": {
-          "prompt": {
+          "description": {
             "type": "string",
             "description": "System prompt for this role."
           },
-          "tools_allowed": {
+          "tools": {
             "type": "array",
             "items": { "type": "string" },
             "description": "Tool names this role may invoke."
+          },
+          "policy": {
+            "type": "object",
+            "description": "Optional policy block for this role.",
+            "additionalProperties": true
           }
         },
         "additionalProperties": false

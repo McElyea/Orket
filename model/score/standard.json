@@ -1,0 +1,13 @@
+{
+  "name": "standard",
+  "description": "Default sequencing for a typical engineering task.",
+  "tempo": "standard",
+  "steps": [
+        { "role": "architect" },
+        { "role": "coder" },
+        { "role": "coder" },
+        { "role": "coder" },
+        { "role": "coder" },
+        { "role": "reviewer" }
+  ]
+}

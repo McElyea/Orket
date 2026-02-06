@@ -1,54 +1,86 @@
+# orket/tools.py
 import json
 from pathlib import Path
-from orket.utils import log_event
+from typing import Dict, Any, List
+
+from orket.policy import load_policy
+
+
+# ------------------------------------------------------------
+# Lazy-loaded policy
+# ------------------------------------------------------------
+
+_POLICY = None
+
+def _policy():
+    global _POLICY
+    if _POLICY is None:
+        _POLICY = load_policy()
+    return _POLICY
+
 
 # ------------------------------------------------------------
 # Tool Implementations
 # ------------------------------------------------------------
 
+def read_file(args: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    args: { "path": "relative/or/absolute/path" }
+    """
+    path = Path(args["path"]).resolve()
+    policy = _policy()
 
-def read_file(args: dict) -> dict:
+    if not policy.can_read(str(path)):
+        return {"ok": False, "error": f"Read not allowed: {path}"}
+
+    try:
+        content = path.read_text(encoding="utf-8")
+        return {"ok": True, "content": content}
+    except Exception as e:
+        return {"ok": False, "error": f"Failed to read file: {e}"}
+
+
+def write_file(args: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Read a file from the workspace.
-    args: { "path": "relative/path/to/file" }
+    args: { "path": "relative/or/absolute/path", "content": "text" }
     """
-    path = Path(args["path"])
+    path = Path(args["path"]).resolve()
+    content = args["content"]
+    policy = _policy()
+
+    if not policy.can_write(str(path)):
+        return {"ok": False, "error": f"Write not allowed: {path}"}
+
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return {"ok": True, "path": str(path)}
+    except Exception as e:
+        return {"ok": False, "error": f"Failed to write file: {e}"}
+
+
+def list_dir(args: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    args: { "path": "relative/or/absolute/path" }
+    """
+    path = Path(args["path"]).resolve()
+    policy = _policy()
+
+    # Listing a directory is a read operation
+    if not policy.can_read(str(path)):
+        return {"ok": False, "error": f"Directory read not allowed: {path}"}
 
     if not path.exists():
-        return {"error": f"File not found: {path}"}
-
-    content = path.read_text(encoding="utf-8")
-    return {"content": content}
-
-
-def write_file(args: dict) -> dict:
-    """
-    Write content to a file in the workspace.
-    args: { "path": "relative/path/to/file", "content": "text" }
-    """
-    path = Path(args["path"])
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    path.write_text(args["content"], encoding="utf-8")
-
-    return {"status": "ok", "path": str(path), "bytes_written": len(args["content"])}
-
-
-def list_dir(args: dict) -> dict:
-    """
-    List files in a directory.
-    args: { "path": "relative/path" }
-    """
-    path = Path(args["path"])
-
-    if not path.exists():
-        return {"error": f"Directory not found: {path}"}
+        return {"ok": False, "error": f"Directory not found: {path}"}
 
     if not path.is_dir():
-        return {"error": f"Not a directory: {path}"}
+        return {"ok": False, "error": f"Not a directory: {path}"}
 
-    items = [p.name for p in path.iterdir()]
-    return {"items": items}
+    try:
+        items = [p.name for p in path.iterdir()]
+        return {"ok": True, "items": items}
+    except Exception as e:
+        return {"ok": False, "error": f"Failed to list directory: {e}"}
 
 
 # ------------------------------------------------------------
@@ -66,32 +98,26 @@ TOOLS = {
 # Tool Execution
 # ------------------------------------------------------------
 
-
-def run_tool(tool_name: str, args: dict) -> dict:
+def run_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
     """
     Execute a tool by name.
     """
     if tool_name not in TOOLS:
-        return {"error": f"Unknown tool: {tool_name}"}
+        return {"ok": False, "error": f"Unknown tool: {tool_name}"}
 
     tool_fn = TOOLS[tool_name]
 
-    log_event({"type": "tool_execute", "tool": tool_name, "args": args})
-
     try:
-        result = tool_fn(args)
+        return tool_fn(args)
     except Exception as e:
-        return {"error": f"Tool '{tool_name}' failed: {e}"}
-
-    return result
+        return {"ok": False, "error": f"Tool '{tool_name}' failed: {e}"}
 
 
 # ------------------------------------------------------------
 # Tool Call Parsing
 # ------------------------------------------------------------
 
-
-def parse_tool_calls(content: str) -> list:
+def parse_tool_calls(content: str) -> List[Dict[str, Any]]:
     """
     Extract tool calls from agent output.
 
@@ -103,19 +129,21 @@ def parse_tool_calls(content: str) -> list:
 
     Returns a list of tool call dicts.
     """
-    tool_calls = []
+    calls: List[Dict[str, Any]] = []
 
-    # Try to find JSON blocks
     try:
         data = json.loads(content)
+
         if isinstance(data, dict) and "tool" in data and "args" in data:
-            tool_calls.append(data)
+            calls.append(data)
+
         elif isinstance(data, list):
             for item in data:
                 if isinstance(item, dict) and "tool" in item and "args" in item:
-                    tool_calls.append(item)
+                    calls.append(item)
+
     except Exception:
         # Not JSON — ignore
         pass
 
-    return tool_calls
+    return calls

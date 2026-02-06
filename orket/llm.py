@@ -1,51 +1,188 @@
+# orket/llm.py
+from dataclasses import dataclass
+from typing import Any, Dict, Optional, List
+import subprocess
+import os
+from pathlib import Path
 import json
-import requests
-from orket.utils import log_event
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-MODEL_NAME = "llama3.1:8b"
+from orket.logging import log_event
 
 
-def call_llm(messages: list[dict]) -> dict:
+@dataclass
+class ModelResponse:
+    content: str
+    raw: Dict[str, Any]
+
+
+class LocalModelProvider:
     """
-    Stable, modern Ollama chat API call.
-    Works on Windows. No subprocess. No escape codes.
+    Local model provider with:
+      - echo mode
+      - Ollama mode
+      - safe environment patch for Windows
+      - automatic fallback when --json is unsupported
+      - unified .complete(messages) API for Agent
+      - token counting when available
     """
 
-    log_event(
-        "info",
-        "llm",
-        "llm_call_start",
-        {"message_count": len(messages), "model": MODEL_NAME},
-    )
+    def __init__(self, model: str, temperature: float = 0.2, seed: Optional[int] = None):
+        self.model = model
+        self.temperature = temperature
+        self.seed = seed
 
-    payload = {
-        "model": MODEL_NAME,
-        "messages": messages,
-        "stream": False,
-    }
+    # ----------------------------------------------------------------------
+    # Agent API
+    # ----------------------------------------------------------------------
+    def complete(self, messages: List[Dict[str, str]]) -> ModelResponse:
+        prompt = self._format_messages(messages)
+        return self.invoke(prompt)
 
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
-        response.raise_for_status()
+    def _format_messages(self, messages: List[Dict[str, str]]) -> str:
+        parts = []
+        for m in messages:
+            role = m["role"].upper()
+            content = m["content"]
+            parts.append(f"{role}: {content}")
+        return "\n\n".join(parts)
 
-        data = response.json()
-        content = data.get("message", {}).get("content", "")
+    # ----------------------------------------------------------------------
+    # Core invoke() with JSON fallback
+    # ----------------------------------------------------------------------
+    def invoke(self, prompt: str) -> ModelResponse:
+        # Echo mode for debugging
+        if self.model == "echo":
+            return ModelResponse(
+                content=f"[echo]\n{prompt}",
+                raw={
+                    "prompt": prompt,
+                    "input_tokens": None,
+                    "output_tokens": None,
+                    "total_tokens": None,
+                    "provider": "echo",
+                    "model": self.model,
+                },
+            )
 
-        log_event(
-            "info",
-            "llm",
-            "llm_call_end",
-            {"content_preview": content[:200]},
+        # Prepare safe environment for Ollama
+        safe_env = os.environ.copy()
+
+        if not safe_env.get("USERPROFILE"):
+            safe_env["USERPROFILE"] = str(Path.home())
+
+        if not safe_env.get("HOME"):
+            safe_env["HOME"] = safe_env["USERPROFILE"]
+
+        if self.seed is not None:
+            safe_env["OLLAMA_SEED"] = str(self.seed)
+
+        # ------------------------------------------------------------------
+        # Attempt JSON mode first
+        # ------------------------------------------------------------------
+        json_cmd = ["ollama", "run", self.model, "--json"]
+
+        try:
+            proc = subprocess.run(
+                json_cmd,
+                input=prompt.encode("utf-8"),
+                capture_output=True,
+                env=safe_env,
+            )
+
+            stderr = proc.stderr.decode("utf-8", errors="ignore")
+
+            # Detect unsupported flag
+            if "unknown flag: --json" in stderr.lower():
+                raise ValueError("JSON_MODE_UNSUPPORTED")
+
+            if proc.returncode != 0:
+                raise RuntimeError(stderr)
+
+            stdout = proc.stdout.decode("utf-8", errors="ignore")
+
+            # Ollama streams JSON lines; take the last non-empty line as final
+            lines = [l for l in stdout.splitlines() if l.strip()]
+            last = lines[-1] if lines else "{}"
+            data = json.loads(last)
+
+            content = data.get("response", stdout)
+            prompt_tokens = data.get("prompt_eval_count")
+            completion_tokens = data.get("eval_count")
+            total_tokens = None
+            if isinstance(prompt_tokens, int) and isinstance(completion_tokens, int):
+                total_tokens = prompt_tokens + completion_tokens
+
+            raw = {
+                "stdout": stdout,
+                "ollama": data,
+                "input_tokens": prompt_tokens,
+                "output_tokens": completion_tokens,
+                "total_tokens": total_tokens,
+                "provider": "ollama-json",
+                "model": self.model,
+            }
+
+            return ModelResponse(content=content, raw=raw)
+
+        except ValueError as e:
+            # ------------------------------------------------------------------
+            # JSON mode unsupported → fallback to non-JSON mode
+            # ------------------------------------------------------------------
+            if str(e) == "JSON_MODE_UNSUPPORTED":
+                # Log fallback
+                log_event(
+                    "model_fallback",
+                    {
+                        "from_model": self.model,
+                        "to_model": self.model,
+                        "reason": "ollama_json_unsupported",
+                    },
+                    workspace=Path.cwd(),  # workspace is not known here; safe fallback
+                )
+                return self._invoke_no_json(prompt, safe_env)
+
+            raise
+
+        except FileNotFoundError:
+            # Ollama not installed — fallback to echo
+            return ModelResponse(
+                content=f"[echo-fallback]\n{prompt}",
+                raw={
+                    "prompt": prompt,
+                    "input_tokens": None,
+                    "output_tokens": None,
+                    "total_tokens": None,
+                    "provider": "echo-fallback",
+                    "model": self.model,
+                },
+            )
+
+    # ----------------------------------------------------------------------
+    # Fallback: non-JSON mode (no token counts)
+    # ----------------------------------------------------------------------
+    def _invoke_no_json(self, prompt: str, safe_env: Dict[str, str]) -> ModelResponse:
+        cmd = ["ollama", "run", self.model]
+
+        proc = subprocess.run(
+            cmd,
+            input=prompt.encode("utf-8"),
+            capture_output=True,
+            env=safe_env,
         )
 
-        return {"content": content}
+        if proc.returncode != 0:
+            raise RuntimeError(proc.stderr.decode("utf-8", errors="ignore"))
 
-    except Exception as e:
-        log_event(
-            "error",
-            "llm",
-            "llm_exception",
-            {"error": str(e)},
+        text = proc.stdout.decode("utf-8", errors="ignore")
+
+        return ModelResponse(
+            content=text,
+            raw={
+                "stdout": text,
+                "input_tokens": None,
+                "output_tokens": None,
+                "total_tokens": None,
+                "provider": "ollama",
+                "model": self.model,
+            },
         )
-        return {"content": f"[LLM ERROR] {e}"}

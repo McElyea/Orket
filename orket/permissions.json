@@ -1,0 +1,11 @@
+{
+  "spaces": {
+    "work_domain": ".",
+    "workspaces": ["workspace"],
+    "reference_spaces": ["reference"]
+  },
+  "policy": {
+    "read_scope": ["workspace", "reference", "domain"],
+    "write_scope": ["workspace"]
+  }
+}

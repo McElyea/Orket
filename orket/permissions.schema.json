@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FilesystemPermissions",
+  "type": "object",
+  "required": ["spaces", "policy"],
+  "properties": {
+    "spaces": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "work_domain": {
+          "type": "string",
+          "description": "Absolute or project-relative path to the broad working area."
+        },
+        "workspaces": {
+          "type": "array",
+          "description": "List of workspace roots for task-specific work.",
+          "items": { "type": "string" }
+        },
+        "reference_spaces": {
+          "type": "array",
+          "description": "List of read-only reference roots.",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "read_scope": {
+          "type": "array",
+          "description": "Ordered list of spaces allowed for reads.",
+          "items": {
+            "type": "string",
+            "enum": ["workspace", "reference", "domain"]
+          },
+          "default": ["workspace", "reference", "domain"]
+        },
+        "write_scope": {
+          "type": "array",
+          "description": "Ordered list of spaces allowed for writes. Reference is always read-only.",
+          "items": {
+            "type": "string",
+            "enum": ["workspace", "reference", "domain"]
+          },
+          "default": ["workspace"]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,65 +1,165 @@
+from typing import Dict, Any
+from orket.llm import LocalModelProvider
+from orket.logging import log_event, log_model_usage
 import json
-from orket.utils import log_event
-from orket.llm import call_llm
 
 
 class Agent:
     """
-    A single LLM-backed agent with a role and a system prompt.
-    Now supports structured status signals such as:
-      { "status": "waiting", "for": "tool:write_file" }
-      { "status": "pending" }
-      { "status": "complete" }
-      { "task_complete": true }
+    Single authoritative Agent class for Orket.
+    Handles:
+    - Prompt construction
+    - Model invocation
+    - Tool-call parsing
+    - Tool execution
+    - Logging
     """
 
-    def __init__(self, role: str, system_prompt: str):
-        self.role = role
-        self.system_prompt = system_prompt
+    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider):
+        self.name = name
+        self.description = description
+        self.tools = tools
+        self.provider = provider
+        self._prompt_patch: str | None = None
 
-    def run(self, messages: list[dict], round_num: int) -> str:
+    # ---------------------------------------------------------
+    # Prompt patching
+    # ---------------------------------------------------------
+    def apply_prompt_patch(self, patch: str | None) -> None:
+        self._prompt_patch = patch
+
+    def _build_system_prompt(self) -> str:
+        base = self.description
+        if self._prompt_patch:
+            base += "\n\n" + self._prompt_patch
+        return base
+
+    # ---------------------------------------------------------
+    # Tool-call parsing
+    # ---------------------------------------------------------
+    def _parse_tool_call(self, text: str):
         """
-        Execute one agent turn.
-        messages: full conversation history so far
-        round_num: current orchestrator round
+        Expected format:
+        {"tool": "write_file", "args": {"path": "...", "content": "..."}}
         """
-
-        # BEFORE CALL
-        log_event(
-            "info",
-            "agent",
-            "agent_before_call",
-            {"agent": self.role, "round": round_num},
-        )
-
-        # Build LLM input
-        llm_messages = [{"role": "system", "content": self.system_prompt}, *messages]
-
-        # Call the model
-        response = call_llm(llm_messages)
-        content = response.get("content", "")
-
-        # Attempt to parse structured status
-        structured_status = None
+        text = text.strip()
         try:
-            parsed = json.loads(content)
-            if isinstance(parsed, dict):
-                if "status" in parsed or "task_complete" in parsed:
-                    structured_status = parsed
-        except Exception:
-            pass
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            return None, None
 
-        # AFTER CALL
-        log_event(
-            "info",
-            "agent",
-            "agent_after_call",
-            {
-                "agent": self.role,
-                "round": round_num,
-                "content": content[:500],
-                "structured_status": structured_status,
-            },
-        )
+        if not isinstance(data, dict):
+            return None, None
 
-        return content
+        tool = data.get("tool")
+        args = data.get("args")
+
+        if not isinstance(tool, str) or not isinstance(args, dict):
+            return None, None
+
+        return tool, args
+
+    # ---------------------------------------------------------
+    # Main agent execution
+    # ---------------------------------------------------------
+    def run(self, task: Dict[str, Any], context: Dict[str, Any], workspace):
+        """
+        Executes a single agent step:
+        - Calls the model
+        - Logs model usage (tokens)
+        - Parses tool calls
+        - Executes tools
+        - Logs tool events
+        - Returns a Response-like object
+        """
+
+        system_prompt = self._build_system_prompt()
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": task["description"]},
+            {"role": "user", "content": f"Context: {context}"},
+        ]
+
+        result = self.provider.complete(messages)
+        text = result.content if hasattr(result, "content") else str(result)
+
+        # Agent-level model usage logging (raw token counts)
+        if hasattr(result, "raw"):
+            tokens = {
+                "input_tokens": result.raw.get("input_tokens"),
+                "output_tokens": result.raw.get("output_tokens"),
+                "total_tokens": result.raw.get("total_tokens"),
+            }
+            log_model_usage(
+                role=self.name,
+                model=result.raw.get("model", getattr(self.provider, "model", "unknown")),
+                tokens=tokens,
+                step_index=context.get("step_index", -1),
+                flow=context.get("flow_name", "unknown"),
+                workspace=workspace,
+            )
+
+        # Try to interpret as a tool call
+        tool_name, args = self._parse_tool_call(text)
+
+        if tool_name is None:
+            # No tool call — return raw text
+            return type("Response", (), {"content": text, "note": f"role={self.name}"})
+
+        # Validate tool
+        if tool_name not in self.tools:
+            msg = f"Unknown tool '{tool_name}'. Available tools: {list(self.tools.keys())}"
+            return type("Response", (), {"content": msg, "note": f"role={self.name}"})
+
+        tool_fn = self.tools[tool_name]
+
+        # Execute tool
+        try:
+            result = tool_fn(**args)
+
+            # Compute byte size for logging
+            content_bytes = 0
+            if isinstance(args.get("content"), str):
+                content_bytes = len(args["content"].encode("utf-8"))
+
+            log_event(
+                "tool_call",
+                {
+                    "role": self.name,
+                    "tool": tool_name,
+                    "args": args,
+                    "content_bytes": content_bytes,
+                },
+                workspace=workspace,
+            )
+
+            return type(
+                "Response",
+                (),
+                {
+                    "content": f"Tool '{tool_name}' executed successfully.",
+                    "note": f"role={self.name}, tool={tool_name}",
+                },
+            )
+
+        except Exception as e:
+            log_event(
+                "tool_error",
+                {
+                    "role": self.name,
+                    "tool": tool_name,
+                    "args": args,
+                    "error": str(e),
+                },
+                workspace=workspace,
+            )
+
+            return type(
+                "Response",
+                (),
+                {
+                    "content": f"Tool '{tool_name}' failed with error: {e}",
+                    "note": f"role={self.name}, tool={tool_name}, error",
+                },
+            )

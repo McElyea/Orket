@@ -1,77 +1,89 @@
 # main.py
 import argparse
+from pathlib import Path
 
-from orket import orchestrate, load_venue
-from orket.utils import log_event
+from orket.orket import orchestrate
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run Orket with a given venue.")
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run an Orket flow.")
+
     parser.add_argument(
-        "--venue",
+        "--flow",
         type=str,
-        default="standard",
-        help="Venue name (matches venues/<name>.json).",
+        required=True,
+        help="Path to the flow JSON file.",
     )
+
     parser.add_argument(
-        "--max-rounds",
+        "--workspace",
+        type=str,
+        default="workspace/default",
+        help="Workspace directory for generated files and logs.",
+    )
+
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="qwen3-coder:latest",
+        help="Model name for LocalModelProvider.",
+    )
+
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.2,
+        help="Model temperature.",
+    )
+
+    parser.add_argument(
+        "--seed",
         type=int,
-        default=20,
-        help="Maximum orchestration rounds.",
+        default=None,
+        help="Optional seed for deterministic model behavior.",
     )
+
     parser.add_argument(
-        "--no-prelude",
+        "--interactive-conductor",
         action="store_true",
-        help="Disable the Prelude stage.",
+        help="Enable manual conductor mode.",
     )
+
     return parser.parse_args()
 
 
-def main() -> None:
+def main():
     args = parse_args()
 
-    log_event(
-        level="info",
-        component="orchestrator",
-        event="session_start",
-        payload={"venue": args.venue},
+    flow_path = Path(args.flow).resolve()
+    workspace = Path(args.workspace).resolve()
+
+    print(f"Running Orket flow: {flow_path}")
+    print(f"Workspace: {workspace}")
+    print(f"Model: {args.model}")
+
+    result = orchestrate(
+        flow_path=flow_path,
+        workspace=workspace,
+        model_name=args.model,
+        temperature=args.temperature,
+        seed=args.seed,
+        interactive_conductor=args.interactive_conductor,
     )
 
-    venue = load_venue(args.venue)
+    print("\n=== Orket Run Complete ===")
+    print(f"Flow: {result.flow_name}")
+    print(f"Workspace: {result.workspace}")
 
-    print(f"Loaded venue: {venue.name}")
-    print(f"Band: {venue.band}")
-    print(f"Score: {venue.score}")
-    print(f"Tempo: {venue.tempo}")
-
-    while True:
-        try:
-            task = input("\nEnter a task description (or 'quit'): ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nExiting.")
-            break
-
-        if not task:
-            continue
-        if task.lower() in ("quit", "exit"):
-            break
-
-        result = orchestrate(
-            venue_name=args.venue,
-            task=task,
-            max_rounds=args.max_rounds,
-            use_prelude=not args.no_prelude,
-        )
-
-        print("\n--- Session Result ---")
-        print(result)
-
-    log_event(
-        level="info",
-        component="orchestrator",
-        event="session_end",
-        payload={"venue": args.venue},
-    )
+    print("\n=== Transcript ===")
+    for entry in result.transcript:
+        idx = entry["step_index"]
+        role = entry["role"]
+        note = entry["note"]
+        summary = entry["summary"]
+        print(f"\n--- Step {idx} ({role}) ---")
+        print(f"Note: {note}")
+        print(summary)
 
 
 if __name__ == "__main__":

@@ -1,42 +1,87 @@
 import os
+from dataclasses import dataclass
+from typing import List, Dict, Literal, Optional
 
+Scope = Literal["workspace", "reference", "domain"]
+
+@dataclass
+class Spaces:
+    work_domain: Optional[str]
+    workspaces: List[str]
+    reference_spaces: List[str]
+    launch_dir: str  # always readable, non-recursive
+
+@dataclass
+class Policy:
+    read_scope: List[Scope]
+    write_scope: List[Scope]
 
 class FilesystemPolicy:
     """
-    Implements the DomainSpace / WorkSpace / ReferenceSpace model
-    combined with a declarative write_policy.
+    Declarative filesystem policy over three spaces:
+
+      - WorkDomain: broad working area
+      - Workspaces: isolated task-specific directories
+      - ReferenceSpaces: read-only inputs
+
+    Additional rule:
+      - The directory Orket is launched from is always readable (non-recursive).
     """
 
-    def __init__(self, spaces: dict, policy: dict):
-        # Spaces
-        self.work_domain = spaces.get("work_domain")
-        self.workspaces = spaces.get("workspaces", [])
-        self.reference_spaces = spaces.get("reference_spaces", [])
+    def __init__(self, spaces: Dict, policy: Dict):
+        launch_dir = os.path.abspath(os.getcwd())
 
-        # Policy
-        self.write_policy = policy.get("write_policy", "workspace-first")
+        self.spaces = Spaces(
+            work_domain=spaces.get("work_domain"),
+            workspaces=spaces.get("workspaces", []),
+            reference_spaces=spaces.get("reference_spaces", []),
+            launch_dir=launch_dir,
+        )
+
+        self.policy = Policy(
+            read_scope=policy.get("read_scope", ["workspace", "reference", "domain"]),
+            write_scope=policy.get("write_scope", ["workspace"]),
+        )
 
     # ---------------------------------------------------------
     # Helpers
     # ---------------------------------------------------------
 
-    def _in(self, path, roots):
+    def _in(self, path: str, roots: List[str]) -> bool:
         path = os.path.abspath(path)
         for r in roots:
             if path.startswith(os.path.abspath(r)):
                 return True
         return False
 
-    def in_workspace(self, path):
-        return self._in(path, self.workspaces)
+    def _in_workspace(self, path: str) -> bool:
+        return self._in(path, self.spaces.workspaces)
 
-    def in_reference(self, path):
-        return self._in(path, self.reference_spaces)
+    def _in_reference(self, path: str) -> bool:
+        return self._in(path, self.spaces.reference_spaces)
 
-    def in_work_domain(self, path):
-        if not self.work_domain:
+    def _in_domain(self, path: str) -> bool:
+        if not self.spaces.work_domain:
             return False
-        return os.path.abspath(path).startswith(os.path.abspath(self.work_domain))
+        return os.path.abspath(path).startswith(os.path.abspath(self.spaces.work_domain))
+
+    def _in_launch_dir_exact(self, path: str) -> bool:
+        # Only allow reading the exact launch directory, not subdirectories
+        return os.path.abspath(path) == self.spaces.launch_dir
+
+    # ---------------------------------------------------------
+    # Scope resolution
+    # ---------------------------------------------------------
+
+    def _scopes_for_path(self, path: str) -> List[Scope]:
+        scopes: List[Scope] = []
+        if self._in_workspace(path):
+            scopes.append("workspace")
+        if self._in_reference(path):
+            scopes.append("reference")
+        if self._in_domain(path):
+            scopes.append("domain")
+        return scopes
 
     # ---------------------------------------------------------
     # Read permissions
@@ -45,43 +90,42 @@ class FilesystemPolicy:
     def can_read(self, path: str) -> bool:
         path = os.path.abspath(path)
 
-        if self.in_workspace(path):
+        # Always allow reading the launch directory itself
+        if self._in_launch_dir_exact(path):
             return True
 
-        if self.in_reference(path):
-            return True
+        path_scopes = self._scopes_for_path(path)
+        if not path_scopes:
+            return False
 
-        if self.in_work_domain(path):
-            return True
+        for scope in self.policy.read_scope:
+            if scope in path_scopes:
+                return True
 
         return False
 
     # ---------------------------------------------------------
-    # Write permissions (policy-driven)
+    # Write permissions
     # ---------------------------------------------------------
 
     def can_write(self, path: str) -> bool:
         path = os.path.abspath(path)
 
-        # ReferenceSpace is always read-only
-        if self.in_reference(path):
+        # Never write to launch directory
+        if self._in_launch_dir_exact(path):
             return False
 
-        # Policy modes
-        if self.write_policy == "workspace-only":
-            return self.in_workspace(path)
+        path_scopes = self._scopes_for_path(path)
 
-        if self.write_policy == "workspace-first":
-            if self.workspaces:
-                return self.in_workspace(path)
-            else:
-                return self.in_work_domain(path)
-
-        if self.write_policy == "domain-only":
-            return self.in_work_domain(path)
-
-        if self.write_policy == "disabled":
+        # Reference spaces are always read-only
+        if "reference" in path_scopes:
             return False
 
-        # Unknown policy → safest default
+        if not path_scopes:
+            return False
+
+        for scope in self.policy.write_scope:
+            if scope in path_scopes:
+                return True
+
         return False

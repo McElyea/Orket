@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Venue",
+  "type": "object",
+  "required": ["name", "model"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique venue name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional human-readable description."
+    },
+    "model": {
+      "type": "string",
+      "description": "Model identifier (e.g., 'qwen3-coder:latest')."
+    },
+    "temperature": {
+      "type": "number",
+      "default": 0.0,
+      "description": "Model temperature."
+    },
+    "seed": {
+      "type": "integer",
+      "description": "Optional deterministic seed."
+    },
+    "params": {
+      "type": "object",
+      "description": "Additional model parameters.",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
