@@ -39,47 +39,74 @@ class Agent:
     # ---------------------------------------------------------
     def _parse_tool_call(self, text: str):
         """
-        Expected format:
-        {"tool": "write_file", "args": {"path": "...", "content": "..."}}
+        Supports both JSON and the DSL:
+        TOOL: write_file
+        PATH: ...
+        CONTENT: ...
         """
         text = text.strip()
+        
+        # Try DSL first
+        if "TOOL:" in text and "PATH:" in text:
+            lines = text.splitlines()
+            tool = None
+            path = None
+            content_lines = []
+            in_content = False
+
+            for line in lines:
+                if line.startswith("TOOL:"):
+                    tool = line.replace("TOOL:", "").strip()
+                elif line.startswith("PATH:"):
+                    path = line.replace("PATH:", "").strip()
+                elif line.startswith("CONTENT:"):
+                    in_content = True
+                    # If there's content on the same line after CONTENT:
+                    remainder = line.replace("CONTENT:", "").strip()
+                    if remainder:
+                        content_lines.append(remainder)
+                elif in_content:
+                    content_lines.append(line)
+            
+            if tool and path:
+                return tool, {"path": path, "content": "\n".join(content_lines)}
+
+        # Fallback to JSON
         try:
             data = json.loads(text)
+            if isinstance(data, dict) and "tool" in data:
+                return data["tool"], data.get("args", {})
         except json.JSONDecodeError:
-            return None, None
+            pass
 
-        if not isinstance(data, dict):
-            return None, None
-
-        tool = data.get("tool")
-        args = data.get("args")
-
-        if not isinstance(tool, str) or not isinstance(args, dict):
-            return None, None
-
-        return tool, args
+        return None, None
 
     # ---------------------------------------------------------
     # Main agent execution
     # ---------------------------------------------------------
-    def run(self, task: Dict[str, Any], context: Dict[str, Any], workspace):
+    def run(self, task: Dict[str, Any], context: Dict[str, Any], workspace, transcript: List[Dict[str, Any]] = None):
         """
-        Executes a single agent step:
-        - Calls the model
-        - Logs model usage (tokens)
-        - Parses tool calls
-        - Executes tools
-        - Logs tool events
-        - Returns a Response-like object
+        Executes a single agent step with transcript context.
         """
 
         system_prompt = self._build_system_prompt()
 
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": task["description"]},
-            {"role": "user", "content": f"Context: {context}"},
+            {"role": "user", "content": f"Task: {task['description']}"},
         ]
+
+        # Inject transcript for context
+        if transcript:
+            history = "Previous steps in this session:\n"
+            for entry in transcript:
+                history += f"\n[Step {entry['step_index']} - {entry['role']}]\n"
+                if entry.get("note"):
+                    history += f"Note: {entry['note']}\n"
+                history += f"{entry['summary']}\n"
+            messages.append({"role": "user", "content": history})
+
+        messages.append({"role": "user", "content": f"Context: {context}"})
 
         result = self.provider.complete(messages)
         text = result.content if hasattr(result, "content") else str(result)
@@ -116,7 +143,8 @@ class Agent:
 
         # Execute tool
         try:
-            result = tool_fn(**args)
+            # Pass args dictionary and context to the tool function
+            tool_result = tool_fn(args, context=context)
 
             # Compute byte size for logging
             content_bytes = 0
@@ -130,18 +158,29 @@ class Agent:
                     "tool": tool_name,
                     "args": args,
                     "content_bytes": content_bytes,
+                    "result": tool_result
                 },
                 workspace=workspace,
             )
 
-            return type(
-                "Response",
-                (),
-                {
-                    "content": f"Tool '{tool_name}' executed successfully.",
-                    "note": f"role={self.name}, tool={tool_name}",
-                },
-            )
+            if tool_result.get("ok"):
+                return type(
+                    "Response",
+                    (),
+                    {
+                        "content": f"Tool '{tool_name}' executed successfully. Result: {tool_result}",
+                        "note": f"role={self.name}, tool={tool_name}",
+                    },
+                )
+            else:
+                return type(
+                    "Response",
+                    (),
+                    {
+                        "content": f"Tool '{tool_name}' failed: {tool_result.get('error')}",
+                        "note": f"role={self.name}, tool={tool_name}, error",
+                    },
+                )
 
         except Exception as e:
             log_event(

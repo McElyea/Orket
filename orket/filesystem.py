@@ -43,6 +43,11 @@ class FilesystemPolicy:
             write_scope=policy.get("write_scope", ["workspace"]),
         )
 
+    def add_workspace(self, path: str):
+        abs_path = os.path.abspath(path)
+        if abs_path not in self.spaces.workspaces:
+            self.spaces.workspaces.append(abs_path)
+
     # ---------------------------------------------------------
     # Helpers
     # ---------------------------------------------------------

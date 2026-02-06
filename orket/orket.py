@@ -10,6 +10,7 @@ from orket.llm import LocalModelProvider
 from orket.logging import log_event
 from orket.conductor import Conductor, ManualConductor, SessionView
 from orket.agents.agent_factory import build_band_agents
+from orket.tools import _policy
 
 
 # ---------------------------------------------------------------------------
@@ -128,6 +129,9 @@ def orchestrate(
     score = load_score(model_root, flow.score_name)
     ctx = TaskContext(task=flow.task)
 
+    # Register workspace with policy
+    _policy().add_workspace(str(workspace))
+
     # Provider + Conductor
     provider = LocalModelProvider(model=model_name, temperature=temperature, seed=seed)
     conductor: Conductor = ManualConductor() if interactive_conductor else Conductor()
@@ -144,6 +148,7 @@ def orchestrate(
     )
 
     transcript: List[Dict[str, Any]] = []
+    notes: Dict[str, Any] = {}
 
     log_event(
         "session_start",
@@ -167,6 +172,7 @@ def orchestrate(
             step_index=idx,
             transcript=transcript,
             role=role_name,
+            notes=notes,
         )
 
         adjust = conductor.before_step(step, session_view)
@@ -204,9 +210,23 @@ def orchestrate(
                 "step_index": idx,
                 "workspace": str(workspace),
                 "flow_name": flow.name,
+                "notes": notes,
             },
             workspace=workspace,
+            transcript=transcript,
         )
+
+        # Handle NOTES_UPDATE in response
+        if "NOTES_UPDATE:" in response.content:
+            try:
+                import json
+                parts = response.content.split("NOTES_UPDATE:")
+                update_str = parts[1].splitlines()[0].strip()
+                update_data = json.loads(update_str)
+                notes.update(update_data)
+                log_event("notes_updated", {"update": update_data, "current_notes": notes}, workspace=workspace)
+            except Exception as e:
+                log_event("notes_update_error", {"error": str(e), "content": response.content}, workspace=workspace)
 
         log_event(
             "step_end",

@@ -56,4 +56,14 @@ Semantic versioning:
 
 MAJOR — breaking changes  
 MINOR — new features  
-PATCH — fixes  
+PATCH — fixes
+
+## Current Status (v0.2.1-patched)
+
+As of February 6, 2026, the core orchestration engine has been repaired and is fully functional:
+- **Hybrid Tool Parsing:** Agents now support both JSON and the `TOOL/PATH/CONTENT` DSL.
+- **Stateful Workflows:** The `orchestrate` loop now passes the full transcript to agents, allowing them to see previous steps and plans.
+- **Runtime Notes:** Implemented the `NOTES_UPDATE` mechanism for inter-agent communication (e.g., Task Decomposition).
+- **Workspace Safety:** Tools now dynamically resolve relative paths against the active workspace and are correctly authorized by the `FilesystemPolicy`.
+- **Verified Roles:** Architect, Coder, and Reviewer are now correctly using tools and sharing context.
+  

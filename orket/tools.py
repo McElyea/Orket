@@ -23,29 +23,51 @@ def _policy():
 # Tool Implementations
 # ------------------------------------------------------------
 
-def read_file(args: Dict[str, Any]) -> Dict[str, Any]:
+def _resolve_path(path_str: str, workspace: str) -> Path:
+    """
+    Resolves a path string. If relative, joins with the current workspace.
+    """
+    path = Path(path_str)
+    if not path.is_absolute():
+        return (Path(workspace) / path).resolve()
+    return path.resolve()
+
+
+def read_file(args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     args: { "path": "relative/or/absolute/path" }
     """
-    path = Path(args["path"]).resolve()
+    path_str = args.get("path")
+    if not path_str:
+        return {"ok": False, "error": "Missing 'path' argument"}
+    
+    workspace = context.get("workspace", ".") if context else "."
+    path = _resolve_path(path_str, workspace)
     policy = _policy()
 
     if not policy.can_read(str(path)):
         return {"ok": False, "error": f"Read not allowed: {path}"}
 
     try:
+        if not path.exists():
+             return {"ok": False, "error": f"File not found: {path}"}
         content = path.read_text(encoding="utf-8")
         return {"ok": True, "content": content}
     except Exception as e:
         return {"ok": False, "error": f"Failed to read file: {e}"}
 
 
-def write_file(args: Dict[str, Any]) -> Dict[str, Any]:
+def write_file(args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     args: { "path": "relative/or/absolute/path", "content": "text" }
     """
-    path = Path(args["path"]).resolve()
-    content = args["content"]
+    path_str = args.get("path")
+    content = args.get("content", "")
+    if not path_str:
+        return {"ok": False, "error": "Missing 'path' argument"}
+
+    workspace = context.get("workspace", ".") if context else "."
+    path = _resolve_path(path_str, workspace)
     policy = _policy()
 
     if not policy.can_write(str(path)):
@@ -59,11 +81,13 @@ def write_file(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "error": f"Failed to write file: {e}"}
 
 
-def list_dir(args: Dict[str, Any]) -> Dict[str, Any]:
+def list_dir(args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     args: { "path": "relative/or/absolute/path" }
     """
-    path = Path(args["path"]).resolve()
+    path_str = args.get("path", ".")
+    workspace = context.get("workspace", ".") if context else "."
+    path = _resolve_path(path_str, workspace)
     policy = _policy()
 
     # Listing a directory is a read operation
