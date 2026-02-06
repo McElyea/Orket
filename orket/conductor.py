@@ -16,6 +16,7 @@ class SessionView:
     step_index: int
     role: str
     transcript: List[Dict[str, Any]]
+    notes: Dict[str, Any]
 
 
 class Conductor:
