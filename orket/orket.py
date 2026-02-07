@@ -1,7 +1,6 @@
 # orket/orket.py
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import json
@@ -12,141 +11,99 @@ from orket.conductor import Conductor, ManualConductor, SessionView
 from orket.agents.agent_factory import build_band_agents
 from orket.tools import _policy
 from orket.settings import get_setting
+from orket.schema import ProjectConfig, TeamConfig, EnvironmentConfig, SequenceConfig
 
 
 # ---------------------------------------------------------------------------
-# Data classes
+# Configuration Loader (Department-Aware)
 # ---------------------------------------------------------------------------
 
-@dataclass
-class Flow:
-    name: str
-    description: str
-    band_name: str
-    score_name: str
-    task: str  # Simplified to string
+class ConfigLoader:
+    def __init__(self, model_root: Path, department: str = "core"):
+        self.model_root = model_root
+        self.department = department
+        self.dept_path = model_root / department
 
+    def list_projects(self) -> List[str]:
+        path = self.dept_path / "projects"
+        return [p.stem for p in path.glob("*.json")]
 
-@dataclass
-class BandRole:
-    description: str
-    tools: List[str]
+    def list_teams(self) -> List[str]:
+        path = self.dept_path / "teams"
+        return [p.stem for p in path.glob("*.json")]
 
+    def list_environments(self) -> List[str]:
+        path = self.dept_path / "environments"
+        return [p.stem for p in path.glob("*.json")]
 
-@dataclass
-class Band:
-    name: str
-    roles: Dict[str, BandRole]
+    def list_sequences(self) -> List[str]:
+        path = self.dept_path / "sequences"
+        return [p.stem for p in path.glob("*.json")]
 
+    def load_project(self, name: str) -> ProjectConfig:
+        path = self.dept_path / "projects" / f"{name}.json"
+        return ProjectConfig.model_validate_json(path.read_text(encoding="utf-8"))
 
-@dataclass
-class Score:
-    name: str
-    steps: List[Dict[str, Any]]
+    def load_team(self, name: str) -> TeamConfig:
+        path = self.dept_path / "teams" / f"{name}.json"
+        return TeamConfig.model_validate_json(path.read_text(encoding="utf-8"))
 
+    def load_environment(self, name: str) -> EnvironmentConfig:
+        path = self.dept_path / "environments" / f"{name}.json"
+        return EnvironmentConfig.model_validate_json(path.read_text(encoding="utf-8"))
 
-@dataclass
-class OrchestrateResult:
-    flow_name: str
-    transcript: List[Dict[str, Any]]
-    workspace: Path
-
-
-# ---------------------------------------------------------------------------
-# JSON loading helpers
-# ---------------------------------------------------------------------------
-
-def _load_json(path: Path) -> Dict[str, Any]:
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def load_flow(flow_path: Path) -> Flow:
-    data = _load_json(flow_path)
-    return Flow(
-        name=data["name"],
-        description=data.get("description", ""),
-        band_name=data["band"],
-        score_name=data["score"],
-        task=data["task"],
-    )
-
-
-def load_band(model_root: Path, band_name: str) -> Band:
-    path = model_root / "band" / f"{band_name}.json"
-    data = _load_json(path)
-
-    roles: Dict[str, BandRole] = {}
-    for role_name, role_data in data["roles"].items():
-        roles[role_name] = BandRole(
-            description=role_data["description"],
-            tools=role_data.get("tools", []),
-        )
-
-    return Band(
-        name=data["name"],
-        roles=roles,
-    )
-
-
-def load_score(model_root: Path, score_name: str) -> Score:
-    path = model_root / "score" / f"{score_name}.json"
-    data = _load_json(path)
-    return Score(
-        name=data["name"],
-        steps=data["steps"],
-    )
+    def load_sequence(self, name: str) -> SequenceConfig:
+        path = self.dept_path / "sequences" / f"{name}.json"
+        return SequenceConfig.model_validate_json(path.read_text(encoding="utf-8"))
 
 
 # ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
 
-def orchestrate(
-    flow_path: Path,
+async def orchestrate(
+    project_name: str,
     workspace: Path,
-    model_name: Optional[str] = None,
+    department: str = "core",
+    model_override: Optional[str] = None,
     task_override: Optional[str] = None,
-    temperature: float = 0.2,
-    seed: Optional[int] = None,
     interactive_conductor: bool = False,
-) -> OrchestrateResult:
-
+) -> Any:
+    """
+    Asynchronous orchestration entry point.
+    """
     workspace = workspace.resolve()
+    model_root = Path("model").resolve()
+    loader = ConfigLoader(model_root, department)
 
-    # Determine default model from settings if not provided
-    if model_name is None:
-        model_name = get_setting("preferred_coder", "qwen3-coder:latest")
-
-    # FIXED: correct model root resolution
-    model_root = flow_path.parent.parent
-
-    # Load flow, band, score
-    flow = load_flow(flow_path)
-    band = load_band(model_root, flow.band_name)
-    score = load_score(model_root, flow.score_name)
+    # 1. Load the Project
+    project = loader.load_project(project_name)
     
-    # Resolve final task: Override > Flow JSON
-    final_task = task_override or flow.task
-    if isinstance(final_task, dict):
-        final_task = final_task.get("description", str(final_task))
+    # 2. Load dependencies
+    team = loader.load_team(project.team)
+    sequence = loader.load_sequence(project.sequence)
+    env = loader.load_environment(project.environment)
+    
+    # 3. Handle Overrides
+    final_model = model_override or env.model
+    final_task = task_override or project.example_task or "No task provided."
 
-    # Register workspace with policy
     _policy().add_workspace(str(workspace))
 
-    # Provider + Conductor
-    provider = LocalModelProvider(model=model_name, temperature=temperature, seed=seed)
+    provider = LocalModelProvider(
+        model=final_model, 
+        temperature=env.temperature, 
+        seed=env.seed
+    )
     conductor: Conductor = ManualConductor() if interactive_conductor else Conductor()
 
-    # Build agents
-    agents = build_band_agents(band, provider)
+    agents = build_band_agents(team, provider)
 
-    # Session-level model selection logging
     conductor.log_session_models(
-        band=band,
+        team=team,
         provider=provider,
         workspace=workspace,
-        flow_name=flow.name,
+        project_name=project.name,
     )
 
     transcript: List[Dict[str, Any]] = []
@@ -155,128 +112,71 @@ def orchestrate(
     log_event(
         "session_start",
         {
-            "flow": flow.name,
-            "band": band.name,
-            "score": score.name,
+            "department": department,
+            "project": project.name,
+            "team": team.name,
+            "sequence": sequence.name,
             "model": provider.model,
-            "temperature": provider.temperature,
-            "seed": provider.seed,
             "task": final_task[:100] + "..." if len(final_task) > 100 else final_task
         },
         workspace=workspace,
     )
 
-    # Main step loop
-    for idx, step in enumerate(score.steps):
-        role_name = step["role"]
-
+    for idx, step in enumerate(sequence.steps):
+        role_name = step.role
         session_view = SessionView(
-            flow_name=flow.name,
+            flow_name=project.name,
             step_index=idx,
             transcript=transcript,
             role=role_name,
             notes=notes,
         )
 
-        adjust = conductor.before_step(step, session_view)
+        step_dict = step.model_dump()
+        adjust = conductor.before_step(step_dict, session_view)
 
         if adjust.skip_role:
-            log_event(
-                "step_skipped",
-                {
-                    "role": role_name,
-                    "step_index": idx,
-                    "reason": "conductor_skip",
-                },
-                workspace=workspace,
-                role=role_name,
-            )
+            log_event("step_skipped", {"role": role_name, "step_index": idx}, workspace=workspace, role=role_name)
             continue
 
-        log_event(
-            "step_start",
-            {
-                "role": role_name,
-                "step_index": idx,
-                "model": provider.model,
-                "temperature": provider.temperature,
-                "seed": provider.seed,
-            },
-            workspace=workspace,
-            role=role_name,
-        )
+        log_event("step_start", {"role": role_name, "step_index": idx, "model": provider.model}, workspace=workspace, role=role_name)
 
         agent = agents[role_name]
         agent.apply_prompt_patch(adjust.prompt_patch)
 
-        response = agent.run(
-            task={"description": final_task}, # Agent still expects a dict for now to minimize changes
+        # AWAIT the async agent run
+        response = await agent.run(
+            task={"description": final_task},
             context={
                 "step_index": idx,
                 "workspace": str(workspace),
-                "flow_name": flow.name,
+                "project_name": project.name,
                 "notes": notes,
             },
             workspace=workspace,
             transcript=transcript,
         )
 
-        # Handle NOTES_UPDATE in response
         if "NOTES_UPDATE:" in response.content:
             try:
-                import json
                 parts = response.content.split("NOTES_UPDATE:")
                 update_str = parts[1].splitlines()[0].strip()
                 update_data = json.loads(update_str)
                 notes.update(update_data)
-                log_event(
-                    "notes_updated", 
-                    {"update": update_data, "current_notes": notes}, 
-                    workspace=workspace,
-                    role=role_name
-                )
-            except Exception as e:
-                log_event(
-                    "notes_update_error", 
-                    {"error": str(e), "content": response.content}, 
-                    workspace=workspace,
-                    role=role_name
-                )
+            except:
+                pass
 
-        log_event(
-            "step_end",
-            {
-                "role": role_name,
-                "step_index": idx,
-                "output_preview": response.content[:200],
-                "model": provider.model,
-            },
-            workspace=workspace,
-            role=role_name,
-        )
+        log_event("step_end", {"role": role_name, "step_index": idx, "output_preview": response.content[:100]}, workspace=workspace, role=role_name)
 
-        transcript.append(
-            {
-                "step_index": idx,
-                "role": role_name,
-                "note": response.note,
-                "summary": response.content,
-            }
-        )
+        transcript.append({
+            "step_index": idx,
+            "role": role_name,
+            "note": response.note,
+            "summary": response.content,
+        })
 
-        conductor.after_step(step, session_view)
+        conductor.after_step(step_dict, session_view)
 
-    log_event(
-        "session_end",
-        {
-            "flow": flow.name,
-            "steps": len(score.steps),
-        },
-        workspace=workspace,
-    )
+    log_event("session_end", {"project": project.name}, workspace=workspace)
 
-    return OrchestrateResult(
-        flow_name=flow.name,
-        transcript=transcript,
-        workspace=workspace,
-    )
+    return transcript

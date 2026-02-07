@@ -106,7 +106,7 @@ class Agent:
     # ---------------------------------------------------------
     # Main agent execution
     # ---------------------------------------------------------
-    def run(self, task: Dict[str, Any], context: Dict[str, Any], workspace, transcript: List[Dict[str, Any]] = None):
+    async def run(self, task: Dict[str, Any], context: Dict[str, Any], workspace, transcript: List[Dict[str, Any]] = None):
         """
         Executes a single agent step with transcript context.
         """
@@ -130,7 +130,7 @@ class Agent:
 
         messages.append({"role": "user", "content": f"Context: {context}"})
 
-        result = self.provider.complete(messages)
+        result = await self.provider.complete(messages)
         text = result.content if hasattr(result, "content") else str(result)
 
         # Agent-level model usage logging (raw token counts)
