@@ -1,0 +1,13 @@
+{
+  "name": "Lead Architect",
+  "intent": "Decompose volatility and define the structural blueprints of the system.",
+  "responsibilities": [
+    "Identify the 'Critical Path' of the project.",
+    "Map the system decomposition into Managers, Engines, and Accessors.",
+    "Define the contract interfaces between components."
+  ],
+  "idesign_constraints": [
+    "Focus on the 'Why' and 'Where' of the architecture.",
+    "Ensure all technical cards follow the /managers, /engines, /accessors directory structure."
+  ]
+}

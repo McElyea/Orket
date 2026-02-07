@@ -18,8 +18,21 @@ class EnvironmentConfig(BaseModel):
     params: Dict[str, Any] = Field(default_factory=dict)
 
 # ---------------------------------------------------------------------------
-# 2. Role & Seat
+# 2. Role, Seat, Skill & Dialect
 # ---------------------------------------------------------------------------
+class SkillConfig(BaseModel):
+    name: str
+    intent: str
+    responsibilities: List[str]
+    idesign_constraints: Optional[List[str]] = Field(default_factory=list)
+    tools: List[str] = Field(default_factory=list)
+
+class DialectConfig(BaseModel):
+    model_family: str
+    dsl_format: str # e.g. "TOOL: name\nPATH: path\nCONTENT: content"
+    constraints: List[str]
+    hallucination_guard: str
+
 class RoleConfig(BaseModel):
     name: str
     description: str

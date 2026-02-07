@@ -1,0 +1,10 @@
+{
+  "model_family": "qwen",
+  "dsl_format": "{\n  \"tool\": \"write_file\",\n  \"args\": {\n    \"path\": \"filename.ext\",\n    \"content\": \"your code here\"\n  }\n}",
+  "constraints": [
+    "NEVER include conversational filler.",
+    "Your output must be a SINGLE JSON object.",
+    "Do NOT use markdown code blocks (```json) unless the tool requires content containing them."
+  ],
+  "hallucination_guard": "If you output text before or after the JSON block, the execution will fail."
+}

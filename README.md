@@ -1,89 +1,83 @@
-# Orket
+# Orket EOS (v0.3.0)
 
-Orket is a local‑first, multi‑agent orchestration engine for long‑running engineering sessions.  
-It coordinates a team of AI agents through a deterministic Flow and exposes a Conductor that can steer the session in real time.
+Orket is a local‑first, multi‑agent orchestration engine for professional engineering operations.  
+It coordinates a team of AI agents through an iDesign-aligned hierarchy (Rocks, Epics, Cards) and utilizes a dynamic Prompt Engine to separate role intent from model-specific syntax.
 
-Orket emphasizes transparency, traceability, and control. Every step is logged and auditable. It is designed for engineering work where structure and oversight matter.
+Orket emphasizes **Structural Integrity**, **Volatility Decomposition**, and **Traceability**. It is designed for production-grade engineering work where architectural standards and local execution are paramount.
+
+---
+
+## What's New in v0.3.0
+
+- **Card-Based Hierarchy** — Track work through **Rocks** (High-level goals), **Epics** (Thematic groups), and **Cards** (Units of execution).
+- **The Prompt Engine** — Separation of **Skills** (Managerial intent) and **Dialects** (Model-specific syntax) to solve the leaf-node explosion problem.
+- **iDesign Training** — Injected constraints forcing models to follow strict structural patterns: Managers, Engines, Accessors, and Utilities.
+- **Vendor Abstraction** — Unified interface for Gitea, ADO, and Jira integrations.
+- **Reforge System** — Automated model optimization loop to ensure 10/10 tool-calling precision.
 
 ---
 
 ## Why Orket
 
-Modern AI tools often operate as opaque, single‑shot systems. They produce results but offer limited visibility into how those results were created or how to correct drift.
+Modern AI tools often operate as opaque, single‑shot systems. Orket provides the **Engine of Operations**:
 
-Orket addresses those gaps:
-
-- **Local execution** — run models on your machine or local cluster.  
-- **Deterministic orchestration** — reproducible, step‑by‑step runs.  
-- **Role‑based agents** — explicit responsibilities for Architect, Coder, Reviewer, and others.  
-- **Session steering** — Conductor can enable/disable roles, patch prompts, and skip steps.  
-- **Long‑running sessions** — designed for iterative, multi‑cycle work.  
-- **Full traceability** — structured event logs and transcripts.
-
----
-
-## What Orket is not
-
-- Not a chatbot.  
-- Not a cloud service.  
-- Not a black box.  
-- Not a replacement for engineering judgment.  
-- Not an autonomous agent that acts without human oversight.
+- **Volatility-Based Decomposition** — Encapsulates change within specific components.
+- **Local execution** — Run models on your machine using Ollama.
+- **Strict Contracts** — Models interact via strictly validated JSON and DSL contracts.
+- **Full Traceability** — Every action is a logged event, move through Kanban stages, and a persisted artifact.
 
 ---
 
 ## Core concepts
 
-- **Flow** — orchestration structure and references to Band, Venue, Score.  
-- **Band** — role definitions and prompts.  
-- **Venue** — model backend configuration.  
-- **Score** — ordered steps the Orchestrator executes.  
-- **Conductor** — session governor that observes and adjusts between steps.  
-- **Orchestrator** — runtime that loads configuration, runs steps, and records events.  
-- **Workspace** — files and artifacts produced by a run.  
-- **Event Stream** — structured events for UI and auditing.
+- **Rock** — A strategic milestone (e.g., "Initialize System").
+- **Epic** — A group of related cards (e.g., "Core Baseline").
+- **Card** — The atomic unit of work (e.g., "COR26-0001: Verify Hardware").
+- **Skill** — The "Manager" intent of a role (Platform-agnostic).
+- **Dialect** — The "Utility" syntax for a specific model (e.g., Qwen vs. Llama).
+- **Workstation** — The Command & Control UI for managing the Project Board and File Explorer.
 
 ---
 
-## Small flow diagram
+## iDesign Directory Structure
 
-    ┌──────────┐     ┌────────┐     ┌──────────┐
-    │ Architect│ →   │ Coder  │ →   │ Reviewer │
-    └──────────┘     └────────┘     └──────────┘
-            ↑             ↑               ↑
-            └────────── Conductor ───────┘
-
-The Conductor sits above the loop and can adjust prompts, skip roles, or change behavior between steps.
+Orket enforces a professional directory structure for all generated code:
+- `/controllers` — External API and entry points.
+- `/managers` — Use-case coordination and workflow logic.
+- `/engines` — Business rules and computational algorithms.
+- `/accessors` — External tool and data interaction.
+- `/utils` — Cross-cutting logic.
+- `/tests` — Unit and integration tests.
 
 ---
 
 ## Quickstart
 
-1. Install dependencies:
-
+1. **Install dependencies:**
+    ```bash
     pip install -r requirements.txt
+    ```
 
-2. Run a Flow:
+2. **Ignite the Engine (First Run):**
+    ```bash
+    python main.py --rock initialize_orket
+    ```
 
-    python main.py --flow standard --task examples/hello/task.json
+3. **View the Board:**
+    ```bash
+    python main.py --board
+    ```
 
-3. Enable interactive Conductor controls:
-
-    python main.py --interactive-conductor
-
-You will be prompted to adjust roles or patch prompts between steps.
-
----
-
-## Example interaction
-
-A typical run produces a structured transcript and event log. Events include `step_start`, `step_end`, `step_skipped`, and workspace writes. The transcript records each agent's summary for later review.
+4. **Run a Standalone Card:**
+    ```bash
+    python main.py --card "Generate system status report"
+    ```
 
 ---
 
 ## Documentation
 
-- `docs/ARCHITECTURE.md` — system design, diagrams, and sequence interactions  
-- `docs/PROJECT.md` — roadmap and milestones  
-- `docs/SECURITY.md` — local execution and safety notes  
-- `CONTRIBUTING.md` — contributor guidelines
+- `docs/ARCHITECTURE.md` — The iDesign roadmap and system relationships.
+- `docs/PROJECT.md` — Roadmap and v0.3.0 milestones.
+- `docs/SECURITY.md` — Local execution and safety notes.
+- `CONTRIBUTING.md` — Contributor guidelines.

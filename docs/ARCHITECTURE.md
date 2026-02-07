@@ -1,125 +1,79 @@
-# Orket Architecture
+# Orket EOS Architecture (v0.3.0)
 
-Orket is a deterministic, multi‑agent orchestration engine.  
-This document describes the system structure, runtime relationships, and the sequence of interactions that define a session.
-
----
-
-# System overview
-
-Orket coordinates a team of agents through a Flow. Each component has a focused responsibility:
-
-- **Flow** — orchestration structure and references to Band, Venue, Score.  
-- **Band** — role definitions and prompts.  
-- **Venue** — model backend configuration and runtime parameters.  
-- **Score** — ordered steps the Orchestrator executes.  
-- **Conductor** — session governor that observes and adjusts between steps.  
-- **Orchestrator** — runtime that loads configuration, runs steps, and records events.  
-- **Agent** — role implementation that builds prompts and invokes a ModelProvider.  
-- **ModelProvider** — abstraction that executes model invocations (local, mesh, or remote).  
-- **Workspace** — files and artifacts produced by a run.  
-- **Event Stream** — structured events for UI and auditing.
+Orket is a multi‑agent orchestration engine built on the principles of **iDesign** (Juval Lowy).  
+It decomposes system complexity by **volatility**, encapsulating areas of change within a hierarchy of Managers, Engines, and Accessors.
 
 ---
 
-# Component relationships
+# The Project Hierarchy
 
-    ┌──────────────┐
-    │   Orchestrator│
-    └───────┬──────┘
-            │ builds
-            ▼
-    ┌──────────────┐        ┌──────────────────┐
-    │    Agents     │ ───►  │  ModelProvider   │
-    └──────────────┘        └──────────────────┘
-            ▲
-            │ uses
-            ▼
-    ┌──────────────┐
-    │     Band      │
-    └──────────────┘
+Orket work is organized into a three-layer tree:
 
-- The **Orchestrator** constructs Agents from the Band and injects a ModelProvider.  
-- Each **Agent** holds a reference to a ModelProvider and calls it directly to obtain model outputs.  
-- The **Conductor** observes the session and provides adjustments to the Orchestrator between steps; it does not execute model calls itself.  
-- The **Event Stream** receives structured events from the Orchestrator for UI and audit purposes.  
-- The **Workspace** stores artifacts produced by Agents and the Orchestrator.
+1.  **Rocks (The Strategic Layer):** High-level milestones or business objectives.
+2.  **Epics (The Tactical Layer):** Functional groupings of tasks.
+3.  **Cards (The Operational Layer):** Atomic units of execution with unique IDs (e.g., `COR26-0001`).
 
 ---
 
-# Sequence diagram
+# The Prompt Engine (Volatility Decomposition)
 
-The following Mermaid sequence diagram shows the interactions for a single step and the Conductor checks before and after the step.
+To solve the "Leaf Node Explosion" (Role x Model x Version), Orket separates intent from syntax:
+
+- **Skills (`/skills/*.json`):** Defines the **Managerial Intent**. These are high-level responsibilities and business goals. They are platform-agnostic.
+- **Dialects (`/dialects/*.json`):** Defines the **Utility Syntax**. These capture how a specific model (e.g., Qwen, Llama) expects to see tool calls and formatting instructions.
+- **The Compiler:** The `Agent` class dynamically compiles a **Skill** + a **Dialect** + **iDesign Constraints** into a single, high-precision system prompt at runtime.
+
+---
+
+# Component relationships (iDesign Model)
+
+- **Managers (`orket/orket.py`):** Orchestrate the flow between Rocks, Epics, and Cards.
+- **Engines (`orket/llm.py`, `orket/agents/agent.py`):** Handle the "intelligence" logic and prompt compilation.
+- **Accessors (`orket/persistence.py`, `orket/vendors/`):** Manage state and external tool interactions (SQLite, Gitea, ADO).
+- **Utilities (`orket/utils.py`, `orket/logging.py`):** Provide cross-cutting concerns like logging and name sanitization.
+
+---
+
+# iDesign Structural Training
+
+Orket injects structural constraints into every technical agent, forcing code generation to follow a strict professional layout:
+
+- `/controllers` — API/Entry points.
+- `/managers` — Workflow orchestration.
+- `/engines` — Business logic.
+- `/accessors` — Tool/Data interaction.
+- `/utils` — Cross-cutting logic.
+- `/tests` — Automated verification.
+
+---
+
+# Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant Orchestrator
-    participant Score
     participant Conductor
-    participant Agent as Agent[role]
+    participant Orchestrator
+    participant Agent
+    participant PromptEngine
     participant ModelProvider
-    participant EventStream
-    participant Workspace
 
-    User->>Orchestrator: start Flow
-    Orchestrator->>Score: request next step
-    Orchestrator->>Conductor: before_step(session_view)
-    Conductor-->>Orchestrator: adjustment (skip, patch, enable/disable)
-    alt not skipped
-        Orchestrator->>Agent: run(task, context)
-        Agent->>ModelProvider: invoke(prompt)
-        ModelProvider-->>Agent: model response
-        Agent-->>Orchestrator: result (summary, artifacts)
-        Orchestrator->>EventStream: emit step_end
-        Orchestrator->>Workspace: write artifacts
+    User->>Orchestrator: Run Rock/Epic/Card
+    Orchestrator->>PromptEngine: Load Skill (Intent) + Dialect (Syntax)
+    Orchestrator->>Agent: Initialize with Compiled Prompt
+    loop Traction Loop
+        Agent->>ModelProvider: Execute Tool Call (JSON Contract)
+        ModelProvider-->>Agent: Result
+        Agent->>Orchestrator: Record Gain/Output
     end
-    Orchestrator->>Conductor: after_step(session_view)
-    Conductor-->>Orchestrator: optional adjustments
+    Orchestrator->>User: Complete (v0.3.0)
 ```
----
-## Filesystem Model
-
-Orket defines three explicit filesystem spaces:
-
-- **WorkDomain** — broad working area, usually the project root.
-- **Workspaces** — isolated directories where agents write artifacts.
-- **ReferenceSpaces** — read-only inputs.
-
-Additionally:
-
-- **The directory Orket is launched from is always readable (non-recursive).**
-
-Access is controlled by a declarative policy:
-
-```json
-{
-  "read_scope": ["workspace", "reference", "domain"],
-  "write_scope": ["workspace"]
-}
 
 ---
 
-# Design principles
+# Vendor Abstraction
 
-- **Visibility** — every decision, prompt, and output is recorded and inspectable.  
-- **Control** — humans steer the session through the Conductor; automation is explicit and reversible.  
-- **Composability** — roles, models, and flows are modular and replaceable.
-
-These principles guide the architecture:
-
-- Injected ModelProvider allows local, mesh, or remote backends without changing agent logic.  
-- Deterministic orchestration and structured logs enable reproducibility and debugging.  
-- The Conductor separates governance from execution, enabling both manual and automated interventions.
-
----
-
-# Extensions and next steps
-
-Planned directions that align with the core principles:
-
-- UI dashboard that subscribes to the Event Stream and exposes Conductor controls.  
-- Streaming model output and token accounting per role.  
-- Automatic Conductor heuristics for drift detection and suggested adjustments.  
-- Mesh ModelProvider for local cluster execution.  
-- Session persistence and resume for long‑running work.
+Orket defines a `VendorInterface` to allow plug-and-play integration with professional project management tools:
+- **LocalVendor:** JSON-first local files (Default).
+- **GiteaVendor:** Full REST API integration for local-first corporate meshes.
+- **ADO/Jira:** Stubs for enterprise-grade vendor support.
