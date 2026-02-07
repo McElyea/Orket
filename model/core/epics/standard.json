@@ -1,21 +1,11 @@
 {
   "name": "standard",
-  "description": "A standard development epic.",
+  "description": "Standard development flow.",
   "team": "standard",
   "environment": "standard",
-  "stories": [
-    {
-      "seat": "lead_architect",
-      "note": "Design the solution"
-    },
-    {
-      "seat": "senior_developer",
-      "note": "Implement the code"
-    },
-    {
-      "seat": "quality_assurance",
-      "note": "Verify the results"
-    }
-  ],
-  "example_task": "Build a small Python package named 'shapes' with area and perimeter functions."
+  "cards": [
+    { "summary": "Design the solution", "seat": "lead_architect" },
+    { "summary": "Implement the code", "seat": "senior_developer" },
+    { "summary": "Verify the results", "seat": "quality_assurance" }
+  ]
 }

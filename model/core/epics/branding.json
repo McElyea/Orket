@@ -1,19 +1,10 @@
 {
   "name": "branding",
-  "description": "Create a visual brand identity for the project.",
-  "team": "ui_experts",
+  "description": "Establish the brand identity.",
+  "team": "standard",
   "environment": "standard",
-  "stories": [
-    {
-      "seat": "creative_director",
-      "model": "qwen3-coder:latest",
-      "note": "Define the prompt for the logo."
-    },
-    {
-      "seat": "frontend_artisan",
-      "model": "qwen3-coder:latest",
-      "note": "Generate the logo file using image_generate."
-    }
-  ],
-  "example_task": "Generate a modern, high-tech logo for 'Orket'. Save it as 'logo.png'."
+  "cards": [
+    { "summary": "Define the prompt for the logo.", "seat": "creative_director" },
+    { "summary": "Generate the logo using image_generate.", "seat": "frontend_artisan" }
+  ]
 }

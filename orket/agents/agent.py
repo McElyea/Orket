@@ -7,9 +7,12 @@ import json
 
 from orket.utils import sanitize_name
 
+from orket.schema import SkillConfig, DialectConfig
+
 class Agent:
     """
-    Single authoritative Agent class for Orket.
+    Authority Agent class.
+    Uses the 'Prompt Engine' to compile Skills + Dialects.
     """
 
     def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider):
@@ -19,96 +22,127 @@ class Agent:
         self.provider = provider
         self._prompt_patch: str | None = None
         
-        # Load model-specific instructions if they exist
-        self._load_model_specific_prompt()
-
-    def _load_model_specific_prompt(self):
-        """
-        Looks for model-specific overrides in prompts/{role}/{model_family}.txt
-        e.g., prompts/coder/qwen.txt
-        """
-        model_name = self.provider.model.lower()
-        family = "unknown"
-        if "qwen" in model_name: family = "qwen"
-        elif "llama" in model_name: family = "llama"
-        elif "deepseek" in model_name: family = "deepseek"
-        elif "gemma" in model_name: family = "gemma"
+        # New iDesign Prompt Engine Components
+        self.skill: SkillConfig | None = None
+        self.dialect: DialectConfig | None = None
         
-        # Sanitize seat name for directory lookup
-        safe_name = sanitize_name(self.name)
-        prompt_path = Path("prompts") / safe_name / f"{family}.txt"
-        if prompt_path.exists():
-            try:
-                override = prompt_path.read_text(encoding="utf-8")
-                self.description = override
-            except Exception:
-                pass
+        self._load_engine_configs()
 
-    # ---------------------------------------------------------
-    # Prompt patching
-    # ---------------------------------------------------------
-    def apply_prompt_patch(self, patch: str | None) -> None:
-        self._prompt_patch = patch
+    def _load_engine_configs(self):
+        """
+        iDesign: Decompose by Volatility.
+        Loads the 'Skill' (Manager Intent) and 'Dialect' (Utility Syntax).
+        """
+        from orket.orket import ConfigLoader
+        loader = ConfigLoader(Path("model"), "core")
+        
+        # 1. Load Skill based on Seat Name
+        try:
+            self.skill = loader.load_asset("skills", sanitize_name(self.name), SkillConfig)
+        except:
+            # Fallback to a generic skill if specific one missing
+            pass
+
+        # 2. Load Dialect based on Model Family
+        model_name = self.provider.model.lower()
+        family = "qwen" if "qwen" in model_name else "llama" if "llama" in model_name else "generic"
+        try:
+            self.dialect = loader.load_asset("dialects", family, DialectConfig)
+        except:
+            pass
 
     def _build_system_prompt(self) -> str:
-        base = self.description
-        base += "\n\nCRITICAL: You are an execution engine, not a chat bot."
-        base += "\nONLY output tool calls using the 'TOOL:' DSL or JSON."
-        base += "\nNEVER include raw markdown code blocks unless they are part of a 'write_file' CONTENT section."
-        base += "\nIf you respond with text or a code block without a TOOL: prefix, the task will FAIL."
+        """
+        The Compiler: Skill + Dialect + iDesign Policies.
+        """
+        if not self.skill or not self.dialect:
+            # Legacy fallback if configs aren't ready
+            base = self.description
+            base += "\n\nCRITICAL: You are an execution engine, not a chat bot."
+            return base
+
+        prompt = f"IDENTITY: {self.skill.name}\n"
+        prompt += f"INTENT: {self.skill.intent}\n\n"
         
+        prompt += "RESPONSIBILITIES:\n"
+        for r in self.skill.responsibilities:
+            prompt += f"- {r}\n"
+
+        prompt += "\niDESIGN CONSTRAINTS (Structural Integrity):\n"
+        # Standard iDesign structure injected for all technical roles
+        idesign_standard = [
+            "Maintain strict separation of concerns: Managers, Engines, Accessors, Utilities.",
+            "Managers orchestrate the workflow and high-level logic.",
+            "Engines handle complex computations or business rules.",
+            "Accessors manage state or external tool interactions.",
+            "Utilities provide cross-cutting logic.",
+            "Organize files into: /controllers, /managers, /engines, /accessors, /utils, /tests."
+        ]
+        for c in (idesign_standard + self.skill.idesign_constraints):
+            prompt += f"- {c}\n"
+
+        prompt += f"\nSYNTAX DIALECT ({self.dialect.model_family}):\n"
+        prompt += f"You MUST use this format for all file operations:\n{self.dialect.dsl_format}\n"
+        
+        prompt += "\nCONSTRAINTS:\n"
+        for c in self.dialect.constraints:
+            prompt += f"- {c}\n"
+        
+        prompt += f"\nGUARDRAIL: {self.dialect.hallucination_guard}\n"
+
         if self._prompt_patch:
-            base += "\n\nPATCH:\n" + self._prompt_patch
-        return base
+            prompt += f"\n\nPATCH:\n{self._prompt_patch}"
+            
+        return prompt
 
     # ---------------------------------------------------------
     # Tool-call parsing
     # ---------------------------------------------------------
     def _parse_tool_call(self, text: str):
         """
-        Supports both JSON and the DSL:
-        TOOL: write_file
-        PATH: ...
-        CONTENT: ...
+        Aggressive Tool Extraction: Supports JSON and DSL.
         """
         text = text.strip()
         
-        # Try DSL first
+        # 1. Look for JSON in markdown fences
+        import re
+        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        if json_match:
+            try:
+                data = json.loads(json_match.group(1))
+                if isinstance(data, dict) and "tool" in data:
+                    return data["tool"], data.get("args", {})
+            except: pass
+
+        # 2. Look for first { and last } (Loose JSON)
+        try:
+            start = text.find('{')
+            end = text.rfind('}')
+            if start != -1 and end != -1:
+                candidate = text[start:end+1]
+                data = json.loads(candidate)
+                if isinstance(data, dict) and "tool" in data:
+                    return data["tool"], data.get("args", {})
+        except: pass
+
+        # 3. DSL Fallback: TOOL:, PATH:, CONTENT:
         if "TOOL:" in text and "PATH:" in text:
             lines = text.splitlines()
-            tool = None
-            path = None
-            content_lines = []
-            in_content = False
-
+            tool, path, content_lines, in_content = None, None, [], False
             for line in lines:
-                if line.startswith("TOOL:"):
-                    tool = line.replace("TOOL:", "").strip()
-                elif line.startswith("PATH:"):
-                    path = line.replace("PATH:", "").strip()
+                if line.startswith("TOOL:"): tool = line.replace("TOOL:", "").strip()
+                elif line.startswith("PATH:"): path = line.replace("PATH:", "").strip()
                 elif line.startswith("CONTENT:"):
                     in_content = True
-                    # If there's content on the same line after CONTENT:
-                    remainder = line.replace("CONTENT:", "").strip()
-                    if remainder:
-                        content_lines.append(remainder)
-                elif in_content:
-                    content_lines.append(line)
+                    rem = line.replace("CONTENT:", "").strip()
+                    if rem: content_lines.append(rem)
+                elif in_content: content_lines.append(line)
             
             if tool and path:
                 content = "\n".join(content_lines)
-                # Auto-strip markdown fences if present
                 if content.startswith("```") and content.endswith("```"):
                     content = "\n".join(content.splitlines()[1:-1])
                 return tool, {"path": path, "content": content}
-
-        # Fallback to JSON
-        try:
-            data = json.loads(text)
-            if isinstance(data, dict) and "tool" in data:
-                return data["tool"], data.get("args", {})
-        except json.JSONDecodeError:
-            pass
 
         return None, None
 
