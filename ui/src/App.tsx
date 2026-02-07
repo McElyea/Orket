@@ -22,12 +22,37 @@ export default function App() {
   const [isLaunching, setIsLaunching] = useState(false);
   
   const [isExplorerOpen, setExplorerOpen] = useState(true);
+  const [navigatorView, setNavigatorView] = useState<'explorer' | 'traction_tree'>('explorer');
+  const [boardHierarchy, setBoardHierarchy] = useState<any>(null);
   const [executeFilter, setExecuteFilter] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
   
   const [sidebarWidth, setSidebarWidth] = useState(240);
   const [hudWidth, setHudWidth] = useState(380);
   const [footerHeight, setFooterHeight] = useState(240);
+
+  const fetchBoard = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/system/board`);
+      setBoardHierarchy(await res.json());
+    } catch (e) {}
+  };
+
+  const fetchMemberMetrics = async (sid: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/runs/${sid}/metrics`);
+      const data = await res.json();
+      setActiveMembers(data || {});
+    } catch (e) {}
+  };
+
+  const fetchBacklog = async (sid: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/runs/${sid}/backlog`);
+      const data = await res.json();
+      setBacklog(data || []);
+    } catch (e) {}
+  };
 
   // 1. DATA INIT
   useEffect(() => {
@@ -62,17 +87,23 @@ export default function App() {
     return () => clearInterval(itv);
   }, []);
 
-  // 2. EXPLORER
+  // 2. EXPLORER & BOARD
   useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/system/explorer?path=${currentPath}`);
-        const data = await res.json();
-        setFiles(data.items || []);
-      } catch (e) {}
-    };
-    if (activeTab === 'workstation') fetchFiles();
-  }, [currentPath, activeTab]);
+    if (activeTab === 'workstation') {
+        if (navigatorView === 'explorer') {
+            const fetchFiles = async () => {
+                try {
+                  const res = await fetch(`${API_BASE}/system/explorer?path=${currentPath}`);
+                  const data = await res.json();
+                  setFiles(data.items || []);
+                } catch (e) {}
+            };
+            fetchFiles();
+        } else {
+            fetchBoard();
+        }
+    }
+  }, [currentPath, activeTab, navigatorView]);
 
   // 3. WS & STATE SYNC
   useEffect(() => {
@@ -93,25 +124,9 @@ export default function App() {
     return () => socket?.close();
   }, [activeSessionId]);
 
-  const fetchMemberMetrics = async (sid: string) => {
+  const updateStatus = async (cardId: string, status: string) => {
     try {
-      const res = await fetch(`${API_BASE}/runs/${sid}/metrics`);
-      const data = await res.json();
-      setActiveMembers(data || {});
-    } catch (e) {}
-  };
-
-  const fetchBacklog = async (sid: string) => {
-    try {
-      const res = await fetch(`${API_BASE}/runs/${sid}/backlog`);
-      const data = await res.json();
-      setBacklog(data || []);
-    } catch (e) {}
-  };
-
-  const updateStatus = async (bookId: string, status: string) => {
-    try {
-      await fetch(`${API_BASE}/backlog/${bookId}`, {
+      await fetch(`${API_BASE}/backlog/${cardId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -146,7 +161,7 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setActiveSessionId(data.session_id);
-      setActiveTab('traction'); // Switch to board so user sees cards appearing
+      setActiveTab('traction'); 
       console.log(`[RIG] Session Started: ${data.session_id}`);
     } catch (e: any) { 
         alert(`Launch Failed: ${e.message}`); 
@@ -241,9 +256,18 @@ export default function App() {
             <div style={{ width: isExplorerOpen ? 240 : 40 }} className="flex bg-slate-950 border-r border-slate-800 transition-all duration-300 overflow-hidden shrink-0 relative shadow-2xl">
                 <div className="flex flex-col w-full h-full">
                     <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-black/20 shrink-0 h-10">
-                        {isExplorerOpen && <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><FolderTree size={12}/> Navigator</span>}
+                        {isExplorerOpen && (
+                            <div className="flex bg-black/40 rounded border border-slate-800 p-0.5">
+                                <button onClick={() => setNavigatorView('explorer')} className={`p-1 rounded ${navigatorView === 'explorer' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>
+                                    <FolderTree size={12}/>
+                                </button>
+                                <button onClick={() => setNavigatorView('traction_tree')} className={`p-1 rounded ${navigatorView === 'traction_tree' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>
+                                    <Trello size={12}/>
+                                </button>
+                            </div>
+                        )}
                         <div className="flex items-center gap-2">
-                            {isExplorerOpen && (
+                            {isExplorerOpen && navigatorView === 'explorer' && (
                                 <button onClick={() => setExecuteFilter(!executeFilter)} className={`p-1 rounded transition-colors ${executeFilter ? 'text-blue-400 bg-blue-900/20' : 'text-slate-600 hover:text-slate-400'}`}>
                                     <Filter size={12} />
                                 </button>
@@ -255,23 +279,55 @@ export default function App() {
                     </div>
                     {isExplorerOpen && (
                         <div className="flex-grow overflow-auto p-2 scrollbar-hide">
-                            <div className="text-[8px] text-slate-600 mb-2 px-2 uppercase font-bold tracking-widest opacity-50 truncate flex justify-between">
-                                <span>Root: {currentPath}</span>
-                                {executeFilter && <span className="text-blue-500 animate-pulse"><Rocket size={8}/> PLAYLIST</span>}
-                            </div>
-                            {currentPath !== '.' && !executeFilter && (
-                                <div onClick={goBack} className="flex items-center gap-2 py-1 px-3 text-[11px] text-blue-400 hover:bg-slate-900 cursor-pointer rounded mb-1 font-bold group">
-                                    <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" /> .. [Back]
+                            {navigatorView === 'explorer' ? (
+                                <>
+                                    <div className="text-[8px] text-slate-600 mb-2 px-2 uppercase font-bold tracking-widest opacity-50 truncate flex justify-between">
+                                        <span>Root: {currentPath}</span>
+                                        {executeFilter && <span className="text-blue-500 animate-pulse"><Rocket size={8}/> PLAYLIST</span>}
+                                    </div>
+                                    {currentPath !== '.' && !executeFilter && (
+                                        <div onClick={goBack} className="flex items-center gap-2 py-1 px-3 text-[11px] text-blue-400 hover:bg-slate-900 cursor-pointer rounded mb-1 font-bold group">
+                                            <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" /> .. [Back]
+                                        </div>
+                                    )}
+                                    {files.filter(f => !executeFilter || f.is_launchable || f.is_dir).map(f => (
+                                        <div key={f.name} onClick={() => f.is_dir ? setCurrentPath(currentPath === '.' ? f.name : `${currentPath}/${f.name}`) : openFile(f)}
+                                            className={`flex items-center gap-2 py-1.5 px-3 text-[11px] rounded cursor-pointer transition-colors ${activeFile?.includes(f.name) ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 shadow-lg' : 'hover:bg-slate-900 hover:text-slate-100'}`}>
+                                            {f.is_dir ? <Folder size={12} className="text-blue-500 fill-blue-500/10" /> : <File size={12} className={f.is_launchable ? "text-blue-400 font-bold" : "text-slate-500"} />}
+                                            <span className={`truncate ${f.is_launchable ? 'font-black' : ''}`}>{f.name}</span>
+                                            {f.is_launchable && <Rocket size={10} className="ml-auto text-blue-500 opacity-50" />}
+                                        </div>
+                                    ))}
+                                </>
+                            ) : (
+                                <div className="space-y-4">
+                                    {boardHierarchy?.rocks.map((rock: any) => (
+                                        <div key={rock.name} className="space-y-1">
+                                            <div className="text-[9px] font-black text-blue-500 uppercase tracking-tighter flex items-center gap-1 opacity-80">
+                                                <Zap size={10}/> {rock.name}
+                                            </div>
+                                            {rock.epics.map((epic: any) => (
+                                                <div key={epic.name} className="ml-2 pl-2 border-l border-slate-800 space-y-1">
+                                                    <div className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">{epic.name}</div>
+                                                    {epic.cards.map((card: any) => (
+                                                        <div key={card.summary} className="ml-2 text-[9px] text-slate-500 hover:text-blue-400 cursor-pointer transition-colors">
+                                                            - {card.summary}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                    {boardHierarchy?.orphaned_epics.length > 0 && (
+                                        <div className="mt-4 pt-4 border-t border-slate-800">
+                                            <div className="text-[9px] font-black text-red-500 uppercase mb-2 animate-pulse">! Orphaned Epics</div>
+                                            {boardHierarchy.orphaned_epics.map((epic: any) => (
+                                                <div key={epic.name} className="text-[10px] text-slate-400 pl-2">{epic.name}</div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                            {files.filter(f => !executeFilter || f.is_launchable || f.is_dir).map(f => (
-                                <div key={f.name} onClick={() => f.is_dir ? setCurrentPath(currentPath === '.' ? f.name : `${currentPath}/${f.name}`) : openFile(f)}
-                                    className={`flex items-center gap-2 py-1.5 px-3 text-[11px] rounded cursor-pointer transition-colors ${activeFile?.includes(f.name) ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 shadow-lg' : 'hover:bg-slate-900 hover:text-slate-100'}`}>
-                                    {f.is_dir ? <Folder size={12} className="text-blue-500 fill-blue-500/10" /> : <File size={12} className={f.is_launchable ? "text-blue-400 font-bold" : "text-slate-500"} />}
-                                    <span className={`truncate ${f.is_launchable ? 'font-black' : ''}`}>{f.name}</span>
-                                    {f.is_launchable && <Rocket size={10} className="ml-auto text-blue-500 opacity-50" />}
-                                </div>
-                            ))}
                         </div>
                     )}
                 </div>
@@ -351,24 +407,24 @@ export default function App() {
                                     <span className="text-[10px] font-mono text-slate-600 bg-black/40 px-2 rounded-full border border-slate-800">{backlog.filter(s => s.status === status).length}</span>
                                 </div>
                                 <div className="flex-grow overflow-y-auto p-3 space-y-3 scrollbar-hide">
-                                    {backlog.filter(s => s.status === status).map(book => (
-                                        <div key={book.id} className="bg-slate-900/80 border border-slate-800 p-4 rounded-lg shadow-xl hover:border-blue-500/50 transition-all group relative">
-                                            <div className={`absolute top-0 right-0 w-1 h-12 rounded-tr-lg rounded-br-lg ${book.priority === 'Critical' ? 'bg-red-600' : book.priority === 'High' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
+                                    {backlog.filter(s => s.status === status).map(card => (
+                                        <div key={card.id} className="bg-slate-900/80 border border-slate-800 p-4 rounded-lg shadow-xl hover:border-blue-500/50 transition-all group relative">
+                                            <div className={`absolute top-0 right-0 w-1 h-12 rounded-tr-lg rounded-br-lg ${card.priority === 'Critical' ? 'bg-red-600' : card.priority === 'High' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
                                             <div className="flex justify-between items-start mb-3">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">{book.id}</span>
-                                                    <span className="text-[7px] text-slate-600 font-bold">{book.sprint}</span>
+                                                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">{card.id}</span>
+                                                    <span className="text-[7px] text-slate-600 font-bold">{card.sprint}</span>
                                                 </div>
                                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {status !== 'ready' && <button onClick={() => updateStatus(book.id, 'ready')} className="p-1 hover:bg-blue-600 rounded text-slate-500 hover:text-white"><PlayCircle size={12}/></button>}
-                                                    {status !== 'done' && <button onClick={() => updateStatus(book.id, 'done')} className="p-1 hover:bg-green-600 rounded text-slate-500 hover:text-white"><CheckCircle2 size={12}/></button>}
+                                                    {status !== 'ready' && <button onClick={() => updateStatus(card.id, 'ready')} className="p-1 hover:bg-blue-600 rounded text-slate-500 hover:text-white"><PlayCircle size={12}/></button>}
+                                                    {status !== 'done' && <button onClick={() => updateStatus(card.id, 'done')} className="p-1 hover:bg-green-600 rounded text-slate-500 hover:text-white"><CheckCircle2 size={12}/></button>}
                                                 </div>
                                             </div>
-                                            <div className="text-[11px] font-black text-slate-100 uppercase mb-1 tracking-tight truncate">{book.summary || book.seat.replace(/_/g, ' ')}</div>
-                                            <div className="text-[10px] text-slate-500 italic leading-relaxed line-clamp-2">{book.note}</div>
+                                            <div className="text-[11px] font-black text-slate-100 uppercase mb-1 tracking-tight truncate">{card.summary || card.seat.replace(/_/g, ' ')}</div>
+                                            <div className="text-[10px] text-slate-500 italic leading-relaxed line-clamp-2">{card.note}</div>
                                             <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-800/50 text-[9px]">
-                                                <span className="text-slate-400 font-bold uppercase">{book.assignee || 'Unassigned'}</span>
-                                                <span className={`font-bold px-1.5 rounded ${book.priority === 'Critical' ? 'text-red-400 bg-red-950/20' : 'text-slate-500'}`}>{book.priority}</span>
+                                                <span className="text-slate-400 font-bold uppercase">{card.assignee || 'Unassigned'}</span>
+                                                <span className={`font-bold px-1.5 rounded ${card.priority === 'Critical' ? 'text-red-400 bg-red-950/20' : 'text-slate-500'}`}>{card.priority}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -384,7 +440,7 @@ export default function App() {
       {/* FOOTER */}
       <div style={{ height: footerHeight }} className="fixed bottom-0 left-0 w-full border-t border-slate-800 bg-slate-950 flex flex-col z-40 shadow-[0_-15px_50px_rgba(0,0,0,0.7)]">
         <div onMouseDown={(e) => {
-            const onMove = (me: MouseEvent) => setFooterHeight(Math.max(100, Math.min(600, window.innerHeight - me.clientY)));
+            const onMove = (me: MouseEvent) => setFooterHeight(Math.max(100, Math.min(600, window.innerHeight - me.clientX)));
             const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
             document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
         }} className="h-1 w-full cursor-row-resize hover:bg-blue-600 transition-colors z-50 shrink-0" />

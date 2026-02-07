@@ -145,7 +145,7 @@ def print_orket_manifest(department: str = "core"):
                         epic = dept_loader.load_asset("epics", epic_name, EpicConfig)
                         team = dept_loader.load_asset("teams", epic.team, TeamConfig)
                         
-                        seats = [s.seat for s in epic.stories]
+                        seats = [c.seat for c in epic.cards]
                         unique_seats = list(dict.fromkeys(seats)) # Preserve order
                         
                         print(f"    ↳ {dept.upper():<12} | Epic: {epic_name:<20} | Members: {', '.join(unique_seats)}")

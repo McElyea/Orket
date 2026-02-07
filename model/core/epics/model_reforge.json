@@ -1,10 +1,11 @@
 {
   "name": "model_reforge",
-  "description": "Reforge models to optimize tool-calling precision.",
-  "team": "standard",
+  "description": "Reforge models to optimize tool-calling precision and report gains.",
+  "team": "enterprise",
   "environment": "standard",
-  "stories": [
-    { "summary": "Audit current model response patterns for tool triggers.", "seat": "senior_developer" },
-    { "summary": "Update model-specific prompt patches to improve tool adherence.", "seat": "senior_developer" }
+  "cards": [
+    { "summary": "Audit model tool adherence and update specific prompt patches.", "seat": "reforge_specialist", "priority": "Critical" },
+    { "summary": "Generate a velocity report and finalize project board status.", "seat": "operations_lead", "priority": "Medium" },
+    { "summary": "Produce the final Reforge Stability Report.", "seat": "reforge_specialist", "priority": "High" }
   ]
 }

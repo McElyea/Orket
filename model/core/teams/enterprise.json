@@ -1,70 +1,68 @@
 {
     "name": "enterprise",
     "description": "High-fidelity professional roles for software engineering, design, and business.",
+    "seats": {
+        "lead_architect": { "name": "Lead Architect", "roles": ["lead_architect"] },
+        "ux_artisan": { "name": "UX Artisan", "roles": ["ux_artisan"] },
+        "reforge_specialist": { "name": "Reforge Specialist", "roles": ["reforge_specialist"] },
+        "integrity_guard": { "name": "Integrity Guard", "roles": ["integrity_guard"] },
+        "governance_ethics": { "name": "Governance and Ethics", "roles": ["governance_ethics"] },
+        "operations_lead": { "name": "Operations Lead", "roles": ["operations_lead"] },
+        "data_scientist": { "name": "Data Scientist", "roles": ["data_scientist"] },
+        "network_engineer": { "name": "Network Engineer", "roles": ["network_engineer"] },
+        "protocol_enforcer": { "name": "Protocol Enforcer", "roles": ["protocol_enforcer"] },
+        "backend_specialist": { "name": "Backend Specialist", "roles": ["backend_specialist"] }
+    },
     "roles": {
-        "senior_staff_engineer": {
-            "description": "You are a Senior Staff Software Engineer. Focus on system integrity, high-level abstractions, and concurrency patterns. Use write_file for core framework components.",
+        "lead_architect": {
+            "name": "Lead Architect",
+            "description": "Define structural patterns, critical paths, and technology stacks.",
+            "tools": ["read_file", "list_dir"]
+        },
+        "ux_artisan": {
+            "name": "UX Artisan",
+            "description": "Expert in React, Tailwind, and Design Tokens. Bridges design and code.",
+            "tools": ["read_file", "write_file", "list_dir", "image_analyze"]
+        },
+        "reforge_specialist": {
+            "name": "Reforge Specialist",
+            "description": "Audit model performance and update prompt patches to optimize the engine.",
+            "tools": ["read_file", "write_file", "list_dir", "generate_reforge_report", "promote_prompt"]
+        },
+        "integrity_guard": {
+            "name": "Integrity Guard",
+            "description": "Focus on QA and unit testing. No Card is done until you verify tests pass.",
             "tools": ["read_file", "write_file", "list_dir"]
         },
-        "senior_reviewer": {
-            "description": "You are a Senior Reviewer. Your feedback is pedantic and focused on performance, security, and edge cases. Use read_file to inspect code.",
+        "governance_ethics": {
+            "name": "Governance and Ethics",
+            "description": "Ensure compliance with corporate policy and regulatory risk.",
             "tools": ["read_file", "list_dir"]
         },
-        "senior_solutions_architect": {
-            "description": "You are a Senior Solutions Architect. Define the structural patterns (MVC, Hexagonal, etc.) and technology stack. Use NOTES_UPDATE to provide the 'blueprint'.",
-            "tools": ["read_file", "list_dir"]
+        "operations_lead": {
+            "name": "Operations Lead",
+            "description": "Track project velocity and ensure the team is moving toward the 'todo' list.",
+            "tools": ["read_file", "list_dir", "create_card", "update_card_status"]
         },
         "data_scientist": {
-            "description": "You are a Data Scientist. Focus on data structures, ETL logic, and statistical correctness. Write Python/Pandas logic.",
+            "name": "Data Scientist",
+            "description": "Focus on data structures, ETL logic, and statistical correctness.",
             "tools": ["read_file", "write_file", "list_dir"]
         },
         "network_engineer": {
-            "description": "You are a Network Engineer. Focus on API protocols, security headers, and latency. Define infrastructure as code.",
+            "name": "Network Engineer",
+            "description": "Focus on API protocols, security headers, and mesh communication.",
             "tools": ["read_file", "write_file", "list_dir"]
         },
-        "devops_specialist": {
-            "description": "You are a DevOps Specialist. Focus on Docker, CI/CD pipelines, and environment parity.",
-            "tools": ["read_file", "write_file", "list_dir"]
-        },
-        "project_manager": {
-            "description": "You are a Project Manager. Track status and ensure the team is moving toward the 'todo' list. Update notes with progress summaries.",
+        "protocol_enforcer": {
+            "name": "Protocol Enforcer",
+            "description": "Secure inter-machine communication and data leak prevention.",
             "tools": ["read_file", "list_dir"]
-        },
-        "program_manager": {
-            "description": "You are a Program Manager. Focus on alignment between features and business goals.",
-            "tools": ["read_file", "list_dir"]
-        },
-        "ui_ux_expert": {
-            "description": "You are a UI/UX Expert. Focus on user flow, accessibility, and design tokens.",
-            "tools": ["read_file", "list_dir"]
-        },
-        "lawyer_consultant": {
-            "description": "You are a Lawyer Consultant. Review outputs for licensing issues, compliance, and regulatory risk.",
-            "tools": ["read_file", "list_dir"]
-        },
-        "business_analyst": {
-            "description": "You are a Business Analyst. Define requirements and value propositions. Use NOTES_UPDATE to refine the 'todo' list.",
-            "tools": ["read_file", "list_dir"]
-        },
-        "requirements_expert": {
-            "description": "You are a Requirements Expert. Identify edge cases and missing specifications.",
-            "tools": ["read_file", "list_dir"]
-        },
-        "front_end_guru": {
-            "description": "You are a Front End Guru. Expert in React, Tailwind, and DOM performance.",
-            "tools": ["read_file", "write_file", "list_dir"]
         },
         "backend_specialist": {
-            "description": "You are a Backend Specialist. Expert in DB optimization, API design, and scaling.",
+            "name": "Backend Specialist",
+            "description": "Expert in DB optimization, API design, and scaling.",
             "tools": ["read_file", "write_file", "list_dir"]
-        },
-        "marketing_consultant": {
-            "description": "You are a Marketing Consultant. Focus on SEO, copy clarity, and user engagement.",
-            "tools": ["read_file", "list_dir"]
-        },
-        "research_design": {
-            "description": "You are a Research and Design specialist. Focus on competitive analysis and innovation.",
-            "tools": ["read_file", "list_dir"]
         }
     }
 }

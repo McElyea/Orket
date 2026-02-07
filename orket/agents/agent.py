@@ -52,8 +52,13 @@ class Agent:
 
     def _build_system_prompt(self) -> str:
         base = self.description
+        base += "\n\nCRITICAL: You are an execution engine, not a chat bot."
+        base += "\nONLY output tool calls using the 'TOOL:' DSL or JSON."
+        base += "\nNEVER include raw markdown code blocks unless they are part of a 'write_file' CONTENT section."
+        base += "\nIf you respond with text or a code block without a TOOL: prefix, the task will FAIL."
+        
         if self._prompt_patch:
-            base += "\n\n" + self._prompt_patch
+            base += "\n\nPATCH:\n" + self._prompt_patch
         return base
 
     # ---------------------------------------------------------
@@ -136,6 +141,8 @@ class Agent:
 
         result = await self.provider.complete(messages)
         text = result.content if hasattr(result, "content") else str(result)
+        
+        print(f"  [DEBUG] Raw response from {self.name}:\n{text}\n{'-'*40}")
 
         # Agent-level model usage logging (raw token counts)
         if hasattr(result, "raw"):
@@ -269,10 +276,12 @@ class Agent:
     def _auto_extract_files(self, text: str) -> List[Dict[str, str]]:
         """
         Aggressively scans text for markdown code blocks and filename hints.
+        Also scans for pseudo-function calls like write_file(path=..., content=...).
         """
         import re
         files = []
-        # Support various code block styles
+        
+        # 1. Standard Markdown Blocks
         blocks = re.findall(r"```(?:\w+)?\s*\n(.*?)\n```", text, re.DOTALL)
         segments = re.split(r"```(?:\w+)?\s*\n.*?\n```", text, flags=re.DOTALL)
         
@@ -299,7 +308,6 @@ class Agent:
                     filename = match.group(1)
                     break
             
-            # Fallback for common types
             if not filename:
                 if "# " in content[:50]: filename = f"document_{i+1}.md"
                 elif "{" in content[:10]: filename = f"data_{i+1}.json"
@@ -307,5 +315,13 @@ class Agent:
                 else: filename = f"artifact_{i+1}.txt"
             
             files.append({"path": filename, "content": content})
+
+        # 2. Heuristic: Look for write_file(path="...", content="...") style
+        # This catches models that 'pretend' to call the function in text
+        fn_matches = re.findall(r"write_file\(\s*path=[\"'](.*?)[\"']\s*,\s*content=[\"'](.*?)[\"']\s*\)", text, re.DOTALL)
+        for path, content in fn_matches:
+            # Unescape newlines if the model used \n
+            content = content.replace("\\n", "\n").replace("\\\\", "\\")
+            files.append({"path": path, "content": content})
         
         return files

@@ -113,44 +113,44 @@ class ToolBox:
 
     # --- Traction & EOS Tools ---
 
-    def create_book(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Dynamically adds a new Book to the Board."""
+    def create_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Dynamically adds a new Card to the Board."""
         session_id = context.get("session_id")
         seat = args.get("seat")
         summary = args.get("summary")
-        book_type = args.get("type", "story")
+        card_type = args.get("type", "story")
         if not session_id or not seat or not summary: return {"ok": False, "error": "Missing params"}
         
         from orket.persistence import PersistenceManager
         db = PersistenceManager()
-        book_id = db.add_book(session_id, seat, summary, book_type, args.get("priority", "Medium"))
-        return {"ok": True, "book_id": book_id}
+        card_id = db.add_card(session_id, seat, summary, card_type, args.get("priority", "Medium"))
+        return {"ok": True, "card_id": card_id}
 
-    def update_book_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Updates Book status. Only Project Manager can cancel."""
-        book_id = args.get("book_id") or context.get("book_id")
+    def update_card_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Updates Card status. Only Project Manager can cancel."""
+        card_id = args.get("card_id") or context.get("card_id")
         new_status = args.get("status", "").lower()
         seat_calling = context.get("role", "")
         
-        if not book_id or not new_status: return {"ok": False, "error": "Missing params"}
+        if not card_id or not new_status: return {"ok": False, "error": "Missing params"}
         if new_status == "canceled" and "project_manager" not in seat_calling.lower():
             return {"ok": False, "error": "Permission Denied: Only PM can cancel work."}
             
         from orket.persistence import PersistenceManager
         db = PersistenceManager()
-        db.update_book_status(book_id, new_status)
-        return {"ok": True, "book_id": book_id, "status": new_status}
+        db.update_card_status(card_id, new_status)
+        return {"ok": True, "card_id": card_id, "status": new_status}
 
     def request_excuse(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Allows a member to request an excuse from the current book."""
-        book_id = context.get("book_id")
+        """Allows a member to request an excuse from the current card."""
+        card_id = context.get("card_id")
         reason = args.get("reason", "No reason provided")
-        if not book_id: return {"ok": False, "error": "No active Book"}
+        if not card_id: return {"ok": False, "error": "No active Card"}
         
         from orket.persistence import PersistenceManager
         db = PersistenceManager()
-        db.update_book_status(book_id, "excuse_requested")
-        print(f"  [PROTOCOL] Seat {context.get('role')} requested excuse from {book_id}. Reason: {reason}")
+        db.update_card_status(card_id, "excuse_requested")
+        print(f"  [PROTOCOL] Seat {context.get('role')} requested excuse from {card_id}. Reason: {reason}")
         return {"ok": True, "message": "Excuse requested from Conductor."}
 
     # --- Academy Tools ---
@@ -176,6 +176,18 @@ class ToolBox:
             return {"ok": True, "path": str(dest)}
         except Exception as e: return {"ok": False, "error": str(e)}
 
+    def generate_reforge_report(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Analyzes logs/transcripts to generate a Reforge Audit."""
+        workspace = self.workspace
+        log_path = workspace / "orket.log"
+        if not log_path.exists(): return {"ok": False, "error": "Logs not found."}
+        logs = log_path.read_text(encoding="utf-8").splitlines()
+        calls = [json.loads(l) for l in logs if "tool_call" in l]
+        errs = [json.loads(l) for l in logs if "error" in l]
+        report = {"session": context.get("session_id"), "stability": max(0, 10 - len(errs)), "calls": len(calls)}
+        (workspace / "reforge_report.json").write_text(json.dumps(report, indent=2))
+        return {"ok": True, "report": report}
+
 # ------------------------------------------------------------
 # Metadata & Registry
 # ------------------------------------------------------------
@@ -187,6 +199,7 @@ TOOL_TIERS = {
     "document_inspect": ToolTier.TIER_1_COMPUTE,
     "image_analyze": ToolTier.TIER_2_VISION,
     "image_generate": ToolTier.TIER_3_CREATOR,
+    "generate_reforge_report": ToolTier.TIER_0_UTILITY,
 }
 
 def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
@@ -197,9 +210,10 @@ def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
         "document_inspect": toolbox.document_inspect,
         "image_analyze": toolbox.image_analyze,
         "image_generate": toolbox.image_generate,
-        "create_book": toolbox.create_book,
-        "update_book_status": toolbox.update_book_status,
+        "create_card": toolbox.create_card,
+        "update_card_status": toolbox.update_card_status,
         "request_excuse": toolbox.request_excuse,
         "archive_eval": toolbox.archive_eval,
         "promote_prompt": toolbox.promote_prompt,
+        "generate_reforge_report": toolbox.generate_reforge_report,
     }
