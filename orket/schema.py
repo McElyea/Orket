@@ -1,78 +1,112 @@
 from __future__ import annotations
 from typing import Dict, List, Optional, Any
+import uuid
+import enum
 from pydantic import BaseModel, Field, ConfigDict
 
 # ---------------------------------------------------------------------------
-# 1. Environment (The "Infrastructure")
+# 1. Environment
 # ---------------------------------------------------------------------------
 class EnvironmentConfig(BaseModel):
     model_config = ConfigDict(extra='allow')
-    
     name: str
     description: Optional[str] = None
     model: str
     temperature: float = 0.0
     seed: Optional[int] = None
-    params: Dict[str, Any] = Field(default_factory=list) # Changed to list for consistency if needed, but dict is better for params
+    timeout: int = 300
+    params: Dict[str, Any] = Field(default_factory=dict)
 
 # ---------------------------------------------------------------------------
-# 2. Role & Seat (The "Accountability")
+# 2. Role & Seat
 # ---------------------------------------------------------------------------
 class RoleConfig(BaseModel):
-    """A specific skill or persona (e.g., 'Python Coding', 'System Architecture')."""
     name: str
     description: str
     tools: List[str] = Field(default_factory=list)
     policy: Dict[str, Any] = Field(default_factory=dict)
 
 class SeatConfig(BaseModel):
-    """A 'Seat' on the bus. Has a name and a list of roles/responsibilities."""
     name: str
-    roles: List[str] = Field(..., description="List of Role names this seat is responsible for.")
+    roles: List[str]
 
 class TeamConfig(BaseModel):
-    """The collection of Seats that make up a functional unit."""
     name: str
     description: Optional[str] = None
-    seats: Dict[str, SeatConfig] = Field(..., description="Seat Name -> Seat Configuration")
-    roles: Dict[str, RoleConfig] = Field(..., description="Role Name -> Role Configuration")
+    seats: Dict[str, SeatConfig]
+    roles: Dict[str, RoleConfig]
 
 # ---------------------------------------------------------------------------
-# 3. Story & Epic (The "Traction")
+# 3. Book & Epic (The Traction Board)
 # ---------------------------------------------------------------------------
-class StoryConfig(BaseModel):
-    """A single 'To-Do' or Step in a sequence."""
-    seat: str = Field(..., description="The Seat responsible for this story.")
-    model: Optional[str] = Field(None, description="Optional model override for this specific story.")
-    governance: Optional[str] = Field("always", description="Rule: 'always', 'once' (round 1 only), 'final' (last round only).")
+class BookType(str, enum.Enum):
+    STORY = "story"
+    BUG = "bug"
+    PROD_SUPPORT = "prod_support"
+
+class BookStatus(str, enum.Enum):
+    READY = "ready"
+    BLOCKED = "blocked"
+    IN_PROGRESS = "in_progress"
+    READY_FOR_TESTING = "ready_for_testing"
+    WAITING_FOR_DEVELOPER = "waiting_for_developer"
+    DONE = "done"
+    CANCELED = "canceled"
+    EXCUSE_REQUESTED = "excuse_requested"
+
+class BookConfig(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
+    type: BookType = Field(default=BookType.STORY)
+    summary: str
+    seat: str
+    status: BookStatus = Field(default=BookStatus.READY)
+    priority: str = Field(default="Medium")
+    assignee: Optional[str] = None
+    sprint: Optional[str] = None
     note: Optional[str] = None
     params: Dict[str, Any] = Field(default_factory=dict)
 
 class EpicConfig(BaseModel):
-    """A 'Sequence' of stories that deliver a major feature or fix."""
+    model_config = ConfigDict(populate_by_name=True)
     name: str
     description: Optional[str] = None
-    team: str  # Reference to Team file
-    environment: str # Reference to Environment file
-    iterations: int = Field(1, description="Number of times to repeat the stories (Rounds).")
-    stories: List[StoryConfig]
-    references: List[str] = Field(default_factory=list, description="List of read-only input paths (folders/files).")
+    team: str
+    environment: str
+    iterations: int = Field(1)
+    books: List[BookConfig] = Field(default_factory=list, alias="stories")
+    references: List[str] = Field(default_factory=list)
     example_task: Optional[str] = None
 
 # ---------------------------------------------------------------------------
-# 4. Rock (The "90-Day Goal")
+# 4. Rock
 # ---------------------------------------------------------------------------
 class RockConfig(BaseModel):
-    """A high-level objective that coordinates Epics across Departments."""
     name: str
     description: Optional[str] = None
     owner_department: str
-    epics: List[Dict[str, str]] = Field(..., description="List of {'department': '...', 'epic': '...'} pairs")
-    references: List[str] = Field(default_factory=list, description="Global references for this Rock.")
+    task: Optional[str] = None
+    epics: List[Dict[str, str]]
+    references: List[str] = Field(default_factory=list)
 
 # ---------------------------------------------------------------------------
-# 5. Department & Organization
+# 5. Organization & Engines
 # ---------------------------------------------------------------------------
+class EngineRecommendation(BaseModel):
+    model: str
+    tier: str
+    description: str
+
+class EngineMapping(BaseModel):
+    tier: str
+    keywords: List[str]
+    fallback: str
+    catalog: List[EngineRecommendation] = Field(default_factory=list)
+
+class EngineRegistry(BaseModel):
+    name: str
+    updated_at: str
+    mappings: Dict[str, EngineMapping] # e.g. "coder" -> Mapping
+
 class DepartmentConfig(BaseModel):
     name: str
     description: Optional[str] = None

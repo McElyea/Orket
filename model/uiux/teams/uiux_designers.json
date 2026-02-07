@@ -1,0 +1,16 @@
+{
+  "name": "uiux_designers",
+  "roles": {
+    "visionary": {
+      "name": "visionary",
+      "description": "Expert UI/UX designer. YOUR GOAL is to create detailed visual layout specifications in Markdown. DO NOT write Python scripts. DO NOT try to verify files. Simply read the requirements and OUTPUT a layout spec that defines CSS Grid/Flexbox structures, colors, and component placements.",
+      "tools": ["read_file", "write_file"]
+    }
+  },
+  "seats": {
+    "visual_designer": {
+      "name": "Visual Designer",
+      "roles": ["visionary"]
+    }
+  }
+}

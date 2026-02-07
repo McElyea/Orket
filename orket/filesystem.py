@@ -54,8 +54,15 @@ class FilesystemPolicy:
 
     def _in(self, path: str, roots: List[str]) -> bool:
         path = os.path.abspath(path)
+        if os.name == 'nt':
+            path = path.lower()
+            
         for r in roots:
-            if path.startswith(os.path.abspath(r)):
+            root_abs = os.path.abspath(r)
+            if os.name == 'nt':
+                root_abs = root_abs.lower()
+                
+            if path.startswith(root_abs):
                 return True
         return False
 
@@ -68,11 +75,26 @@ class FilesystemPolicy:
     def _in_domain(self, path: str) -> bool:
         if not self.spaces.work_domain:
             return False
-        return os.path.abspath(path).startswith(os.path.abspath(self.spaces.work_domain))
+        
+        path_abs = os.path.abspath(path)
+        domain_abs = os.path.abspath(self.spaces.work_domain)
+        
+        if os.name == 'nt':
+            path_abs = path_abs.lower()
+            domain_abs = domain_abs.lower()
+            
+        return path_abs.startswith(domain_abs)
 
     def _in_launch_dir_exact(self, path: str) -> bool:
         # Only allow reading the exact launch directory, not subdirectories
-        return os.path.abspath(path) == self.spaces.launch_dir
+        path_abs = os.path.abspath(path)
+        launch_abs = self.spaces.launch_dir
+        
+        if os.name == 'nt':
+            path_abs = path_abs.lower()
+            launch_abs = launch_abs.lower()
+            
+        return path_abs == launch_abs
 
     # ---------------------------------------------------------
     # Scope resolution

@@ -5,15 +5,15 @@
   "environment": "standard",
   "stories": [
     {
-      "seat": "Lead Architect",
+      "seat": "lead_architect",
       "note": "Design the solution"
     },
     {
-      "seat": "Senior Developer",
+      "seat": "senior_developer",
       "note": "Implement the code"
     },
     {
-      "seat": "Quality Assurance",
+      "seat": "quality_assurance",
       "note": "Verify the results"
     }
   ],

@@ -1,0 +1,16 @@
+{
+  "name": "Marketing Team",
+  "roles": {
+    "brand_specialist": {
+      "name": "brand_specialist",
+      "description": "Visual branding and copy specialist.",
+      "tools": ["image_generate", "write_file"]
+    }
+  },
+  "seats": {
+    "brand_architect": {
+      "name": "Brand Architect",
+      "roles": ["brand_specialist"]
+    }
+  }
+}

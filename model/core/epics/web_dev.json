@@ -5,12 +5,12 @@
   "environment": "standard",
   "stories": [
     {
-      "seat": "Creative Director",
+      "seat": "creative_director",
       "model": "qwen3-coder:latest",
       "note": "Verify the logo exists in the references and plan the landing page."
     },
     {
-      "seat": "Frontend Artisan",
+      "seat": "frontend_artisan",
       "model": "qwen3-coder:latest",
       "note": "Write the landing.html and link the logo.png."
     }

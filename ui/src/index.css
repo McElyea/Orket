@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vibe-purple: #8a2be2;
+  --color-engine-cyan: #00bfff;
+  --color-orket-dark: #0b0e14;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--color-orket-dark);
+}
+
+/* Hide scrollbars for a cleaner terminal look */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

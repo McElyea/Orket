@@ -1,0 +1,8 @@
+{
+  "name": "engine_v2_ui",
+  "owner_department": "product",
+  "epics": [
+    { "department": "product", "epic": "command_center_requirements" },
+    { "department": "marketing", "epic": "enterprise_vibe_design" }
+  ]
+}

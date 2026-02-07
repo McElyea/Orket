@@ -1,0 +1,13 @@
+{
+  "name": "layout_mockup",
+  "team": "uiux_designers",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "visual_designer",
+      "model": "qwen3-coder:latest",
+      "note": "Design the technical layout spec."
+    }
+  ],
+  "example_task": "Write 'layout_spec.md'. Describe exactly how the 50/50 top split and 3-panel 30% bottom split should look. Define CSS classes for the File Browser, Member Cards, Logs, Hardware Graph, and Telemetry Graph. Use the Brand Guide colors (Obsidian, Purple, Cyan)."
+}

@@ -1,0 +1,13 @@
+{
+  "name": "security_audit",
+  "team": "quality_team",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "security_auditor",
+      "model": "qwen2.5-coder:14b",
+      "note": "Review the scaffolded code for security leaks."
+    }
+  ],
+  "example_task": "Inspect the generated engineering files. Check for hardcoded credentials or dangerous API calls. Write 'audit_report.md'."
+}

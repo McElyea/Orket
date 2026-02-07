@@ -1,19 +1,27 @@
 # server.py
 import asyncio
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
 from pathlib import Path
 import uuid
 import json
-import os
+from datetime import datetime, timedelta
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks, HTTPException, Body
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
-from orket.orket import orchestrate, orchestrate_rock, ConfigLoader
-from orket.logging import subscribe_to_events, unsubscribe_from_events
-from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, RoleConfig, SeatConfig
-from orket.hardware import get_current_profile
+from orket.orket import orchestrate, orchestrate_rock
+from orket.logging import subscribe_to_events
+from orket.state import runtime_state
+from orket.hardware import get_current_profile, get_metrics_snapshot
+from orket.settings import load_user_settings
+from orket.persistence import PersistenceManager
+
+# ---------------------------------------------------------------------------
+# Init
+# ---------------------------------------------------------------------------
+db = PersistenceManager()
+settings = load_user_settings()
+PROJECT_ROOT = Path(__file__).parent.resolve()
 
 app = FastAPI(title="Orket EOS Engine API")
 
@@ -25,195 +33,191 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# State
+# Endpoints
 # ---------------------------------------------------------------------------
-class SessionState:
-    def __init__(self):
-        self.active_websockets: List[WebSocket] = []
-        self.runs: Dict[str, Any] = {}
-        self.event_queue = asyncio.Queue()
 
-state = SessionState()
+@app.get("/health")
+async def health(): return {"status": "ok", "port": 8082}
+
+@app.get("/system/metrics")
+async def get_metrics(): return get_metrics_snapshot()
+
+@app.get("/system/explorer")
+async def list_system_files(path: str = "."):
+    rel_path = path.strip("./") if path and path != "." else ""
+    target = (PROJECT_ROOT / rel_path).resolve()
+    if not str(target).startswith(str(PROJECT_ROOT)): raise HTTPException(403)
+    if not target.exists(): return {"items": [], "path": path}
+    
+    items = []
+    for p in target.iterdir():
+        if p.name.startswith(".") or "__pycache__" in p.name or p.name == "node_modules": continue
+        is_dir = p.is_dir()
+        is_launchable, asset_type = False, None
+        if not is_dir and p.suffix == ".json":
+            try:
+                raw = json.loads(p.read_text(encoding="utf-8"))
+                if "epics" in raw: is_launchable, asset_type = True, "rock"
+                elif "tracs" in raw or "stories" in raw: is_launchable, asset_type = True, "epic"
+            except: pass
+        items.append({"name": p.name, "is_dir": is_dir, "ext": p.suffix, "is_launchable": is_launchable, "asset_type": asset_type})
+    items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
+    return {"items": items, "path": path}
+
+@app.get("/system/read")
+async def read_system_file(path: str):
+    target = (PROJECT_ROOT / path).resolve()
+    if not str(target).startswith(str(PROJECT_ROOT)): raise HTTPException(403)
+    return {"content": target.read_text(encoding="utf-8")}
+
+@app.get("/system/calendar")
+async def get_calendar():
+    from orket.utils import get_eos_sprint
+    now = datetime.now()
+    return {
+        "current_sprint": get_eos_sprint(now),
+        "sprint_start": (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d"),
+        "sprint_end": (now + timedelta(days=4-now.weekday())).strftime("%Y-%m-%d")
+    }
+
+@app.post("/system/run-active")
+async def run_active_asset(data: Dict[str, str] = Body(...)):
+    path_str = data.get("path")
+    if not path_str: raise HTTPException(400)
+    p = Path(path_str)
+    asset_name = p.stem
+    
+    dept = "core"
+    if "model" in p.parts:
+        idx = p.parts.index("model")
+        if len(p.parts) > idx + 1: dept = p.parts[idx+1]
+
+    session_id = str(uuid.uuid4())[:8]
+    print(f"  [LAUNCH] {asset_name} (ID: {session_id})")
+
+    if "rocks" in str(p):
+        db.start_session(session_id, "rock", asset_name, dept, "Ignited")
+        task = asyncio.create_task(run_rock_task(session_id, asset_name, dept))
+        runtime_state.active_tasks[session_id] = task
+        return {"session_id": session_id, "type": "rock"}
+    else:
+        db.start_session(session_id, "epic", asset_name, dept, "Ignited")
+        task = asyncio.create_task(run_epic_task(session_id, asset_name, dept))
+        runtime_state.active_tasks[session_id] = task
+        return {"session_id": session_id, "type": "epic"}
+
+@app.post("/system/halt")
+async def halt_session(data: Dict[str, str] = Body(...)):
+    session_id = data.get("session_id")
+    if not session_id:
+        # Halt ALL active tasks if no session_id provided
+        count = 0
+        for sid, task in list(runtime_state.active_tasks.items()):
+            task.cancel()
+            count += 1
+        return {"ok": True, "message": f"Halted {count} active sessions."}
+    
+    if session_id in runtime_state.active_tasks:
+        runtime_state.active_tasks[session_id].cancel()
+        return {"ok": True, "message": f"Session {session_id} halted."}
+    return {"ok": False, "error": "Session not found or not active."}
+
+@app.post("/system/refresh-engines")
+async def refresh_engines():
+    from orket.discovery import refresh_engine_mappings
+    recs = refresh_engine_mappings()
+    return {"ok": True, "recommendations": recs}
+
+@app.get("/system/recommendations")
+async def get_system_recommendations():
+    from orket.discovery import get_engine_recommendations
+    return {"suggestions": get_engine_recommendations()}
+
+@app.get("/system/board")
+async def get_system_board(dept: str = "core"):
+    from orket.board import get_board_hierarchy
+    return get_board_hierarchy(dept)
+
+@app.get("/runs")
+async def list_runs(): return db.get_recent_runs()
+
+@app.get("/runs/{session_id}/backlog")
+async def get_backlog(session_id: str): return db.get_session_books(session_id)
+
+@app.patch("/backlog/{book_id}")
+async def patch_book(book_id: str, data: Dict[str, str] = Body(...)):
+    db.update_book_status(book_id, data["status"])
+    return {"ok": True}
+
+@app.post("/conductor/intervene")
+async def conductor_intervene(session_id: str = Body(...), seat: str = Body(...), action: str = Body(...)):
+    if session_id not in runtime_state.interventions: runtime_state.interventions[session_id] = {}
+    runtime_state.interventions[session_id][seat] = action
+    return {"ok": True}
 
 # ---------------------------------------------------------------------------
-# Background Tasks
+# Runners
 # ---------------------------------------------------------------------------
+
+async def run_epic_task(session_id: str, epic_name: str, department: str):
+    workspace = Path(f"workspace/runs/{session_id}")
+    try:
+        transcript = await orchestrate(epic_name, workspace, department, session_id=session_id)
+        db.update_session_status(session_id, "completed", 0, transcript)
+    except asyncio.CancelledError:
+        print(f"  [HALT] {session_id} canceled by user.")
+        db.update_session_status(session_id, "halted")
+    except Exception as e:
+        print(f"  [FAIL] {session_id}: {e}")
+        db.update_session_status(session_id, "failed")
+    finally:
+        runtime_state.active_tasks.pop(session_id, None)
+
+async def run_rock_task(session_id: str, rock_name: str, department: str):
+    workspace = Path(f"workspace/runs/{session_id}")
+    try:
+        from orket.orket import orchestrate_rock
+        result = await orchestrate_rock(rock_name, workspace, department, session_id=session_id)
+        db.update_session_status(session_id, "completed", 0, result)
+    except asyncio.CancelledError:
+        print(f"  [HALT] {session_id} canceled by user.")
+        db.update_session_status(session_id, "halted")
+    except Exception as e:
+        print(f"  [FAIL] {session_id}: {e}")
+        db.update_session_status(session_id, "failed")
+    finally:
+        runtime_state.active_tasks.pop(session_id, None)
+
+# ---------------------------------------------------------------------------
+# WS
+# ---------------------------------------------------------------------------
+
 async def event_broadcaster():
     while True:
-        record = await state.event_queue.get()
-        dead_sockets = []
-        for ws in state.active_websockets:
-            try:
-                await ws.send_json(record)
-            except:
-                dead_sockets.append(ws)
-        for ws in dead_sockets:
-            if ws in state.active_websockets:
-                state.active_websockets.remove(ws)
-        state.event_queue.task_done()
+        record = await runtime_state.event_queue.get()
+        for ws in list(runtime_state.active_websockets):
+            try: await ws.send_json(record)
+            except: 
+                if ws in runtime_state.active_websockets: runtime_state.active_websockets.remove(ws)
+        runtime_state.event_queue.task_done()
 
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(event_broadcaster())
     def on_log_record(record):
         loop = asyncio.get_event_loop()
-        loop.call_soon_threadsafe(state.event_queue.put_nowait, record)
+        loop.call_soon_threadsafe(runtime_state.event_queue.put_nowait, record)
     subscribe_to_events(on_log_record)
-
-# ---------------------------------------------------------------------------
-# Models
-# ---------------------------------------------------------------------------
-class EpicRequest(BaseModel):
-    epic: str
-    department: str = "core"
-    task_override: Optional[str] = None
-    model_override: Optional[str] = None
-
-class RockRequest(BaseModel):
-    rock: str
-    department: str = "core"
-    task_override: Optional[str] = None
-
-# ---------------------------------------------------------------------------
-# System & Discovery Endpoints
-# ---------------------------------------------------------------------------
-
-@app.get("/health")
-async def health():
-    return {"status": "ok", "framework": "EOS"}
-
-@app.get("/hardware")
-async def get_hardware():
-    return get_current_profile()
-
-@app.get("/departments")
-async def list_departments():
-    model_root = Path("model")
-    return {"departments": [d.name for d in model_root.iterdir() if d.is_dir()]}
-
-@app.get("/departments/{dept}/assets")
-async def get_dept_assets(dept: str):
-    loader = ConfigLoader(Path("model"), dept)
-    return {
-        "rocks": loader.list_assets("rocks"),
-        "epics": loader.list_assets("epics"),
-        "teams": loader.list_assets("teams"),
-        "environments": loader.list_assets("environments")
-    }
-
-# ---------------------------------------------------------------------------
-# Asset CRUD (UI Editor Support)
-# ---------------------------------------------------------------------------
-
-@app.get("/departments/{dept}/{category}/{name}")
-async def get_asset(dept: str, category: str, name: str):
-    loader = ConfigLoader(Path("model"), dept)
-    # Map category to schema model
-    schema_map = {
-        "epics": EpicConfig,
-        "teams": TeamConfig,
-        "rocks": RockConfig,
-        "environments": EnvironmentConfig
-    }
-    if category not in schema_map: raise HTTPException(400, "Invalid category")
-    try:
-        return loader.load_asset(category, name, schema_map[category])
-    except Exception as e: raise HTTPException(404, str(e))
-
-@app.post("/departments/{dept}/{category}/{name}")
-async def save_asset(dept: str, category: str, name: str, data: Dict[str, Any] = Body(...)):
-    """Saves or updates an EOS asset JSON file."""
-    model_root = Path("model")
-    dest_dir = model_root / dept / category
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    
-    file_path = dest_dir / f"{name}.json"
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-    return {"ok": True, "path": str(file_path)}
-
-# ---------------------------------------------------------------------------
-# Execution & Run Management
-# ---------------------------------------------------------------------------
-
-@app.get("/runs")
-async def list_runs():
-    return state.runs
-
-@app.get("/runs/{session_id}")
-async def get_run_status(session_id: str):
-    if session_id not in state.runs: raise HTTPException(404, "Run not found")
-    return state.runs[session_id]
-
-@app.post("/epics/run")
-async def run_epic(req: EpicRequest):
-    session_id = str(uuid.uuid4())
-    state.runs[session_id] = {"status": "running", "type": "epic", "name": req.epic, "department": req.department}
-    asyncio.create_task(run_epic_task(session_id, req))
-    return {"session_id": session_id}
-
-@app.post("/rocks/run")
-async def run_rock(req: RockRequest):
-    session_id = str(uuid.uuid4())
-    state.runs[session_id] = {"status": "running", "type": "rock", "name": req.rock, "department": req.department}
-    asyncio.create_task(run_rock_task(session_id, req))
-    return {"session_id": session_id}
-
-async def run_epic_task(session_id: str, req: EpicRequest):
-    workspace = Path(f"workspace/runs/{session_id}")
-    try:
-        transcript = await orchestrate(req.epic, workspace, req.department, req.model_override, req.task_override)
-        state.runs[session_id].update({"status": "completed", "transcript": transcript})
-    except Exception as e:
-        state.runs[session_id].update({"status": "failed", "error": str(e)})
-
-async def run_rock_task(session_id: str, req: RockRequest):
-    workspace = Path(f"workspace/runs/{session_id}")
-    try:
-        result = await orchestrate_rock(req.rock, workspace, req.department, req.task_override)
-        state.runs[session_id].update({"status": "completed", "result": result})
-    except Exception as e:
-        state.runs[session_id].update({"status": "failed", "error": str(e)})
-
-# ---------------------------------------------------------------------------
-# Workspace Explorer
-# ---------------------------------------------------------------------------
-
-@app.get("/workspaces/{session_id}/files")
-async def list_workspace_files(session_id: str, path: str = "."):
-    base = Path(f"workspace/runs/{session_id}")
-    target = (base / path).resolve()
-    
-    # Security: Ensure we don't escape the workspace
-    if not str(target).startswith(str(base.resolve())):
-        raise HTTPException(403, "Access Denied")
-    
-    if not target.exists(): return {"items": []}
-    
-    items = []
-    for p in target.iterdir():
-        items.append({
-            "name": p.name,
-            "is_dir": p.is_dir(),
-            "size": p.stat().st_size if not p.is_dir() else 0,
-            "ext": p.suffix
-        })
-    return {"items": items, "path": path}
-
-# ---------------------------------------------------------------------------
-# Real-time Events
-# ---------------------------------------------------------------------------
 
 @app.websocket("/ws/events")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    state.active_websockets.append(websocket)
+    runtime_state.active_websockets.append(websocket)
     try:
         while True: await websocket.receive_text()
     except WebSocketDisconnect:
-        if websocket in state.active_websockets:
-            state.active_websockets.remove(websocket)
+        if websocket in runtime_state.active_websockets: runtime_state.active_websockets.remove(websocket)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8080)
+    uvicorn.run("server:app", host="127.0.0.1", port=8082, reload=True)

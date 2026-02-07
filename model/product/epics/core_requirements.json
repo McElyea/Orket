@@ -1,0 +1,13 @@
+{
+  "name": "core_requirements",
+  "team": "product_owners",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "product_owner",
+      "model": "deepseek-r1:32b",
+      "note": "Document the frontend requirements for Orket."
+    }
+  ],
+  "example_task": "Create 'requirements.md' for the Orket Dashboard. MANDATORY LAYOUT: Top Left (50% width, 70% height) is a real-time File Browser with live editing view. Top Right (50% width, 70% height) is a Dynamic Member Display showing active Seats/Models with detail levels by role (Coders show files, Reviewers show docs). Bottom 30% split into 3 panels: 1. Raw Text Logs, 2. Computer Performance Graphs (CPU/RAM/VRAM), 3. Engine Telemetry Graphs."
+}

@@ -5,12 +5,12 @@
   "environment": "standard",
   "stories": [
     {
-      "seat": "Creative Director",
+      "seat": "creative_director",
       "model": "qwen3-coder:latest",
       "note": "Define the prompt for the logo."
     },
     {
-      "seat": "Frontend Artisan",
+      "seat": "frontend_artisan",
       "model": "qwen3-coder:latest",
       "note": "Generate the logo file using image_generate."
     }

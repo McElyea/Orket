@@ -6,19 +6,19 @@
   "iterations": 2,
   "stories": [
     {
-      "seat": "Creative Director",
+      "seat": "creative_director",
       "model": "qwen3-coder:latest",
       "governance": "once",
       "note": "Set the visual direction in Round 1 only."
     },
     {
-      "seat": "Frontend Artisan",
+      "seat": "frontend_artisan",
       "model": "deepseek-coder:33B",
       "governance": "always",
       "note": "Refine the CSS every round."
     },
     {
-      "seat": "Quality Inspector",
+      "seat": "quality_inspector",
       "model": "qwen2.5-coder:14b",
       "governance": "final",
       "note": "Perform a technical audit in the final round only."

@@ -1,0 +1,10 @@
+{
+  "name": "core_baseline",
+  "description": "Establish foundational system configurations.",
+  "team": "standard",
+  "environment": "standard",
+  "stories": [
+    { "summary": "Verify hardware profile and update settings.", "seat": "lead_architect" },
+    { "summary": "Establish core security policies and file access permissions.", "seat": "security_auditor" }
+  ]
+}

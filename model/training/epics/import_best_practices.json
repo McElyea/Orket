@@ -1,0 +1,19 @@
+{
+  "name": "import_best_practices",
+  "description": "Epic to import and tune industry-standard prompts (Aider/Cursor) for local models.",
+  "team": "training_experts",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "prompt_engineer",
+      "model": "deepseek-r1:32b",
+      "note": "Draft the high-precision Aider-style prompt."
+    },
+    {
+      "seat": "master_coach",
+      "model": "qwen3-coder:latest",
+      "note": "Validate the draft and use the 'promote_prompt' tool to save it to the core library for the Frontend Artisan."
+    }
+  ],
+  "example_task": "Promote the new 'Precision Coder' prompt to the core library. TARGET SEAT: frontend_artisan. MODEL FAMILY: deepseek. Use the tool 'promote_prompt'."
+}

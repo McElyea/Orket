@@ -1,0 +1,14 @@
+{
+  "name": "dashboard_production",
+  "team": "engineering_team",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "frontend_artisan",
+      "model": "deepseek-coder:33B",
+      "note": "Final High-Fidelity Implementation."
+    }
+  ],
+  "references": ["references/frontend_templates"],
+  "example_task": "Deliver the FINAL dashboard. REQS: 1. Use 'dashboard_base.html' as your template for index.html. 2. main.js MUST use Chart.js to render real-time CPU/RAM/VRAM from http://127.0.0.1:8080/system/metrics. 3. main.js MUST connect to ws://127.0.0.1:8080/ws/events and append log records to the 'logs' panel. 4. Populate the 'member-list' by fetching /runs."
+}

@@ -1,0 +1,19 @@
+{
+  "name": "void_lore",
+  "team": "creative_guild",
+  "environment": "standard",
+  "tracs": [
+    {
+      "summary": "Ship Lore & Backstory",
+      "seat": "narrative_lead",
+      "priority": "High",
+      "note": "Define the CSS-01 'Icarus' derelict ship and why it's dark."
+    },
+    {
+      "summary": "Mechanics: Oxygen & Fear",
+      "seat": "narrative_lead",
+      "priority": "Medium",
+      "note": "Define the state variables for the game loop."
+    }
+  ]
+}

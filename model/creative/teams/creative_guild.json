@@ -1,0 +1,25 @@
+{
+  "name": "Creative Guild",
+  "roles": {
+    "world_builder": {
+      "name": "world_builder",
+      "description": "Master of lore, atmosphere, and game mechanics. You excel at creating immersive, high-stakes environments.",
+      "tools": ["write_file", "read_file"]
+    },
+    "concept_artist": {
+      "name": "concept_artist",
+      "description": "Visual specialist. You turn text lore into striking image prompts and actual assets.",
+      "tools": ["image_generate", "write_file"]
+    }
+  },
+  "seats": {
+    "narrative_lead": {
+      "name": "Narrative Lead",
+      "roles": ["world_builder"]
+    },
+    "visual_director": {
+      "name": "Visual Director",
+      "roles": ["concept_artist"]
+    }
+  }
+}

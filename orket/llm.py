@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, List
 from pathlib import Path
+import asyncio
 import ollama
 
 @dataclass
@@ -14,10 +15,11 @@ class LocalModelProvider:
     Asynchronous Local model provider using the 'ollama' library.
     """
 
-    def __init__(self, model: str, temperature: float = 0.2, seed: Optional[int] = None):
+    def __init__(self, model: str, temperature: float = 0.2, seed: Optional[int] = None, timeout: int = 300):
         self.model = model
         self.temperature = temperature
         self.seed = seed
+        self.timeout = timeout
         self.client = ollama.AsyncClient()
 
     async def complete(self, messages: List[Dict[str, str]]) -> ModelResponse:
@@ -31,10 +33,13 @@ class LocalModelProvider:
             options["seed"] = self.seed
 
         try:
-            response = await self.client.chat(
-                model=self.model,
-                messages=messages,
-                options=options
+            response = await asyncio.wait_for(
+                self.client.chat(
+                    model=self.model,
+                    messages=messages,
+                    options=options
+                ),
+                timeout=self.timeout
             )
             
             content = response.get("message", {}).get("content", "")
@@ -57,6 +62,14 @@ class LocalModelProvider:
 
             return ModelResponse(content=content, raw=raw)
 
+        except asyncio.TimeoutError:
+            return ModelResponse(
+                content=f"[Timeout]: Model {self.model} failed to respond within {self.timeout}s.",
+                raw={"error": "timeout", "model": self.model}
+            )
+        except asyncio.CancelledError:
+            # Re-raise to allow task cancellation to propagate
+            raise
         except Exception as e:
             # Fallback for when Ollama is not running or other errors
             return ModelResponse(

@@ -1,0 +1,12 @@
+{
+  "name": "frontend_launch",
+  "owner_department": "product",
+  "task": "Build a high-fidelity, real-time Orket Dashboard using React, Tailwind, and Monaco. The layout must be a 50/50 vertical split with a 3-panel footer. Connect to the Rig API on port 8082.",
+  "epics": [
+    { "department": "product", "epic": "core_requirements" },
+    { "department": "marketing", "epic": "brand_package" },
+    { "department": "uiux", "epic": "layout_mockup" },
+    { "department": "engineering", "epic": "dashboard_scaffold" },
+    { "department": "quality", "epic": "security_audit" }
+  ]
+}

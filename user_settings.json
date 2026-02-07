@@ -1,7 +1,8 @@
 {
     "setup_complete": true,
-    "hardware_profile": "mid-range (14B optimized)",
+    "hardware_profile": "auto-detected",
+    "dashboard_password": "orket-vibe-dawn-2026",
+    "dashboard_secret_key": "vibe-secret-change-me-later",
     "preferred_coder": "qwen2.5-coder:14b",
-    "preferred_architect": "deepseek-r1:32b",
-    "preferred_venue": "specialized"
+    "preferred_architect": "deepseek-r1:32b"
 }

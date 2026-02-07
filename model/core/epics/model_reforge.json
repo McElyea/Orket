@@ -1,0 +1,10 @@
+{
+  "name": "model_reforge",
+  "description": "Reforge models to optimize tool-calling precision.",
+  "team": "standard",
+  "environment": "standard",
+  "stories": [
+    { "summary": "Audit current model response patterns for tool triggers.", "seat": "senior_developer" },
+    { "summary": "Update model-specific prompt patches to improve tool adherence.", "seat": "senior_developer" }
+  ]
+}

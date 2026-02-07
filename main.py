@@ -3,7 +3,7 @@ import argparse
 from pathlib import Path
 import asyncio
 
-from orket.orket import orchestrate
+from orket.orket import orchestrate, orchestrate_rock
 from orket.discovery import print_orket_manifest, perform_first_run_setup
 
 
@@ -13,8 +13,15 @@ def parse_args():
     parser.add_argument(
         "--epic",
         type=str,
-        required=True,
-        help="Name of the epic to run (e.g. 'standard').",
+        default=None,
+        help="Name of the epic to run.",
+    )
+
+    parser.add_argument(
+        "--rock",
+        type=str,
+        default=None,
+        help="Name of the rock to run.",
     )
 
     parser.add_argument(
@@ -51,33 +58,88 @@ def parse_args():
         help="Optional task description to override the epic's default example task.",
     )
 
+    parser.add_argument(
+        "--board",
+        action="store_true",
+        help="Display the top-down tree view of Rocks, Epics, and Books.",
+    )
+
     return parser.parse_args()
 
 
+def print_board(hierarchy: dict):
+    print(f"\n{'='*60}\n ORKET PROJECT BOARD (Tree View)\n{'='*60}")
+    
+    for rock in hierarchy["rocks"]:
+        print(f"\n[ROCK] {rock['name']}")
+        for epic in rock.get("epics", []):
+            if "error" in epic:
+                print(f"  ↳ [EPIC] {epic['name']} (Error: {epic['error']})")
+                continue
+            print(f"  ↳ [EPIC] {epic['name']}")
+            for book in epic.get("books", []):
+                print(f"    - [{book['id']}] {book['summary']} ({book['seat']})")
+                
+    if hierarchy["orphaned_epics"]:
+        print(f"\n[STANDALONE EPICS] (ALERT: These should be assigned to a Rock!)")
+        for epic in hierarchy["orphaned_epics"]:
+            print(f"  ⊷ {epic['name']}")
+            for book in epic.get("books", []):
+                print(f"    - [{book['id']}] {book['summary']} ({book['seat']})")
+    print(f"\n{'='*60}\n")
+
+
 def main():
-    perform_first_run_setup()
-    print_orket_manifest()
-    args = parse_args()
+    try:
+        perform_first_run_setup()
+        args = parse_args()
+        
+        if args.board:
+            from orket.board import get_board_hierarchy
+            hierarchy = get_board_hierarchy(args.department)
+            print_board(hierarchy)
+            return
 
-    workspace = Path(args.workspace).resolve()
+        print_orket_manifest(args.department)
 
-    print(f"Running Orket Epic: {args.epic} (Department: {args.department})")
+        workspace = Path(args.workspace).resolve()
 
-    transcript = asyncio.run(orchestrate(
-        epic_name=args.epic,
-        workspace=workspace,
-        department=args.department,
-        model_override=args.model,
-        task_override=args.task,
-        interactive_conductor=args.interactive_conductor,
-    ))
+        if args.rock:
+            print(f"Running Orket Rock: {args.rock} (Department: {args.department})")
+            result = asyncio.run(orchestrate_rock(
+                rock_name=args.rock,
+                workspace=workspace,
+                department=args.department,
+                task_override=args.task
+            ))
+            print(f"\n=== Rock {args.rock} Complete ===")
+            return
 
-    print("\n=== Orket EOS Run Complete ===")
-    for entry in transcript:
-        idx = entry["step_index"]
-        role = entry["role"]
-        print(f"\n--- Story {idx} ({role}) ---")
-        print(entry["summary"])
+        if not args.epic:
+            print("Error: Must specify either --epic or --rock")
+            return
+
+        print(f"Running Orket Epic: {args.epic} (Department: {args.department})")
+
+            transcript = asyncio.run(orchestrate(
+                epic_name=args.epic,
+                workspace=workspace,
+                department=args.department,
+                model_override=args.model,
+                task_override=args.task,
+                interactive_conductor=args.interactive_conductor,
+            ))
+        
+            print("\n=== Orket EOS Run Complete ===")
+            for entry in transcript:
+                idx = entry.get("step_index", "?")
+                role = entry["role"]
+                print(f"\n--- Book {idx} ({role}) ---")
+                print(entry["summary"])            
+    except KeyboardInterrupt:
+        print("\n[HALT] Interrupted by user. Exiting...")
+    except Exception as e:
+        print(f"\n[FATAL] {e}")
 
 
 if __name__ == "__main__":

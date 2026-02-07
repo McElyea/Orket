@@ -1,0 +1,13 @@
+{
+  "name": "enterprise_vibe_design",
+  "team": "marketing_pros",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "brand_architect",
+      "model": "qwen3-coder:latest",
+      "note": "Define the final Tailwind color configuration."
+    }
+  ],
+  "example_task": "Create 'tailwind_theme.json'. Define the exact hex codes for 'Orket Dark' (background), 'Vibe Purple' (accents), and 'Engine Cyan' (telemetry). Ensure they meet enterprise readability standards."
+}

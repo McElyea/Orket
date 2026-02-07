@@ -19,15 +19,15 @@
     }
   },
   "seats": {
-    "Lead Architect": {
+    "lead_architect": {
       "name": "Lead Architect",
       "roles": ["architect"]
     },
-    "Senior Developer": {
+    "senior_developer": {
       "name": "Senior Developer",
       "roles": ["coder"]
     },
-    "Quality Assurance": {
+    "quality_assurance": {
       "name": "Quality Assurance",
       "roles": ["reviewer"]
     }

@@ -13,11 +13,15 @@ def unsubscribe_from_events(callback: Callable[[Dict[str, Any]], None]):
     if callback in _subscribers:
         _subscribers.remove(callback)
 
+from orket.utils import sanitize_name
+
 def _log_path(workspace: Path, role: str = None) -> Path:
     if role:
         agent_dir = workspace / "agents"
         agent_dir.mkdir(parents=True, exist_ok=True)
-        return agent_dir / f"{role}.log"
+        # Sanitize name for filename consistency
+        safe_name = sanitize_name(role)
+        return agent_dir / f"{safe_name}.log"
     workspace.mkdir(parents=True, exist_ok=True)
     return workspace / "orket.log"
 
@@ -50,7 +54,7 @@ def log_event(event: str, data: Dict[str, Any], workspace: Path, role: str = Non
             pass # Prevent one bad subscriber from breaking the engine
 
 
-def log_model_selected(role: str, model: str, temperature: float, seed, flow: str, workspace: Path) -> None:
+def log_model_selected(role: str, model: str, temperature: float, seed, epic: str, workspace: Path) -> None:
     log_event(
         "model_selected",
         {
@@ -58,19 +62,19 @@ def log_model_selected(role: str, model: str, temperature: float, seed, flow: st
             "model": model,
             "temperature": temperature,
             "seed": seed,
-            "flow": flow,
+            "epic": epic,
         },
         workspace=workspace,
     )
 
 
-def log_model_usage(role: str, model: str, tokens: Dict[str, Any], step_index: int, flow: str, workspace: Path) -> None:
+def log_model_usage(role: str, model: str, tokens: Dict[str, Any], step_index: int, epic: str, workspace: Path) -> None:
     log_event(
         "model_usage",
         {
             "role": role,
             "model": model,
-            "flow": flow,
+            "epic": epic,
             "step_index": step_index,
             "input_tokens": tokens.get("input_tokens"),
             "output_tokens": tokens.get("output_tokens"),
