@@ -1,0 +1,13 @@
+{
+  "name": "void_visuals",
+  "team": "creative_guild",
+  "environment": "standard",
+  "tracs": [
+    {
+      "summary": "Concept Art: Cargo Bay",
+      "seat": "visual_director",
+      "priority": "Medium",
+      "note": "Generate an image showing the rusted, flickering corridors."
+    }
+  ]
+}

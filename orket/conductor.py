@@ -30,36 +30,36 @@ class Conductor:
         return
 
     # Optional hooks for model logging; can be called from orchestrator
-    def log_session_models(self, team, provider, workspace, project_name: str) -> None:
+    def log_session_models(self, team, provider, workspace, epic_name: str) -> None:
         for role_name in team.roles.keys():
             log_model_selected(
                 role=role_name,
                 model=getattr(provider, "model", "unknown"),
                 temperature=getattr(provider, "temperature", None),
                 seed=getattr(provider, "seed", None),
-                flow=project_name, # Map project_name to 'flow' field in legacy logs
+                epic=epic_name, 
                 workspace=workspace,
             )
 
-    def log_model_override(self, role: str, new_model: str, project_name: str, workspace) -> None:
+    def log_model_override(self, role: str, new_model: str, epic_name: str, workspace) -> None:
         log_event(
             "model_override",
             {
                 "role": role,
                 "new_model": new_model,
-                "project": project_name,
+                "epic": epic_name,
             },
             workspace=workspace,
         )
 
-    def log_fallback(self, role: str, from_model: str, to_model: str, project_name: str, workspace) -> None:
+    def log_fallback(self, role: str, from_model: str, to_model: str, epic_name: str, workspace) -> None:
         log_event(
             "model_fallback",
             {
                 "role": role,
                 "from_model": from_model,
                 "to_model": to_model,
-                "project": project_name,
+                "epic": epic_name,
             },
             workspace=workspace,
         )

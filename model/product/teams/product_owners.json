@@ -1,0 +1,16 @@
+{
+  "name": "Product Team",
+  "roles": {
+    "analyst": {
+      "name": "analyst",
+      "description": "Product analyst responsible for defining technical requirements and user stories.",
+      "tools": ["list_dir", "read_file", "write_file"]
+    }
+  },
+  "seats": {
+    "product_owner": {
+      "name": "Product Owner",
+      "roles": ["analyst"]
+    }
+  }
+}

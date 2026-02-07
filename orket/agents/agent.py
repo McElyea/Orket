@@ -5,6 +5,8 @@ from orket.logging import log_event, log_model_usage
 import json
 
 
+from orket.utils import sanitize_name
+
 class Agent:
     """
     Single authoritative Agent class for Orket.
@@ -32,7 +34,9 @@ class Agent:
         elif "deepseek" in model_name: family = "deepseek"
         elif "gemma" in model_name: family = "gemma"
         
-        prompt_path = Path("prompts") / self.name / f"{family}.txt"
+        # Sanitize seat name for directory lookup
+        safe_name = sanitize_name(self.name)
+        prompt_path = Path("prompts") / safe_name / f"{family}.txt"
         if prompt_path.exists():
             try:
                 override = prompt_path.read_text(encoding="utf-8")
@@ -144,13 +148,42 @@ class Agent:
                 role=self.name,
                 model=result.raw.get("model", getattr(self.provider, "model", "unknown")),
                 tokens=tokens,
-                step_index=context.get("step_index", -1),
-                flow=context.get("flow_name", "unknown"),
+                step_index=context.get("story_index", -1),
+                epic=context.get("epic_name", "unknown"),
                 workspace=workspace,
             )
 
         # Try to interpret as a tool call
         tool_name, args = self._parse_tool_call(text)
+
+        # --- FORCEFUL PERSISTENCE (Auto-Extract) ---
+        if tool_name is None and "```" in text:
+            extracted_files = self._auto_extract_files(text)
+            tool_fn = self.tools.get("write_file")
+            
+            if extracted_files and tool_fn:
+                persist_notes = []
+                for file_info in extracted_files:
+                    path_str, content = file_info["path"], file_info["content"]
+                    try:
+                        import inspect
+                        if inspect.iscoroutine(tool_fn) or inspect.iscoroutinefunction(tool_fn):
+                            res = await tool_fn({"path": path_str, "content": content}, context=context)
+                        else:
+                            res = tool_fn({"path": path_str, "content": content}, context=context)
+                        
+                        if res.get("ok"):
+                            persist_notes.append(path_str)
+                            log_event("auto_persist", {"path": path_str, "role": self.name}, workspace=workspace)
+                        else:
+                            pass
+                    except: pass
+                
+                if persist_notes:
+                    return type("Response", (), {
+                        "content": f"[AUTO-PERSISTED: {', '.join(persist_notes)}]\n\n{text}",
+                        "note": f"role={self.name}, auto_persist"
+                    })
 
         if tool_name is None:
             # No tool call — return raw text
@@ -209,6 +242,8 @@ class Agent:
                     },
                 )
 
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             log_event(
                 "tool_error",
@@ -230,3 +265,47 @@ class Agent:
                     "note": f"role={self.name}, tool={tool_name}, error",
                 },
             )
+
+    def _auto_extract_files(self, text: str) -> List[Dict[str, str]]:
+        """
+        Aggressively scans text for markdown code blocks and filename hints.
+        """
+        import re
+        files = []
+        # Support various code block styles
+        blocks = re.findall(r"```(?:\w+)?\s*\n(.*?)\n```", text, re.DOTALL)
+        segments = re.split(r"```(?:\w+)?\s*\n.*?\n```", text, flags=re.DOTALL)
+        
+        for i, block in enumerate(blocks):
+            if i >= len(segments): break
+            content = block.strip()
+            if len(content) < 5: continue
+
+            # Try to find a hint in the last few lines before the block
+            pre_context = segments[i].strip().splitlines()[-3:]
+            pre_text = " ".join(pre_context)
+            
+            filename = None
+            patterns = [
+                r"(?:[Ff]ile|[Pp]ath|写入|[Cc]reate|新建|Name|Target):\s*([\w\.\-/]+\.\w+)",
+                r"\*\*([\w\.\-/]+\.\w+)\*\*",
+                r"([\w\.\-/]+\.\w+):",
+                r"(?:^|\s)([\w\.\-/]+\.\w+)(?:\s|$)"
+            ]
+            
+            for p in patterns:
+                match = re.search(p, pre_text)
+                if match:
+                    filename = match.group(1)
+                    break
+            
+            # Fallback for common types
+            if not filename:
+                if "# " in content[:50]: filename = f"document_{i+1}.md"
+                elif "{" in content[:10]: filename = f"data_{i+1}.json"
+                elif "import " in content or "def " in content: filename = f"script_{i+1}.py"
+                else: filename = f"artifact_{i+1}.txt"
+            
+            files.append({"path": filename, "content": content})
+        
+        return files

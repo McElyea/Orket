@@ -1,0 +1,16 @@
+{
+  "name": "engineering_team",
+  "roles": {
+    "artisan": {
+      "name": "artisan",
+      "description": "Expert Web Developer. YOUR MISSION: Deliver a fully functional, high-fidelity dashboard. You MUST write the complete JavaScript logic to fetch data from /system/metrics and /system/telemetry. You MUST implement the WebSocket listener for /ws/events to show logs. You MUST use Chart.js for the 3 bottom graph panels. No placeholders allowed.",
+      "tools": ["write_file", "read_file", "list_dir"]
+    }
+  },
+  "seats": {
+    "frontend_artisan": {
+      "name": "Frontend Artisan",
+      "roles": ["artisan"]
+    }
+  }
+}

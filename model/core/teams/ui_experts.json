@@ -19,15 +19,15 @@
     }
   },
   "seats": {
-    "Creative Director": {
+    "creative_director": {
       "name": "Creative Director",
       "roles": ["designer"]
     },
-    "Frontend Artisan": {
+    "frontend_artisan": {
       "name": "Frontend Artisan",
       "roles": ["stylist"]
     },
-    "Quality Inspector": {
+    "quality_inspector": {
       "name": "Quality Inspector",
       "roles": ["critic"]
     }

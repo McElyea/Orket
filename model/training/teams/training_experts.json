@@ -1,0 +1,25 @@
+{
+  "name": "training_experts",
+  "roles": {
+    "tuner": {
+      "name": "tuner",
+      "description": "Expert in Prompt Engineering. You specialize in SEARCH/REPLACE logic, few-shot prompting, and strict instruction following. Your goal is to maximize 'Traction' and minimize 'Chattiness'.",
+      "tools": ["read_file", "write_file", "list_dir"]
+    },
+    "coach": {
+      "name": "coach",
+      "description": "Senior Orchestration Coach. You verify snapshots against logs and officially graduate prompts into production.",
+      "tools": ["archive_eval", "promote_prompt", "read_file"]
+    }
+  },
+  "seats": {
+    "prompt_engineer": {
+      "name": "Prompt Engineer",
+      "roles": ["tuner"]
+    },
+    "master_coach": {
+      "name": "Master Coach",
+      "roles": ["coach"]
+    }
+  }
+}

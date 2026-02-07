@@ -39,6 +39,29 @@ def get_current_profile() -> HardwareProfile:
         has_nvidia=(vram > 0)
     )
 
+def get_metrics_snapshot() -> Dict[str, Any]:
+    """Returns real-time usage stats for graphs."""
+    vm = psutil.virtual_memory()
+    return {
+        "cpu_percent": psutil.cpu_percent(interval=None),
+        "ram_percent": vm.percent,
+        "vram_gb_used": get_vram_usage(),
+        "vram_total_gb": get_vram_info(),
+        "timestamp": os.getlogin() # Placeholder for timestamp logic
+    }
+
+def get_vram_usage() -> float:
+    try:
+        res = subprocess.run(
+            ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, check=True
+        )
+        total_used = 0
+        for line in res.stdout.strip().splitlines():
+            total_used += int(line)
+        return total_used / 1024.0
+    except: return 0.0
+
 class ToolTier:
     """Definitions for Hardware Requirements."""
     TIER_0_UTILITY = "utility"   # No reqs

@@ -1,0 +1,10 @@
+{
+  "name": "project_void",
+  "owner_department": "creative",
+  "task": "Design a horror text-adventure 'VOID'. Produce lore, concept art, and a Python engine.",
+  "epics": [
+    { "department": "creative", "epic": "void_lore" },
+    { "department": "creative", "epic": "void_visuals" },
+    { "department": "engineering", "epic": "void_engine" }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Orket Knowledge Catalog",
+  "updated_at": "2026-02-07",
+  "mappings": {
+    "coder": {
+      "tier": "mid",
+      "keywords": ["coder", "code", "starcoder"],
+      "fallback": "qwen2.5-coder:7b",
+      "catalog": [
+        { "model": "qwen2.5-coder:32b", "tier": "high", "description": "State-of-the-art coding & reasoning. Best for complex refactoring." },
+        { "model": "qwen2.5-coder:7b", "tier": "base", "description": "Fast, reliable coding. Perfect for most Tracs." },
+        { "model": "deepseek-coder-v2", "tier": "mid", "description": "Excellent logic and multi-language support." }
+      ]
+    },
+    "architect": {
+      "tier": "base",
+      "keywords": ["llama", "mistral", "r1"],
+      "fallback": "llama3.1:8b",
+      "catalog": [
+        { "model": "deepseek-r1:32b", "tier": "high", "description": "High reasoning for complex architecture and security audits." },
+        { "model": "llama3.3:70b", "tier": "ultra", "description": "The gold standard for decision making. Requires high VRAM." },
+        { "model": "llama3.1:8b", "tier": "base", "description": "Solid generalist for standard system design." }
+      ]
+    },
+    "vision": {
+      "tier": "vision",
+      "keywords": ["vision", "llava"],
+      "fallback": "llama3.2-vision",
+      "catalog": [
+        { "model": "llama3.2-vision:11b", "tier": "vision", "description": "Best-in-class local UI/UX analysis and OCR." },
+        { "model": "minicpm-v", "tier": "base", "description": "Excellent performance on lower-spec hardware." }
+      ]
+    },
+    "general": {
+      "tier": "mini",
+      "keywords": ["phi", "gemma", "tiny"],
+      "fallback": "phi3:mini",
+      "catalog": [
+        { "model": "phi3.5:latest", "tier": "mini", "description": "Extremely fast for utility tasks and simple automation." },
+        { "model": "gemma2:9b", "tier": "base", "description": "High-quality responses for documentation and creative writing." }
+      ]
+    }
+  }
+}

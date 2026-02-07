@@ -2,7 +2,9 @@
 import json
 import os
 import base64
+import shutil
 from pathlib import Path
+from datetime import datetime
 from typing import Dict, Any, List, Optional, Callable
 
 import fitz  # PyMuPDF
@@ -15,10 +17,6 @@ from orket.hardware import ToolTier
 # ------------------------------------------------------------
 
 class ToolBox:
-    """
-    Centralized tool management.
-    Handles security gating and path resolution per session.
-    """
     def __init__(self, policy, workspace: str, references: List[str] = None):
         self.policy = policy
         self.workspace = Path(workspace).resolve()
@@ -26,23 +24,17 @@ class ToolBox:
         self._image_pipeline = None
 
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
-        """
-        Gated path resolution. 
-        Ensures the path stays within allowed spaces.
-        """
         p = Path(path_str)
         if not p.is_absolute():
             p = (self.workspace / p).resolve()
         else:
             p = p.resolve()
 
-        # Final Security Gate: Check the policy
         if write:
             if not self.policy.can_write(str(p)):
                 raise PermissionError(f"Security Violation: Write access denied to {p}")
         else:
             if not self.policy.can_read(str(p)):
-                # If reading, also check reference spaces
                 found_in_ref = False
                 for ref in self.references:
                     if str(p).startswith(str(ref)):
@@ -50,10 +42,9 @@ class ToolBox:
                         break
                 if not found_in_ref:
                     raise PermissionError(f"Security Violation: Read access denied to {p}")
-        
         return p
 
-    # --- Tool Implementations ---
+    # --- File Tools ---
 
     def read_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
@@ -93,6 +84,8 @@ class ToolBox:
             return {"ok": False, "error": "Unsupported format"}
         except Exception as e: return {"ok": False, "error": str(e)}
 
+    # --- AI Tools ---
+
     async def image_analyze(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
             path = self._resolve_safe_path(args.get("path", ""))
@@ -118,6 +111,71 @@ class ToolBox:
             return {"ok": True, "path": str(path)}
         except Exception as e: return {"ok": False, "error": str(e)}
 
+    # --- Traction & EOS Tools ---
+
+    def create_book(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Dynamically adds a new Book to the Board."""
+        session_id = context.get("session_id")
+        seat = args.get("seat")
+        summary = args.get("summary")
+        book_type = args.get("type", "story")
+        if not session_id or not seat or not summary: return {"ok": False, "error": "Missing params"}
+        
+        from orket.persistence import PersistenceManager
+        db = PersistenceManager()
+        book_id = db.add_book(session_id, seat, summary, book_type, args.get("priority", "Medium"))
+        return {"ok": True, "book_id": book_id}
+
+    def update_book_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Updates Book status. Only Project Manager can cancel."""
+        book_id = args.get("book_id") or context.get("book_id")
+        new_status = args.get("status", "").lower()
+        seat_calling = context.get("role", "")
+        
+        if not book_id or not new_status: return {"ok": False, "error": "Missing params"}
+        if new_status == "canceled" and "project_manager" not in seat_calling.lower():
+            return {"ok": False, "error": "Permission Denied: Only PM can cancel work."}
+            
+        from orket.persistence import PersistenceManager
+        db = PersistenceManager()
+        db.update_book_status(book_id, new_status)
+        return {"ok": True, "book_id": book_id, "status": new_status}
+
+    def request_excuse(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Allows a member to request an excuse from the current book."""
+        book_id = context.get("book_id")
+        reason = args.get("reason", "No reason provided")
+        if not book_id: return {"ok": False, "error": "No active Book"}
+        
+        from orket.persistence import PersistenceManager
+        db = PersistenceManager()
+        db.update_book_status(book_id, "excuse_requested")
+        print(f"  [PROTOCOL] Seat {context.get('role')} requested excuse from {book_id}. Reason: {reason}")
+        return {"ok": True, "message": "Excuse requested from Conductor."}
+
+    # --- Academy Tools ---
+
+    def archive_eval(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        session_id = args.get("session_id")
+        if not session_id: return {"ok": False, "error": "session_id required"}
+        src = Path(f"workspace/runs/{session_id}")
+        dest = Path(f"evals/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}")
+        try:
+            shutil.copytree(src, dest)
+            return {"ok": True, "path": str(dest)}
+        except Exception as e: return {"ok": False, "error": str(e)}
+
+    def promote_prompt(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        seat, content = args.get("seat"), args.get("content")
+        if not seat or not content: return {"ok": False, "error": "Missing params"}
+        from orket.utils import sanitize_name
+        dest = Path(f"prompts/{sanitize_name(seat)}/{args.get('model_family', 'qwen')}.txt")
+        try:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(content, encoding="utf-8")
+            return {"ok": True, "path": str(dest)}
+        except Exception as e: return {"ok": False, "error": str(e)}
+
 # ------------------------------------------------------------
 # Metadata & Registry
 # ------------------------------------------------------------
@@ -132,7 +190,6 @@ TOOL_TIERS = {
 }
 
 def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
-    """Returns a map of tool names to their bound methods in the toolbox."""
     return {
         "read_file": toolbox.read_file,
         "write_file": toolbox.write_file,
@@ -140,4 +197,9 @@ def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
         "document_inspect": toolbox.document_inspect,
         "image_analyze": toolbox.image_analyze,
         "image_generate": toolbox.image_generate,
+        "create_book": toolbox.create_book,
+        "update_book_status": toolbox.update_book_status,
+        "request_excuse": toolbox.request_excuse,
+        "archive_eval": toolbox.archive_eval,
+        "promote_prompt": toolbox.promote_prompt,
     }

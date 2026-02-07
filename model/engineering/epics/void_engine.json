@@ -1,0 +1,13 @@
+{
+  "name": "void_engine",
+  "team": "engineering_team",
+  "environment": "standard",
+  "tracs": [
+    {
+      "summary": "Python Game Loop",
+      "seat": "frontend_artisan",
+      "priority": "High",
+      "note": "Implement the main.py using the lore and mechanics from previous steps."
+    }
+  ]
+}

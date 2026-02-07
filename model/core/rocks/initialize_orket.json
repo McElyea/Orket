@@ -1,0 +1,11 @@
+{
+  "name": "initialize_orket",
+  "description": "Foundational setup: Establishing tool baselines and model optimization.",
+  "owner_department": "core",
+  "task": "Initialize Orket system settings, verify hardware, and optimize model tool usage through Reforge.",
+  "epics": [
+    { "epic": "core_baseline", "department": "core" },
+    { "epic": "model_reforge", "department": "core" }
+  ],
+  "references": []
+}

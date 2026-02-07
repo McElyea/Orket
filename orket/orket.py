@@ -1,175 +1,148 @@
 # orket/orket.py
 from __future__ import annotations
-
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Type
+from typing import Any, Dict, List, Optional, Type
 import json
+import uuid
 
 from orket.llm import LocalModelProvider
 from orket.logging import log_event
-from orket.conductor import Conductor, ManualConductor, SessionView
+from orket.state import runtime_state
 from orket.agents.agent import Agent
 from orket.policy import create_session_policy
-from orket.tools import ToolBox, get_tool_map, TOOL_TIERS
+from orket.tools import ToolBox, get_tool_map
 from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig
+from orket.utils import get_eos_sprint, sanitize_name
 from pydantic import BaseModel
-
-
-# ---------------------------------------------------------------------------
-# Generic Configuration Loader
-# ---------------------------------------------------------------------------
 
 class ConfigLoader:
     def __init__(self, model_root: Path, department: str = "core"):
         self.dept_path = model_root / department
 
-    def list_assets(self, category: str) -> List[str]:
-        path = self.dept_path / category
-        return [p.stem for p in path.glob("*.json")] if path.exists() else []
-
     def load_asset(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
         path = self.dept_path / category / f"{name}.json"
         if not path.exists():
-            raise FileNotFoundError(f"Asset '{name}' not found in {category}")
+            core_path = self.dept_path.parent / "core" / category / f"{name}.json"
+            if core_path.exists(): path = core_path
+            else: raise FileNotFoundError(f"Asset '{name}' not found")
         return model_type.model_validate_json(path.read_text(encoding="utf-8"))
 
-
-# ---------------------------------------------------------------------------
-# Orchestration
-# ---------------------------------------------------------------------------
+    def list_assets(self, category: str) -> List[str]:
+        assets = set()
+        paths = [self.dept_path / category, self.dept_path.parent / "core" / category]
+        for p in paths:
+            if p.exists():
+                for f in p.glob("*.json"):
+                    assets.add(f.stem)
+        return sorted(list(assets))
 
 async def orchestrate(
     epic_name: str,
     workspace: Path,
     department: str = "core",
-    model_override: Optional[str] = None,
     task_override: Optional[str] = None,
-    interactive_conductor: bool = False,
     extra_references: List[str] = None,
+    session_id: str = None
 ) -> Any:
-    """
-    EOS-aligned orchestration with session-scoped security and unified loading.
-    """
-    workspace = workspace.resolve()
-    model_root = Path("model").resolve()
-    loader = ConfigLoader(model_root, department)
-
-    # 1. Load Components
+    workspace.mkdir(parents=True, exist_ok=True)
+    loader = ConfigLoader(Path("model").resolve(), department)
     epic = loader.load_asset("epics", epic_name, EpicConfig)
     team = loader.load_asset("teams", epic.team, TeamConfig)
     env = loader.load_asset("environments", epic.environment, EnvironmentConfig)
     
-    final_task = task_override or epic.example_task or "No task provided."
+    final_task = task_override or epic.example_task or "No objective."
     all_refs = epic.references + (extra_references or [])
+    run_id = session_id or str(uuid.uuid4())[:8]
 
-    # 2. Setup Session Security & Tools
+    # --- POPULATE BACKLOG ---
+    from orket.persistence import PersistenceManager
+    db = PersistenceManager()
+    current_sprint = get_eos_sprint()
+    
+    # Only populate if this is a fresh Epic run (not inherited from Rock)
+    existing = db.get_session_books(run_id)
+    for b in epic.books:
+        # Check if this specific book summary already exists to avoid dupes in Rock runs
+        if not any(ex["summary"] == b.summary for ex in existing):
+            db.add_book(run_id, b.seat, b.summary, b.type, b.priority, current_sprint, b.note)
+
+    log_event("session_start", {"epic": epic.name, "run_id": run_id}, workspace=workspace)
+    
     policy = create_session_policy(str(workspace), all_refs)
     toolbox = ToolBox(policy, str(workspace), all_refs)
     tool_map = get_tool_map(toolbox)
-
     provider = LocalModelProvider(
-        model=model_override or env.model, 
+        model=env.model, 
         temperature=env.temperature, 
-        seed=env.seed
+        seed=env.seed,
+        timeout=env.timeout
     )
-    conductor: Conductor = ManualConductor() if interactive_conductor else Conductor()
 
-    transcript: List[Dict[str, Any]] = []
-    notes: Dict[str, Any] = {}
+    transcript = []
 
-    log_event("session_start", {"epic": epic.name, "team": team.name}, workspace=workspace)
-
-    # 3. Main Traction Loop
-    from orket.hardware import get_current_profile, can_handle_tier
-    hw_profile = get_current_profile()
-
-    for iteration in range(epic.iterations):
-        for idx, story in enumerate(epic.stories):
-            seat_name = story.seat
-            seat = team.seats.get(seat_name)
-            if not seat: raise ValueError(f"Seat '{seat_name}' not found")
-            
-            # Aggregate Roles and filter by Hardware
-            combined_description = f"Seat: {seat_name}.\n"
-            combined_tools = {}
-            omitted_tools = []
-            
-            for role_name in seat.roles:
-                role = team.roles.get(role_name)
-                if not role: continue
-                combined_description += f"\nRole {role.name}: {role.description}\n"
-                for t_name in role.tools:
-                    if t_name in tool_map:
-                        tier = TOOL_TIERS.get(t_name, "utility")
-                        if can_handle_tier(tier, hw_profile):
-                            combined_tools[t_name] = tool_map[t_name]
-                        else:
-                            omitted_tools.append(t_name)
-            
-            if omitted_tools:
-                combined_description += f"\n\nDISABLED TOOLS (Hardware): {omitted_tools}."
-
-            session_view = SessionView(epic.name, iteration + 1, idx, seat_name, transcript, notes)
-            
-            # Governance
-            is_first, is_last = (iteration == 0), (iteration == epic.iterations - 1)
-            gov = story.governance or "always"
-            if (gov == "once" and not is_first) or (gov == "final" and not is_last):
-                print(f"  [SKIPPED] {seat_name} (Governance)")
-                continue
-            
-            if conductor.before_step(story.model_dump(), session_view).skip_role:
-                continue
-
-            active_model = story.model or model_override or env.model
-            print(f"  [RUNNING] R{iteration+1} | {seat_name} ({active_model})...")
-
-            # Provider for this story
-            story_provider = LocalModelProvider(active_model, env.temperature, env.seed)
-            member = Agent(seat_name, combined_description, combined_tools, story_provider)
-
-            response = await member.run(
-                task={"description": final_task},
-                context={"story_index": idx, "iteration": iteration + 1, "workspace": str(workspace), "references": all_refs, "notes": notes},
-                workspace=workspace,
-                transcript=transcript
-            )
-
-            # Handle notes
-            if "NOTES_UPDATE:" in response.content:
-                try: notes.update(json.loads(response.content.split("NOTES_UPDATE:")[1].splitlines()[0]))
-                except: pass
-
-            transcript.append({"iteration": iteration + 1, "step_index": idx, "role": seat_name, "note": response.note, "summary": response.content})
-            conductor.after_step(story.model_dump(), session_view)
-
-    log_event("session_end", {"epic": epic.name}, workspace=workspace)
-    return transcript
-
-async def orchestrate_rock(
-    rock_name: str,
-    workspace: Path,
-    department: str = "core",
-    task_override: Optional[str] = None
-) -> Dict[str, Any]:
-    model_root = Path("model").resolve()
-    loader = ConfigLoader(model_root, department)
-    rock = loader.load_asset("rocks", rock_name, RockConfig)
-    
-    results, previous_workspaces = [], []
-    for entry in rock.epics:
-        dept, epic_name = entry["department"], entry["epic"]
-        epic_workspace = workspace / epic_name
+    # --- TRACTION LOOP ---
+    while True:
+        backlog = db.get_session_books(run_id)
+        # Filter for Books belonging to THIS Epic context or added by it
+        ready = [b for b in backlog if b["status"] == "ready"]
         
-        transcript = await orchestrate(
-            epic_name=epic_name,
-            workspace=epic_workspace,
-            department=dept,
-            task_override=task_override,
-            extra_references=rock.references + previous_workspaces
+        if not ready: break
+            
+        book = ready[0]
+        book_id, seat_name = book["id"], book["seat"]
+
+        # CONDUCTOR PULL
+        if run_id in runtime_state.interventions and seat_name in runtime_state.interventions[run_id]:
+            if runtime_state.interventions[run_id][seat_name] == "pull":
+                db.update_book_status(book_id, "ready", assignee=None)
+                continue
+
+        db.update_book_status(book_id, "in_progress", assignee=seat_name)
+        
+        seat = team.seats.get(sanitize_name(seat_name))
+        if not seat:
+            db.update_book_status(book_id, "blocked")
+            continue
+
+        desc = f"Seat: {seat_name}.\nBOOK: {book['summary']}\n"
+        desc += "MANDATORY: Use 'write_file' to persist work. One Book, One Member.\n"
+        
+        tools = {}
+        for r_name in seat.roles:
+            role = team.roles.get(r_name)
+            if role:
+                desc += f"\nRole {role.name}: {role.description}\n"
+                for tn in role.tools:
+                    if tn in tool_map: tools[tn] = tool_map[tn]
+
+        print(f"  [TRACTION] {seat_name} -> {book_id}")
+        agent = Agent(seat_name, desc, tools, provider)
+        response = await agent.run(
+            task={"description": f"{final_task}\n\nTask: {book['summary']}"},
+            context={"session_id": run_id, "book_id": book_id, "workspace": str(workspace), "role": seat_name},
+            workspace=workspace,
+            transcript=transcript
         )
         
-        previous_workspaces.append(str(epic_workspace))
-        results.append({"epic": epic_name, "dept": dept, "transcript": transcript})
+        db.update_book_status(book_id, "done")
+        transcript.append({"role": seat_name, "book": book_id, "summary": response.content})
 
+    log_event("session_end", {"run_id": run_id}, workspace=workspace)
+    return transcript
+
+async def orchestrate_rock(rock_name: str, workspace: Path, department: str = "core", session_id: str = None) -> Dict[str, Any]:
+    loader = ConfigLoader(Path("model").resolve(), department)
+    rock = loader.load_asset("rocks", rock_name, RockConfig)
+    
+    sid = session_id or str(uuid.uuid4())[:8]
+    log_event("rock_start", {"rock": rock.name, "session_id": sid}, workspace=workspace)
+    
+    results, prev_ws = [], []
+    for entry in rock.epics:
+        epic_ws = workspace / entry["epic"]
+        res = await orchestrate(entry["epic"], epic_ws, entry["department"], rock.task, rock.references + prev_ws, session_id=sid)
+        prev_ws.append(str(epic_ws))
+        results.append({"epic": entry["epic"], "transcript": res})
+
+    log_event("rock_end", {"rock": rock.name}, workspace=workspace)
     return {"rock": rock.name, "results": results}
