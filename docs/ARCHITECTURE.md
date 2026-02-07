@@ -5,13 +5,13 @@ It decomposes system complexity by **volatility**, encapsulating areas of change
 
 ---
 
-# The Project Hierarchy
+# The Project Hierarchy (Cards)
 
-Orket work is organized into a three-layer tree:
+Orket work is organized into a three-layer Card tree:
 
-1.  **Rocks (The Strategic Layer):** High-level milestones or business objectives.
-2.  **Epics (The Tactical Layer):** Functional groupings of tasks.
-3.  **Cards (The Operational Layer):** Atomic units of execution with unique IDs (e.g., `COR26-0001`).
+1.  **Rocks (Strategic Card):** High-level milestones or business objectives.
+2.  **Epics (Tactical Card):** Functional groupings of tasks.
+3.  **Issues (Operational Card):** Atomic units of execution with unique IDs (e.g., `COR26-0001`).
 
 ---
 

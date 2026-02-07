@@ -1,28 +1,28 @@
 from pathlib import Path
 from typing import List, Dict, Any
 from orket.orket import ConfigLoader
-from orket.schema import RockConfig, EpicConfig, CardConfig
+from orket.schema import RockConfig, EpicConfig, IssueConfig
 
 def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dict[str, Any]:
     """
-    Builds a tree: Rock -> Epic -> Card
-    Identifies orphaned Epics (no Rock) and orphaned Cards (no Epic).
+    Builds a tree: Rock -> Epic -> Issue
+    Identifies orphaned Epics (no Rock) and orphaned Issues (no Epic).
     """
     loader = ConfigLoader(Path("model"), department)
     
     rocks_names = loader.list_assets("rocks")
     epics_names = loader.list_assets("epics")
-    cards_names = loader.list_assets("cards")
+    issues_names = loader.list_assets("issues")
     
     hierarchy = {
         "rocks": [],
         "orphaned_epics": [],
-        "orphaned_cards": [],
+        "orphaned_issues": [],
         "alerts": []
     }
     
     epics_in_rocks = set()
-    cards_in_epics = set()
+    issues_in_epics = set()
     
     # 1. Process Rocks
     for rname in rocks_names:
@@ -43,16 +43,17 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                     dept_loader = ConfigLoader(Path("model"), edept)
                     epic = dept_loader.load_asset("epics", ename, EpicConfig)
                     
-                    # Track cards in this epic
-                    epic_cards = []
-                    for c in epic.cards:
-                        cards_in_epics.add(c.summary) 
-                        epic_cards.append(c.dict())
+                    # Track issues in this epic
+                    epic_issues = []
+                    for i in epic.issues:
+                        # We use summary as a weak ID for now to see if it's a 'named' standalone issue
+                        issues_in_epics.add(i.summary) 
+                        epic_issues.append(i.dict())
 
                     epic_node = {
                         "name": epic.name,
                         "description": epic.description,
-                        "cards": epic_cards
+                        "issues": epic_issues
                     }
                     rock_node["epics"].append(epic_node)
                 except Exception as e:
@@ -70,26 +71,26 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                 orph_epic = {
                     "name": epic.name,
                     "description": epic.description,
-                    "cards": []
+                    "issues": []
                 }
-                for c in epic.cards:
-                    cards_in_epics.add(c.summary)
-                    orph_epic["cards"].append(c.dict())
+                for i in epic.issues:
+                    issues_in_epics.add(i.summary)
+                    orph_epic["issues"].append(i.dict())
                 hierarchy["orphaned_epics"].append(orph_epic)
             except Exception:
                 pass
 
-    # 3. Find Orphaned Cards (Standalone files not referenced in any Epic)
-    for cname in cards_names:
+    # 3. Find Orphaned Issues (Standalone files not referenced in any Epic)
+    for iname in issues_names:
         try:
-            card = loader.load_asset("cards", cname, CardConfig)
-            if card.summary not in cards_in_epics:
-                hierarchy["orphaned_cards"].append(card.dict())
+            issue = loader.load_asset("issues", iname, IssueConfig)
+            if issue.summary not in issues_in_epics:
+                hierarchy["orphaned_issues"].append(issue.dict())
         except Exception:
             pass
 
-    if hierarchy["orphaned_epics"] or hierarchy["orphaned_cards"]:
-        msg = f"Structure Alert: {len(hierarchy['orphaned_epics'])} Orphan Epics, {len(hierarchy['orphaned_cards'])} Orphaned Cards."
+    if hierarchy["orphaned_epics"] or hierarchy["orphaned_issues"]:
+        msg = f"Structure Alert: {len(hierarchy['orphaned_epics'])} Orphan Epics, {len(hierarchy['orphaned_issues'])} Orphaned Issues."
         hierarchy["alerts"].append({
             "type": "error",
             "message": msg,

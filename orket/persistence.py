@@ -27,9 +27,9 @@ class PersistenceManager:
                 )
             """)
             
-            # 2. Cards Table (The Core Backlog)
+            # 2. Issues Table (The Core Backlog)
             conn.execute("""
-                CREATE TABLE IF NOT EXISTS cards (
+                CREATE TABLE IF NOT EXISTS issues (
                     id TEXT PRIMARY KEY,
                     session_id TEXT,
                     type TEXT DEFAULT 'story',
@@ -43,21 +43,58 @@ class PersistenceManager:
                     labels TEXT,
                     due_date TEXT,
                     note TEXT,
+                    resolution TEXT,
+                    credits_spent REAL DEFAULT 0.0,
                     created_at TIMESTAMP,
                     updated_at TIMESTAMP,
                     FOREIGN KEY(session_id) REFERENCES sessions(id)
                 )
             """)
+
+            # 3. Comments Table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    issue_id TEXT,
+                    author TEXT,
+                    content TEXT,
+                    created_at TIMESTAMP,
+                    FOREIGN KEY(issue_id) REFERENCES issues(id)
+                )
+            """)
             
-            # Migration from Books to Cards
-            conn.execute("CREATE TABLE IF NOT EXISTS books (id TEXT PRIMARY KEY)")
-            cursor = conn.execute("PRAGMA table_info(books)")
-            if len(cursor.fetchall()) > 1:
-                 print("  [DB_MIGRATE] Migrating legacy Books to Cards...")
-                 conn.execute("INSERT INTO cards (id, session_id, type, summary, seat, status, priority, assignee, sprint, note, created_at, updated_at) "
-                              "SELECT id, session_id, type, summary, seat, status, priority, assignee, sprint, note, created_at, updated_at FROM books")
-                 conn.execute("DROP TABLE books")
+            # Migration check for new columns
+            cursor = conn.execute("PRAGMA table_info(issues)")
+            columns = [info[1] for info in cursor.fetchall()]
+            if 'resolution' not in columns:
+                conn.execute("ALTER TABLE issues ADD COLUMN resolution TEXT")
+            if 'credits_spent' not in columns:
+                conn.execute("ALTER TABLE issues ADD COLUMN credits_spent REAL DEFAULT 0.0")
             
+            conn.commit()
+
+    def add_comment(self, issue_id: str, author: str, content: str):
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "INSERT INTO comments (issue_id, author, content, created_at) VALUES (?, ?, ?, ?)",
+                (issue_id, author, content, datetime.now().isoformat())
+            )
+            conn.commit()
+
+    def get_comments(self, issue_id: str) -> List[Dict[str, Any]]:
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("SELECT * FROM comments WHERE issue_id = ? ORDER BY created_at DESC", (issue_id,)).fetchall()
+            return [dict(r) for r in rows]
+
+    def update_issue_resolution(self, issue_id: str, resolution: str):
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("UPDATE issues SET resolution = ?, updated_at = ? WHERE id = ?", (resolution, datetime.now().isoformat(), issue_id))
+            conn.commit()
+
+    def add_credits(self, issue_id: str, amount: float):
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("UPDATE issues SET credits_spent = credits_spent + ?, updated_at = ? WHERE id = ?", (amount, datetime.now().isoformat(), issue_id))
             conn.commit()
 
     def start_session(self, session_id: str, run_type: str, name: str, department: str, task: str):
@@ -68,12 +105,11 @@ class PersistenceManager:
             )
             conn.commit()
 
-    def add_card(self, session_id: str, seat: str, summary: str, card_type="story", priority="Medium", sprint=None, note=""):
+    def add_issue(self, session_id: str, seat: str, summary: str, issue_type="story", priority="Medium", sprint=None, note=""):
         from datetime import datetime
         now = datetime.now()
         year_suffix = now.strftime("%y")
         
-        # Get department from session to use as ID prefix
         session = self.get_session(session_id)
         dept_prefix = "UNK"
         if session and session.get("department"):
@@ -83,9 +119,8 @@ class PersistenceManager:
         
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            # Find the highest sequence number for this prefix
             cursor = conn.execute(
-                "SELECT id FROM cards WHERE id LIKE ? ORDER BY id DESC LIMIT 1",
+                "SELECT id FROM issues WHERE id LIKE ? ORDER BY id DESC LIMIT 1",
                 (f"{id_prefix}%",)
             )
             row = cursor.fetchone()
@@ -99,28 +134,28 @@ class PersistenceManager:
                 except:
                     pass
             
-            card_id = f"{id_prefix}{sequence:04d}"
+            issue_id = f"{id_prefix}{sequence:04d}"
             
             conn.execute(
-                """INSERT INTO cards (id, session_id, type, summary, seat, status, priority, sprint, note, created_at, updated_at) 
+                """INSERT INTO issues (id, session_id, type, summary, seat, status, priority, sprint, note, created_at, updated_at) 
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (card_id, session_id, card_type, summary, seat, "ready", priority, sprint, note, datetime.now().isoformat(), datetime.now().isoformat())
+                (issue_id, session_id, issue_type, summary, seat, "ready", priority, sprint, note, datetime.now().isoformat(), datetime.now().isoformat())
             )
             conn.commit()
-        return card_id
+        return issue_id
 
-    def update_card_status(self, card_id: str, status: str, assignee: str = None):
+    def update_issue_status(self, issue_id: str, status: str, assignee: str = None):
         with sqlite3.connect(self.db_path) as conn:
             if assignee:
-                conn.execute("UPDATE cards SET status = ?, assignee = ?, updated_at = ? WHERE id = ?", (status, assignee, datetime.now().isoformat(), card_id))
+                conn.execute("UPDATE issues SET status = ?, assignee = ?, updated_at = ? WHERE id = ?", (status, assignee, datetime.now().isoformat(), issue_id))
             else:
-                conn.execute("UPDATE cards SET status = ?, updated_at = ? WHERE id = ?", (status, datetime.now().isoformat(), card_id))
+                conn.execute("UPDATE issues SET status = ?, updated_at = ? WHERE id = ?", (status, datetime.now().isoformat(), issue_id))
             conn.commit()
 
-    def get_session_cards(self, session_id: str) -> List[Dict[str, Any]]:
+    def get_session_issues(self, session_id: str) -> List[Dict[str, Any]]:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            rows = conn.execute("SELECT * FROM cards WHERE session_id = ? ORDER BY created_at ASC", (session_id,)).fetchall()
+            rows = conn.execute("SELECT * FROM issues WHERE session_id = ? ORDER BY created_at ASC", (session_id,)).fetchall()
             return [dict(r) for r in rows]
 
     def update_session_status(self, session_id: str, status: str, total_tokens: int = 0, transcript: Any = None):

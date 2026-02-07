@@ -100,10 +100,10 @@ async def orchestrate(
     db = PersistenceManager()
     current_sprint = get_eos_sprint()
     
-    existing = db.get_session_cards(run_id)
-    for c in epic.cards:
-        if not any(ex["summary"] == c.summary for ex in existing):
-            db.add_card(run_id, c.seat, c.summary, c.type, c.priority, current_sprint, c.note)
+    existing = db.get_session_issues(run_id)
+    for i in epic.issues:
+        if not any(ex["summary"] == i.summary for ex in existing):
+            db.add_issue(run_id, i.seat, i.summary, i.type, i.priority, current_sprint, i.note)
 
     log_event("session_start", {"epic": epic.name, "run_id": run_id}, workspace=workspace)
     
@@ -121,32 +121,32 @@ async def orchestrate(
 
     # --- TRACTION LOOP ---
     while True:
-        backlog = db.get_session_cards(run_id)
-        ready = [c for c in backlog if c["status"] == "ready"]
+        backlog = db.get_session_issues(run_id)
+        ready = [i for i in backlog if i["status"] == "ready"]
         
         if not ready: break
             
-        card = ready[0]
-        card_id, seat_name = card["id"], card["seat"]
+        issue = ready[0]
+        issue_id, seat_name = issue["id"], issue["seat"]
 
         # CONDUCTOR INTERVENTION
         if run_id in runtime_state.interventions and seat_name in runtime_state.interventions[run_id]:
             action = runtime_state.interventions[run_id][seat_name]
             if action == "pull":
-                db.update_card_status(card_id, "ready", assignee=None)
+                db.update_issue_status(issue_id, "ready", assignee=None)
                 continue
             elif action == "halt":
                 break
 
-        db.update_card_status(card_id, "in_progress", assignee=seat_name)
+        db.update_issue_status(issue_id, "in_progress", assignee=seat_name)
         
         seat = team.seats.get(sanitize_name(seat_name))
         if not seat:
-            db.update_card_status(card_id, "blocked")
+            db.update_issue_status(issue_id, "blocked")
             continue
 
-        desc = f"Seat: {seat_name}.\nCARD: {card['summary']}\n"
-        desc += "MANDATORY: Use 'write_file' to persist work. One Card, One Member.\n"
+        desc = f"Seat: {seat_name}.\nISSUE: {issue['summary']}\n"
+        desc += "MANDATORY: Use 'write_file' to persist work. One Issue, One Member.\n"
         
         tools = {}
         for r_name in seat.roles:
@@ -156,29 +156,34 @@ async def orchestrate(
                 for tn in role.tools:
                     if tn in tool_map: tools[tn] = tool_map[tn]
 
-        print(f"  [TRACTION] {seat_name} -> {card_id}")
+        print(f"  [TRACTION] {seat_name} -> {issue_id}")
         agent = Agent(seat_name, desc, tools, provider)
         
         # Manual Conduct Mode
         if interactive_conductor:
-            print(f"\n[CONDUCTOR] Card {card_id} starting. Press Enter to proceed or 's' to skip...")
+            print(f"\n[CONDUCTOR] Issue {issue_id} starting. Press Enter to proceed or 's' to skip...")
             cmd = input().strip().lower()
             if cmd == 's':
-                db.update_card_status(card_id, "blocked")
+                db.update_issue_status(issue_id, "blocked")
                 continue
 
         response = await agent.run(
-            task={"description": f"{final_task}\n\nTask: {card['summary']}"},
-            context={"session_id": run_id, "card_id": card_id, "workspace": str(workspace), "role": seat_name, "step_index": len(transcript)},
+            task={"description": f"{final_task}\n\nTask: {issue['summary']}"},
+            context={"session_id": run_id, "issue_id": issue_id, "workspace": str(workspace), "role": seat_name, "step_index": len(transcript)},
             workspace=workspace,
             transcript=transcript
         )
         
-        db.update_card_status(card_id, "done")
+        # Check current status in DB before auto-finalizing
+        # This allows the agent to have moved it to 'ready_for_testing' etc.
+        current_issue = [i for i in db.get_session_issues(run_id) if i["id"] == issue_id][0]
+        if current_issue["status"] == "in_progress":
+            db.update_issue_status(issue_id, "done")
+            
         transcript.append({
             "step_index": len(transcript),
             "role": seat_name, 
-            "card": card_id, 
+            "issue": issue_id, 
             "summary": response.content
         })
 

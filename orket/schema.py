@@ -50,14 +50,14 @@ class TeamConfig(BaseModel):
     roles: Dict[str, RoleConfig]
 
 # ---------------------------------------------------------------------------
-# 3. Card & Epic (The Traction Board)
+# 3. Issue & Epic (The Traction Board)
 # ---------------------------------------------------------------------------
-class CardType(str, enum.Enum):
+class IssueType(str, enum.Enum):
     STORY = "story"
     BUG = "bug"
     PROD_SUPPORT = "prod_support"
 
-class CardStatus(str, enum.Enum):
+class IssueStatus(str, enum.Enum):
     READY = "ready"
     BLOCKED = "blocked"
     IN_PROGRESS = "in_progress"
@@ -67,12 +67,12 @@ class CardStatus(str, enum.Enum):
     CANCELED = "canceled"
     EXCUSE_REQUESTED = "excuse_requested"
 
-class CardConfig(BaseModel):
+class IssueConfig(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
-    type: CardType = Field(default=CardType.STORY)
+    type: IssueType = Field(default=IssueType.STORY)
     summary: str
     seat: str
-    status: CardStatus = Field(default=CardStatus.READY)
+    status: IssueStatus = Field(default=IssueStatus.READY)
     priority: str = Field(default="Medium")
     assignee: Optional[str] = None
     sprint: Optional[str] = None
@@ -86,7 +86,7 @@ class EpicConfig(BaseModel):
     team: str
     environment: str
     iterations: int = Field(1)
-    cards: List[CardConfig] = Field(default_factory=list, alias="stories")
+    issues: List[IssueConfig] = Field(default_factory=list, alias="stories")
     references: List[str] = Field(default_factory=list)
     example_task: Optional[str] = None
 

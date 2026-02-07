@@ -1,0 +1,31 @@
+{
+  "name": "Orket Market Standards",
+  "updated_at": "2026-02-07",
+  "roles": {
+    "lead_architect": {
+      "standard": "iDesign (Juval Lowy)",
+      "focus": ["Volatility-based decomposition", "Critical Path definition", "Manager/Engine/Accessor hierarchy"],
+      "recommended_model": "llama3.3:70b or qwen2.5-coder:32b"
+    },
+    "ux_artisan": {
+      "standard": "Material Design 3 / Tailwind 4",
+      "focus": ["Design Tokens", "Component Atomicity", "Responsive Accessibility"],
+      "recommended_model": "llama3.2-vision:11b"
+    },
+    "integrity_guard": {
+      "standard": "Zero-Trust Structural Verification",
+      "focus": ["Contract Enforcement", "Unit/Integration Test Coverage", "Pre-Commit Hooks"],
+      "recommended_model": "qwen2.5-coder:7b"
+    },
+    "reforge_specialist": {
+      "standard": "Prompt Dialect Engineering",
+      "focus": ["Hallucination Guardrails", "Syntax Dialect optimization", "Precision Gain auditing"],
+      "recommended_model": "deepseek-r1:32b"
+    },
+    "operations_lead": {
+      "standard": "Agile EOS",
+      "focus": ["Velocity Reporting", "Rock/Epic/Issue lifecycle", "Resource Allocation"],
+      "recommended_model": "phi3.5:latest"
+    }
+  }
+}

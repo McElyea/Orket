@@ -1,0 +1,23 @@
+{
+  "name": "idea_brainstorming_session",
+  "description": "A session to brainstorm new ideas for the company, leveraging a diverse set of skills from the core department.",
+  "team": "enterprise",
+  "environment": "standard",
+  "issues": [
+    {
+      "summary": "Define the scope and objectives of the brainstorming session",
+      "seat": "lead_architect",
+      "priority": "High"
+    },
+    {
+      "summary": "Recruit participants from various teams to ensure diverse perspectives",
+      "seat": "operations_lead",
+      "priority": "High"
+    },
+    {
+      "summary": "Facilitate the brainstorming process and capture ideas",
+      "seat": "reforge_specialist",
+      "priority": "High"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "auth_manager",
+  "description": "A secure authentication manager following iDesign principles to ensure user security and compliance with best practices.",
+  "team": "enterprise",
+  "environment": "standard",
+  "issues": [
+    {
+      "summary": "Define AuthManager interface",
+      "seat": "lead_architect",
+      "priority": "High"
+    },
+    {
+      "summary": "Implement BCrypt password engine",
+      "seat": "backend_specialist",
+      "priority": "High"
+    },
+    {
+      "summary": "Integrate with existing user management system",
+      "seat": "reforge_specialist",
+      "priority": "Medium"
+    }
+  ]
+}

@@ -95,6 +95,7 @@ async def run_active_asset(data: Dict[str, str] = Body(...)):
     session_id = str(uuid.uuid4())[:8]
     print(f"  [LAUNCH] {asset_name} (ID: {session_id})")
 
+    # Rocks and Epics are high-level Cards. Issues are operational Cards.
     if "rocks" in str(p):
         db.start_session(session_id, "rock", asset_name, dept, "Ignited")
         task = asyncio.create_task(run_rock_task(session_id, asset_name, dept))
@@ -138,15 +139,48 @@ async def get_system_board(dept: str = "core"):
     from orket.board import get_board_hierarchy
     return get_board_hierarchy(dept)
 
+@app.post("/system/chat-driver")
+async def chat_driver(data: Dict[str, str] = Body(...)):
+    from orket.driver import OrketDriver
+    message = data.get("message")
+    if not message: raise HTTPException(400)
+    
+    driver = OrketDriver()
+    response = await driver.process_request(message)
+    return {"response": response}
+
 @app.get("/runs")
 async def list_runs(): return db.get_recent_runs()
 
-@app.get("/runs/{session_id}/backlog")
-async def get_backlog(session_id: str): return db.get_session_cards(session_id)
+@app.get("/runs/{session_id}/metrics")
+async def get_run_metrics(session_id: str):
+    from orket.logging import get_member_metrics
+    workspace = Path(f"workspace/runs/{session_id}")
+    if not workspace.exists():
+        # Fallback to default workspace if not a specific run
+        workspace = Path("workspace/default")
+    return get_member_metrics(workspace)
 
-@app.patch("/backlog/{card_id}")
-async def patch_card(card_id: str, data: Dict[str, str] = Body(...)):
-    db.update_card_status(card_id, data["status"])
+@app.get("/runs/{session_id}/backlog")
+async def get_backlog(session_id: str): return db.get_session_issues(session_id)
+
+@app.patch("/backlog/{issue_id}")
+async def patch_issue(issue_id: str, data: Dict[str, Any] = Body(...)):
+    if "status" in data:
+        db.update_issue_status(issue_id, data["status"])
+    if "resolution" in data:
+        db.update_issue_resolution(issue_id, data["resolution"])
+    if "credits" in data:
+        db.add_credits(issue_id, data["credits"])
+    return {"ok": True}
+
+@app.get("/backlog/{issue_id}/comments")
+async def get_comments(issue_id: str):
+    return db.get_comments(issue_id)
+
+@app.post("/backlog/{issue_id}/comments")
+async def post_comment(issue_id: str, data: Dict[str, str] = Body(...)):
+    db.add_comment(issue_id, data.get("author", "User"), data["content"])
     return {"ok": True}
 
 @app.post("/conductor/intervene")
