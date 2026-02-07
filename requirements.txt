@@ -1,2 +1,15 @@
 jsonschema
 ollama
+pydantic
+fastapi
+uvicorn
+python-multipart
+pymupdf
+python-docx
+diffusers
+transformers
+accelerate
+torch
+torchvision
+torchaudio
+psutil

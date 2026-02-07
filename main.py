@@ -1,19 +1,20 @@
 # main.py
 import argparse
 from pathlib import Path
+import asyncio
 
 from orket.orket import orchestrate
 from orket.discovery import print_orket_manifest, perform_first_run_setup
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run an Orket project.")
+    parser = argparse.ArgumentParser(description="Run an Orket Epic.")
 
     parser.add_argument(
-        "--project",
+        "--epic",
         type=str,
         required=True,
-        help="Name of the project to run (e.g. 'standard').",
+        help="Name of the epic to run (e.g. 'standard').",
     )
 
     parser.add_argument(
@@ -27,14 +28,14 @@ def parse_args():
         "--workspace",
         type=str,
         default="workspace/default",
-        help="Workspace directory for generated files and logs.",
+        help="Workspace directory.",
     )
 
     parser.add_argument(
         "--model",
         type=str,
         default=None,
-        help="Model override (e.g. 'qwen2.5-coder:7b').",
+        help="Model override.",
     )
 
     parser.add_argument(
@@ -47,7 +48,7 @@ def parse_args():
         "--task",
         type=str,
         default=None,
-        help="Optional task description to override the project's default task.",
+        help="Optional task description to override the epic's default example task.",
     )
 
     return parser.parse_args()
@@ -60,16 +61,10 @@ def main():
 
     workspace = Path(args.workspace).resolve()
 
-    print(f"Running Orket Project: {args.project} (Department: {args.department})")
-    print(f"Workspace: {workspace}")
-    if args.model:
-        print(f"Model Override: {args.model}")
-    if args.task:
-        print(f"Task Override: {args.task}")
+    print(f"Running Orket Epic: {args.epic} (Department: {args.department})")
 
-    import asyncio
     transcript = asyncio.run(orchestrate(
-        project_name=args.project,
+        epic_name=args.epic,
         workspace=workspace,
         department=args.department,
         model_override=args.model,
@@ -77,19 +72,12 @@ def main():
         interactive_conductor=args.interactive_conductor,
     ))
 
-    print("\n=== Orket Run Complete ===")
-    print(f"Project: {args.project}")
-    print(f"Workspace: {workspace}")
-
-    print("\n=== Transcript ===")
+    print("\n=== Orket EOS Run Complete ===")
     for entry in transcript:
         idx = entry["step_index"]
         role = entry["role"]
-        note = entry["note"]
-        summary = entry["summary"]
-        print(f"\n--- Step {idx} ({role}) ---")
-        print(f"Note: {note}")
-        print(summary)
+        print(f"\n--- Story {idx} ({role}) ---")
+        print(entry["summary"])
 
 
 if __name__ == "__main__":

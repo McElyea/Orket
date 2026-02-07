@@ -165,8 +165,12 @@ class Agent:
 
         # Execute tool
         try:
-            # Pass args dictionary and context to the tool function
-            tool_result = tool_fn(args, context=context)
+            import asyncio
+            # Handle both sync and async tool functions
+            if asyncio.iscoroutinefunction(tool_fn):
+                tool_result = await tool_fn(args, context=context)
+            else:
+                tool_result = tool_fn(args, context=context)
 
             # Compute byte size for logging
             content_bytes = 0

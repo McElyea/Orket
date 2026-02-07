@@ -12,7 +12,8 @@ class ConductorAdjustment:
 
 @dataclass
 class SessionView:
-    flow_name: str # Kept for backward compat in logging for a moment, but used as Project Name
+    project_name: str
+    iteration: int
     step_index: int
     role: str
     transcript: List[Dict[str, Any]]

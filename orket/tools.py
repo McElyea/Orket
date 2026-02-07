@@ -1,173 +1,143 @@
 # orket/tools.py
 import json
+import os
+import base64
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Callable
 
-from orket.policy import load_policy
-
-
-# ------------------------------------------------------------
-# Lazy-loaded policy
-# ------------------------------------------------------------
-
-_POLICY = None
-
-def _policy():
-    global _POLICY
-    if _POLICY is None:
-        _POLICY = load_policy()
-    return _POLICY
-
+import fitz  # PyMuPDF
+import docx
+import ollama
+from orket.hardware import ToolTier
 
 # ------------------------------------------------------------
-# Tool Implementations
+# Tool Implementation Core
 # ------------------------------------------------------------
 
-def _resolve_path(path_str: str, workspace: str) -> Path:
+class ToolBox:
     """
-    Resolves a path string. If relative, joins with the current workspace.
+    Centralized tool management.
+    Handles security gating and path resolution per session.
     """
-    path = Path(path_str)
-    if not path.is_absolute():
-        return (Path(workspace) / path).resolve()
-    return path.resolve()
+    def __init__(self, policy, workspace: str, references: List[str] = None):
+        self.policy = policy
+        self.workspace = Path(workspace).resolve()
+        self.references = [Path(r).resolve() for r in (references or [])]
+        self._image_pipeline = None
 
+    def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
+        """
+        Gated path resolution. 
+        Ensures the path stays within allowed spaces.
+        """
+        p = Path(path_str)
+        if not p.is_absolute():
+            p = (self.workspace / p).resolve()
+        else:
+            p = p.resolve()
 
-def read_file(args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-    """
-    args: { "path": "relative/or/absolute/path" }
-    """
-    path_str = args.get("path")
-    if not path_str:
-        return {"ok": False, "error": "Missing 'path' argument"}
-    
-    workspace = context.get("workspace", ".") if context else "."
-    path = _resolve_path(path_str, workspace)
-    policy = _policy()
+        # Final Security Gate: Check the policy
+        if write:
+            if not self.policy.can_write(str(p)):
+                raise PermissionError(f"Security Violation: Write access denied to {p}")
+        else:
+            if not self.policy.can_read(str(p)):
+                # If reading, also check reference spaces
+                found_in_ref = False
+                for ref in self.references:
+                    if str(p).startswith(str(ref)):
+                        found_in_ref = True
+                        break
+                if not found_in_ref:
+                    raise PermissionError(f"Security Violation: Read access denied to {p}")
+        
+        return p
 
-    if not policy.can_read(str(path)):
-        return {"ok": False, "error": f"Read not allowed: {path}"}
+    # --- Tool Implementations ---
 
-    try:
-        if not path.exists():
-             return {"ok": False, "error": f"File not found: {path}"}
-        content = path.read_text(encoding="utf-8")
-        return {"ok": True, "content": content}
-    except Exception as e:
-        return {"ok": False, "error": f"Failed to read file: {e}"}
+    def read_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        try:
+            path = self._resolve_safe_path(args.get("path", ""))
+            if not path.exists(): return {"ok": False, "error": "Not found"}
+            return {"ok": True, "content": path.read_text(encoding="utf-8")}
+        except Exception as e: return {"ok": False, "error": str(e)}
 
+    def write_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        try:
+            path = self._resolve_safe_path(args.get("path", ""), write=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(args.get("content", ""), encoding="utf-8")
+            return {"ok": True, "path": str(path)}
+        except Exception as e: return {"ok": False, "error": str(e)}
 
-def write_file(args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-    """
-    args: { "path": "relative/or/absolute/path", "content": "text" }
-    """
-    path_str = args.get("path")
-    content = args.get("content", "")
-    if not path_str:
-        return {"ok": False, "error": "Missing 'path' argument"}
+    def list_dir(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        try:
+            path = self._resolve_safe_path(args.get("path", "."))
+            items = [p.name for p in path.iterdir()]
+            return {"ok": True, "items": items}
+        except Exception as e: return {"ok": False, "error": str(e)}
 
-    workspace = context.get("workspace", ".") if context else "."
-    path = _resolve_path(path_str, workspace)
-    policy = _policy()
+    def document_inspect(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        try:
+            path = self._resolve_safe_path(args.get("path", ""))
+            ext = path.suffix.lower()
+            if ext == ".pdf":
+                text = ""
+                with fitz.open(path) as doc:
+                    for page in doc: text += page.get_text()
+                return {"ok": True, "content": text, "type": "pdf"}
+            elif ext == ".docx":
+                doc = docx.Document(path)
+                text = "\n".join([p.text for p in doc.paragraphs])
+                return {"ok": True, "content": text, "type": "docx"}
+            return {"ok": False, "error": "Unsupported format"}
+        except Exception as e: return {"ok": False, "error": str(e)}
 
-    if not policy.can_write(str(path)):
-        return {"ok": False, "error": f"Write not allowed: {path}"}
+    async def image_analyze(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        try:
+            path = self._resolve_safe_path(args.get("path", ""))
+            with open(path, "rb") as f:
+                img_data = base64.b64encode(f.read()).decode('utf-8')
+            client = ollama.AsyncClient()
+            model = args.get("model", "llama3.2-vision")
+            response = await client.generate(model=model, prompt=args.get("prompt", "Describe this image."), images=[img_data])
+            return {"ok": True, "analysis": response['response']}
+        except Exception as e: return {"ok": False, "error": str(e)}
 
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
-        return {"ok": True, "path": str(path)}
-    except Exception as e:
-        return {"ok": False, "error": f"Failed to write file: {e}"}
-
-
-def list_dir(args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-    """
-    args: { "path": "relative/or/absolute/path" }
-    """
-    path_str = args.get("path", ".")
-    workspace = context.get("workspace", ".") if context else "."
-    path = _resolve_path(path_str, workspace)
-    policy = _policy()
-
-    # Listing a directory is a read operation
-    if not policy.can_read(str(path)):
-        return {"ok": False, "error": f"Directory read not allowed: {path}"}
-
-    if not path.exists():
-        return {"ok": False, "error": f"Directory not found: {path}"}
-
-    if not path.is_dir():
-        return {"ok": False, "error": f"Not a directory: {path}"}
-
-    try:
-        items = [p.name for p in path.iterdir()]
-        return {"ok": True, "items": items}
-    except Exception as e:
-        return {"ok": False, "error": f"Failed to list directory: {e}"}
-
+    def image_generate(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        try:
+            path = self._resolve_safe_path(args.get("path", "generated.png"), write=True)
+            if self._image_pipeline is None:
+                import torch
+                from diffusers import StableDiffusionPipeline
+                print("  [SYSTEM] Loading Stable Diffusion 1.5...")
+                self._image_pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16).to("cuda")
+            image = self._image_pipeline(args.get("prompt")).images[0]
+            path.parent.mkdir(parents=True, exist_ok=True)
+            image.save(path)
+            return {"ok": True, "path": str(path)}
+        except Exception as e: return {"ok": False, "error": str(e)}
 
 # ------------------------------------------------------------
-# Tool Registry
+# Metadata & Registry
 # ------------------------------------------------------------
 
-TOOLS = {
-    "read_file": read_file,
-    "write_file": write_file,
-    "list_dir": list_dir,
+TOOL_TIERS = {
+    "read_file": ToolTier.TIER_0_UTILITY,
+    "write_file": ToolTier.TIER_0_UTILITY,
+    "list_dir": ToolTier.TIER_0_UTILITY,
+    "document_inspect": ToolTier.TIER_1_COMPUTE,
+    "image_analyze": ToolTier.TIER_2_VISION,
+    "image_generate": ToolTier.TIER_3_CREATOR,
 }
 
-
-# ------------------------------------------------------------
-# Tool Execution
-# ------------------------------------------------------------
-
-def run_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Execute a tool by name.
-    """
-    if tool_name not in TOOLS:
-        return {"ok": False, "error": f"Unknown tool: {tool_name}"}
-
-    tool_fn = TOOLS[tool_name]
-
-    try:
-        return tool_fn(args)
-    except Exception as e:
-        return {"ok": False, "error": f"Tool '{tool_name}' failed: {e}"}
-
-
-# ------------------------------------------------------------
-# Tool Call Parsing
-# ------------------------------------------------------------
-
-def parse_tool_calls(content: str) -> List[Dict[str, Any]]:
-    """
-    Extract tool calls from agent output.
-
-    Supports JSON tool calls like:
-    {
-        "tool": "write_file",
-        "args": { "path": "foo.txt", "content": "hello" }
+def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
+    """Returns a map of tool names to their bound methods in the toolbox."""
+    return {
+        "read_file": toolbox.read_file,
+        "write_file": toolbox.write_file,
+        "list_dir": toolbox.list_dir,
+        "document_inspect": toolbox.document_inspect,
+        "image_analyze": toolbox.image_analyze,
+        "image_generate": toolbox.image_generate,
     }
-
-    Returns a list of tool call dicts.
-    """
-    calls: List[Dict[str, Any]] = []
-
-    try:
-        data = json.loads(content)
-
-        if isinstance(data, dict) and "tool" in data and "args" in data:
-            calls.append(data)
-
-        elif isinstance(data, list):
-            for item in data:
-                if isinstance(item, dict) and "tool" in item and "args" in item:
-                    calls.append(item)
-
-    except Exception:
-        # Not JSON — ignore
-        pass
-
-    return calls

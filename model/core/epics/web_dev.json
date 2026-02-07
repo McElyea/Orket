@@ -1,0 +1,19 @@
+{
+  "name": "web_dev",
+  "description": "Develop the landing page using assets from the branding department.",
+  "team": "ui_experts",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "Creative Director",
+      "model": "qwen3-coder:latest",
+      "note": "Verify the logo exists in the references and plan the landing page."
+    },
+    {
+      "seat": "Frontend Artisan",
+      "model": "qwen3-coder:latest",
+      "note": "Write the landing.html and link the logo.png."
+    }
+  ],
+  "example_task": "Create a landing.html file. Locate the 'logo.png' in the reference spaces and include it in the page."
+}

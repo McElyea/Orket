@@ -1,31 +1,35 @@
 {
-    "name": "standard",
-    "description": "Architect + coder + reviewer band.",
-    "roles": {
-        "architect": {
-            "description": "You are the Architect. Break tasks into actionable steps.\n\nSTATE MANAGEMENT:\nYou MUST output a decomposition of the task for the coder using:\nNOTES_UPDATE: {\"todo\": [\"file1.py\", \"file2.py\"]}\n\nRULES:\n1. Identify required files and modules.\n2. Do not write code.\n3. Be specific about file paths and function names.",
-            "tools": ["read_file", "list_dir"],
-            "policy": {
-                "requires_read": true,
-                "requires_tools": ["read_file", "list_dir"]
-            }
-        },
-        "coder": {
-            "description": "You are an autonomous AI coding agent. You write and modify files exclusively through Orket tool calls.\n\nYour ONLY mechanism for creating or updating files is the write_file tool. You MUST use the exact tool call format shown below.\n\nMANDATORY TOOL CALL FORMAT:\n\nTOOL: write_file\nPATH: <relative/path/to/file>\nCONTENT:\n<full file content>\n\nSTATE MANAGEMENT:\nYou can update shared notes for subsequent roles using:\nNOTES_UPDATE: {\"key\": \"value\"}\nUse this to track completed files or steps.\n\nRULES:\n1. Use the TOOL/PATH/CONTENT format exactly.\n2. Write full file content every time.\n3. Output exactly one tool call per message.\n4. You MUST NOT wrap tool calls in markdown.\n5. If a file is finished, add a NOTES_UPDATE line to your response.",
-            "tools": ["read_file", "write_file", "list_dir"],
-            "policy": {
-                "requires_write": true,
-                "requires_read": true,
-                "requires_tools": ["read_file", "write_file", "list_dir"]
-            }
-        },
-        "reviewer": {
-            "description": "You are the Reviewer. Evaluate files for correctness and alignment with the plan.\n\nMANDATORY TOOL CALL FORMAT:\nTOOL: read_file\nPATH: <path>\n\nRULES:\n1. You MUST load files using TOOL: read_file before reviewing.\n2. NEVER assume file contents.\n3. If a file is missing or incorrect, state it clearly.\n4. Provide concise, actionable feedback.",
-            "tools": ["read_file", "list_dir"],
-            "policy": {
-                "requires_read": true,
-                "requires_tools": ["read_file", "list_dir"]
-            }
-        }
+  "name": "standard",
+  "description": "Standard EOS-aligned team for core development.",
+  "roles": {
+    "architect": {
+      "name": "architect",
+      "description": "System Architect role focusing on high-level design and todo lists.",
+      "tools": ["read_file", "list_dir"]
+    },
+    "coder": {
+      "name": "coder",
+      "description": "Software Engineer role focusing on implementation and writing files.",
+      "tools": ["read_file", "write_file", "list_dir"]
+    },
+    "reviewer": {
+      "name": "reviewer",
+      "description": "QA Reviewer role focusing on code quality and verification.",
+      "tools": ["read_file", "list_dir"]
     }
+  },
+  "seats": {
+    "Lead Architect": {
+      "name": "Lead Architect",
+      "roles": ["architect"]
+    },
+    "Senior Developer": {
+      "name": "Senior Developer",
+      "roles": ["coder"]
+    },
+    "Quality Assurance": {
+      "name": "Quality Assurance",
+      "roles": ["reviewer"]
+    }
+  }
 }
