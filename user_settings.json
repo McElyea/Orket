@@ -1,0 +1,7 @@
+{
+    "setup_complete": true,
+    "hardware_profile": "mid-range (14B optimized)",
+    "preferred_coder": "qwen2.5-coder:14b",
+    "preferred_architect": "deepseek-r1:32b",
+    "preferred_venue": "specialized"
+}
