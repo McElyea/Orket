@@ -1,10 +1,11 @@
 {
   "name": "core_baseline",
-  "description": "Establish foundational system configurations.",
-  "team": "standard",
+  "description": "Establish foundational system configurations using refined Enterprise roles.",
+  "team": "enterprise",
   "environment": "standard",
-  "stories": [
-    { "summary": "Verify hardware profile and update settings.", "seat": "lead_architect" },
-    { "summary": "Establish core security policies and file access permissions.", "seat": "security_auditor" }
+  "cards": [
+    { "summary": "Verify hardware profile and update engine settings.", "seat": "lead_architect", "priority": "High" },
+    { "summary": "Create baseline dashboard configuration for the UX layout.", "seat": "ux_artisan", "priority": "Medium" },
+    { "summary": "Audit configuration files for structural integrity.", "seat": "integrity_guard", "priority": "High" }
   ]
 }

@@ -142,11 +142,11 @@ async def get_system_board(dept: str = "core"):
 async def list_runs(): return db.get_recent_runs()
 
 @app.get("/runs/{session_id}/backlog")
-async def get_backlog(session_id: str): return db.get_session_books(session_id)
+async def get_backlog(session_id: str): return db.get_session_cards(session_id)
 
-@app.patch("/backlog/{book_id}")
-async def patch_book(book_id: str, data: Dict[str, str] = Body(...)):
-    db.update_book_status(book_id, data["status"])
+@app.patch("/backlog/{card_id}")
+async def patch_card(card_id: str, data: Dict[str, str] = Body(...)):
+    db.update_card_status(card_id, data["status"])
     return {"ok": True}
 
 @app.post("/conductor/intervene")

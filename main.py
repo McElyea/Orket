@@ -3,18 +3,25 @@ import argparse
 from pathlib import Path
 import asyncio
 
-from orket.orket import orchestrate, orchestrate_rock
+from orket.orket import orchestrate, orchestrate_rock, orchestrate_card
 from orket.discovery import print_orket_manifest, perform_first_run_setup
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run an Orket Epic.")
+    parser = argparse.ArgumentParser(description="Run an Orket Card, Epic, or Rock.")
 
     parser.add_argument(
         "--epic",
         type=str,
         default=None,
         help="Name of the epic to run.",
+    )
+
+    parser.add_argument(
+        "--card",
+        type=str,
+        default=None,
+        help="ID or summary of a specific Card to run.",
     )
 
     parser.add_argument(
@@ -55,13 +62,13 @@ def parse_args():
         "--task",
         type=str,
         default=None,
-        help="Optional task description to override the epic's default example task.",
+        help="Optional task description override.",
     )
 
     parser.add_argument(
         "--board",
         action="store_true",
-        help="Display the top-down tree view of Rocks, Epics, and Books.",
+        help="Display the top-down tree view of Rocks, Epics, and Cards.",
     )
 
     return parser.parse_args()
@@ -77,15 +84,27 @@ def print_board(hierarchy: dict):
                 print(f"  ↳ [EPIC] {epic['name']} (Error: {epic['error']})")
                 continue
             print(f"  ↳ [EPIC] {epic['name']}")
-            for book in epic.get("books", []):
-                print(f"    - [{book['id']}] {book['summary']} ({book['seat']})")
+            for card in epic.get("cards", []):
+                print(f"    - [{card['id']}] {card['summary']} ({card['seat']})")
                 
     if hierarchy["orphaned_epics"]:
-        print(f"\n[STANDALONE EPICS] (ALERT: These should be assigned to a Rock!)")
+        print(f"\n[ORPHANED EPICS] (ALERT: These should be assigned to a Rock!)")
         for epic in hierarchy["orphaned_epics"]:
             print(f"  ⊷ {epic['name']}")
-            for book in epic.get("books", []):
-                print(f"    - [{book['id']}] {book['summary']} ({book['seat']})")
+            for card in epic.get("cards", []):
+                print(f"    - [{card['id']}] {card['summary']} ({card['seat']})")
+
+    if hierarchy["orphaned_cards"]:
+        print(f"\n[ORPHANED CARDS] (ALERT: These should be assigned to an Epic!)")
+        for card in hierarchy["orphaned_cards"]:
+            print(f"  ⚡ [{card['id']}] {card['summary']} ({card['seat']})")
+            
+    if hierarchy["alerts"]:
+        print(f"\n[STRUCTURAL ALERTS]")
+        for alert in hierarchy["alerts"]:
+            print(f"  ! {alert['message']}")
+            print(f"    Action: {alert['action_required']}")
+            
     print(f"\n{'='*60}\n")
 
 
@@ -115,30 +134,42 @@ def main():
             print(f"\n=== Rock {args.rock} Complete ===")
             return
 
+        if args.card:
+            print(f"Running Orket Card: {args.card}")
+            asyncio.run(orchestrate_card(
+                card_id=args.card,
+                workspace=workspace,
+                department=args.department
+            ))
+            return
+
         if not args.epic:
-            print("Error: Must specify either --epic or --rock")
+            print("Error: Must specify --epic, --rock, or --card")
             return
 
         print(f"Running Orket Epic: {args.epic} (Department: {args.department})")
 
-            transcript = asyncio.run(orchestrate(
-                epic_name=args.epic,
-                workspace=workspace,
-                department=args.department,
-                model_override=args.model,
-                task_override=args.task,
-                interactive_conductor=args.interactive_conductor,
-            ))
-        
-            print("\n=== Orket EOS Run Complete ===")
-            for entry in transcript:
-                idx = entry.get("step_index", "?")
-                role = entry["role"]
-                print(f"\n--- Book {idx} ({role}) ---")
-                print(entry["summary"])            
+        transcript = asyncio.run(orchestrate(
+            epic_name=args.epic,
+            workspace=workspace,
+            department=args.department,
+            model_override=args.model,
+            task_override=args.task,
+            interactive_conductor=args.interactive_conductor,
+        ))
+
+        print("\n=== Orket EOS Run Complete ===")
+        for entry in transcript:
+            idx = entry.get("step_index", "?")
+            role = entry["role"]
+            print(f"\n--- Card {idx} ({role}) ---")
+            print(entry["summary"])
+            
     except KeyboardInterrupt:
         print("\n[HALT] Interrupted by user. Exiting...")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"\n[FATAL] {e}")
 
 
