@@ -1,9 +1,0 @@
-{
-    "name": "enterprise_launch",
-    "description": "Full lifecycle engineering flow from BA to Reviewer.",
-    "band": "enterprise",
-    "score": "enterprise_launch",
-    "task": {
-        "description": "Design and implement a robust, containerized Python microservice for financial transaction processing. Include a domain-driven design, unit tests, and a Dockerfile."
-    }
-}

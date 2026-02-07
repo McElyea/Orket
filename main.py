@@ -7,13 +7,20 @@ from orket.discovery import print_orket_manifest, perform_first_run_setup
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run an Orket flow.")
+    parser = argparse.ArgumentParser(description="Run an Orket project.")
 
     parser.add_argument(
-        "--flow",
+        "--project",
         type=str,
         required=True,
-        help="Path to the flow JSON file.",
+        help="Name of the project to run (e.g. 'standard').",
+    )
+
+    parser.add_argument(
+        "--department",
+        type=str,
+        default="core",
+        help="The department namespace (default: 'core').",
     )
 
     parser.add_argument(
@@ -27,21 +34,7 @@ def parse_args():
         "--model",
         type=str,
         default=None,
-        help="Model name for LocalModelProvider (defaults to user_settings.json).",
-    )
-
-    parser.add_argument(
-        "--temperature",
-        type=float,
-        default=0.2,
-        help="Model temperature.",
-    )
-
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Optional seed for deterministic model behavior.",
+        help="Model override (e.g. 'qwen2.5-coder:7b').",
     )
 
     parser.add_argument(
@@ -54,7 +47,7 @@ def parse_args():
         "--task",
         type=str,
         default=None,
-        help="Optional task description to override the flow's default task.",
+        help="Optional task description to override the project's default task.",
     )
 
     return parser.parse_args()
@@ -65,44 +58,31 @@ def main():
     print_orket_manifest()
     args = parse_args()
 
-    # Resolve flow path
-    flow_arg = args.flow
-    if not flow_arg.endswith(".json"):
-        flow_arg += ".json"
-    
-    flow_path = Path(flow_arg)
-    if not flow_path.exists():
-        # Try relative to model/flow
-        potential_path = Path(__file__).parent / "model" / "flow" / flow_arg
-        if potential_path.exists():
-            flow_path = potential_path
-        else:
-            flow_path = flow_path.resolve() # Let it fail with absolute path if still not found
-
     workspace = Path(args.workspace).resolve()
 
-    print(f"Running Orket flow: {flow_path}")
+    print(f"Running Orket Project: {args.project} (Department: {args.department})")
     print(f"Workspace: {workspace}")
-    print(f"Model: {args.model or 'Default (from settings)'}")
+    if args.model:
+        print(f"Model Override: {args.model}")
     if args.task:
         print(f"Task Override: {args.task}")
 
-    result = orchestrate(
-        flow_path=flow_path,
+    import asyncio
+    transcript = asyncio.run(orchestrate(
+        project_name=args.project,
         workspace=workspace,
-        model_name=args.model,
+        department=args.department,
+        model_override=args.model,
         task_override=args.task,
-        temperature=args.temperature,
-        seed=args.seed,
         interactive_conductor=args.interactive_conductor,
-    )
+    ))
 
     print("\n=== Orket Run Complete ===")
-    print(f"Flow: {result.flow_name}")
-    print(f"Workspace: {result.workspace}")
+    print(f"Project: {args.project}")
+    print(f"Workspace: {workspace}")
 
     print("\n=== Transcript ===")
-    for entry in result.transcript:
+    for entry in transcript:
         idx = entry["step_index"]
         role = entry["role"]
         note = entry["note"]

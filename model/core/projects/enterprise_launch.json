@@ -1,0 +1,8 @@
+{
+  "name": "enterprise_launch",
+  "description": "Comprehensive flow for larger features with specialized coder and multiple gurus.",
+  "team": "enterprise",
+  "environment": "specialized",
+  "sequence": "enterprise_launch",
+  "example_task": "Implement a new feature in the orket engine: a 'session persistence' mechanism that saves the session state (transcript, notes, events) to a JSON file in the workspace every 3 steps. The engine should be able to resume from this file if launched with a --resume flag."
+}

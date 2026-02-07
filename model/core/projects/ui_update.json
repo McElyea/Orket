@@ -1,0 +1,8 @@
+{
+  "name": "ui_update",
+  "description": "Specialized flow for UI-related tasks.",
+  "team": "standard",
+  "environment": "standard",
+  "sequence": "single_guru",
+  "example_task": "Add a basic CSS file to the project that styles the output for better readability."
+}

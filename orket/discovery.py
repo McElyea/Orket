@@ -26,26 +26,30 @@ def get_installed_models() -> List[str]:
     except Exception:
         return []
 
-def discover_project_assets() -> Dict[str, List[str]]:
-    """Scans the model/ directory for available configurations."""
-    # Find project root relative to this file (orket/discovery.py)
-    root = Path(__file__).parent.parent / "model"
+def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
+    """Scans the model/{department} directory for available configurations."""
+    root = Path(__file__).parent.parent / "model" / department
     assets = {
-        "flows": [],
-        "bands": [],
-        "scores": [],
-        "venues": []
+        "projects": [],
+        "teams": [],
+        "sequences": [],
+        "environments": []
     }
     
     if not root.exists():
         return assets
 
-    for category in ["flow", "band", "score", "venue"]:
-        dir_path = root / category
+    mapping = {
+        "projects": "projects",
+        "teams": "teams",
+        "sequences": "sequences",
+        "environments": "environments"
+    }
+
+    for key, folder in mapping.items():
+        dir_path = root / folder
         if dir_path.exists():
-            # Find json files and filter out schemas
             found = [p.stem for p in dir_path.rglob("*.json") if "schema" not in p.name.lower()]
-            key = category + "s"
             assets[key] = found
             
     return assets
@@ -67,7 +71,6 @@ def perform_first_run_setup():
         "hardware_profile": "auto-detected",
         "preferred_coder": "qwen3-coder:latest",
         "preferred_architect": "llama3.1:8b",
-        "preferred_venue": "specialized"
     }
 
     if any("14b" in m for m in models):
@@ -85,25 +88,23 @@ def perform_first_run_setup():
     print(f"  > Default Architect: {optimization['preferred_architect']}")
     print("  > Settings stored in 'user_settings.json'\n")
 
-def print_orket_manifest():
+def print_orket_manifest(department: str = "core"):
     """Prints a suggested 'playlist' of what can be run right now."""
     models = get_installed_models()
-    assets = discover_project_assets()
+    assets = discover_project_assets(department)
     
     print("\n" + "="*50)
-    print(" ORKET DISCOVERY: SUGGESTED PLAYLIST")
+    print(f" ORKET DISCOVERY (Dept: {department})")
     print("="*50)
     
     print(f"\n[LOCAL ENGINES] ({len(models)} found)")
     
-    # Advanced Role Mapping based on the Matrix
     def find_best(keywords, fallback="None found"):
         for m in models:
             if any(k in m.lower() for k in keywords):
                 return m
         return fallback
 
-    # Logic-based suggestions
     best_coder = find_best(["coder-32b", "coder-33b", "coder:14b", "coder"])
     best_arch = find_best(["r1:32b", "70b", "72b", "33b"], fallback=find_best(["llama3.1:8b"]))
     best_ds = find_best(["v2.5", "math", "coder:14b"])
@@ -118,17 +119,17 @@ def print_orket_manifest():
     print(f"  > Lawyer & Compliance:    {best_legal}")
     print(f"  > PM & Business Analyst:  {best_pm}")
 
-    print(f"\n[FLOWS]")
-    for f in assets["flows"]:
-        print(f"  - {f}")
+    print(f"\n[PROJECTS]")
+    for p in assets["projects"]:
+        print(f"  - {p}")
 
-    print(f"\n[BANDS]")
-    for b in assets["bands"]:
-        print(f"  - {b}")
+    print(f"\n[TEAMS]")
+    for t in assets["teams"]:
+        print(f"  - {t}")
 
     print(f"\n[COMMAND SUGGESTION]")
-    if assets["flows"]:
-        flow = "enterprise_launch" if "enterprise_launch" in assets["flows"] else assets["flows"][0]
-        print(f"  python main.py --flow model/flow/{flow}.json --model {best_coder}")
+    if assets["projects"]:
+        proj = "standard" if "standard" in assets["projects"] else assets["projects"][0]
+        print(f"  python main.py --project {proj} --department {department}")
     
     print("="*50 + "\n")

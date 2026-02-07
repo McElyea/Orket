@@ -12,7 +12,7 @@ class ConductorAdjustment:
 
 @dataclass
 class SessionView:
-    flow_name: str
+    flow_name: str # Kept for backward compat in logging for a moment, but used as Project Name
     step_index: int
     role: str
     transcript: List[Dict[str, Any]]
@@ -29,36 +29,36 @@ class Conductor:
         return
 
     # Optional hooks for model logging; can be called from orchestrator
-    def log_session_models(self, band, provider, workspace, flow_name: str) -> None:
-        for role_name in band.roles.keys():
+    def log_session_models(self, team, provider, workspace, project_name: str) -> None:
+        for role_name in team.roles.keys():
             log_model_selected(
                 role=role_name,
                 model=getattr(provider, "model", "unknown"),
                 temperature=getattr(provider, "temperature", None),
                 seed=getattr(provider, "seed", None),
-                flow=flow_name,
+                flow=project_name, # Map project_name to 'flow' field in legacy logs
                 workspace=workspace,
             )
 
-    def log_model_override(self, role: str, new_model: str, flow_name: str, workspace) -> None:
+    def log_model_override(self, role: str, new_model: str, project_name: str, workspace) -> None:
         log_event(
             "model_override",
             {
                 "role": role,
                 "new_model": new_model,
-                "flow": flow_name,
+                "project": project_name,
             },
             workspace=workspace,
         )
 
-    def log_fallback(self, role: str, from_model: str, to_model: str, flow_name: str, workspace) -> None:
+    def log_fallback(self, role: str, from_model: str, to_model: str, project_name: str, workspace) -> None:
         log_event(
             "model_fallback",
             {
                 "role": role,
                 "from_model": from_model,
                 "to_model": to_model,
-                "flow": flow_name,
+                "project": project_name,
             },
             workspace=workspace,
         )
