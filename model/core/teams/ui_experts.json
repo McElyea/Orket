@@ -1,0 +1,35 @@
+{
+  "name": "ui_experts",
+  "description": "Specialized team for UI/UX and visual analysis.",
+  "roles": {
+    "designer": {
+      "name": "designer",
+      "description": "Visual designer that can analyze screenshots and describe UI layouts.",
+      "tools": ["image_analyze", "list_dir"]
+    },
+    "stylist": {
+      "name": "stylist",
+      "description": "CSS and Frontend expert. You MUST use the 'write_file' tool to save your code to the workspace. Do not just output code in the chat; persist it to disk so subsequent members can use it.",
+      "tools": ["write_file", "read_file", "image_generate"]
+    },
+    "critic": {
+      "name": "critic",
+      "description": "Design critic that verifies the implementation against the original vision.",
+      "tools": ["image_analyze", "read_file"]
+    }
+  },
+  "seats": {
+    "Creative Director": {
+      "name": "Creative Director",
+      "roles": ["designer"]
+    },
+    "Frontend Artisan": {
+      "name": "Frontend Artisan",
+      "roles": ["stylist"]
+    },
+    "Quality Inspector": {
+      "name": "Quality Inspector",
+      "roles": ["critic"]
+    }
+  }
+}

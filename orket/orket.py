@@ -2,59 +2,36 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union, Type
 import json
 
 from orket.llm import LocalModelProvider
 from orket.logging import log_event
 from orket.conductor import Conductor, ManualConductor, SessionView
-from orket.agents.agent_factory import build_band_agents
-from orket.tools import _policy
-from orket.settings import get_setting
-from orket.schema import ProjectConfig, TeamConfig, EnvironmentConfig, SequenceConfig
+from orket.agents.agent import Agent
+from orket.policy import create_session_policy
+from orket.tools import ToolBox, get_tool_map, TOOL_TIERS
+from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig
+from pydantic import BaseModel
 
 
 # ---------------------------------------------------------------------------
-# Configuration Loader (Department-Aware)
+# Generic Configuration Loader
 # ---------------------------------------------------------------------------
 
 class ConfigLoader:
     def __init__(self, model_root: Path, department: str = "core"):
-        self.model_root = model_root
-        self.department = department
         self.dept_path = model_root / department
 
-    def list_projects(self) -> List[str]:
-        path = self.dept_path / "projects"
-        return [p.stem for p in path.glob("*.json")]
+    def list_assets(self, category: str) -> List[str]:
+        path = self.dept_path / category
+        return [p.stem for p in path.glob("*.json")] if path.exists() else []
 
-    def list_teams(self) -> List[str]:
-        path = self.dept_path / "teams"
-        return [p.stem for p in path.glob("*.json")]
-
-    def list_environments(self) -> List[str]:
-        path = self.dept_path / "environments"
-        return [p.stem for p in path.glob("*.json")]
-
-    def list_sequences(self) -> List[str]:
-        path = self.dept_path / "sequences"
-        return [p.stem for p in path.glob("*.json")]
-
-    def load_project(self, name: str) -> ProjectConfig:
-        path = self.dept_path / "projects" / f"{name}.json"
-        return ProjectConfig.model_validate_json(path.read_text(encoding="utf-8"))
-
-    def load_team(self, name: str) -> TeamConfig:
-        path = self.dept_path / "teams" / f"{name}.json"
-        return TeamConfig.model_validate_json(path.read_text(encoding="utf-8"))
-
-    def load_environment(self, name: str) -> EnvironmentConfig:
-        path = self.dept_path / "environments" / f"{name}.json"
-        return EnvironmentConfig.model_validate_json(path.read_text(encoding="utf-8"))
-
-    def load_sequence(self, name: str) -> SequenceConfig:
-        path = self.dept_path / "sequences" / f"{name}.json"
-        return SequenceConfig.model_validate_json(path.read_text(encoding="utf-8"))
+    def load_asset(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
+        path = self.dept_path / category / f"{name}.json"
+        if not path.exists():
+            raise FileNotFoundError(f"Asset '{name}' not found in {category}")
+        return model_type.model_validate_json(path.read_text(encoding="utf-8"))
 
 
 # ---------------------------------------------------------------------------
@@ -62,121 +39,137 @@ class ConfigLoader:
 # ---------------------------------------------------------------------------
 
 async def orchestrate(
-    project_name: str,
+    epic_name: str,
     workspace: Path,
     department: str = "core",
     model_override: Optional[str] = None,
     task_override: Optional[str] = None,
     interactive_conductor: bool = False,
+    extra_references: List[str] = None,
 ) -> Any:
     """
-    Asynchronous orchestration entry point.
+    EOS-aligned orchestration with session-scoped security and unified loading.
     """
     workspace = workspace.resolve()
     model_root = Path("model").resolve()
     loader = ConfigLoader(model_root, department)
 
-    # 1. Load the Project
-    project = loader.load_project(project_name)
+    # 1. Load Components
+    epic = loader.load_asset("epics", epic_name, EpicConfig)
+    team = loader.load_asset("teams", epic.team, TeamConfig)
+    env = loader.load_asset("environments", epic.environment, EnvironmentConfig)
     
-    # 2. Load dependencies
-    team = loader.load_team(project.team)
-    sequence = loader.load_sequence(project.sequence)
-    env = loader.load_environment(project.environment)
-    
-    # 3. Handle Overrides
-    final_model = model_override or env.model
-    final_task = task_override or project.example_task or "No task provided."
+    final_task = task_override or epic.example_task or "No task provided."
+    all_refs = epic.references + (extra_references or [])
 
-    _policy().add_workspace(str(workspace))
+    # 2. Setup Session Security & Tools
+    policy = create_session_policy(str(workspace), all_refs)
+    toolbox = ToolBox(policy, str(workspace), all_refs)
+    tool_map = get_tool_map(toolbox)
 
     provider = LocalModelProvider(
-        model=final_model, 
+        model=model_override or env.model, 
         temperature=env.temperature, 
         seed=env.seed
     )
     conductor: Conductor = ManualConductor() if interactive_conductor else Conductor()
 
-    agents = build_band_agents(team, provider)
-
-    conductor.log_session_models(
-        team=team,
-        provider=provider,
-        workspace=workspace,
-        project_name=project.name,
-    )
-
     transcript: List[Dict[str, Any]] = []
     notes: Dict[str, Any] = {}
 
-    log_event(
-        "session_start",
-        {
-            "department": department,
-            "project": project.name,
-            "team": team.name,
-            "sequence": sequence.name,
-            "model": provider.model,
-            "task": final_task[:100] + "..." if len(final_task) > 100 else final_task
-        },
-        workspace=workspace,
-    )
+    log_event("session_start", {"epic": epic.name, "team": team.name}, workspace=workspace)
 
-    for idx, step in enumerate(sequence.steps):
-        role_name = step.role
-        session_view = SessionView(
-            flow_name=project.name,
-            step_index=idx,
-            transcript=transcript,
-            role=role_name,
-            notes=notes,
-        )
+    # 3. Main Traction Loop
+    from orket.hardware import get_current_profile, can_handle_tier
+    hw_profile = get_current_profile()
 
-        step_dict = step.model_dump()
-        adjust = conductor.before_step(step_dict, session_view)
+    for iteration in range(epic.iterations):
+        for idx, story in enumerate(epic.stories):
+            seat_name = story.seat
+            seat = team.seats.get(seat_name)
+            if not seat: raise ValueError(f"Seat '{seat_name}' not found")
+            
+            # Aggregate Roles and filter by Hardware
+            combined_description = f"Seat: {seat_name}.\n"
+            combined_tools = {}
+            omitted_tools = []
+            
+            for role_name in seat.roles:
+                role = team.roles.get(role_name)
+                if not role: continue
+                combined_description += f"\nRole {role.name}: {role.description}\n"
+                for t_name in role.tools:
+                    if t_name in tool_map:
+                        tier = TOOL_TIERS.get(t_name, "utility")
+                        if can_handle_tier(tier, hw_profile):
+                            combined_tools[t_name] = tool_map[t_name]
+                        else:
+                            omitted_tools.append(t_name)
+            
+            if omitted_tools:
+                combined_description += f"\n\nDISABLED TOOLS (Hardware): {omitted_tools}."
 
-        if adjust.skip_role:
-            log_event("step_skipped", {"role": role_name, "step_index": idx}, workspace=workspace, role=role_name)
-            continue
+            session_view = SessionView(epic.name, iteration + 1, idx, seat_name, transcript, notes)
+            
+            # Governance
+            is_first, is_last = (iteration == 0), (iteration == epic.iterations - 1)
+            gov = story.governance or "always"
+            if (gov == "once" and not is_first) or (gov == "final" and not is_last):
+                print(f"  [SKIPPED] {seat_name} (Governance)")
+                continue
+            
+            if conductor.before_step(story.model_dump(), session_view).skip_role:
+                continue
 
-        log_event("step_start", {"role": role_name, "step_index": idx, "model": provider.model}, workspace=workspace, role=role_name)
+            active_model = story.model or model_override or env.model
+            print(f"  [RUNNING] R{iteration+1} | {seat_name} ({active_model})...")
 
-        agent = agents[role_name]
-        agent.apply_prompt_patch(adjust.prompt_patch)
+            # Provider for this story
+            story_provider = LocalModelProvider(active_model, env.temperature, env.seed)
+            member = Agent(seat_name, combined_description, combined_tools, story_provider)
 
-        # AWAIT the async agent run
-        response = await agent.run(
-            task={"description": final_task},
-            context={
-                "step_index": idx,
-                "workspace": str(workspace),
-                "project_name": project.name,
-                "notes": notes,
-            },
-            workspace=workspace,
-            transcript=transcript,
-        )
+            response = await member.run(
+                task={"description": final_task},
+                context={"story_index": idx, "iteration": iteration + 1, "workspace": str(workspace), "references": all_refs, "notes": notes},
+                workspace=workspace,
+                transcript=transcript
+            )
 
-        if "NOTES_UPDATE:" in response.content:
-            try:
-                parts = response.content.split("NOTES_UPDATE:")
-                update_str = parts[1].splitlines()[0].strip()
-                update_data = json.loads(update_str)
-                notes.update(update_data)
-            except:
-                pass
+            # Handle notes
+            if "NOTES_UPDATE:" in response.content:
+                try: notes.update(json.loads(response.content.split("NOTES_UPDATE:")[1].splitlines()[0]))
+                except: pass
 
-        log_event("step_end", {"role": role_name, "step_index": idx, "output_preview": response.content[:100]}, workspace=workspace, role=role_name)
+            transcript.append({"iteration": iteration + 1, "step_index": idx, "role": seat_name, "note": response.note, "summary": response.content})
+            conductor.after_step(story.model_dump(), session_view)
 
-        transcript.append({
-            "step_index": idx,
-            "role": role_name,
-            "note": response.note,
-            "summary": response.content,
-        })
-
-        conductor.after_step(step_dict, session_view)
-
-    log_event("session_end", {"project": project.name}, workspace=workspace)
-
+    log_event("session_end", {"epic": epic.name}, workspace=workspace)
     return transcript
+
+async def orchestrate_rock(
+    rock_name: str,
+    workspace: Path,
+    department: str = "core",
+    task_override: Optional[str] = None
+) -> Dict[str, Any]:
+    model_root = Path("model").resolve()
+    loader = ConfigLoader(model_root, department)
+    rock = loader.load_asset("rocks", rock_name, RockConfig)
+    
+    results, previous_workspaces = [], []
+    for entry in rock.epics:
+        dept, epic_name = entry["department"], entry["epic"]
+        epic_workspace = workspace / epic_name
+        
+        transcript = await orchestrate(
+            epic_name=epic_name,
+            workspace=epic_workspace,
+            department=dept,
+            task_override=task_override,
+            extra_references=rock.references + previous_workspaces
+        )
+        
+        previous_workspaces.append(str(epic_workspace))
+        results.append({"epic": epic_name, "dept": dept, "transcript": transcript})
+
+    return {"rock": rock.name, "results": results}

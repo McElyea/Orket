@@ -2,12 +2,21 @@ import json
 from pathlib import Path
 from orket.filesystem import FilesystemPolicy
 
-def load_policy(config_path: Path | str = "orket/permissions.json") -> FilesystemPolicy:
-    path = Path(config_path)
-    with path.open("r", encoding="utf-8") as f:
-        cfg = json.load(f)
+def create_session_policy(workspace: str, references: list[str] = None) -> FilesystemPolicy:
+    """
+    Creates a fresh, isolated policy for a single orchestration session.
+    """
+    # Default base policy (could also be loaded from a global config)
+    spaces = {
+        "domain": str(Path.cwd()),
+        "workspace": workspace,
+        "references": references or []
+    }
+    
+    # Standard security rules
+    policy_rules = {
+        "read_scope": ["workspace", "reference", "domain"],
+        "write_scope": ["workspace"]
+    }
 
-    spaces = cfg.get("spaces", {})
-    policy = cfg.get("policy", {})
-
-    return FilesystemPolicy(spaces=spaces, policy=policy)
+    return FilesystemPolicy(spaces=spaces, policy=policy_rules)

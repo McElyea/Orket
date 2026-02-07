@@ -1,8 +1,17 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Callable
 
+# Global list of event subscribers (e.g. for WebSockets)
+_subscribers: List[Callable[[Dict[str, Any]], None]] = []
+
+def subscribe_to_events(callback: Callable[[Dict[str, Any]], None]):
+    _subscribers.append(callback)
+
+def unsubscribe_from_events(callback: Callable[[Dict[str, Any]], None]):
+    if callback in _subscribers:
+        _subscribers.remove(callback)
 
 def _log_path(workspace: Path, role: str = None) -> Path:
     if role:
@@ -15,23 +24,30 @@ def _log_path(workspace: Path, role: str = None) -> Path:
 
 def log_event(event: str, data: Dict[str, Any], workspace: Path, role: str = None) -> None:
     record = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "role": role or data.get("role"), # Promote role to top level
+        "timestamp": datetime.now().isoformat() + "Z",
+        "role": role or data.get("role"), 
         "event": event,
         "data": data,
     }
     
-    # Write to main log
+    # 1. Write to main log
     main_path = _log_path(workspace)
     with main_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
         
-    # Write to agent-specific log if role is known
+    # 2. Write to agent-specific log if role is known
     current_role = record["role"]
     if current_role:
         agent_path = _log_path(workspace, current_role)
         with agent_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    # 3. Notify subscribers (for WebSockets)
+    for subscriber in _subscribers:
+        try:
+            subscriber(record)
+        except:
+            pass # Prevent one bad subscriber from breaking the engine
 
 
 def log_model_selected(role: str, model: str, temperature: float, seed, flow: str, workspace: Path) -> None:

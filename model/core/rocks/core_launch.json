@@ -1,0 +1,15 @@
+{
+  "name": "core_launch",
+  "description": "Initial launch of the Orket core engine features.",
+  "owner_department": "core",
+  "epics": [
+    {
+      "department": "core",
+      "epic": "standard"
+    },
+    {
+      "department": "core",
+      "epic": "ui_update"
+    }
+  ]
+}

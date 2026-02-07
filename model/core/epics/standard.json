@@ -1,0 +1,21 @@
+{
+  "name": "standard",
+  "description": "A standard development epic.",
+  "team": "standard",
+  "environment": "standard",
+  "stories": [
+    {
+      "seat": "Lead Architect",
+      "note": "Design the solution"
+    },
+    {
+      "seat": "Senior Developer",
+      "note": "Implement the code"
+    },
+    {
+      "seat": "Quality Assurance",
+      "note": "Verify the results"
+    }
+  ],
+  "example_task": "Build a small Python package named 'shapes' with area and perimeter functions."
+}
