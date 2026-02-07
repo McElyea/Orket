@@ -113,44 +113,44 @@ class ToolBox:
 
     # --- Traction & EOS Tools ---
 
-    def create_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Dynamically adds a new Card to the Board."""
+    def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Dynamically adds a new Issue to the Board."""
         session_id = context.get("session_id")
         seat = args.get("seat")
         summary = args.get("summary")
-        card_type = args.get("type", "story")
+        issue_type = args.get("type", "story")
         if not session_id or not seat or not summary: return {"ok": False, "error": "Missing params"}
         
         from orket.persistence import PersistenceManager
         db = PersistenceManager()
-        card_id = db.add_card(session_id, seat, summary, card_type, args.get("priority", "Medium"))
-        return {"ok": True, "card_id": card_id}
+        issue_id = db.add_issue(session_id, seat, summary, issue_type, args.get("priority", "Medium"))
+        return {"ok": True, "issue_id": issue_id}
 
-    def update_card_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Updates Card status. Only Project Manager can cancel."""
-        card_id = args.get("card_id") or context.get("card_id")
+    def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Updates Issue status. Only Project Manager can cancel."""
+        issue_id = args.get("issue_id") or context.get("issue_id")
         new_status = args.get("status", "").lower()
         seat_calling = context.get("role", "")
         
-        if not card_id or not new_status: return {"ok": False, "error": "Missing params"}
+        if not issue_id or not new_status: return {"ok": False, "error": "Missing params"}
         if new_status == "canceled" and "project_manager" not in seat_calling.lower():
             return {"ok": False, "error": "Permission Denied: Only PM can cancel work."}
             
         from orket.persistence import PersistenceManager
         db = PersistenceManager()
-        db.update_card_status(card_id, new_status)
-        return {"ok": True, "card_id": card_id, "status": new_status}
+        db.update_issue_status(issue_id, new_status)
+        return {"ok": True, "issue_id": issue_id, "status": new_status}
 
     def request_excuse(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Allows a member to request an excuse from the current card."""
-        card_id = context.get("card_id")
+        """Allows a member to request an excuse from the current issue."""
+        issue_id = context.get("issue_id")
         reason = args.get("reason", "No reason provided")
-        if not card_id: return {"ok": False, "error": "No active Card"}
+        if not issue_id: return {"ok": False, "error": "No active Issue"}
         
         from orket.persistence import PersistenceManager
         db = PersistenceManager()
-        db.update_card_status(card_id, "excuse_requested")
-        print(f"  [PROTOCOL] Seat {context.get('role')} requested excuse from {card_id}. Reason: {reason}")
+        db.update_issue_status(issue_id, "excuse_requested")
+        print(f"  [PROTOCOL] Seat {context.get('role')} requested excuse from {issue_id}. Reason: {reason}")
         return {"ok": True, "message": "Excuse requested from Conductor."}
 
     # --- Academy Tools ---
@@ -210,8 +210,8 @@ def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
         "document_inspect": toolbox.document_inspect,
         "image_analyze": toolbox.image_analyze,
         "image_generate": toolbox.image_generate,
-        "create_card": toolbox.create_card,
-        "update_card_status": toolbox.update_card_status,
+        "create_issue": toolbox.create_issue,
+        "update_issue_status": toolbox.update_issue_status,
         "request_excuse": toolbox.request_excuse,
         "archive_eval": toolbox.archive_eval,
         "promote_prompt": toolbox.promote_prompt,

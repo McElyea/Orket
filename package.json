@@ -1,0 +1,9 @@
+{
+  "name": "orket-root",
+  "private": true,
+  "scripts": {
+    "dev:ui": "npm run dev --prefix ui",
+    "dev:server": "python server.py",
+    "dev": "npm run dev:ui"
+  }
+}

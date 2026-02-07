@@ -82,3 +82,40 @@ def log_model_usage(role: str, model: str, tokens: Dict[str, Any], step_index: i
         },
         workspace=workspace,
     )
+
+def get_member_metrics(workspace: Path) -> Dict[str, Any]:
+    """
+    Aggregates stats per role from the workspace/orket.log.
+    """
+    log_path = workspace / "orket.log"
+    if not log_path.exists():
+        return {}
+
+    metrics = {}
+    with log_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            try:
+                record = json.loads(line)
+                role = record.get("role")
+                if not role: continue
+                
+                if role not in metrics:
+                    metrics[role] = {"tokens": 0, "lines_written": 0, "last_action": "Idle", "detail": ""}
+                
+                event = record.get("event")
+                data = record.get("data", {})
+                
+                if event == "model_usage":
+                    metrics[role]["tokens"] += (data.get("total_tokens") or 0)
+                elif event == "tool_call":
+                    tool = data.get("tool")
+                    metrics[role]["last_action"] = f"Executing {tool}"
+                    if tool == "write_file":
+                        content = data.get("args", {}).get("content", "")
+                        metrics[role]["lines_written"] += len(content.splitlines())
+                        metrics[role]["detail"] = f"Wrote {data.get('args', {}).get('path')}"
+                elif event == "auto_persist":
+                    metrics[role]["detail"] = f"Persisted {data.get('path')}"
+            except:
+                continue
+    return metrics

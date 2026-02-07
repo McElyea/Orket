@@ -9,7 +9,10 @@ Orket emphasizes **Structural Integrity**, **Volatility Decomposition**, and **T
 
 ## What's New in v0.3.0
 
-- **Card-Based Hierarchy** — Track work through **Rocks** (High-level goals), **Epics** (Thematic groups), and **Cards** (Units of execution).
+- **Card-Based Hierarchy** — Track work through **Cards** (The generic polymorphic type).
+    - **Rock** (Strategic Card) — High-level goals.
+    - **Epic** (Tactical Card) — Thematic groups.
+    - **Issue** (Operational Card) — The atomic unit of execution (e.g., `COR26-0001`).
 - **The Prompt Engine** — Separation of **Skills** (Managerial intent) and **Dialects** (Model-specific syntax) to solve the leaf-node explosion problem.
 - **iDesign Training** — Injected constraints forcing models to follow strict structural patterns: Managers, Engines, Accessors, and Utilities.
 - **Vendor Abstraction** — Unified interface for Gitea, ADO, and Jira integrations.
@@ -30,9 +33,10 @@ Modern AI tools often operate as opaque, single‑shot systems. Orket provides t
 
 ## Core concepts
 
-- **Rock** — A strategic milestone (e.g., "Initialize System").
-- **Epic** — A group of related cards (e.g., "Core Baseline").
-- **Card** — The atomic unit of work (e.g., "COR26-0001: Verify Hardware").
+- **Card** — The base polymorphic type for all tracked work.
+- **Rock** — A strategic Card (milestone).
+- **Epic** — A tactical Card (group of related issues).
+- **Issue** — An operational Card (atomic work unit, e.g. `COR26-0001`).
 - **Skill** — The "Manager" intent of a role (Platform-agnostic).
 - **Dialect** — The "Utility" syntax for a specific model (e.g., Qwen vs. Llama).
 - **Workstation** — The Command & Control UI for managing the Project Board and File Explorer.

@@ -8,7 +8,7 @@ from orket.discovery import print_orket_manifest, perform_first_run_setup
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run an Orket Card, Epic, or Rock.")
+    parser = argparse.ArgumentParser(description="Run an Orket Card (Rock, Epic, or Issue).")
 
     parser.add_argument(
         "--epic",
@@ -21,7 +21,7 @@ def parse_args():
         "--card",
         type=str,
         default=None,
-        help="ID or summary of a specific Card to run.",
+        help="ID or summary of a specific Card (Issue, Epic, or Rock) to run.",
     )
 
     parser.add_argument(
@@ -68,14 +68,14 @@ def parse_args():
     parser.add_argument(
         "--board",
         action="store_true",
-        help="Display the top-down tree view of Rocks, Epics, and Cards.",
+        help="Display the top-down tree view of Rocks, Epics, and Issues (The Cards).",
     )
 
     return parser.parse_args()
 
 
 def print_board(hierarchy: dict):
-    print(f"\n{'='*60}\n ORKET PROJECT BOARD (Tree View)\n{'='*60}")
+    print(f"\n{'='*60}\n ORKET PROJECT BOARD (The Card Hierarchy)\n{'='*60}")
     
     for rock in hierarchy["rocks"]:
         print(f"\n[ROCK] {rock['name']}")
@@ -84,20 +84,20 @@ def print_board(hierarchy: dict):
                 print(f"  ↳ [EPIC] {epic['name']} (Error: {epic['error']})")
                 continue
             print(f"  ↳ [EPIC] {epic['name']}")
-            for card in epic.get("cards", []):
-                print(f"    - [{card['id']}] {card['summary']} ({card['seat']})")
+            for issue in epic.get("issues", []):
+                print(f"    - [{issue['id']}] {issue['summary']} ({issue['seat']})")
                 
     if hierarchy["orphaned_epics"]:
         print(f"\n[ORPHANED EPICS] (ALERT: These should be assigned to a Rock!)")
         for epic in hierarchy["orphaned_epics"]:
             print(f"  ⊷ {epic['name']}")
-            for card in epic.get("cards", []):
-                print(f"    - [{card['id']}] {card['summary']} ({card['seat']})")
+            for issue in epic.get("issues", []):
+                print(f"    - [{issue['id']}] {issue['summary']} ({issue['seat']})")
 
-    if hierarchy["orphaned_cards"]:
-        print(f"\n[ORPHANED CARDS] (ALERT: These should be assigned to an Epic!)")
-        for card in hierarchy["orphaned_cards"]:
-            print(f"  ⚡ [{card['id']}] {card['summary']} ({card['seat']})")
+    if hierarchy["orphaned_issues"]:
+        print(f"\n[ORPHANED ISSUES] (ALERT: These should be assigned to an Epic!)")
+        for issue in hierarchy["orphaned_issues"]:
+            print(f"  ⚡ [{issue['id']}] {issue['summary']} ({issue['seat']})")
             
     if hierarchy["alerts"]:
         print(f"\n[STRUCTURAL ALERTS]")
@@ -144,7 +144,38 @@ def main():
             return
 
         if not args.epic:
-            print("Error: Must specify --epic, --rock, or --card")
+            # Interactive Driver Mode
+            from orket.driver import OrketDriver
+            
+            print(f"\n{'='*60}\n ORKET DRIVER (Interactive)\n{'='*60}")
+            print("Describe your problem or the team you need. Type 'exit' to quit.\n")
+            
+            async def run_interactive_session():
+                driver = OrketDriver(model=args.model if args.model else "qwen2.5-coder:7b")
+                while True:
+                    try:
+                        user_input = await asyncio.to_thread(input, "Driver> ")
+                        user_input = user_input.strip()
+                        
+                        if user_input.lower() in ["exit", "quit", "q"]:
+                            break
+                        if not user_input:
+                            continue
+                            
+                        print("Thinking...", end="", flush=True)
+                        response = await driver.process_request(user_input)
+                        print(f"\r{response}\n")
+                    except EOFError:
+                        break
+
+            try:
+                asyncio.run(run_interactive_session())
+            except KeyboardInterrupt:
+                pass
+            except Exception as e:
+                print(f"\nError: {e}")
+            
+            print("\nDriver Session Ended.")
             return
 
         print(f"Running Orket Epic: {args.epic} (Department: {args.department})")

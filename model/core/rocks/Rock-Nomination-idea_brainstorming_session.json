@@ -1,0 +1,11 @@
+{
+  "name": "Rock-Nomination-idea_brainstorming_session",
+  "description": "Strategic parent for A session to brainstorm new ideas for the company, leveraging a diverse set of skills from the core department.",
+  "owner_department": "core",
+  "epics": [
+    {
+      "epic": "idea_brainstorming_session",
+      "department": "core"
+    }
+  ]
+}

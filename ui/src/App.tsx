@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Menu, FolderTree, Users, Activity, Terminal, Cpu, File, Folder, ChevronRight, ChevronLeft, Save, Play, Settings, Trello, Monitor, Rocket, CheckCircle2, PlayCircle, Filter, Calendar, Zap } from 'lucide-react';
+import { Menu, FolderTree, Users, Activity, Terminal, Cpu, File, Folder, ChevronRight, ChevronLeft, Save, Play, Settings, Trello, Monitor, Rocket, Zap } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import { LineChart, Line, ResponsiveContainer, CartesianGrid, YAxis, XAxis, Tooltip, ReferenceLine, Legend } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, CartesianGrid, YAxis, XAxis, ReferenceLine } from 'recharts';
+import KanbanPlugin from './components/KanbanPlugin';
 
 const API_BASE = "http://127.0.0.1:8082";
-const WS_BASE = "ws://127.0.0.1:8082";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'workstation' | 'traction'>('workstation');
+  const [activeTab, setActiveTab] = useState<'traction' | 'workstation'>('traction');
+  const [showTractionPlugin, setShowTractionPlugin] = useState(true);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [files, setFiles] = useState<any[]>([]);
   const [currentPath, setCurrentPath] = useState('.');
@@ -21,15 +22,92 @@ export default function App() {
   const [calendar, setCalendar] = useState<any>(null);
   const [isLaunching, setIsLaunching] = useState(false);
   
+  const [selectedIssue, setSelectedIssue] = useState<any>(null);
+  const [issueComments, setIssueComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [resolutionText, setResolutionText] = useState('');
+
   const [isExplorerOpen, setExplorerOpen] = useState(true);
-  const [navigatorView, setNavigatorView] = useState<'explorer' | 'traction_tree'>('explorer');
+  const [navigatorView, setNavigatorView] = useState<'traction_tree' | 'explorer' | 'members' | 'settings'>('traction_tree');
   const [boardHierarchy, setBoardHierarchy] = useState<any>(null);
-  const [executeFilter, setExecuteFilter] = useState(false);
+  const [executeFilter] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
   
-  const [sidebarWidth, setSidebarWidth] = useState(240);
-  const [hudWidth, setHudWidth] = useState(380);
+  const [sidebarWidth] = useState(260);
+  const [hudWidth, setHudWidth] = useState(window.innerWidth / 2);
   const [footerHeight, setFooterHeight] = useState(240);
+
+  const [chatInput, setChatInput] = useState('');
+  const [isChatting, setIsChatting] = useState(false);
+
+  const [membersConfig, setMembersConfig] = useState<any>(null);
+  const [settingsConfig, setSettingsConfig] = useState<any>(null);
+
+  const fetchMembers = async () => {
+    try {
+      const teamsRes = await fetch(`${API_BASE}/system/explorer?path=model/core/teams`);
+      const skillsRes = await fetch(`${API_BASE}/system/explorer?path=model/core/skills`);
+      setMembersConfig({
+        teams: (await teamsRes.json()).items || [],
+        skills: (await skillsRes.json()).items || []
+      });
+    } catch (e) {}
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const dialectsRes = await fetch(`${API_BASE}/system/explorer?path=model/core/dialects`);
+      const envsRes = await fetch(`${API_BASE}/system/explorer?path=model/core/environments`);
+      const rootRes = await fetch(`${API_BASE}/system/explorer?path=model/core`);
+      const rootFiles = (await rootRes.json()).items || [];
+      
+      setSettingsConfig({
+        dialects: (await dialectsRes.json()).items || [],
+        environments: (await envsRes.json()).items || [],
+        core: rootFiles.filter((f: any) => f.name.endsWith('.json'))
+      });
+    } catch (e) {}
+  };
+
+  const fetchComments = async (issueId: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/backlog/${issueId}/comments`);
+      setIssueComments(await res.json());
+    } catch (e) {}
+  };
+
+  const addComment = async () => {
+    if (!selectedIssue || !newComment) return;
+    try {
+      await fetch(`${API_BASE}/backlog/${selectedIssue.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newComment, author: 'User' })
+      });
+      setNewComment('');
+      fetchComments(selectedIssue.id);
+    } catch (e) {}
+  };
+
+  const submitResolution = async () => {
+    if (!selectedIssue || !resolutionText) return;
+    try {
+      await fetch(`${API_BASE}/backlog/${selectedIssue.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resolution: resolutionText, status: 'done' })
+      });
+      setResolutionText('');
+      setSelectedIssue(null);
+      if (activeSessionId) fetchBacklog(activeSessionId);
+    } catch (e) {}
+  };
+
+  const openIssueDetail = (issue: any) => {
+    setSelectedIssue(issue);
+    setResolutionText(issue.resolution || '');
+    fetchComments(issue.id);
+  };
 
   const fetchBoard = async () => {
     try {
@@ -52,6 +130,26 @@ export default function App() {
       const data = await res.json();
       setBacklog(data || []);
     } catch (e) {}
+  };
+
+  const chatWithDriver = async () => {
+    if (!chatInput) return;
+    setIsChatting(true);
+    try {
+      const res = await fetch(`${API_BASE}/system/chat-driver`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: chatInput })
+      });
+      const data = await res.json();
+      setLogs(p => [...p, {role: 'DRIVER', event: 'REACTION', data: {msg: data.response}}]);
+      setChatInput('');
+      fetchBoard();
+    } catch (e: any) {
+        alert("Driver Error: " + e.message);
+        console.error("Driver Chat Failed", e);
+    }
+    finally { setIsChatting(false); }
   };
 
   // 1. DATA INIT
@@ -89,7 +187,7 @@ export default function App() {
 
   // 2. EXPLORER & BOARD
   useEffect(() => {
-    if (activeTab === 'workstation') {
+    if (activeTab === 'workstation' || activeTab === 'traction') {
         if (navigatorView === 'explorer') {
             const fetchFiles = async () => {
                 try {
@@ -99,34 +197,21 @@ export default function App() {
                 } catch (e) {}
             };
             fetchFiles();
-        } else {
+        } else if (navigatorView === 'traction_tree') {
             fetchBoard();
+        } else if (navigatorView === 'members') {
+            fetchMembers();
+        } else if (navigatorView === 'settings') {
+            fetchSettings();
         }
     }
   }, [currentPath, activeTab, navigatorView]);
 
-  // 3. WS & STATE SYNC
-  useEffect(() => {
-    let socket: WebSocket;
-    const connect = () => {
-      socket = new WebSocket(`${WS_BASE}/ws/events`);
-      socket.onmessage = (event) => {
-        const record = JSON.parse(event.data);
-        setLogs((prev) => [...prev.slice(-100), record]);
-        if (activeSessionId) {
-            fetchMemberMetrics(activeSessionId);
-            fetchBacklog(activeSessionId);
-        }
-      };
-      socket.onclose = () => setTimeout(connect, 3000);
-    };
-    connect();
-    return () => socket?.close();
-  }, [activeSessionId]);
+  // ... (previous useEffects) ...
 
-  const updateStatus = async (cardId: string, status: string) => {
+  const updateStatus = async (issueId: string, status: string) => {
     try {
-      await fetch(`${API_BASE}/backlog/${cardId}`, {
+      await fetch(`${API_BASE}/backlog/${issueId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -136,13 +221,14 @@ export default function App() {
   };
 
   const openFile = async (f: any) => {
-    const fullPath = currentPath === '.' ? f.name : `${currentPath}/${f.name}`;
+    const fullPath = f.name.startsWith('model/') ? f.name : (currentPath === '.' ? f.name : `${currentPath}/${f.name}`);
     try {
       const res = await fetch(`${API_BASE}/system/read?path=${fullPath}`);
       const data = await res.json();
       setActiveFile(fullPath);
       setActiveAssetType(f.asset_type);
       setFileContent(data.content || '');
+      setActiveTab('workstation');
     } catch (e) {
         console.error("Open File Error:", e);
     }
@@ -161,7 +247,7 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setActiveSessionId(data.session_id);
-      setActiveTab('traction'); 
+      if (showTractionPlugin) setActiveTab('traction'); 
       console.log(`[RIG] Session Started: ${data.session_id}`);
     } catch (e: any) { 
         alert(`Launch Failed: ${e.message}`); 
@@ -215,6 +301,9 @@ export default function App() {
                 <div className="absolute top-10 left-0 w-56 bg-slate-900 border border-slate-800 shadow-2xl rounded-md py-1 z-[100] border-t-2 border-t-blue-600">
                     <button className="w-full text-left px-4 py-2 text-xs hover:bg-blue-600 hover:text-white flex items-center gap-2"><FolderTree size={12}/> Open Project</button>
                     <button onClick={saveFile} className="w-full text-left px-4 py-2 text-xs hover:bg-blue-600 hover:text-white flex items-center gap-2"><Save size={12}/> Save</button>
+                    <button onClick={() => setShowTractionPlugin(!showTractionPlugin)} className="w-full text-left px-4 py-2 text-xs hover:bg-blue-600 hover:text-white flex items-center gap-2">
+                      <Zap size={12}/> {showTractionPlugin ? 'Shelve Traction' : 'Unshelve Traction'}
+                    </button>
                     <div className="border-t border-slate-800 my-1"></div>
                     <button className="w-full text-left px-4 py-2 text-xs hover:bg-blue-600 hover:text-white flex items-center gap-2"><Settings size={12}/> Rig Settings</button>
                 </div>
@@ -224,15 +313,17 @@ export default function App() {
           <span className="font-black tracking-[0.4em] text-xs text-slate-100 uppercase">Orket</span>
 
           <div className="flex bg-black/40 p-1 rounded-lg border border-slate-800 ml-4">
+            {showTractionPlugin && (
+              <button 
+                  onClick={() => setActiveTab('traction')}
+                  className={`flex items-center gap-2 px-3 py-1 rounded text-[10px] font-bold transition-all ${activeTab === 'traction' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-500 hover:text-slate-300'}`}>
+                  <Trello size={12}/> TRACTION BOARD
+              </button>
+            )}
             <button 
                 onClick={() => setActiveTab('workstation')}
                 className={`flex items-center gap-2 px-3 py-1 rounded text-[10px] font-bold transition-all ${activeTab === 'workstation' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-500 hover:text-slate-300'}`}>
                 <Monitor size={12}/> WORKSTATION
-            </button>
-            <button 
-                onClick={() => setActiveTab('traction')}
-                className={`flex items-center gap-2 px-3 py-1 rounded text-[10px] font-bold transition-all ${activeTab === 'traction' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-500 hover:text-slate-300'}`}>
-                <Trello size={12}/> TRACTION BOARD
             </button>
           </div>
         </div>
@@ -251,196 +342,239 @@ export default function App() {
       {/* BODY */}
       <div className="flex-grow flex overflow-hidden min-h-0" style={{ marginBottom: footerHeight }}>
         
-        {/* NAVIGATOR */}
-        {activeTab === 'workstation' && (
-            <div style={{ width: isExplorerOpen ? 240 : 40 }} className="flex bg-slate-950 border-r border-slate-800 transition-all duration-300 overflow-hidden shrink-0 relative shadow-2xl">
-                <div className="flex flex-col w-full h-full">
-                    <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-black/20 shrink-0 h-10">
-                        {isExplorerOpen && (
-                            <div className="flex bg-black/40 rounded border border-slate-800 p-0.5">
-                                <button onClick={() => setNavigatorView('explorer')} className={`p-1 rounded ${navigatorView === 'explorer' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>
-                                    <FolderTree size={12}/>
-                                </button>
-                                <button onClick={() => setNavigatorView('traction_tree')} className={`p-1 rounded ${navigatorView === 'traction_tree' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>
-                                    <Trello size={12}/>
-                                </button>
-                            </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                            {isExplorerOpen && navigatorView === 'explorer' && (
-                                <button onClick={() => setExecuteFilter(!executeFilter)} className={`p-1 rounded transition-colors ${executeFilter ? 'text-blue-400 bg-blue-900/20' : 'text-slate-600 hover:text-slate-400'}`}>
-                                    <Filter size={12} />
-                                </button>
+        {activeTab === 'workstation' ? (
+          <div className="flex-grow flex min-w-0">
+            {/* LEFT 50%: NAVIGATOR + IDE */}
+            <div className="flex flex-row overflow-hidden border-r border-slate-800" style={{ width: `calc(100vw - ${hudWidth}px)` }}>
+                
+                {/* NAVIGATOR */}
+                <div style={{ width: isExplorerOpen ? sidebarWidth : 40 }} className="flex bg-slate-950 border-r border-slate-800 transition-all duration-300 overflow-hidden shrink-0 relative shadow-2xl">
+                    <div className="flex flex-col w-full h-full">
+                        <div className="p-2 border-b border-slate-800 flex items-center justify-between bg-black/20 shrink-0 h-12 overflow-x-auto no-scrollbar">
+                            {isExplorerOpen && (
+                                <div className="flex bg-black/40 rounded-lg border border-slate-800 p-1 gap-1">
+                                    <button onClick={() => setNavigatorView('traction_tree')} className={`flex items-center gap-2 px-3 py-1 rounded text-[10px] font-bold transition-all ${navigatorView === 'traction_tree' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                                        <Trello size={14}/> TRACTION
+                                    </button>
+                                    <button onClick={() => setNavigatorView('explorer')} className={`flex items-center gap-2 px-3 py-1 rounded text-[10px] font-bold transition-all ${navigatorView === 'explorer' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                                        <FolderTree size={14}/> FILES
+                                    </button>
+                                    <button onClick={() => setNavigatorView('members')} className={`flex items-center gap-2 px-3 py-1 rounded text-[10px] font-bold transition-all ${navigatorView === 'members' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                                        <Users size={14}/> MEMBERS
+                                    </button>
+                                    <button onClick={() => setNavigatorView('settings')} className={`flex items-center gap-2 px-3 py-1 rounded text-[10px] font-bold transition-all ${navigatorView === 'settings' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                                        <Settings size={14}/> SETTINGS
+                                    </button>
+                                </div>
                             )}
-                            <button onClick={() => setExplorerOpen(!isExplorerOpen)} className="text-slate-500 hover:text-blue-500">
-                                {isExplorerOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                            <button onClick={() => setExplorerOpen(!isExplorerOpen)} className="text-slate-500 hover:text-blue-500 p-1 shrink-0">
+                                {isExplorerOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
                             </button>
                         </div>
-                    </div>
-                    {isExplorerOpen && (
-                        <div className="flex-grow overflow-auto p-2 scrollbar-hide">
-                            {navigatorView === 'explorer' ? (
-                                <>
-                                    <div className="text-[8px] text-slate-600 mb-2 px-2 uppercase font-bold tracking-widest opacity-50 truncate flex justify-between">
-                                        <span>Root: {currentPath}</span>
-                                        {executeFilter && <span className="text-blue-500 animate-pulse"><Rocket size={8}/> PLAYLIST</span>}
-                                    </div>
-                                    {currentPath !== '.' && !executeFilter && (
-                                        <div onClick={goBack} className="flex items-center gap-2 py-1 px-3 text-[11px] text-blue-400 hover:bg-slate-900 cursor-pointer rounded mb-1 font-bold group">
-                                            <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" /> .. [Back]
+                        {isExplorerOpen && (
+                            <div className="flex-grow overflow-auto p-2 scrollbar-hide">
+                                {navigatorView === 'explorer' ? (
+                                    <>
+                                        <div className="text-[8px] text-slate-600 mb-2 px-2 uppercase font-bold tracking-widest opacity-50 truncate flex justify-between">
+                                            <span>Root: {currentPath}</span>
+                                            {executeFilter && <span className="text-blue-500 animate-pulse"><Rocket size={8}/> PLAYLIST</span>}
                                         </div>
-                                    )}
-                                    {files.filter(f => !executeFilter || f.is_launchable || f.is_dir).map(f => (
-                                        <div key={f.name} onClick={() => f.is_dir ? setCurrentPath(currentPath === '.' ? f.name : `${currentPath}/${f.name}`) : openFile(f)}
-                                            className={`flex items-center gap-2 py-1.5 px-3 text-[11px] rounded cursor-pointer transition-colors ${activeFile?.includes(f.name) ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 shadow-lg' : 'hover:bg-slate-900 hover:text-slate-100'}`}>
-                                            {f.is_dir ? <Folder size={12} className="text-blue-500 fill-blue-500/10" /> : <File size={12} className={f.is_launchable ? "text-blue-400 font-bold" : "text-slate-500"} />}
-                                            <span className={`truncate ${f.is_launchable ? 'font-black' : ''}`}>{f.name}</span>
-                                            {f.is_launchable && <Rocket size={10} className="ml-auto text-blue-500 opacity-50" />}
-                                        </div>
-                                    ))}
-                                </>
-                            ) : (
-                                <div className="space-y-4">
-                                    {boardHierarchy?.rocks.map((rock: any) => (
-                                        <div key={rock.name} className="space-y-1">
-                                            <div className="text-[9px] font-black text-blue-500 uppercase tracking-tighter flex items-center gap-1 opacity-80">
-                                                <Zap size={10}/> {rock.name}
+                                        {currentPath !== '.' && !executeFilter && (
+                                            <div onClick={goBack} className="flex items-center gap-2 py-1 px-3 text-[11px] text-blue-400 hover:bg-slate-900 cursor-pointer rounded mb-1 font-bold group">
+                                                <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" /> .. [Back]
                                             </div>
-                                            {rock.epics.map((epic: any) => (
-                                                <div key={epic.name} className="ml-2 pl-2 border-l border-slate-800 space-y-1">
-                                                    <div className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">{epic.name}</div>
-                                                    {epic.cards.map((card: any) => (
-                                                        <div key={card.summary} className="ml-2 text-[9px] text-slate-500 hover:text-blue-400 cursor-pointer transition-colors">
-                                                            - {card.summary}
-                                                        </div>
-                                                    ))}
+                                        )}
+                                        {files.filter(f => !executeFilter || f.is_launchable || f.is_dir).map(f => (
+                                            <div key={f.name} onClick={() => f.is_dir ? setCurrentPath(currentPath === '.' ? f.name : `${currentPath}/${f.name}`) : openFile(f)}
+                                                className={`flex items-center gap-2 py-1.5 px-3 text-[11px] rounded cursor-pointer transition-colors ${activeFile?.includes(f.name) ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 shadow-lg' : 'hover:bg-slate-900 hover:text-slate-100'}`}>
+                                                {f.is_dir ? <Folder size={12} className="text-blue-500 fill-blue-500/10" /> : <File size={12} className={f.is_launchable ? "text-blue-400 font-bold" : "text-slate-500"} />}
+                                                <span className={`truncate ${f.is_launchable ? 'font-black' : ''}`}>{f.name}</span>
+                                                {f.is_launchable && <Rocket size={10} className="ml-auto text-blue-500 opacity-50" />}
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : navigatorView === 'traction_tree' ? (
+                                    <div className="space-y-4 p-1">
+                                        {boardHierarchy?.rocks.map((rock: any) => (
+                                            <div key={rock.name} className="space-y-1">
+                                                <div 
+                                                    onClick={() => openFile({name: `model/core/rocks/${rock.name}.json`, asset_type: 'rock'})}
+                                                    className="text-[10px] font-black text-blue-500 uppercase tracking-tighter flex items-center gap-2 cursor-pointer hover:text-blue-400 group">
+                                                    <Zap size={12} className="group-hover:fill-blue-500/20"/> {rock.name}
                                                 </div>
+                                                {rock.epics.map((epic: any) => (
+                                                    <div key={epic.name} className="ml-2 pl-2 border-l border-slate-800 space-y-1">
+                                                        <div 
+                                                            onClick={() => openFile({name: `model/core/epics/${epic.name}.json`, asset_type: 'epic'})}
+                                                            className="text-[11px] font-bold text-slate-300 uppercase tracking-tight cursor-pointer hover:text-white">{epic.name}</div>
+                                                        {epic.issues.map((issue: any) => (
+                                                            <div key={issue.id} 
+                                                                onClick={() => {
+                                                                    openFile({name: `model/core/epics/${epic.name}.json`, asset_type: 'epic'});
+                                                                }}
+                                                                className="ml-2 text-[10px] text-slate-500 hover:text-blue-400 cursor-pointer transition-colors flex items-center gap-1">
+                                                                <span className="opacity-30">#</span> {issue.summary}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                        {(boardHierarchy?.orphaned_epics.length > 0 || boardHierarchy?.orphaned_issues.length > 0) && (
+                                            <div className="mt-4 pt-4 border-t border-slate-800 space-y-3">
+                                                <div className="text-[10px] font-black text-red-500 uppercase flex items-center gap-2 animate-pulse"><Zap size={12}/> Orphanage</div>
+                                                {boardHierarchy.orphaned_epics.map((epic: any) => (
+                                                    <div key={epic.name} onClick={() => openFile({name: `model/core/epics/${epic.name}.json`, asset_type: 'epic'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-red-900/50 ml-2">{epic.name}</div>
+                                                ))}
+                                                {boardHierarchy.orphaned_issues.map((issue: any) => (
+                                                    <div key={issue.id} onClick={() => openIssueDetail(issue)} className="text-[10px] text-slate-500 pl-2 cursor-pointer hover:text-blue-400 border-l border-red-900/50 ml-2">[{issue.id}] {issue.summary}</div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : navigatorView === 'members' ? (
+                                    <div className="space-y-6 p-1">
+                                        <div className="space-y-2">
+                                            <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-2 opacity-70"><Users size={12}/> Teams</div>
+                                            {membersConfig?.teams.map((t: any) => (
+                                                <div key={t.name} onClick={() => openFile({name: `model/core/teams/${t.name}`, asset_type: 'team'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-slate-800 ml-1">{t.name}</div>
                                             ))}
                                         </div>
-                                    ))}
-                                    {boardHierarchy?.orphaned_epics.length > 0 && (
-                                        <div className="mt-4 pt-4 border-t border-slate-800">
-                                            <div className="text-[9px] font-black text-red-500 uppercase mb-2 animate-pulse">! Orphaned Epics</div>
-                                            {boardHierarchy.orphaned_epics.map((epic: any) => (
-                                                <div key={epic.name} className="text-[10px] text-slate-400 pl-2">{epic.name}</div>
+                                        <div className="space-y-2">
+                                            <div className="text-[10px] font-black text-purple-500 uppercase tracking-widest flex items-center gap-2 opacity-70"><Cpu size={12}/> Skills</div>
+                                            {membersConfig?.skills.map((s: any) => (
+                                                <div key={s.name} onClick={() => openFile({name: `model/core/skills/${s.name}`, asset_type: 'skill'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-slate-800 ml-1">{s.name}</div>
                                             ))}
                                         </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6 p-1">
+                                        <div className="space-y-2">
+                                            <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-2 opacity-70"><Activity size={12}/> Dialects</div>
+                                            {settingsConfig?.dialects.map((d: any) => (
+                                                <div key={d.name} onClick={() => openFile({name: `model/core/dialects/${d.name}`, asset_type: 'dialect'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-slate-800 ml-1">{d.name}</div>
+                                            ))}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="text-[10px] font-black text-green-500 uppercase tracking-widest flex items-center gap-2 opacity-70"><Monitor size={12}/> Environments</div>
+                                            {settingsConfig?.environments.map((e: any) => (
+                                                <div key={e.name} onClick={() => openFile({name: `model/core/environments/${e.name}`, asset_type: 'environment'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-slate-800 ml-1">{e.name}</div>
+                                            ))}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest flex items-center gap-2 opacity-70"><Settings size={12}/> Core Configs</div>
+                                            {settingsConfig?.core.map((c: any) => (
+                                                <div key={c.name} onClick={() => openFile({name: `model/core/${c.name}`, asset_type: 'config'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-slate-800 ml-1">{c.name}</div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* IDE */}
+                <div className="flex-grow flex flex-col bg-slate-950 min-w-0 relative">
+                    <div className="h-8 bg-slate-900/30 border-b border-slate-800 flex items-center px-4 justify-between shrink-0">
+                        <span className="text-[10px] font-mono text-slate-500">{activeFile || 'IDLE_IDE'}</span>
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 border rounded uppercase tracking-[0.2em] ${activeAssetType ? 'text-blue-400 border-blue-900/50 bg-blue-950/20' : 'text-slate-600 border-slate-800'}`}>
+                            {activeAssetType || 'Read-Only'}
+                        </span>
+                    </div>
+                    <div className="flex-grow relative overflow-hidden">
+                        <Editor height="100%" theme="vs-dark" value={fileContent} onChange={(v) => setFileContent(v || '')} options={{ fontSize: 13, minimap: { enabled: false }, automaticLayout: true, fontFamily: 'Fira Code, monospace', lineHeight: 1.6 }} />
+                    </div>
                 </div>
             </div>
+
+            {/* RIGHT 50%: HUD (WIDE) */}
+            <div style={{ width: hudWidth }} className="bg-slate-950 border-l border-slate-800 flex flex-col shrink-0 relative shadow-2xl overflow-hidden">
+                <div onMouseDown={() => {
+                    const onMove = (me: MouseEvent) => setHudWidth(Math.max(200, Math.min(600, window.innerWidth - me.clientX)));
+                    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+                    document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+                }} className="absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-blue-600 transition-colors z-50" />
+                
+                <div className="p-3 border-b border-slate-800 flex items-center gap-2 bg-slate-900/40 shrink-0 uppercase tracking-widest font-black text-[10px] text-slate-500">
+                    <Activity size={14} className="text-blue-500" /> Member HUD
+                </div>
+                <div className="flex-grow overflow-auto p-4 space-y-4 bg-black/10">
+                    {Object.entries(activeMembers).map(([role, stats]: [string, any]) => (
+                    <div key={role} className="bg-slate-900/60 border border-slate-800 p-4 rounded-lg border-l-4 border-l-blue-600 group hover:border-blue-500 transition-all shadow-xl">
+                        <div className="flex justify-between items-center mb-4">
+                            <span className="text-slate-100 font-bold text-[11px] uppercase tracking-tighter">{role.replace('_', ' ')}</span>
+                            <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-center text-slate-400">
+                            <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
+                                <div className="text-[7px] uppercase font-black mb-1">Compute</div>
+                                <div className="text-xs font-mono">{(stats.tokens/1000).toFixed(1)}k</div>
+                            </div>
+                            <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
+                                <div className="text-[7px] uppercase font-black mb-1">Traction</div>
+                                <div className="text-xs font-mono text-blue-400">+{stats.lines_written}</div>
+                            </div>
+                        </div>
+                        {stats.detail && (
+                            <div className="mt-3 bg-blue-950/20 border border-blue-900/30 p-2 rounded text-[9px] font-mono text-blue-300 truncate">
+                                <span className="opacity-50 mr-1">DETAIL:</span> {stats.detail}
+                            </div>
+                        )}
+                    </div>
+                    ))}
+                </div>
+
+                {/* CHAT WITH DRIVER PANEL */}
+                <div className="h-48 border-t border-slate-800 bg-black/40 flex flex-col p-4 shrink-0">
+                    <div className="flex items-center gap-2 mb-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <Activity size={14} className="text-green-500" /> Driver Chat
+                    </div>
+                    <div className="flex-grow overflow-auto mb-3 text-[11px] text-slate-400 italic">
+                        Talk to the Driver to generate new Rocks, Epics, or Issues...
+                    </div>
+                    <div className="flex gap-2">
+                        <input 
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && chatWithDriver()}
+                            placeholder="e.g. 'Add a new feature for data export...'"
+                            className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-xs outline-none focus:border-blue-600 transition-colors"
+                        />
+                        <button 
+                            onClick={chatWithDriver}
+                            disabled={isChatting}
+                            className={`bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-all ${isChatting ? 'opacity-50 animate-pulse' : ''}`}>
+                            <Play size={14} fill="currentColor" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+          </div>
+        ) : (
+          <KanbanPlugin 
+            backlog={backlog} 
+            calendar={calendar} 
+            updateStatus={updateStatus} 
+            openIssueDetail={(issue: any) => {
+                // Find epic in board hierarchy
+                let epicName = "";
+                boardHierarchy?.rocks.forEach((r: any) => {
+                    r.epics.forEach((e: any) => {
+                        if (e.issues.some((i: any) => i.id === issue.id)) epicName = e.name;
+                    });
+                });
+                if (epicName) openFile({name: `model/core/epics/${epicName}.json`, asset_type: 'epic'});
+                else openIssueDetail(issue); // Fallback to modal if epic not found
+            }} 
+          />
         )}
-
-        {/* CONTENT AREA */}
-        <div className="flex-grow flex min-w-0 bg-slate-950">
-            {activeTab === 'workstation' ? (
-                <div className="flex-grow flex overflow-hidden">
-                    <div className="flex-grow flex flex-col bg-slate-950 min-w-0 relative">
-                        <div className="h-8 bg-slate-900/30 border-b border-slate-800 flex items-center px-4 justify-between shrink-0">
-                            <span className="text-[10px] font-mono text-slate-500">{activeFile || 'IDLE_IDE'}</span>
-                            <span className={`text-[8px] font-black px-1.5 py-0.5 border rounded uppercase tracking-[0.2em] ${activeAssetType ? 'text-blue-400 border-blue-900/50 bg-blue-950/20' : 'text-slate-600 border-slate-800'}`}>
-                                {activeAssetType || 'Read-Only'}
-                            </span>
-                        </div>
-                        <div className="flex-grow relative overflow-hidden">
-                            <Editor height="100%" theme="vs-dark" value={fileContent} onChange={(v) => setFileContent(v || '')} options={{ fontSize: 13, minimap: { enabled: false }, automaticLayout: true, fontFamily: 'Fira Code, monospace', lineHeight: 1.6 }} />
-                        </div>
-                    </div>
-
-                    {/* HUD (WIDE) */}
-                    <div style={{ width: hudWidth }} className="bg-slate-950 border-l border-slate-800 flex flex-col shrink-0 relative shadow-2xl overflow-hidden">
-                        <div onMouseDown={(e) => {
-                            const onMove = (me: MouseEvent) => setHudWidth(Math.max(200, Math.min(600, window.innerWidth - me.clientX)));
-                            const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-                            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
-                        }} className="absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-blue-600 transition-colors z-50" />
-                        
-                        <div className="p-3 border-b border-slate-800 flex items-center gap-2 bg-slate-900/40 shrink-0 uppercase tracking-widest font-black text-[10px] text-slate-500">
-                            <Users size={14} className="text-blue-500" /> Member HUD
-                        </div>
-                        <div className="flex-grow overflow-auto p-4 space-y-4 bg-black/10">
-                            {Object.entries(activeMembers).map(([role, stats]: [string, any]) => (
-                            <div key={role} className="bg-slate-900/60 border border-slate-800 p-4 rounded-lg border-l-4 border-l-blue-600 group hover:border-blue-500 transition-all shadow-xl">
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-slate-100 font-bold text-[11px] uppercase tracking-tighter">{role.replace('_', ' ')}</span>
-                                    <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 text-center text-slate-400">
-                                    <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
-                                        <div className="text-[7px] uppercase font-black mb-1">Compute</div>
-                                        <div className="text-xs font-mono">{(stats.tokens/1000).toFixed(1)}k</div>
-                                    </div>
-                                    <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
-                                        <div className="text-[7px] uppercase font-black mb-1">Traction</div>
-                                        <div className="text-xs font-mono text-blue-400">+{stats.lines_written}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                /* TRACTION BOARD */
-                <div className="flex-grow flex flex-col bg-[#020617] overflow-hidden">
-                    <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/20 shrink-0">
-                        <div className="flex items-center gap-4">
-                            <h4 className="text-sm font-black tracking-widest text-slate-100 uppercase flex items-center gap-2">
-                                <Trello size={18} className="text-blue-500"/> The Traction Board
-                            </h4>
-                            <div className="h-6 w-[1px] bg-slate-800"></div>
-                            {calendar && (
-                                <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] tracking-widest uppercase">
-                                    <Calendar size={14}/> {calendar.current_sprint} <span className="opacity-30">({calendar.sprint_start} to {calendar.sprint_end})</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex-grow flex gap-4 p-4 overflow-x-auto overflow-y-hidden bg-black/20">
-                        {['ready', 'blocked', 'ready_for_testing', 'waiting_for_developer', 'done', 'canceled'].map(status => (
-                            <div key={status} className="w-[320px] shrink-0 flex flex-col bg-slate-900/40 border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                                <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-black/40 h-10">
-                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">{status.replace(/_/g, ' ')}</span>
-                                    <span className="text-[10px] font-mono text-slate-600 bg-black/40 px-2 rounded-full border border-slate-800">{backlog.filter(s => s.status === status).length}</span>
-                                </div>
-                                <div className="flex-grow overflow-y-auto p-3 space-y-3 scrollbar-hide">
-                                    {backlog.filter(s => s.status === status).map(card => (
-                                        <div key={card.id} className="bg-slate-900/80 border border-slate-800 p-4 rounded-lg shadow-xl hover:border-blue-500/50 transition-all group relative">
-                                            <div className={`absolute top-0 right-0 w-1 h-12 rounded-tr-lg rounded-br-lg ${card.priority === 'Critical' ? 'bg-red-600' : card.priority === 'High' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">{card.id}</span>
-                                                    <span className="text-[7px] text-slate-600 font-bold">{card.sprint}</span>
-                                                </div>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {status !== 'ready' && <button onClick={() => updateStatus(card.id, 'ready')} className="p-1 hover:bg-blue-600 rounded text-slate-500 hover:text-white"><PlayCircle size={12}/></button>}
-                                                    {status !== 'done' && <button onClick={() => updateStatus(card.id, 'done')} className="p-1 hover:bg-green-600 rounded text-slate-500 hover:text-white"><CheckCircle2 size={12}/></button>}
-                                                </div>
-                                            </div>
-                                            <div className="text-[11px] font-black text-slate-100 uppercase mb-1 tracking-tight truncate">{card.summary || card.seat.replace(/_/g, ' ')}</div>
-                                            <div className="text-[10px] text-slate-500 italic leading-relaxed line-clamp-2">{card.note}</div>
-                                            <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-800/50 text-[9px]">
-                                                <span className="text-slate-400 font-bold uppercase">{card.assignee || 'Unassigned'}</span>
-                                                <span className={`font-bold px-1.5 rounded ${card.priority === 'Critical' ? 'text-red-400 bg-red-950/20' : 'text-slate-500'}`}>{card.priority}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
       </div>
 
       {/* FOOTER */}
       <div style={{ height: footerHeight }} className="fixed bottom-0 left-0 w-full border-t border-slate-800 bg-slate-950 flex flex-col z-40 shadow-[0_-15px_50px_rgba(0,0,0,0.7)]">
-        <div onMouseDown={(e) => {
-            const onMove = (me: MouseEvent) => setFooterHeight(Math.max(100, Math.min(600, window.innerHeight - me.clientX)));
+        <div onMouseDown={() => {
+            const onMove = (me: MouseEvent) => setFooterHeight(Math.max(100, Math.min(600, window.innerHeight - me.clientY)));
             const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
             document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
         }} className="h-1 w-full cursor-row-resize hover:bg-blue-600 transition-colors z-50 shrink-0" />
@@ -491,6 +625,96 @@ export default function App() {
             </div>
         </div>
       </div>
+
+      {/* ISSUE DETAIL MODAL */}
+      {selectedIssue && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[2000] flex items-center justify-center p-8">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+                  <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-black/20">
+                      <div>
+                          <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">{selectedIssue.id}</span>
+                          <h2 className="text-xl font-black text-slate-100 uppercase tracking-tight">{selectedIssue.summary}</h2>
+                      </div>
+                      <button onClick={() => setSelectedIssue(null)} className="text-slate-500 hover:text-white p-2">✕</button>
+                  </div>
+                  
+                  <div className="flex-grow flex overflow-hidden">
+                      {/* LEFT: DETAILS */}
+                      <div className="w-2/3 p-6 overflow-y-auto border-r border-slate-800 space-y-6">
+                          <section>
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Description</h4>
+                              <div className="text-slate-300 text-[14px] leading-relaxed bg-black/20 p-4 rounded-lg border border-slate-800/50">
+                                  {selectedIssue.note || 'No description provided.'}
+                              </div>
+                          </section>
+
+                          {(selectedIssue.status === 'done' || selectedIssue.status === 'canceled' || resolutionText) && (
+                              <section>
+                                  <h4 className="text-[10px] font-black text-blue-500 uppercase mb-2 tracking-widest">Resolution</h4>
+                                  <textarea 
+                                      value={resolutionText}
+                                      onChange={(e) => setResolutionText(e.target.value)}
+                                      placeholder="Explain how this issue was resolved or why it was canceled..."
+                                      className="w-full bg-black/40 border border-slate-800 rounded-lg p-4 text-[13px] text-slate-200 min-h-[120px] focus:border-blue-600 outline-none transition-colors"
+                                  />
+                                  <button 
+                                      onClick={submitResolution}
+                                      className="mt-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 rounded uppercase tracking-widest shadow-lg shadow-blue-900/20">
+                                      Save Resolution
+                                  </button>
+                              </section>
+                          )}
+
+                          <section>
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Comments</h4>
+                              <div className="space-y-4 mb-4">
+                                  {issueComments.map((c, i) => (
+                                      <div key={i} className="bg-black/20 p-3 rounded border border-slate-800/50">
+                                          <div className="flex justify-between text-[9px] mb-1">
+                                              <span className="font-black text-blue-400 uppercase">{c.author}</span>
+                                              <span className="text-slate-600">{new Date(c.created_at).toLocaleString()}</span>
+                                          </div>
+                                          <p className="text-slate-300 text-[12px]">{c.content}</p>
+                                      </div>
+                                  ))}
+                              </div>
+                              <div className="flex gap-2">
+                                  <input 
+                                      value={newComment}
+                                      onChange={(e) => setNewComment(e.target.value)}
+                                      placeholder="Add a comment..."
+                                      className="flex-grow bg-black/40 border border-slate-800 rounded p-2 text-xs outline-none focus:border-blue-600"
+                                  />
+                                  <button onClick={addComment} className="bg-slate-800 hover:bg-slate-700 p-2 rounded text-blue-400"><Play size={14}/></button>
+                              </div>
+                          </section>
+                      </div>
+
+                      {/* RIGHT: METRICS */}
+                      <div className="w-1/3 p-6 bg-black/10 space-y-6">
+                          <div>
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Status</h4>
+                              <span className="px-2 py-1 bg-blue-900/30 border border-blue-800 text-blue-400 rounded text-[10px] font-black uppercase">{selectedIssue.status}</span>
+                          </div>
+                          <div>
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Credits Spent</h4>
+                              <div className="text-3xl font-black text-slate-100 font-mono">{(selectedIssue.credits_spent || 0).toFixed(2)}<span className="text-sm text-blue-500 ml-1">c</span></div>
+                          </div>
+                          <div>
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Assignee</h4>
+                              <div className="text-[13px] font-bold text-slate-300 uppercase">{selectedIssue.assignee || 'Unassigned'}</div>
+                          </div>
+                          <div>
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Priority</h4>
+                              <span className={`text-[10px] font-black px-2 py-1 rounded uppercase ${selectedIssue.priority === 'Critical' ? 'bg-red-900/30 text-red-400 border border-red-800' : 'bg-slate-800 text-slate-400'}`}>
+                                  {selectedIssue.priority}
+                              </span>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 }
