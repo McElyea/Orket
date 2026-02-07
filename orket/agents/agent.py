@@ -1,4 +1,5 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
+from pathlib import Path
 from orket.llm import LocalModelProvider
 from orket.logging import log_event, log_model_usage
 import json
@@ -7,12 +8,6 @@ import json
 class Agent:
     """
     Single authoritative Agent class for Orket.
-    Handles:
-    - Prompt construction
-    - Model invocation
-    - Tool-call parsing
-    - Tool execution
-    - Logging
     """
 
     def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider):
@@ -21,6 +16,29 @@ class Agent:
         self.tools = tools
         self.provider = provider
         self._prompt_patch: str | None = None
+        
+        # Load model-specific instructions if they exist
+        self._load_model_specific_prompt()
+
+    def _load_model_specific_prompt(self):
+        """
+        Looks for model-specific overrides in prompts/{role}/{model_family}.txt
+        e.g., prompts/coder/qwen.txt
+        """
+        model_name = self.provider.model.lower()
+        family = "unknown"
+        if "qwen" in model_name: family = "qwen"
+        elif "llama" in model_name: family = "llama"
+        elif "deepseek" in model_name: family = "deepseek"
+        elif "gemma" in model_name: family = "gemma"
+        
+        prompt_path = Path("prompts") / self.name / f"{family}.txt"
+        if prompt_path.exists():
+            try:
+                override = prompt_path.read_text(encoding="utf-8")
+                self.description = override
+            except Exception:
+                pass
 
     # ---------------------------------------------------------
     # Prompt patching
@@ -69,7 +87,11 @@ class Agent:
                     content_lines.append(line)
             
             if tool and path:
-                return tool, {"path": path, "content": "\n".join(content_lines)}
+                content = "\n".join(content_lines)
+                # Auto-strip markdown fences if present
+                if content.startswith("```") and content.endswith("```"):
+                    content = "\n".join(content.splitlines()[1:-1])
+                return tool, {"path": path, "content": content}
 
         # Fallback to JSON
         try:
@@ -161,6 +183,7 @@ class Agent:
                     "result": tool_result
                 },
                 workspace=workspace,
+                role=self.name,
             )
 
             if tool_result.get("ok"):
@@ -192,6 +215,7 @@ class Agent:
                     "error": str(e),
                 },
                 workspace=workspace,
+                role=self.name,
             )
 
             return type(

@@ -39,12 +39,55 @@ class LocalModelProvider:
         return self.invoke(prompt)
 
     def _format_messages(self, messages: List[Dict[str, str]]) -> str:
+        model_lower = self.model.lower()
+        
+        # ChatML (Qwen, DeepSeek, many others)
+        if any(m in model_lower for m in ["qwen", "deepseek", "yi", "internlm"]):
+            return self._format_chatml(messages)
+            
+        # Llama-3 / 3.1
+        if "llama-3" in model_lower or "llama3" in model_lower:
+            return self._format_llama3(messages)
+            
+        # Gemma-2 / 3
+        if "gemma" in model_lower:
+            return self._format_gemma(messages)
+
+        # Fallback to simple format
         parts = []
         for m in messages:
             role = m["role"].upper()
             content = m["content"]
             parts.append(f"{role}: {content}")
         return "\n\n".join(parts)
+
+    def _format_chatml(self, messages: List[Dict[str, str]]) -> str:
+        prompt = ""
+        for m in messages:
+            role = m["role"]
+            content = m["content"]
+            prompt += f"<|im_start|>{role}\n{content}<|im_end|>\n"
+        prompt += "<|im_start|>assistant\n"
+        return prompt
+
+    def _format_llama3(self, messages: List[Dict[str, str]]) -> str:
+        # Simplified Llama-3 header format
+        prompt = "<|begin_of_text|>"
+        for m in messages:
+            role = m["role"]
+            content = m["content"]
+            prompt += f"<|start_header_id|>{role}<|end_header_id|>\n\n{content}<|eot_id|>"
+        prompt += "<|start_header_id|>assistant<|end_header_id|>\n\n"
+        return prompt
+
+    def _format_gemma(self, messages: List[Dict[str, str]]) -> str:
+        prompt = ""
+        for m in messages:
+            role = "model" if m["role"] == "assistant" else m["role"]
+            content = m["content"]
+            prompt += f"<start_of_turn>{role}\n{content}<end_of_turn>\n"
+        prompt += "<start_of_turn>model\n"
+        return prompt
 
     # ----------------------------------------------------------------------
     # Core invoke() with JSON fallback

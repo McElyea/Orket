@@ -11,6 +11,7 @@ from orket.logging import log_event
 from orket.conductor import Conductor, ManualConductor, SessionView
 from orket.agents.agent_factory import build_band_agents
 from orket.tools import _policy
+from orket.settings import get_setting
 
 
 # ---------------------------------------------------------------------------
@@ -18,17 +19,12 @@ from orket.tools import _policy
 # ---------------------------------------------------------------------------
 
 @dataclass
-class TaskContext:
-    task: Dict[str, Any]
-
-
-@dataclass
 class Flow:
     name: str
     description: str
     band_name: str
     score_name: str
-    task: Dict[str, Any]
+    task: str  # Simplified to string
 
 
 @dataclass
@@ -109,7 +105,8 @@ def load_score(model_root: Path, score_name: str) -> Score:
 def orchestrate(
     flow_path: Path,
     workspace: Path,
-    model_name: str,
+    model_name: Optional[str] = None,
+    task_override: Optional[str] = None,
     temperature: float = 0.2,
     seed: Optional[int] = None,
     interactive_conductor: bool = False,
@@ -117,17 +114,22 @@ def orchestrate(
 
     workspace = workspace.resolve()
 
+    # Determine default model from settings if not provided
+    if model_name is None:
+        model_name = get_setting("preferred_coder", "qwen3-coder:latest")
+
     # FIXED: correct model root resolution
-    # flow_path = model/flow/standard.json
-    # flow_path.parent = model/flow
-    # flow_path.parent.parent = model
     model_root = flow_path.parent.parent
 
-    # Load flow, band, score, task
+    # Load flow, band, score
     flow = load_flow(flow_path)
     band = load_band(model_root, flow.band_name)
     score = load_score(model_root, flow.score_name)
-    ctx = TaskContext(task=flow.task)
+    
+    # Resolve final task: Override > Flow JSON
+    final_task = task_override or flow.task
+    if isinstance(final_task, dict):
+        final_task = final_task.get("description", str(final_task))
 
     # Register workspace with policy
     _policy().add_workspace(str(workspace))
@@ -159,6 +161,7 @@ def orchestrate(
             "model": provider.model,
             "temperature": provider.temperature,
             "seed": provider.seed,
+            "task": final_task[:100] + "..." if len(final_task) > 100 else final_task
         },
         workspace=workspace,
     )
@@ -186,6 +189,7 @@ def orchestrate(
                     "reason": "conductor_skip",
                 },
                 workspace=workspace,
+                role=role_name,
             )
             continue
 
@@ -199,13 +203,14 @@ def orchestrate(
                 "seed": provider.seed,
             },
             workspace=workspace,
+            role=role_name,
         )
 
         agent = agents[role_name]
         agent.apply_prompt_patch(adjust.prompt_patch)
 
         response = agent.run(
-            task=ctx.task,
+            task={"description": final_task}, # Agent still expects a dict for now to minimize changes
             context={
                 "step_index": idx,
                 "workspace": str(workspace),
@@ -224,9 +229,19 @@ def orchestrate(
                 update_str = parts[1].splitlines()[0].strip()
                 update_data = json.loads(update_str)
                 notes.update(update_data)
-                log_event("notes_updated", {"update": update_data, "current_notes": notes}, workspace=workspace)
+                log_event(
+                    "notes_updated", 
+                    {"update": update_data, "current_notes": notes}, 
+                    workspace=workspace,
+                    role=role_name
+                )
             except Exception as e:
-                log_event("notes_update_error", {"error": str(e), "content": response.content}, workspace=workspace)
+                log_event(
+                    "notes_update_error", 
+                    {"error": str(e), "content": response.content}, 
+                    workspace=workspace,
+                    role=role_name
+                )
 
         log_event(
             "step_end",
@@ -237,6 +252,7 @@ def orchestrate(
                 "model": provider.model,
             },
             workspace=workspace,
+            role=role_name,
         )
 
         transcript.append(

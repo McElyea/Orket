@@ -1,0 +1,6 @@
+{
+    "name": "single_guru",
+    "steps": [
+        { "role": "front_end_guru" }
+    ]
+}
