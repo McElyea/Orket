@@ -101,8 +101,8 @@ from orket.settings import load_user_settings, save_user_settings
 
 def perform_first_run_setup():
     if load_user_settings().get("setup_complete"): return
-    print("\n[FIRST RUN] Orket EOS Ignited.")
-    print("  Recommendation: Run the initialization rock to optimize your models.")
+    print("\n[FIRST RUN] Orket EOS Orkestrated.")
+    print("  Recommendation: Orkestrate the initialization rock to optimize your models.")
     print("  Command: python main.py --rock initialize_orket")
     save_user_settings({"setup_complete": True, "hardware_profile": "auto-detected"})
 

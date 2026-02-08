@@ -62,7 +62,7 @@ Orket enforces a professional directory structure for all generated code:
     pip install -r requirements.txt
     ```
 
-2. **Ignite the Engine (First Run):**
+2. **Orkestrate the Engine (First Run):**
     ```bash
     python main.py --rock initialize_orket
     ```

@@ -1,0 +1,11 @@
+{
+  "name": "Q1 2026 Engine Maturation & Scale",
+  "description": "Strategic priority for Q1 2026 focused on stabilizing core orchestration, optimizing model tool-usage via periodic Reforge Ceremonies, and scaling the Sneaky Price Watch intelligence framework.",
+  "status": "in_progress",
+  "type": "rock",
+  "owner_department": "core",
+  "epics": [
+    { "epic": "system_optimization_q1", "department": "core" },
+    { "epic": "sneaky_price_watch_refinement", "department": "core" }
+  ]
+}

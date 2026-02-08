@@ -1,0 +1,12 @@
+{
+  "model_family": "deepseek-r1",
+  "dsl_format": "{\"tool\": \"write_file\", \"args\": {\"path\": \"filename.ext\", \"content\": \"code\"}}",
+  "constraints": [
+    "NEVER include conversational filler in your final JSON.",
+    "The FINAL output must be a SINGLE JSON object.",
+    "NEVER output markdown code blocks (e.g. ```json).",
+    "You MUST use tools to perform work. Do not just describe your plan.",
+    "If you need to reason, do it briefly then output the JSON tool call."
+  ],
+  "hallucination_guard": "If you output text before or after the JSON block, the engine will fail."
+}

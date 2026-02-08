@@ -53,9 +53,22 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--build-id",
+        type=str,
+        default=None,
+        help="Stable ID for Orket's continuous reuse pattern.",
+    )
+
+    parser.add_argument(
         "--interactive-conductor",
         action="store_true",
         help="Enable manual conductor mode.",
+    )
+
+    parser.add_argument(
+        "--driver-steered",
+        action="store_true",
+        help="Consult the Driver for tactical directives during orchestration.",
     )
 
     parser.add_argument(
@@ -78,26 +91,29 @@ def print_board(hierarchy: dict):
     print(f"\n{'='*60}\n ORKET PROJECT BOARD (The Card Hierarchy)\n{'='*60}")
     
     for rock in hierarchy["rocks"]:
-        print(f"\n[ROCK] {rock['name']}")
+        print(f"\n[ROCK] {rock['name']} (Status: {rock.get('status', 'on_track')})")
         for epic in rock.get("epics", []):
             if "error" in epic:
                 print(f"  ↳ [EPIC] {epic['name']} (Error: {epic['error']})")
                 continue
-            print(f"  ↳ [EPIC] {epic['name']}")
+            print(f"  ↳ [EPIC] {epic['name']} (Status: {epic.get('status', 'planning')})")
             for issue in epic.get("issues", []):
-                print(f"    - [{issue['id']}] {issue['summary']} ({issue['seat']})")
+                summary = issue.get("summary") or issue.get("name") or "Unnamed Unit"
+                print(f"    - [{issue['id']}] {summary} ({issue['seat']}) [Priority: {issue.get('priority', 'Medium')}, Status: {issue.get('status', 'ready')}]")
                 
     if hierarchy["orphaned_epics"]:
         print(f"\n[ORPHANED EPICS] (ALERT: These should be assigned to a Rock!)")
         for epic in hierarchy["orphaned_epics"]:
-            print(f"  ⊷ {epic['name']}")
+            print(f"  ⊷ {epic['name']} (Status: {epic.get('status', 'planning')})")
             for issue in epic.get("issues", []):
-                print(f"    - [{issue['id']}] {issue['summary']} ({issue['seat']})")
+                summary = issue.get("summary") or issue.get("name") or "Unnamed Unit"
+                print(f"    - [{issue['id']}] {summary} ({issue['seat']})")
 
     if hierarchy["orphaned_issues"]:
         print(f"\n[ORPHANED ISSUES] (ALERT: These should be assigned to an Epic!)")
         for issue in hierarchy["orphaned_issues"]:
-            print(f"  ⚡ [{issue['id']}] {issue['summary']} ({issue['seat']})")
+            summary = issue.get("summary") or issue.get("name") or "Unnamed Unit"
+            print(f"  ⚡ [{issue['id']}] {summary} ({issue['seat']})")
             
     if hierarchy["alerts"]:
         print(f"\n[STRUCTURAL ALERTS]")
@@ -129,6 +145,7 @@ def main():
                 rock_name=args.rock,
                 workspace=workspace,
                 department=args.department,
+                build_id=args.build_id,
                 task_override=args.task
             ))
             print(f"\n=== Rock {args.rock} Complete ===")
@@ -139,7 +156,9 @@ def main():
             asyncio.run(orchestrate_card(
                 card_id=args.card,
                 workspace=workspace,
-                department=args.department
+                department=args.department,
+                build_id=args.build_id,
+                driver_steered=args.driver_steered
             ))
             return
 
@@ -185,8 +204,10 @@ def main():
             workspace=workspace,
             department=args.department,
             model_override=args.model,
+            build_id=args.build_id,
             task_override=args.task,
             interactive_conductor=args.interactive_conductor,
+            driver_steered=args.driver_steered
         ))
 
         print("\n=== Orket EOS Run Complete ===")

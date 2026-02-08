@@ -18,6 +18,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
         "rocks": [],
         "orphaned_epics": [],
         "orphaned_issues": [],
+        "artifacts": [f.name for f in (Path("model") / department / "artifacts").iterdir() if f.is_file()] if (Path("model") / department / "artifacts").exists() else [],
         "alerts": []
     }
     
@@ -29,8 +30,10 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
         try:
             rock = loader.load_asset("rocks", rname, RockConfig)
             rock_node = {
+                "id": rname,
                 "name": rock.name,
                 "description": rock.description,
+                "status": rock.status,
                 "epics": []
             }
             
@@ -47,17 +50,19 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                     epic_issues = []
                     for i in epic.issues:
                         # We use summary as a weak ID for now to see if it's a 'named' standalone issue
-                        issues_in_epics.add(i.summary) 
+                        issues_in_epics.add(i.name) 
                         epic_issues.append(i.dict())
 
                     epic_node = {
+                        "id": ename,
                         "name": epic.name,
                         "description": epic.description,
+                        "status": epic.status,
                         "issues": epic_issues
                     }
                     rock_node["epics"].append(epic_node)
                 except Exception as e:
-                    rock_node["epics"].append({"name": ename, "error": str(e)})
+                    rock_node["epics"].append({"id": ename, "name": ename, "error": str(e)})
             
             hierarchy["rocks"].append(rock_node)
         except Exception:
@@ -69,12 +74,14 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
             try:
                 epic = loader.load_asset("epics", ename, EpicConfig)
                 orph_epic = {
+                    "id": ename,
                     "name": epic.name,
                     "description": epic.description,
+                    "status": epic.status,
                     "issues": []
                 }
                 for i in epic.issues:
-                    issues_in_epics.add(i.summary)
+                    issues_in_epics.add(i.name)
                     orph_epic["issues"].append(i.dict())
                 hierarchy["orphaned_epics"].append(orph_epic)
             except Exception:
@@ -84,7 +91,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
     for iname in issues_names:
         try:
             issue = loader.load_asset("issues", iname, IssueConfig)
-            if issue.summary not in issues_in_epics:
+            if issue.name not in issues_in_epics:
                 hierarchy["orphaned_issues"].append(issue.dict())
         except Exception:
             pass

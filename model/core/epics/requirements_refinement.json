@@ -1,0 +1,23 @@
+{
+  "name": "requirements_refinement",
+  "description": "Refine the descriptions in our Traction board to maximize understanding and velocity. This includes clarifying requirements, identifying dependencies, and ensuring alignment with project goals.",
+  "team": "product_owners",
+  "environment": "standard",
+  "issues": [
+    {
+      "summary": "Conduct a thorough review of all Traction board descriptions",
+      "seat": "product_owner",
+      "priority": "High"
+    },
+    {
+      "summary": "Identify and document any gaps or ambiguities in requirements",
+      "seat": "requirements_specialist",
+      "priority": "High"
+    },
+    {
+      "summary": "Update descriptions to ensure clarity and alignment with project goals",
+      "seat": "writer",
+      "priority": "High"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "model_family": "generic",
+  "dsl_format": "{
+  "tool": "write_file",
+  "args": {
+    "path": "filename.ext",
+    "content": "your code here"
+  }
+}",
+  "constraints": [
+    "Produce valid JSON output.",
+    "Be concise.",
+    "Follow the requested tool format strictly."
+  ],
+  "hallucination_guard": "Output only the tool call."
+}

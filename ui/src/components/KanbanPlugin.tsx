@@ -10,7 +10,7 @@ interface KanbanPluginProps {
 
 const KanbanPlugin: React.FC<KanbanPluginProps> = ({ backlog, calendar, updateStatus, openIssueDetail }) => {
   const statuses = ['ready', 'blocked', 'ready_for_testing', 'waiting_for_developer', 'done', 'canceled'];
-
+  
   return (
     <div className="flex-grow flex flex-col bg-[#020617] overflow-hidden">
       <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/20 shrink-0">

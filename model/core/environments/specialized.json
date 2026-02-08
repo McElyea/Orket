@@ -1,23 +1,7 @@
 {
-    "name": "specialized",
-    "description": "Hardware-optimized professional roles for 14B-33B class local models.",
-    "roles": {
-        "senior_staff_engineer": { "model": "qwen2.5-coder:14b", "temperature": 0.1 },
-        "senior_reviewer": { "model": "deepseek-coder:33b", "temperature": 0.1 },
-        "senior_solutions_architect": { "model": "deepseek-r1:32b", "temperature": 0.6 },
-        "data_scientist": { "model": "qwen2.5:14b", "temperature": 0.2 },
-        "network_engineer": { "model": "qwen2.5-coder:14b", "temperature": 0.1 },
-        "devops_specialist": { "model": "qwen2.5-coder:14b", "temperature": 0.1 },
-        "project_manager": { "model": "llama3.1:8b", "temperature": 0.6 },
-        "program_manager": { "model": "llama3.1:8b", "temperature": 0.5 },
-        "ui_ux_expert": { "model": "gemma3:27b", "temperature": 0.7 },
-        "lawyer_consultant": { "model": "gemma3:27b", "temperature": 0.0 },
-        "business_analyst": { "model": "llama3.1:8b", "temperature": 0.4 },
-        "requirements_expert": { "model": "llama3.1:8b", "temperature": 0.3 },
-        "front_end_guru": { "model": "qwen2.5-coder:14b", "temperature": 0.2 },
-        "backend_specialist": { "model": "qwen2.5-coder:14b", "temperature": 0.1 },
-        "marketing_consultant": { "model": "llama3.1:8b", "temperature": 0.8 },
-        "research_design": { "model": "gemma3:27b", "temperature": 0.6 }
-    },
-    "default": { "model": "qwen2.5-coder:14b", "temperature": 0.2 }
+  "name": "specialized",
+  "description": "High-reasoning environment for system self-optimization.",
+  "model": "deepseek-r1:32b",
+  "temperature": 0.0,
+  "timeout": 600
 }

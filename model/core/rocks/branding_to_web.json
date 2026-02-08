@@ -1,15 +1,16 @@
 {
-  "name": "branding_to_web",
-  "description": "EOS Rock: Branding hand-off to Web Development.",
-  "owner_department": "core",
-  "epics": [
-    {
-      "department": "core",
-      "epic": "branding"
-    },
-    {
-      "department": "core",
-      "epic": "web_dev"
-    }
-  ]
+    "name":  "branding_to_web",
+    "description":  "EOS Rock: Branding hand-off to Web Development.",
+    "status": "in_progress",
+    "owner_department":  "core",
+    "epics":  [
+                  {
+                      "department":  "core",
+                      "epic":  "branding"
+                  },
+                  {
+                      "department":  "core",
+                      "epic":  "web_dev"
+                  }
+              ]
 }

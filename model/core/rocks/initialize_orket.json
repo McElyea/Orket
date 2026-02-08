@@ -1,11 +1,20 @@
 {
-  "name": "initialize_orket",
-  "description": "Foundational setup: Establishing tool baselines and model optimization.",
-  "owner_department": "core",
-  "task": "Initialize Orket system settings, verify hardware, and optimize model tool usage through Reforge.",
-  "epics": [
-    { "epic": "core_baseline", "department": "core" },
-    { "epic": "model_reforge", "department": "core" }
-  ],
-  "references": []
+    "name":  "System Genesis \u0026 Baseline Configuration",
+    "description":  "The foundational setup required to bring Orket online. This milestone establishes the initial model-to-dialect mappings, populates the team registry with essential skills, and runs the first-pass reforge to ensure the engine is properly calibrated for the host hardware.",
+    "status": "in_progress",
+    "owner_department":  "core",
+    "task":  "Initialize Orket system settings, verify hardware, and optimize model tool usage through Reforge.",
+    "epics":  [
+                  {
+                      "epic":  "core_baseline",
+                      "department":  "core"
+                  },
+                  {
+                      "epic":  "model_reforge",
+                      "department":  "core"
+                  }
+              ],
+    "references":  [
+
+                   ]
 }

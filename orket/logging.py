@@ -16,12 +16,16 @@ def unsubscribe_from_events(callback: Callable[[Dict[str, Any]], None]):
 from orket.utils import sanitize_name
 
 def _log_path(workspace: Path, role: str = None) -> Path:
+    root_log = Path("workspace/default/orket.log")
+    root_log.parent.mkdir(parents=True, exist_ok=True)
+    
     if role:
         agent_dir = workspace / "agents"
         agent_dir.mkdir(parents=True, exist_ok=True)
         # Sanitize name for filename consistency
         safe_name = sanitize_name(role)
         return agent_dir / f"{safe_name}.log"
+    
     workspace.mkdir(parents=True, exist_ok=True)
     return workspace / "orket.log"
 
@@ -34,12 +38,19 @@ def log_event(event: str, data: Dict[str, Any], workspace: Path, role: str = Non
         "data": data,
     }
     
-    # 1. Write to main log
-    main_path = _log_path(workspace)
-    with main_path.open("a", encoding="utf-8") as f:
+    # 1. Write to consolidated root log (Source of Truth for UI)
+    root_path = Path("workspace/default/orket.log")
+    root_path.parent.mkdir(parents=True, exist_ok=True)
+    with root_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    # 2. Write to local workspace log
+    main_path = workspace / "orket.log"
+    if main_path != root_path:
+        with main_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
         
-    # 2. Write to agent-specific log if role is known
+    # 3. Write to agent-specific log if role is known
     current_role = record["role"]
     if current_role:
         agent_path = _log_path(workspace, current_role)

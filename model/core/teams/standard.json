@@ -5,17 +5,22 @@
     "architect": {
       "name": "architect",
       "description": "System Architect role focusing on high-level design and todo lists.",
-      "tools": ["read_file", "list_dir"]
+      "tools": ["read_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
     },
     "coder": {
       "name": "coder",
       "description": "Software Engineer role focusing on implementation and writing files.",
-      "tools": ["read_file", "write_file", "list_dir"]
+      "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
     },
     "reviewer": {
       "name": "reviewer",
       "description": "QA Reviewer role focusing on code quality and verification.",
-      "tools": ["read_file", "list_dir"]
+      "tools": ["read_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
+    },
+    "reforger": {
+      "name": "reforger",
+      "description": "Specialized role for system self-optimization and semantic analysis.",
+      "tools": ["read_file", "write_file", "list_directory", "refinement_proposal", "report_credits", "add_issue_comment", "get_issue_context", "update_issue_status"]
     }
   },
   "seats": {
@@ -30,6 +35,10 @@
     "quality_assurance": {
       "name": "Quality Assurance",
       "roles": ["reviewer"]
+    },
+    "reforge_specialist": {
+      "name": "Reforge Specialist",
+      "roles": ["reforger"]
     }
   }
 }

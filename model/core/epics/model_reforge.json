@@ -1,11 +1,32 @@
 {
-  "name": "model_reforge",
-  "description": "Reforge models to optimize tool-calling precision and report gains.",
-  "team": "enterprise",
-  "environment": "standard",
-  "cards": [
-    { "summary": "Audit model tool adherence and update specific prompt patches.", "seat": "reforge_specialist", "priority": "Critical" },
-    { "summary": "Generate a velocity report and finalize project board status.", "seat": "operations_lead", "priority": "Medium" },
-    { "summary": "Produce the final Reforge Stability Report.", "seat": "reforge_specialist", "priority": "High" }
+  "name": "Intelligent System Self-Optimization Loop",
+  "description": "A high-reasoning refinement cycle where the Reforge Specialist analyzes live execution logs to detect semantic drift or tool failures. This epic drives the continuous evolution of our Environments and Dialects, ensuring that model performance remains peak and cost-effective.",
+  "status": "in_progress",
+  "team": "standard",
+  "environment": "specialized",
+  "handshake_enabled": false,
+  "example_task": "Review the last 100 entries in the System Event Stream. Identify one model reasoning failure and propose a Dialect or Environment update to fix it.",
+  "issues": [
+    {
+      "summary": "Log Analysis & Diagnostics",
+      "seat": "reforge_specialist",
+      "status": "ready",
+      "priority": "High",
+      "note": "Examine orket.log for tool-call failures or 'hallucination_guard' triggers. Record intent in Card System."
+    },
+    {
+      "summary": "Tune Model Environments",
+      "seat": "reforge_specialist",
+      "status": "ready",
+      "priority": "Medium",
+      "note": "Adjust temperatures in environments/*.json. Track reasoning via comments."
+    },
+    {
+      "summary": "Optimize Team Interplay",
+      "seat": "reforge_specialist",
+      "status": "ready",
+      "priority": "High",
+      "note": "Refine phrasing in model/core/teams/standard.json. Use comments for handoff."
+    }
   ]
 }

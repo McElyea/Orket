@@ -1,0 +1,23 @@
+{
+  "name": "requirements_team",
+  "description": "A team responsible for generating detailed requirements and descriptions for each Card on the Traction Board, working closely with the Traction Board to ensure alignment with project goals and stakeholder expectations.",
+  "team": "enterprise",
+  "environment": "standard",
+  "issues": [
+    {
+      "summary": "Define Requirements Team structure and roles",
+      "seat": "lead_architect",
+      "priority": "High"
+    },
+    {
+      "summary": "Develop a process for gathering and documenting requirements",
+      "seat": "operations_lead",
+      "priority": "High"
+    },
+    {
+      "summary": "Create templates for richer Card descriptions",
+      "seat": "reforge_specialist",
+      "priority": "High"
+    }
+  ]
+}

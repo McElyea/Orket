@@ -38,6 +38,11 @@ workspace/
 task_memory/
 sessions/
 
+# Persistence (SQLite)
+# We ignore the DB to keep the repo size down, unless it's a seed.
+orket_persistence.db
+orket_persistence.db-journal
+
 # IDE files
 .vscode/
 .idea/
@@ -48,3 +53,7 @@ sessions/
 .env.*
 *.secret.json
 *.private.json
+
+# Temporary scripts/dumps
+project_dump*
+orket/temp_*

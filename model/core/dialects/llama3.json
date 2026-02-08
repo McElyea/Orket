@@ -1,0 +1,17 @@
+{
+  "model_family": "llama3",
+  "dsl_format": "{
+  "tool": "write_file",
+  "args": {
+    "path": "filename.ext",
+    "content": "your code here"
+  }
+}",
+  "constraints": [
+    "NEVER include conversational filler.",
+    "Your output must be a SINGLE JSON object.",
+    "Maintain strict adherence to the provided tool schema.",
+    "Llama-specific: Be concise and avoid verbosity in content strings."
+  ],
+  "hallucination_guard": "Do not include the 'Certainly! here is your JSON' prefix."
+}

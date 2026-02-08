@@ -1,0 +1,12 @@
+{
+    "name":  "test_rock",
+    "description":  "Demonstration Rock for completion workflow.",
+    "status": "in_progress",
+    "owner_department":  "core",
+    "epics":  [
+                  {
+                      "epic":  "qa_completion_test",
+                      "department":  "core"
+                  }
+              ]
+}

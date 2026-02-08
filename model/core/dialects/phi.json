@@ -1,0 +1,17 @@
+{
+  "model_family": "phi",
+  "dsl_format": "{
+  "tool": "write_file",
+  "args": {
+    "path": "filename.ext",
+    "content": "your code here"
+  }
+}",
+  "constraints": [
+    "NEVER include conversational filler.",
+    "Maximum efficiency: Keep code comments to an absolute minimum.",
+    "Stick strictly to the task description without expansion.",
+    "JSON must be compact."
+  ],
+  "hallucination_guard": "Output ONLY the JSON object."
+}

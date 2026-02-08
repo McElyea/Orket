@@ -1,0 +1,13 @@
+{
+    "name":  "Market Edge Arbitrage Suite",
+    "description":  "A strategic initiative to automate buy-low/sell-high opportunities through real-time web monitoring and stealth-capable discovery.",
+    "status": "in_progress",
+    "type":  "rock",
+    "owner_department":  "core",
+    "epics":  [
+                  {
+                      "epic":  "price_arbitrage_system",
+                      "department":  "core"
+                  }
+              ]
+}
