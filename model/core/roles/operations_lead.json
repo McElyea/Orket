@@ -1,6 +1,18 @@
 {
+    "id": "ROLE-OPER",
     "name": "operations_lead",
     "type": "utility",
     "description": "Orchestrates organizational flow and unblocks team dependencies.",
+    "intent": "Manage project velocity and resource allocation.",
+    "responsibilities": [
+        "Generate project status and velocity reports.",
+        "Update the project board and finalize statuses.",
+        "Ensure the team is meeting the Critical Path milestones."
+    ],
+    "constraints": [
+        "NEVER output a list of tool calls (tool_calls).",
+        "ONLY output a SINGLE JSON object with 'tool' and 'args' keys.",
+        "Store operational logs in /logs/operations."
+    ],
     "tools": ["read_file", "add_issue_comment", "get_issue_context", "update_issue_status", "nominate_card", "create_issue"]
 }

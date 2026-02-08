@@ -1,38 +1,54 @@
-# McElyea Orket: Project Maturation (v0.3.5)
+# McElyea Project: Orket Maturation
 
-This document tracks the milestones, quality benchmarks, and the "McElyea Reforge" results.
+This document tracks the milestones, lessons learned, and quality benchmarks for the Orket platform.
 
-## Current Milestone: v0.3.5 (The Reforge)
-
-We have successfully migrated Orket from an implicit monolithic core to an explicit, data-driven orchestration engine.
-
-### Reforge Accomplishments
-*   **Decoupled Orchestration:** Moved all logic from CLI/API into a single `OrchestrationEngine`.
-*   **Atomic Roles:** Extracted roles from code into `model/core/roles/*.json`.
-*   **Model Selector:** Centralized engine choices based on `user_settings.json` and Organization rules.
-*   **NoteStore:** Implemented deterministic, ephemeral inter-agent tactical notes.
-*   **UI Recovery:** Restored the WorkStation, added collapsible trees, and the "Binocular" preview mode.
+## Organization: McElyea
+**Vision:** Local-first autonomous market intelligence.
+**Ethos:** Excellence through iteration, transparency, and sovereignty.
 
 ---
 
-## Roadmap
+## Current Status: v0.3.5 (The Reforge Release)
 
-### v0.4.0 (Autonomous Auditor)
-*   **Automated QA:** Agents that generate "QA Cards" automatically when project scores fall below 7.0.
-*   **Gated Handoffs:** Mandatory "Member-to-Member Memos" via the NoteStore.
-
-### v0.5.0 (Multi-Model Swarm)
-*   **Parallel Coordination:** Supporting single-turn Swarm strategies (Sequential vs Parallel).
-*   **Cross-Departmental Loops:** Autonomous work pulling from Marketing, Product, and Engineering simultaneously.
+We have pivoted from a descriptive orchestration model to a **mechanical enforcement model** based on a brutal architectural audit.
 
 ---
 
-## Lessons Learned Ledger (v0.3.5)
+## Maturation Roadmap
 
-### Positive
-*   **Refactor Clarity:** Centralizing the engine reduced "Architecture Smearing" and simplified API maintenance.
-*   **Atomic Roles:** Moving roles to JSON made it possible to update agent personas without restarting the server.
+### Phase 1: Ruthless Simplification (Current)
+*   **Merge Skills into Roles:** Eliminate the complexity tax of dual persona layers.
+*   **Simplify Dialects:** Consolidate output contracts to focus only on tool-calling precision.
+*   **Atomic Card Identity:** Ensure every Rock, Epic, and Issue has a stable, non-volatile ID.
 
-### Negative
-*   **ID Volatility:** Auto-generated IDs in Pydantic caused 500 errors in the previewer. Resolved by adding stable IDs to assets.
-*   **Empty File Syndrome:** Modular scaffolding led to "Done" cards with no logic. Resolved by the 7-Issue iDesign Gate.
+### Phase 2: Mechanical Enforcement
+*   **Hard State Machines:** Implement Python-level guards for transitions (e.g., No `DONE` without Verifier sign-off).
+*   **Tool Gating:** Intercept `write_file` and state changes at the engine level to enforce organizational invariants.
+*   **The Verifier Pivot:** Transform the "Integrity Guard" from an advisor to a gatekeeper.
+
+### Phase 3: Elegant Failure & Recovery
+*   **The Elegant Stop:** When an invariant is broken, the engine terminates with a clear "Policy Violation" report.
+*   **Memory Hygiene:** Implement logic to clear model context/memory on restart to prevent hallucination drift.
+*   **Restart Mechanism:** Enable resuming a run from the last valid state machine checkpoint.
+
+### Phase 4: Empirical Verification (North Star)
+*   **FIT Fixtures:** Integrated testing where Orket runs code and verifies results before advancing cards.
+*   **Local Sandboxing:** Host and verify applications in an isolated environment.
+
+---
+
+## Case Study: Sneaky Price Watch
+The maturation of the Price Watcher project served as our baseline for Quality Auditing.
+
+*   **Initial Audit Score:** 4.1 / 10 (Non-Shippable).
+*   **Lessons Learned (Negative):** Empty file syndrome, "Headless" gap.
+*   **Lessons Learned (Positive):** Playwright stealth worked exceptionally well.
+*   **Action Plan:** Transitioned to iDesign: False (Tactical/Flat) to simplify logic and merge arbitrage artifacts.
+
+---
+
+## iDesign in Practice
+We utilize iDesign as a "Complexity Gate."
+*   **Current Threshold:** 7 Issues.
+*   **Mandatory Structure:** Managers, Engines, Accessors.
+*   **Goal:** To ensure that Orket never produces "Spaghetti Code" as it grows.
