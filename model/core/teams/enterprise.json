@@ -14,50 +14,5 @@
         "backend_specialist": { "name": "Backend Specialist", "roles": ["backend_specialist"] },
         "senior_developer": { "name": "Senior Developer", "roles": ["coder"] },
         "market_researcher": { "name": "Market Researcher", "roles": ["market_researcher"] }
-    },
-    "roles": {
-        "market_researcher": {
-            "name": "market_researcher",
-            "description": "Expert in market intelligence and information gathering using web search.",
-            "tools": ["read_file", "google_web_search", "add_issue_comment", "get_issue_context", "update_issue_status"],
-            "policy": {
-                "mandatory_storage_path": "product/sneaky_price_watch/artifacts"
-            }
-        },
-        "lead_architect": {
-            "name": "lead_architect",
-            "description": "Define structural patterns, critical paths, and technology stacks.",
-            "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
-        },
-        "ux_artisan": {
-            "name": "ux_artisan",
-            "description": "Expert in React, Tailwind, and Design Tokens. Bridges design and code.",
-            "tools": ["read_file", "write_file", "list_directory", "image_analyze", "add_issue_comment", "get_issue_context", "update_issue_status"]
-        },
-        "reforge_specialist": {
-            "name": "reforge_specialist",
-            "description": "Audit model performance and update prompt patches to optimize the engine.",
-            "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status", "refinement_proposal", "report_credits", "nominate_card"]
-        },
-        "integrity_guard": {
-            "name": "integrity_guard",
-            "description": "Focus on QA and unit testing. No Card is done until you verify tests pass.",
-            "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
-        },
-        "operations_lead": {
-            "name": "operations_lead",
-            "description": "Orchestrates organizational flow and unblocks team dependencies.",
-            "tools": ["read_file", "add_issue_comment", "get_issue_context", "update_issue_status", "nominate_card", "create_issue"]
-        },
-        "coder": {
-            "name": "coder",
-            "description": "Software Engineer role focusing on implementation and writing files.",
-            "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
-        },
-        "backend_specialist": {
-            "name": "backend_specialist",
-            "description": "Expert in DB optimization, API design, and scaling.",
-            "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
-        }
     }
 }

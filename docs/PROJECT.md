@@ -1,69 +1,38 @@
-# Orket Project Overview
+# McElyea Orket: Project Maturation (v0.3.5)
 
-This document tracks the roadmap, decisions, and long‑term direction of Orket.
+This document tracks the milestones, quality benchmarks, and the "McElyea Reforge" results.
 
-## Vision
+## Current Milestone: v0.3.5 (The Reforge)
 
-Orket aims to be the most transparent, deterministic, local‑first multi‑agent automation platform for engineering work.
+We have successfully migrated Orket from an implicit monolithic core to an explicit, data-driven orchestration engine.
+
+### Reforge Accomplishments
+*   **Decoupled Orchestration:** Moved all logic from CLI/API into a single `OrchestrationEngine`.
+*   **Atomic Roles:** Extracted roles from code into `model/core/roles/*.json`.
+*   **Model Selector:** Centralized engine choices based on `user_settings.json` and Organization rules.
+*   **NoteStore:** Implemented deterministic, ephemeral inter-agent tactical notes.
+*   **UI Recovery:** Restored the WorkStation, added collapsible trees, and the "Binocular" preview mode.
+
+---
 
 ## Roadmap
 
-### Near‑term
+### v0.4.0 (Autonomous Auditor)
+*   **Automated QA:** Agents that generate "QA Cards" automatically when project scores fall below 7.0.
+*   **Gated Handoffs:** Mandatory "Member-to-Member Memos" via the NoteStore.
 
-- Complete migration to Band + Score architecture  
-- Expand Venue capabilities  
-- Add richer Prelude options  
-- Improve tool dispatcher safety  
-- Add CLI subcommands  
+### v0.5.0 (Multi-Model Swarm)
+*   **Parallel Coordination:** Supporting single-turn Swarm strategies (Sequential vs Parallel).
+*   **Cross-Departmental Loops:** Autonomous work pulling from Marketing, Product, and Engineering simultaneously.
 
-### Mid‑term
+---
 
-- Add Session replay  
-- Add structured tool schemas  
-- Add Band‑level capability profiles  
-- Add Score templates  
+## Lessons Learned Ledger (v0.3.5)
 
-### Long‑term
+### Positive
+*   **Refactor Clarity:** Centralizing the engine reduced "Architecture Smearing" and simplified API maintenance.
+*   **Atomic Roles:** Moving roles to JSON made it possible to update agent personas without restarting the server.
 
-- UI for inspecting Sessions  
-- Visual orchestration graph  
-- Plugin system for tools  
-- Multi‑Venue pipelines  
-
-## Architectural Decisions (ADRs)
-
-### ADR 001 — Band is the single source of truth for roles  
-Roles, prompts, and tools belong exclusively to Bands.
-
-### ADR 002 — Score defines orchestration only  
-Scores reference roles but never define them.
-
-### ADR 003 — Venue binds Band + Score  
-Venue is the environment configuration layer.
-
-### ADR 004 — Prelude is optional  
-Prelude is a first‑class stage but can be disabled.
-
-## Migration Notes
-
-- teams.json replaced by bands/ + scores/  
-- orchestrator updated to use Venue → Band → Score  
-- dispatcher now enforces Band‑level tool permissions  
-
-## Versioning Strategy
-
-Semantic versioning:
-
-MAJOR — breaking changes  
-MINOR — new features  
-PATCH — fixes
-
-## Current Status (v0.2.1-patched)
-
-As of February 6, 2026, the core orchestration engine has been repaired and is fully functional:
-- **Hybrid Tool Parsing:** Agents now support both JSON and the `TOOL/PATH/CONTENT` DSL.
-- **Stateful Workflows:** The `orchestrate` loop now passes the full transcript to agents, allowing them to see previous steps and plans.
-- **Runtime Notes:** Implemented the `NOTES_UPDATE` mechanism for inter-agent communication (e.g., Task Decomposition).
-- **Workspace Safety:** Tools now dynamically resolve relative paths against the active workspace and are correctly authorized by the `FilesystemPolicy`.
-- **Verified Roles:** Architect, Coder, and Reviewer are now correctly using tools and sharing context.
-  
+### Negative
+*   **ID Volatility:** Auto-generated IDs in Pydantic caused 500 errors in the previewer. Resolved by adding stable IDs to assets.
+*   **Empty File Syndrome:** Modular scaffolding led to "Done" cards with no logic. Resolved by the 7-Issue iDesign Gate.

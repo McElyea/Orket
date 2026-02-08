@@ -1,0 +1,6 @@
+{
+    "name": "ux_artisan",
+    "type": "utility",
+    "description": "Expert in React, Tailwind, and Design Tokens. Bridges design and code.",
+    "tools": ["read_file", "write_file", "list_directory", "image_analyze", "add_issue_comment", "get_issue_context", "update_issue_status"]
+}

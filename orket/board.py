@@ -51,7 +51,9 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                     for i in epic.issues:
                         # We use summary as a weak ID for now to see if it's a 'named' standalone issue
                         issues_in_epics.add(i.name) 
-                        epic_issues.append(i.dict())
+                        issue_dict = i.model_dump(by_alias=True)
+                        issue_dict["name"] = i.name # Ensure name is present for UI
+                        epic_issues.append(issue_dict)
 
                     epic_node = {
                         "id": ename,
@@ -82,7 +84,9 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                 }
                 for i in epic.issues:
                     issues_in_epics.add(i.name)
-                    orph_epic["issues"].append(i.dict())
+                    issue_dict = i.model_dump(by_alias=True)
+                    issue_dict["name"] = i.name
+                    orph_epic["issues"].append(issue_dict)
                 hierarchy["orphaned_epics"].append(orph_epic)
             except Exception:
                 pass
@@ -92,7 +96,9 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
         try:
             issue = loader.load_asset("issues", iname, IssueConfig)
             if issue.name not in issues_in_epics:
-                hierarchy["orphaned_issues"].append(issue.dict())
+                issue_dict = issue.model_dump(by_alias=True)
+                issue_dict["name"] = issue.name
+                hierarchy["orphaned_issues"].append(issue_dict)
         except Exception:
             pass
 

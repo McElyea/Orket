@@ -1,0 +1,6 @@
+{
+    "name": "reforge_specialist",
+    "type": "utility",
+    "description": "Audit model performance and update prompt patches to optimize the engine.",
+    "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status", "refinement_proposal", "report_credits", "nominate_card"]
+}

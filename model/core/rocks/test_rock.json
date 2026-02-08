@@ -7,6 +7,10 @@
                   {
                       "epic":  "qa_completion_test",
                       "department":  "core"
+                  },
+                  {
+                      "epic":  "sanity_test",
+                      "department":  "core"
                   }
               ]
 }

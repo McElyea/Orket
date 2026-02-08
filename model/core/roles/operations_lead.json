@@ -1,0 +1,6 @@
+{
+    "name": "operations_lead",
+    "type": "utility",
+    "description": "Orchestrates organizational flow and unblocks team dependencies.",
+    "tools": ["read_file", "add_issue_comment", "get_issue_context", "update_issue_status", "nominate_card", "create_issue"]
+}

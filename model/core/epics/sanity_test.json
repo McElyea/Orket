@@ -1,0 +1,22 @@
+{
+  "id": "SANITY-01",
+  "name": "Orket Core Sanity Test",
+  "type": "epic",
+  "status": "ready",
+  "team": "enterprise",
+  "environment": "standard",
+  "description": "A rapid end-to-end test of the McElyea Orket Engine after the Reforge.",
+  "architecture_governance": {
+    "idesign": false,
+    "pattern": "Tactical/Flat"
+  },
+  "stories": [
+    {
+      "id": "SN-001",
+      "summary": "Generate a Sanity Receipt in the workspace.",
+      "seat": "lead_architect",
+      "priority": "High",
+      "note": "Write a file named 'sanity_receipt.md' that says 'Orket is Operational' and includes the Organization name."
+    }
+  ]
+}

@@ -100,6 +100,14 @@ def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
 from orket.settings import load_user_settings, save_user_settings
 
 def perform_first_run_setup():
+    # Run Structural Reconciliation on every startup to clean up orphans
+    try:
+        from orket.domain.reconciler import StructuralReconciler
+        reconciler = StructuralReconciler()
+        reconciler.reconcile_all()
+    except Exception as e:
+        print(f"  [WARN] Structural Reconciliation failed: {e}")
+
     if load_user_settings().get("setup_complete"): return
     print("\n[FIRST RUN] Orket EOS Orkestrated.")
     print("  Recommendation: Orkestrate the initialization rock to optimize your models.")
@@ -126,7 +134,7 @@ def print_orket_manifest(department: str = "core"):
     if recs:
         print(f"\n[MEMBER UPGRADES AVAILABLE]")
         for r in recs:
-            print(f"  ⚡ {r['category'].upper():<10} | Suggestion: {r['suggestion']:<20} | {r['reason']}")
+            print(f"  ! {r['category'].upper():<10} | Suggestion: {r['suggestion']:<20} | {r['reason']}")
             print(f"    Command: {r['command']}")
 
     if assets["rocks"]:
@@ -134,7 +142,7 @@ def print_orket_manifest(department: str = "core"):
         for rock_name in assets["rocks"]:
             try:
                 rock = loader.load_asset("rocks", rock_name, RockConfig)
-                print(f"  ⊷ ROCK: {rock.name}")
+                print(f"  - ROCK: {rock.name}")
                 for entry in rock.epics:
                     dept = entry["department"]
                     epic_name = entry["epic"]
@@ -148,11 +156,11 @@ def print_orket_manifest(department: str = "core"):
                         seats = [i.seat for i in epic.issues]
                         unique_seats = list(dict.fromkeys(seats)) # Preserve order
                         
-                        print(f"    ↳ {dept.upper():<12} | Epic: {epic_name:<20} | Members: {', '.join(unique_seats)}")
+                        print(f"    * {dept.upper():<12} | Epic: {epic_name:<20} | Members: {', '.join(unique_seats)}")
                     except:
-                        print(f"    ↳ {dept.upper():<12} | Epic: {epic_name:<20} | [Error loading details]")
+                        print(f"    * {dept.upper():<12} | Epic: {epic_name:<20} | [Error loading details]")
             except:
-                print(f"  ⊷ ROCK: {rock_name} [Metadata load failed]")
+                print(f"  - ROCK: {rock_name} [Metadata load failed]")
 
     else:
         print(f"\n[EPICS (Standalone)]")

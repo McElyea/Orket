@@ -11,8 +11,22 @@ class OrketDriver:
     The Driver is the high-level intent parser and resource manager.
     It manages Rocks, Epics, Issues, and Team Selection.
     """
-    def __init__(self, model: str = "qwen2.5-coder:7b"):
-        self.provider = LocalModelProvider(model=model, temperature=0.1)
+    def __init__(self, model: str = None):
+        # 1. Load Organization context
+        from orket.schema import OrganizationConfig
+        org_path = Path("model/organization.json")
+        self.org = None
+        if org_path.exists():
+            try:
+                self.org = OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
+            except: pass
+
+        # 2. Select Model
+        from orket.orchestration.models import ModelSelector
+        selector = ModelSelector(organization=self.org)
+        selected_model = selector.select(role="operations_lead", override=model)
+        
+        self.provider = LocalModelProvider(model=selected_model, temperature=0.1)
         self.model_root = Path("model")
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
@@ -125,6 +139,13 @@ Example for turn_directive:
             dept = plan.get("suggested_department")
             log_event("team_assignment", {"team": team, "department": dept, "reason": reasoning}, Path("workspace/default"), role="DRIVER")
             return f"Resource Selection: Switching to Team '{team}' in '{dept}'.\nReason: {reasoning}"
+
+        if action == "turn_directive":
+            # This is where we produce a Note for the target seat
+            target = plan.get("target_seat")
+            directive = plan.get("directive")
+            # The OrchestrationEngine will need to handle this note delivery
+            return f"Tactical Directive issued to {target}: {directive}"
 
         res = await self._execute_structural_change(plan)
         return f"{res}\n\nStrategic Insight: {reasoning}"
