@@ -1,0 +1,10 @@
+{
+    "id": "UPS-EPIC",
+    "name": "unplanned support",
+    "type": "epic",
+    "status": "ready",
+    "team": "enterprise",
+    "environment": "standard",
+    "description": "The default catchment for all standalone issues, ad-hoc requests, and orphaned operational cards.",
+    "stories": []
+}

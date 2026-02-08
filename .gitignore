@@ -1,59 +1,56 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Virtual environments
-.venv/
+*.py[cod]
+*$py.class
+*.so
+.Python
 env/
-venv/
-Scripts/
-
-# Build artifacts
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
+.installed.cfg
+*.egg
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-
-# Test and coverage
-.coverage
-htmlcov/
-.cache/
-
-# Editor swap/backup files
-*.swp
-*.swo
-*~
-
-# Orket workspace and memory
-workspace/
-task_memory/
-sessions/
-
-# Persistence (SQLite)
-# We ignore the DB to keep the repo size down, unless it's a seed.
+# Orket Specific
 orket_persistence.db
-orket_persistence.db-journal
+workspace/runs/
+workspace/default/*.log
+workspace/default/*.txt
+workspace/default/agents/
+logs/
+*.log
+server.out
+server.err
+user_settings.json
 
-# IDE files
-.vscode/
-.idea/
+# Node / Frontend
+node_modules/
+ui/node_modules/
+ui/dist/
+dist/
+.eslintcache
+.stylelintcache
 
-# Local config overrides
-*.local.json
-*.env
-.env.*
-*.secret.json
-*.private.json
+# macOS
+.DS_Store
 
-# Temporary scripts/dumps
-project_dump*
-orket/temp_*
+# Examples / Product Sub-projects
+product/**/node_modules/
+product/**/dist/
+product/**/build/
+product/**/*.db
+product/**/*.log
+
+# Temp
+.gemini/
+C:/Users/jonmc/.gemini/tmp/

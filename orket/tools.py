@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Callable
 
+from orket.infrastructure.sqlite_repositories import SQLiteCardRepository
+
 class ToolBox:
     """
     Standard Tool repository for all Orket Agents.
@@ -15,6 +17,7 @@ class ToolBox:
         self.workspace_root = Path(workspace_root)
         self.references = [Path(r) for r in references]
         self._image_pipeline = None
+        self.cards = SQLiteCardRepository("orket_persistence.db")
 
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
         p = Path(path_str)
@@ -106,9 +109,9 @@ class ToolBox:
         issue_type = args.get("type", "story")
         if not session_id or not seat or not summary: return {"ok": False, "error": "Missing params"}
         
-        from orket.persistence import PersistenceManager
-        db = PersistenceManager()
-        issue_id = db.add_issue(session_id, seat, summary, issue_type, args.get("priority", "Medium"))
+        
+        
+        issue_id = self.cards.add_issue(session_id, seat, summary, issue_type, args.get("priority", "Medium"))
         return {"ok": True, "issue_id": issue_id}
 
     def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -121,9 +124,9 @@ class ToolBox:
         if new_status == "canceled" and "project_manager" not in seat_calling.lower():
             return {"ok": False, "error": "Permission Denied: Only PM can cancel work."}
 
-        from orket.persistence import PersistenceManager
-        db = PersistenceManager()
-        db.update_issue_status(issue_id, new_status)
+        
+        
+        self.cards.update_issue_status(issue_id, new_status)
         return {"ok": True, "issue_id": issue_id, "status": new_status}
 
     def add_issue_comment(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -134,9 +137,9 @@ class ToolBox:
         
         if not issue_id or not content: return {"ok": False, "error": "Missing comment content"}
         
-        from orket.persistence import PersistenceManager
-        db = PersistenceManager()
-        db.add_comment(issue_id, author, content)
+        
+        
+        self.cards.add_comment(issue_id, author, content)
         return {"ok": True, "message": "Comment added to Card System."}
 
     def get_issue_context(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -144,14 +147,14 @@ class ToolBox:
         issue_id = args.get("issue_id") or context.get("issue_id")
         if not issue_id: return {"ok": False, "error": "No issue_id found"}
         
-        from orket.persistence import PersistenceManager
-        db = PersistenceManager()
-        comments = db.get_comments(issue_id)
+        
+        
+        comments = self.cards.get_comments(issue_id)
         # We don't have a direct 'get_issue' but we can filter from session
         session_id = context.get("session_id")
         issue_data = {}
         if session_id:
-            issues = db.get_session_issues(session_id)
+            issues = self.cards.get_session_issues(session_id)
             issue_data = next((i for i in issues if i["id"] == issue_id), {})
 
         return {
@@ -188,9 +191,9 @@ class ToolBox:
         reason = args.get("reason", "Manual credit report")
         if not issue_id or amount <= 0: return {"ok": False, "error": "Invalid params"}
 
-        from orket.persistence import PersistenceManager
-        db = PersistenceManager()
-        db.add_credits(issue_id, amount)
+        
+        
+        self.cards.add_credits(issue_id, amount)
         print(f"  [CREDITS] Seat {context.get('role')} reported {amount}c for: {reason}")
         return {"ok": True, "message": f"Reported {amount} credits."}
 
@@ -214,9 +217,9 @@ class ToolBox:
         reason = args.get("reason", "No reason provided")
         if not issue_id: return {"ok": False, "error": "No active Issue"}
         
-        from orket.persistence import PersistenceManager
-        db = PersistenceManager()
-        db.update_issue_status(issue_id, "excuse_requested")
+        
+        
+        self.cards.update_issue_status(issue_id, "excuse_requested")
         print(f"  [PROTOCOL] Seat {context.get('role')} requested excuse from {issue_id}. Reason: {reason}")
         return {"ok": True, "message": "Excuse requested from Conductor."}
 

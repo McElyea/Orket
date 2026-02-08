@@ -8,6 +8,52 @@
   "build_id": "build-sneaky-price-watch",
   "handshake_enabled": true,
   "requirements": "1. Simple browser (Playwright) talking to FastAPI backend. 2. Selection tool via right-click context menu to tag elements (XPath, CSS, ARIA, Text-ID). 3. Automated baseline lock on first poll. 4. Stealth features: header-rotation and user-agent spoofing. 5. Local UI for multi-URL capture and alerting. 6. MANDATORY: Save all artifacts to 'product/sneaky_price_watch/artifacts/', 'backend/', or 'frontend/'.",
+  "architecture_governance": {
+    "idesign": false,
+    "pattern": "Tactical/Flat",
+    "reasoning": "Simple scraper tool; iDesign modularity in the first attempt caused unnecessary file bloat and disconnected logic."
+  },
+  "quality_assessment": {
+    "score": 4.1,
+    "grade": "Non-Shippable",
+    "audit_date": "2026-02-08",
+    "criteria_scores": {
+      "rock_goals": 6.0,
+      "end_to_end": 3.0,
+      "documentation": 0.0,
+      "design_fit": 8.0
+    },
+    "summary": "The project has a solid architectural core in price_arbitrage but fails shippability because it is headless and lacks integration. The backend is 60% complete but disconnected from persistence.",
+    "shippability_threshold": 7.0
+  },
+  "lessons_learned": [
+    {
+      "date": "2026-02-08",
+      "category": "Integration",
+      "observation": "Sneaky Price Watch (first attempt) resulted in 'empty file syndrome' where cards were marked DONE despite being mocks.",
+      "sentiment": "negative",
+      "action_item": "Use Price Arbitrage as the functional baseline and merge it into a single product structure."
+    },
+    {
+      "date": "2026-02-08",
+      "category": "Product Design",
+      "observation": "A headless backend is non-shippable for local users.",
+      "sentiment": "negative",
+      "action_item": "Implement a React dashboard to make the tool usable for non-technical users."
+    },
+    {
+      "date": "2026-02-08",
+      "category": "Technology",
+      "observation": "The decision to use Playwright with stealth-async in the price_arbitrage prototype worked exceptionally well for bypassing basic bot detection.",
+      "sentiment": "positive"
+    },
+    {
+      "date": "2026-02-08",
+      "category": "Workflow",
+      "observation": "FastAPI's automatic OpenAPI documentation made it easy to understand the backend stubs even without a frontend.",
+      "sentiment": "positive"
+    }
+  ],
   "issues": [
     {
       "id": "SNK-0004",
@@ -46,8 +92,40 @@
       "summary": "End-to-End Stealth Integration",
       "seat": "lead_architect",
       "priority": "High",
-      "status": "ready",
+      "status": "done",
       "note": "Wire the researcher's found URLs into the Polling Manager and verify the Stealth Browser can scrape them without being blocked. Consolidate artifacts into the final product directory."
+    },
+    {
+      "id": "SNK-0006",
+      "summary": "Polling Jitter & 20% Drop Detection Implementation",
+      "seat": "backend_specialist",
+      "priority": "High",
+      "status": "done",
+      "note": "Implement the actual mathematical logic for 20% drop detection in alerting_engine.py and add random jitter (1-5 minutes) to the polling loop in unified_main.py or polling_manager.py."
+    },
+    {
+      "id": "SNK-QA-01",
+      "summary": "Consolidate Product Artifacts & SQLite Persistence",
+      "seat": "backend_specialist",
+      "priority": "High",
+      "status": "ready",
+      "note": "Merge functional logic from price_arbitrage into sneaky_price_watch. Implement the SQLAlchemy persistence layer in backend/main.py."
+    },
+    {
+      "id": "SNK-QA-02",
+      "summary": "React Dashboard Implementation",
+      "seat": "ux_artisan",
+      "priority": "High",
+      "status": "ready",
+      "note": "Scaffold a Vite/React frontend that connects to the FastAPI backend. Allow users to add URLs and view alert history."
+    },
+    {
+      "id": "SNK-QA-03",
+      "summary": "End-to-End Integration & Documentation",
+      "seat": "lead_architect",
+      "priority": "Medium",
+      "status": "ready",
+      "note": "Verify the full flow (UI -> Backend -> Scraper -> Database). Create README.md with setup instructions for the user."
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+    "name": "market_researcher",
+    "type": "utility",
+    "description": "Expert in market intelligence and information gathering using web search.",
+    "tools": ["read_file", "google_web_search", "add_issue_comment", "get_issue_context", "update_issue_status"],
+    "policy": {
+        "mandatory_storage_path": "product/sneaky_price_watch/artifacts"
+    }
+}

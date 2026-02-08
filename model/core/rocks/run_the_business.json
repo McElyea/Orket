@@ -1,0 +1,21 @@
+{
+    "id": "RTB-ROCK",
+    "name": "Run the Business",
+    "description": "The default organizational rock for all operational activities, administrative tasks, and orphaned epics.",
+    "status": "active",
+    "owner_department": "core",
+    "epics": [
+        {
+            "epic": "unplanned_support",
+            "department": "core"
+        },
+        {
+            "epic": "enterprise_launch",
+            "department": "core"
+        },
+        {
+            "epic": "ui_vision",
+            "department": "core"
+        }
+    ]
+}

@@ -1,79 +1,49 @@
-# Orket EOS Architecture (v0.3.0)
+# Orket Architecture: Volatility Decomposition (v0.3.5)
 
-Orket is a multi‑agent orchestration engine built on the principles of **iDesign** (Juval Lowy).  
-It decomposes system complexity by **volatility**, encapsulating areas of change within a hierarchy of Managers, Engines, and Accessors.
-
----
-
-# The Project Hierarchy (Cards)
-
-Orket work is organized into a three-layer Card tree:
-
-1.  **Rocks (Strategic Card):** High-level milestones or business objectives.
-2.  **Epics (Tactical Card):** Functional groupings of tasks.
-3.  **Issues (Operational Card):** Atomic units of execution with unique IDs (e.g., `COR26-0001`).
+This document defines the structural and philosophical foundations of the McElyea Orket engine.
 
 ---
 
-# The Prompt Engine (Volatility Decomposition)
+# 1. iDesign & The McElyea Gate
 
-To solve the "Leaf Node Explosion" (Role x Model x Version), Orket separates intent from syntax:
+At McElyea, we treat system design as the management of complexity. We avoid designing around features, which are volatile, and instead design around **Encapsulated Volatility**.
 
-- **Skills (`/skills/*.json`):** Defines the **Managerial Intent**. These are high-level responsibilities and business goals. They are platform-agnostic.
-- **Dialects (`/dialects/*.json`):** Defines the **Utility Syntax**. These capture how a specific model (e.g., Qwen, Llama) expects to see tool calls and formatting instructions.
-- **The Compiler:** The `Agent` class dynamically compiles a **Skill** + a **Dialect** + **iDesign Constraints** into a single, high-precision system prompt at runtime.
+### The Complexity Gate
+Orket enforces architectural discipline through a quantified threshold:
+*   **Issues <= 7:** "Flat and Fast" (Tactical) projects allowed.
+*   **Issues > 7:** Mandatory iDesign structure (Managers, Engines, Accessors).
 
----
-
-# Component relationships (iDesign Model)
-
-- **Managers (`orket/orket.py`):** Orchestrate the flow between Rocks, Epics, and Cards.
-- **Engines (`orket/llm.py`, `orket/agents/agent.py`):** Handle the "intelligence" logic and prompt compilation.
-- **Accessors (`orket/persistence.py`, `orket/vendors/`):** Manage state and external tool interactions (SQLite, Gitea, ADO).
-- **Utilities (`orket/utils.py`, `orket/logging.py`):** Provide cross-cutting concerns like logging and name sanitization.
+### Component Definitions
+*   **Managers:** Conductors of use-cases. They own the workflow.
+*   **Engines:** Pure business logic. They know nothing of state or external resources.
+*   **Accessors:** Wrappers for volatility (APIs, Databases, Files).
 
 ---
 
-# iDesign Structural Training
+# 2. The Prompt Engine (Intelligent Compile)
 
-Orket injects structural constraints into every technical agent, forcing code generation to follow a strict professional layout:
+The v0.3.5 refactor introduced the **Data-Driven Prompt Engine**, which eliminates the "Role-Model-Version" matrix explosion.
 
-- `/controllers` — API/Entry points.
-- `/managers` — Workflow orchestration.
-- `/engines` — Business logic.
-- `/accessors` — Tool/Data interaction.
-- `/utils` — Cross-cutting logic.
-- `/tests` — Automated verification.
-
----
-
-# Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Conductor
-    participant Orchestrator
-    participant Agent
-    participant PromptEngine
-    participant ModelProvider
-
-    User->>Orchestrator: Run Rock/Epic/Card
-    Orchestrator->>PromptEngine: Load Skill (Intent) + Dialect (Syntax)
-    Orchestrator->>Agent: Initialize with Compiled Prompt
-    loop Traction Loop
-        Agent->>ModelProvider: Execute Tool Call (JSON Contract)
-        ModelProvider-->>Agent: Result
-        Agent->>Orchestrator: Record Gain/Output
-    end
-    Orchestrator->>User: Complete (v0.3.0)
-```
+### The Merge Strategy
+At runtime, the `OrchestrationEngine` compiles three distinct vectors:
+1.  **Intent (Atomic Role):** The professional persona (`coder.json`, `architect.json`).
+2.  **Syntax (Dialect):** The model-specific grammar (`llama.txt`, `qwen.txt`).
+3.  **Ethos (Organization):** Global McElyea standards and branding "Do's and Don'ts."
 
 ---
 
-# Vendor Abstraction
+# 3. Structural Reconciler
 
-Orket defines a `VendorInterface` to allow plug-and-play integration with professional project management tools:
-- **LocalVendor:** JSON-first local files (Default).
-- **GiteaVendor:** Full REST API integration for local-first corporate meshes.
-- **ADO/Jira:** Stubs for enterprise-grade vendor support.
+To prevent "Board Drift," Orket runs a reconciliation sweep on every startup.
+*   **Adoption:** Any orphaned Epic is moved to the **"Run the Business"** Rock.
+*   **Catchment:** Any orphaned Issue is moved to the **"unplanned support"** Epic.
+*   **Integrity:** Ensures the Traction Tree is always a valid, traversable graph.
+
+---
+
+# 4. State Machine (Flow of Work)
+
+Cards move through a professional lifecycle:
+`Ready` -> `In Progress` -> `Blocked` -> `Ready_For_Testing` -> `Code_Review` -> `Done`.
+
+The **Code_Review** state is a mandatory "Freezer" where work awaits an audit score (Target: > 7.0) before finalization.
