@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 import uuid
 import enum
 from pydantic import BaseModel, Field, ConfigDict
 
 # ---------------------------------------------------------------------------
-# 1. Environment
+# 1. Environment & Dialect
 # ---------------------------------------------------------------------------
 class EnvironmentConfig(BaseModel):
     model_config = ConfigDict(extra='allow')
@@ -17,9 +17,6 @@ class EnvironmentConfig(BaseModel):
     timeout: int = 300
     params: Dict[str, Any] = Field(default_factory=dict)
 
-# ---------------------------------------------------------------------------
-# 2. Role, Seat, Skill & Dialect
-# ---------------------------------------------------------------------------
 class SkillConfig(BaseModel):
     name: str
     intent: str
@@ -29,10 +26,83 @@ class SkillConfig(BaseModel):
 
 class DialectConfig(BaseModel):
     model_family: str
-    dsl_format: str # e.g. "TOOL: name\nPATH: path\nCONTENT: content"
+    dsl_format: str
     constraints: List[str]
     hallucination_guard: str
 
+# ---------------------------------------------------------------------------
+# 2. Card Fundamentals (Universal Base)
+# ---------------------------------------------------------------------------
+class CardType(str, enum.Enum):
+    ROCK = "rock"
+    EPIC = "epic"
+    ISSUE = "issue"
+
+class CardStatus(str, enum.Enum):
+    READY = "ready"
+    IN_PROGRESS = "in_progress"
+    CANCELED = "canceled"
+    WAITING_FOR_DEVELOPER = "waiting_for_developer"
+    READY_FOR_TESTING = "ready_for_testing"
+    DONE = "done"
+
+class BaseCardConfig(BaseModel):
+    """
+    The polymorphic base for all Orket Units of Work.
+    Rocks, Epics, and Issues ARE Cards.
+    """
+    model_config = ConfigDict(populate_by_name=True)
+    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
+    name: Optional[str] = Field(None, alias="summary")
+    type: CardType
+    status: CardStatus = Field(default=CardStatus.READY)
+    description: Optional[str] = None
+    priority: str = Field(default="Medium")
+    note: Optional[str] = None
+    
+    # Hierarchy
+    parent_id: Optional[str] = None
+    build_id: Optional[str] = None
+    
+    # Metadata
+    owner_department: Optional[str] = "core"
+    labels: List[str] = Field(default_factory=list)
+    params: Dict[str, Any] = Field(default_factory=dict)
+    references: List[str] = Field(default_factory=list)
+
+# ---------------------------------------------------------------------------
+# 3. Specific Card Implementations
+# ---------------------------------------------------------------------------
+
+class IssueConfig(BaseCardConfig):
+    type: CardType = Field(default=CardType.ISSUE)
+    seat: str
+    assignee: Optional[str] = None
+    sprint: Optional[str] = None
+    requirements: Optional[str] = None # Atomic requirement detail
+
+class EpicConfig(BaseCardConfig):
+    type: CardType = Field(default=CardType.EPIC)
+    team: str
+    environment: str
+    iterations: int = Field(1)
+    handshake_enabled: bool = Field(default=False)
+    issues: List[IssueConfig] = Field(default_factory=list, alias="stories")
+    example_task: Optional[str] = None
+    requirements: Optional[str] = None # High-level spec or link
+
+class RockConfig(BaseCardConfig):
+    type: CardType = Field(default=CardType.ROCK)
+    task: Optional[str] = None
+    epics: List[Dict[str, str]] # List of {epic: name, department: dept}
+
+# Recursive type for the Preview/Full Tree view
+class CardDetail(BaseCardConfig):
+    children: List[CardDetail] = []
+
+# ---------------------------------------------------------------------------
+# 4. Teams & Organization
+# ---------------------------------------------------------------------------
 class RoleConfig(BaseModel):
     name: str
     description: str
@@ -49,61 +119,6 @@ class TeamConfig(BaseModel):
     seats: Dict[str, SeatConfig]
     roles: Dict[str, RoleConfig]
 
-# ---------------------------------------------------------------------------
-# 3. Issue & Epic (The Traction Board)
-# ---------------------------------------------------------------------------
-class IssueType(str, enum.Enum):
-    STORY = "story"
-    BUG = "bug"
-    PROD_SUPPORT = "prod_support"
-
-class IssueStatus(str, enum.Enum):
-    READY = "ready"
-    BLOCKED = "blocked"
-    IN_PROGRESS = "in_progress"
-    READY_FOR_TESTING = "ready_for_testing"
-    WAITING_FOR_DEVELOPER = "waiting_for_developer"
-    DONE = "done"
-    CANCELED = "canceled"
-    EXCUSE_REQUESTED = "excuse_requested"
-
-class IssueConfig(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
-    type: IssueType = Field(default=IssueType.STORY)
-    summary: str
-    seat: str
-    status: IssueStatus = Field(default=IssueStatus.READY)
-    priority: str = Field(default="Medium")
-    assignee: Optional[str] = None
-    sprint: Optional[str] = None
-    note: Optional[str] = None
-    params: Dict[str, Any] = Field(default_factory=dict)
-
-class EpicConfig(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    name: str
-    description: Optional[str] = None
-    team: str
-    environment: str
-    iterations: int = Field(1)
-    issues: List[IssueConfig] = Field(default_factory=list, alias="stories")
-    references: List[str] = Field(default_factory=list)
-    example_task: Optional[str] = None
-
-# ---------------------------------------------------------------------------
-# 4. Rock
-# ---------------------------------------------------------------------------
-class RockConfig(BaseModel):
-    name: str
-    description: Optional[str] = None
-    owner_department: str
-    task: Optional[str] = None
-    epics: List[Dict[str, str]]
-    references: List[str] = Field(default_factory=list)
-
-# ---------------------------------------------------------------------------
-# 5. Organization & Engines
-# ---------------------------------------------------------------------------
 class EngineRecommendation(BaseModel):
     model: str
     tier: str
@@ -118,7 +133,7 @@ class EngineMapping(BaseModel):
 class EngineRegistry(BaseModel):
     name: str
     updated_at: str
-    mappings: Dict[str, EngineMapping] # e.g. "coder" -> Mapping
+    mappings: Dict[str, EngineMapping]
 
 class DepartmentConfig(BaseModel):
     name: str

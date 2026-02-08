@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, FolderTree, Users, Activity, Terminal, Cpu, File, Folder, ChevronRight, ChevronLeft, Save, Play, Settings, Trello, Monitor, Rocket, Zap } from 'lucide-react';
+import { Menu, FolderTree, Users, Activity, Terminal, Cpu, File, Folder, ChevronRight, ChevronLeft, Save, Play, Settings, Trello, Monitor, Rocket, Zap, CheckCircle2 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { LineChart, Line, ResponsiveContainer, CartesianGrid, YAxis, XAxis, ReferenceLine } from 'recharts';
 import KanbanPlugin from './components/KanbanPlugin';
@@ -14,6 +14,7 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState('.');
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const [activeAssetType, setActiveAssetType] = useState<string | null>(null);
+  const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState('');
   const [metrics, setMetrics] = useState<any>([]);
   const [logs, setLogs] = useState<any[]>([]);
@@ -32,6 +33,9 @@ export default function App() {
   const [boardHierarchy, setBoardHierarchy] = useState<any>(null);
   const [executeFilter] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [driverSteered, setDriverSteered] = useState(false);
+  const [activeLogSource, setActiveLogSource] = useState('orket.log');
+  const [availableLogs, setAvailableLogs] = useState<string[]>(['orket.log']);
   
   const [sidebarWidth] = useState(260);
   const [hudWidth, setHudWidth] = useState(window.innerWidth / 2);
@@ -132,18 +136,44 @@ export default function App() {
     } catch (e) {}
   };
 
+  const fetchAvailableLogs = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/system/explorer?path=workspace/default/agents`);
+      const data = await res.json();
+      const agentLogs = (data.items || []).map((f: any) => `agents/${f.name}`);
+      setAvailableLogs(['orket.log', ...agentLogs]);
+    } catch (e) {}
+  };
+
+  const fetchLogs = async () => {
+    try {
+      const logPath = activeLogSource === 'orket.log' ? 'workspace/default/orket.log' : `workspace/default/${activeLogSource}`;
+      const res = await fetch(`${API_BASE}/system/read?path=${logPath}`);
+      const data = await res.json();
+      if (data.content) {
+        const lines = data.content.trim().split('\n');
+        const historicalLogs = lines.map((l: string) => {
+            try { return JSON.parse(l); } catch(e) { return { event: 'LOG', role: 'RAW', data: { msg: l }, timestamp: new Date().toISOString() }; }
+        }).filter((l: any) => l !== null);
+        setLogs(historicalLogs.slice(-100));
+      }
+    } catch (e) {}
+  };
+
   const chatWithDriver = async () => {
     if (!chatInput) return;
+    const userMsg = chatInput;
+    setChatInput('');
+    setLogs(p => [...p, {role: 'USER', event: 'PROMPT', data: {msg: userMsg}, timestamp: new Date().toISOString()}]);
     setIsChatting(true);
     try {
       const res = await fetch(`${API_BASE}/system/chat-driver`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: chatInput })
+        body: JSON.stringify({ message: userMsg })
       });
       const data = await res.json();
-      setLogs(p => [...p, {role: 'DRIVER', event: 'REACTION', data: {msg: data.response}}]);
-      setChatInput('');
+      setLogs(p => [...p, {role: 'DRIVER', event: 'REACTION', data: {msg: data.response}, timestamp: new Date().toISOString()}]);
       fetchBoard();
     } catch (e: any) {
         alert("Driver Error: " + e.message);
@@ -166,6 +196,8 @@ export default function App() {
         }
         const calRes = await fetch(`${API_BASE}/system/calendar`);
         setCalendar(await calRes.json());
+        fetchAvailableLogs();
+        fetchLogs();
       } catch (e) { console.error("API Link Offline", e); }
     };
     init();
@@ -184,6 +216,11 @@ export default function App() {
     const itv = setInterval(pulse, 2000);
     return () => clearInterval(itv);
   }, []);
+
+  useEffect(() => {
+    const itv = setInterval(fetchLogs, 3000);
+    return () => clearInterval(itv);
+  }, [activeLogSource]);
 
   // 2. EXPLORER & BOARD
   useEffect(() => {
@@ -207,8 +244,6 @@ export default function App() {
     }
   }, [currentPath, activeTab, navigatorView]);
 
-  // ... (previous useEffects) ...
-
   const updateStatus = async (issueId: string, status: string) => {
     try {
       await fetch(`${API_BASE}/backlog/${issueId}`, {
@@ -227,6 +262,7 @@ export default function App() {
       const data = await res.json();
       setActiveFile(fullPath);
       setActiveAssetType(f.asset_type);
+      setActiveIssueId(f.issue_id || null);
       setFileContent(data.content || '');
       setActiveTab('workstation');
     } catch (e) {
@@ -235,14 +271,19 @@ export default function App() {
   };
 
   const runActiveAsset = async () => {
-    if (!activeFile) return;
+    if (!activeFile && !activeIssueId) return;
     setIsLaunching(true);
-    console.log(`[RIG] Launching: ${activeFile}`);
+    console.log(`[RIG] Launching: ${activeIssueId || activeFile}`);
     try {
       const res = await fetch(`${API_BASE}/system/run-active`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: activeFile })
+        body: JSON.stringify({ 
+            path: activeFile, 
+            type: activeAssetType,
+            issue_id: activeIssueId,
+            driver_steered: driverSteered 
+        })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -253,6 +294,18 @@ export default function App() {
         alert(`Launch Failed: ${e.message}`); 
     } finally {
         setIsLaunching(false);
+    }
+  };
+
+  const previewActiveAsset = async () => {
+    if (!activeFile && !activeIssueId) return;
+    try {
+      const res = await fetch(`${API_BASE}/system/preview-asset?path=${activeFile}&issue_id=${activeIssueId || ''}`);
+      const data = await res.json();
+      setFileContent(JSON.stringify(data, null, 2));
+      setActiveAssetType('preview');
+    } catch (e: any) {
+        alert("Preview Failed: " + e.message);
     }
   };
 
@@ -277,6 +330,17 @@ export default function App() {
 
   const latestMetrics = metrics.length > 0 ? metrics[metrics.length - 1] : { cpu: 0, vram: 0 };
 
+  const getRoleColor = (role: string) => {
+    if (!role) return 'text-slate-500';
+    const r = role.toLowerCase();
+    if (r.includes('driver')) return 'text-green-400';
+    if (r.includes('architect')) return 'text-purple-400';
+    if (r.includes('developer') || r.includes('specialist')) return 'text-blue-400';
+    if (r.includes('owner') || r.includes('manager')) return 'text-orange-400';
+    if (r.includes('user')) return 'text-cyan-400';
+    return 'text-slate-200';
+  };
+
   return (
     <div className="h-screen w-screen bg-[#020617] text-slate-300 flex flex-col overflow-hidden font-sans select-none text-[13px]">
       
@@ -285,7 +349,7 @@ export default function App() {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1000] flex items-center justify-center">
               <div className="flex flex-col items-center gap-4">
                   <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <div className="text-white font-black tracking-widest uppercase text-xs animate-pulse">Igniting Engine...</div>
+                  <div className="text-white font-black tracking-widest uppercase text-xs animate-pulse">Orkestrating Unit...</div>
               </div>
           </div>
       )}
@@ -330,11 +394,40 @@ export default function App() {
         
         <div className="flex items-center gap-4">
             <span className="text-[10px] text-slate-500 font-mono tracking-tighter uppercase">{activeSessionId ? `SESSION: ${activeSessionId.slice(0,8)}` : 'RIG_IDLE'}</span>
+            
+            {activeAssetType === 'epic' && backlog.length > 0 && backlog.every(i => i.status === 'done' || i.status === 'canceled') && (
+              <button 
+                onClick={async () => {
+                    const res = await fetch(`${API_BASE}/system/archive-session`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: activeSessionId })
+                    });
+                    if (res.ok) { alert("Epic Archived."); fetchBoard(); }
+                }}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-black px-4 py-1.5 rounded-sm uppercase tracking-widest flex items-center gap-2 transition-all border border-slate-700 shadow-xl">
+                <CheckCircle2 size={10} /> ARCHIVE & CLOSE EPIC
+              </button>
+            )}
+
+            <button 
+                onClick={() => setDriverSteered(!driverSteered)}
+                className={`text-[10px] font-black px-3 py-1.5 rounded-sm uppercase tracking-widest flex items-center gap-2 transition-all ${driverSteered ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40' : 'bg-slate-800 text-slate-500 border border-slate-700'}`}>
+                <Activity size={10} /> STEERED
+            </button>
+
+            <button 
+                onClick={previewActiveAsset}
+                disabled={!activeAssetType || activeAssetType === 'preview' || isLaunching}
+                className={`text-[10px] font-black px-4 py-1.5 rounded-sm uppercase tracking-widest flex items-center gap-2 transition-all ${activeAssetType && activeAssetType !== 'preview' && !isLaunching ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'}`}>
+                <File size={10} /> PREVIEW
+            </button>
+
             <button 
                 onClick={runActiveAsset}
-                disabled={!activeAssetType || isLaunching}
-                className={`text-[10px] font-black px-4 py-1.5 rounded-sm uppercase tracking-widest flex items-center gap-2 transition-all ${activeAssetType && !isLaunching ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/40' : 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'}`}>
-                <Zap size={10} fill="currentColor" /> {isLaunching ? 'IGNITING...' : activeAssetType ? `IGNITE ${activeAssetType.toUpperCase()}` : 'LAUNCH_READY'}
+                disabled={(!activeAssetType && !activeIssueId) || isLaunching}
+                className={`text-[10px] font-black px-4 py-1.5 rounded-sm uppercase tracking-widest flex items-center gap-2 transition-all ${ (activeAssetType || activeIssueId) && !isLaunching ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/40' : 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'}`}>
+                <Play size={10} fill="currentColor" /> {isLaunching ? 'ORKESTRATING...' : `ORKESTRATE ${activeAssetType?.toUpperCase() || 'CARD'}`}
             </button>
         </div>
       </div>
@@ -395,39 +488,45 @@ export default function App() {
                                     </>
                                 ) : navigatorView === 'traction_tree' ? (
                                     <div className="space-y-4 p-1">
-                                        {boardHierarchy?.rocks.map((rock: any) => (
-                                            <div key={rock.name} className="space-y-1">
+                                        {boardHierarchy?.rocks.filter((r: any) => r.status !== 'done' && r.status !== 'archived').map((rock: any) => (
+                                            <div key={rock.id} className="space-y-1">
                                                 <div 
-                                                    onClick={() => openFile({name: `model/core/rocks/${rock.name}.json`, asset_type: 'rock'})}
+                                                    onClick={() => openFile({name: `model/core/rocks/${rock.id}.json`, asset_type: 'rock'})}
                                                     className="text-[10px] font-black text-blue-500 uppercase tracking-tighter flex items-center gap-2 cursor-pointer hover:text-blue-400 group">
                                                     <Zap size={12} className="group-hover:fill-blue-500/20"/> {rock.name}
                                                 </div>
-                                                {rock.epics.map((epic: any) => (
-                                                    <div key={epic.name} className="ml-2 pl-2 border-l border-slate-800 space-y-1">
+                                                {rock.epics.filter((e: any) => e.status !== 'done' && e.status !== 'archived').map((epic: any) => (
+                                                    <div key={epic.id} className="ml-2 pl-2 border-l border-slate-800 space-y-1">
                                                         <div 
-                                                            onClick={() => openFile({name: `model/core/epics/${epic.name}.json`, asset_type: 'epic'})}
+                                                            onClick={() => openFile({name: `model/core/epics/${epic.id}.json`, asset_type: 'epic'})}
                                                             className="text-[11px] font-bold text-slate-300 uppercase tracking-tight cursor-pointer hover:text-white">{epic.name}</div>
                                                         {epic.issues.map((issue: any) => (
                                                             <div key={issue.id} 
-                                                                onClick={() => {
-                                                                    openFile({name: `model/core/epics/${epic.name}.json`, asset_type: 'epic'});
-                                                                }}
+                                                                onClick={() => openFile({name: `model/core/epics/${epic.id}.json`, asset_type: 'issue', issue_id: issue.id})}
                                                                 className="ml-2 text-[10px] text-slate-500 hover:text-blue-400 cursor-pointer transition-colors flex items-center gap-1">
-                                                                <span className="opacity-30">#</span> {issue.summary}
+                                                                <span className="opacity-30">#</span> {issue.name}
                                                             </div>
                                                         ))}
                                                     </div>
                                                 ))}
                                             </div>
                                         ))}
-                                        {(boardHierarchy?.orphaned_epics.length > 0 || boardHierarchy?.orphaned_issues.length > 0) && (
+                                        {(boardHierarchy?.orphaned_epics.filter((e: any) => e.status !== 'done' && e.status !== 'archived').length > 0 || boardHierarchy?.orphaned_issues.length > 0) && (
                                             <div className="mt-4 pt-4 border-t border-slate-800 space-y-3">
                                                 <div className="text-[10px] font-black text-red-500 uppercase flex items-center gap-2 animate-pulse"><Zap size={12}/> Orphanage</div>
-                                                {boardHierarchy.orphaned_epics.map((epic: any) => (
-                                                    <div key={epic.name} onClick={() => openFile({name: `model/core/epics/${epic.name}.json`, asset_type: 'epic'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-red-900/50 ml-2">{epic.name}</div>
+                                                {boardHierarchy.orphaned_epics.filter((e: any) => e.status !== 'done' && e.status !== 'archived').map((epic: any) => (
+                                                    <div key={epic.id} onClick={() => openFile({name: `model/core/epics/${epic.id}.json`, asset_type: 'epic'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-red-900/50 ml-2">{epic.name}</div>
                                                 ))}
                                                 {boardHierarchy.orphaned_issues.map((issue: any) => (
-                                                    <div key={issue.id} onClick={() => openIssueDetail(issue)} className="text-[10px] text-slate-500 pl-2 cursor-pointer hover:text-blue-400 border-l border-red-900/50 ml-2">[{issue.id}] {issue.summary}</div>
+                                                    <div key={issue.id} onClick={() => openIssueDetail(issue)} className="text-[10px] text-slate-500 pl-2 cursor-pointer hover:text-blue-400 border-l border-red-900/50 ml-2">[{issue.id}] {issue.name}</div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {boardHierarchy?.artifacts?.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+                                                <div className="text-[10px] font-black text-cyan-500 uppercase flex items-center gap-2"><Zap size={12}/> Artifacts</div>
+                                                {boardHierarchy.artifacts.map((art: string) => (
+                                                    <div key={art} onClick={() => openFile({name: `model/core/artifacts/${art}`, asset_type: 'artifact'})} className="text-[11px] text-slate-400 pl-2 cursor-pointer hover:text-white border-l border-cyan-900/50 ml-2">{art}</div>
                                                 ))}
                                             </div>
                                         )}
@@ -497,56 +596,36 @@ export default function App() {
                 }} className="absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-blue-600 transition-colors z-50" />
                 
                 <div className="p-3 border-b border-slate-800 flex items-center gap-2 bg-slate-900/40 shrink-0 uppercase tracking-widest font-black text-[10px] text-slate-500">
-                    <Activity size={14} className="text-blue-500" /> Member HUD
+                    <Users size={14} className="text-blue-500" /> Member HUD
                 </div>
-                <div className="flex-grow overflow-auto p-4 space-y-4 bg-black/10">
-                    {Object.entries(activeMembers).map(([role, stats]: [string, any]) => (
-                    <div key={role} className="bg-slate-900/60 border border-slate-800 p-4 rounded-lg border-l-4 border-l-blue-600 group hover:border-blue-500 transition-all shadow-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <span className="text-slate-100 font-bold text-[11px] uppercase tracking-tighter">{role.replace('_', ' ')}</span>
-                            <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                <div className="flex-grow overflow-auto p-4 bg-black/10">
+                    <div className={`grid gap-4 ${
+                        Object.keys(activeMembers).length <= 4 ? 'grid-cols-1' : 
+                        Object.keys(activeMembers).length <= 8 ? 'grid-cols-2' : 'grid-cols-3'
+                    }`}>
+                        {Object.entries(activeMembers).map(([role, stats]: [string, any]) => (
+                        <div key={role} className="bg-slate-900/60 border border-slate-800 p-4 rounded-lg border-l-4 border-l-blue-600 group hover:border-blue-500 transition-all shadow-xl h-fit">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-slate-100 font-bold text-[11px] uppercase tracking-tighter">{role.replace('_', ' ')}</span>
+                                <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-center text-slate-400">
+                                <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
+                                    <div className="text-[7px] uppercase font-black mb-1">Compute</div>
+                                    <div className="text-xs font-mono">{(stats.tokens/1000).toFixed(1)}k</div>
+                                </div>
+                                <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
+                                    <div className="text-[7px] uppercase font-black mb-1">Traction</div>
+                                    <div className="text-xs font-mono text-blue-400">+{stats.lines_written}</div>
+                                </div>
+                            </div>
+                            {stats.detail && (
+                                <div className="mt-3 bg-blue-950/20 border border-blue-900/30 p-2 rounded text-[9px] font-mono text-blue-300 truncate">
+                                    <span className="opacity-50 mr-1">DETAIL:</span> {stats.detail}
+                                </div>
+                            )}
                         </div>
-                        <div className="grid grid-cols-2 gap-3 text-center text-slate-400">
-                            <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
-                                <div className="text-[7px] uppercase font-black mb-1">Compute</div>
-                                <div className="text-xs font-mono">{(stats.tokens/1000).toFixed(1)}k</div>
-                            </div>
-                            <div className="bg-black/40 p-2.5 rounded border border-slate-800/50">
-                                <div className="text-[7px] uppercase font-black mb-1">Traction</div>
-                                <div className="text-xs font-mono text-blue-400">+{stats.lines_written}</div>
-                            </div>
-                        </div>
-                        {stats.detail && (
-                            <div className="mt-3 bg-blue-950/20 border border-blue-900/30 p-2 rounded text-[9px] font-mono text-blue-300 truncate">
-                                <span className="opacity-50 mr-1">DETAIL:</span> {stats.detail}
-                            </div>
-                        )}
-                    </div>
-                    ))}
-                </div>
-
-                {/* CHAT WITH DRIVER PANEL */}
-                <div className="h-48 border-t border-slate-800 bg-black/40 flex flex-col p-4 shrink-0">
-                    <div className="flex items-center gap-2 mb-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        <Activity size={14} className="text-green-500" /> Driver Chat
-                    </div>
-                    <div className="flex-grow overflow-auto mb-3 text-[11px] text-slate-400 italic">
-                        Talk to the Driver to generate new Rocks, Epics, or Issues...
-                    </div>
-                    <div className="flex gap-2">
-                        <input 
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && chatWithDriver()}
-                            placeholder="e.g. 'Add a new feature for data export...'"
-                            className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-xs outline-none focus:border-blue-600 transition-colors"
-                        />
-                        <button 
-                            onClick={chatWithDriver}
-                            disabled={isChatting}
-                            className={`bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-all ${isChatting ? 'opacity-50 animate-pulse' : ''}`}>
-                            <Play size={14} fill="currentColor" />
-                        </button>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -557,15 +636,14 @@ export default function App() {
             calendar={calendar} 
             updateStatus={updateStatus} 
             openIssueDetail={(issue: any) => {
-                // Find epic in board hierarchy
-                let epicName = "";
+                let epicId = "";
                 boardHierarchy?.rocks.forEach((r: any) => {
                     r.epics.forEach((e: any) => {
-                        if (e.issues.some((i: any) => i.id === issue.id)) epicName = e.name;
+                        if (e.issues.some((i: any) => i.id === issue.id)) epicId = e.id;
                     });
                 });
-                if (epicName) openFile({name: `model/core/epics/${epicName}.json`, asset_type: 'epic'});
-                else openIssueDetail(issue); // Fallback to modal if epic not found
+                if (epicId) openFile({name: `model/core/epics/${epicId}.json`, asset_type: 'epic'});
+                else openIssueDetail(issue);
             }} 
           />
         )}
@@ -580,20 +658,81 @@ export default function App() {
         }} className="h-1 w-full cursor-row-resize hover:bg-blue-600 transition-colors z-50 shrink-0" />
         
         <div className="flex-grow flex overflow-hidden">
-            <div className="flex-grow border-r border-slate-800 p-3 flex flex-col bg-black/20 overflow-hidden">
-                <div className="flex items-center gap-2 mb-2 opacity-40 text-blue-500 uppercase text-[9px] font-black tracking-widest"><Terminal size={12} /> System Event Stream</div>
+            <div className="w-[450px] border-r border-slate-800 p-3 flex flex-col bg-black/20 overflow-hidden shrink-0">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 opacity-40 text-blue-500 uppercase text-[9px] font-black tracking-widest"><Terminal size={12} /> System Event Stream</div>
+                    <select 
+                        value={activeLogSource} 
+                        onChange={(e) => setActiveLogSource(e.target.value)}
+                        className="bg-slate-900 text-[8px] font-black text-slate-400 border border-slate-800 rounded px-1 outline-none cursor-pointer hover:border-blue-600 transition-colors">
+                        {availableLogs.map(l => <option key={l} value={l}>{l.split('/').pop()}</option>)}
+                    </select>
+                </div>
                 <div className="flex-grow overflow-auto font-mono text-[9px] text-slate-400 space-y-1 select-text scrollbar-hide px-2 border-l border-slate-900">
                     {logs.map((l, i) => (
-                        <div key={i} className="group hover:bg-slate-900/50 transition-colors rounded px-1">
-                            <span className="text-blue-600 mr-2 font-bold">[{l.timestamp?.split('T')[1]?.split('.')[0] || '...'}]</span>
-                            <span className={l.role ? "text-slate-200 uppercase font-bold" : "text-slate-500"}>{l.role || 'SYS'}</span>
-                            <span className="text-slate-500 mx-1">:</span>
-                            <span className="text-slate-300">{l.event}</span>
-                            <span className="text-slate-600 ml-2 italic opacity-0 group-hover:opacity-100 transition-opacity text-[8px]">({JSON.stringify(l.data).slice(0,80)}...)</span>
+                        <div key={i} className="group hover:bg-slate-900/50 transition-colors rounded px-1 flex items-start gap-2">
+                            <span className="text-blue-600 font-bold shrink-0">[{l.timestamp?.split('T')[1]?.split('.')[0] || '...'}]</span>
+                            <span className={`uppercase font-black shrink-0 ${getRoleColor(l.role)}`}>{l.role || 'SYS'}</span>
+                            <span className="text-slate-600 shrink-0">»</span>
+                            <div className="flex-grow">
+                                <span className="text-slate-200 font-bold">{l.event}</span>
+                                <span className="text-slate-500 ml-2 opacity-80 break-all">
+                                    {l.event === 'reasoning' ? (
+                                        <span className="italic text-slate-400 opacity-60">"{(l.data?.thought || '').slice(0, 300)}..."</span>
+                                    ) : l.event === 'tool_call' ? `EXECUTING ${l.data?.tool} (${l.data?.args?.path || l.data?.args?.issue_id || ''})` : 
+                                     l.event === 'PROMPT' ? l.data?.msg : 
+                                     l.event === 'REACTION' ? l.data?.msg :
+                                     JSON.stringify(l.data).slice(0, 120)}
+                                </span>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {/* CHAT WITH DRIVER PANEL */}
+            <div className="flex-grow border-r border-slate-800 bg-black/40 flex flex-col p-3 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    <Activity size={14} className="text-green-500" /> Driver Chat
+                </div>
+                <div className="flex-grow overflow-auto mb-2 space-y-2 no-scrollbar">
+                    {logs.filter(l => l.role === 'DRIVER' || l.role === 'USER').map((l, i) => (
+                        <div key={i} className={`p-2 rounded text-[11px] ${l.role === 'USER' ? 'bg-blue-900/20 text-blue-300 ml-4 border-l-2 border-blue-500' : 'bg-slate-900/40 text-slate-300 mr-4 border-l-2 border-green-500'}`}>
+                            <div className="flex justify-between opacity-50 text-[8px] font-black mb-1">
+                                <span>{l.role}</span>
+                                <span>{l.timestamp?.split('T')[1]?.split('.')[0]}</span>
+                            </div>
+                            <div className="whitespace-pre-wrap">{l.data?.msg}</div>
+                        </div>
+                    ))}
+                    {isChatting && (
+                        <div className="text-[10px] text-green-500 animate-pulse flex items-center gap-2">
+                            <Zap size={10} fill="currentColor" /> Driver is architecting...
+                        </div>
+                    )}
+                    {logs.filter(l => l.role === 'DRIVER' || l.role === 'USER').length === 0 && (
+                        <div className="text-[11px] text-slate-500 italic">
+                            Talk to the Driver to generate new Rocks, Epics, or Issues...
+                        </div>
+                    )}
+                </div>
+                <div className="flex gap-2">
+                    <input 
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && chatWithDriver()}
+                        placeholder="e.g. 'Add a new feature for data export...'"
+                        className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-xs outline-none focus:border-blue-600 transition-colors"
+                    />
+                    <button 
+                        onClick={chatWithDriver}
+                        disabled={isChatting}
+                        className={`bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-all ${isChatting ? 'opacity-50 animate-pulse' : ''}`}>
+                        <Play size={14} fill="currentColor" />
+                    </button>
+                </div>
+            </div>
+
             <div className="w-[450px] border-r border-slate-800 p-3 flex flex-col bg-black/40 overflow-hidden shrink-0 relative">
                 <div className="flex items-center gap-2 mb-2 opacity-40 text-blue-500 uppercase text-[9px] font-black tracking-widest"><Cpu size={12} /> i9-13900K / RTX 4090 Pulse</div>
                 <div className="flex-grow relative">

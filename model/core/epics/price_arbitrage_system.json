@@ -1,0 +1,53 @@
+{
+  "name": "Sneaky Price Watch Engine",
+  "description": "A tactical implementation of a local-first price discovery and alerting system using FastAPI and Playwright.",
+  "status": "in_progress",
+  "type": "epic",
+  "team": "enterprise",
+  "environment": "standard",
+  "build_id": "build-sneaky-price-watch",
+  "handshake_enabled": true,
+  "requirements": "1. Simple browser (Playwright) talking to FastAPI backend. 2. Selection tool via right-click context menu to tag elements (XPath, CSS, ARIA, Text-ID). 3. Automated baseline lock on first poll. 4. Stealth features: header-rotation and user-agent spoofing. 5. Local UI for multi-URL capture and alerting. 6. MANDATORY: Save all artifacts to 'product/sneaky_price_watch/artifacts/', 'backend/', or 'frontend/'.",
+  "issues": [
+    {
+      "id": "SNK-0004",
+      "summary": "Target Intelligence & Testing Baselines",
+      "seat": "market_researcher",
+      "priority": "High",
+      "status": "done",
+      "note": "Use web search to find 5-10 high-value e-commerce or trading URLs for initial testing. Document the exact CSS/XPath for price elements on these sites."
+    },
+    {
+      "id": "SNK-0001",
+      "summary": "Stealth Browser & Schema Design",
+      "seat": "lead_architect",
+      "priority": "High",
+      "status": "done",
+      "note": "Define SQLAlchemy models for Targets and History. Design the Playwright wrapper with stealth-evasion headers."
+    },
+    {
+      "id": "SNK-0002",
+      "summary": "DOM Inspector & Selection Payload",
+      "seat": "senior_developer",
+      "priority": "High",
+      "status": "done",
+      "note": "Implement the JS injection script for right-click element tagging. Must extract XPath, CSS, and ARIA labels."
+    },
+    {
+      "id": "SNK-0003",
+      "summary": "Polling Manager & Alert Logic",
+      "seat": "backend_specialist",
+      "priority": "Medium",
+      "status": "done",
+      "note": "Build the background poller with jitter. Implement the 20% drop detection vs baseline."
+    },
+    {
+      "id": "SNK-0005",
+      "summary": "End-to-End Stealth Integration",
+      "seat": "lead_architect",
+      "priority": "High",
+      "status": "ready",
+      "note": "Wire the researcher's found URLs into the Polling Manager and verify the Stealth Browser can scrape them without being blocked. Consolidate artifacts into the final product directory."
+    }
+  ]
+}

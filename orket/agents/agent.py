@@ -15,12 +15,13 @@ class Agent:
     Uses the 'Prompt Engine' to compile Skills + Dialects.
     """
 
-    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider):
+    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider, next_member: str = None, prompt_patch: str = None):
         self.name = name
         self.description = description
         self.tools = tools
         self.provider = provider
-        self._prompt_patch: str | None = None
+        self.next_member = next_member
+        self._prompt_patch = prompt_patch
         
         # New iDesign Prompt Engine Components
         self.skill: SkillConfig | None = None
@@ -45,7 +46,17 @@ class Agent:
 
         # 2. Load Dialect based on Model Family
         model_name = self.provider.model.lower()
-        family = "qwen" if "qwen" in model_name else "llama" if "llama" in model_name else "generic"
+        if "deepseek" in model_name:
+            family = "deepseek-r1"
+        elif "llama" in model_name:
+            family = "llama3"
+        elif "phi" in model_name:
+            family = "phi"
+        elif "qwen" in model_name:
+            family = "qwen"
+        else:
+            family = "generic"
+            
         try:
             self.dialect = loader.load_asset("dialects", family, DialectConfig)
         except:
@@ -81,6 +92,12 @@ class Agent:
         for c in (idesign_standard + self.skill.idesign_constraints):
             prompt += f"- {c}\n"
 
+        prompt += "\nCARD SYSTEM PROTOCOL:\n"
+        # Force models to use the new Card System tools
+        prompt += "- ALWAYS start by calling 'get_issue_context' to read the comment history and intent.\n"
+        prompt += "- Use 'add_issue_comment' to log your progress, reasoning, and final handoff memo.\n"
+        prompt += "- The Card System is the Source of Truth for INTENT. Files are the result of EXECUTION.\n"
+
         prompt += f"\nSYNTAX DIALECT ({self.dialect.model_family}):\n"
         prompt += f"You MUST use this format for all file operations:\n{self.dialect.dsl_format}\n"
         
@@ -90,6 +107,12 @@ class Agent:
         
         prompt += f"\nGUARDRAIL: {self.dialect.hallucination_guard}\n"
 
+        if self.next_member:
+            prompt += f"\nWARM HANDOFF PROTOCOL:\n"
+            prompt += f"Your work will be handed off to the '{self.next_member}'.\n"
+            prompt += f"You MUST include a 'Member-to-Member Memo' in an 'add_issue_comment' call.\n"
+            prompt += f"Tailor the language: if they are technical, be precise. If they are business/creative, focus on features and value.\n"
+
         if self._prompt_patch:
             prompt += f"\n\nPATCH:\n{self._prompt_patch}"
             
@@ -98,53 +121,99 @@ class Agent:
     # ---------------------------------------------------------
     # Tool-call parsing
     # ---------------------------------------------------------
-    def _parse_tool_call(self, text: str):
+    def _parse_tool_calls(self, text: str) -> List[Dict[str, Any]]:
         """
-        Aggressive Tool Extraction: Supports JSON and DSL.
+        Aggressive Multi-Tool Extraction: Uses stack-based JSON parsing,
+        OpenAI-style translation, and multi-block DSL scanner.
+        Supports both 'tool/args' and 'name/arguments' formats.
         """
         text = text.strip()
+        results = []
         
-        # 1. Look for JSON in markdown fences
+        # 1. Look for JSON in markdown fences (Highest priority)
         import re
-        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-        if json_match:
+        json_blocks = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        for block in json_blocks:
             try:
-                data = json.loads(json_match.group(1))
-                if isinstance(data, dict) and "tool" in data:
-                    return data["tool"], data.get("args", {})
+                data = json.loads(block)
+                if isinstance(data, dict):
+                    # Orket format
+                    if "tool" in data:
+                        results.append({"tool": data["tool"], "args": data.get("args", {})})
+                    # Alternate 'name/arguments' format
+                    elif "name" in data and "arguments" in data:
+                        results.append({"tool": data["name"], "args": data["arguments"]})
             except: pass
 
-        # 2. Look for first { and last } (Loose JSON)
-        try:
-            start = text.find('{')
-            end = text.rfind('}')
-            if start != -1 and end != -1:
-                candidate = text[start:end+1]
-                data = json.loads(candidate)
-                if isinstance(data, dict) and "tool" in data:
-                    return data["tool"], data.get("args", {})
-        except: pass
+        if results: return results
 
-        # 3. DSL Fallback: TOOL:, PATH:, CONTENT:
-        if "TOOL:" in text and "PATH:" in text:
-            lines = text.splitlines()
-            tool, path, content_lines, in_content = None, None, [], False
-            for line in lines:
-                if line.startswith("TOOL:"): tool = line.replace("TOOL:", "").strip()
-                elif line.startswith("PATH:"): path = line.replace("PATH:", "").strip()
-                elif line.startswith("CONTENT:"):
-                    in_content = True
-                    rem = line.replace("CONTENT:", "").strip()
-                    if rem: content_lines.append(rem)
-                elif in_content: content_lines.append(line)
-            
-            if tool and path:
-                content = "\n".join(content_lines)
-                if content.startswith("```") and content.endswith("```"):
-                    content = "\n".join(content.splitlines()[1:-1])
-                return tool, {"path": path, "content": content}
+        # 2. Stack-based extraction for loose JSON
+        stack = []
+        start_idx = -1
+        for i, char in enumerate(text):
+            if char == '{':
+                if not stack: start_idx = i
+                stack.append('{')
+            elif char == '}':
+                if stack:
+                    stack.pop()
+                    if not stack:
+                        candidate = text[start_idx:i+1]
+                        try:
+                            data = json.loads(candidate)
+                            # Orket format
+                            if isinstance(data, dict) and "tool" in data:
+                                results.append({"tool": data["tool"], "args": data.get("args", {})})
+                            # OpenAI name/arguments format
+                            elif isinstance(data, dict) and "name" in data and "arguments" in data:
+                                results.append({"tool": data["name"], "args": data["arguments"]})
+                            # OpenAI single function format
+                            elif isinstance(data, dict) and "function" in data:
+                                f = data.get("function", {})
+                                args = f.get("arguments", {})
+                                if isinstance(args, str): 
+                                    try: args = json.loads(args)
+                                    except: pass
+                                results.append({"tool": f.get("name"), "args": args})
+                        except: pass
+            elif char == '[':
+                if not stack: start_idx = i
+                stack.append('[')
+            elif char == ']':
+                if stack:
+                    stack.pop()
+                    if not stack:
+                        candidate = text[start_idx:i+1]
+                        try:
+                            data = json.loads(candidate)
+                            # OpenAI list format
+                            if isinstance(data, list) and len(data) > 0 and "function" in data[0]:
+                                for call in data:
+                                    f = call.get("function", {})
+                                    args = f.get("arguments", {})
+                                    if isinstance(args, str):
+                                        try: args = json.loads(args)
+                                        except: pass
+                                    results.append({"tool": f.get("name"), "args": args})
+                        except: pass
 
-        return None, None
+        if results: return results
+
+        # 3. Multi-block DSL Scanner: [TOOL] path: content:
+        dsl_blocks = re.split(r"(?:\[|TOOL:\s*)(write_file|create_issue|add_issue_comment|get_issue_context)(?:\]|\s*)", text)
+        if len(dsl_blocks) > 1:
+            for i in range(1, len(dsl_blocks), 2):
+                tool_name = dsl_blocks[i]
+                block_content = dsl_blocks[i+1]
+                path_match = re.search(r"(?:path|PATH):\s*([^\n]+)", block_content)
+                content_match = re.search(r"(?:content|CONTENT):\s*\"*\"*\"*\n?(.*?)(?:\n\"*\"*\"*|$)", block_content, re.DOTALL)
+                if path_match and content_match:
+                    results.append({
+                        "tool": tool_name,
+                        "args": {"path": path_match.group(1).strip().strip("'").strip('"'), "content": content_match.group(1).strip()}
+                    })
+        
+        return results
 
     # ---------------------------------------------------------
     # Main agent execution
@@ -153,6 +222,8 @@ class Agent:
         """
         Executes a single agent step with transcript context.
         """
+        import asyncio
+        import re
 
         system_prompt = self._build_system_prompt()
 
@@ -173,139 +244,83 @@ class Agent:
 
         messages.append({"role": "user", "content": f"Context: {context}"})
 
-        result = await self.provider.complete(messages)
-        text = result.content if hasattr(result, "content") else str(result)
-        
-        print(f"  [DEBUG] Raw response from {self.name}:\n{text}\n{'-'*40}")
-
-        # Agent-level model usage logging (raw token counts)
-        if hasattr(result, "raw"):
-            tokens = {
-                "input_tokens": result.raw.get("input_tokens"),
-                "output_tokens": result.raw.get("output_tokens"),
-                "total_tokens": result.raw.get("total_tokens"),
-            }
-            log_model_usage(
-                role=self.name,
-                model=result.raw.get("model", getattr(self.provider, "model", "unknown")),
-                tokens=tokens,
-                step_index=context.get("story_index", -1),
-                epic=context.get("epic_name", "unknown"),
-                workspace=workspace,
-            )
-
-        # Try to interpret as a tool call
-        tool_name, args = self._parse_tool_call(text)
-
-        # --- FORCEFUL PERSISTENCE (Auto-Extract) ---
-        if tool_name is None and "```" in text:
-            extracted_files = self._auto_extract_files(text)
-            tool_fn = self.tools.get("write_file")
-            
-            if extracted_files and tool_fn:
-                persist_notes = []
-                for file_info in extracted_files:
-                    path_str, content = file_info["path"], file_info["content"]
-                    try:
-                        import inspect
-                        if inspect.iscoroutine(tool_fn) or inspect.iscoroutinefunction(tool_fn):
-                            res = await tool_fn({"path": path_str, "content": content}, context=context)
-                        else:
-                            res = tool_fn({"path": path_str, "content": content}, context=context)
-                        
-                        if res.get("ok"):
-                            persist_notes.append(path_str)
-                            log_event("auto_persist", {"path": path_str, "role": self.name}, workspace=workspace)
-                        else:
-                            pass
-                    except: pass
-                
-                if persist_notes:
-                    return type("Response", (), {
-                        "content": f"[AUTO-PERSISTED: {', '.join(persist_notes)}]\n\n{text}",
-                        "note": f"role={self.name}, auto_persist"
-                    })
-
-        if tool_name is None:
-            # No tool call — return raw text
-            return type("Response", (), {"content": text, "note": f"role={self.name}"})
-
-        # Validate tool
-        if tool_name not in self.tools:
-            msg = f"Unknown tool '{tool_name}'. Available tools: {list(self.tools.keys())}"
-            return type("Response", (), {"content": msg, "note": f"role={self.name}"})
-
-        tool_fn = self.tools[tool_name]
-
-        # Execute tool
         try:
-            import asyncio
-            # Handle both sync and async tool functions
-            if asyncio.iscoroutinefunction(tool_fn):
-                tool_result = await tool_fn(args, context=context)
-            else:
-                tool_result = tool_fn(args, context=context)
+            result = await self.provider.complete(messages)
+            text = result.content if hasattr(result, "content") else str(result)
+            
+            # --- CHAIN OF THOUGHT EXTRACTION ---
+            thought_match = re.search(r"<thought>(.*?)</thought>", text, re.DOTALL)
+            if thought_match:
+                thought_content = thought_match.group(1).strip()
+                log_event("reasoning", {"thought": thought_content, "role": self.name}, workspace, role=self.name)
+                text = re.sub(r"<thought>.*?</thought>", "", text, flags=re.DOTALL).strip()
 
-            # Compute byte size for logging
-            content_bytes = 0
-            if isinstance(args.get("content"), str):
-                content_bytes = len(args["content"].encode("utf-8"))
+            print(f"  [DEBUG] Raw response from {self.name}:\n{text}\n{'-'*40}")
 
-            log_event(
-                "tool_call",
-                {
-                    "role": self.name,
-                    "tool": tool_name,
-                    "args": args,
-                    "content_bytes": content_bytes,
-                    "result": tool_result
-                },
-                workspace=workspace,
-                role=self.name,
-            )
-
-            if tool_result.get("ok"):
-                return type(
-                    "Response",
-                    (),
-                    {
-                        "content": f"Tool '{tool_name}' executed successfully. Result: {tool_result}",
-                        "note": f"role={self.name}, tool={tool_name}",
-                    },
+            # Usage logging
+            usage = result.raw if hasattr(result, "raw") else {}
+            if hasattr(result, "raw"):
+                tokens = {
+                    "input_tokens": result.raw.get("input_tokens"),
+                    "output_tokens": result.raw.get("output_tokens"),
+                    "total_tokens": result.raw.get("total_tokens"),
+                }
+                log_model_usage(
+                    role=self.name,
+                    model=result.raw.get("model", getattr(self.provider, "model", "unknown")),
+                    tokens=tokens,
+                    step_index=context.get("story_index", -1),
+                    epic=context.get("epic_name", "unknown"),
+                    workspace=workspace,
                 )
-            else:
-                return type(
-                    "Response",
-                    (),
-                    {
-                        "content": f"Tool '{tool_name}' failed: {tool_result.get('error')}",
-                        "note": f"role={self.name}, tool={tool_name}, error",
-                    },
-                )
+
+            # Parse ALL tool calls
+            tool_calls = self._parse_tool_calls(text)
+
+            # --- FORCEFUL PERSISTENCE ---
+            if not tool_calls and "```" in text:
+                extracted_files = self._auto_extract_files(text)
+                if extracted_files:
+                    for f in extracted_files:
+                        tool_calls.append({"tool": "write_file", "args": f})
+
+            if not tool_calls:
+                return type("Response", (), {"content": text, "note": f"role={self.name}", "usage": usage})
+
+            # --- EXECUTE ALL TOOL CALLS ---
+            execution_results = []
+            for call in tool_calls:
+                tool_name = call["tool"]
+                args = call["args"]
+                
+                if tool_name not in self.tools:
+                    execution_results.append(f"Error: Unknown tool '{tool_name}'")
+                    continue
+
+                tool_fn = self.tools[tool_name]
+                try:
+                    import inspect
+                    if inspect.iscoroutinefunction(tool_fn):
+                        tool_res = await tool_fn(args, context=context)
+                    else:
+                        tool_res = tool_fn(args, context=context)
+                    
+                    execution_results.append(f"Tool '{tool_name}' result: {tool_res}")
+                    log_event("tool_call", {"role": self.name, "tool": tool_name, "args": args, "result": tool_res}, workspace, role=self.name)
+                except Exception as e:
+                    execution_results.append(f"Tool '{tool_name}' failed: {e}")
+
+            return type("Response", (), {
+                "content": f"Executed {len(tool_calls)} tools.\n" + "\n".join(execution_results),
+                "note": f"role={self.name}, tools={len(tool_calls)}",
+                "usage": usage
+            })
 
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            log_event(
-                "tool_error",
-                {
-                    "role": self.name,
-                    "tool": tool_name,
-                    "args": args,
-                    "error": str(e),
-                },
-                workspace=workspace,
-                role=self.name,
-            )
-
-            return type(
-                "Response",
-                (),
-                {
-                    "content": f"Tool '{tool_name}' failed with error: {e}",
-                    "note": f"role={self.name}, tool={tool_name}, error",
-                },
-            )
+            log_event("tool_error", {"role": self.name, "error": str(e)}, workspace=workspace, role=self.name)
+            return type("Response", (), {"content": f"Agent execution failed: {e}", "note": "error", "usage": {}})
 
     def _auto_extract_files(self, text: str) -> List[Dict[str, str]]:
         """
@@ -351,10 +366,8 @@ class Agent:
             files.append({"path": filename, "content": content})
 
         # 2. Heuristic: Look for write_file(path="...", content="...") style
-        # This catches models that 'pretend' to call the function in text
         fn_matches = re.findall(r"write_file\(\s*path=[\"'](.*?)[\"']\s*,\s*content=[\"'](.*?)[\"']\s*\)", text, re.DOTALL)
         for path, content in fn_matches:
-            # Unescape newlines if the model used \n
             content = content.replace("\\n", "\n").replace("\\\\", "\\")
             files.append({"path": path, "content": content})
         

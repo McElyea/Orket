@@ -1,0 +1,26 @@
+{
+  "name": "System Maintenance & Optimization (Q1)",
+  "description": "The primary 'Run the Business' Epic for Q1 2026. This Epic captures unplanned support and formalizes the Reforge Ceremony as a periodic utility run.",
+  "status": "in_progress",
+  "type": "epic",
+  "team": "enterprise",
+  "environment": "standard",
+  "build_id": "build-rtb-q1-2026",
+  "handshake_enabled": true,
+  "issues": [
+    {
+      "id": "RTB-0001",
+      "summary": "Reforge Ceremony: Log Analysis & Prompt Patching",
+      "seat": "reforge_specialist",
+      "priority": "High",
+      "note": "Execute the first Reforge Ceremony of the quarter. Analyze SNK epic logs for timeouts or tool-call errors and propose specific prompt patches."
+    },
+    {
+      "id": "RTB-0002",
+      "summary": "Unplanned Support: Engine Drift Monitoring",
+      "seat": "operations_lead",
+      "priority": "Medium",
+      "note": "Placeholder for unplanned support tickets and general engine maintenance."
+    }
+  ]
+}

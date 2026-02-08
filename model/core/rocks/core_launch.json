@@ -1,19 +1,20 @@
 {
-  "name": "core_launch",
-  "description": "Initial launch of the Orket core engine features.",
-  "owner_department": "core",
-  "epics": [
-    {
-      "department": "core",
-      "epic": "standard"
-    },
-    {
-      "department": "core",
-      "epic": "ui_update"
-    },
-    {
-      "epic": "auth_manager",
-      "department": "core"
-    }
-  ]
+    "name":  "Orket Core Engine Orkestration",
+    "description":  "The strategic milestone for activating Orket\u0027s core orchestration capabilities. This involves establishing the standard operating procedures, refining the primary user interface, and implementing the fundamental security and authentication layers required for a production-ready environment.",
+    "status": "in_progress",
+    "owner_department":  "core",
+    "epics":  [
+                  {
+                      "department":  "core",
+                      "epic":  "standard"
+                  },
+                  {
+                      "department":  "core",
+                      "epic":  "ui_update"
+                  },
+                  {
+                      "epic":  "auth_manager",
+                      "department":  "core"
+                  }
+              ]
 }

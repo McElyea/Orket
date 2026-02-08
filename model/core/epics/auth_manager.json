@@ -1,6 +1,6 @@
 {
-  "name": "auth_manager",
-  "description": "A secure authentication manager following iDesign principles to ensure user security and compliance with best practices.",
+  "name": "Secure Authentication Manager Implementation",
+  "description": "A tactical initiative to build a robust, BCrypt-powered authentication system. This epic focuses on the iDesign separation of the AuthManager interface from its underlying crypto-engine, ensuring that user identity management is both secure and easily extensible for future vendors.",
   "team": "enterprise",
   "environment": "standard",
   "issues": [

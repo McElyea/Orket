@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from orket.orket import orchestrate, orchestrate_rock
+from orket.orket import orchestrate, orchestrate_rock, orchestrate_card
 from orket.logging import subscribe_to_events
 from orket.state import runtime_state
 from orket.hardware import get_current_profile, get_metrics_snapshot
@@ -58,7 +58,7 @@ async def list_system_files(path: str = "."):
             try:
                 raw = json.loads(p.read_text(encoding="utf-8"))
                 if "epics" in raw: is_launchable, asset_type = True, "rock"
-                elif "tracs" in raw or "stories" in raw: is_launchable, asset_type = True, "epic"
+                elif "tracs" in raw or "stories" in raw or "issues" in raw: is_launchable, asset_type = True, "epic"
             except: pass
         items.append({"name": p.name, "is_dir": is_dir, "ext": p.suffix, "is_launchable": is_launchable, "asset_type": asset_type})
     items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
@@ -81,8 +81,22 @@ async def get_calendar():
     }
 
 @app.post("/system/run-active")
-async def run_active_asset(data: Dict[str, str] = Body(...)):
+async def run_active_asset(data: Dict[str, Any] = Body(...)):
     path_str = data.get("path")
+    build_id = data.get("build_id")
+    driver_steered = data.get("driver_steered", False)
+    asset_type = data.get("type") # Explicit type if known (e.g. 'issue')
+    
+    session_id = str(uuid.uuid4())[:8]
+
+    if asset_type == "issue":
+        issue_id = data.get("issue_id")
+        print(f"  [ORKESTRATE] Issue {issue_id} (ID: {session_id}, Steered: {driver_steered})")
+        db.start_session(session_id, "issue", issue_id, "core", "Orkestrating")
+        task = asyncio.create_task(run_issue_task(session_id, issue_id, "core", build_id, driver_steered))
+        runtime_state.active_tasks[session_id] = task
+        return {"session_id": session_id, "type": "issue"}
+
     if not path_str: raise HTTPException(400)
     p = Path(path_str)
     asset_name = p.stem
@@ -92,18 +106,16 @@ async def run_active_asset(data: Dict[str, str] = Body(...)):
         idx = p.parts.index("model")
         if len(p.parts) > idx + 1: dept = p.parts[idx+1]
 
-    session_id = str(uuid.uuid4())[:8]
-    print(f"  [LAUNCH] {asset_name} (ID: {session_id})")
+    print(f"  [ORKESTRATE] {asset_name} (ID: {session_id}, Build: {build_id or 'auto'}, Steered: {driver_steered})")
 
-    # Rocks and Epics are high-level Cards. Issues are operational Cards.
     if "rocks" in str(p):
-        db.start_session(session_id, "rock", asset_name, dept, "Ignited")
-        task = asyncio.create_task(run_rock_task(session_id, asset_name, dept))
+        db.start_session(session_id, "rock", asset_name, dept, "Orkestrating")
+        task = asyncio.create_task(run_rock_task(session_id, asset_name, dept, build_id, driver_steered))
         runtime_state.active_tasks[session_id] = task
         return {"session_id": session_id, "type": "rock"}
     else:
-        db.start_session(session_id, "epic", asset_name, dept, "Ignited")
-        task = asyncio.create_task(run_epic_task(session_id, asset_name, dept))
+        db.start_session(session_id, "epic", asset_name, dept, "Orkestrating")
+        task = asyncio.create_task(run_epic_task(session_id, asset_name, dept, build_id, driver_steered))
         runtime_state.active_tasks[session_id] = task
         return {"session_id": session_id, "type": "epic"}
 
@@ -139,6 +151,27 @@ async def get_system_board(dept: str = "core"):
     from orket.board import get_board_hierarchy
     return get_board_hierarchy(dept)
 
+@app.get("/system/preview-asset")
+async def preview_asset(path: str, issue_id: Optional[str] = None):
+    from orket.preview import PreviewBuilder
+    p = Path(path)
+    asset_name = p.stem
+    
+    dept = "core"
+    if "model" in p.parts:
+        idx = p.parts.index("model")
+        if len(p.parts) > idx + 1: dept = p.parts[idx+1]
+        
+    builder = PreviewBuilder()
+    if issue_id:
+        res = await builder.build_issue_preview(issue_id, asset_name, dept)
+    elif "rocks" in str(p):
+        res = await builder.build_rock_preview(asset_name, dept)
+    else:
+        res = await builder.build_epic_preview(asset_name, dept)
+        
+    return res
+
 @app.post("/system/chat-driver")
 async def chat_driver(data: Dict[str, str] = Body(...)):
     from orket.driver import OrketDriver
@@ -148,6 +181,36 @@ async def chat_driver(data: Dict[str, str] = Body(...)):
     driver = OrketDriver()
     response = await driver.process_request(message)
     return {"response": response}
+
+@app.post("/system/archive-session")
+async def archive_session(data: Dict[str, str] = Body(...)):
+    session_id = data.get("session_id")
+    if not session_id: raise HTTPException(400)
+    
+    session = db.get_session(session_id)
+    if not session: raise HTTPException(404)
+    
+    asset_name = session["name"]
+    asset_type = session["type"]
+    dept = session["department"]
+    
+    # Update config file
+    try:
+        path = PROJECT_ROOT / "model" / dept / f"{asset_type}s" / f"{asset_name}.json"
+        if path.exists():
+            config = json.loads(path.read_text(encoding="utf-8"))
+            config["status"] = "done"
+            path.write_text(json.dumps(config, indent=2), encoding="utf-8")
+            
+            # Record final QA event
+            from orket.logging import log_event
+            log_event("asset_archived", {"name": asset_name, "type": asset_type, "dept": dept}, Path(f"workspace/runs/{session_id}"), role="SYS")
+            
+            return {"ok": True, "message": f"{asset_type.capitalize()} '{asset_name}' marked as DONE."}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    
+    return {"ok": False, "error": "Config file not found."}
 
 @app.get("/runs")
 async def list_runs(): return db.get_recent_runs()
@@ -193,10 +256,11 @@ async def conductor_intervene(session_id: str = Body(...), seat: str = Body(...)
 # Runners
 # ---------------------------------------------------------------------------
 
-async def run_epic_task(session_id: str, epic_name: str, department: str):
+async def run_issue_task(session_id: str, issue_id: str, department: str, build_id: str = None, driver_steered: bool = False):
     workspace = Path(f"workspace/runs/{session_id}")
     try:
-        transcript = await orchestrate(epic_name, workspace, department, session_id=session_id)
+        from orket.orket import orchestrate_card
+        transcript = await orchestrate_card(issue_id, workspace, department, session_id=session_id, build_id=build_id, driver_steered=driver_steered)
         db.update_session_status(session_id, "completed", 0, transcript)
     except asyncio.CancelledError:
         print(f"  [HALT] {session_id} canceled by user.")
@@ -207,11 +271,25 @@ async def run_epic_task(session_id: str, epic_name: str, department: str):
     finally:
         runtime_state.active_tasks.pop(session_id, None)
 
-async def run_rock_task(session_id: str, rock_name: str, department: str):
+async def run_epic_task(session_id: str, epic_name: str, department: str, build_id: str = None, driver_steered: bool = False):
+    workspace = Path(f"workspace/runs/{session_id}")
+    try:
+        transcript = await orchestrate(epic_name, workspace, department, session_id=session_id, build_id=build_id, driver_steered=driver_steered)
+        db.update_session_status(session_id, "completed", 0, transcript)
+    except asyncio.CancelledError:
+        print(f"  [HALT] {session_id} canceled by user.")
+        db.update_session_status(session_id, "halted")
+    except Exception as e:
+        print(f"  [FAIL] {session_id}: {e}")
+        db.update_session_status(session_id, "failed")
+    finally:
+        runtime_state.active_tasks.pop(session_id, None)
+
+async def run_rock_task(session_id: str, rock_name: str, department: str, build_id: str = None, driver_steered: bool = False):
     workspace = Path(f"workspace/runs/{session_id}")
     try:
         from orket.orket import orchestrate_rock
-        result = await orchestrate_rock(rock_name, workspace, department, session_id=session_id)
+        result = await orchestrate_rock(rock_name, workspace, department, session_id=session_id, build_id=build_id, driver_steered=driver_steered)
         db.update_session_status(session_id, "completed", 0, result)
     except asyncio.CancelledError:
         print(f"  [HALT] {session_id} canceled by user.")
@@ -235,9 +313,31 @@ async def event_broadcaster():
                 if ws in runtime_state.active_websockets: runtime_state.active_websockets.remove(ws)
         runtime_state.event_queue.task_done()
 
+async def log_tailer():
+    """Tails the orket.log file to broadcast events from other processes (like the CLI)."""
+    log_path = PROJECT_ROOT / "workspace" / "default" / "orket.log"
+    if not log_path.parent.exists(): log_path.parent.mkdir(parents=True, exist_ok=True)
+    if not log_path.exists(): log_path.touch()
+    
+    # Start at the end of the file
+    file_handle = open(log_path, "r", encoding="utf-8")
+    file_handle.seek(0, 2) 
+    
+    while True:
+        line = file_handle.readline()
+        if not line:
+            await asyncio.sleep(0.5)
+            continue
+        try:
+            record = json.loads(line)
+            await runtime_state.event_queue.put(record)
+        except:
+            pass
+
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(event_broadcaster())
+    asyncio.create_task(log_tailer())
     def on_log_record(record):
         loop = asyncio.get_event_loop()
         loop.call_soon_threadsafe(runtime_state.event_queue.put_nowait, record)
@@ -254,4 +354,4 @@ async def websocket_endpoint(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="127.0.0.1", port=8082, reload=True)
+    uvicorn.run("server:app", host="127.0.0.1", port=8082, reload=True, reload_excludes=["workspace/*", "product/*"])
