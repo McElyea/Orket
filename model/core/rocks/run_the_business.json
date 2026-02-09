@@ -16,6 +16,10 @@
         {
             "epic": "ui_vision",
             "department": "core"
+        },
+        {
+            "epic": "import_best_practices",
+            "department": "training"
         }
     ]
 }

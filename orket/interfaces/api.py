@@ -31,6 +31,21 @@ engine = OrchestrationEngine(PROJECT_ROOT / "workspace" / "default")
 @app.get("/health")
 async def health(): return {"status": "ok", "organization": "McElyea"}
 
+@app.post("/system/clear-logs")
+async def clear_logs():
+    log_path = PROJECT_ROOT / "workspace" / "default" / "orket.log"
+    if log_path.exists():
+        log_path.write_text("", encoding="utf-8")
+    return {"ok": True}
+
+@app.get("/system/heartbeat")
+async def heartbeat():
+    return {
+        "status": "online",
+        "timestamp": datetime.now().isoformat(),
+        "active_tasks": len(runtime_state.active_tasks)
+    }
+
 @app.get("/system/metrics")
 async def get_metrics(): return get_metrics_snapshot()
 
