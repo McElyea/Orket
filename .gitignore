@@ -68,3 +68,6 @@ infrastructure/sandboxes/
 *.pem
 *.key
 *.crt
+
+# Backups (local copies, sync to cloud instead)
+backups/
