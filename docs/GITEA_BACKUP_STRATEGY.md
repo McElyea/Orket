@@ -1,4 +1,12 @@
-# Gitea Backup & Recovery Strategy
+# Gitea Backup & Recovery Strategy (LOCAL ONLY)
+
+## ⚠️ Security Notice
+
+**DO NOT sync backups to cloud storage!**
+
+Backups contain ALL private repositories. If synced to cloud and your account is compromised, all code is exposed. **Local-only backups** are the safest approach for private projects.
+
+---
 
 ## Storage Architecture
 
@@ -19,7 +27,7 @@ All Gitea data is stored locally in: `infrastructure/gitea/`
 
 ## Backup Strategy
 
-### Option 1: Manual Backup (Simple)
+### Manual Backup
 
 ```bash
 # Run backup script
@@ -36,37 +44,30 @@ All Gitea data is stored locally in: `infrastructure/gitea/`
 
 **Retention**: Last 7 backups (auto-cleaned)
 
-### Option 2: Scheduled Backup (Recommended)
+### Automated Backup (Windows Task Scheduler)
 
-**Windows Task Scheduler**:
+**Setup (Run PowerShell as Administrator)**:
 ```powershell
-# Create daily backup task
-$action = New-ScheduledTaskAction -Execute "bash" -Argument "c:\Source\Orket\scripts\backup_gitea.sh"
-$trigger = New-ScheduledTaskTrigger -Daily -At 3am
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Orket Gitea Backup"
+.\scripts\setup_windows_backup.ps1
 ```
 
-**Linux/Mac cron**:
-```bash
-# Add to crontab (daily at 3am)
-0 3 * * * cd /path/to/Orket && ./scripts/backup_gitea.sh
+This creates a scheduled task that:
+- Runs daily at 3:00 AM
+- Executes `backup_gitea.sh`
+- Keeps last 7 backups
+- Runs as your user account
+
+**Manual commands**:
+```powershell
+# View task
+Get-ScheduledTask -TaskName "Orket-Gitea-Daily-Backup"
+
+# Run now
+Start-ScheduledTask -TaskName "Orket-Gitea-Daily-Backup"
+
+# Remove
+Unregister-ScheduledTask -TaskName "Orket-Gitea-Daily-Backup"
 ```
-
-### Option 3: Cloud Sync (Best)
-
-**Sync backups to cloud storage**:
-```bash
-# After backup, sync to cloud
-./scripts/backup_gitea.sh
-rclone copy backups/gitea/ remote:orket-backups/gitea/
-```
-
-**Supported cloud providers** (via rclone):
-- Google Drive
-- OneDrive
-- Dropbox
-- AWS S3
-- Backblaze B2
 
 ---
 
@@ -75,7 +76,7 @@ rclone copy backups/gitea/ remote:orket-backups/gitea/
 | Scenario | Frequency | Retention |
 |----------|-----------|-----------|
 | **Active Development** | Daily | 7 days |
-| **Production Use** | Hourly | 24 hours + weekly archives |
+| **Production Use** | Daily | 14 days |
 | **Stable/Archive** | Weekly | 4 weeks |
 
 **Current recommendation**: **Daily at 3am** (low usage time)
@@ -115,27 +116,15 @@ tar -xf /tmp/my-project.git.tar
 
 ## Privacy Settings
 
-### Make Repos Private by Default
+### ✅ Repos are Now Private by Default
 
-**Method 1: Web UI**
-1. Go to http://localhost:3000
-2. Click your profile → **Site Administration**
-3. **Configuration** → **Repository**
-4. Set **Default Private** = `true`
-5. Save
+**Already configured!** All new repos will be private.
 
-**Method 2: Script** (recommended)
+**To verify**:
 ```bash
-./scripts/configure_gitea_privacy.sh
-cd infrastructure
-docker-compose -f docker-compose.gitea.yml restart
-```
-
-**Method 3: Manual config edit**
-```bash
-# Edit infrastructure/gitea/gitea/conf/app.ini
-[repository]
-DEFAULT_PRIVATE = private
+cd infrastructure/gitea/gitea/conf
+grep "DEFAULT_PRIVATE" app.ini
+# Should show: DEFAULT_PRIVATE = private
 ```
 
 ### Change Existing Repos to Private
@@ -148,6 +137,11 @@ curl -X PATCH \
   -H "Content-Type: application/json" \
   -d '{"private": true}'
 ```
+
+Via Web UI:
+1. Go to repo → Settings
+2. Check "Make Private"
+3. Save
 
 ---
 
@@ -208,31 +202,36 @@ curl http://localhost:3000/api/v1/user/repos -u "Orket:password"
 
 ---
 
-## Cloud Backup Setup (Recommended)
+## Off-Site Backup (Optional - Advanced)
 
-### Using rclone (supports all major clouds)
+**If you need off-site backups** (for disaster recovery):
 
-**Install rclone**:
+**Option 1: External Hard Drive**
 ```bash
-# Windows
-choco install rclone
-
-# Linux/Mac
-curl https://rclone.org/install.sh | sudo bash
+# After backup, copy to external drive
+cp backups/gitea/gitea_backup_*.tar.gz /mnt/external-drive/orket-backups/
 ```
 
-**Configure remote**:
+**Option 2: Encrypted USB Drive**
 ```bash
-rclone config
-# Follow prompts to add Google Drive, OneDrive, etc.
+# Encrypt backup before copying
+gpg --symmetric --cipher-algo AES256 backups/gitea/gitea_backup_LATEST.tar.gz
+# Copy .gpg file to USB drive
 ```
 
-**Add to backup script**:
+**Option 3: Network Attached Storage (NAS)**
 ```bash
-# At end of scripts/backup_gitea.sh
-rclone copy "$BACKUP_DIR/$BACKUP_NAME" remote:orket-backups/gitea/
-echo "☁️  Synced to cloud: remote:orket-backups/gitea/$BACKUP_NAME"
+# Mount NAS
+net use Z: \\nas\backups /user:username password
+
+# Copy backups
+xcopy /Y backups\gitea\*.tar.gz Z:\orket\
 ```
+
+**DO NOT** use cloud storage unless you:
+1. Encrypt backups with strong password first
+2. Understand the security implications
+3. Have a specific compliance requirement
 
 ---
 
@@ -252,16 +251,6 @@ if [ $AGE -gt 86400 ]; then
 fi
 ```
 
-### Email Alerts (optional)
-
-Add to `scripts/backup_gitea.sh`:
-```bash
-# Send email if backup fails
-if [ $? -ne 0 ]; then
-    echo "Gitea backup failed!" | mail -s "Backup Alert" you@email.com
-fi
-```
-
 ---
 
 ## Migration to New System
@@ -269,7 +258,7 @@ fi
 **Export from old system**:
 ```bash
 ./scripts/backup_gitea.sh
-# Copy backups/gitea/gitea_backup_LATEST.tar.gz to new system
+# Copy backups/gitea/gitea_backup_LATEST.tar.gz to USB/external drive
 ```
 
 **Import on new system**:
@@ -285,14 +274,15 @@ cd Orket
 ## Summary
 
 ✅ **Local storage**: `infrastructure/gitea/` (bind mount, easy to backup)
-✅ **Private by default**: Run `./scripts/configure_gitea_privacy.sh`
+✅ **Private by default**: Configured automatically
 ✅ **Daily backups**: Keep last 7 days
-✅ **Cloud sync**: Use rclone for offsite backups
 ✅ **Quick recovery**: ~5 minutes from backup
 ✅ **Never lose data**: Automated + verified backups
+✅ **Secure**: No cloud exposure
 
-**Recommended setup**:
-1. Configure private repos by default
-2. Set up daily automated backups (3am)
-3. Sync to cloud storage (Google Drive, OneDrive)
-4. Test restore monthly
+**Setup checklist**:
+- [x] Gitea configured for private repos
+- [ ] Run: `.\scripts\setup_windows_backup.ps1` (as Administrator)
+- [ ] Test backup: `.\scripts\backup_gitea.sh`
+- [ ] Test restore: `.\scripts\restore_gitea.sh backups/gitea/gitea_backup_LATEST.tar.gz`
+- [ ] Verify monthly
