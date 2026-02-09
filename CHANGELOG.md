@@ -54,7 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Core StateMachine for mechanical governance
 - Atomic Roles implementation
-- Secret sovereignty with `.env` credential management
 - Exponential backoff retry logic for LLM calls
 - Hardware-aware multi-modal support (CUDA/CPU auto-detection)
 
@@ -67,8 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pivoted from descriptive orchestration to mechanical enforcement model
 
 ### Security
-- Moved all sensitive credentials to `.env` files
-- Implemented `.gitignore` guards for `.db` and `.json` settings
+- Environment-based credential management with `.env` files
+- `.gitignore` guards for sensitive files
 
 ### Removed
 - Legacy Skills system (consolidated into Roles)

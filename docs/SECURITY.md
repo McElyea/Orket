@@ -5,10 +5,9 @@ This document defines the Vibe Rail integrity model.
 ## Integrity-Based Security
 At Vibe Rail, security is a subset of system integrity. We ensure that every agent turn is traceable and constrained by organizational rules.
 
-### 1. Secret Sovereignty (New in v0.3.6)
+### 1. Environment-Based Credentials
 *   **Environment Management:** All sensitive credentials (passwords, API keys, secret keys) are stored in a local `.env` file.
-*   **Git Guards:** The `.gitignore` policy strictly excludes `.env`, `*.db`, and `user_settings.json` from version control to prevent accidental leaks.
-*   **Placeholder Rotation:** All previously committed secrets have been rotated and replaced with environment variable lookups.
+*   **Git Guards:** The `.gitignore` policy strictly excludes `.env`, `*.db`, and `user_settings.json` from version control.
 
 ### 2. Hardware & Path Sandboxing
 The refactored `FileSystemTools` enforces strict workspace boundaries:

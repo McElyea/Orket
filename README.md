@@ -42,7 +42,7 @@ The v0.3.8 update enhances governance with explicit wait reason tracking:
 ---
 
 ## Security & Sovereignty
-*   **Secret Sovereignty:** All sensitive credentials (passwords, API keys) are managed via `.env` files and strictly excluded from version control.
+*   **Environment Management:** All sensitive credentials (passwords, API keys) are managed via `.env` files and strictly excluded from version control.
 *   **Local-First Execution:** Orchestration and model execution (Ollama) happen entirely on local hardware.
 *   **LLM Resiliency:** Built-in exponential backoff and specific error handling for transient model failures.
 
