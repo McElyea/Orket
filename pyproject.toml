@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.2.0"
+version = "0.3.8"
 description = "Local-first multi-agent LLM automation platform"
 authors = [
     { name = "Jonathan McElyea" }
@@ -27,3 +27,8 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["orket*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_mode = "auto"

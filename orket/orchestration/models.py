@@ -10,9 +10,9 @@ class ModelSelector:
     Centralized engine for selecting models based on organization standards,
     user preferences, and per-asset overrides.
     """
-    def __init__(self, organization: Optional[OrganizationConfig] = None):
+    def __init__(self, organization: Optional[OrganizationConfig] = None, user_settings: Optional[Dict[str, Any]] = None):
         self.org = organization
-        self.user_settings = load_user_settings()
+        self.user_settings = user_settings or load_user_settings()
 
     def select(self, 
                role: str, 

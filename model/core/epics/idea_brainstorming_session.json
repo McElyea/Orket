@@ -7,17 +7,17 @@
     {
       "summary": "Define the scope and objectives of the brainstorming session",
       "seat": "lead_architect",
-      "priority": "High"
+      "priority": 3.0
     },
     {
       "summary": "Recruit participants from various teams to ensure diverse perspectives",
       "seat": "operations_lead",
-      "priority": "High"
+      "priority": 3.0
     },
     {
       "summary": "Facilitate the brainstorming process and capture ideas",
       "seat": "reforge_specialist",
-      "priority": "High"
+      "priority": 3.0
     }
   ]
 }

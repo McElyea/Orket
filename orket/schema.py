@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Any, Union
 import uuid
 import enum
-from pydantic import BaseModel, Field, ConfigDict, AliasChoices
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices, field_validator
 
 # ---------------------------------------------------------------------------
 # 1. Environment & Dialect
@@ -50,6 +50,16 @@ class CardStatus(str, enum.Enum):
     CODE_REVIEW = "code_review"
     DONE = "done"
 
+class WaitReason(str, enum.Enum):
+    """
+    Explicit reasons for why a card is blocked or waiting.
+    Enables diagnostic tracking and automatic unblocking logic.
+    """
+    RESOURCE = "resource"          # Waiting for available resources (VRAM, LLM slot, etc.)
+    DEPENDENCY = "dependency"      # Waiting for another card to complete
+    REVIEW = "review"              # Waiting for human review/approval
+    INPUT = "input"                # Waiting for human input/clarification
+
 class BaseCardConfig(BaseModel):
     """
     The polymorphic base for all Orket Units of Work.
@@ -61,18 +71,28 @@ class BaseCardConfig(BaseModel):
     type: CardType = Field(default=CardType.ISSUE)
     status: CardStatus = Field(default=CardStatus.READY)
     description: Optional[str] = None
-    priority: str = Field(default="Medium")
+    priority: float = Field(default=2.0)  # 3.0=High, 2.0=Medium, 1.0=Low
+    wait_reason: Optional[WaitReason] = None  # Why is this card blocked/waiting?
     note: Optional[str] = None
-    
+
     # Hierarchy
     parent_id: Optional[str] = None
     build_id: Optional[str] = None
-    
+
     # Metadata
     owner_department: Optional[str] = "core"
     labels: List[str] = Field(default_factory=list)
     params: Dict[str, Any] = Field(default_factory=dict)
     references: List[str] = Field(default_factory=list)
+
+    @field_validator('priority', mode='before')
+    @classmethod
+    def convert_priority(cls, v):
+        """Migrate legacy string priorities to numeric values."""
+        if isinstance(v, str):
+            mapping = {"high": 3.0, "medium": 2.0, "low": 1.0}
+            return mapping.get(v.lower(), 2.0)
+        return v
 
 # ---------------------------------------------------------------------------
 # 3. Specific Card Implementations
@@ -102,9 +122,9 @@ class VerificationResult(BaseModel):
     logs: List[str] = Field(default_factory=list)
 
 class IssueVerification(BaseModel):
-    fixture_path: Optional[str] = Field(None, alias="verification_fixture")
+    fixture_path: Optional[str] = Field(None, validation_alias=AliasChoices("fixture_path", "verification_fixture"))
     scenarios: List[VerificationScenario] = Field(default_factory=list)
-    last_run: Optional[VerificationResult] = Field(None, alias="last_verification")
+    last_run: Optional[VerificationResult] = Field(None, validation_alias=AliasChoices("last_run", "last_verification"))
 
 class IssueConfig(BaseCardConfig):
     type: CardType = Field(default=CardType.ISSUE)
@@ -231,6 +251,19 @@ class ContactInfo(BaseModel):
     socials: Dict[str, str] = Field(default_factory=dict)
 
 
+class BottleneckThresholds(BaseModel):
+    """
+    Configurable thresholds for bottleneck detection.
+    Prevents alert fatigue by distinguishing normal operation from real problems.
+    """
+    resource_normal: int = Field(default=3, description="Cards waiting for resources is normal serial execution (no alert)")
+    resource_warning: int = Field(default=10, description="Mild backlog, monitor but don't alert")
+    resource_critical: int = Field(default=11, description="Chronic bottleneck, alert and take action")
+
+    dependency_warning_pct: float = Field(default=0.5, description="Alert if >50% of blocked cards are dependency-blocked")
+
+    human_attention_threshold: int = Field(default=1, description="Alert if any cards need human review/input")
+
 
 class OrganizationConfig(BaseModel):
 
@@ -249,5 +282,7 @@ class OrganizationConfig(BaseModel):
     departments: List[str] = Field(default_factory=list)
 
     process_rules: Dict[str, Any] = Field(default_factory=dict)
-    
+
+    bottleneck_thresholds: BottleneckThresholds = Field(default_factory=BottleneckThresholds)
+
     bypass_governance: bool = Field(default=False)

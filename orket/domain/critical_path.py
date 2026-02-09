@@ -10,12 +10,14 @@ class CriticalPathEngine:
     @staticmethod
     def get_priority_queue(epic: EpicConfig) -> List[str]:
         """
-        Returns a list of Issue IDs sorted by their critical path weight.
-        High Weight = Blocks many other tasks.
+        Returns a list of Issue IDs sorted by combined priority score.
+        Score = base_priority + critical_path_weight
+
+        High Score = High priority card that blocks many other tasks.
         """
         # 1. Build adjacency map (who depends on me?)
         blocked_by_me: Dict[str, Set[str]] = {i.id: set() for i in epic.issues}
-        
+
         for issue in epic.issues:
             for dependency_id in issue.depends_on:
                 if dependency_id in blocked_by_me:
@@ -26,9 +28,13 @@ class CriticalPathEngine:
         for issue_id in blocked_by_me:
             weights[issue_id] = CriticalPathEngine._calculate_weight(issue_id, blocked_by_me)
 
-        # 3. Filter for READY issues and sort by weight (descending)
+        # 3. Calculate combined priority scores (base priority + dependency weight)
+        def calculate_score(issue) -> float:
+            return issue.priority + weights.get(issue.id, 0)
+
+        # 4. Filter for READY issues and sort by combined score (descending)
         ready_issues = [i for i in epic.issues if i.status == CardStatus.READY]
-        ready_issues.sort(key=lambda x: weights.get(x.id, 0), reverse=True)
+        ready_issues.sort(key=calculate_score, reverse=True)
 
         return [i.id for i in ready_issues]
 

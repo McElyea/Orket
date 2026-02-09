@@ -1,6 +1,6 @@
-# Vibe Rail Orket EOS (v0.3.6)
+# Vibe Rail Orket EOS (v0.3.8)
 
-Orket is a professional‑grade, multi‑agent orchestration engine for autonomous engineering operations.  
+Orket is a professional‑grade, multi‑agent orchestration engine for autonomous engineering operations.
 Owned and operated by **Vibe Rail**, it utilizes a high‑precision **Prompt Engine** and **iDesign architectural governance** to manage complexity through volatility decomposition.
 
 ---
@@ -8,7 +8,7 @@ Owned and operated by **Vibe Rail**, it utilizes a high‑precision **Prompt Eng
 ## The Vibe Rail Standard
 *Excellence through iteration, transparency in process, and local-first sovereignty.*
 
-Orket v0.3.6 (The Integrity Release) marks the transition from a monolithic core to a decoupled, data‑driven engine aligned with modern enterprise standards.
+Orket v0.3.8 continues the backend stabilization phase with enhanced diagnostics, priority-based scheduling, and robust state machine governance.
 
 ---
 
@@ -28,10 +28,16 @@ We utilize **iDesign** principles (Volatility Decomposition) to maintain structu
 *   **Structural Reconciler:** A self-healing background process that ensures every Card belongs to a parent structure.
 
 ### 3. Decoupled Tooling (ToolBox)
-The v0.3.6 update introduced a refactored `ToolBox`, splitting monolithic tool logic into specialized, secure services:
+The v0.3.x series introduced a refactored `ToolBox`, splitting monolithic tool logic into specialized, secure services:
 *   **FileSystemTools:** Secure, path-sandboxed file operations.
 *   **VisionTools:** Multi-modal support including local Stable Diffusion with CPU fallback and hardware detection.
 *   **CardManagementTools:** Direct interaction with the Universal Card System.
+
+### 4. State Machine with Diagnostic Intelligence
+The v0.3.8 update enhances governance with explicit wait reason tracking:
+*   **WaitReason Enforcement:** Cards entering BLOCKED or WAITING_FOR_DEVELOPER states must specify why (RESOURCE, DEPENDENCY, REVIEW, INPUT).
+*   **Bottleneck Detection:** Configurable thresholds prevent alert fatigue while catching real bottlenecks.
+*   **Multi-Role Validation:** Agents can hold multiple roles, enabling flexible yet secure state transitions.
 
 ---
 
@@ -66,6 +72,8 @@ The v0.3.6 update introduced a refactored `ToolBox`, splitting monolithic tool l
 
 ## Documentation
 
+- `CHANGELOG.md` — Version history and release notes.
 - `docs/ARCHITECTURE.md` — iDesign roadmap and Volatility Decomposition.
 - `docs/PROJECT.md` — Roadmap and Vibe Rail milestones.
 - `docs/SECURITY.md` — Integrity-based security model.
+- `docs/bottleneck_thresholds.md` — Bottleneck detection configuration.

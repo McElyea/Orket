@@ -1,76 +1,102 @@
 import importlib.util
-import sys
 import json
-from datetime import datetime
+import sys
 from pathlib import Path
-from typing import List, Dict, Any
-from orket.schema import IssueConfig, VerificationScenario, VerificationResult
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+from orket.schema import IssueVerification, VerificationScenario, VerificationResult
 
 class VerificationEngine:
     """
-    The FIT-style execution engine for Orket.
-    Loads fixtures, runs scenarios, and produces empirical results.
+    Empirical Verification Service (The 'FIT' Executor).
+    Runs physical code fixtures to verify Issue completion.
     """
-    
+
     @staticmethod
-    async def verify_issue(workspace: Path, issue: IssueConfig) -> VerificationResult:
-        if not issue.verification_fixture:
-            return VerificationResult(
-                timestamp=datetime.now().isoformat(),
-                total_scenarios=0, passed=0, failed=0,
-                logs=["No verification fixture defined for this card."]
-            )
-
-        fixture_path = workspace / issue.verification_fixture
-        if not fixture_path.exists():
-            return VerificationResult(
-                timestamp=datetime.now().isoformat(),
-                total_scenarios=0, passed=0, failed=0,
-                logs=[f"Fixture file not found: {fixture_path}"]
-            )
-
-        print(f"  [VERIFIER] Running FIT Fixture: {issue.verification_fixture}")
-        
-        passed_count = 0
+    def verify(verification: IssueVerification, workspace_root: Path) -> VerificationResult:
+        """
+        Executes the verification logic for an issue.
+        """
         logs = []
+        passed = 0
+        failed = 0
         
-        # 1. Load the Fixture Module
+        logs.append(f"--- Verification Started at {datetime.now().isoformat()} ---")
+        
+        if not verification.fixture_path:
+            logs.append("No verification fixture defined. Skipping empirical tests.")
+            return VerificationResult(
+                timestamp=datetime.now().isoformat(),
+                total_scenarios=len(verification.scenarios),
+                passed=0,
+                failed=0,
+                logs=logs
+            )
+
+        fixture_path = workspace_root / verification.fixture_path
+        if not fixture_path.exists():
+            logs.append(f"ERROR: Fixture file not found at {fixture_path}")
+            return VerificationResult(
+                timestamp=datetime.now().isoformat(),
+                total_scenarios=len(verification.scenarios),
+                passed=0,
+                failed=failed,
+                logs=logs
+            )
+
         try:
-            spec = importlib.util.spec_from_file_location("fit_fixture", fixture_path)
+            # 1. Load the fixture as a module
+            spec = importlib.util.spec_from_file_location("verification_fixture", fixture_path)
             module = importlib.util.module_from_spec(spec)
+            
+            # Add workspace to sys.path so the fixture can import local modules
+            sys.path.insert(0, str(workspace_root.resolve()))
             spec.loader.exec_module(module)
             
-            # The fixture must implement a 'verify' function
-            if not hasattr(module, 'verify'):
-                raise AttributeError("Fixture must implement a 'verify(input_data)' function.")
+            # 2. Iterate through scenarios
+            for scenario in verification.scenarios:
+                logs.append(f"Running Scenario: {scenario.description}")
+                
+                # Fixtures must implement a 'verify' function or a function matching the scenario ID
+                verify_fn = getattr(module, f"verify_{scenario.id}", None) or getattr(module, "verify", None)
+                
+                if not verify_fn:
+                    logs.append(f"  [FAIL] No verify function found in fixture for scenario {scenario.id}")
+                    scenario.status = "fail"
+                    failed += 1
+                    continue
 
-            # 2. Iterate Scenarios
-            for scenario in issue.scenarios:
                 try:
-                    # Execute Fixture
-                    actual = module.verify(scenario.input_data)
+                    # Execute with input data
+                    actual = verify_fn(scenario.input_data)
                     scenario.actual_output = actual
                     
-                    # Comparison Logic (FIT Table Style)
+                    # Comparison logic (can be simple equality or custom)
                     if actual == scenario.expected_output:
+                        logs.append(f"  [PASS] Actual matches Expected: {actual}")
                         scenario.status = "pass"
-                        passed_count += 1
-                        logs.append(f"Scenario '{scenario.description}': PASS")
+                        passed += 1
                     else:
+                        logs.append(f"  [FAIL] Expected {scenario.expected_output}, got {actual}")
                         scenario.status = "fail"
-                        logs.append(f"Scenario '{scenario.description}': FAIL (Expected {scenario.expected_output}, got {actual})")
-                
+                        failed += 1
                 except Exception as e:
+                    logs.append(f"  [ERROR] Execution error: {str(e)}")
                     scenario.status = "fail"
-                    logs.append(f"Scenario '{scenario.description}': ERROR ({str(e)})")
-
+                    failed += 1
+                    
         except Exception as e:
-            logs.append(f"CRITICAL FIXTURE ERROR: {str(e)}")
+            logs.append(f"FATAL ERROR loading fixture: {str(e)}")
+        finally:
+            if str(workspace_root.resolve()) in sys.path:
+                sys.path.remove(str(workspace_root.resolve()))
 
+        logs.append(f"--- Verification Complete: {passed} Passed, {failed} Failed ---")
+        
         return VerificationResult(
             timestamp=datetime.now().isoformat(),
-            total_scenarios=len(issue.scenarios),
-            passed=passed_count,
-            failed=len(issue.scenarios) - passed_count,
+            total_scenarios=len(verification.scenarios),
+            passed=passed,
+            failed=failed,
             logs=logs
         )

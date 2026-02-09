@@ -6,6 +6,10 @@ from typing import Dict, Any, Optional
 SETTINGS_FILE = Path("user_settings.json")
 ENV_FILE = Path(".env")
 
+def set_settings_file(path: Path):
+    global SETTINGS_FILE
+    SETTINGS_FILE = path
+
 def load_env():
     """Simple .env loader to avoid extra dependencies."""
     if ENV_FILE.exists():

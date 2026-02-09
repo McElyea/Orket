@@ -20,6 +20,7 @@ class ExecutionTurn:
     tokens_used: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
     note: str = ""
+    raw: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
 class ExecutionResult:

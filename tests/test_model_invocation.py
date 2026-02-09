@@ -1,48 +1,71 @@
 from pathlib import Path
 import json
-from orket import orchestrate
-from orket.llm import LocalModelProvider
+import pytest
+from orket.orchestration.engine import OrchestrationEngine
+from orket.llm import LocalModelProvider, ModelResponse
 
 
 class DummyProvider(LocalModelProvider):
     def __init__(self):
-        super().__init__(model="dummy")
+        self.model = "dummy"
+        self.prompts = []
 
-    def invoke(self, prompt: str):
-        # Just record that we were called
-        self.last_prompt = prompt
-        from dataclasses import dataclass
-
-        @dataclass
-        class DummyResponse:
-            content: str
-            raw: dict
-
-        return DummyResponse(content="dummy response", raw={"prompt": prompt})
+    async def complete(self, messages):
+        # Record all messages content
+        for m in messages:
+            self.prompts.append(m["content"])
+        return ModelResponse(content='{"thought": "test", "tool_calls": []}', raw={"model": "dummy", "total_tokens": 10})
 
 
-def test_model_invocation(monkeypatch, tmp_path):
-    # Patch LocalModelProvider to our dummy
+@pytest.mark.asyncio
+async def test_model_invocation(monkeypatch, tmp_path):
+    # Setup mock assets
+    root = tmp_path
+    (root / "config").mkdir()
+    (root / "model" / "core" / "epics").mkdir(parents=True)
+    (root / "model" / "core" / "roles").mkdir(parents=True)
+    (root / "model" / "core" / "dialects").mkdir(parents=True)
+    (root / "model" / "core" / "teams").mkdir(parents=True)
+    (root / "model" / "core" / "environments").mkdir(parents=True)
+    
+    (root / "config" / "organization.json").write_text(json.dumps({
+        "name": "Test Rail", "vision": "T", "ethos": "T", "branding": {"design_dos": []},
+        "architecture": {"cicd_rules": [], "preferred_stack": {}}, "departments": ["core"]
+    }))
+    for d in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
+        (root / "model" / "core" / "dialects" / f"{d}.json").write_text(json.dumps({
+            "model_family": d, "dsl_format": "JSON", "constraints": [], "hallucination_guard": "N"
+        }))
+    (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({
+        "id": "ARCH", "summary": "lead_architect", "type": "utility", "description": "D", "prompt": "P", "tools": []
+    }))
+    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
+        "name": "standard", "seats": {"lead_architect": {"name": "L", "roles": ["lead_architect"]}}
+    }))
+    (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({
+        "name": "S", "model": "dummy", "temperature": 0.1
+    }))
+    (root / "model" / "core" / "epics" / "test_epic.json").write_text(json.dumps({
+        "id": "E1", "name": "Test", "type": "epic", "team": "standard", "environment": "standard",
+        "description": "Test description", "issues": [{"id": "I1", "summary": "Task 1", "seat": "lead_architect"}]
+    }))
+
     dummy = DummyProvider()
 
-    def _dummy_init(self, model: str, temperature: float = 0.2, seed=None):
-        # Ignore args, reuse dummy instance
-        pass
-
-    def _dummy_invoke(self, prompt: str):
-        return dummy.invoke(prompt)
-
-    monkeypatch.setattr(LocalModelProvider, "__init__", _dummy_init)
-    monkeypatch.setattr(LocalModelProvider, "invoke", _dummy_invoke)
-
-    flow_path = Path("model/flow/standard.json")
-    task = {"description": "Test that the model is invoked."}
-    workspace = tmp_path / "session"
-
-    result = orchestrate(flow_path=flow_path, task=task, workspace=workspace, use_prelude=False)
-
-    assert "transcript" in result
-    assert len(result["transcript"]) > 0
-    assert hasattr(dummy, "last_prompt"), "Model provider was never invoked"
-    assert "Test that the model is invoked." in dummy.last_prompt
+    def mock_provider_init(self, *args, **kwargs):
+        self.model = "dummy"
     
+    monkeypatch.setattr(LocalModelProvider, "__init__", mock_provider_init)
+    monkeypatch.setattr(LocalModelProvider, "complete", dummy.complete)
+
+    workspace = tmp_path / "session"
+    workspace.mkdir()
+    db_path = str(tmp_path / "test.db")
+
+    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
+    await engine.run_card("test_epic")
+
+    assert len(dummy.prompts) > 0, "Model provider was never invoked"
+    # Check if any recorded prompt contains our task summary
+    found_task = any("Task 1" in p for p in dummy.prompts)
+    assert found_task, f"Task summary 'Task 1' not found in any prompt: {dummy.prompts}"

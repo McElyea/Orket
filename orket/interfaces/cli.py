@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument("--build-id", type=str, default=None, help="Stable ID for continuous reuse.")
     parser.add_argument("--interactive-conductor", action="store_true", help="Enable manual conductor mode.")
     parser.add_argument("--driver-steered", action="store_true", help="Consult Driver for tactical directives.")
+    parser.add_argument("--resume", type=str, default=None, help="Resume an Epic from a specific Issue ID.")
     parser.add_argument("--task", type=str, default=None, help="Optional task description override.")
     parser.add_argument("--board", action="store_true", help="Display the project board.")
     parser.add_argument("--loop", action="store_true", help="Start the Vibe Rail Organization Loop.")
@@ -87,7 +88,7 @@ async def run_cli():
             return
 
         print(f"Running Orket Epic: {args.epic}")
-        transcript = await engine.run_card(args.epic, build_id=args.build_id, driver_steered=args.driver_steered)
+        transcript = await engine.run_card(args.epic, build_id=args.build_id, driver_steered=args.driver_steered, target_issue_id=args.resume)
         print("\n=== Orket EOS Run Complete ===")
         for entry in transcript:
             print(f"\n--- Card {entry.get('step_index', '?')} ({entry['role']}) ---")

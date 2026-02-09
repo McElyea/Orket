@@ -1,4 +1,4 @@
-# Orket Architecture: Volatility Decomposition (v0.3.6)
+# Orket Architecture: Volatility Decomposition (v0.3.8)
 
 This document defines the structural and philosophical foundations of the Vibe Rail Orket engine.
 
@@ -56,3 +56,26 @@ Cards move through a professional lifecycle:
 `Ready` -> `In Progress` -> `Blocked` -> `Ready_For_Testing` -> `Code_Review` -> `Done`.
 
 The **Code_Review** state is a mandatory "Freezer" where work awaits an audit score before finalization.
+
+### v0.3.8 Enhancements: Diagnostic Governance
+
+The state machine now enforces explicit diagnostic tracking:
+
+*   **WaitReason Requirement:** Cards transitioning to `BLOCKED` or `WAITING_FOR_DEVELOPER` must specify why:
+    *   `RESOURCE` — Waiting for available resources (VRAM, LLM slot, etc.)
+    *   `DEPENDENCY` — Waiting for another card to complete
+    *   `REVIEW` — Waiting for human review/approval
+    *   `INPUT` — Waiting for human input/clarification
+
+*   **Multi-Role Validation:** Agents can now hold multiple roles, allowing flexible transitions while maintaining integrity gates (e.g., only `integrity_guard` can finalize issues to `DONE`).
+
+*   **Bottleneck Detection:** Configurable thresholds (`config/bottleneck_thresholds.json`) distinguish normal operation from chronic bottlenecks, preventing alert fatigue.
+
+### Priority System Evolution
+
+Priorities migrated from strings ("High"/"Medium"/"Low") to floats (3.0/2.0/1.0) for precise sorting:
+*   **3.0 — High:** Critical path items, blockers
+*   **2.0 — Medium:** Standard work items
+*   **1.0 — Low:** Nice-to-have, cleanup tasks
+
+Legacy string priorities are automatically converted via field validators for backward compatibility.

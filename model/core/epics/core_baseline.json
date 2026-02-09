@@ -4,8 +4,8 @@
   "team": "enterprise",
   "environment": "standard",
   "cards": [
-    { "summary": "Verify hardware profile and update engine settings.", "seat": "lead_architect", "priority": "High" },
-    { "summary": "Create baseline dashboard configuration for the UX layout.", "seat": "ux_artisan", "priority": "Medium" },
-    { "summary": "Audit configuration files for structural integrity.", "seat": "integrity_guard", "priority": "High" }
+    { "summary": "Verify hardware profile and update engine settings.", "seat": "lead_architect", "priority": 3.0 },
+    { "summary": "Create baseline dashboard configuration for the UX layout.", "seat": "ux_artisan", "priority": 2.0 },
+    { "summary": "Audit configuration files for structural integrity.", "seat": "integrity_guard", "priority": 3.0 }
   ]
 }

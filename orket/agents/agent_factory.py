@@ -2,27 +2,33 @@
 from typing import Dict
 from orket.agents.agent import Agent
 from orket.llm import LocalModelProvider
-from orket.tools import TOOLS
+from orket.tools import get_tool_map, ToolBox
 
 
-def build_band_agents(band, provider: LocalModelProvider) -> Dict[str, Agent]:
+def build_team_agents(team, provider: LocalModelProvider, toolbox: ToolBox) -> Dict[str, Agent]:
+    """
+    Factory to instantiate agents for a specific Team.
+    """
     agents: Dict[str, Agent] = {}
+    tool_map = get_tool_map(toolbox)
 
-    for role_name, role in band.roles.items():
+    for seat_name, seat in team.seats.items():
+        # Aggregate tools for all roles in this seat
         resolved_tools = {}
+        
+        # Load the role objects if needed, or use the seat's role definitions
+        # This is a bit complex as we usually load role JSONs in the traction loop.
+        # This factory is mostly used for high-level setup or specialized tests.
+        
+        for role_name in seat.roles:
+            # Placeholder: In the real traction loop, we load RoleConfigs.
+            # Here we just register what tools are in the tool_map.
+            pass
 
-        for tool_name in role.tools:
-            if tool_name not in TOOLS:
-                raise RuntimeError(
-                    f"Role '{role_name}' requires tool '{tool_name}', "
-                    f"but it is not present in the tool registry."
-                )
-            resolved_tools[tool_name] = TOOLS[tool_name]
-
-        agents[role_name] = Agent(
-            name=role_name,
-            description=role.description,
-            tools=resolved_tools,
+        agents[seat_name] = Agent(
+            name=seat_name,
+            description=f"Member of team {team.name} in seat {seat_name}",
+            tools=tool_map, # Default to all tools for factory-built agents
             provider=provider,
         )
 

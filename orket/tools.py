@@ -90,9 +90,9 @@ class VisionTools(BaseTools):
         except Exception as e: return {"ok": False, "error": str(e)}
 
 class CardManagementTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: List[Path]):
+    def __init__(self, workspace_root: Path, references: List[Path], db_path: str = "orket_persistence.db"):
         super().__init__(workspace_root, references)
-        self.cards = SQLiteCardRepository("orket_persistence.db")
+        self.cards = SQLiteCardRepository(db_path)
 
     def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
@@ -101,13 +101,21 @@ class CardManagementTools(BaseTools):
         return {"ok": True, "issue_id": issue_id}
 
     def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        from orket.schema import CardStatus
         issue_id = args.get("issue_id") or context.get("issue_id")
-        new_status, role = args.get("status", "").lower(), context.get("role", "")
-        if not issue_id or not new_status: return {"ok": False, "error": "Missing params"}
-        if new_status == "canceled" and "project_manager" not in role.lower():
+        new_status_str, role = args.get("status", "").lower(), context.get("role", "")
+        if not issue_id or not new_status_str: return {"ok": False, "error": "Missing params"}
+        
+        try:
+            new_status = CardStatus(new_status_str)
+        except ValueError:
+            return {"ok": False, "error": f"Invalid status: {new_status_str}"}
+
+        if new_status == CardStatus.CANCELED and "project_manager" not in role.lower():
             return {"ok": False, "error": "Permission Denied: Only PM can cancel work."}
-        self.cards.update_issue_status(issue_id, new_status)
-        return {"ok": True, "issue_id": issue_id, "status": new_status}
+            
+        self.cards.update_status(issue_id, new_status)
+        return {"ok": True, "issue_id": issue_id, "status": new_status.value}
 
     def add_issue_comment(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         issue_id, content = context.get("issue_id"), args.get("comment")
@@ -145,12 +153,13 @@ class AcademyTools(BaseTools):
         except Exception as e: return {"ok": False, "error": str(e)}
 
 class ToolBox:
-    def __init__(self, policy, workspace_root: str, references: List[str]):
+    def __init__(self, policy, workspace_root: str, references: List[str], db_path: str = "orket_persistence.db"):
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
+        self.db_path = db_path
         self.fs = FileSystemTools(self.root, self.refs)
         self.vision = VisionTools(self.root, self.refs)
-        self.cards = CardManagementTools(self.root, self.refs)
+        self.cards = CardManagementTools(self.root, self.refs, db_path=self.db_path)
         self.academy = AcademyTools(self.root, self.refs)
 
     def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:

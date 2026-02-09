@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 class ToolParser:
     """
     Service responsible for extracting structured tool calls from raw model text.
-    Supports multiple JSON objects, OpenAI-style calls, and DSL blocks.
+    Standardized on stack-based JSON extraction for maximum robustness.
     """
     
     @staticmethod
@@ -13,21 +13,10 @@ class ToolParser:
         text = text.strip()
         results = []
         
-        # 1. Markdown Fences
-        json_blocks = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-        for block in json_blocks:
-            try:
-                data = json.loads(block)
-                if isinstance(data, dict):
-                    if "tool" in data: results.append({"tool": data["tool"], "args": data.get("args", {})})
-                    elif "name" in data and "arguments" in data: results.append({"tool": data["name"], "args": data["arguments"]})
-            except: pass
-
-        if results: return results
-
-        # 2. Stack-based Loose JSON
+        # 1. Stack-based JSON extraction (Robust against nested blocks and conversational noise)
         stack = []
         start_idx = -1
+        
         for i, char in enumerate(text):
             if char == '{':
                 if not stack: start_idx = i
@@ -40,27 +29,16 @@ class ToolParser:
                         try:
                             data = json.loads(candidate)
                             if isinstance(data, dict):
-                                if "tool" in data: results.append({"tool": data["tool"], "args": data.get("args", {})})
-                                elif "name" in data and "arguments" in data: results.append({"tool": data["name"], "args": data["arguments"]})
+                                # Normalize different LLM output formats
+                                if "tool" in data: 
+                                    results.append({"tool": data["tool"], "args": data.get("args", {})})
+                                elif "name" in data and "arguments" in data: 
+                                    # OpenAI style
+                                    args = data["arguments"]
+                                    if isinstance(args, str): args = json.loads(args)
+                                    results.append({"tool": data["name"], "args": args})
                                 elif "function" in data:
                                     f = data.get("function", {})
-                                    args = f.get("arguments", {})
-                                    if isinstance(args, str): args = json.loads(args)
-                                    results.append({"tool": f.get("name"), "args": args})
-                        except: pass
-            elif char == '[':
-                if not stack: start_idx = i
-                stack.append('[')
-            elif char == ']':
-                if stack:
-                    stack.pop()
-                    if not stack:
-                        candidate = text[start_idx:i+1]
-                        try:
-                            data = json.loads(candidate)
-                            if isinstance(data, list) and len(data) > 0 and "function" in data[0]:
-                                for call in data:
-                                    f = call.get("function", {})
                                     args = f.get("arguments", {})
                                     if isinstance(args, str): args = json.loads(args)
                                     results.append({"tool": f.get("name"), "args": args})
@@ -68,7 +46,7 @@ class ToolParser:
 
         if results: return results
 
-        # 3. DSL Scanner
+        # 2. Legacy DSL Fallback (Regex based - fragile)
         dsl_blocks = re.split(r"(?:\[|TOOL:\s*)(write_file|create_issue|add_issue_comment|get_issue_context)(?:\]|\s*)", text)
         if len(dsl_blocks) > 1:
             for i in range(1, len(dsl_blocks), 2):

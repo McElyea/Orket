@@ -15,15 +15,15 @@ class Message:
 @dataclass
 class Session:
     id: str
-    venue_name: str
+    organization_name: str
     task: str
     messages: List[Message] = field(default_factory=list)
 
     @classmethod
-    def start(cls, venue_name: str, task: str) -> "Session":
+    def start(cls, organization_name: str, task: str) -> "Session":
         return cls(
             id=str(uuid.uuid4()),
-            venue_name=venue_name,
+            organization_name=organization_name,
             task=task,
             messages=[
                 Message(
@@ -46,7 +46,7 @@ class Session:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
-            "venue": self.venue_name,
+            "organization": self.organization_name,
             "task": self.task,
             "messages": [
                 {"role": m.role, "content": m.content, "ts": m.ts}

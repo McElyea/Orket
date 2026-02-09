@@ -8,19 +8,19 @@
       "id": "AUTH-001",
       "summary": "Define AuthManager interface",
       "seat": "lead_architect",
-      "priority": "High"
+      "priority": 3.0
     },
     {
       "id": "AUTH-002",
       "summary": "Implement BCrypt password engine",
       "seat": "backend_specialist",
-      "priority": "High"
+      "priority": 3.0
     },
     {
       "id": "AUTH-003",
       "summary": "Integrate with existing user management system",
       "seat": "reforge_specialist",
-      "priority": "Medium"
+      "priority": 2.0
     }
   ]
 }

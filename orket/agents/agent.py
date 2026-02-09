@@ -20,13 +20,14 @@ class Agent:
     Delegates to specialized services for prompt compilation and tool parsing.
     """
 
-    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider, next_member: str = None, prompt_patch: str = None):
+    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider, next_member: str = None, prompt_patch: str = None, config_root: Optional[Path] = None):
         self.name = name
         self.description = description
         self.tools = tools
         self.provider = provider
         self.next_member = next_member
         self._prompt_patch = prompt_patch
+        self.config_root = config_root or Path(".").resolve()
         
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
@@ -34,8 +35,8 @@ class Agent:
 
     def _load_configs(self):
         from orket.orket import ConfigLoader
-        loader = ConfigLoader(Path("model"), "core")
-        try: self.skill = loader.load_asset("skills", sanitize_name(self.name), SkillConfig)
+        loader = ConfigLoader(self.config_root, "core")
+        try: self.skill = loader.load_asset("roles", sanitize_name(self.name), SkillConfig)
         except: pass
 
         model_name = self.provider.model.lower()
@@ -89,7 +90,8 @@ class Agent:
             issue_id=context.get("issue_id", "unknown"),
             thought=thought,
             content=text,
-            tokens_used=getattr(result, "raw", {}).get("total_tokens", 0)
+            tokens_used=getattr(result, "raw", {}).get("total_tokens", 0),
+            raw=getattr(result, "raw", {})
         )
 
         for call in parsed_calls:

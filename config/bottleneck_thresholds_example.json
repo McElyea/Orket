@@ -1,0 +1,31 @@
+{
+  "name": "Example Organization",
+  "vision": "Build great software with local LLMs",
+  "ethos": "Quality over speed",
+  "branding": {},
+  "architecture": {
+    "idesign_threshold": 10
+  },
+  "contact": {},
+  "departments": ["core"],
+  "process_rules": {},
+  "bottleneck_thresholds": {
+    "_comment": "Thresholds for bottleneck detection - tune based on your hardware",
+
+    "resource_normal": 3,
+    "_resource_normal_doc": "Cards waiting for resources below this threshold = normal serial execution (no alert)",
+
+    "resource_warning": 10,
+    "_resource_warning_doc": "Cards waiting 4-10 = mild backlog (monitor but don't alert)",
+
+    "resource_critical": 11,
+    "_resource_critical_doc": "Cards waiting >10 = chronic bottleneck (alert and take action)",
+
+    "dependency_warning_pct": 0.5,
+    "_dependency_warning_pct_doc": "Alert if >50% of blocked cards are dependency-blocked",
+
+    "human_attention_threshold": 1,
+    "_human_attention_threshold_doc": "Alert if any cards need human review/input"
+  },
+  "bypass_governance": false
+}
