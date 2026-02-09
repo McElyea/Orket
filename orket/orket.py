@@ -363,11 +363,22 @@ class ExecutionPipeline:
                             tools[tn] = tool_map[tn]
 
                 print(f"  [ORKESTRATE] {seat_name} -> {issue_id} ({'REVIEW' if is_review_turn else 'EXECUTE'}) (Model: {selected_model})")
-                
-                agent = Agent(seat_name, system_desc, tools, provider, config_root=self.config_root)
+
+                # --- TOOL GATE: Mechanical Enforcement at tool level ---
+                from orket.services.tool_gate import ToolGate
+                tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
+
+                agent = Agent(seat_name, system_desc, tools, provider, config_root=self.config_root, tool_gate=tool_gate)
                 turn: ExecutionTurn = await agent.run(
                     task={"description": f"{epic.description}\n\nTask: {issue['summary']}"},
-                    context={"session_id": run_id, "issue_id": issue_id, "workspace": str(self.workspace), "role": seat_name},
+                    context={
+                        "session_id": run_id,
+                        "issue_id": issue_id,
+                        "workspace": str(self.workspace),
+                        "role": seat_name,
+                        "roles": roles_to_load,
+                        "current_status": current_status.value
+                    },
                     workspace=self.workspace,
                     transcript=[{"role": t.role, "summary": t.content} for t in self.transcript]
                 )

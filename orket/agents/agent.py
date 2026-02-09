@@ -20,7 +20,7 @@ class Agent:
     Delegates to specialized services for prompt compilation and tool parsing.
     """
 
-    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider, next_member: str = None, prompt_patch: str = None, config_root: Optional[Path] = None):
+    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider, next_member: str = None, prompt_patch: str = None, config_root: Optional[Path] = None, tool_gate=None):
         self.name = name
         self.description = description
         self.tools = tools
@@ -28,7 +28,8 @@ class Agent:
         self.next_member = next_member
         self._prompt_patch = prompt_patch
         self.config_root = config_root or Path(".").resolve()
-        
+        self.tool_gate = tool_gate  # Optional ToolGate for mechanical enforcement
+
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
         self._load_configs()
@@ -97,11 +98,21 @@ class Agent:
         for call in parsed_calls:
             tool_name = call["tool"]
             args = call["args"]
-            
+
             if tool_name not in self.tools:
                 turn.tool_calls.append(ToolCall(tool=tool_name, args=args, error=f"Unknown tool '{tool_name}'"))
                 continue
 
+            # --- TOOL GATE: Pre-execution validation ---
+            if self.tool_gate:
+                roles = context.get("roles", [self.name])
+                gate_error = self.tool_gate.validate(tool_name, args, context, roles)
+                if gate_error:
+                    turn.tool_calls.append(ToolCall(tool=tool_name, args=args, error=f"[GATE] {gate_error}"))
+                    log_event("tool_blocked", {"tool": tool_name, "args": args, "reason": gate_error}, workspace, role=self.name)
+                    continue
+
+            # --- TOOL EXECUTION ---
             tool_fn = self.tools[tool_name]
             try:
                 res = await tool_fn(args, context=context) if inspect.iscoroutinefunction(tool_fn) else tool_fn(args, context=context)
