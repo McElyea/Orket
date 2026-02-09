@@ -9,6 +9,7 @@ Write-Host "🔧 Setting up Windows Task Scheduler for Gitea backups..." -Foregr
 $TaskName = "Orket-Gitea-Daily-Backup"
 $ScriptPath = "C:\Source\Orket\scripts\backup_gitea.sh"
 $BackupTime = "03:00"  # 3:00 AM
+$BackupDrive = "V:\OrketBackup"  # IMPORTANT: Different drive than source!
 
 # Check if running as Administrator
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -36,6 +37,14 @@ if (-not (Test-Path $ScriptPath)) {
 
 Write-Host "✅ Found backup script" -ForegroundColor Green
 
+# Create backup directory if it doesn't exist
+if (-not (Test-Path $BackupDrive)) {
+    Write-Host "📁 Creating backup directory: $BackupDrive" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $BackupDrive -Force | Out-Null
+}
+
+Write-Host "✅ Backup location: $BackupDrive" -ForegroundColor Green
+
 # Remove existing task if it exists
 $existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 if ($existingTask) {
@@ -43,10 +52,11 @@ if ($existingTask) {
     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
 }
 
-# Create action (run bash script)
+# Create action (run bash script with backup location)
+# Set environment variable for backup location
 $action = New-ScheduledTaskAction `
     -Execute $bashPath `
-    -Argument "$ScriptPath" `
+    -Argument "-c `"export ORKET_BACKUP_DIR='$BackupDrive' && $ScriptPath`"" `
     -WorkingDirectory "C:\Source\Orket"
 
 # Create trigger (daily at specified time)

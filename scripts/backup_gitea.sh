@@ -1,7 +1,10 @@
 #!/bin/bash
 # Backup Gitea data (repos, database, config)
+# IMPORTANT: Backups should be on a DIFFERENT DRIVE than source data
 
-BACKUP_DIR="backups/gitea"
+# Backup location (change to your backup drive)
+# Default: V:\OrketBackup (Windows) or /mnt/backup/orket (Linux)
+BACKUP_DIR="${ORKET_BACKUP_DIR:-/mnt/v/OrketBackup}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="gitea_backup_${TIMESTAMP}.tar.gz"
 
