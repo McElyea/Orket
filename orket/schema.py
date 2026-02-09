@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Any, Union
 import uuid
 import enum
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices
 
 # ---------------------------------------------------------------------------
 # 1. Environment & Dialect
@@ -58,7 +58,7 @@ class BaseCardConfig(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
     name: Optional[str] = Field(None, alias="summary")
-    type: CardType
+    type: CardType = Field(default=CardType.ISSUE)
     status: CardStatus = Field(default=CardStatus.READY)
     description: Optional[str] = None
     priority: str = Field(default="Medium")
@@ -78,20 +78,43 @@ class BaseCardConfig(BaseModel):
 # 3. Specific Card Implementations
 # ---------------------------------------------------------------------------
 
+class QualityAssessment(BaseModel):
+    score: float = 0.0
+    grade: str = "Pending"
+    audit_date: Optional[str] = None
+    criteria_scores: Dict[str, float] = Field(default_factory=dict)
+
+class VerificationScenario(BaseModel) :
+    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:4])
+    description: str
+    input_data: Dict[str, Any]
+    expected_output: Any
+    actual_output: Optional[Any] = None
+    status: str = Field(default="pending") # "pass", "fail", "pending"
+
+class VerificationResult(BaseModel):
+    timestamp: str
+    total_scenarios: int
+    passed: int
+    failed: int
+    logs: List[str] = Field(default_factory=list)
+
 class IssueConfig(BaseCardConfig):
     type: CardType = Field(default=CardType.ISSUE)
-    seat: str
+    seat: str = "standard"
     assignee: Optional[str] = None
     sprint: Optional[str] = None
     requirements: Optional[str] = None # Atomic requirement detail
-
-class QualityAssessment(BaseModel):
-    score: float
-    grade: str # e.g. "Shippable", "Non-Shippable"
-    audit_date: str
-    criteria_scores: Dict[str, float]
-    summary: str
+    depends_on: List[str] = Field(default_factory=list)
+    verification_fixture: Optional[str] = None # Path to Python fixture
+    scenarios: List[VerificationScenario] = Field(default_factory=list)
+    last_verification: Optional[VerificationResult] = None
+    score: float = 0.0
+    grade: str = "Pending" # e.g. "Shippable", "Non-Shippable"
+    audit_date: Optional[str] = None
+    criteria_scores: Dict[str, float] = Field(default_factory=dict)
     shippability_threshold: float = 7.0
+    path_delta: Optional[float] = 0.0 # Metric for Critical Path drift
 
 class ArchitectureGovernance(BaseModel):
     idesign: bool = Field(default=True)
@@ -111,7 +134,7 @@ class EpicConfig(BaseCardConfig):
     environment: str
     iterations: int = Field(1)
     handshake_enabled: bool = Field(default=False)
-    issues: List[IssueConfig] = Field(default_factory=list, alias="stories")
+    issues: List[IssueConfig] = Field(default_factory=list, validation_alias=AliasChoices("issues", "stories", "cards"))
     example_task: Optional[str] = None
     requirements: Optional[str] = None # High-level spec or link
     architecture_governance: ArchitectureGovernance = Field(default_factory=ArchitectureGovernance)
@@ -221,3 +244,5 @@ class OrganizationConfig(BaseModel):
     departments: List[str] = Field(default_factory=list)
 
     process_rules: Dict[str, Any] = Field(default_factory=dict)
+    
+    bypass_governance: bool = Field(default=False)

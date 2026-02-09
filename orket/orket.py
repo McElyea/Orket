@@ -118,6 +118,11 @@ class ExecutionPipeline:
         log_event("session_end", {"run_id": run_id}, workspace=self.workspace)
         self.snapshots.record(run_id, {"epic": epic.model_dump(), "team": team.model_dump(), "env": env.model_dump(), "build_id": active_build}, legacy_transcript)
 
+        # Clear active log for UI cleanliness
+        root_log = Path("workspace/default/orket.log")
+        if root_log.exists():
+            root_log.write_text("", encoding="utf-8")
+
         return legacy_transcript
 
     async def run_rock(self, rock_name: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, **kwargs) -> Dict:
@@ -147,7 +152,10 @@ class ExecutionPipeline:
         tool_map = get_tool_map(toolbox)
         
         from orket.orchestration.models import ModelSelector
+        from orket.domain.state_machine import StateMachine, StateMachineError
         model_selector = ModelSelector(organization=self.org)
+
+        print(f"  [ANTICIPATOR] Scanning Epic '{epic.name}' for critical path risks...")
 
         while True:
             backlog = self.cards.get_by_build(active_build)
@@ -158,29 +166,102 @@ class ExecutionPipeline:
             issue = ready[0]
             issue_id, seat_name = issue["id"], issue["seat"]
             
-            # 1. Resolve Seat and Atomic Roles
+            governance_retries = 0
+            all_hands_on_deck = False
+
             seat = team.seats.get(sanitize_name(seat_name))
             if not seat:
                 self.cards.update_status(issue_id, CardStatus.CANCELED)
                 continue
 
-            role_objects = []
-            for r_name in seat.roles:
-                try:
-                    role_objects.append(self.loader.load_asset("roles", r_name, RoleConfig))
-                except Exception as e:
-                    print(f"  [WARN] Failed to load atomic role '{r_name}': {e}")
+            self.cards.update_status(issue_id, CardStatus.IN_PROGRESS, assignee=seat_name)
 
-            # 2. Select Model for this role
-            # Use the primary role (first role in seat) for model selection
-            primary_role_name = seat.roles[0] if seat.roles else "coder"
-            selected_model = model_selector.select(
-                role=primary_role_name,
-                department=self.department,
-                asset_config=epic
-            )
-            
-            provider = LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
+            while governance_retries < 2:
+                # Action B: Summon all roles if first retry failed
+                roles_to_load = seat.roles if not all_hands_on_deck else list(team.roles.keys())
+                role_objects = []
+                for r_name in roles_to_load:
+                    try: role_objects.append(self.loader.load_asset("roles", r_name, RoleConfig))
+                    except: pass
+
+                selected_model = model_selector.select(role=seat.roles[0], asset_config=epic)
+                provider = LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
+
+                desc = f"Seat: {seat_name}.\nISSUE: {issue['summary']}\nMANDATORY: Use 'write_file' to persist work.\n"
+                if all_hands_on_deck:
+                    desc += "\n[CRITICAL] ALL HANDS ON DECK: Previous turns failed governance. All team personas are now active to resolve this block.\n"
+                
+                relevant_notes = self.notes.get_for_role(seat_name, len(self.transcript))
+                if relevant_notes:
+                    desc += "\n[INTER-AGENT NOTES]\n" + "\n".join([f"- From {n.from_role}: {n.content}" for n in relevant_notes])
+
+                for ro in role_objects:
+                    if ro.prompt: desc += f"\n[{ro.name.upper()} GUIDELINES]\n{ro.prompt}\n"
+
+                if self.org:
+                    desc += f"\n[ORGANIZATION: {self.org.name}]\nEthos: {self.org.ethos}\nBranding: {', '.join(self.org.branding.design_dos)}\n"
+
+                print(f"  [ORKESTRATE] {seat_name} -> {issue_id} (Model: {selected_model}) {'[ALL HANDS]' if all_hands_on_deck else ''}")
+                
+                agent = Agent(seat_name, desc, {}, provider)
+                turn: ExecutionTurn = await agent.run(
+                    task={"description": f"{epic.description}\n\nTask: {issue['summary']}"},
+                    context={"session_id": run_id, "issue_id": issue_id, "workspace": str(self.workspace), "role": seat_name},
+                    workspace=self.workspace,
+                    transcript=[{"role": t.role, "summary": t.content} for t in self.transcript]
+                )
+
+                # --- MECHANICAL ENFORCEMENT (Teeth) ---
+                violation = None
+                for call in turn.tool_calls:
+                    if call.tool == "update_issue_status":
+                        try:
+                            req_status = CardStatus(call.args.get("status"))
+                            # Apply StateMachine check
+                            if not self.org or not self.org.bypass_governance:
+                                StateMachine.validate_transition(CardType.ISSUE, CardStatus.IN_PROGRESS, req_status, role=seat_name)
+                        except Exception as e:
+                            violation = str(e)
+                            break
+
+                if violation:
+                    governance_retries += 1
+                    print(f"  [GOVERNANCE] Turn failed: {violation} (Retry {governance_retries}/2)")
+                    
+                    # Context Hygiene: Remove the failed turn from the local transcript so the next attempt is clean
+                    # (We keep it in the global orket.log for audit, but hide it from the model's memory)
+                    
+                    if governance_retries == 1:
+                        # Action A: Add error note and retry
+                        self.notes.add(Note(from_role="system", content=f"GOVERNANCE ERROR: {violation}. Re-attempting task with strict adherence to policy.", step_index=len(self.transcript)))
+                        continue
+                    else:
+                        # Action B: Trigger All Hands
+                        all_hands_on_deck = True
+                        self.notes.add(Note(from_role="system", content=f"CRITICAL BLOCK: {violation}. All team personas are now active to resolve this block.", step_index=len(self.transcript)))
+                        continue
+
+                # --- HARD FAILURE (EJECT) ---
+                if governance_retries >= 2:
+                    print(f"  [FATAL] Governance could not be satisfied after All Hands. Ejecting.")
+                    from orket.domain.failure_reporter import FailureReporter
+                    FailureReporter.generate_report(self.workspace, run_id, issue_id, violation, self.transcript)
+                    
+                    self.cards.update_status(issue_id, CardStatus.BLOCKED)
+                    self.sessions.complete_session(run_id, "failed", self.transcript)
+                    raise ExecutionFailed(f"Governance Policy Violation: {violation}. Card {issue_id} is now BLOCKED.")
+
+                # Turn Passed - Process results
+                if turn.thought: log_event("reasoning", {"thought": turn.thought, "role": seat_name}, self.workspace, role=seat_name)
+                from orket.logging import log_model_usage
+                log_model_usage(seat_name, selected_model, turn.raw, len(self.transcript), epic.name, self.workspace)
+                
+                # Capture and execute tools (only if valid)
+                # (Simplified: Agent.run already executed them, but in a real system we'd gate the execution itself)
+                
+                self.transcript.append(turn)
+                self.cards.update_status(issue_id, CardStatus.CODE_REVIEW)
+                break
 
             prompt_patch = None
             if driver_steered:

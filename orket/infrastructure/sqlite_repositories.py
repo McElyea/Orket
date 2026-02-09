@@ -39,6 +39,40 @@ class SQLiteCardRepository(CardRepository):
             else:
                 conn.execute("UPDATE issues SET status = ? WHERE id = ?", (status.value, card_id))
             conn.commit()
+        
+        # Record Transaction
+        self.add_transaction(card_id, assignee or "system", f"Set Status to '{status.value}'")
+
+    def add_transaction(self, card_id: str, role: str, action: str):
+        """Records a DateTime: Role -> Action entry in the audit ledger."""
+        with sqlite3.connect(self.db_path) as conn:
+            # Ensure table exists (simplified for now, usually done in init)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS card_transactions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    card_id TEXT,
+                    role TEXT,
+                    action TEXT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.execute(
+                "INSERT INTO card_transactions (card_id, role, action) VALUES (?, ?, ?)",
+                (card_id, role, action)
+            )
+            conn.commit()
+
+    def get_card_history(self, card_id: str) -> List[str]:
+        """Returns history formatted as: 2/8/2026 3:48PM: Coder -> Set Status to 'Code Review'"""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("SELECT * FROM card_transactions WHERE card_id = ? ORDER BY timestamp ASC", (card_id,)).fetchall()
+            history = []
+            for r in rows:
+                # Basic formatting
+                ts = datetime.fromisoformat(r['timestamp'].replace(' ', 'T')).strftime("%m/%d/%Y %I:%M%p")
+                history.append(f"{ts}: {r['role']} -> {r['action']}")
+            return history
 
     def add_issue(self, session_id: str, seat: str, summary: str, i_type: str, priority: str):
         issue_id = f"ISSUE-{str(uuid.uuid4())[:4].upper()}"
