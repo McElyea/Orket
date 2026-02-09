@@ -1,11 +1,11 @@
-# Vibe Rail Orket EOS (v0.3.8)
+# Orket (v0.3.8)
 
-Orket is a professional‑grade, multi‑agent orchestration engine for autonomous engineering operations.
-Owned and operated by **Vibe Rail**, it utilizes a high‑precision **Prompt Engine** and **iDesign architectural governance** to manage complexity through volatility decomposition.
+Orket is a professional-grade, multi-agent orchestration engine for autonomous engineering operations.
+It utilizes a high-precision **Prompt Engine** and **iDesign architectural governance** to manage complexity through volatility decomposition.
 
 ---
 
-## The Vibe Rail Standard
+## Core Philosophy
 *Excellence through iteration, transparency in process, and local-first sovereignty.*
 
 Orket v0.3.8 continues the backend stabilization phase with enhanced diagnostics, priority-based scheduling, and robust state machine governance.
@@ -19,7 +19,7 @@ To solve the "Leaf Node Explosion" (Role x Model x Version), Orket separates **M
 *   **PromptCompiler:** At runtime, the engine compiles the **Role Intent** with the **Model Dialect** using a centralized compiler service.
 *   **Atomic Roles:** Role personas are stored as decoupled JSON assets (`model/core/roles/*.json`).
 *   **Dialects:** We maintain a library of model-specific grammar (Qwen, Llama, Deepseek). 
-*   **Ethos Injection:** The Vibe Rail vision, branding guidelines, and design "Do's and Don'ts" are automatically injected into every agent turn.
+*   **Ethos Injection:** Organizational vision, branding guidelines, and design "Do's and Don'ts" are automatically injected into every agent turn.
 
 ### 2. iDesign (Architectural Governance)
 We utilize **iDesign** principles (Volatility Decomposition) to maintain structural integrity.
@@ -74,6 +74,6 @@ The v0.3.8 update enhances governance with explicit wait reason tracking:
 
 - `CHANGELOG.md` — Version history and release notes.
 - `docs/ARCHITECTURE.md` — iDesign roadmap and Volatility Decomposition.
-- `docs/PROJECT.md` — Roadmap and Vibe Rail milestones.
+- `docs/PROJECT.md` — Project roadmap and development milestones.
 - `docs/SECURITY.md` — Integrity-based security model.
 - `docs/bottleneck_thresholds.md` — Bottleneck detection configuration.

@@ -103,11 +103,11 @@ System is battle-tested, documented, and ready for UI. Can onboard new users, ha
 
 ### 3.3 - Gitea Webhook Integration
 **Status**: 🟡 Handler built, not connected
-**Blockers**: Need Flask/FastAPI endpoint
+**Blockers**: Need FastAPI endpoint
 **Time**: 1 day
 
 **Work Needed**:
-- [ ] Create Flask app for webhook endpoint (`orket/webhook_server.py`)
+- [ ] Create FastAPI app for webhook endpoint (`orket/webhook_server.py`)
 - [ ] Route POST /webhook/gitea to GiteaWebhookHandler
 - [ ] Validate webhook signatures (HMAC)
 - [ ] Store review cycle count in SQLite (not in-memory)
