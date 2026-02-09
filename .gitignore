@@ -50,8 +50,10 @@ product/**/dist/
 product/**/build/
 product/**/*.db
 product/**/*.log
+*.db
 
 # Temp
+.env
 .gemini/
 C:/Users/jonmc/.gemini/tmp/
 project_dumper_small.py
