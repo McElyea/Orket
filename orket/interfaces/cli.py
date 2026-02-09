@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument("--driver-steered", action="store_true", help="Consult Driver for tactical directives.")
     parser.add_argument("--task", type=str, default=None, help="Optional task description override.")
     parser.add_argument("--board", action="store_true", help="Display the project board.")
-    parser.add_argument("--loop", action="store_true", help="Start the McElyea Organization Loop.")
+    parser.add_argument("--loop", action="store_true", help="Start the Vibe Rail Organization Loop.")
     return parser.parse_args()
 
 def print_board(hierarchy: dict):

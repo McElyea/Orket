@@ -1,5 +1,5 @@
 {
-    "name": "McElyea",
+    "name": "Vibe Rail",
     "vision": "To deliver local-first, high-fidelity automation tools that empower users with autonomous market intelligence.",
     "ethos": "Excellence through iteration, transparency in process, and local-first sovereignty.",
     "branding": {
@@ -32,9 +32,9 @@
         ]
     },
     "contact": {
-        "email": "contact@mcelyea.com",
+        "email": "contact@viberail.com",
         "socials": {
-            "github": "McElyea"
+            "github": "VibeRail"
         }
     },
     "departments": ["core", "engineering", "marketing", "product", "quality", "training", "uiux"],

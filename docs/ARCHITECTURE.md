@@ -1,12 +1,12 @@
 # Orket Architecture: Volatility Decomposition (v0.3.6)
 
-This document defines the structural and philosophical foundations of the McElyea Orket engine.
+This document defines the structural and philosophical foundations of the Vibe Rail Orket engine.
 
 ---
 
-# 1. iDesign & The McElyea Gate
+# 1. iDesign & The Vibe Rail Gate
 
-At McElyea, we treat system design as the management of complexity. We avoid designing around features, which are volatile, and instead design around **Encapsulated Volatility**.
+At Vibe Rail, we treat system design as the management of complexity. We avoid designing around features, which are volatile, and instead design around **Encapsulated Volatility**.
 
 ### The Complexity Gate
 Orket enforces architectural discipline through a quantified threshold:
@@ -28,7 +28,7 @@ The v0.3.6 refactor introduced the `PromptCompiler` service, which eliminates th
 At runtime, the `ExecutionPipeline` compiles three distinct vectors:
 1.  **Intent (Atomic Role):** The professional persona (`roles/*.json`).
 2.  **Syntax (Dialect):** The model-specific grammar (`dialects/*.json`).
-3.  **Ethos (Organization):** Global McElyea standards and architectural policy.
+3.  **Ethos (Organization):** Global Vibe Rail standards and architectural policy.
 
 ---
 

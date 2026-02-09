@@ -1,6 +1,6 @@
 # Contributing to Orket
 
-Thank you for your interest in contributing to the McElyea Orket EOS.
+Thank you for your interest in contributing to the Vibe Rail Orket EOS.
 
 ## Development Setup
 

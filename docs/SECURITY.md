@@ -1,9 +1,9 @@
 # Orket Security & Governance (v0.3.6)
 
-This document defines the McElyea integrity model.
+This document defines the Vibe Rail integrity model.
 
 ## Integrity-Based Security
-At McElyea, security is a subset of system integrity. We ensure that every agent turn is traceable and constrained by organizational rules.
+At Vibe Rail, security is a subset of system integrity. We ensure that every agent turn is traceable and constrained by organizational rules.
 
 ### 1. Secret Sovereignty (New in v0.3.6)
 *   **Environment Management:** All sensitive credentials (passwords, API keys, secret keys) are stored in a local `.env` file.

@@ -5,7 +5,7 @@
   "status": "ready",
   "team": "enterprise",
   "environment": "standard",
-  "description": "A rapid end-to-end test of the McElyea Orket Engine after the Reforge.",
+  "description": "A rapid end-to-end test of the Vibe Rail Orket Engine after the Reforge.",
   "architecture_governance": {
     "idesign": false,
     "pattern": "Tactical/Flat"

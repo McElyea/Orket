@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 class FailureReporter:
     """
     Generates a high-fidelity 'Black Box' report when the engine stalls.
-    Helps the McElyea Organization troubleshoot governance failures.
+    Helps the Vibe Rail Organization troubleshoot governance failures.
     """
     
     @staticmethod

@@ -7,8 +7,10 @@ from orket.schema import CardStatus, RockConfig, EpicConfig, OrganizationConfig
 from orket.domain.critical_path import CriticalPathEngine
 
 class OrganizationLoop:
-    def __init__(self, organization_path: Path = Path("model/organization.json")):
+    def __init__(self, organization_path: Path = Path("config/organization.json")):
         self.org_path = organization_path
+        if not self.org_path.exists():
+            self.org_path = Path("model/organization.json")
         self.org = self._load_org()
         self.running = False
 
@@ -17,7 +19,7 @@ class OrganizationLoop:
 
     async def run_forever(self):
         self.running = True
-        print(f"--- [McElyea Organization Loop Started] ---")
+        print(f"--- [Vibe Rail Organization Loop Started] ---")
         while self.running:
             # 1. Scan for next priority work based on Critical Path
             next_card = self._find_next_critical_card()

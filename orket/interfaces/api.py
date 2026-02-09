@@ -14,7 +14,7 @@ from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.settings import load_user_settings
 
-app = FastAPI(title="McElyea Orket EOS API")
+app = FastAPI(title="Vibe Rail Orket EOS API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,7 +29,7 @@ engine = OrchestrationEngine(PROJECT_ROOT / "workspace" / "default")
 # --- System Endpoints ---
 
 @app.get("/health")
-async def health(): return {"status": "ok", "organization": "McElyea"}
+async def health(): return {"status": "ok", "organization": "Vibe Rail"}
 
 @app.post("/system/clear-logs")
 async def clear_logs():

@@ -1,8 +1,8 @@
-# McElyea Project: Orket Maturation
+# Vibe Rail Project: Orket Maturation
 
 This document tracks the milestones, lessons learned, and quality benchmarks for the Orket platform.
 
-## Organization: McElyea
+## Organization: Vibe Rail
 **Vision:** Local-first autonomous market intelligence.
 **Ethos:** Excellence through iteration, transparency, and sovereignty.
 
@@ -15,7 +15,7 @@ We have pivoted from a descriptive orchestration model to a **mechanical enforce
 ---
 
 ## v0.3.6 Milestones (Completed)
-*   **Secret Rotation & Sovereignty:** Moved all sensitive credentials to `.env`; implemented `.gitignore` guards for all `.db` and `.json` settings.
+*   **Secret Sovereignty:** Moved all sensitive credentials to `.env`; implemented `.gitignore` guards for all `.db` and `.json` settings.
 *   **Tool Decomposition:** Refactored the monolithic `ToolBox` into specialized, sandboxed toolsets (`FileSystem`, `Vision`, `Cards`).
 *   **SRP-Based Schema:** Refactored `IssueConfig` to decouple metrics from verification logic.
 *   **Model Resiliency:** Implemented exponential backoff retry logic and specific LLM error handling.

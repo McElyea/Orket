@@ -1,11 +1,11 @@
-# McElyea Orket EOS (v0.3.6)
+# Vibe Rail Orket EOS (v0.3.6)
 
 Orket is a professional‑grade, multi‑agent orchestration engine for autonomous engineering operations.  
-Owned and operated by **McElyea**, it utilizes a high‑precision **Prompt Engine** and **iDesign architectural governance** to manage complexity through volatility decomposition.
+Owned and operated by **Vibe Rail**, it utilizes a high‑precision **Prompt Engine** and **iDesign architectural governance** to manage complexity through volatility decomposition.
 
 ---
 
-## The McElyea Standard
+## The Vibe Rail Standard
 *Excellence through iteration, transparency in process, and local-first sovereignty.*
 
 Orket v0.3.6 (The Integrity Release) marks the transition from a monolithic core to a decoupled, data‑driven engine aligned with modern enterprise standards.
@@ -19,7 +19,7 @@ To solve the "Leaf Node Explosion" (Role x Model x Version), Orket separates **M
 *   **PromptCompiler:** At runtime, the engine compiles the **Role Intent** with the **Model Dialect** using a centralized compiler service.
 *   **Atomic Roles:** Role personas are stored as decoupled JSON assets (`model/core/roles/*.json`).
 *   **Dialects:** We maintain a library of model-specific grammar (Qwen, Llama, Deepseek). 
-*   **Ethos Injection:** The McElyea vision, branding guidelines, and design "Do's and Don'ts" are automatically injected into every agent turn.
+*   **Ethos Injection:** The Vibe Rail vision, branding guidelines, and design "Do's and Don'ts" are automatically injected into every agent turn.
 
 ### 2. iDesign (Architectural Governance)
 We utilize **iDesign** principles (Volatility Decomposition) to maintain structural integrity.
@@ -67,5 +67,5 @@ The v0.3.6 update introduced a refactored `ToolBox`, splitting monolithic tool l
 ## Documentation
 
 - `docs/ARCHITECTURE.md` — iDesign roadmap and Volatility Decomposition.
-- `docs/PROJECT.md` — Roadmap and McElyea milestones.
+- `docs/PROJECT.md` — Roadmap and Vibe Rail milestones.
 - `docs/SECURITY.md` — Integrity-based security model.
