@@ -49,16 +49,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - WorkStation stability issues
 
-## [0.3.6] - 2025-02-08 - "The Enforcement Pivot"
+## [0.3.6] - 2025-02-08 - "The Enforcement Pivot" / "The Integrity Release"
 
 ### Added
 - Core StateMachine for mechanical governance
 - Atomic Roles implementation
+- Secret sovereignty with `.env` credential management
+- Exponential backoff retry logic for LLM calls
+- Hardware-aware multi-modal support (CUDA/CPU auto-detection)
 
 ### Changed
 - Merged Skills into atomic Roles
 - Simplified project structure
 - Ignored local dev scripts
+- **Tool Decomposition:** Refactored monolithic ToolBox into specialized toolsets (FileSystem, Vision, Cards)
+- **SRP-Based Schema:** Decoupled metrics from verification logic in IssueConfig
+- Pivoted from descriptive orchestration to mechanical enforcement model
+
+### Security
+- Moved all sensitive credentials to `.env` files
+- Implemented `.gitignore` guards for `.db` and `.json` settings
 
 ### Removed
 - Legacy Skills system (consolidated into Roles)

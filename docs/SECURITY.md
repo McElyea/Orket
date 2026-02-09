@@ -1,4 +1,4 @@
-# Orket Security & Governance (v0.3.6)
+# Orket Security & Governance (v0.3.8)
 
 This document defines the Vibe Rail integrity model.
 

@@ -8,18 +8,11 @@ This document tracks the milestones, lessons learned, and quality benchmarks for
 
 ---
 
-## Current Status: v0.3.6 (The Integrity Release)
+## Current Status: v0.3.8 (The Diagnostic Intelligence)
 
-We have pivoted from a descriptive orchestration model to a **mechanical enforcement model** based on a brutal architectural audit. v0.3.6 focuses on security, tool decoupling, and Single Responsibility Principle (SRP) compliance.
+Building on the mechanical enforcement model, v0.3.8 adds diagnostic intelligence with WaitReason tracking, priority-based scheduling, and comprehensive bottleneck detection. The backend stabilization phase continues with enhanced testing and state machine governance.
 
----
-
-## v0.3.6 Milestones (Completed)
-*   **Secret Sovereignty:** Moved all sensitive credentials to `.env`; implemented `.gitignore` guards for all `.db` and `.json` settings.
-*   **Tool Decomposition:** Refactored the monolithic `ToolBox` into specialized, sandboxed toolsets (`FileSystem`, `Vision`, `Cards`).
-*   **SRP-Based Schema:** Refactored `IssueConfig` to decouple metrics from verification logic.
-*   **Model Resiliency:** Implemented exponential backoff retry logic and specific LLM error handling.
-*   **Hardware-Aware Multi-Modal:** Vision tools now automatically detect CUDA/CPU and use configurable models.
+**Note:** For detailed version history, see [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
