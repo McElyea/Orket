@@ -18,6 +18,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from orket.logging import log_event
+from orket.services.webhook_db import WebhookDatabase
+from orket.services.sandbox_orchestrator import SandboxOrchestrator
+from orket.domain.sandbox import TechStack, SandboxRegistry
 
 load_dotenv()
 
@@ -35,9 +38,15 @@ class GiteaWebhookHandler:
         self.workspace = workspace or Path.cwd()
         self.auth = (self.gitea_user, self.gitea_password)
 
-        # Review cycle tracking (in-memory for now, should be in DB)
-        self.pr_review_cycles: Dict[str, int] = {}  # pr_key -> cycle_count
-        self.pr_failure_reasons: Dict[str, list] = {}  # pr_key -> [reasons]
+        # SQLite database for review cycle tracking
+        self.db = WebhookDatabase()
+
+        # Sandbox orchestrator for deployment
+        self.sandbox_registry = SandboxRegistry()
+        self.sandbox_orchestrator = SandboxOrchestrator(
+            workspace_root=self.workspace,
+            registry=self.sandbox_registry
+        )
 
     async def handle_webhook(self, event_type: str, payload: Dict[str, Any]) -> Dict[str, str]:
         """
@@ -90,18 +99,12 @@ class GiteaWebhookHandler:
 
         # CHANGES_REQUESTED → Track cycles
         if review_state == "changes_requested":
-            cycles = self.pr_review_cycles.get(pr_key, 0) + 1
-            self.pr_review_cycles[pr_key] = cycles
+            repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
+            cycles = self.db.increment_pr_cycle(repo_full_name, pr_number)
 
             # Store failure reason
-            if pr_key not in self.pr_failure_reasons:
-                self.pr_failure_reasons[pr_key] = []
-            self.pr_failure_reasons[pr_key].append({
-                "cycle": cycles,
-                "reviewer": reviewer,
-                "reason": review.get("body", "No reason provided"),
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            reason = review.get("body", "No reason provided")
+            self.db.add_failure_reason(repo_full_name, pr_number, reviewer, reason)
 
             # Cycle 3: Escalate to architect
             if cycles == 3:
@@ -110,7 +113,7 @@ class GiteaWebhookHandler:
 
             # Cycle 4+: Auto-reject
             elif cycles >= 4:
-                await self._auto_reject(repo, pr_number, pr_key)
+                await self._auto_reject(repo, pr_number, repo_full_name)
                 return {"status": "rejected", "message": f"PR #{pr_number} auto-rejected after 4 cycles"}
 
             return {"status": "changes_requested", "message": f"PR #{pr_number} rejected (cycle {cycles}/4)"}
@@ -181,7 +184,7 @@ This PR has been rejected **3 times** by integrity_guard.
 
         log_event("pr_escalated", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.workspace)
 
-    async def _auto_reject(self, repo: Dict, pr_number: int, pr_key: str) -> None:
+    async def _auto_reject(self, repo: Dict, pr_number: int, repo_full_name: str) -> None:
         """
         Auto-reject PR after 4 review cycles.
         Close PR and create Requirements Review Issue.
@@ -210,15 +213,14 @@ This PR has been rejected **3 times** by integrity_guard.
         )
 
         # Create Requirements Review Issue
-        await self._create_requirements_issue(repo, pr_number, pr_key)
+        await self._create_requirements_issue(repo, pr_number, repo_full_name)
 
         log_event("pr_rejected", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.workspace)
 
-        # Cleanup tracking
-        self.pr_review_cycles.pop(pr_key, None)
-        self.pr_failure_reasons.pop(pr_key, None)
+        # Mark PR cycle as rejected in database
+        self.db.close_pr_cycle(repo_full_name, pr_number, status="rejected")
 
-    async def _create_requirements_issue(self, repo: Dict, pr_number: int, pr_key: str) -> None:
+    async def _create_requirements_issue(self, repo: Dict, pr_number: int, repo_full_name: str) -> None:
         """
         Create Requirements Review Issue after auto-reject.
         """
@@ -226,9 +228,9 @@ This PR has been rejected **3 times** by integrity_guard.
         repo_name = repo["name"]
         url = f"{self.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues"
 
-        failure_reasons = self.pr_failure_reasons.get(pr_key, [])
+        failure_reasons = self.db.get_failure_reasons(repo_full_name, pr_number)
         reasons_text = "\n".join([
-            f"**Cycle {r['cycle']}** ({r['timestamp']}): {r['reason']}"
+            f"**Cycle {r['cycle_number']}** ({r['created_at']}): {r['reason']}"
             for r in failure_reasons
         ])
 
@@ -278,12 +280,16 @@ Why did this fail even with guidance?
         pr_number = pr["number"]
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
+        repo_full_name = f"{owner}/{repo_name}"
 
         log_event("pr_merged", {
             "pr": pr_number,
-            "repo": f"{owner}/{repo_name}",
+            "repo": repo_full_name,
             "merged_by": pr.get("merged_by", {}).get("login", "unknown")
         }, self.workspace)
+
+        # Mark PR cycle as merged in database
+        self.db.close_pr_cycle(repo_full_name, pr_number, status="merged")
 
         # Trigger sandbox deployment
         await self._trigger_sandbox_deployment(owner, repo_name, pr)
@@ -293,19 +299,76 @@ Why did this fail even with guidance?
     async def _trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: Dict) -> None:
         """
         Trigger sandbox deployment after PR merge.
-
-        This will eventually call SandboxOrchestrator.create_sandbox()
-        For now, just log the event.
+        Creates a Docker Compose sandbox for the merged code.
         """
-        # TODO: Integrate with SandboxOrchestrator
-        # from orket.services.sandbox_orchestrator import SandboxOrchestrator
-        # orchestrator = SandboxOrchestrator(...)
-        # await orchestrator.create_sandbox(...)
+        repo_full_name = f"{owner}/{repo_name}"
+        pr_number = pr["number"]
+        branch = pr["head"]["ref"]
 
-        log_event("sandbox_deployment_triggered", {
-            "repo": f"{owner}/{repo_name}",
-            "pr": pr["number"],
-            "branch": pr["head"]["ref"]
-        }, self.workspace)
+        # Clone the repo to local workspace (for now, assume it's already there)
+        # In production, this would clone from Gitea
+        workspace_path = self.workspace / "sandboxes" / repo_name
 
-        print(f"🚀 Sandbox deployment triggered for {owner}/{repo_name} PR #{pr['number']}")
+        # Determine tech stack from repository metadata
+        # For now, default to FastAPI + React + Postgres
+        # TODO: Read from .orket.json or repository config
+        tech_stack = TechStack.FASTAPI_REACT_POSTGRES
+
+        # Create rock_id from repo and PR
+        rock_id = f"{repo_name}-pr{pr_number}"
+
+        try:
+            sandbox = await self.sandbox_orchestrator.create_sandbox(
+                rock_id=rock_id,
+                project_name=f"{repo_name} (PR #{pr_number})",
+                tech_stack=tech_stack,
+                workspace_path=str(workspace_path)
+            )
+
+            log_event("sandbox_deployed", {
+                "repo": repo_full_name,
+                "pr": pr_number,
+                "sandbox_id": sandbox.id,
+                "api_url": sandbox.api_url,
+                "frontend_url": sandbox.frontend_url
+            }, self.workspace)
+
+            # Comment on PR with sandbox URLs
+            await self._add_sandbox_comment(owner, repo_name, pr_number, sandbox)
+
+            print(f"🚀 Sandbox deployed for {repo_full_name} PR #{pr_number}")
+            print(f"   API: {sandbox.api_url}")
+            print(f"   Frontend: {sandbox.frontend_url}")
+
+        except Exception as e:
+            log_event("sandbox_deployment_failed", {
+                "repo": repo_full_name,
+                "pr": pr_number,
+                "error": str(e)
+            }, self.workspace)
+            print(f"❌ Sandbox deployment failed: {e}")
+
+    async def _add_sandbox_comment(self, owner: str, repo_name: str, pr_number: int, sandbox) -> None:
+        """Add comment to PR with sandbox deployment URLs."""
+        url = f"{self.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues/{pr_number}/comments"
+
+        comment = f"""🚀 **Sandbox Deployed Successfully**
+
+Your code has been deployed to a live environment for testing:
+
+- API: [{sandbox.api_url}]({sandbox.api_url})
+- Frontend: [{sandbox.frontend_url}]({sandbox.frontend_url})
+- Database: {sandbox.tech_stack.value}
+
+**Sandbox ID**: `{sandbox.id}`
+
+The sandbox will remain active during the Bug Fix Phase. Bugs discovered will automatically create Issues for remediation.
+"""
+
+        requests.post(
+            url,
+            auth=self.auth,
+            headers={"Content-Type": "application/json"},
+            json={"body": comment},
+            timeout=10
+        )
