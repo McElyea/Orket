@@ -12,11 +12,12 @@ from orket.state import runtime_state
 from orket.agents.agent import Agent
 from orket.policy import create_session_policy
 from orket.tools import ToolBox, get_tool_map
-from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, IssueConfig, CardStatus
+from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, IssueConfig, CardStatus, SkillConfig, DialectConfig
 from orket.utils import get_eos_sprint, sanitize_name
 from orket.exceptions import CardNotFound, ExecutionFailed, StateConflict
 from orket.infrastructure.sqlite_repositories import SQLiteCardRepository, SQLiteSessionRepository, SQLiteSnapshotRepository
 from orket.domain.execution import ExecutionTurn
+from orket.services.prompt_compiler import PromptCompiler
 from pydantic import BaseModel
 
 # ---------------------------------------------------------------------------
@@ -24,21 +25,60 @@ from pydantic import BaseModel
 # ---------------------------------------------------------------------------
 
 class ConfigLoader:
-    def __init__(self, model_root: Path, department: str = "core"):
-        self.dept_path = model_root / department
+    """
+    Unified Configuration and Asset Loader.
+    Priority: 1. config/ (Unified) 2. model/{dept}/ (Legacy) 3. model/core/ (Fallback)
+    """
+    def __init__(self, root: Path, department: str = "core"):
+        self.root = root
+        self.config_dir = root / "config"
+        self.model_dir = root / "model"
+        self.department = department
+
+    def load_organization(self) -> Optional[OrganizationConfig]:
+        from orket.schema import OrganizationConfig
+        paths = [
+            self.config_dir / "organization.json",
+            self.model_dir / "organization.json"
+        ]
+        for p in paths:
+            if p.exists():
+                return OrganizationConfig.model_validate_json(p.read_text(encoding="utf-8"))
+        return None
+
+    def load_department(self, name: str) -> Optional[DepartmentConfig]:
+        from orket.schema import DepartmentConfig
+        paths = [
+            self.config_dir / "departments" / f"{name}.json",
+            self.model_dir / name / "department.json" # Legacy check
+        ]
+        for p in paths:
+            if p.exists():
+                return DepartmentConfig.model_validate_json(p.read_text(encoding="utf-8"))
+        return None
 
     def load_asset(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
-        path = self.dept_path / category / f"{name}.json"
-        if not path.exists():
-            core_path = self.dept_path.parent / "core" / category / f"{name}.json"
-            if core_path.exists(): path = core_path
-            else: raise CardNotFound(f"Asset '{name}' not found in category '{category}'.")
-        return model_type.model_validate_json(path.read_text(encoding="utf-8"))
+        # 1. Unified Config
+        paths = [
+            self.config_dir / category / f"{name}.json",
+            self.model_dir / self.department / category / f"{name}.json",
+            self.model_dir / "core" / category / f"{name}.json"
+        ]
+        
+        for p in paths:
+            if p.exists():
+                return model_type.model_validate_json(p.read_text(encoding="utf-8"))
+                
+        raise CardNotFound(f"Asset '{name}' not found in category '{category}' for department '{self.department}'.")
 
     def list_assets(self, category: str) -> List[str]:
         assets = set()
-        paths = [self.dept_path / category, self.dept_path.parent / "core" / category]
-        for p in paths:
+        search_paths = [
+            self.config_dir / category,
+            self.model_dir / self.department / category,
+            self.model_dir / "core" / category
+        ]
+        for p in search_paths:
             if p.exists():
                 for f in p.glob("*.json"):
                     assets.add(f.stem)
@@ -58,15 +98,10 @@ class ExecutionPipeline:
     def __init__(self, workspace: Path, department: str = "core"):
         self.workspace = workspace
         self.department = department
-        self.loader = ConfigLoader(Path("model").resolve(), department)
+        self.loader = ConfigLoader(Path(".").resolve(), department)
         
         # Load Organization
-        org_path = Path("model/organization.json")
-        if org_path.exists():
-            from orket.schema import OrganizationConfig
-            self.org = OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
-        else:
-            self.org = None
+        self.org = self.loader.load_organization()
         
         db_path = "orket_persistence.db"
         self.cards = SQLiteCardRepository(db_path)
@@ -179,31 +214,42 @@ class ExecutionPipeline:
             while governance_retries < 2:
                 # Action B: Summon all roles if first retry failed
                 roles_to_load = seat.roles if not all_hands_on_deck else list(team.roles.keys())
-                role_objects = []
+                role_configs = []
                 for r_name in roles_to_load:
-                    try: role_objects.append(self.loader.load_asset("roles", r_name, RoleConfig))
+                    try: role_configs.append(self.loader.load_asset("roles", r_name, RoleConfig))
                     except: pass
 
                 selected_model = model_selector.select(role=seat.roles[0], asset_config=epic)
+                dialect_name = model_selector.get_dialect_name(selected_model)
+                dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
                 provider = LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
 
-                desc = f"Seat: {seat_name}.\nISSUE: {issue['summary']}\nMANDATORY: Use 'write_file' to persist work.\n"
+                # Convert primary Role to Skill for compiler
+                primary_role = role_configs[0]
+                skill = SkillConfig(
+                    name=primary_role.name or primary_role.summary or seat_name,
+                    intent=primary_role.description,
+                    responsibilities=[ro.description for ro in role_configs],
+                    idesign_constraints=self.org.architecture.cicd_rules if self.org else [],
+                    tools=primary_role.tools
+                )
+
+                patch = ""
                 if all_hands_on_deck:
-                    desc += "\n[CRITICAL] ALL HANDS ON DECK: Previous turns failed governance. All team personas are now active to resolve this block.\n"
+                    patch += "\n[CRITICAL] ALL HANDS ON DECK: Previous turns failed governance. All team personas are now active.\n"
                 
                 relevant_notes = self.notes.get_for_role(seat_name, len(self.transcript))
                 if relevant_notes:
-                    desc += "\n[INTER-AGENT NOTES]\n" + "\n".join([f"- From {n.from_role}: {n.content}" for n in relevant_notes])
-
-                for ro in role_objects:
-                    if ro.prompt: desc += f"\n[{ro.name.upper()} GUIDELINES]\n{ro.prompt}\n"
+                    patch += "\n[INTER-AGENT NOTES]\n" + "\n".join([f"- From {n.from_role}: {n.content}" for n in relevant_notes])
 
                 if self.org:
-                    desc += f"\n[ORGANIZATION: {self.org.name}]\nEthos: {self.org.ethos}\nBranding: {', '.join(self.org.branding.design_dos)}\n"
+                    patch += f"\n[ORGANIZATION: {self.org.name}]\nEthos: {self.org.ethos}\n"
+
+                system_desc = PromptCompiler.compile(skill, dialect, patch=patch)
 
                 print(f"  [ORKESTRATE] {seat_name} -> {issue_id} (Model: {selected_model}) {'[ALL HANDS]' if all_hands_on_deck else ''}")
                 
-                agent = Agent(seat_name, desc, {}, provider)
+                agent = Agent(seat_name, system_desc, {}, provider)
                 turn: ExecutionTurn = await agent.run(
                     task={"description": f"{epic.description}\n\nTask: {issue['summary']}"},
                     context={"session_id": run_id, "issue_id": issue_id, "workspace": str(self.workspace), "role": seat_name},
@@ -272,27 +318,9 @@ class ExecutionPipeline:
 
             self.cards.update_status(issue_id, CardStatus.IN_PROGRESS, assignee=seat_name)
 
-            desc = f"Seat: {seat_name}.\nISSUE: {issue['summary']}\nMANDATORY: Use 'write_file' to persist work. One Issue, One Member.\n"
-            
-            # 3. Inject Notes from previous steps
-            relevant_notes = self.notes.get_for_role(seat_name, len(self.transcript))
-            if relevant_notes:
-                desc += "\n[INTER-AGENT NOTES]\n"
-                for n in relevant_notes:
-                    desc += f"- From {n.from_role}: {n.content}\n"
-
-            # 4. Inject Prompts from Roles
-            for ro in role_objects:
-                if ro.prompt:
-                    desc += f"\n[{ro.name.upper()} GUIDELINES]\n{ro.prompt}\n"
-
-            # Inject Organization context
-            if self.org:
-                desc += f"\n[ORGANIZATION: {self.org.name}]\nEthos: {self.org.ethos}\nBranding Rules: {', '.join(self.org.branding.design_dos)}\n"
-
             # Aggregate tools
             tools = {}
-            for ro in role_objects:
+            for ro in role_configs:
                 for tn in ro.tools:
                     if tn in tool_map:
                         tools[tn] = tool_map[tn]
@@ -301,7 +329,7 @@ class ExecutionPipeline:
             
             turn_count = 0
             while turn_count < 5:
-                agent = Agent(seat_name, desc, tools, provider, prompt_patch=prompt_patch)
+                agent = Agent(seat_name, system_desc, tools, provider, prompt_patch=prompt_patch)
                 turn: ExecutionTurn = await agent.run(
                     task={"description": f"{epic.description}\n\nTask: {issue['summary']}"},
                     context={"session_id": run_id, "issue_id": issue_id, "workspace": str(self.workspace), "role": seat_name},

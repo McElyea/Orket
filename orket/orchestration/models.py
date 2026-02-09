@@ -71,6 +71,15 @@ class ModelSelector:
         
         return fallbacks.get(role, "llama3.1:8b")
 
+    def get_dialect_name(self, model: str) -> str:
+        """Maps a model name to its syntax dialect (e.g. qwen, llama, deepseek)."""
+        m = model.lower()
+        if "qwen" in m: return "qwen"
+        if "llama" in m: return "llama3"
+        if "deepseek" in m: return "deepseek-r1"
+        if "phi" in m: return "phi"
+        return "generic"
+
 class ModelRegistry:
     """
     Helper to list available models and their capabilities.

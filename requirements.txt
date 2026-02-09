@@ -15,3 +15,9 @@ torchaudio
 psutil
 python-jose[cryptography]
 passlib[bcrypt]
+python-dotenv
+Pillow
+pytest
+pytest-asyncio
+argparse
+typing-extensions

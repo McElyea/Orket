@@ -17,3 +17,15 @@ class StateConflict(OrketError):
 class InfrastructureError(OrketError):
     """Wrapped technical error from persistence or filesystem."""
     pass
+
+class ModelProviderError(OrketError):
+    """Base error for LLM provider failures."""
+    pass
+
+class ModelTimeoutError(ModelProviderError):
+    """Raised when the model fails to respond within the timeout period."""
+    pass
+
+class ModelConnectionError(ModelProviderError):
+    """Raised when the LLM provider (e.g., Ollama) is unreachable."""
+    pass

@@ -78,11 +78,13 @@ class BaseCardConfig(BaseModel):
 # 3. Specific Card Implementations
 # ---------------------------------------------------------------------------
 
-class QualityAssessment(BaseModel):
+class IssueMetrics(BaseModel):
     score: float = 0.0
-    grade: str = "Pending"
+    grade: str = "Pending"  # e.g. "Shippable", "Non-Shippable"
     audit_date: Optional[str] = None
     criteria_scores: Dict[str, float] = Field(default_factory=dict)
+    shippability_threshold: float = 7.0
+    path_delta: Optional[float] = 0.0  # Metric for Critical Path drift
 
 class VerificationScenario(BaseModel) :
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:4])
@@ -99,6 +101,11 @@ class VerificationResult(BaseModel):
     failed: int
     logs: List[str] = Field(default_factory=list)
 
+class IssueVerification(BaseModel):
+    fixture_path: Optional[str] = Field(None, alias="verification_fixture")
+    scenarios: List[VerificationScenario] = Field(default_factory=list)
+    last_run: Optional[VerificationResult] = Field(None, alias="last_verification")
+
 class IssueConfig(BaseCardConfig):
     type: CardType = Field(default=CardType.ISSUE)
     seat: str = "standard"
@@ -106,15 +113,10 @@ class IssueConfig(BaseCardConfig):
     sprint: Optional[str] = None
     requirements: Optional[str] = None # Atomic requirement detail
     depends_on: List[str] = Field(default_factory=list)
-    verification_fixture: Optional[str] = None # Path to Python fixture
-    scenarios: List[VerificationScenario] = Field(default_factory=list)
-    last_verification: Optional[VerificationResult] = None
-    score: float = 0.0
-    grade: str = "Pending" # e.g. "Shippable", "Non-Shippable"
-    audit_date: Optional[str] = None
-    criteria_scores: Dict[str, float] = Field(default_factory=dict)
-    shippability_threshold: float = 7.0
-    path_delta: Optional[float] = 0.0 # Metric for Critical Path drift
+    
+    # Separated Concerns
+    verification: IssueVerification = Field(default_factory=IssueVerification)
+    metrics: IssueMetrics = Field(default_factory=IssueMetrics)
 
 class ArchitectureGovernance(BaseModel):
     idesign: bool = Field(default=True)
@@ -138,14 +140,14 @@ class EpicConfig(BaseCardConfig):
     example_task: Optional[str] = None
     requirements: Optional[str] = None # High-level spec or link
     architecture_governance: ArchitectureGovernance = Field(default_factory=ArchitectureGovernance)
-    quality_assessment: Optional[QualityAssessment] = None
+    metrics: Optional[IssueMetrics] = None
     lessons_learned: List[LessonsLearned] = Field(default_factory=list)
 
 class RockConfig(BaseCardConfig):
     type: CardType = Field(default=CardType.ROCK)
     task: Optional[str] = None
     epics: List[Dict[str, str]] # List of {epic: name, department: dept}
-    quality_assessment: Optional[QualityAssessment] = None
+    metrics: Optional[IssueMetrics] = None
     lessons_learned: List[LessonsLearned] = Field(default_factory=list)
 
 # Recursive type for the Preview/Full Tree view
@@ -191,7 +193,10 @@ class EngineRegistry(BaseModel):
 class DepartmentConfig(BaseModel):
     name: str
     description: Optional[str] = None
+    parent: Optional[str] = "core"
     policy: Dict[str, Any] = Field(default_factory=dict)
+    preferred_stack: Dict[str, str] = Field(default_factory=dict)
+    default_llm: Optional[str] = None
 
 class BrandingConfig(BaseModel):
 

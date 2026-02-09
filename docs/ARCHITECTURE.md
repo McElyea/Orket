@@ -1,4 +1,4 @@
-# Orket Architecture: Volatility Decomposition (v0.3.5)
+# Orket Architecture: Volatility Decomposition (v0.3.6)
 
 This document defines the structural and philosophical foundations of the McElyea Orket engine.
 
@@ -13,37 +13,46 @@ Orket enforces architectural discipline through a quantified threshold:
 *   **Issues <= 7:** "Flat and Fast" (Tactical) projects allowed.
 *   **Issues > 7:** Mandatory iDesign structure (Managers, Engines, Accessors).
 
-### Component Definitions
-*   **Managers:** Conductors of use-cases. They own the workflow.
-*   **Engines:** Pure business logic. They know nothing of state or external resources.
-*   **Accessors:** Wrappers for volatility (APIs, Databases, Files).
+### SRP-Compliant Cards
+To ensure the Single Responsibility Principle, our **IssueConfig** is decomposed into specialized concerns:
+*   **Metrics:** Focused on scoring, grading, and shippability thresholds.
+*   **Verification:** Focused on fixtures, scenarios, and execution results.
 
 ---
 
 # 2. The Prompt Engine (Intelligent Compile)
 
-The v0.3.5 refactor introduced the **Data-Driven Prompt Engine**, which eliminates the "Role-Model-Version" matrix explosion.
+The v0.3.6 refactor introduced the `PromptCompiler` service, which eliminates the "Role-Model-Version" matrix explosion.
 
 ### The Merge Strategy
-At runtime, the `OrchestrationEngine` compiles three distinct vectors:
-1.  **Intent (Atomic Role):** The professional persona (`coder.json`, `architect.json`).
-2.  **Syntax (Dialect):** The model-specific grammar (`llama.txt`, `qwen.txt`).
-3.  **Ethos (Organization):** Global McElyea standards and branding "Do's and Don'ts."
+At runtime, the `ExecutionPipeline` compiles three distinct vectors:
+1.  **Intent (Atomic Role):** The professional persona (`roles/*.json`).
+2.  **Syntax (Dialect):** The model-specific grammar (`dialects/*.json`).
+3.  **Ethos (Organization):** Global McElyea standards and architectural policy.
 
 ---
 
-# 3. Structural Reconciler
+# 3. Configuration Hierarchy (ConfigLoader)
 
-To prevent "Board Drift," Orket runs a reconciliation sweep on every startup.
-*   **Adoption:** Any orphaned Epic is moved to the **"Run the Business"** Rock.
-*   **Catchment:** Any orphaned Issue is moved to the **"unplanned support"** Epic.
-*   **Integrity:** Ensures the Traction Tree is always a valid, traversable graph.
+Orket utilizes a prioritized configuration system to ensure both flexibility and organizational control:
+1.  **Unified Config (`config/`):** Primary location for organization and department standards.
+2.  **Legacy Assets (`model/{dept}/`):** Department-specific assets and overrides.
+3.  **Core Fallbacks (`model/core/`):** The organizational "Safety Net."
 
 ---
 
-# 4. State Machine (Flow of Work)
+# 4. Tool Sovereignty & Decoupling
+
+The monolithic `ToolBox` has been decomposed into specialized toolsets to improve security and extensibility:
+*   **FileSystemTools:** Implements path-sandboxing and workspace boundaries.
+*   **VisionTools:** Manages multi-modal assets (Stable Diffusion) with hardware-aware fallbacks (CUDA/CPU).
+*   **CardManagementTools:** Encapsulates the persistence and lifecycle of the Card System.
+
+---
+
+# 5. State Machine (Flow of Work)
 
 Cards move through a professional lifecycle:
 `Ready` -> `In Progress` -> `Blocked` -> `Ready_For_Testing` -> `Code_Review` -> `Done`.
 
-The **Code_Review** state is a mandatory "Freezer" where work awaits an audit score (Target: > 7.0) before finalization.
+The **Code_Review** state is a mandatory "Freezer" where work awaits an audit score before finalization.

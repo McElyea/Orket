@@ -1,65 +1,53 @@
 # Contributing to Orket
 
-Thank you for your interest in contributing. This document explains how to work on the project.
+Thank you for your interest in contributing to the McElyea Orket EOS.
 
 ## Development Setup
 
-Clone the repository:
+1. **Clone the repository.**
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Setup Environment:**
+   Create a `.env` file for your local secrets (passwords, API keys).
+4. **Run Orket:**
+   ```bash
+   python main.py --rock <rock_name>
+   ```
 
-git clone <repo-url>
+## Project Structure
 
-Install dependencies:
+Orket follows the **Universal Card System**:
+- **Rocks:** Strategic objectives (`model/core/rocks/`).
+- **Epics:** Tactical feature groups (`model/core/epics/`).
+- **Issues:** Operational units of work (found inside Epics).
+- **Roles:** Personas and guidelines (`model/core/roles/`).
+- **Dialects:** Model-specific syntax (`model/core/dialects/`).
 
-pip install -r requirements.txt
+## Adding a New Asset
 
-Run Orket:
+### 1. Adding a Role
+- Define identity and responsibilities in `model/core/roles/<role_name>.json`.
+- Add relevant tools to the `tools` list.
 
-python main.py --venue standard
+### 2. Adding a Tool
+- Implement the tool logic in a specialized class within `orket/tools.py` (e.g., `FileSystemTools`).
+- Register the tool in the `ToolBox` and `get_tool_map`.
+- Document security boundaries for the new tool.
 
-## Adding a New Band
-
-1. Create a file in bands/  
-2. Define roles, prompts, and tools_allowed  
-3. Ensure role names match Score references  
-
-## Adding a New Score
-
-1. Create a file in scores/  
-2. Define included_roles  
-3. Define dependencies  
-4. Define completion rules  
-
-## Adding a New Venue
-
-1. Create a file in venues/  
-2. Reference a Band  
-3. Reference a Score  
-4. Configure filesystem policy  
-
-## Adding a New Tool
-
-1. Implement the tool  
-2. Register it in the dispatcher  
-3. Add it to tools_allowed for relevant roles  
+### 3. Adding an Epic
+- Define the team, environment, and atomic issues in `model/core/epics/<epic_name>.json`.
+- Ensure issues follow the **Single Responsibility Principle (SRP)**.
 
 ## Coding Standards
-
-- explicit imports  
-- no hidden behavior  
-- deterministic orchestration  
-- copy‑paste‑friendly Markdown  
-- no duplication across docs  
-
-## Documentation Standards
-
-- each file has a single purpose  
-- no overlap  
+- **Explicit Imports:** Avoid wildcard imports.
+- **Async-First:** Use `async/await` for I/O and model interactions.
+- **Type Safety:** Utilize Pydantic models for all configuration and state.
+- **iDesign Compliance:** Adhere to Volatility Decomposition. Maintain separation between Managers, Engines, and Accessors.
 
 ## Pull Requests
-
-PRs should include:
-
-- clear description  
-- tests if applicable  
-- updated docs if needed  
-- no unrelated changes  
+- Include a clear description of changes.
+- Add integration tests in the `tests/` directory.
+- Update relevant documentation in `docs/`.
+- Ensure `.env` and `*.db` files are never included.

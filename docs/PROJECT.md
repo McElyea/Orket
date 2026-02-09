@@ -8,23 +8,32 @@ This document tracks the milestones, lessons learned, and quality benchmarks for
 
 ---
 
-## Current Status: v0.3.5 (The Reforge Release)
+## Current Status: v0.3.6 (The Integrity Release)
 
-We have pivoted from a descriptive orchestration model to a **mechanical enforcement model** based on a brutal architectural audit.
+We have pivoted from a descriptive orchestration model to a **mechanical enforcement model** based on a brutal architectural audit. v0.3.6 focuses on security, tool decoupling, and Single Responsibility Principle (SRP) compliance.
+
+---
+
+## v0.3.6 Milestones (Completed)
+*   **Secret Rotation & Sovereignty:** Moved all sensitive credentials to `.env`; implemented `.gitignore` guards for all `.db` and `.json` settings.
+*   **Tool Decomposition:** Refactored the monolithic `ToolBox` into specialized, sandboxed toolsets (`FileSystem`, `Vision`, `Cards`).
+*   **SRP-Based Schema:** Refactored `IssueConfig` to decouple metrics from verification logic.
+*   **Model Resiliency:** Implemented exponential backoff retry logic and specific LLM error handling.
+*   **Hardware-Aware Multi-Modal:** Vision tools now automatically detect CUDA/CPU and use configurable models.
 
 ---
 
 ## Maturation Roadmap
 
-### Phase 1: Ruthless Simplification (Current)
+### Phase 1: Ruthless Simplification (DONE)
 *   **Merge Skills into Roles:** Eliminate the complexity tax of dual persona layers.
-*   **Simplify Dialects:** Consolidate output contracts to focus only on tool-calling precision.
+*   **Unified Configuration:** Established the `config/` directory with prioritized overrides.
 *   **Atomic Card Identity:** Ensure every Rock, Epic, and Issue has a stable, non-volatile ID.
 
-### Phase 2: Mechanical Enforcement
+### Phase 2: Mechanical Enforcement (Current)
 *   **Hard State Machines:** Implement Python-level guards for transitions (e.g., No `DONE` without Verifier sign-off).
 *   **Tool Gating:** Intercept `write_file` and state changes at the engine level to enforce organizational invariants.
-*   **The Verifier Pivot:** Transform the "Integrity Guard" from an advisor to a gatekeeper.
+*   **Integration Testing:** Establish a robust suite of core flow tests (Prompt Compilation, Tool Execution).
 
 ### Phase 3: Elegant Failure & Recovery
 *   **The Elegant Stop:** When an invariant is broken, the engine terminates with a clear "Policy Violation" report.
@@ -34,16 +43,6 @@ We have pivoted from a descriptive orchestration model to a **mechanical enforce
 ### Phase 4: Empirical Verification (North Star)
 *   **FIT Fixtures:** Integrated testing where Orket runs code and verifies results before advancing cards.
 *   **Local Sandboxing:** Host and verify applications in an isolated environment.
-
----
-
-## Case Study: Sneaky Price Watch
-The maturation of the Price Watcher project served as our baseline for Quality Auditing.
-
-*   **Initial Audit Score:** 4.1 / 10 (Non-Shippable).
-*   **Lessons Learned (Negative):** Empty file syndrome, "Headless" gap.
-*   **Lessons Learned (Positive):** Playwright stealth worked exceptionally well.
-*   **Action Plan:** Transitioned to iDesign: False (Tactical/Flat) to simplify logic and merge arbitrage artifacts.
 
 ---
 

@@ -1,60 +1,82 @@
-# McElyea Orket Examples (v0.3.5)
+# McElyea Orket Examples (v0.3.6)
 
-Professional configuration examples for the refactored Orket engine.
+Professional configuration examples for the refactored and secured Orket engine.
 
 ---
 
-## 1. The McElyea Organization Card
+## 1. Environment Secrets (`.env`)
 
-The root source of truth for all projects.
+Secrets are managed outside of the Card system for sovereignty.
+
+```env
+DASHBOARD_PASSWORD=your-secure-password
+DASHBOARD_SECRET_KEY=your-secret-key
+SD_MODEL=runwayml/stable-diffusion-v1-5
+```
+
+---
+
+## 2. SRP-Compliant Issue (`IssueConfig`)
+
+Issues now separate operational requirements from metrics and verification.
 
 ```json
 {
-    "name": "McElyea",
-    "ethos": "Excellence through iteration...",
-    "branding": { "design_dos": ["Use clear labels"] },
-    "architecture": { "idesign_threshold": 7 }
+    "id": "ISSUE-1234",
+    "summary": "Implement price scraper",
+    "seat": "coder",
+    "requirements": "Create a robust scraper for target retail sites.",
+    "verification": {
+        "fixture_path": "tests/fixtures/scraper_test.py",
+        "scenarios": [
+            {
+                "description": "Scrape valid URL",
+                "input_data": {"url": "https://example.com"},
+                "expected_output": {"price": 10.99}
+            }
+        ]
+    },
+    "metrics": {
+        "shippability_threshold": 8.0
+    }
 }
 ```
 
 ---
 
-## 2. An Atomic Role (`lead_architect.json`)
+## 3. Atomic Role (`roles/coder.json`)
 
-Roles are now decoupled Cards (type: `utility`).
+Roles define the intent and toolset for a specific seat.
 
 ```json
 {
-    "id": "ARCH-ROLE",
-    "name": "lead_architect",
+    "id": "CODER-ROLE",
+    "summary": "senior_developer",
     "type": "utility",
-    "description": "System design lead",
-    "prompt": "You are the Architect. Focus on volatility decomposition.",
-    "tools": ["read_file", "list_directory"]
+    "description": "Expert Python developer specializing in async I/O.",
+    "prompt": "You are a Senior Developer. Write clean, PEP8 compliant code.",
+    "tools": ["read_file", "write_file", "list_directory"]
 }
 ```
 
 ---
 
-## 3. The Model Selector (Precedence)
+## 4. The Unified Configuration Priority
 
-How Orket chooses an LLM for a turn:
-1.  `--model` (CLI Flag)
-2.  `model_overrides` (Epic JSON)
-3.  `preferred_coder` (User Settings)
-4.  `default_llm` (Organization JSON)
-5.  Ollama Fallbacks
+How Orket loads assets in v0.3.6:
+1.  **Unified Override:** `config/epics/my_epic.json`
+2.  **Department Asset:** `model/marketing/epics/my_epic.json`
+3.  **Core Fallback:** `model/core/epics/my_epic.json`
 
 ---
 
-## 4. Using Inter-Agent Notes
+## 5. Model Provider with Retry
 
-Agents can now "talk" across turns without global bloat.
+The engine handles transient failures automatically.
 
-```json
-{
-  "thought": "I need to let the coder know about the DB path.",
-  "notes": ["BROADCAST: SQLite path is workspace/default/prices.db"],
-  "tool_calls": [...]
-}
+```python
+# Internal logic example
+provider = LocalModelProvider(model="qwen2.5-coder", timeout=60)
+# complete() will retry 3x with exponential backoff on timeout/connection errors.
+response = await provider.complete(messages)
 ```
