@@ -23,10 +23,10 @@ Building on the mechanical enforcement model, v0.3.8 adds diagnostic intelligenc
 *   **Unified Configuration:** Established the `config/` directory with prioritized overrides.
 *   **Atomic Card Identity:** Ensure every Rock, Epic, and Issue has a stable, non-volatile ID.
 
-### Phase 2: Mechanical Enforcement (Current)
-*   **Hard State Machines:** Implement Python-level guards for transitions (e.g., No `DONE` without Verifier sign-off).
-*   **Tool Gating:** Intercept `write_file` and state changes at the engine level to enforce organizational invariants.
-*   **Integration Testing:** Establish a robust suite of core flow tests (Prompt Compilation, Tool Execution).
+### Phase 2: Mechanical Enforcement (DONE - v0.3.8)
+*   ✅ **Hard State Machines:** Implemented WaitReason enforcement, multi-role validation, priority-based scheduling.
+*   ✅ **Tool Gating:** Centralized pre-execution validation in ToolGate service. Enforces workspace boundaries, state transitions, destructive operation protection.
+*   ✅ **Integration Testing:** 49 total tests across 9 test files. Golden flow validation for end-to-end orchestration.
 
 ### Phase 3: Elegant Failure & Recovery
 *   **The Elegant Stop:** When an invariant is broken, the engine terminates with a clear "Policy Violation" report.
