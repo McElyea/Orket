@@ -1,0 +1,361 @@
+"""
+Turn Executor - The Reconstruction
+
+Single Responsibility: Execute one agent turn with proper async I/O.
+
+This replaces the 200-line god method in orket.py with a clean,
+testable, async-native implementation.
+
+Design Principles:
+- Single Responsibility: One turn, one purpose
+- Dependency Injection: All dependencies passed in
+- Async Native: No blocking I/O
+- Fail Fast: Specific exceptions, no bare except
+"""
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Optional, List, Dict, Any
+from datetime import datetime, UTC
+from pathlib import Path
+
+from orket.schema import IssueConfig, CardStatus, RoleConfig
+from orket.domain.state_machine import StateMachine, StateMachineError, WaitReason
+from orket.domain.execution import ExecutionTurn, ToolCall
+from orket.logging import log_event
+
+
+@dataclass
+class TurnResult:
+    """Result of executing a single turn."""
+    success: bool
+    turn: Optional[ExecutionTurn] = None
+    error: Optional[str] = None
+    should_retry: bool = False
+    violations: List[str] = None
+
+    @classmethod
+    def succeeded(cls, turn: ExecutionTurn) -> TurnResult:
+        """Turn executed successfully."""
+        return cls(success=True, turn=turn)
+
+    @classmethod
+    def failed(cls, error: str, should_retry: bool = False) -> TurnResult:
+        """Turn failed with error."""
+        return cls(success=False, error=error, should_retry=should_retry)
+
+    @classmethod
+    def governance_violation(cls, violations: List[str]) -> TurnResult:
+        """Turn violated governance rules."""
+        return cls(
+            success=False,
+            error=f"Governance violations: {violations}",
+            should_retry=True,
+            violations=violations
+        )
+
+
+class TurnExecutor:
+    """
+    Executes a single agent turn.
+
+    Responsibilities:
+    1. Load issue configuration
+    2. Validate state transitions
+    3. Execute agent
+    4. Validate tool calls
+    5. Persist results
+
+    Does NOT:
+    - Loop over multiple issues (that's the job of TractionLoop)
+    - Handle retries (that's the job of the caller)
+    - Manage sessions (that's the job of SessionManager)
+    """
+
+    def __init__(
+        self,
+        state_machine: StateMachine,
+        workspace: Path
+    ):
+        """
+        Initialize turn executor.
+
+        Args:
+            state_machine: State machine for validation
+            workspace: Workspace root for logging
+        """
+        self.state = state_machine
+        self.workspace = workspace
+
+    async def execute_turn(
+        self,
+        issue: IssueConfig,
+        role: RoleConfig,
+        model_client: Any,  # ModelClient interface
+        toolbox: Any,  # ToolBox interface
+        context: Dict[str, Any]
+    ) -> TurnResult:
+        """
+        Execute a single turn for an issue.
+
+        Args:
+            issue: Issue to work on
+            role: Role executing the turn
+            model_client: LLM client (async)
+            toolbox: Tool execution environment
+            context: Additional context (session_id, etc.)
+
+        Returns:
+            TurnResult with success/failure and turn data
+
+        Raises:
+            StateMachineError: If state transition is invalid
+            ValueError: If required context is missing
+        """
+        issue_id = issue.id
+        role_name = role.name
+
+        try:
+            # 1. Validate we can execute this turn
+            self._validate_preconditions(issue, role, context)
+
+            # 2. Prepare the prompt
+            messages = await self._prepare_messages(issue, role, context)
+
+            # 3. Call LLM (async)
+            log_event(
+                "turn_start",
+                {"issue_id": issue_id, "role": role_name},
+                self.workspace
+            )
+
+            response = await model_client.complete(messages)
+
+            # 4. Parse response into ExecutionTurn
+            turn = self._parse_response(
+                response=response,
+                issue_id=issue_id,
+                role_name=role_name
+            )
+
+            # 5. Execute tool calls (if any)
+            if turn.tool_calls:
+                await self._execute_tools(turn, toolbox, context)
+
+            # 6. Log success
+            log_event(
+                "turn_complete",
+                {
+                    "issue_id": issue_id,
+                    "role": role_name,
+                    "tool_calls": len(turn.tool_calls),
+                    "tokens": turn.tokens_used
+                },
+                self.workspace
+            )
+
+            return TurnResult.succeeded(turn)
+
+        except StateMachineError as e:
+            # State transition violation - don't retry
+            log_event(
+                "turn_failed",
+                {"issue_id": issue_id, "error": str(e), "type": "state_violation"},
+                self.workspace
+            )
+            return TurnResult.failed(f"State violation: {e}", should_retry=False)
+
+        except ToolValidationError as e:
+            # Tool call violation - can retry
+            log_event(
+                "turn_failed",
+                {"issue_id": issue_id, "error": str(e), "type": "tool_violation"},
+                self.workspace
+            )
+            return TurnResult.governance_violation(e.violations)
+
+        except ModelTimeoutError as e:
+            # Transient error - should retry
+            log_event(
+                "turn_failed",
+                {"issue_id": issue_id, "error": str(e), "type": "timeout"},
+                self.workspace
+            )
+            return TurnResult.failed(str(e), should_retry=True)
+
+        except Exception as e:
+            # Unexpected error - log with traceback and don't retry
+            import traceback
+            log_event(
+                "turn_failed",
+                {
+                    "issue_id": issue_id,
+                    "error": str(e),
+                    "type": type(e).__name__,
+                    "traceback": traceback.format_exc()
+                },
+                self.workspace
+            )
+            return TurnResult.failed(f"Unexpected error: {e}", should_retry=False)
+
+    def _validate_preconditions(
+        self,
+        issue: IssueConfig,
+        role: RoleConfig,
+        context: Dict[str, Any]
+    ) -> None:
+        """
+        Validate that we can execute this turn.
+
+        Raises:
+            ValueError: If preconditions not met
+            StateMachineError: If state transition invalid
+        """
+        # Required context
+        if "session_id" not in context:
+            raise ValueError("session_id required in context")
+
+        # Check role can execute this issue type
+        if issue.type not in role.capabilities.get("issue_types", ["story"]):
+            raise ValueError(
+                f"Role {role.name} cannot handle {issue.type} issues"
+            )
+
+        # Validate current status allows execution
+        current_status = CardStatus(issue.status)
+        if current_status not in [CardStatus.READY, CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW]:
+            raise StateMachineError(
+                f"Issue {issue.id} in status {current_status} cannot be executed"
+            )
+
+    async def _prepare_messages(
+        self,
+        issue: IssueConfig,
+        role: RoleConfig,
+        context: Dict[str, Any]
+    ) -> List[Dict[str, str]]:
+        """
+        Prepare message history for LLM.
+
+        Args:
+            issue: Issue configuration
+            role: Role configuration
+            context: Execution context
+
+        Returns:
+            List of messages in LLM format
+        """
+        messages = []
+
+        # System message with role persona
+        messages.append({
+            "role": "system",
+            "content": role.persona
+        })
+
+        # Add issue context
+        messages.append({
+            "role": "user",
+            "content": f"Issue {issue.id}: {issue.summary}\n\nType: {issue.type}\nPriority: {issue.priority}"
+        })
+
+        # Add any history (from context)
+        if "history" in context:
+            messages.extend(context["history"])
+
+        return messages
+
+    def _parse_response(
+        self,
+        response: Dict[str, Any],
+        issue_id: str,
+        role_name: str
+    ) -> ExecutionTurn:
+        """
+        Parse LLM response into ExecutionTurn.
+
+        Args:
+            response: LLM response
+            issue_id: Issue ID
+            role_name: Role name
+
+        Returns:
+            ExecutionTurn with parsed data
+        """
+        content = response.get("content", "")
+        tool_calls_raw = response.get("tool_calls", [])
+
+        # Parse tool calls
+        tool_calls = []
+        for tc in tool_calls_raw:
+            tool_calls.append(ToolCall(
+                tool=tc.get("name"),
+                args=tc.get("arguments", {}),
+                result=None,
+                error=None
+            ))
+
+        return ExecutionTurn(
+            role=role_name,
+            issue_id=issue_id,
+            thought=response.get("thought"),
+            content=content,
+            tool_calls=tool_calls,
+            tokens_used=response.get("tokens", 0),
+            timestamp=datetime.now(UTC),
+            raw=response
+        )
+
+    async def _execute_tools(
+        self,
+        turn: ExecutionTurn,
+        toolbox: Any,
+        context: Dict[str, Any]
+    ) -> None:
+        """
+        Execute all tool calls in a turn.
+
+        Args:
+            turn: Execution turn with tool calls
+            toolbox: Tool execution environment
+            context: Execution context
+
+        Raises:
+            ToolValidationError: If tool calls violate governance
+        """
+        violations = []
+
+        for tool_call in turn.tool_calls:
+            try:
+                # Execute tool (toolbox handles validation)
+                result = await toolbox.execute(
+                    tool_call.tool,
+                    tool_call.args,
+                    context
+                )
+
+                tool_call.result = result
+
+                if not result.get("ok", False):
+                    violations.append(
+                        f"Tool {tool_call.tool} failed: {result.get('error')}"
+                    )
+
+            except Exception as e:
+                tool_call.error = str(e)
+                violations.append(f"Tool {tool_call.tool} error: {e}")
+
+        if violations:
+            raise ToolValidationError(violations)
+
+
+class ToolValidationError(Exception):
+    """Tool call validation failed."""
+
+    def __init__(self, violations: List[str]):
+        self.violations = violations
+        super().__init__(f"Tool validation failed: {violations}")
+
+
+class ModelTimeoutError(Exception):
+    """Model request timed out."""
+    pass
