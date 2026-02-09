@@ -60,3 +60,11 @@ project_dumper_small.py
 project_dumper_small.txt
 **/project_dumper_small.py
 **/project_dumper_small.txt
+
+# Infrastructure (Gitea, MySQL, Sandboxes)
+infrastructure/gitea/
+infrastructure/mysql/
+infrastructure/sandboxes/
+*.pem
+*.key
+*.crt

@@ -1,0 +1,21 @@
+version: "3"
+
+networks:
+  vibe-rail:
+    external: false
+
+services:
+  gitea:
+    image: gitea/gitea:1.22
+    container_name: vibe-rail-gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    restart: unless-stopped
+    networks:
+      - vibe-rail
+    volumes:
+      - ./gitea:/data
+    ports:
+      - "3000:3000"
+      - "222:22"
