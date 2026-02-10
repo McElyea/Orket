@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Dict, Any, Optional
 from pathlib import Path
 import os
-import requests
+import httpx
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -48,6 +48,13 @@ class GiteaWebhookHandler:
             registry=self.sandbox_registry
         )
 
+        # Persistent HTTP client
+        self.client = httpx.AsyncClient(auth=self.auth, timeout=10.0)
+
+    async def close(self):
+        """Close the HTTP client."""
+        await self.client.aclose()
+
     async def handle_webhook(self, event_type: str, payload: Dict[str, Any]) -> Dict[str, str]:
         """
         Main webhook handler dispatcher.
@@ -61,11 +68,56 @@ class GiteaWebhookHandler:
         """
         if event_type == "pull_request_review":
             return await self._handle_pr_review(payload)
-        elif event_type == "pull_request" and payload.get("action") == "closed":
-            if payload["pull_request"].get("merged"):
-                return await self._handle_pr_merged(payload)
+        elif event_type == "pull_request":
+            action = payload.get("action")
+            if action in ["opened", "synchronized"]:
+                return await self._handle_pr_opened(payload)
+            elif action == "closed":
+                if payload["pull_request"].get("merged"):
+                    return await self._handle_pr_merged(payload)
 
         return {"status": "ignored", "message": f"Event type {event_type} not handled"}
+
+    async def _handle_pr_opened(self, payload: Dict[str, Any]) -> Dict[str, str]:
+        """
+        Handle PR opened or updated events.
+        Triggers the autonomous CODE_REVIEW process.
+        """
+        pr = payload["pull_request"]
+        repo = payload["repository"]
+        pr_number = pr["number"]
+        repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
+
+        log_event("pr_opened", {
+            "pr": pr_number,
+            "repo": repo_full_name,
+            "action": payload.get("action")
+        }, self.workspace)
+
+        # In a real environment, we'd map the PR to an Orket Issue
+        # For now, we'll try to find the issue ID from the PR title (e.g. "[ISSUE-123] ...")
+        import re
+        issue_match = re.search(r"ISSUE-[A-Z0-9]+", pr["title"])
+        issue_id = issue_match.group(0) if issue_match else None
+
+        if not issue_id:
+            # Fallback: Check if we have a mapping in our DB
+            # For this MVP, we'll assume the PR *is* the work for the current epic
+            return {"status": "ignored", "message": "No issue ID found in PR title"}
+
+        # Trigger the Orchestration Engine for a Code Review turn
+        from orket.orchestration.engine import OrchestrationEngine
+        engine = OrchestrationEngine(self.workspace)
+        
+        # We run the card, and the engine's traction loop will find it in READY or CODE_REVIEW
+        # We must ensure the card is in CODE_REVIEW state
+        await engine.cards.update_status(issue_id, "code_review")
+        
+        # Start execution
+        import asyncio
+        asyncio.create_task(engine.run_card(issue_id))
+
+        return {"status": "success", "message": f"PR #{pr_number} review triggered for {issue_id}"}
 
     async def _handle_pr_review(self, payload: Dict[str, Any]) -> Dict[str, str]:
         """
@@ -100,11 +152,11 @@ class GiteaWebhookHandler:
         # CHANGES_REQUESTED → Track cycles
         if review_state == "changes_requested":
             repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
-            cycles = self.db.increment_pr_cycle(repo_full_name, pr_number)
+            cycles = await self.db.increment_pr_cycle(repo_full_name, pr_number)
 
             # Store failure reason
             reason = review.get("body", "No reason provided")
-            self.db.add_failure_reason(repo_full_name, pr_number, reviewer, reason)
+            await self.db.add_failure_reason(repo_full_name, pr_number, reviewer, reason)
 
             # Cycle 3: Escalate to architect
             if cycles == 3:
@@ -130,16 +182,14 @@ class GiteaWebhookHandler:
         repo_name = repo["name"]
         url = f"{self.gitea_url}/api/v1/repos/{owner}/{repo_name}/pulls/{pr_number}/merge"
 
-        response = requests.post(
+        response = await self.client.post(
             url,
-            auth=self.auth,
             headers={"Content-Type": "application/json"},
             json={
                 "Do": "merge",
                 "MergeMessageField": f"Auto-merged PR #{pr_number} after approval",
                 "delete_branch_after_merge": True
-            },
-            timeout=10
+            }
         )
 
         if response.status_code == 200:
@@ -174,12 +224,10 @@ This PR has been rejected **3 times** by integrity_guard.
 
 **This is the last chance before auto-reject.**"""
 
-        requests.post(
+        await self.client.post(
             url,
-            auth=self.auth,
             headers={"Content-Type": "application/json"},
-            json={"body": comment},
-            timeout=10
+            json={"body": comment}
         )
 
         log_event("pr_escalated", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.workspace)
@@ -194,22 +242,18 @@ This PR has been rejected **3 times** by integrity_guard.
 
         # Close PR
         close_url = f"{self.gitea_url}/api/v1/repos/{owner}/{repo_name}/pulls/{pr_number}"
-        requests.patch(
+        await self.client.patch(
             close_url,
-            auth=self.auth,
             headers={"Content-Type": "application/json"},
-            json={"state": "closed"},
-            timeout=10
+            json={"state": "closed"}
         )
 
         # Add final comment
         comment_url = f"{self.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues/{pr_number}/comments"
-        requests.post(
+        await self.client.post(
             comment_url,
-            auth=self.auth,
             headers={"Content-Type": "application/json"},
             json={"body": "❌ **Auto-rejected** after 4 review cycles. Requirements Issue created."},
-            timeout=10
         )
 
         # Create Requirements Review Issue
@@ -218,7 +262,7 @@ This PR has been rejected **3 times** by integrity_guard.
         log_event("pr_rejected", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.workspace)
 
         # Mark PR cycle as rejected in database
-        self.db.close_pr_cycle(repo_full_name, pr_number, status="rejected")
+        await self.db.close_pr_cycle(repo_full_name, pr_number, status="rejected")
 
     async def _create_requirements_issue(self, repo: Dict, pr_number: int, repo_full_name: str) -> None:
         """
@@ -228,7 +272,7 @@ This PR has been rejected **3 times** by integrity_guard.
         repo_name = repo["name"]
         url = f"{self.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues"
 
-        failure_reasons = self.db.get_failure_reasons(repo_full_name, pr_number)
+        failure_reasons = await self.db.get_failure_reasons(repo_full_name, pr_number)
         reasons_text = "\n".join([
             f"**Cycle {r['cycle_number']}** ({r['created_at']}): {r['reason']}"
             for r in failure_reasons
@@ -258,16 +302,14 @@ Why did this fail even with guidance?
 - [ ] Assign to different agent/seat
 """
 
-        requests.post(
+        await self.client.post(
             url,
-            auth=self.auth,
             headers={"Content-Type": "application/json"},
             json={
                 "title": f"Requirements Review: PR #{pr_number} failed after 4 cycles",
                 "body": body,
                 "labels": ["requirements-review", "auto-rejected"]
-            },
-            timeout=10
+            }
         )
 
     async def _handle_pr_merged(self, payload: Dict[str, Any]) -> Dict[str, str]:
@@ -289,7 +331,7 @@ Why did this fail even with guidance?
         }, self.workspace)
 
         # Mark PR cycle as merged in database
-        self.db.close_pr_cycle(repo_full_name, pr_number, status="merged")
+        await self.db.close_pr_cycle(repo_full_name, pr_number, status="merged")
 
         # Trigger sandbox deployment
         await self._trigger_sandbox_deployment(owner, repo_name, pr)

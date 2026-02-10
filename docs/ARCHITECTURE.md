@@ -1,4 +1,4 @@
-# Orket Architecture: Volatility Decomposition (v0.3.8)
+# Orket Architecture: Volatility Decomposition (v0.3.9)
 
 This document defines the structural and philosophical foundations of the Vibe Rail Orket engine.
 
@@ -67,7 +67,7 @@ The state machine now enforces explicit diagnostic tracking:
     *   `REVIEW` — Waiting for human review/approval
     *   `INPUT` — Waiting for human input/clarification
 
-*   **Multi-Role Validation:** Agents can now hold multiple roles, allowing flexible transitions while maintaining integrity gates (e.g., only `integrity_guard` can finalize issues to `DONE`).
+*   **Multi-Role Validation:** System actors can now hold multiple roles, allowing flexible transitions while maintaining integrity gates (e.g., only `integrity_guard` can finalize issues to `DONE`).
 
 *   **Bottleneck Detection:** Configurable thresholds (`config/bottleneck_thresholds.json`) distinguish normal operation from chronic bottlenecks, preventing alert fatigue.
 

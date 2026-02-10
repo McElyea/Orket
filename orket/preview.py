@@ -22,7 +22,9 @@ class PreviewBuilder:
             from orket.schema import OrganizationConfig
             try:
                 self.org = OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
-            except (ValueError, FileNotFoundError): pass
+            except (ValueError, FileNotFoundError) as e:
+                print(f"  [PREVIEW] Info: Could not load organization config: {e}")
+                pass
 
     async def _get_compiled_prompt(self, seat_name: str, issue_summary: str, epic: EpicConfig, team: TeamConfig, department: str) -> str:
         loader = ConfigLoader(self.model_root, department)
@@ -35,7 +37,9 @@ class PreviewBuilder:
         for r_name in seat.roles:
             try:
                 role_objects.append(loader.load_asset("roles", r_name, RoleConfig))
-            except (FileNotFoundError, ValueError): pass
+            except (FileNotFoundError, ValueError, CardNotFound) as e:
+                print(f"  [PREVIEW] Info: Could not load role {r_name}: {e}")
+                pass
 
         # 2. Select Model
         from orket.orchestration.models import ModelSelector

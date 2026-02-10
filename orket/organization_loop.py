@@ -54,7 +54,10 @@ class OrganizationLoop:
                             "priority": issue.priority,
                             "dept": dept
                         })
-                except: continue
+                except (FileNotFoundError, ValueError, StopIteration) as e:
+                    # Log skip for visibility but continue scan
+                    print(f"  [ORG_LOOP] WARN: Skipping epic {epic_name} in {dept}: {e}")
+                    continue
         
         if not candidates: return None
             

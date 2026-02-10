@@ -1,17 +1,19 @@
 """
-SQLite Database for Webhook Event Tracking
+Async SQLite Database for Webhook Event Tracking - The Reconstruction
 
 Persists:
 - PR review cycles (prevents in-memory loss on restart)
 - Review failure reasons
 - Webhook event history
+
+Reconstructed to use aiosqlite for true async I/O.
 """
 from __future__ import annotations
-import sqlite3
+import aiosqlite
+import json
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from datetime import datetime
-from contextlib import contextmanager
+from datetime import datetime, UTC
 
 from orket.logging import log_event
 
@@ -19,46 +21,28 @@ from orket.logging import log_event
 class WebhookDatabase:
     """
     Data Access Layer for webhook event persistence.
-    Uses SQLite for review cycle tracking and event history.
+    Uses aiosqlite for non-blocking review cycle tracking.
     """
 
     def __init__(self, db_path: Optional[Path] = None):
         """
         Initialize database connection.
-
-        Args:
-            db_path: Path to SQLite database file (default: .orket/webhook.db)
         """
         if db_path is None:
             db_path = Path.cwd() / ".orket" / "webhook.db"
 
         self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._initialized = False
 
-        # Initialize schema
-        self._init_schema()
+    async def _ensure_initialized(self):
+        """Ensure database schema exists."""
+        if self._initialized:
+            return
 
-    @contextmanager
-    def _get_connection(self):
-        """Context manager for database connections."""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row  # Return rows as dicts
-        try:
-            yield conn
-            conn.commit()
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            conn.close()
-
-    def _init_schema(self):
-        """Create database tables if they don't exist."""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-
+        async with aiosqlite.connect(self.db_path) as conn:
             # PR review cycles table
-            cursor.execute("""
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS pr_review_cycles (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     pr_key TEXT UNIQUE NOT NULL,
@@ -73,7 +57,7 @@ class WebhookDatabase:
             """)
 
             # Review failure reasons table
-            cursor.execute("""
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS review_failures (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     pr_key TEXT NOT NULL,
@@ -86,7 +70,7 @@ class WebhookDatabase:
             """)
 
             # Webhook event log
-            cursor.execute("""
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS webhook_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_type TEXT NOT NULL,
@@ -97,53 +81,53 @@ class WebhookDatabase:
                 )
             """)
 
+            # Bug Fix Phases table
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS bug_fix_phases (
+                    rock_id TEXT PRIMARY KEY,
+                    data_json TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             # Create indices
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pr_key ON pr_review_cycles(pr_key)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_repo_pr ON pr_review_cycles(repo_full_name, pr_number)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_failure_pr_key ON review_failures(pr_key)")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_pr_key ON pr_review_cycles(pr_key)")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_repo_pr ON pr_review_cycles(repo_full_name, pr_number)")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_failure_pr_key ON review_failures(pr_key)")
 
-            log_event("webhook_db", "Database schema initialized", "info")
+            await conn.commit()
+            log_event("webhook_db", "Async database schema initialized", "info")
 
-    def get_pr_cycle_count(self, repo_full_name: str, pr_number: int) -> int:
+        self._initialized = True
+
+    async def get_pr_cycle_count(self, repo_full_name: str, pr_number: int) -> int:
         """
         Get current review cycle count for a PR.
-
-        Args:
-            repo_full_name: Repository full name (e.g., "orket/test-project")
-            pr_number: PR number
-
-        Returns:
-            Current cycle count (0 if PR not found)
         """
+        await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
                 "SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?",
                 (pr_key,)
             )
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             return row["cycle_count"] if row else 0
 
-    def increment_pr_cycle(self, repo_full_name: str, pr_number: int) -> int:
+    async def increment_pr_cycle(self, repo_full_name: str, pr_number: int) -> int:
         """
         Increment review cycle count for a PR.
-
-        Args:
-            repo_full_name: Repository full name
-            pr_number: PR number
-
-        Returns:
-            New cycle count
         """
+        await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
             # Insert or update
-            cursor.execute("""
+            await conn.execute("""
                 INSERT INTO pr_review_cycles (pr_key, repo_full_name, pr_number, cycle_count, updated_at)
                 VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
                 ON CONFLICT(pr_key) DO UPDATE SET
@@ -152,113 +136,115 @@ class WebhookDatabase:
             """, (pr_key, repo_full_name, pr_number))
 
             # Get new count
-            cursor.execute("SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?", (pr_key,))
-            row = cursor.fetchone()
+            cursor = await conn.execute("SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?", (pr_key,))
+            row = await cursor.fetchone()
+            await conn.commit()
 
             new_count = row["cycle_count"]
             log_event("webhook_db", f"Incremented PR cycle: {pr_key} -> {new_count}", "info")
             return new_count
 
-    def add_failure_reason(self, repo_full_name: str, pr_number: int, reviewer: str, reason: str):
+    async def add_failure_reason(self, repo_full_name: str, pr_number: int, reviewer: str, reason: str):
         """
         Record a review failure reason.
-
-        Args:
-            repo_full_name: Repository full name
-            pr_number: PR number
-            reviewer: Reviewer username
-            reason: Failure reason/comment
         """
+        await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
-        cycle_count = self.get_pr_cycle_count(repo_full_name, pr_number)
+        cycle_count = await self.get_pr_cycle_count(repo_full_name, pr_number)
 
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        async with aiosqlite.connect(self.db_path) as conn:
+            await conn.execute("""
                 INSERT INTO review_failures (pr_key, cycle_number, reviewer, reason)
                 VALUES (?, ?, ?, ?)
             """, (pr_key, cycle_count, reviewer, reason))
-
+            await conn.commit()
             log_event("webhook_db", f"Recorded failure reason for {pr_key}", "info")
 
-    def get_failure_reasons(self, repo_full_name: str, pr_number: int) -> List[Dict[str, Any]]:
+    async def get_failure_reasons(self, repo_full_name: str, pr_number: int) -> List[Dict[str, Any]]:
         """
         Get all failure reasons for a PR.
-
-        Args:
-            repo_full_name: Repository full name
-            pr_number: PR number
-
-        Returns:
-            List of failure reason dicts
         """
+        await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
                 SELECT cycle_number, reviewer, reason, created_at
                 FROM review_failures
                 WHERE pr_key = ?
                 ORDER BY cycle_number ASC
             """, (pr_key,))
 
-            rows = cursor.fetchall()
+            rows = await cursor.fetchall()
             return [dict(row) for row in rows]
 
-    def close_pr_cycle(self, repo_full_name: str, pr_number: int, status: str = "closed"):
+    async def save_bug_fix_phase(self, phase: Any):
+        """Save a bug fix phase to the database."""
+        await self._ensure_initialized()
+        async with aiosqlite.connect(self.db_path) as conn:
+            await conn.execute("""
+                INSERT OR REPLACE INTO bug_fix_phases (rock_id, data_json, status, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            """, (phase.rock_id, phase.model_dump_json(), phase.status.value))
+            await conn.commit()
+
+    async def get_bug_fix_phase(self, rock_id: str) -> Optional[Any]:
+        """Retrieve a bug fix phase from the database."""
+        await self._ensure_initialized()
+        from orket.domain.bug_fix_phase import BugFixPhase
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT data_json FROM bug_fix_phases WHERE rock_id = ?",
+                (rock_id,)
+            )
+            row = await cursor.fetchone()
+            if row:
+                return BugFixPhase.model_validate_json(row["data_json"])
+            return None
+
+    async def close_pr_cycle(self, repo_full_name: str, pr_number: int, status: str = "closed"):
         """
         Mark a PR review cycle as closed.
-
-        Args:
-            repo_full_name: Repository full name
-            pr_number: PR number
-            status: Final status (closed, merged, rejected)
         """
+        await self._ensure_initialized()
         pr_key = f"{repo_full_name}#{pr_number}"
 
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        async with aiosqlite.connect(self.db_path) as conn:
+            await conn.execute("""
                 UPDATE pr_review_cycles
                 SET status = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE pr_key = ?
             """, (status, pr_key))
-
+            await conn.commit()
             log_event("webhook_db", f"Closed PR cycle: {pr_key} ({status})", "info")
 
-    def log_webhook_event(self, event_type: str, pr_key: Optional[str], payload: str, result: str):
+    async def log_webhook_event(self, event_type: str, pr_key: Optional[str], payload: str, result: str):
         """
         Log a webhook event for debugging/auditing.
-
-        Args:
-            event_type: Type of webhook event
-            pr_key: PR key (if applicable)
-            payload: JSON payload (as string)
-            result: Result of handling (success/error)
         """
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        await self._ensure_initialized()
+        async with aiosqlite.connect(self.db_path) as conn:
+            await conn.execute("""
                 INSERT INTO webhook_events (event_type, pr_key, payload, result)
                 VALUES (?, ?, ?, ?)
             """, (event_type, pr_key, payload, result))
+            await conn.commit()
 
-    def get_active_prs(self) -> List[Dict[str, Any]]:
+    async def get_active_prs(self) -> List[Dict[str, Any]]:
         """
         Get all active PR review cycles.
-
-        Returns:
-            List of active PR dicts
         """
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        await self._ensure_initialized()
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute("""
                 SELECT pr_key, repo_full_name, pr_number, cycle_count, created_at, updated_at
                 FROM pr_review_cycles
                 WHERE status = 'active'
                 ORDER BY updated_at DESC
             """)
 
-            rows = cursor.fetchall()
+            rows = await cursor.fetchall()
             return [dict(row) for row in rows]

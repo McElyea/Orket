@@ -60,7 +60,8 @@ def get_vram_usage() -> float:
         for line in res.stdout.strip().splitlines():
             total_used += int(line)
         return total_used / 1024.0
-    except: return 0.0
+    except (subprocess.CalledProcessError, OSError, ValueError):
+        return 0.0
 
 class ToolTier:
     """Definitions for Hardware Requirements."""

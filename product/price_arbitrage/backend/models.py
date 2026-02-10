@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSO
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import datetime
+from datetime import UTC
 
 Base = declarative_base()
 
@@ -17,7 +18,7 @@ class Target(Base):
     market_baseline = Column(Float, nullable=True) # Manually set or locked from first poll
     threshold_percent = Column(Float, default=20.0) # e.g. 20%
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     last_polled_at = Column(DateTime, nullable=True)
     
     history = relationship("PriceHistory", back_populates="target")
@@ -27,7 +28,7 @@ class PriceHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     target_id = Column(Integer, ForeignKey("targets.id"))
     price = Column(Float)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     raw_value = Column(String) # Original string before cleaning
     
     target = relationship("Target", back_populates="history")

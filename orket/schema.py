@@ -23,6 +23,7 @@ class SkillConfig(BaseModel):
     responsibilities: List[str]
     idesign_constraints: Optional[List[str]] = Field(default_factory=list)
     tools: List[str] = Field(default_factory=list)
+    capabilities: Dict[str, Any] = Field(default_factory=dict)
 
 class DialectConfig(BaseModel):
     model_family: str
@@ -116,9 +117,9 @@ class VerificationScenario(BaseModel) :
 
 class VerificationResult(BaseModel):
     timestamp: str
-    total_scenarios: int
-    passed: int
-    failed: int
+    total_scenarios: int = 0
+    passed: int = 0
+    failed: int = 0
     logs: List[str] = Field(default_factory=list)
 
 class IssueVerification(BaseModel):
@@ -183,6 +184,7 @@ class RoleConfig(BaseCardConfig):
     prompt: Optional[str] = None
     tools: List[str] = Field(default_factory=list)
     policy: Dict[str, Any] = Field(default_factory=dict)
+    capabilities: Dict[str, Any] = Field(default_factory=dict)
 
 class SeatConfig(BaseModel):
     name: str

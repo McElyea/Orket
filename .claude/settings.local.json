@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python main.py:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python:*)",
+      "Bash(sqlite3:*)",
+      "Bash(pytest:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore\\(release\\): v0.3.8 ''The Diagnostic Intelligence'' - Enhanced state machine with WaitReason enforcement, priority-based scheduling \\(float priorities\\), and bottleneck detection. Introduced comprehensive testing suite with golden flow validation. Added iDesign validator service and improved multi-role agent support.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ndocs: consolidate version references to v0.3.8\n\n- Updated PROJECT.md to reference CHANGELOG.md for version history\n- Enhanced CHANGELOG.md with detailed v0.3.6 milestones from PROJECT.md\n- Updated SECURITY.md version reference to v0.3.8\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(grep:*)",
+      "Bash(docker-compose:*)",
+      "Bash(test:*)",
+      "Bash(echo:*)",
+      "Bash(git commit:*)",
+      "Bash(if [ -f app.ini ])",
+      "Bash(then grep -A 5 \"\\\\[repository\\\\]\" app.ini)",
+      "Bash(else echo \"app.ini not initialized yet\")",
+      "Bash(fi)",
+      "Bash(cloc:*)",
+      "Bash(git rm:*)"
+    ]
+  }
+}

@@ -11,6 +11,7 @@ from orket.schema import (
 from orket.infrastructure.sqlite_repositories import (
     SQLiteCardRepository, SQLiteSessionRepository, SQLiteSnapshotRepository
 )
+from orket.infrastructure.async_card_repository import AsyncCardRepository, CardRepositoryAdapter
 from orket.logging import log_event
 from orket.utils import sanitize_name
 
@@ -26,7 +27,9 @@ class OrchestrationEngine:
         self.config_root = config_root or Path(".").resolve()
         
         # Repositories (Accessors)
-        self.cards = SQLiteCardRepository(self.db_path)
+        self.async_cards = AsyncCardRepository(self.db_path)
+        self.cards = CardRepositoryAdapter(self.async_cards)
+        
         self.sessions = SQLiteSessionRepository(self.db_path)
         self.snapshots = SQLiteSnapshotRepository(self.db_path)
         
@@ -52,6 +55,19 @@ class OrchestrationEngine:
     def get_board(self) -> Dict[str, Any]:
         from orket.board import get_board_hierarchy
         return get_board_hierarchy(self.department)
+
+    async def get_sandboxes(self) -> List[Dict[str, Any]]:
+        """Returns list of active sandboxes."""
+        from orket.orket import ExecutionPipeline
+        pipeline = ExecutionPipeline(self.workspace_root, self.department, db_path=self.db_path, config_root=self.config_root)
+        registry = pipeline.sandbox_orchestrator.registry
+        return [s.model_dump() for s in registry.list_all()]
+
+    async def stop_sandbox(self, sandbox_id: str):
+        """Stops and deletes a sandbox."""
+        from orket.orket import ExecutionPipeline
+        pipeline = ExecutionPipeline(self.workspace_root, self.department, db_path=self.db_path, config_root=self.config_root)
+        await pipeline.sandbox_orchestrator.delete_sandbox(sandbox_id)
 
     def halt_session(self, session_id: str):
         # Implementation of halt logic

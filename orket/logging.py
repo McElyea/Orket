@@ -1,8 +1,30 @@
 import json
 import os
-from datetime import datetime
+import logging
+import logging.handlers
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict, List, Callable
+
+# Initialize system logger
+_logger = logging.getLogger("orket")
+_logger.setLevel(logging.INFO)
+
+def setup_logging(workspace: Path):
+    """Configures rotating file handlers for the workspace."""
+    log_file = workspace / "orket.log"
+    workspace.mkdir(parents=True, exist_ok=True)
+    
+    # Rotating handler: 10MB per file, keep 5 backups
+    handler = logging.handlers.RotatingFileHandler(
+        log_file, maxBytes=10*1024*1024, backupCount=5, encoding="utf-8"
+    )
+    # Structured JSON format for machine parsing
+    formatter = logging.Formatter('%(message)s')
+    handler.setFormatter(formatter)
+    
+    if not any(isinstance(h, logging.handlers.RotatingFileHandler) and h.baseFilename == str(log_file.resolve()) for h in _logger.handlers):
+        _logger.addHandler(handler)
 
 # Global list of event subscribers (e.g. for WebSockets)
 _subscribers: List[Callable[[Dict[str, Any]], None]] = []
@@ -33,40 +55,26 @@ def _log_path(workspace: Path, role: str = None) -> Path:
 
 def log_event(event: str, data: Dict[str, Any], workspace: Path, role: str = None) -> None:
     record = {
-        "timestamp": datetime.now().isoformat() + "Z",
-        "role": role or data.get("role"), 
+        "timestamp": datetime.now(UTC).isoformat(),
+        "role": role or data.get("role") or "system", 
         "event": event,
         "data": data,
     }
     
-    # 1. Write to consolidated root log (Source of Truth for UI)
-    root_path = Path("workspace/default/orket.log")
-    # Skip root logging if we are in a test environment or if it doesn't exist
-    if not any("pytest" in arg for arg in os.sys.argv):
-        root_path.parent.mkdir(parents=True, exist_ok=True)
-        with root_path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-    # 2. Write to local workspace log
-    main_path = workspace / "orket.log"
-    if main_path != root_path:
-        main_path.parent.mkdir(parents=True, exist_ok=True)
-        with main_path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        
-    # 3. Write to agent-specific log if role is known
-    current_role = record["role"]
-    if current_role:
-        agent_path = _log_path(workspace, current_role)
-        with agent_path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    # 1. Ensure logging is set up for this workspace
+    setup_logging(workspace)
+    
+    # 2. Emit JSON record
+    _logger.info(json.dumps(record, ensure_ascii=False))
 
     # 3. Notify subscribers (for WebSockets)
     for subscriber in _subscribers:
         try:
             subscriber(record)
-        except Exception:
-            pass  # Prevent one bad subscriber from breaking the engine
+        except Exception as e:
+            # Print to stderr but don't crash
+            print(f"  [LOGGING] Subscriber failed: {e}")
+            pass
 
 
 def log_model_selected(role: str, model: str, temperature: float, seed, epic: str, workspace: Path) -> None:

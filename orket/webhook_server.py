@@ -24,7 +24,7 @@ load_dotenv()
 app = FastAPI(
     title="Orket Webhook Server",
     description="Handles webhooks from Gitea for PR review automation",
-    version="0.3.8"
+    version="0.3.9"
 )
 
 # Initialize webhook handler
@@ -67,7 +67,7 @@ async def root():
     return {
         "service": "Orket Webhook Server",
         "status": "running",
-        "version": "0.3.8"
+        "version": "0.3.9"
     }
 
 

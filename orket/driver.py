@@ -125,11 +125,18 @@ Example for turn_directive:
             text = response.content
             start = text.find('{')
             end = text.rfind('}')
+            if start == -1 or end == -1:
+                return f"Driver failed to find JSON in response: {text[:100]}..."
+                
             plan = json.loads(text[start:end+1])
-            
             return await self.execute_plan(plan)
+        except json.JSONDecodeError as e:
+            return f"Driver failed to parse JSON: {str(e)}"
         except Exception as e:
-            return f"Driver failed to process request: {str(e)}"
+            # Fallback for unexpected logical errors, but still better than a bare except
+            import traceback
+            print(f"ERROR: Driver process failed: {e}\n{traceback.format_exc()}")
+            return f"Driver failed to process request due to internal error: {str(e)}"
 
     async def execute_plan(self, plan: Dict[str, Any]) -> str:
         action = plan.get("action")

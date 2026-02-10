@@ -92,7 +92,8 @@ class TurnExecutor:
         role: RoleConfig,
         model_client: Any,  # ModelClient interface
         toolbox: Any,  # ToolBox interface
-        context: Dict[str, Any]
+        context: Dict[str, Any],
+        system_prompt: Optional[str] = None
     ) -> TurnResult:
         """
         Execute a single turn for an issue.
@@ -103,6 +104,7 @@ class TurnExecutor:
             model_client: LLM client (async)
             toolbox: Tool execution environment
             context: Additional context (session_id, etc.)
+            system_prompt: Optional system prompt override
 
         Returns:
             TurnResult with success/failure and turn data
@@ -119,7 +121,7 @@ class TurnExecutor:
             self._validate_preconditions(issue, role, context)
 
             # 2. Prepare the prompt
-            messages = await self._prepare_messages(issue, role, context)
+            messages = await self._prepare_messages(issue, role, context, system_prompt)
 
             # 3. Call LLM (async)
             log_event(
@@ -215,9 +217,14 @@ class TurnExecutor:
             raise ValueError("session_id required in context")
 
         # Check role can execute this issue type
-        if issue.type not in role.capabilities.get("issue_types", ["story"]):
+        allowed_types = role.capabilities.get("issue_types")
+        if allowed_types is None:
+            allowed_types = ["issue", "story", "bug", "task"]
+            
+        current_type = issue.type.value if hasattr(issue.type, "value") else str(issue.type)
+        if current_type not in allowed_types:
             raise ValueError(
-                f"Role {role.name} cannot handle {issue.type} issues"
+                f"Role {role.name} cannot handle {current_type} issues (Allowed: {allowed_types})"
             )
 
         # Validate current status allows execution
@@ -231,7 +238,8 @@ class TurnExecutor:
         self,
         issue: IssueConfig,
         role: RoleConfig,
-        context: Dict[str, Any]
+        context: Dict[str, Any],
+        system_prompt: Optional[str] = None
     ) -> List[Dict[str, str]]:
         """
         Prepare message history for LLM.
@@ -240,6 +248,7 @@ class TurnExecutor:
             issue: Issue configuration
             role: Role configuration
             context: Execution context
+            system_prompt: Optional system prompt override
 
         Returns:
             List of messages in LLM format
@@ -249,13 +258,13 @@ class TurnExecutor:
         # System message with role persona
         messages.append({
             "role": "system",
-            "content": role.persona
+            "content": system_prompt or role.prompt or role.description
         })
 
         # Add issue context
         messages.append({
             "role": "user",
-            "content": f"Issue {issue.id}: {issue.summary}\n\nType: {issue.type}\nPriority: {issue.priority}"
+            "content": f"Issue {issue.id}: {issue.name}\n\nType: {issue.type}\nPriority: {issue.priority}"
         })
 
         # Add any history (from context)
@@ -266,7 +275,7 @@ class TurnExecutor:
 
     def _parse_response(
         self,
-        response: Dict[str, Any],
+        response: Any, # Can be ModelResponse or dict
         issue_id: str,
         role_name: str
     ) -> ExecutionTurn:
@@ -281,15 +290,19 @@ class TurnExecutor:
         Returns:
             ExecutionTurn with parsed data
         """
-        content = response.get("content", "")
-        tool_calls_raw = response.get("tool_calls", [])
-
-        # Parse tool calls
+        from orket.services.tool_parser import ToolParser
+        
+        content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
+        raw_data = getattr(response, "raw", {}) if not isinstance(response, dict) else response
+        
+        # Parse tool calls using the standardized ToolParser
+        parsed_calls = ToolParser.parse(content)
+        
         tool_calls = []
-        for tc in tool_calls_raw:
+        for pc in parsed_calls:
             tool_calls.append(ToolCall(
-                tool=tc.get("name"),
-                args=tc.get("arguments", {}),
+                tool=pc.get("tool"),
+                args=pc.get("args", {}),
                 result=None,
                 error=None
             ))
@@ -297,12 +310,12 @@ class TurnExecutor:
         return ExecutionTurn(
             role=role_name,
             issue_id=issue_id,
-            thought=response.get("thought"),
+            thought=None, # Thought extraction could be added here if needed
             content=content,
             tool_calls=tool_calls,
-            tokens_used=response.get("tokens", 0),
+            tokens_used=raw_data.get("total_tokens", 0),
             timestamp=datetime.now(UTC),
-            raw=response
+            raw=raw_data
         )
 
     async def _execute_tools(

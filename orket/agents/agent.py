@@ -38,8 +38,10 @@ class Agent:
     def _load_configs(self):
         from orket.orket import ConfigLoader
         loader = ConfigLoader(self.config_root, "core")
-        try: self.skill = loader.load_asset("roles", sanitize_name(self.name), SkillConfig)
-        except (FileNotFoundError, ValueError, CardNotFound): pass
+        try:
+            self.skill = loader.load_asset("roles", sanitize_name(self.name), SkillConfig)
+        except (FileNotFoundError, ValueError, CardNotFound) as e:
+            print(f"  [AGENT] Info: Could not load role asset for {self.name}: {e}")
 
         model_name = self.provider.model.lower()
         family = "generic"
@@ -48,8 +50,10 @@ class Agent:
         elif "phi" in model_name: family = "phi"
         elif "qwen" in model_name: family = "qwen"
             
-        try: self.dialect = loader.load_asset("dialects", family, DialectConfig)
-        except (FileNotFoundError, ValueError, CardNotFound): pass
+        try:
+            self.dialect = loader.load_asset("dialects", family, DialectConfig)
+        except (FileNotFoundError, ValueError, CardNotFound) as e:
+            print(f"  [AGENT] Info: Could not load dialect asset for family {family}: {e}")
 
     def get_compiled_prompt(self) -> str:
         """Returns the fully compiled system instructions for this agent."""

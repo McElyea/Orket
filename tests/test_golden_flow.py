@@ -24,9 +24,9 @@ class GoldenFlowDummyProvider(LocalModelProvider):
                 raw={"model": "dummy", "total_tokens": 50}
             )
         else:
-            # Developer turn: create file and move to review
+            # Developer turn: create file in secure directory and move to review
             return ModelResponse(
-                content='```json\n{"tool": "write_file", "args": {"path": "sanity.txt", "content": "Orket is Operational"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+                content='```json\n{"tool": "write_file", "args": {"path": "agent_output/sanity.txt", "content": "Orket is Operational"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
                 raw={"model": "dummy", "total_tokens": 100}
             )
 
@@ -43,6 +43,9 @@ async def test_golden_flow(tmp_path, monkeypatch):
     
     workspace = root / "workspace"
     workspace.mkdir()
+    (workspace / "agent_output").mkdir() # Required for secure write
+    (workspace / "verification").mkdir() # Required for RCE fix
+    
     db_path = str(root / "test_orket.db")
 
     # 2. Create mock assets
@@ -127,7 +130,7 @@ async def test_golden_flow(tmp_path, monkeypatch):
     await engine.run_card("test_epic")
 
     # 5. Assertions
-    sanity_file = workspace / "sanity.txt"
+    sanity_file = workspace / "agent_output" / "sanity.txt"
     assert sanity_file.exists()
     assert sanity_file.read_text() == "Orket is Operational"
 
@@ -145,6 +148,9 @@ async def test_session_resumption(tmp_path, monkeypatch):
     
     workspace = root / "workspace"
     workspace.mkdir()
+    (workspace / "agent_output").mkdir()
+    (workspace / "verification").mkdir()
+    
     db_path = str(root / "test_resume.db")
 
     (root / "config" / "organization.json").write_text(json.dumps({
@@ -158,8 +164,14 @@ async def test_session_resumption(tmp_path, monkeypatch):
             "model_family": d_name, "dsl_format": "JSON", "constraints": [], "hallucination_guard": "N"
         }))
 
-    (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({"id": "R", "summary": "lead_architect", "description": "D", "tools": ["update_issue_status"]}))
+    (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({
+        "id": "R", "summary": "lead_architect", "type": "utility", "description": "D", "tools": ["update_issue_status", "write_file"]
+    }))
+    (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({
+        "id": "VERI", "summary": "integrity_guard", "type": "utility", "description": "Test Verifier", "tools": ["update_issue_status", "read_file"]
+    }))
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({"name": "standard", "seats": {"lead_architect": {"name": "L", "roles": ["lead_architect"]}}}))
+        
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}))
 
     (root / "model" / "core" / "epics" / "resume_epic.json").write_text(json.dumps({

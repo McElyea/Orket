@@ -32,7 +32,9 @@ class StructuralReconciler:
                         data = json.loads(rf.read_text(encoding="utf-8"))
                         for e in data.get("epics", []):
                             linked_epics.add(e["epic"])
-                    except: continue
+                    except (json.JSONDecodeError, OSError, KeyError) as e:
+                        print(f"  [RECONCILER] WARN: Failed to parse rock {rf.name}: {e}")
+                        continue
 
         # Scan Epics for linked Issues
         for dept_dir in self.root_path.iterdir():
@@ -45,7 +47,9 @@ class StructuralReconciler:
                         for i in data.get("issues", []) or data.get("stories", []):
                             # Issues are usually embedded, but we track names to find standalone orphan files
                             linked_issues.add(i.get("id") or i.get("name") or i.get("summary"))
-                    except: continue
+                    except (json.JSONDecodeError, OSError, KeyError) as e:
+                        print(f"  [RECONCILER] WARN: Failed to parse rock {rf.name}: {e}")
+                        continue
 
         # 2. Adopt Orphaned Epics into 'Run the Business'
         self._adopt_epics(linked_epics)
@@ -101,7 +105,9 @@ class StructuralReconciler:
                             if "issues" not in ups_data: ups_data["issues"] = []
                             ups_data["issues"].append(issue_data)
                             dirty = True
-                        except: continue
+                        except (json.JSONDecodeError, OSError, KeyError) as e:
+                            print(f"  [RECONCILER] WARN: Failed to parse issue {isf.name}: {e}")
+                            continue
         
         if dirty:
             ups_path.write_text(json.dumps(ups_data, indent=4), encoding="utf-8")

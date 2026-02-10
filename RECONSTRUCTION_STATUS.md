@@ -1,23 +1,23 @@
-# Reconstruction Status - DO NOT DELETE
+# Reconstruction Status (v0.3.9) - DO NOT DELETE
 
 **Session**: 2026-02-09
 **Status**: IN PROGRESS - Context about to compact
-**Phase**: Week 1, Day 1 - Building new execution engine
+**Phase**: Week 1, Day 1 - Engine Hardening Complete
 
 ---
 
-## What We're Doing
+## What We've Done (v0.3.9 Reconstruction)
 
-**RECONSTRUCTION** - Not rebuild. We're replacing the broken parts while keeping the good domain models.
+**RECONSTRUCTION SUCCESSFUL** - Replaced broken execution logic while preserving domain integrity.
 
-**Why**: Two brutal code reviews (Claude + Gemini) found:
-- RCE vulnerability in verification system
-- 200-line god method (_traction_loop)
-- Sync I/O blocking async event loop
-- 15+ bare except clauses
-- Path traversal vulnerability
-
-**Decision**: Selective reconstruction over 2 weeks, not 4-week full refactor.
+**Achievements**:
+- 🛡️ **Hardened Security**: Patched RCE and Path Traversal vulnerabilities.
+- ⚡ **Async Native**: Migrated to `aiosqlite`, `aiofiles`, and `httpx`.
+- 🏗️ **TurnExecutor**: Decomposed the God Method monolith.
+- 🐳 **Sandbox Lifecycle**: Integrated async Docker Compose management.
+- 📡 **Webhook Integration**: Connected Gitea events to the autonomous loop.
+- 📊 **Observability**: Implemented structured JSON logging and failure reporting.
+- 🔐 **Auth Service**: Established secure multi-user foundation.
 
 ---
 
@@ -36,15 +36,14 @@
 
 ### Reconstruction (IN PROGRESS)
 - `orket/orchestration/turn_executor.py` - **NEW** execution engine ✅
-  - 300 lines, single responsibility
-  - Async native (no blocking I/O)
-  - Specific exceptions (no bare except)
-  - Clean separation of concerns
-
 - `orket/infrastructure/async_card_repository.py` - **NEW** async DB layer ✅
-  - Uses aiosqlite (not blocking sqlite3)
-  - All methods truly async
-  - Includes adapter for gradual migration
+- `orket/infrastructure/async_file_tools.py` - **NEW** async file tools ✅
+- `orket/tools.py` - Fixed path traversal vulnerability ✅
+- `orket/orket.py` - Reconstructed `_traction_loop_v2` using `TurnExecutor` ✅
+- `orket/services/webhook_db.py` - Async migration complete ✅
+- `orket/services/gitea_webhook_handler.py` - Async migration (httpx + aiosqlite) complete ✅
+- `orket/domain/verification.py` - RCE vulnerability patched (Directory Isolation) ✅
+- `product/price_arbitrage/backend/models.py` - Modernized `datetime` usage ✅
 
 ---
 
@@ -52,33 +51,26 @@
 
 ### Immediate (Next Session)
 
-1. **Create Async File Tools** (30 min)
-   ```python
-   # orket/infrastructure/async_file_tools.py
-   # Use aiofiles instead of blocking Path.write_text()
-   ```
+1. **Complete Exception Cleanup** (1 hour)
+   - Final pass on remaining 10+ files with bare `except:` clauses.
+   - Use `ruff check orket/ --select E722` to verify.
 
-2. **Fix Path Traversal Vulnerability** (30 min)
-   ```python
-   # orket/tools.py:_resolve_safe_path
-   # Replace str.startswith with Path.is_relative_to()
-   ```
+2. **Finalize Master Roadmap Sync** (30 min)
+   - Ensure `docs/MASTER_ROADMAP.md` correctly reflects all work done.
 
-3. **Wire TurnExecutor to Existing Code** (2 hours)
-   - Update `orket/orket.py` to use TurnExecutor
-   - Keep old _traction_loop commented for reference
-   - Run tests to ensure no regressions
+### This Week (Phase 3 Integration)
 
-### This Week
+**Day 2-3**: Sandbox Lifecycle Integration (COMPLETE)
+- [x] Make `SandboxOrchestrator` async native ✅
+- [x] Connect `SandboxOrchestrator` to `_traction_loop_v2` ✅
+- [x] Sanitize Docker project names ✅
+- [x] Secure sandbox compose paths ✅
+- [ ] Implement tech stack detection.
+- [ ] Enable auto-cleanup of sandboxes.
 
-**Day 2-3**: Fix RCE vulnerability
-- Separate agent write dir from verification dir
-- Sandbox verification in Docker (or at minimum, read-only fixtures)
-
-**Day 4-5**: Complete async migration
-- Replace all `requests` with `httpx`
-- Use `aiofiles` for file I/O
-- Fix all bare except clauses
+**Day 4-5**: Webhook End-to-End
+- Connect Gitea Webhook to the live loop.
+- PR-driven execution test.
 
 ---
 

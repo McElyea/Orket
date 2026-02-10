@@ -123,6 +123,33 @@ async def get_run_metrics(session_id: str):
 @app.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str): return engine.sessions.get_session_issues(session_id)
 
+@app.get("/api/sessions/{session_id}")
+async def get_session_detail(session_id: str):
+    session = engine.sessions.get_session(session_id)
+    if not session: raise HTTPException(404)
+    return session
+
+@app.get("/api/sessions/{session_id}/snapshot")
+async def get_session_snapshot(session_id: str):
+    snapshot = engine.snapshots.get(session_id)
+    if not snapshot: raise HTTPException(404)
+    return snapshot
+
+@app.get("/api/sandboxes")
+async def list_sandboxes():
+    return await engine.get_sandboxes()
+
+@app.post("/api/sandboxes/{sandbox_id}/stop")
+async def stop_sandbox(sandbox_id: str):
+    await engine.stop_sandbox(sandbox_id)
+    return {"ok": True}
+
+@app.get("/api/sandboxes/{sandbox_id}/logs")
+async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
+    from orket.orket import ExecutionPipeline
+    pipeline = ExecutionPipeline(PROJECT_ROOT / "workspace" / "default")
+    return {"logs": pipeline.sandbox_orchestrator.get_logs(sandbox_id, service)}
+
 @app.get("/system/board")
 async def get_system_board(dept: str = "core"):
     return engine.get_board()

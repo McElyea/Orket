@@ -278,6 +278,28 @@ class AsyncCardRepository(CardRepository):
             )
             await conn.commit()
 
+    async def add_comment(self, issue_id: str, author: str, content: str) -> None:
+        """Add a comment to an issue."""
+        await self._ensure_initialized()
+        async with aiosqlite.connect(self.db_path) as conn:
+            await conn.execute(
+                "INSERT INTO comments (issue_id, author, content, created_at) VALUES (?, ?, ?, ?)",
+                (issue_id, author, content, datetime.now(UTC).isoformat())
+            )
+            await conn.commit()
+
+    async def get_comments(self, issue_id: str) -> List[Dict[str, Any]]:
+        """Get all comments for an issue."""
+        await self._ensure_initialized()
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(
+                "SELECT * FROM comments WHERE issue_id = ? ORDER BY created_at ASC",
+                (issue_id,)
+            )
+            rows = await cursor.fetchall()
+            return [dict(row) for row in rows]
+
     def _deserialize_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
         """
         Deserialize database row into card data.

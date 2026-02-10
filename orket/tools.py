@@ -16,12 +16,9 @@ class BaseTools:
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
         """
         Resolve and validate a file path against security policy.
-
-        Uses Path.is_relative_to() instead of string comparison to prevent:
-        - Windows case-insensitivity bypasses
-        - Symlink attacks
-        - UNC path bypasses
         """
+        from orket.domain.verification import AGENT_OUTPUT_DIR, VERIFICATION_DIR
+        
         p = Path(path_str)
         if not p.is_absolute():
             p = self.workspace_root / p
@@ -29,14 +26,21 @@ class BaseTools:
         resolved = p.resolve()
         workspace_resolved = self.workspace_root.resolve()
 
+        # Check if within workspace
         in_workspace = resolved.is_relative_to(workspace_resolved)
         in_references = any(resolved.is_relative_to(r.resolve()) for r in self.references)
 
         if not (in_workspace or in_references):
             raise PermissionError(f"Access to path '{path_str}' is denied by security policy.")
 
-        if write and not in_workspace:
-            raise PermissionError(f"Write access to path '{path_str}' is restricted to workspace.")
+        if write:
+            # Agents can ONLY write to the designated output directory
+            output_root = (workspace_resolved / AGENT_OUTPUT_DIR).resolve()
+            if not resolved.is_relative_to(output_root):
+                raise PermissionError(
+                    f"Write access to '{path_str}' is denied. "
+                    f"Agents may only write to '{AGENT_OUTPUT_DIR}/'."
+                )
 
         return resolved
 
@@ -102,15 +106,29 @@ class VisionTools(BaseTools):
 class CardManagementTools(BaseTools):
     def __init__(self, workspace_root: Path, references: List[Path], db_path: str = "orket_persistence.db"):
         super().__init__(workspace_root, references)
-        self.cards = SQLiteCardRepository(db_path)
+        from orket.infrastructure.async_card_repository import AsyncCardRepository
+        self.cards = AsyncCardRepository(db_path)
 
-    def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
         if not all([session_id, seat, summary]): return {"ok": False, "error": "Missing params"}
-        issue_id = self.cards.add_issue(session_id, seat, summary, args.get("type", "story"), args.get("priority", "Medium"))
+        # Note: add_issue is currently in SQLiteCardRepository but not in AsyncCardRepository interface.
+        # I'll use save() which is polymorphic.
+        import uuid
+        issue_id = f"ISSUE-{str(uuid.uuid4())[:4].upper()}"
+        card_data = {
+            "id": issue_id,
+            "session_id": session_id,
+            "seat": seat,
+            "summary": summary,
+            "type": args.get("type", "story"),
+            "priority": args.get("priority", "Medium"),
+            "status": "ready"
+        }
+        await self.cards.save(card_data)
         return {"ok": True, "issue_id": issue_id}
 
-    def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         from orket.schema import CardStatus
         issue_id = args.get("issue_id") or context.get("issue_id")
         new_status_str, role = args.get("status", "").lower(), context.get("role", "")
@@ -124,21 +142,20 @@ class CardManagementTools(BaseTools):
         if new_status == CardStatus.CANCELED and "project_manager" not in role.lower():
             return {"ok": False, "error": "Permission Denied: Only PM can cancel work."}
             
-        self.cards.update_status(issue_id, new_status)
+        await self.cards.update_status(issue_id, new_status)
         return {"ok": True, "issue_id": issue_id, "status": new_status.value}
 
-    def add_issue_comment(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def add_issue_comment(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         issue_id, content = context.get("issue_id"), args.get("comment")
         if not issue_id or not content: return {"ok": False, "error": "Missing params"}
-        self.cards.add_comment(issue_id, context.get("role", "Unknown"), content)
+        await self.cards.add_comment(issue_id, context.get("role", "Unknown"), content)
         return {"ok": True, "message": "Comment added."}
 
-    def get_issue_context(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def get_issue_context(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         issue_id = args.get("issue_id") or context.get("issue_id")
         if not issue_id: return {"ok": False, "error": "No issue_id"}
-        comments = self.cards.get_comments(issue_id)
-        session_id = context.get("session_id")
-        issue_data = next((i for i in self.cards.get_session_issues(session_id) if i["id"] == issue_id), {}) if session_id else {}
+        comments = await self.cards.get_comments(issue_id)
+        issue_data = await self.cards.get_by_id(issue_id) or {}
         return {"ok": True, "status": issue_data.get("status"), "summary": issue_data.get("summary"), "comments": comments}
 
 class AcademyTools(BaseTools):
@@ -171,6 +188,24 @@ class ToolBox:
         self.vision = VisionTools(self.root, self.refs)
         self.cards = CardManagementTools(self.root, self.refs, db_path=self.db_path)
         self.academy = AcademyTools(self.root, self.refs)
+
+    async def execute(self, tool_name: str, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Execute a tool by name with provided arguments and context.
+        """
+        tool_map = get_tool_map(self)
+        if tool_name not in tool_map:
+            return {"ok": False, "error": f"Unknown tool '{tool_name}'"}
+        
+        tool_fn = tool_map[tool_name]
+        try:
+            import inspect
+            if inspect.iscoroutinefunction(tool_fn):
+                return await tool_fn(args, context=context)
+            else:
+                return tool_fn(args, context=context)
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
 
     def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         from orket.logging import log_event
