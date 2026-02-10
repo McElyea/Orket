@@ -5,6 +5,28 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.11] - 2026-02-10 - "The Clean Sweep"
+
+### Changed
+- **Repository Cleanup**: Removed obsolete roadmaps and internal agent logs from the tracked repository.
+- **Documentation**: Established `docs/ROADMAP.md` as the single source of truth.
+- **Security**: Hardened webhook secret handling (fails fast if secret is missing).
+- **API**: Added Pydantic models for better request validation.
+
+## [0.3.9] - 2026-02-09 - "The Async Sovereignty"
+
+### Added
+- **Async Native Core**: Migrated all I/O to `aiofiles`, `aiosqlite`, and `httpx`.
+- **Security Sovereignty**: Implemented strict `Path.is_relative_to()` checks and directory isolation (`agent_output/` vs `verification/`).
+- **TurnExecutor**: Decomposed the monolithic loop into a specialized async executor.
+- **PolicyViolationReport**: Mechanical reporting for governance failures.
+- **Gitea Webhook**: Fully functional webhook server for PR automation.
+
+### Changed
+- **Dependency Management**: Consolidated all versions into `pyproject.toml`.
+- **Datetime**: Replaced `datetime.utcnow()` with `datetime.now(UTC)` globally.
+- **Exception Handling**: Removed all bare `except:` clauses.
+
 ## [0.3.8] - 2025-02-09 - "The Diagnostic Intelligence"
 
 ### Added

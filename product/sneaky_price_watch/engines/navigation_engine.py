@@ -18,5 +18,5 @@ class NavigationEngine:
 
     def _get_timestamp(self):
         """Returns current timestamp."""
-        from datetime import datetime
-        return datetime.now().isoformat()
+        from datetime import datetime, UTC
+        return datetime.now(UTC).isoformat()

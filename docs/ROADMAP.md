@@ -1,540 +1,349 @@
-# Orket Development Roadmap (v0.3.8 → v1.0)
+# Orket Master Roadmap v2: The Honest Path
 
-**Last Updated**: 2026-02-09
-**Current Version**: v0.3.8 "The Diagnostic Intelligence"
-**Goal**: Reach v1.0 "Production Ready" for UI revamp
+**Author**: Claude Opus 4.6 (consolidated from 4 agent reviews + direct code audit)
+**Date**: 2026-02-10
+**Version**: v0.4.5 (actual) -- NOT v1.0
 
----
-
-## 🎯 Vision: Three Stages of Maturity
-
-### Stage 1: **Functioning** (v0.4.0 - Target: 4 weeks)
-Backend works end-to-end with manual oversight. Agents can complete simple projects with human guidance.
-
-### Stage 2: **Fully Functioning** (v0.5.0 - Target: 8 weeks)
-Backend runs autonomously. Agents complete projects, deploy to sandboxes, iterate on feedback without human intervention.
-
-### Stage 3: **Production Ready** (v1.0 - Target: 12 weeks)
-System is battle-tested, documented, and ready for UI. Can onboard new users, handle errors gracefully, scale to multiple concurrent projects.
+This document replaces the previous MASTER_ROADMAP.md which falsely claimed v1.0 milestone completion. Every item below is verified against the actual codebase as of this date.
 
 ---
 
-## 📊 Current State: v0.3.8
+## Reality Check: Where We Actually Are
 
-### ✅ What Works
-- State Machine with WaitReason enforcement
-- Tool Gating (pre-execution validation)
-- Priority-based scheduling
-- 49 tests passing
-- Gitea running (Git + CI/CD infrastructure)
-- PR review policy with loop prevention
-- Credential management
-- Backup system (local only)
+### What The Old Roadmap Claimed
 
-### ⚠️ What's Incomplete
-- Sandbox Orchestrator (designed but not integrated)
-- Bug Fix Phase Manager (designed but not integrated)
-- Gitea webhook handler (built but not wired up)
-- ExecutionPipeline integration hooks (missing)
-- No actual sandbox deployments happening
-- No automated testing of generated code
-- No UI for monitoring/control
+> "v1.0 MILESTONE REACHED. All roadmap items COMPLETE. 150+ tests. Production-ready."
 
-### ❌ What's Broken/Missing
-- Sandboxes don't auto-create on PR merge
-- No actual Docker Compose generation happening
-- Tech stack detection doesn't exist yet
-- Gitea Actions not configured
-- No webhook endpoint in Orket
-- No connection between Orket ↔ Gitea
-- Bug Fix Phase never starts
-- Requirements Issue creation doesn't work
-- No architect escalation actually happening
+### What The Code Says
+
+| Dimension | Claimed | Actual | Evidence |
+|:---|:---|:---|:---|
+| Tests | 150+ | 67 (16 files) | `pytest tests/ -q` returns 67 passed |
+| Bare except: | Eliminated | 0 bare, 44 broad `except Exception` | grep confirms bare gone; broad remains |
+| datetime.now(UTC) | Complete | 16 occurrences of `datetime.now()` remain | sqlite_repositories.py, api.py, persistence.py, tools.py, utils.py, notes.py |
+| Dead code deleted | Complete | filesystem.py, conductor.py, persistence.py still exist | All flagged for deletion, all still present |
+| Async-pure | Complete | SQLiteSessionRepository and SQLiteSnapshotRepository are sync sqlite3 | Called from async ExecutionPipeline |
+| Orphaned code | None | orket.py:305-306 references undefined variables | `iteration_count` and `max_iterations` never defined in scope |
+| API tests | Done | 0 tests for 20+ endpoints | api.py has zero test coverage |
+
+**Honest Score: v0.4.5** -- The architecture is sound. The reconstruction landed about 60%. The remaining 40% is unglamorous cleanup that keeps getting deprioritized for new features.
 
 ---
 
-## 🚧 Phase 3: Elegant Failure & Recovery (IN PROGRESS)
+## Completed Work (Verified)
 
-**Goal**: Backend can recover from failures, sandbox lifecycle works, agents can iterate on feedback.
+These items are genuinely done and working:
 
-### 3.1 - Sandbox Orchestrator Integration (CRITICAL)
-**Status**: 🟡 Designed, not integrated
-**Blockers**: None
-**Time**: 2-3 days
-
-**Work Needed**:
-- [ ] Add SandboxOrchestrator to ExecutionPipeline.__init__
-- [ ] Hook sandbox creation in _handle_code_review_approval()
-- [ ] Implement tech stack detection from workspace files
-- [ ] Test Docker Compose generation with real FastAPI+React project
-- [ ] Verify port allocation works (test with 3 simultaneous sandboxes)
-- [ ] Add sandbox health monitoring to traction loop
-- [ ] Create "sandbox status" tool for agents to inspect
-- [ ] Add sandbox cleanup on Bug Fix Phase end
-
-**Code Files**:
-- `orket/orket.py` (ExecutionPipeline)
-- `orket/services/sandbox_orchestrator.py`
-- `orket/domain/sandbox.py`
+- [x] **TurnExecutor**: Clean async single-turn executor (384 lines, well-designed)
+- [x] **Orchestrator**: Extracted from god method, parallel DAG execution with semaphore
+- [x] **AsyncCardRepository**: aiosqlite-based, proper locking, IssueRecord types
+- [x] **RCE Mitigation**: Verification directory separation, `relative_to()` path check
+- [x] **Path Traversal Fix (tools.py)**: `Path.is_relative_to()` used correctly
+- [x] **ToolGate**: Best-tested module (20/20 tests). Clean policy enforcement
+- [x] **State Machine**: Correct FSM with role-based transition guards
+- [x] **Pydantic Schema**: Comprehensive domain models with validation
+- [x] **Bare except: Cleanup**: Zero bare `except:` clauses remain
+- [x] **requests -> httpx**: gitea_webhook_handler.py now uses `await self.client.post()`
+- [x] **Webhook Server**: HMAC signature validation, event dispatcher
+- [x] **Sandbox Orchestrator**: Docker Compose generation, port allocation
+- [x] **Memory Store**: Persistent per-issue memory with RAG search
+- [x] **Agent Coordination Hub**: Sovereign directories, handoff protocols
+- [x] **pyproject.toml**: Single source of truth for dependencies
+- [x] **Structured Logging**: Rotating file handlers, JSON format, subscriber system
+- [x] **Auth Service**: JWT + bcrypt, RuntimeError if SECRET_KEY missing
 
 ---
 
-### 3.2 - Bug Fix Phase Manager Integration
-**Status**: 🟡 Designed, not integrated
-**Blockers**: Sandbox Orchestrator must work first
-**Time**: 1-2 days
+## Phase 1: Stop Lying to Ourselves (Week 1 -- IMMEDIATE)
 
-**Work Needed**:
-- [ ] Add BugFixPhaseManager to ExecutionPipeline.__init__
-- [ ] Hook phase start on Rock → DONE
-- [ ] Implement daily bug discovery monitoring (background task)
-- [ ] Add bug rate calculation (bugs per day)
-- [ ] Implement auto-extension logic (up to 4 weeks)
-- [ ] Trigger sandbox cleanup when phase ends
-- [ ] Create Phase 2 Rock with migrated bugs
-- [ ] Add organizational thresholds to organization.json
+**Goal**: Fix every item the old roadmap falsely marked as done.
 
-**Code Files**:
-- `orket/orket.py` (ExecutionPipeline)
-- `orket/domain/bug_fix_phase.py`
-- `config/organization.json`
+### 1.1 Delete Dead Code (Day 1, 30 minutes)
 
----
+| File | Lines | Status | Why It Still Exists |
+|:---|:---|:---|:---|
+| `orket/filesystem.py` | 159 | DELETE | Vulnerable `startswith()` path check. Superseded by `tools.py:_resolve_safe_path`. Only imported by `policy.py`. |
+| `orket/conductor.py` | 109 | DELETE | Zero references in Orchestrator or ExecutionPipeline. Pure dead code. |
+| `orket/persistence.py` | 176 | DELETE | Sync sqlite3 duplicate of AsyncCardRepository + SQLiteRepositories. Zero unique functionality. |
+| `orket/orket.py:305-306` | 2 | DELETE | Orphaned `if iteration_count >= max_iterations` -- variables undefined, unreachable. |
+| `async_card_repository.py:208-225` | 18 | DELETE | `CardRepositoryAdapter` sync wrapper. Uses deprecated `asyncio.get_event_loop()`. Ticking time bomb. |
 
-### 3.3 - Gitea Webhook Integration
-**Status**: 🟡 Handler built, not connected
-**Blockers**: Need FastAPI endpoint
-**Time**: 1 day
+**Dependency**: `orket/policy.py` imports `FilesystemPolicy` from `filesystem.py`. Refactor `policy.py` to use `tools.py:BaseTools._resolve_safe_path` or inline the workspace resolution.
 
-**Work Needed**:
-- [ ] Create FastAPI app for webhook endpoint (`orket/webhook_server.py`)
-- [ ] Route POST /webhook/gitea to GiteaWebhookHandler
-- [ ] Validate webhook signatures (HMAC)
-- [ ] Store review cycle count in SQLite (not in-memory)
-- [ ] Test PR review flow end-to-end
-- [ ] Configure Gitea webhook in test repo
-- [ ] Handle all event types (review, merge, push)
+### 1.2 Fix datetime.now() (Day 1, 30 minutes)
 
-**Code Files**:
-- `orket/webhook_server.py` (NEW)
-- `orket/services/gitea_webhook_handler.py`
-- `orket/infrastructure/sqlite_repositories.py` (add PR tracking)
+16 occurrences across 6 files. Every one gets `UTC`:
 
----
+| File | Occurrences | Notes |
+|:---|:---|:---|
+| `orket/infrastructure/sqlite_repositories.py` | 6 | Session, snapshot, card timestamps |
+| `orket/persistence.py` | 5 | If not deleted first (see 1.1) |
+| `orket/interfaces/api.py` | 2 | Heartbeat, calendar endpoints |
+| `orket/tools.py` | 1 | Eval archive directory name |
+| `orket/utils.py` | 1 | Sprint calculation fallback |
+| `orket/orchestration/notes.py` | 1 | Note ID generation |
 
-### 3.4 - Gitea Actions Configuration
-**Status**: 🔴 Not started
-**Blockers**: Webhook integration
-**Time**: 2 days
+### 1.3 Harden Credential Management (Day 1, 1 hour)
 
-**Work Needed**:
-- [ ] Create `.gitea/workflows/deploy-sandbox.yml` template
-- [ ] Configure Gitea Actions runner (Docker socket access)
-- [ ] Test workflow triggers on PR merge
-- [ ] Add workflow to call Orket API for sandbox deployment
-- [ ] Handle workflow failures (retry logic)
-- [ ] Add status badges to PRs
+| Issue | File | Fix |
+|:---|:---|:---|
+| Empty GITEA_ADMIN_PASSWORD default | gitea_webhook_handler.py:37 | `raise RuntimeError` if not set, like auth_service does |
+| Hardcoded DB passwords in sandbox templates | sandbox_orchestrator.py:274,306,383,392 | `secrets.token_urlsafe(32)` per sandbox |
+| WEBHOOK_SECRET silent startup | webhook_server.py:38 | Fail at startup, not at first request |
+| Wildcard CORS methods/headers | api.py:44-45 | Explicit `["GET","POST","PATCH","DELETE"]` and `["Content-Type","Authorization","X-API-Key"]` |
 
-**Code Files**:
-- `.gitea/workflows/` templates
-- Gitea Actions runner config
+### 1.4 Fix Async Contamination (Day 2, 2 hours)
+
+`SQLiteSessionRepository` and `SQLiteSnapshotRepository` are synchronous `sqlite3` implementations called from async `ExecutionPipeline`. Every call blocks the event loop.
+
+**Option A (Quick)**: Wrap with `asyncio.to_thread()` at call sites
+**Option B (Proper)**: Create `AsyncSessionRepository` and `AsyncSnapshotRepository` using aiosqlite
+
+Recommended: **Option B**. The sync repositories are 80 lines each. Port them to aiosqlite.
+
+### 1.5 Add asyncio Locks to GlobalState (Day 2, 30 minutes)
+
+`orket/state.py` has unprotected shared state accessed from multiple async contexts:
+```
+active_websockets: List[Any]   -- mutated in api.py:215 and api.py:229
+active_tasks: Dict[str, Task]  -- mutated in api.py:134
+interventions: Dict             -- mutated from multiple contexts
+```
+
+Add `asyncio.Lock` for each mutable field.
 
 ---
 
-### 3.5 - Empirical Verification (FIT Integration)
-**Status**: 🟡 Basic verification exists, needs expansion
-**Blockers**: Sandboxes must be running
-**Time**: 3 days
+## Phase 2: Close the Test Gap (Week 2)
 
-**Work Needed**:
-- [ ] Expand VerificationEngine to test running sandboxes
-- [ ] Add API endpoint testing (pytest + requests)
-- [ ] Add E2E frontend testing (Playwright)
-- [ ] Run tests BEFORE marking Issue as DONE
-- [ ] If tests fail → back to CODE_REVIEW with logs
-- [ ] Add test result attachments to PRs
-- [ ] Create test report in Gitea
+**Goal**: Get from 67 tests to 120+. Test the things that actually matter.
 
-**Code Files**:
-- `orket/domain/verification.py`
-- `orket/orchestration/engine.py`
+### 2.1 Critical Module Tests (Must Have)
 
----
+| Module | Current Tests | Target | Why |
+|:---|:---|:---|:---|
+| `AsyncCardRepository` | 0 | 10 | All persistence flows through here |
+| `interfaces/api.py` | 0 | 15 | 20+ endpoints, 0 validation |
+| `services/tool_parser.py` | 0 | 8 | Parses LLM output; always mocked away |
+| `ConfigLoader` | 0 | 6 | Fallback logic, asset loading |
+| `gitea_webhook_handler.py` | 0 | 8 | PR lifecycle, cycle tracking |
+| `Orchestrator.execute_epic` | 0 | 5 | The main execution loop |
 
-### 3.6 - Memory Hygiene & Restart Mechanism
-**Status**: 🔴 Not started
-**Blockers**: None
-**Time**: 2 days
+### 2.2 Error Path Tests (Should Have)
 
-**Work Needed**:
-- [ ] Clear LLM context between sessions
-- [ ] Implement session checkpointing (save after each Issue)
-- [ ] Add `resume_session(session_id, from_issue_id)` method
-- [ ] Test crash recovery (kill mid-session, resume)
-- [ ] Add session history viewer
-- [ ] Prevent hallucination drift on long sessions
+- Malformed JSON from LLM (tool_parser edge cases)
+- Missing config files (ConfigLoader fallback behavior)
+- Permission denied on file write (FileSystemTools)
+- Database locked / corrupted (AsyncCardRepository)
+- Gitea unreachable (webhook handler timeout/retry)
+- Invalid state transitions (StateMachine negative cases)
 
-**Code Files**:
-- `orket/session.py`
-- `orket/orchestration/engine.py`
+### 2.3 Test Infrastructure (Build Once)
+
+Create `tests/conftest.py` with shared fixtures:
+```
+OrgBuilder().with_idesign(threshold=2).write(root)
+EpicBuilder("EPIC-01").with_issues(3).write(root)
+TeamBuilder.standard().write(root)
+```
+
+This addresses ChatGPT's review finding: "Each test reconstructs an entire miniature universe."
 
 ---
 
-### 3.7 - Error Handling & Policy Violation Reports
-**Status**: 🔴 Not started
-**Blockers**: None
-**Time**: 2 days
+## Phase 3: Structural Integrity (Week 3-4)
 
-**Work Needed**:
-- [ ] Create PolicyViolationReport class
-- [ ] Catch StateMachineError → generate report
-- [ ] Catch ToolGateViolation → generate report
-- [ ] Include: what was attempted, why it failed, how to fix
-- [ ] Save reports to database
-- [ ] Show reports in UI/CLI
-- [ ] Add "Policy Violation" label to Issues
+**Goal**: Resolve the remaining DRY violations and architectural debt.
 
-**Code Files**:
-- `orket/domain/policy_violation.py` (NEW)
-- `orket/domain/state_machine.py`
-- `orket/services/tool_gate.py`
+### 3.1 Consolidate File I/O
 
----
+Three implementations exist: `FileSystemTools` (sync, tools.py), `AsyncFileTools` (async, infrastructure/), and raw `Path.read_text()` calls in api.py, logging.py, orket.py.
 
-## 🎯 Phase 4: UI Preparation (v0.4.0)
+Target: Single `AsyncFileTools` implementation used everywhere. Sync callers use `asyncio.to_thread()`.
 
-**Goal**: Backend stable enough for UI revamp. All core loops working.
+### 3.2 Consolidate Status Update Logic
 
-### 4.1 - API Layer for UI
-**Status**: 🔴 Not started
-**Blockers**: Phase 3 must be complete
-**Time**: 1 week
+Status validation is duplicated in:
+1. `tools.py:CardManagementTools.update_issue_status()`
+2. `services/tool_gate.py:_validate_state_change()`
+3. `domain/state_machine.py:validate_transition()`
 
-**Work Needed**:
-- [ ] Create FastAPI app (`orket/api/`)
-- [ ] Endpoints:
-  - `GET /api/board` - Card hierarchy
-  - `GET /api/cards/{id}` - Card details
-  - `POST /api/cards/{id}/execute` - Run card
-  - `GET /api/sessions` - List sessions
-  - `GET /api/sessions/{id}` - Session transcript
-  - `GET /api/sandboxes` - List running sandboxes
-  - `GET /api/sandboxes/{id}/logs` - Sandbox logs
-  - `POST /api/sandboxes/{id}/stop` - Stop sandbox
-- [ ] WebSocket for live transcript streaming
-- [ ] Authentication (API keys)
-- [ ] Rate limiting
-- [ ] CORS configuration
+Target: StateMachine is the single authority. ToolGate delegates to StateMachine. CardManagementTools delegates to ToolGate.
 
-**Code Files**:
-- `orket/api/` (NEW directory)
-- `orket/api/main.py`
-- `orket/api/routes/`
-- `orket/api/middleware/`
+### 3.3 Complete GovernanceAuditor
+
+`orket/orchestration/governance_auditor.py` exists but has incomplete methods:
+- `_audit_destructive_operation()` -- called but not implemented
+- `_audit_issue_creation()` -- called but not implemented
+
+Finish or remove.
+
+### 3.4 Exception Hierarchy Expansion
+
+Currently 44 `except Exception` catches across the codebase. Each should be narrowed:
+
+| Location | Current | Target |
+|:---|:---|:---|
+| tools.py (6x) | `except Exception` | `except (FileNotFoundError, PermissionError, json.JSONDecodeError)` |
+| board.py (4x) | `except Exception` | `except (FileNotFoundError, json.JSONDecodeError, CardNotFound)` |
+| tool_gate.py (2x) | `except Exception` | `except (PermissionError, ValueError)` |
+| api.py (1x) | `except Exception` | `except WebSocketDisconnect` |
+
+### 3.5 Refactor policy.py After filesystem.py Deletion
+
+`policy.py` imports `FilesystemPolicy` from the deleted `filesystem.py`. Options:
+- **A**: Inline workspace validation into `policy.py` using `Path.is_relative_to()`
+- **B**: Have `policy.py` delegate to `BaseTools._resolve_safe_path()`
+
+Recommended: **A**. Keep it simple.
 
 ---
 
-### 4.2 - Monitoring & Observability
-**Status**: 🔴 Not started
-**Blockers**: None
-**Time**: 1 week
+## Phase 4: Parallel Execution Hardening (Week 5-6)
 
-**Work Needed**:
-- [ ] Metrics collection (Prometheus format)
-  - Cards executed per day
-  - Average execution time
-  - Tool call success rate
-  - State machine violations
-  - Sandbox uptime
-- [ ] Health check endpoint (`/health`)
-- [ ] Add structured logging (JSON format)
-- [ ] Log aggregation (all agents → central log)
-- [ ] Performance profiling (slow queries, bottlenecks)
+**Goal**: Make the DAG-based parallel execution production-safe.
 
-**Code Files**:
-- `orket/monitoring/` (NEW directory)
-- `orket/logging.py` (enhance)
+### 4.1 Race Condition Tests
 
----
+The Orchestrator runs issues in parallel via `asyncio.gather()` with a semaphore (limit: 3). But:
+- No tests verify concurrent execution produces correct results
+- No tests for workspace file conflicts between parallel agents
+- No tests for database contention under parallel writes
 
-### 4.3 - Documentation for UI Developers
-**Status**: 🟡 Partial (needs expansion)
-**Blockers**: API must be built first
-**Time**: 3 days
+### 4.2 File Locking for Parallel Agents
 
-**Work Needed**:
-- [ ] API documentation (OpenAPI/Swagger)
-- [ ] WebSocket protocol documentation
-- [ ] State machine flow diagrams
-- [ ] Example UI workflows
-- [ ] Authentication guide
-- [ ] Deployment guide
-- [ ] Troubleshooting guide
+When two agents write to the same workspace concurrently, file conflicts are possible. Implement:
+- Per-issue workspace subdirectories (agents cannot write outside their issue scope)
+- Or file-level advisory locking via `filelock`
 
-**Code Files**:
-- `docs/API.md` (NEW)
-- `docs/UI_INTEGRATION.md` (NEW)
+### 4.3 Context Window Management
+
+The Orchestrator passes a sliding window of 5 turns (`self.transcript[-5:]`). For complex issues requiring 20+ turns, agents lose context.
+
+Options:
+- Increase window to 10 (simple, more tokens)
+- Implement summarization (compress old turns into a summary)
+- Use the Memory Store (already exists) to persist key decisions
 
 ---
 
-## 🚀 Phase 5: Production Readiness (v1.0)
+## Phase 5: Production Readiness (Week 7-10)
 
-**Goal**: System is production-grade, documented, tested, and scalable.
+**Goal**: Actual production readiness, not claimed.
 
-### 5.1 - Comprehensive Testing
-**Status**: 🟡 Basic tests exist (49), need more
-**Blockers**: Phase 3 + 4 complete
-**Time**: 1 week
+### 5.1 Verification Engine Hardening
 
-**Work Needed**:
-- [ ] Integration tests for all Phase 3 features
-- [ ] End-to-end tests (full Rock → Sandbox → Bug Phase → Cleanup)
-- [ ] Performance tests (10 concurrent Rocks)
-- [ ] Chaos testing (random failures, network issues)
-- [ ] Load testing (100+ Issues)
-- [ ] Security testing (injection attacks, privilege escalation)
-- [ ] Reach 80%+ code coverage
+The RCE mitigation (directory separation) is necessary but insufficient. `importlib.exec_module()` still executes with full process privileges.
 
-**Target**: 150+ tests
+**Target**: Run verification fixtures in `subprocess` with:
+- Timeout (prevent infinite loops)
+- No network access
+- Read-only filesystem
+- Resource limits (memory, CPU)
 
----
+Long-term: Docker container execution.
 
-### 5.2 - User Onboarding
-**Status**: 🔴 Not started
-**Blockers**: None
-**Time**: 3 days
+### 5.2 CI/CD Pipeline
 
-**Work Needed**:
-- [ ] Setup wizard (`orket init`)
-- [ ] Interactive configuration
-- [ ] Sample projects (templates)
-- [ ] Guided tutorials
-- [ ] Video walkthroughs
-- [ ] FAQ documentation
+No CI currently exists. Create:
+```yaml
+# .github/workflows/quality.yml
+- pytest tests/ --cov=orket --cov-fail-under=60
+- ruff check orket/
+- mypy orket/ --ignore-missing-imports
+- grep -rn "datetime.now()" orket/ --include="*.py" | grep -v "now(UTC)" && exit 1
+```
 
-**Code Files**:
-- `orket/cli/setup_wizard.py` (NEW)
-- `docs/GETTING_STARTED.md` (NEW)
+### 5.3 Rate Limiting
 
----
+Webhook endpoint has no rate limiting. Add:
+- Token bucket or sliding window rate limiter
+- Configurable via `ORKET_RATE_LIMIT` env var
 
-### 5.3 - Multi-User Support
-**Status**: 🔴 Not started
-**Blockers**: API layer
-**Time**: 1 week
+### 5.4 Input Validation
 
-**Work Needed**:
-- [ ] User authentication (JWT)
-- [ ] Role-based access control (admin, developer, viewer)
-- [ ] Workspace isolation (user → workspace mapping)
-- [ ] Shared workspaces (team collaboration)
-- [ ] Audit logging (who did what)
-- [ ] User management UI
+API endpoints accept raw `Dict[str, Any]`. Replace with Pydantic models:
+- `RunAssetRequest` for `/system/run-active`
+- `GiteaWebhookPayload` for `/webhook/gitea`
+- `SaveFileRequest` for `/system/save`
 
-**Code Files**:
-- `orket/auth/` (NEW directory)
-- `orket/api/middleware/auth.py`
+### 5.5 Load Testing
+
+Before claiming production-ready:
+- 100 concurrent webhook deliveries
+- 10 parallel epic executions
+- 50 simultaneous WebSocket connections
+- Measure: response time p50/p95/p99, error rate, memory usage
 
 ---
 
-### 5.4 - Deployment Options
-**Status**: 🔴 Not started
-**Blockers**: None
-**Time**: 3 days
+## Phase 6: Operational Maturity (v1.0 Actual)
 
-**Work Needed**:
-- [ ] Docker Compose for full stack (Orket + Gitea + UI)
-- [ ] Kubernetes manifests (optional)
-- [ ] Systemd service files (Linux)
-- [ ] Windows Service installer
-- [ ] Automated updates (version checking)
-- [ ] Migration scripts (database schema changes)
+**Goal**: The real v1.0.
 
-**Code Files**:
-- `deploy/` (NEW directory)
-- `deploy/docker-compose.full-stack.yml`
-- `deploy/systemd/`
+### 6.1 Metrics
+- 150+ tests with 60%+ code coverage
+- Zero CRITICAL/HIGH security findings
+- All async functions truly async (no blocking calls)
+- Zero bare `except:` or overly broad `except Exception`
+- Sub-second API response times under load
 
----
-
-### 5.5 - Enterprise Features (Optional)
-**Status**: 🔴 Not started
-**Blockers**: v1.0 core complete
-**Time**: 2 weeks
-
-**Work Needed**:
-- [ ] LDAP/SSO integration
-- [ ] High availability (multi-instance)
-- [ ] Database replication
-- [ ] Backup encryption
-- [ ] Compliance logging (SOC2, ISO27001)
-- [ ] Custom branding
+### 6.2 Deliverables
+- Production Dockerfile with health checks
+- Migration scripts for database schema changes
+- Runbook for common operational scenarios
+- Security audit report (internal or external)
 
 ---
 
-## 📋 Critical Path: v0.3.8 → v0.4.0 (Functioning)
+## Agent Contribution Tracker
 
-**Must-have for v0.4.0**:
-1. ✅ Sandbox Orchestrator integration (3.1)
-2. ✅ Bug Fix Phase integration (3.2)
-3. ✅ Gitea webhook working (3.3)
-4. ✅ End-to-end test: Issue → PR → Review → Merge → Sandbox → UAT
-5. ✅ Error handling (3.7)
-
-**Estimated time**: 2-3 weeks
-
----
-
-## 📋 Critical Path: v0.4.0 → v0.5.0 (Fully Functioning)
-
-**Must-have for v0.5.0**:
-1. ✅ Gitea Actions configured (3.4)
-2. ✅ Empirical verification working (3.5)
-3. ✅ Memory hygiene (3.6)
-4. ✅ Architect escalation actually happening
-5. ✅ Requirements Issue auto-creation working
-6. ✅ 100+ tests passing
-
-**Estimated time**: 4 weeks from v0.4.0
+| Agent | Phase | Key Contributions |
+|:---|:---|:---|
+| GeminiCLI | v0.3.9 | Async migration, security patches, exception cleanup, dependency consolidation |
+| GeminiAntigravity | v0.3.10+ | Mandatory governance, engine hardening, parallel DAG, AST enforcement, memory store |
+| GeminiPro | Phase 7 | PII scrub, config refactor, CORS/auth, script fixes, code decomposition |
+| Claude (Sonnet) | Feb 9 AM | Original code review, BRUTAL_PATH.md, identified 15 critical issues |
+| Claude (Opus) | Feb 9 PM | Deep 6-agent review (security, async, architecture, testing, errors, deps) |
+| ChatGPT | Feb 9 | Test design critique, DI recommendations, iDesign structured violations |
+| Claude (Opus) | Feb 10 | This roadmap. Full audit against all prior claims. Honesty pass. |
 
 ---
 
-## 📋 Critical Path: v0.5.0 → v1.0 (Production Ready)
+## Products Built by Orket
 
-**Must-have for v1.0**:
-1. ✅ API layer complete (4.1)
-2. ✅ Monitoring & metrics (4.2)
-3. ✅ API documentation (4.3)
-4. ✅ Comprehensive testing (5.1)
-5. ✅ User onboarding (5.2)
-6. ✅ Deployment automation (5.4)
+The `workspace/default/` directory contains an iDesign-structured project (managers, engines, accessors, controllers, utils). The `product/` directory contains:
 
-**Estimated time**: 4 weeks from v0.5.0
+| Product | State | Notes |
+|:---|:---|:---|
+| sneaky_price_watch | Substantial (~20 modules) | iDesign structure (Accessors/Controllers/Engines/Managers). Import paths may need fixing. |
+| price_arbitrage | Stub (~50 lines) | Placeholder polling loop. No real logic. |
 
 ---
 
-## 🎯 Total Timeline to v1.0
+## The Uncomfortable Truth (Updated)
 
-**Conservative estimate**: 12 weeks (3 months)
-**Aggressive estimate**: 8 weeks (2 months)
-**Realistic estimate**: 10 weeks
+Four separate code reviews by four different AI agents all converged on the same conclusion:
 
-**Current date**: 2026-02-09
-**Target v1.0 date**: 2026-04-20 (10 weeks)
+> **Concept: 8/10. Implementation: 3/10.**
 
----
+The reconstruction raised implementation to approximately **5/10**. The TurnExecutor, AsyncCardRepository, ToolGate, and StateMachine are genuinely well-built. But the last 40% -- the dead code, the datetime bugs, the sync-in-async contamination, the untested API, the false roadmap claims -- erodes trust in everything else.
 
-## 🔥 Immediate Next Steps (This Week)
+**The single hardest thing about this project is not building new features. It is finishing what was started.**
 
-### Priority 1 (Critical)
-1. Fix `configure_gitea_privacy.sh` and run it
-2. Set up local-only automated backups (Windows Task Scheduler)
-3. Integrate Sandbox Orchestrator into ExecutionPipeline
-4. Test Docker Compose generation with sample project
-
-### Priority 2 (Important)
-5. Add webhook endpoint to Orket
-6. Connect Gitea webhook to handler
-7. Test PR review cycle end-to-end
-
-### Priority 3 (Nice to have)
-8. Add tech stack detection
-9. Implement sandbox health monitoring
-10. Create sandbox status tool for agents
+This roadmap does not contain a single new feature. Every item is cleanup, hardening, or testing of existing code. That is intentional. The architecture is sound. The domain models are clean. The reconstruction plan was correct. Now we finish the job.
 
 ---
 
-## 📊 Success Metrics
+## Key References
 
-### v0.4.0 "Functioning"
-- [ ] Can generate FastAPI + React project
-- [ ] Can deploy to sandbox automatically
-- [ ] Can run basic tests
-- [ ] Can iterate on PR feedback
-- [ ] Sandboxes auto-cleanup after Bug Fix Phase
-- [ ] 75+ tests passing
-
-### v0.5.0 "Fully Functioning"
-- [ ] Runs autonomously for 8+ hours without intervention
-- [ ] Completes 5+ projects end-to-end
-- [ ] Handles errors gracefully (no crashes)
-- [ ] Bug Fix Phase works as designed
-- [ ] Architect escalation prevents infinite loops
-- [ ] 125+ tests passing
-
-### v1.0 "Production Ready"
-- [ ] 10+ users can onboard without help
-- [ ] Handles 10 concurrent projects
-- [ ] API stable and documented
-- [ ] UI can be built against API
-- [ ] Deployment takes < 10 minutes
-- [ ] 150+ tests passing
-- [ ] Zero known critical bugs
-
----
-
-## 🛠️ Known Issues & Technical Debt
-
-### High Priority
-1. **ExecutionPipeline is too large** (400+ lines) - needs refactoring
-2. **No connection pooling** for database (SQLite → PostgreSQL?)
-3. **In-memory review cycle tracking** - should be in DB
-4. **No graceful shutdown** - can lose in-progress work
-5. **No concurrent execution** - only 1 Rock at a time
-6. **Hard-coded paths** - need dynamic workspace management
-
-### Medium Priority
-7. **Logging not structured** - hard to parse/analyze
-8. **No rate limiting** on tool calls - can spam APIs
-9. **No timeout on agent turns** - can hang forever
-10. **Secret management** - .env is good but not encrypted
-11. **No model switching** - stuck with one LLM per session
-12. **Poor error messages** - hard to debug for users
-
-### Low Priority (Post v1.0)
-13. **No plugin system** - can't extend easily
-14. **No A/B testing** - can't compare agent strategies
-15. **No analytics** - don't know what works
-16. **No cost tracking** - don't know LLM costs
-17. **No team features** - single-user only
-
----
-
-## 📚 Documentation Gaps
-
-### Missing Docs
-- [ ] Architecture deep dive (how everything connects)
-- [ ] Agent development guide (how to add new roles)
-- [ ] Tool development guide (how to add new tools)
-- [ ] State machine guide (valid transitions, when to use what)
-- [ ] Troubleshooting guide (common errors + solutions)
-- [ ] Performance tuning guide
-- [ ] Security hardening guide
-
-### Outdated Docs
-- [ ] ARCHITECTURE.md (doesn't mention sandboxes)
-- [ ] examples.md (old syntax)
-- [ ] Some references to "Skills" (merged into Roles)
-
----
-
-## 🎯 Post-UI Revamp (v1.1+)
-
-**Features for later**:
-- Multi-model support (switch LLM mid-session)
-- Cost optimization (use cheaper models for simple tasks)
-- Agent learning (save successful patterns)
-- Template marketplace (share project templates)
-- Cloud deployment (deploy sandboxes to VPS/cloud)
-- Real-time collaboration (multiple users watching same session)
-- Mobile app (monitor projects on phone)
-
----
-
-## 📖 References
-
-- [PROJECT.md](PROJECT.md) - Project overview
-- [CHANGELOG.md](../CHANGELOG.md) - Version history
-- [PHASE3_INTEGRATION.md](PHASE3_INTEGRATION.md) - Phase 3 details
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System design
-- [PR_REVIEW_POLICY.md](PR_REVIEW_POLICY.md) - Review workflow
+| Document | Location | Purpose |
+|:---|:---|:---|
+| This Roadmap | `docs/ROADMAP.md` | Unified source of truth |
+| BRUTAL_PATH.md | `docs/BRUTAL_PATH.md` | Original emergency plan (Feb 9) |
+| Claude Deep Review | `Agents/Claude/code_review/CODE_REVIEW_2026-02-09_9-19PM.md` | 30-finding security/architecture audit |
+| ChatGPT Review | `docs/reviews/Code_Review (2-9-2026 10pm0).md` | Test design and DI critique |
+| Gemini Brutal Review | `Agents/GeminiAntigravity/BRUTAL_REVIEW_20260210.md` | God class and governance theater analysis |
+| Claude Feedback | `Agents/Claude/Claude_Feedback_20260210.md` | 21 catastrophic design failures |       
+| Reconstruction Status | `Agents/Claude/RECONSTRUCTION_STATUS.md` | Session-level progress tracker |
+| GLOBAL_ACTIVITY.md | `docs/GLOBAL_ACTIVITY.md` | Who did what, when |

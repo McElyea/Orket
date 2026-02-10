@@ -84,6 +84,16 @@ async def health():
     return {"status": "healthy"}
 
 
+from pydantic import BaseModel, Field
+
+class GiteaWebhookPayload(BaseModel):
+    action: Optional[str] = None
+    number: Optional[int] = Field(None, gt=0)
+    pull_request: Optional[Dict[str, Any]] = None
+    repository: Optional[Dict[str, Any]] = None
+    review: Optional[Dict[str, Any]] = None
+    sender: Optional[Dict[str, Any]] = None
+
 @app.post("/webhook/gitea")
 async def gitea_webhook(
     request: Request,
@@ -92,18 +102,12 @@ async def gitea_webhook(
 ):
     """
     Main Gitea webhook endpoint.
-
-    Handles events:
-    - pull_request: PR opened, synchronized
-    - pull_request_review: PR reviewed (approved, changes_requested)
-    - push: Code pushed (triggers sandbox deployment on merge)
-
-    Headers:
-        X-Gitea-Event: Event type
-        X-Gitea-Signature: HMAC-SHA256 signature
     """
-    # Read raw body for signature validation
+    # Size limit: 1MB
+    MAX_SIZE = 1024 * 1024
     body = await request.body()
+    if len(body) > MAX_SIZE:
+        raise HTTPException(status_code=413, detail="Payload too large")
 
     # Validate signature
     if x_gitea_signature:
@@ -111,12 +115,13 @@ async def gitea_webhook(
             log_event("webhook", "Invalid webhook signature", "error")
             raise HTTPException(status_code=401, detail="Invalid signature")
 
-    # Parse JSON payload
+    # Parse and validate JSON payload
     try:
-        payload = await request.json()
+        payload_data = json.loads(body)
+        payload = GiteaWebhookPayload.model_validate(payload_data)
     except Exception as e:
-        log_event("webhook", f"Failed to parse webhook payload: {e}", "error")
-        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+        log_event("webhook", f"Failed to parse or validate webhook payload: {e}", "error")
+        raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
 
     # Log webhook event
     log_event(
@@ -125,14 +130,14 @@ async def gitea_webhook(
         "info",
         details={
             "event": x_gitea_event,
-            "repo": payload.get("repository", {}).get("full_name"),
-            "pr_number": payload.get("number")
+            "repo": payload.repository.get("full_name") if payload.repository else None,
+            "pr_number": payload.number
         }
     )
 
     # Route to handler
     try:
-        result = await webhook_handler.handle_webhook(x_gitea_event, payload)
+        result = await webhook_handler.handle_webhook(x_gitea_event, payload.model_dump())
         return JSONResponse(content=result, status_code=200)
     except Exception as e:
         log_event("webhook", f"Webhook handler error: {e}", "error")

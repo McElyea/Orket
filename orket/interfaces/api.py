@@ -18,6 +18,21 @@ from orket.hardware import get_metrics_snapshot
 from orket.settings import load_user_settings
 
 
+from pydantic import BaseModel, Field
+
+class SaveFileRequest(BaseModel):
+    path: str
+    content: str
+
+class RunAssetRequest(BaseModel):
+    path: Optional[str] = None
+    build_id: Optional[str] = None
+    type: Optional[str] = None
+    issue_id: Optional[str] = None
+
+class ChatDriverRequest(BaseModel):
+    message: str
+
 # Security dependency
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
@@ -99,13 +114,10 @@ async def read_system_file(path: str):
     return {"content": target.read_text(encoding="utf-8")}
 
 @v1_router.post("/system/save")
-async def save_system_file(data: Dict[str, str] = Body(...)):
-    path_str = data.get("path")
-    content = data.get("content")
-    if not path_str or content is None: raise HTTPException(400)
-    target = (PROJECT_ROOT / path_str).resolve()
+async def save_system_file(req: SaveFileRequest):
+    target = (PROJECT_ROOT / req.path).resolve()
     if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
-    target.write_text(content, encoding="utf-8")
+    target.write_text(req.content, encoding="utf-8")
     return {"ok": True}
 
 @v1_router.get("/system/calendar")
@@ -119,18 +131,14 @@ async def get_calendar():
     }
 
 @v1_router.post("/system/run-active")
-async def run_active_asset(data: Dict[str, Any] = Body(...)):
-    path_str = data.get("path")
-    build_id = data.get("build_id")
-    asset_type = data.get("type")
-    issue_id = data.get("issue_id")
+async def run_active_asset(req: RunAssetRequest):
     session_id = str(uuid.uuid4())[:8]
 
-    asset_id = issue_id if issue_id else Path(path_str).stem if path_str else None
+    asset_id = req.issue_id if req.issue_id else Path(req.path).stem if req.path else None
     if not asset_id: raise HTTPException(status_code=400, detail="No asset ID provided.")
 
-    print(f"  [API] v1 EXECUTE: {asset_id} (Type: {asset_type}, Session: {session_id})")
-    task = asyncio.create_task(engine.run_card(asset_id, build_id=build_id, session_id=session_id))
+    print(f"  [API] v1 EXECUTE: {asset_id} (Type: {req.type}, Session: {session_id})")
+    task = asyncio.create_task(engine.run_card(asset_id, build_id=req.build_id, session_id=session_id))
     await runtime_state.add_task(session_id, task)
     return {"session_id": session_id}
 
@@ -194,12 +202,10 @@ async def preview_asset(path: str, issue_id: Optional[str] = None):
     return res
 
 @v1_router.post("/system/chat-driver")
-async def chat_driver(data: Dict[str, str] = Body(...)):
+async def chat_driver(req: ChatDriverRequest):
     from orket.driver import OrketDriver
-    message = data.get("message")
-    if not message: raise HTTPException(400)
     driver = OrketDriver()
-    response = await driver.process_request(message)
+    response = await driver.process_request(req.message)
     return {"response": response}
 
 app.include_router(v1_router)
