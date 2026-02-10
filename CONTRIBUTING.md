@@ -41,6 +41,7 @@ Orket follows the **Universal Card System**:
 - Ensure issues follow the **Single Responsibility Principle (SRP)**.
 
 ## Coding Standards
+- **Testing**: We follow a **"Real-World First"** philosophy. Avoid mocks unless absolutely necessary. We prefer hitting real (temporary) databases and filesystems over mocking function calls. See [docs/TESTING_POLICY.md](docs/TESTING_POLICY.md).
 - **Explicit Imports:** Avoid wildcard imports.
 - **Async-First:** Use `async/await` for I/O and model interactions.
 - **Type Safety:** Utilize Pydantic models for all configuration and state.
