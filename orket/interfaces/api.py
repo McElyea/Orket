@@ -5,8 +5,10 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request, APIRouter
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request, APIRouter, Depends, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import APIKeyHeader
+import os
 
 from orket import __version__
 from orket.orchestration.engine import OrchestrationEngine
@@ -15,12 +17,30 @@ from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.settings import load_user_settings
 
+
+# Security dependency
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+async def get_api_key(api_key_header: str = Security(api_key_header)):
+    expected_key = os.getenv("ORKET_API_KEY")
+    if expected_key and api_key_header != expected_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Could not validate credentials",
+        )
+    return api_key_header
+
 app = FastAPI(title="Orket API", version=__version__)
-v1_router = APIRouter(prefix="/v1")
+# Apply auth to all v1 endpoints if configured
+v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
+
+origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

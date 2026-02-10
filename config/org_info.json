@@ -1,0 +1,30 @@
+{
+    "schema_version": "1.0.0",
+    "name": "Orket Organizational Unit",
+    "vision": "To deliver local-first, high-fidelity automation tools that empower users with autonomous market intelligence.",
+    "ethos": "Excellence through iteration, transparency in process, and local-first sovereignty.",
+    "branding": {
+        "colorscheme": {
+            "primary": "#1A202C",
+            "secondary": "#2D3748",
+            "accent": "#4A5568"
+        },
+        "fonts": [
+            "Inter",
+            "Roboto Mono"
+        ],
+        "design_dos": [
+            "Use clear, professional labels",
+            "Prefer flat structures for simple tasks",
+            "Maintain high contrast for accessibility"
+        ],
+        "design_donts": [
+            "Do not use emojis or non-standard symbols in logs",
+            "Avoid over-engineering for single-user tools"
+        ]
+    },
+    "contact": {
+        "email": null,
+        "socials": {}
+    }
+}

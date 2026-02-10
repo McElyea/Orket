@@ -46,23 +46,51 @@ class ConfigLoader:
         from orket.schema import OrganizationConfig
         from orket.settings import get_setting
         
-        org = None
-        paths = [
-            self.config_dir / "organization.json",
-            self.model_dir / "organization.json"
-        ]
-        for p in paths:
-            if p.exists():
-                org = OrganizationConfig.model_validate_json(p.read_text(encoding="utf-8"))
-                break
+        org_data = {}
         
-        if org:
-            # Overrides
-            env_name = get_setting("ORKET_ORG_NAME")
-            if env_name: org.name = env_name
-            
-            env_vision = get_setting("ORKET_ORG_VISION")
-            if env_vision: org.vision = env_vision
+        # 1. Try Modular Configs (New Standard)
+        info_path = self.config_dir / "org_info.json"
+        arch_path = self.config_dir / "architecture.json"
+        
+        if info_path.exists() and arch_path.exists():
+            try:
+                info = json.loads(info_path.read_text(encoding="utf-8"))
+                arch = json.loads(arch_path.read_text(encoding="utf-8"))
+                org_data = {**info, **arch}
+            except Exception as e:
+                log_event("config_error", {"error": f"Failed to load modular config: {e}"})
+
+        # 2. Key Fallback: Monolith (Legacy)
+        if not org_data:
+            paths = [
+                self.config_dir / "organization.json",
+                self.model_dir / "organization.json"
+            ]
+            for p in paths:
+                if p.exists():
+                    try:
+                        org_data = json.loads(p.read_text(encoding="utf-8"))
+                        break
+                    except Exception:
+                        continue
+        
+        if not org_data:
+            return None
+
+        # Validate
+        try:
+            org = OrganizationConfig.model_validate(org_data)
+        except Exception as e:
+            # Fallback or strict fail? Strict fail for now but log it.
+            print(f"[CONFIG] Validation failed: {e}")
+            return None
+        
+        # Overrides
+        env_name = get_setting("ORKET_ORG_NAME")
+        if env_name: org.name = env_name
+        
+        env_vision = get_setting("ORKET_ORG_VISION")
+        if env_vision: org.vision = env_vision
             
         return org
 

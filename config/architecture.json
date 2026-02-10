@@ -1,0 +1,40 @@
+{
+    "schema_version": "1.0.0",
+    "architecture": {
+        "idesign_threshold": 7,
+        "preferred_stack": {
+            "frontend": "React",
+            "backend": "FastAPI",
+            "database": "SQLite/SQLAlchemy"
+        },
+        "cicd_rules": [
+            "All functional logic must be verified by the integrity_guard",
+            "No PR merge without a Quality Score > 7.0"
+        ]
+    },
+    "departments": [
+        "core",
+        "engineering",
+        "marketing",
+        "product",
+        "quality",
+        "training",
+        "uiux"
+    ],
+    "process_rules": {
+        "card_flow": [
+            "Ready",
+            "In Progress",
+            "Blocked",
+            "Canceled",
+            "Waiting_For_Developer",
+            "Ready_For_Testing",
+            "Code_Review",
+            "Done"
+        ],
+        "final_states": [
+            "Done",
+            "Canceled"
+        ]
+    }
+}

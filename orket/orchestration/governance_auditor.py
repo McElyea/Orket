@@ -42,12 +42,16 @@ class GovernanceAuditor:
     This is the mechanical enforcement layer - no discretion, no mercy.
     """
 
+    
+    # Default limit: 1MB to prevent memory exhaustion and token limit issues
+    DEFAULT_MAX_FILE_SIZE = 1_000_000 
+
     def __init__(
         self,
         workspace: Path,
         role_tool_permissions: Optional[Dict[str, List[str]]] = None,
         max_tool_calls_per_turn: int = 10,
-        max_file_size_bytes: int = 1_000_000,  # 1MB
+        max_file_size_bytes: int = DEFAULT_MAX_FILE_SIZE,
     ):
         self.workspace = workspace
         self.role_permissions = role_tool_permissions or {}

@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ConfigDict, AliasChoices, field_validator
 # ---------------------------------------------------------------------------
 class EnvironmentConfig(BaseModel):
     model_config = ConfigDict(extra='allow')
+    schema_version: str = "1.0.0"
     name: str
     description: Optional[str] = None
     model: str
@@ -279,6 +280,7 @@ class BottleneckThresholds(BaseModel):
 
 class OrganizationConfig(BaseModel):
     model_config = ConfigDict(extra='ignore')
+    schema_version: str = "1.0.0"
     name: str
 
     vision: str

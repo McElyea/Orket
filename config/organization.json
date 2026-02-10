@@ -35,9 +35,9 @@
         ]
     },
     "contact": {
-        "email": "contact@viberail.com",
+        "email": null,
         "socials": {
-            "github": "VibeRail"
+            "github": null
         }
     },
     "departments": [
@@ -54,7 +54,7 @@
             "Ready",
             "In Progress",
             "Blocked",
-            "Cancelled",
+            "Canceled",
             "Waiting_For_Developer",
             "Ready_For_Testing",
             "Code_Review",

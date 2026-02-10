@@ -1,5 +1,6 @@
 # main.py
 import asyncio
+import sys
 from orket.interfaces.cli import run_cli
 
 if __name__ == "__main__":
@@ -11,8 +12,8 @@ if __name__ == "__main__":
         print(f"\n[CRITICAL ERROR] Orket CLI crashed: {e}")
         # Optional: Log full traceback to file but show summary to user
         import traceback
-        with open("orket_crash.log", "a") as f:
-            f.write(f"\n--- {type(e).__name__} at {__import__('datetime').datetime.now()} ---\n")
-            f.write(traceback.format_exc())
+        from orket.logging import log_crash
+        log_crash(e, traceback.format_exc())
         print("A detailed crash log has been saved to 'orket_crash.log'.")
+        sys.exit(1)
 

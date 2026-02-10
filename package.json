@@ -4,6 +4,6 @@
   "scripts": {
     "dev:ui": "npm run dev --prefix ui",
     "dev:server": "python server.py",
-    "dev": "start npm run dev:server && npm run dev:ui"
+    "dev": "npx concurrently \"npm run dev:server\" \"npm run dev:ui\""
   }
 }

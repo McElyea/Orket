@@ -11,6 +11,18 @@ CURRENT_LEVEL = CONSOLE_LEVELS.get("debug", 10)  # adjust as needed
 
 from orket.naming import sanitize_name
 
+
+def get_reload_excludes() -> list[str]:
+    """
+    Returns a list of glob patterns to exclude from auto-reloading.
+    Can be overridden via ORKET_RELOAD_EXCLUDES ("pattern1,pattern2").
+    """
+    env_val = os.getenv("ORKET_RELOAD_EXCLUDES")
+    if env_val:
+        return [p.strip() for p in env_val.split(",") if p.strip()]
+    
+    return ["workspace/*", "product/*", "logs/*", "*.db", ".git/*", "__pycache__/*"]
+
 def get_eos_sprint(date_obj: datetime = None) -> str:
     """Calculates EOS Sprint based on 1-week sprints (Mon-Fri) and 13-sprint quarters."""
     if date_obj is None: date_obj = datetime.now()
