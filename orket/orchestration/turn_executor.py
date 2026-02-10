@@ -326,20 +326,28 @@ class TurnExecutor:
     ) -> None:
         """
         Execute all tool calls in a turn.
-
-        Args:
-            turn: Execution turn with tool calls
-            toolbox: Tool execution environment
-            context: Execution context
-
-        Raises:
-            ToolValidationError: If tool calls violate governance
         """
         violations = []
 
         for tool_call in turn.tool_calls:
             try:
-                # Execute tool (toolbox handles validation)
+                # --- MECHANICAL GOVERNANCE: State Machine Validation ---
+                if tool_call.tool == "update_issue_status":
+                    req_status_str = tool_call.args.get("status")
+                    if req_status_str:
+                        from orket.schema import CardStatus, CardType
+                        req_status = CardStatus(req_status_str)
+                        current_status = CardStatus(context.get("current_status", "ready"))
+                        
+                        # Validate transition
+                        self.state.validate_transition(
+                            card_type=CardType.ISSUE,
+                            current=current_status,
+                            requested=req_status,
+                            roles=context.get("roles", [turn.role])
+                        )
+
+                # Execute tool (toolbox handles path validation)
                 result = await toolbox.execute(
                     tool_call.tool,
                     tool_call.args,

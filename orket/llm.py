@@ -82,28 +82,15 @@ class LocalModelProvider:
                 # Unexpected errors don't necessarily merit a retry unless specified
                 raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(e)}")
             
-                        await asyncio.sleep(retry_delay)
-            
-                        retry_delay *= 2  # Exponential backoff
-            
-            
-            
-                async def clear_context(self):
-            
-                    """
-            
-                    Clears any persistent context for this provider instance.
-            
-                    Ensures a 'fresh' memory for the next session.
-            
-                    """
-            
-                    # For Ollama, each chat() call is stateless by default unless a 
-            
-                    # persistent session ID is used. This hook allows for future cleanup
-            
-                    # logic or stateful provider implementations.
-            
-                    pass
-            
-            
+            await asyncio.sleep(retry_delay)
+            retry_delay *= 2  # Exponential backoff
+
+    async def clear_context(self):
+        """
+        Clears any persistent context for this provider instance.
+        Ensures a 'fresh' memory for the next session.
+        """
+        # For Ollama, each chat() call is stateless by default unless a 
+        # persistent session ID is used. This hook allows for future cleanup
+        # logic or stateful provider implementations.
+        pass

@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Type
 import json
 import uuid
 import asyncio
+from datetime import datetime, UTC
 
 from orket.llm import LocalModelProvider
 from orket.logging import log_event
@@ -609,6 +610,7 @@ class ExecutionPipeline:
                 "workspace": str(self.workspace),
                 "role": seat_name,
                 "roles": roles_to_load,
+                "current_status": issue.status.value,
                 "history": [{"role": t.role, "content": t.content} for t in self.transcript[-5:]] # Windowed history
             }
 

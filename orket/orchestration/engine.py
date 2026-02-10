@@ -27,8 +27,7 @@ class OrchestrationEngine:
         self.config_root = config_root or Path(".").resolve()
         
         # Repositories (Accessors)
-        self.async_cards = AsyncCardRepository(self.db_path)
-        self.cards = CardRepositoryAdapter(self.async_cards)
+        self.cards = AsyncCardRepository(self.db_path)
         
         self.sessions = SQLiteSessionRepository(self.db_path)
         self.snapshots = SQLiteSnapshotRepository(self.db_path)
