@@ -38,3 +38,7 @@ class ComplexityViolation(GovernanceViolation):
     """Raised when an Epic exceeds the iDesign complexity threshold."""
     pass
 
+class CatastrophicFailure(GovernanceViolation):
+    """Raised when a hard limit (like retries) is reached, requiring project shutdown."""
+    pass
+

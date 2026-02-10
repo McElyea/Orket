@@ -47,6 +47,8 @@ class AsyncCardRepository(CardRepository):
                 note TEXT,
                 resolution TEXT,
                 credits_spent REAL DEFAULT 0,
+                retry_count INTEGER DEFAULT 0,
+                max_retries INTEGER DEFAULT 3,
                 verification_json TEXT,
                 metrics_json TEXT,
                 depends_on_json TEXT,
@@ -57,6 +59,12 @@ class AsyncCardRepository(CardRepository):
         # Migration
         try:
             await conn.execute("ALTER TABLE issues ADD COLUMN depends_on_json TEXT")
+        except aiosqlite.OperationalError:
+            pass
+
+        try:
+            await conn.execute("ALTER TABLE issues ADD COLUMN retry_count INTEGER DEFAULT 0")
+            await conn.execute("ALTER TABLE issues ADD COLUMN max_retries INTEGER DEFAULT 3")
         except aiosqlite.OperationalError:
             pass
 
@@ -116,13 +124,13 @@ class AsyncCardRepository(CardRepository):
                 await conn.execute(
                     """INSERT OR REPLACE INTO issues
                        (id, session_id, build_id, seat, summary, type, priority, sprint,
-                        status, note, verification_json, metrics_json, depends_on_json, created_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        status, note, retry_count, max_retries, verification_json, metrics_json, depends_on_json, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (record.id, record.session_id, record.build_id, record.seat, summary,
                      record.type.value if hasattr(record.type, "value") else str(record.type),
                      record.priority, record.sprint,
                      record.status.value if hasattr(record.status, "value") else str(record.status),
-                     record.note, v_json, m_json, d_json, record.created_at or datetime.now(UTC).isoformat())
+                     record.note, record.retry_count, record.max_retries, v_json, m_json, d_json, record.created_at or datetime.now(UTC).isoformat())
                 )
                 await conn.commit()
 

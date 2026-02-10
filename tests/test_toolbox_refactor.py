@@ -40,3 +40,53 @@ def test_write_file_creation(tmp_path):
     res = fs.write_file({"path": "subdir/new.txt", "content": "data"})
     assert res["ok"] is True
     assert (workspace / "subdir" / "new.txt").read_text() == "data"
+
+def test_vision_tools_stub(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    vision = VisionTools(workspace, [])
+    
+    res = vision.image_analyze({"path": "test.png"})
+    assert res["ok"] is False
+    assert "not implemented" in res["error"]
+
+def test_academy_tools_promote_prompt(tmp_path):
+    # Setup project structure
+    project_root = tmp_path
+    workspace = project_root / "workspace" / "default"
+    workspace.mkdir(parents=True)
+    prompts_dir = project_root / "prompts"
+    
+    academy = AcademyTools(workspace, [])
+    
+    res = academy.promote_prompt({
+        "seat": "lead_architect",
+        "content": "You are a lead architect.",
+        "model_family": "qwen"
+    })
+    
+    assert res["ok"] is True
+    expected_path = prompts_dir / "lead_architect" / "qwen.txt"
+    assert expected_path.exists()
+    assert expected_path.read_text() == "You are a lead architect."
+
+@pytest.mark.asyncio
+async def test_card_management_create_issue(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    db_path = tmp_path / "test.db"
+    
+    cards = CardManagementTools(workspace, [], db_path=str(db_path))
+    
+    res = await cards.create_issue({
+        "seat": "dev",
+        "summary": "Fix bug",
+        "priority": "High"
+    }, context={"session_id": "sess-123"})
+    
+    assert res["ok"] is True
+    assert "issue_id" in res
+    
+    issue = await cards.cards.get_by_id(res["issue_id"])
+    assert issue.summary == "Fix bug"
+    assert issue.priority == "High"

@@ -135,3 +135,30 @@ async def test_serialization_edge_cases(repo):
     retrieved = await repo.get_by_id("EDGE")
     assert retrieved.depends_on == []
     assert retrieved.verification.scenarios == []
+
+@pytest.mark.asyncio
+async def test_update_status_transaction_logging(repo):
+    """Verify that update_status automatically logs a transaction."""
+    issue = IssueRecord(id="TX-LOG", summary="Tx Log Test")
+    await repo.save(issue)
+    
+    await repo.update_status("TX-LOG", CardStatus.IN_PROGRESS, assignee="agent-x")
+    
+    history = await repo.get_card_history("TX-LOG")
+    assert any("Set Status to 'in_progress'" in h for h in history)
+    assert any("agent-x" in h for h in history)
+
+@pytest.mark.asyncio
+async def test_deserialize_corrupted_json(repo):
+    """Test _deserialize_row with actual corrupted JSON string in DB."""
+    async with repo._lock:
+        async with aiosqlite.connect(repo.db_path) as conn:
+            await repo._ensure_initialized(conn)
+            await conn.execute(
+                "INSERT INTO issues (id, summary, depends_on_json) VALUES (?, ?, ?)",
+                ("CORRUPT", "Corrupt Test", "{invalid json")
+            )
+            await conn.commit()
+            
+    retrieved = await repo.get_by_id("CORRUPT")
+    assert retrieved.depends_on == [] # Should fallback to empty list

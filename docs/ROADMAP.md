@@ -54,43 +54,69 @@ These items are genuinely done and working:
 
 ---
 
+## Phase 0: Architectural Alignment (Week 1 -- PRE-REQUISITE)
+
+**Goal**: Align the codebase with `docs/OrketArchitectureModel.md` and address the "Three Projects in a Trenchcoat" diagnosis.
+
+### 0.1 Decouple the Product Core (The "Diamond")
+**Context**: The workflow engine (cards, bottlenecks, priority) is the most valuable part but is coupled to LLM logic.
+**Action**:
+- Create `orket/core/` directory.
+- Move `WaitReason`, `CardStatus`, `BottleneckThresholds`, `CriticalPath` logic here.
+- **Strict Rule**: `orket/core/` must NOT import `llm`, `server`, or `cli`. It must be runnable purely with Python standard library (and maybe Pydantic).
+
+### 0.2 Unify Configuration (The "Source of Truth")
+**Context**: "Identity Fragmentation" (3 different organization.json files).
+**Action**:
+- Designate `config/organization.json` as the Single Source of Truth.
+- Delete `config/org_info.json` and `model/organization.json`.
+- Update `ConfigLoader` to read ONLY from the single source.
+- Remove logic that "guesses" which config to use.
+
+### 0.3 Formalize Entry Points (The "Facade")
+**Context**: `main.py` (CLI) and `server.py` (API) initialize the system differently.
+**Action**:
+- Create `orket/system.py` with an `OrketSystem` class (Facade).
+- `OrketSystem` handles config loading, DB connection, and Engine initialization.
+- Refactor `main.py` and `server.py` to simply call `OrketSystem.boot()`.
+
+### 0.4 Isolate Volatility (The "Decision Nodes")
+**Context**: Volatile AI logic (`llm.py`, prompt compilation) is mixed with stable plumbing.
+**Action**:
+- Create `orket/intelligence/` (or `orket/decisions/`).
+- Move `llm.py`, prompt logic, and dialect handling here.
+- Define strict interfaces (contracts) between `orket/orchestration` and `orket/intelligence`.
+
+---
+
 ## Phase 1: Stop Lying to Ourselves (Week 1 -- IMMEDIATE)
 
 **Goal**: Fix every item the old roadmap falsely marked as done.
 
-### 1.1 Delete Dead Code (Day 1, 30 minutes)
+### 1.1 Delete Dead Code (Verified Complete)
 
 | File | Lines | Status | Why It Still Exists |
 |:---|:---|:---|:---|
-| `orket/filesystem.py` | 159 | DELETE | Vulnerable `startswith()` path check. Superseded by `tools.py:_resolve_safe_path`. Only imported by `policy.py`. |
-| `orket/conductor.py` | 109 | DELETE | Zero references in Orchestrator or ExecutionPipeline. Pure dead code. |
-| `orket/persistence.py` | 176 | DELETE | Sync sqlite3 duplicate of AsyncCardRepository + SQLiteRepositories. Zero unique functionality. |
-| `orket/orket.py:305-306` | 2 | DELETE | Orphaned `if iteration_count >= max_iterations` -- variables undefined, unreachable. |
-| `async_card_repository.py:208-225` | 18 | DELETE | `CardRepositoryAdapter` sync wrapper. Uses deprecated `asyncio.get_event_loop()`. Ticking time bomb. |
+| `orket/filesystem.py` | 159 | GONE | Verified deleted. |
+| `orket/conductor.py` | 109 | GONE | Verified deleted. |
+| `orket/persistence.py` | 176 | GONE | Verified deleted. |
+| `orket/orket.py:305-306` | 2 | GONE | Verified deleted. |
+| `async_card_repository.py:208-225` | 18 | GONE | Verified deleted. |
 
-**Dependency**: `orket/policy.py` imports `FilesystemPolicy` from `filesystem.py`. Refactor `policy.py` to use `tools.py:BaseTools._resolve_safe_path` or inline the workspace resolution.
-
-### 1.2 Fix datetime.now() (Day 1, 30 minutes)
+### 1.2 Fix datetime.now() (Verified Complete)
 
 16 occurrences across 6 files. Every one gets `UTC`:
 
-| File | Occurrences | Notes |
-|:---|:---|:---|
-| `orket/infrastructure/sqlite_repositories.py` | 6 | Session, snapshot, card timestamps |
-| `orket/persistence.py` | 5 | If not deleted first (see 1.1) |
-| `orket/interfaces/api.py` | 2 | Heartbeat, calendar endpoints |
-| `orket/tools.py` | 1 | Eval archive directory name |
-| `orket/utils.py` | 1 | Sprint calculation fallback |
-| `orket/orchestration/notes.py` | 1 | Note ID generation |
+**Status**: [x] Verified. All 16+ occurrences now use `datetime.now(UTC)`.
 
-### 1.3 Harden Credential Management (Day 1, 1 hour)
+### 1.3 Harden Credential Management (Verified Complete)
 
 | Issue | File | Fix |
 |:---|:---|:---|
-| Empty GITEA_ADMIN_PASSWORD default | gitea_webhook_handler.py:37 | `raise RuntimeError` if not set, like auth_service does |
-| Hardcoded DB passwords in sandbox templates | sandbox_orchestrator.py:274,306,383,392 | `secrets.token_urlsafe(32)` per sandbox |
-| WEBHOOK_SECRET silent startup | webhook_server.py:38 | Fail at startup, not at first request |
-| Wildcard CORS methods/headers | api.py:44-45 | Explicit `["GET","POST","PATCH","DELETE"]` and `["Content-Type","Authorization","X-API-Key"]` |
+| Empty GITEA_ADMIN_PASSWORD default | gitea_webhook_handler.py:37 | [x] Raises RuntimeError |
+| Hardcoded DB passwords in sandbox templates | sandbox_orchestrator.py:274 | [x] Uses secrets.token_urlsafe |
+| WEBHOOK_SECRET silent startup | webhook_server.py:38 | [x] Fails at startup |
+| Wildcard CORS methods/headers | api.py:44-45 | [x] Explicit list |
 
 ### 1.4 Fix Async Contamination (Day 2, 2 hours)
 
@@ -120,23 +146,23 @@ Add `asyncio.Lock` for each mutable field.
 
 ### 2.1 Critical Module Tests (Must Have)
 
-| Module | Current Tests | Target | Why |
-|:---|:---|:---|:---|
-| `AsyncCardRepository` | 0 | 10 | All persistence flows through here |
-| `interfaces/api.py` | 0 | 15 | 20+ endpoints, 0 validation |
-| `services/tool_parser.py` | 0 | 8 | Parses LLM output; always mocked away |
-| `ConfigLoader` | 0 | 6 | Fallback logic, asset loading |
-| `gitea_webhook_handler.py` | 0 | 8 | PR lifecycle, cycle tracking |
-| `Orchestrator.execute_epic` | 0 | 5 | The main execution loop |
+| Module | Current Tests | Target | Status | Why |
+|:---|:---|:---|:---|:---|
+| `AsyncCardRepository` | 12 | 15 | [x] DONE | All persistence flows through here |
+| `interfaces/api.py` | 8 | 15 | [x] BEGUN | 20+ endpoints, baseline coverage |
+| `services/tool_parser.py` | 10 | 10 | [x] DONE | Parses LLM output |
+| `ConfigLoader` | 0 | 6 | [ ] TODO | Fallback logic, asset loading |
+| `gitea_webhook_handler.py` | 0 | 8 | [ ] TODO | PR lifecycle, cycle tracking |
+| `Orchestrator.execute_epic` | 0 | 5 | [ ] TODO | The main execution loop |
 
 ### 2.2 Error Path Tests (Should Have)
 
-- Malformed JSON from LLM (tool_parser edge cases)
-- Missing config files (ConfigLoader fallback behavior)
-- Permission denied on file write (FileSystemTools)
-- Database locked / corrupted (AsyncCardRepository)
-- Gitea unreachable (webhook handler timeout/retry)
-- Invalid state transitions (StateMachine negative cases)
+- [x] Malformed JSON from LLM (tool_parser edge cases)
+- [ ] Missing config files (ConfigLoader fallback behavior)
+- [ ] Permission denied on file write (FileSystemTools)
+- [x] Database locked / corrupted (AsyncCardRepository)
+- [ ] Gitea unreachable (webhook handler timeout/retry)
+- [ ] Invalid state transitions (StateMachine negative cases)
 
 ### 2.3 Test Infrastructure (Build Once)
 
@@ -341,9 +367,9 @@ This roadmap does not contain a single new feature. Every item is cleanup, harde
 |:---|:---|:---|
 | This Roadmap | `docs/ROADMAP.md` | Unified source of truth |
 | BRUTAL_PATH.md | `docs/BRUTAL_PATH.md` | Original emergency plan (Feb 9) |
-| Claude Deep Review | `Agents/Claude/code_review/CODE_REVIEW_2026-02-09_9-19PM.md` | 30-finding security/architecture audit |
+| Claude Deep Review | `docs/reviews/Claude_Deep_Review_2026-02-09.md` | 30-finding security/architecture audit |
 | ChatGPT Review | `docs/reviews/Code_Review (2-9-2026 10pm0).md` | Test design and DI critique |
-| Gemini Brutal Review | `Agents/GeminiAntigravity/BRUTAL_REVIEW_20260210.md` | God class and governance theater analysis |
-| Claude Feedback | `Agents/Claude/Claude_Feedback_20260210.md` | 21 catastrophic design failures |       
+| Gemini Brutal Review | `docs/reviews/Gemini_Brutal_Review_2026-02-10.md` | God class and governance theater analysis |
+| Claude Feedback | `docs/reviews/Claude_Feedback_2026-02-10.md` | 21 catastrophic design failures |       
 | Reconstruction Status | `Agents/Claude/RECONSTRUCTION_STATUS.md` | Session-level progress tracker |
 | GLOBAL_ACTIVITY.md | `docs/GLOBAL_ACTIVITY.md` | Who did what, when |

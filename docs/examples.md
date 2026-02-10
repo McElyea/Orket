@@ -1,6 +1,6 @@
-# Vibe Rail Orket Examples (v0.3.6)
+# Orket Examples (v0.3.6)
 
-Professional configuration examples for the refactored and secured Orket engine.
+Configuration examples for the Orket engine.
 
 ---
 

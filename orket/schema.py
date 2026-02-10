@@ -3,6 +3,8 @@ from typing import Dict, List, Optional, Any, Union
 import uuid
 import enum
 from pydantic import BaseModel, Field, ConfigDict, AliasChoices, field_validator
+from orket.core.types import CardStatus, WaitReason, CardType
+from orket.core.bottlenecks import BottleneckThresholds
 
 # ---------------------------------------------------------------------------
 # 1. Environment & Dialect
@@ -35,33 +37,6 @@ class DialectConfig(BaseModel):
 # ---------------------------------------------------------------------------
 # 2. Card Fundamentals (Universal Base)
 # ---------------------------------------------------------------------------
-class CardType(str, enum.Enum):
-    ROCK = "rock"
-    EPIC = "epic"
-    ISSUE = "issue"
-    UTILITY = "utility"
-    APP = "app"
-
-class CardStatus(str, enum.Enum):
-    READY = "ready"
-    IN_PROGRESS = "in_progress"
-    BLOCKED = "blocked"
-    CANCELED = "canceled"
-    WAITING_FOR_DEVELOPER = "waiting_for_developer"
-    READY_FOR_TESTING = "ready_for_testing"
-    CODE_REVIEW = "code_review"
-    DONE = "done"
-
-class WaitReason(str, enum.Enum):
-    """
-    Explicit reasons for why a card is blocked or waiting.
-    Enables diagnostic tracking and automatic unblocking logic.
-    """
-    RESOURCE = "resource"          # Waiting for available resources (VRAM, LLM slot, etc.)
-    DEPENDENCY = "dependency"      # Waiting for another card to complete
-    REVIEW = "review"              # Waiting for human review/approval
-    INPUT = "input"                # Waiting for human input/clarification
-
 class BaseCardConfig(BaseModel):
     """
     The polymorphic base for all Orket Units of Work.
@@ -145,6 +120,10 @@ class IssueConfig(BaseCardConfig):
     requirements: Optional[str] = None # Atomic requirement detail
     depends_on: List[str] = Field(default_factory=list)
     
+    # Governance & Retries
+    retry_count: int = Field(default=0)
+    max_retries: int = Field(default=3)
+
     # Separated Concerns
     verification: IssueVerification = Field(default_factory=IssueVerification)
     metrics: IssueMetrics = Field(default_factory=IssueMetrics)
@@ -261,21 +240,6 @@ class ContactInfo(BaseModel):
     website: Optional[str] = None
 
     socials: Dict[str, str] = Field(default_factory=dict)
-
-
-class BottleneckThresholds(BaseModel):
-    model_config = ConfigDict(extra='ignore')
-    """
-    Configurable thresholds for bottleneck detection.
-    Prevents alert fatigue by distinguishing normal operation from real problems.
-    """
-    resource_normal: int = Field(default=3, description="Cards waiting for resources is normal serial execution (no alert)")
-    resource_warning: int = Field(default=10, description="Mild backlog, monitor but don't alert")
-    resource_critical: int = Field(default=11, description="Chronic bottleneck, alert and take action")
-
-    dependency_warning_pct: float = Field(default=0.5, description="Alert if >50% of blocked cards are dependency-blocked")
-
-    human_attention_threshold: int = Field(default=1, description="Alert if any cards need human review/input")
 
 
 class OrganizationConfig(BaseModel):

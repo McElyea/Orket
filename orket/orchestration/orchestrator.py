@@ -328,6 +328,8 @@ class Orchestrator:
 
     async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, roles: List[str]):
         from orket.domain.failure_reporter import FailureReporter
+        from orket.exceptions import CatastrophicFailure
+
         await FailureReporter.generate_report(
             workspace=self.workspace,
             session_id=run_id,
@@ -336,8 +338,40 @@ class Orchestrator:
             transcript=self.transcript,
             roles=roles
         )
-        await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
+        
+        issue.retry_count += 1
+        
+        if issue.retry_count > issue.max_retries:
+            log_event("catastrophic_failure", {
+                "issue_id": issue.id,
+                "retry_count": issue.retry_count,
+                "error": result.error
+            }, self.workspace)
+            await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
+            await self.async_cards.save(issue.model_dump())
+            
+            # Catastrophic failure shuts down the session
+            from orket.state import runtime_state
+            task = await runtime_state.get_task(run_id)
+            if task:
+                task.cancel()
+                
+            raise CatastrophicFailure(
+                f"MAX RETRIES EXCEEDED for {issue.id}. "
+                f"Limit: {issue.max_retries}. Shutting down project orchestration."
+            )
+
+        # Log retry and reset to READY
+        log_event("retry_triggered", {
+            "issue_id": issue.id,
+            "retry_count": issue.retry_count,
+            "max_retries": issue.max_retries,
+            "error": result.error
+        }, self.workspace)
+        
+        await self.async_cards.update_status(issue.id, CardStatus.READY)
+        await self.async_cards.save(issue.model_dump())
         
         if result.violations:
             raise GovernanceViolation(f"iDesign Violation: {result.error}")
-        raise ExecutionFailed(f"Orchestration Turn Failed: {result.error}")
+        raise ExecutionFailed(f"Orchestration Turn Failed (Retry {issue.retry_count}/{issue.max_retries}): {result.error}")

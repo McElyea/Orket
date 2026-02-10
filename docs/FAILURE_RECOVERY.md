@@ -1,4 +1,4 @@
-# Phase 3 Integration Guide: Elegant Failure & Recovery
+# Failure & Recovery
 
 This document explains how to integrate the Sandbox Orchestrator and Bug Fix Phase Manager into Orket's ExecutionPipeline.
 

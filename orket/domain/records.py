@@ -20,6 +20,8 @@ class IssueRecord(BaseModel):
     assignee: Optional[str] = None
     note: Optional[str] = None
     depends_on: List[str] = Field(default_factory=list)
+    retry_count: int = 0
+    max_retries: int = 3
     verification: Dict[str, Any] = Field(default_factory=dict)
     metrics: Dict[str, Any] = Field(default_factory=dict)
     created_at: Optional[str] = None
