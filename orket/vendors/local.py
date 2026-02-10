@@ -30,7 +30,7 @@ class LocalVendor(VendorInterface):
                 try:
                     e = self.loader.load_asset("epics", ename, EpicConfig)
                     epics.append(VendorEpic(id=ename, rock_id=rock_id, name=e.name, description=e.description))
-                except: pass
+                except (FileNotFoundError, ValueError): pass
         else:
             # Return all standalone epics
             for name in self.loader.list_assets("epics"):

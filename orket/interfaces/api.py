@@ -14,7 +14,7 @@ from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.settings import load_user_settings
 
-app = FastAPI(title="Vibe Rail Orket EOS API")
+app = FastAPI(title="Orket API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,7 +29,7 @@ engine = OrchestrationEngine(PROJECT_ROOT / "workspace" / "default")
 # --- System Endpoints ---
 
 @app.get("/health")
-async def health(): return {"status": "ok", "organization": "Vibe Rail"}
+async def health(): return {"status": "ok", "organization": "Orket"}
 
 @app.post("/system/clear-logs")
 async def clear_logs():
@@ -53,7 +53,7 @@ async def get_metrics(): return get_metrics_snapshot()
 async def list_system_files(path: str = "."):
     rel_path = path.strip("./") if path and path != "." else ""
     target = (PROJECT_ROOT / rel_path).resolve()
-    if not str(target).startswith(str(PROJECT_ROOT)): raise HTTPException(403)
+    if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
     if not target.exists(): return {"items": [], "path": path}
     
     items = []
@@ -67,7 +67,7 @@ async def list_system_files(path: str = "."):
 @app.get("/system/read")
 async def read_system_file(path: str):
     target = (PROJECT_ROOT / path).resolve()
-    if not str(target).startswith(str(PROJECT_ROOT)): raise HTTPException(403)
+    if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
     return {"content": target.read_text(encoding="utf-8")}
 
 @app.post("/system/save")
@@ -76,7 +76,7 @@ async def save_system_file(data: Dict[str, str] = Body(...)):
     content = data.get("content")
     if not path_str or content is None: raise HTTPException(400)
     target = (PROJECT_ROOT / path_str).resolve()
-    if not str(target).startswith(str(PROJECT_ROOT)): raise HTTPException(403)
+    if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
     target.write_text(content, encoding="utf-8")
     return {"ok": True}
 
@@ -164,7 +164,7 @@ async def event_broadcaster():
         record = await runtime_state.event_queue.get()
         for ws in list(runtime_state.active_websockets):
             try: await ws.send_json(record)
-            except: 
+            except Exception:
                 if ws in runtime_state.active_websockets: runtime_state.active_websockets.remove(ws)
         runtime_state.event_queue.task_done()
 

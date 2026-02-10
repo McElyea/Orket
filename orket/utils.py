@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -33,7 +33,7 @@ def get_eos_sprint(date_obj: datetime = None) -> str:
     return f"Q{q} S{s}"
 
 def _ts():
-    return datetime.utcnow().isoformat() + "Z"
+    return datetime.now(UTC).isoformat()
 
 
 def log_event(level: str, component: str, event: str, payload: dict):

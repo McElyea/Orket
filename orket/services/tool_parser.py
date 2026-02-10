@@ -42,7 +42,7 @@ class ToolParser:
                                     args = f.get("arguments", {})
                                     if isinstance(args, str): args = json.loads(args)
                                     results.append({"tool": f.get("name"), "args": args})
-                        except: pass
+                        except (json.JSONDecodeError, KeyError, TypeError): pass
 
         if results: return results
 

@@ -1,7 +1,7 @@
 # orket/session.py
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Dict, Any
 
 
@@ -29,7 +29,7 @@ class Session:
                 Message(
                     role="user",
                     content=task,
-                    ts=datetime.utcnow().isoformat() + "Z",
+                    ts=datetime.now(UTC).isoformat(),
                 )
             ],
         )
@@ -39,7 +39,7 @@ class Session:
             Message(
                 role=role,
                 content=content,
-                ts=datetime.utcnow().isoformat() + "Z",
+                ts=datetime.now(UTC).isoformat(),
             )
         )
 

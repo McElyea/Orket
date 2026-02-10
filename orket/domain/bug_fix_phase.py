@@ -10,7 +10,7 @@ sandbox is cleaned up.
 """
 from __future__ import annotations
 from typing import List, Dict, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from pydantic import BaseModel, Field
 import enum
 
@@ -57,8 +57,8 @@ class BugFixPhase(BaseModel):
     current_duration_days: int = 7
 
     # Timeline
-    started_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    scheduled_end: str = Field(default_factory=lambda: (datetime.utcnow() + timedelta(days=7)).isoformat())
+    started_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    scheduled_end: str = Field(default_factory=lambda: (datetime.now(UTC) + timedelta(days=7)).isoformat())
     actual_end: Optional[str] = None
 
     # Metrics
@@ -103,7 +103,7 @@ class BugFixPhase(BaseModel):
         actual_added = new_duration - self.current_duration_days
 
         self.extensions.append({
-            "date": datetime.utcnow().isoformat(),
+            "date": datetime.now(UTC).isoformat(),
             "reason": reason,
             "added_days": str(actual_added)
         })
@@ -114,7 +114,7 @@ class BugFixPhase(BaseModel):
 
     def is_expired(self) -> bool:
         """Check if phase has reached its scheduled end."""
-        return datetime.utcnow() >= datetime.fromisoformat(self.scheduled_end)
+        return datetime.now(UTC) >= datetime.fromisoformat(self.scheduled_end)
 
 
 class BugFixPhaseManager:
@@ -163,7 +163,7 @@ class BugFixPhaseManager:
             max_duration_days=max_days,
             current_duration_days=initial_days,
             metrics=metrics,
-            scheduled_end=(datetime.utcnow() + timedelta(days=initial_days)).isoformat()
+            scheduled_end=(datetime.now(UTC) + timedelta(days=initial_days)).isoformat()
         )
 
         self.active_phases[rock_id] = phase
@@ -187,7 +187,7 @@ class BugFixPhaseManager:
         phase.metrics.critical_bugs = len(critical_bug_ids)
 
         # Calculate discovery rate (bugs per day)
-        days_elapsed = (datetime.utcnow() - datetime.fromisoformat(phase.started_at)).days
+        days_elapsed = (datetime.now(UTC) - datetime.fromisoformat(phase.started_at)).days
         if days_elapsed > 0:
             phase.metrics.discovery_rate = phase.metrics.total_bugs / days_elapsed
         else:
@@ -227,7 +227,7 @@ class BugFixPhaseManager:
             return None
 
         phase.status = BugFixPhaseStatus.COMPLETED
-        phase.actual_end = datetime.utcnow().isoformat()
+        phase.actual_end = datetime.now(UTC).isoformat()
 
         # Create Phase 2 Rock for remaining bugs
         phase2_rock_id = None

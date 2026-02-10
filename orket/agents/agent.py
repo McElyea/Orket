@@ -10,6 +10,7 @@ from orket.llm import LocalModelProvider
 from orket.logging import log_event, log_model_usage
 from orket.utils import sanitize_name
 from orket.schema import SkillConfig, DialectConfig
+from orket.exceptions import CardNotFound
 from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.services.prompt_compiler import PromptCompiler
 from orket.services.tool_parser import ToolParser
@@ -38,7 +39,7 @@ class Agent:
         from orket.orket import ConfigLoader
         loader = ConfigLoader(self.config_root, "core")
         try: self.skill = loader.load_asset("roles", sanitize_name(self.name), SkillConfig)
-        except: pass
+        except (FileNotFoundError, ValueError, CardNotFound): pass
 
         model_name = self.provider.model.lower()
         family = "generic"
@@ -48,7 +49,7 @@ class Agent:
         elif "qwen" in model_name: family = "qwen"
             
         try: self.dialect = loader.load_asset("dialects", family, DialectConfig)
-        except: pass
+        except (FileNotFoundError, ValueError, CardNotFound): pass
 
     def get_compiled_prompt(self) -> str:
         """Returns the fully compiled system instructions for this agent."""

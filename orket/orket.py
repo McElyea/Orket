@@ -196,7 +196,7 @@ class ExecutionPipeline:
                 epic = self.loader.load_asset("epics", ename, EpicConfig)
                 for i in epic.issues:
                     if i.id == issue_id: return epic, ename, i
-            except: continue
+            except (FileNotFoundError, ValueError, CardNotFound): continue
         return None, None, None
 
     async def verify_issue(self, issue_id: str) -> VerificationResult:
@@ -323,7 +323,7 @@ class ExecutionPipeline:
                 role_configs = []
                 for r_name in roles_to_load:
                     try: role_configs.append(self.loader.load_asset("roles", r_name, RoleConfig))
-                    except: pass
+                    except (FileNotFoundError, ValueError, CardNotFound): pass
 
                 selected_model = model_selector.select(role=roles_to_load[0], asset_config=epic)
                 dialect_name = model_selector.get_dialect_name(selected_model)

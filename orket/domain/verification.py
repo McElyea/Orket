@@ -1,77 +1,110 @@
+"""
+Verification Engine (The 'FIT' Executor)
+
+Runs physical code fixtures to verify Issue completion.
+
+SECURITY: Fixtures are loaded from a READ-ONLY verification directory.
+Agents can only write to their workspace, NOT to the verification directory.
+This prevents the write-then-execute RCE vulnerability.
+"""
 import importlib.util
-import json
 import sys
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-from datetime import datetime
-from orket.schema import IssueVerification, VerificationScenario, VerificationResult
+from datetime import datetime, UTC
+
+from orket.schema import IssueVerification, VerificationResult
+from orket.logging import log_event
+
+
+# Verification fixtures MUST live in this subdirectory (read-only to agents)
+VERIFICATION_DIR = "verification"
+
+# Agent workspace where agents write code (agents CANNOT execute from here)
+AGENT_OUTPUT_DIR = "agent_output"
+
+
+class VerificationSecurityError(Exception):
+    """Raised when verification detects a security violation."""
+    pass
+
 
 class VerificationEngine:
     """
     Empirical Verification Service (The 'FIT' Executor).
     Runs physical code fixtures to verify Issue completion.
+
+    SECURITY MODEL:
+    - Fixtures are loaded ONLY from workspace/verification/ (read-only to agents)
+    - Agents write to workspace/agent_output/ (cannot be executed)
+    - This separation prevents write-then-execute attacks
     """
 
     @staticmethod
     def verify(verification: IssueVerification, workspace_root: Path) -> VerificationResult:
-        """
-        Executes the verification logic for an issue.
-        """
+        """Execute verification logic for an issue."""
         logs = []
         passed = 0
         failed = 0
-        
-        logs.append(f"--- Verification Started at {datetime.now().isoformat()} ---")
-        
+        now = datetime.now(UTC).isoformat()
+
+        logs.append(f"--- Verification Started at {now} ---")
+
         if not verification.fixture_path:
             logs.append("No verification fixture defined. Skipping empirical tests.")
             return VerificationResult(
-                timestamp=datetime.now().isoformat(),
+                timestamp=now,
                 total_scenarios=len(verification.scenarios),
-                passed=0,
-                failed=0,
-                logs=logs
+                passed=0, failed=0, logs=logs
             )
 
-        fixture_path = workspace_root / verification.fixture_path
+        # SECURITY: Resolve fixture path and validate it's in the verification directory
+        fixture_path = (workspace_root / verification.fixture_path).resolve()
+        verification_root = (workspace_root / VERIFICATION_DIR).resolve()
+
+        try:
+            fixture_path.relative_to(verification_root)
+        except ValueError:
+            msg = (
+                f"SECURITY VIOLATION: Fixture path '{verification.fixture_path}' "
+                f"is outside the verification directory '{VERIFICATION_DIR}/'. "
+                f"Agents cannot execute code from arbitrary locations."
+            )
+            logs.append(msg)
+            log_event("verification_security_violation", {
+                "fixture_path": str(fixture_path),
+                "verification_root": str(verification_root),
+            }, workspace_root)
+            raise VerificationSecurityError(msg)
+
         if not fixture_path.exists():
             logs.append(f"ERROR: Fixture file not found at {fixture_path}")
             return VerificationResult(
-                timestamp=datetime.now().isoformat(),
+                timestamp=now,
                 total_scenarios=len(verification.scenarios),
-                passed=0,
-                failed=failed,
-                logs=logs
+                passed=0, failed=failed, logs=logs
             )
 
         try:
-            # 1. Load the fixture as a module
             spec = importlib.util.spec_from_file_location("verification_fixture", fixture_path)
             module = importlib.util.module_from_spec(spec)
-            
-            # Add workspace to sys.path so the fixture can import local modules
-            sys.path.insert(0, str(workspace_root.resolve()))
+
+            # Add ONLY the verification directory to sys.path (not the full workspace)
+            sys.path.insert(0, str(verification_root))
             spec.loader.exec_module(module)
-            
-            # 2. Iterate through scenarios
+
             for scenario in verification.scenarios:
                 logs.append(f"Running Scenario: {scenario.description}")
-                
-                # Fixtures must implement a 'verify' function or a function matching the scenario ID
                 verify_fn = getattr(module, f"verify_{scenario.id}", None) or getattr(module, "verify", None)
-                
+
                 if not verify_fn:
-                    logs.append(f"  [FAIL] No verify function found in fixture for scenario {scenario.id}")
+                    logs.append(f"  [FAIL] No verify function found for scenario {scenario.id}")
                     scenario.status = "fail"
                     failed += 1
                     continue
 
                 try:
-                    # Execute with input data
                     actual = verify_fn(scenario.input_data)
                     scenario.actual_output = actual
-                    
-                    # Comparison logic (can be simple equality or custom)
                     if actual == scenario.expected_output:
                         logs.append(f"  [PASS] Actual matches Expected: {actual}")
                         scenario.status = "pass"
@@ -81,22 +114,25 @@ class VerificationEngine:
                         scenario.status = "fail"
                         failed += 1
                 except Exception as e:
-                    logs.append(f"  [ERROR] Execution error: {str(e)}")
+                    logs.append(f"  [ERROR] Execution error: {type(e).__name__}: {e}")
                     scenario.status = "fail"
                     failed += 1
-                    
+
+        except VerificationSecurityError:
+            raise
+        except ImportError as e:
+            logs.append(f"FATAL ERROR loading fixture (import): {e}")
+        except SyntaxError as e:
+            logs.append(f"FATAL ERROR loading fixture (syntax): {e}")
         except Exception as e:
-            logs.append(f"FATAL ERROR loading fixture: {str(e)}")
+            logs.append(f"FATAL ERROR loading fixture: {type(e).__name__}: {e}")
         finally:
-            if str(workspace_root.resolve()) in sys.path:
-                sys.path.remove(str(workspace_root.resolve()))
+            if str(verification_root) in sys.path:
+                sys.path.remove(str(verification_root))
 
         logs.append(f"--- Verification Complete: {passed} Passed, {failed} Failed ---")
-        
         return VerificationResult(
-            timestamp=datetime.now().isoformat(),
+            timestamp=now,
             total_scenarios=len(verification.scenarios),
-            passed=passed,
-            failed=failed,
-            logs=logs
+            passed=passed, failed=failed, logs=logs
         )

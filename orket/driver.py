@@ -5,6 +5,7 @@ from orket.llm import LocalModelProvider
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig, SkillConfig, DialectConfig
 from orket.logging import log_event
+from orket.exceptions import CardNotFound
 
 class OrketDriver:
     """
@@ -19,7 +20,8 @@ class OrketDriver:
         if org_path.exists():
             try:
                 self.org = OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
-            except: pass
+            except (ValueError, FileNotFoundError):
+                pass
 
         # 2. Select Model
         from orket.orchestration.models import ModelSelector
@@ -39,7 +41,7 @@ class OrketDriver:
         # 1. Load specialized Driver skill if exists, otherwise fallback
         try:
             self.skill = loader.load_asset("skills", "operations_lead", SkillConfig)
-        except:
+        except (FileNotFoundError, ValueError, CardNotFound):
             pass
 
         # 2. Load Dialect
@@ -52,7 +54,7 @@ class OrketDriver:
             
         try:
             self.dialect = loader.load_asset("dialects", family, DialectConfig)
-        except:
+        except (FileNotFoundError, ValueError, CardNotFound):
             pass
 
     async def _get_inventory(self) -> Dict[str, Any]:

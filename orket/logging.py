@@ -65,8 +65,8 @@ def log_event(event: str, data: Dict[str, Any], workspace: Path, role: str = Non
     for subscriber in _subscribers:
         try:
             subscriber(record)
-        except:
-            pass # Prevent one bad subscriber from breaking the engine
+        except Exception:
+            pass  # Prevent one bad subscriber from breaking the engine
 
 
 def log_model_selected(role: str, model: str, temperature: float, seed, epic: str, workspace: Path) -> None:
@@ -131,6 +131,6 @@ def get_member_metrics(workspace: Path) -> Dict[str, Any]:
                         metrics[role]["detail"] = f"Wrote {data.get('args', {}).get('path')}"
                 elif event == "auto_persist":
                     metrics[role]["detail"] = f"Persisted {data.get('path')}"
-            except:
+            except (json.JSONDecodeError, KeyError):
                 continue
     return metrics

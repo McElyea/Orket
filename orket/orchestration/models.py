@@ -91,5 +91,5 @@ class ModelRegistry:
             result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=True)
             lines = result.stdout.strip().splitlines()
             return [line.split()[0] for line in lines if line and not line.startswith("NAME")]
-        except:
+        except (subprocess.SubprocessError, FileNotFoundError, OSError):
             return []

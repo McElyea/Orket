@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 import subprocess
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 
 from orket.domain.sandbox import (
     Sandbox,
@@ -97,7 +97,7 @@ class SandboxOrchestrator:
         try:
             await self._deploy_sandbox(sandbox, compose_path)
             sandbox.status = SandboxStatus.RUNNING
-            sandbox.deployed_at = datetime.utcnow().isoformat()
+            sandbox.deployed_at = datetime.now(UTC).isoformat()
             log_event("sandbox_deployed", {"sandbox_id": sandbox_id}, Path(workspace_path))
         except Exception as e:
             sandbox.status = SandboxStatus.UNHEALTHY
@@ -143,7 +143,7 @@ class SandboxOrchestrator:
                 raise RuntimeError(f"Failed to stop sandbox: {result.stderr}")
 
             sandbox.status = SandboxStatus.DELETED
-            sandbox.deleted_at = datetime.utcnow().isoformat()
+            sandbox.deleted_at = datetime.now(UTC).isoformat()
 
             # Release ports
             self.registry.port_allocator.release(sandbox_id)
@@ -188,7 +188,7 @@ class SandboxOrchestrator:
 
             if result.returncode != 0:
                 sandbox.health_checks_failed += 1
-                sandbox.last_health_check = datetime.utcnow().isoformat()
+                sandbox.last_health_check = datetime.now(UTC).isoformat()
                 return False
 
             # Parse container status
@@ -203,13 +203,13 @@ class SandboxOrchestrator:
                 sandbox.health_checks_failed += 1
                 sandbox.status = SandboxStatus.UNHEALTHY
 
-            sandbox.last_health_check = datetime.utcnow().isoformat()
+            sandbox.last_health_check = datetime.now(UTC).isoformat()
             return all_running
 
         except Exception as e:
             sandbox.health_checks_failed += 1
             sandbox.last_error = str(e)
-            sandbox.last_health_check = datetime.utcnow().isoformat()
+            sandbox.last_health_check = datetime.now(UTC).isoformat()
             return False
 
     def get_logs(self, sandbox_id: str, service: Optional[str] = None) -> str:

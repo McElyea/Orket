@@ -14,20 +14,30 @@ class BaseTools:
         self.references = references
 
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
+        """
+        Resolve and validate a file path against security policy.
+
+        Uses Path.is_relative_to() instead of string comparison to prevent:
+        - Windows case-insensitivity bypasses
+        - Symlink attacks
+        - UNC path bypasses
+        """
         p = Path(path_str)
         if not p.is_absolute():
             p = self.workspace_root / p
-        
+
         resolved = p.resolve()
-        in_workspace = str(resolved).startswith(str(self.workspace_root.resolve()))
-        in_references = any(str(resolved).startswith(str(r.resolve())) for r in self.references)
-        
+        workspace_resolved = self.workspace_root.resolve()
+
+        in_workspace = resolved.is_relative_to(workspace_resolved)
+        in_references = any(resolved.is_relative_to(r.resolve()) for r in self.references)
+
         if not (in_workspace or in_references):
             raise PermissionError(f"Access to path '{path_str}' is denied by security policy.")
-            
+
         if write and not in_workspace:
             raise PermissionError(f"Write access to path '{path_str}' is restricted to workspace.")
-            
+
         return resolved
 
 class FileSystemTools(BaseTools):

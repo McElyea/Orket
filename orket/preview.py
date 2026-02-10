@@ -5,6 +5,7 @@ from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig, TeamConfig, EnvironmentConfig, SkillConfig, DialectConfig
 from orket.agents.agent import Agent
 from orket.utils import sanitize_name
+from orket.exceptions import CardNotFound
 
 class PreviewBuilder:
     """
@@ -21,7 +22,7 @@ class PreviewBuilder:
             from orket.schema import OrganizationConfig
             try:
                 self.org = OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
-            except: pass
+            except (ValueError, FileNotFoundError): pass
 
     async def _get_compiled_prompt(self, seat_name: str, issue_summary: str, epic: EpicConfig, team: TeamConfig, department: str) -> str:
         loader = ConfigLoader(self.model_root, department)
@@ -34,7 +35,7 @@ class PreviewBuilder:
         for r_name in seat.roles:
             try:
                 role_objects.append(loader.load_asset("roles", r_name, RoleConfig))
-            except: pass
+            except (FileNotFoundError, ValueError): pass
 
         # 2. Select Model
         from orket.orchestration.models import ModelSelector

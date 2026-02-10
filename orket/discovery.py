@@ -12,7 +12,7 @@ def get_installed_models() -> List[str]:
         lines = result.stdout.strip().splitlines()
         # Filter out 'NAME' header and empty lines
         return [line.split()[0] for line in lines if line and not line.startswith("NAME")]
-    except: return []
+    except (subprocess.SubprocessError, FileNotFoundError, OSError): return []
 
 def refresh_engine_mappings():
     """
@@ -157,10 +157,10 @@ def print_orket_manifest(department: str = "core"):
                         unique_seats = list(dict.fromkeys(seats)) # Preserve order
                         
                         print(f"    * {dept.upper():<12} | Epic: {epic_name:<20} | Members: {', '.join(unique_seats)}")
-                    except:
-                        print(f"    * {dept.upper():<12} | Epic: {epic_name:<20} | [Error loading details]")
-            except:
-                print(f"  - ROCK: {rock_name} [Metadata load failed]")
+                    except (FileNotFoundError, ValueError, KeyError) as e:
+                        print(f"    * {dept.upper():<12} | Epic: {epic_name:<20} | [Error: {e}]")
+            except (FileNotFoundError, ValueError) as e:
+                print(f"  - ROCK: {rock_name} [Metadata load failed: {e}]")
 
     else:
         print(f"\n[EPICS (Standalone)]")
