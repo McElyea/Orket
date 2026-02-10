@@ -2,7 +2,7 @@ import asyncio
 import uuid
 import json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Optional, Dict, Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request, APIRouter, Depends, Security
@@ -41,8 +41,8 @@ origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
@@ -70,8 +70,8 @@ async def clear_logs():
 async def heartbeat():
     return {
         "status": "online",
-        "timestamp": datetime.now().isoformat(),
-        "active_tasks": len(runtime_state.active_tasks)
+        "timestamp": datetime.now(UTC).isoformat(),
+        "active_tasks": len(runtime_state.active_tasks)  # Read-only len() is safe without lock
     }
 
 @v1_router.get("/system/metrics")
@@ -111,7 +111,7 @@ async def save_system_file(data: Dict[str, str] = Body(...)):
 @v1_router.get("/system/calendar")
 async def get_calendar():
     from orket.utils import get_eos_sprint
-    now = datetime.now()
+    now = datetime.now(UTC)
     return {
         "current_sprint": get_eos_sprint(now),
         "sprint_start": (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d"),
@@ -131,7 +131,7 @@ async def run_active_asset(data: Dict[str, Any] = Body(...)):
 
     print(f"  [API] v1 EXECUTE: {asset_id} (Type: {asset_type}, Session: {session_id})")
     task = asyncio.create_task(engine.run_card(asset_id, build_id=build_id, session_id=session_id))
-    runtime_state.active_tasks[session_id] = task
+    await runtime_state.add_task(session_id, task)
     return {"session_id": session_id}
 
 @v1_router.get("/runs")
@@ -209,10 +209,10 @@ app.include_router(v1_router)
 async def event_broadcaster():
     while True:
         record = await runtime_state.event_queue.get()
-        for ws in list(runtime_state.active_websockets):
+        for ws in await runtime_state.get_websockets():
             try: await ws.send_json(record)
             except Exception:
-                if ws in runtime_state.active_websockets: runtime_state.active_websockets.remove(ws)
+                await runtime_state.remove_websocket(ws)
         runtime_state.event_queue.task_done()
 
 @app.on_event("startup")
@@ -226,8 +226,8 @@ async def startup_event():
 @app.websocket("/ws/events")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    runtime_state.active_websockets.append(websocket)
+    await runtime_state.add_websocket(websocket)
     try:
         while True: await websocket.receive_text()
     except WebSocketDisconnect:
-        if websocket in runtime_state.active_websockets: runtime_state.active_websockets.remove(websocket)
+        await runtime_state.remove_websocket(websocket)

@@ -15,7 +15,7 @@ from orket.policy import create_session_policy
 from orket.tools import ToolBox, get_tool_map
 from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, IssueConfig, CardStatus, SkillConfig, DialectConfig, RoleConfig, CardType
 from orket.utils import get_eos_sprint, sanitize_name
-from orket.exceptions import CardNotFound, ExecutionFailed, StateConflict, ComplexityViolation
+from orket.exceptions import CardNotFound, ComplexityViolation
 from orket.infrastructure.sqlite_repositories import SQLiteSessionRepository, SQLiteSnapshotRepository
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.orchestration.turn_executor import TurnExecutor
@@ -299,11 +299,6 @@ class ExecutionPipeline:
     async def verify_issue(self, issue_id: str) -> Any:
         """Runs empirical verification via the Orchestrator."""
         return await self.orchestrator.verify_issue(issue_id)
-
-
-
-        if iteration_count >= max_iterations:
-            raise ExecutionFailed(f"Traction Loop exhausted iterations ({max_iterations}) without completion.")
 
 # Shims
 async def orchestrate_card(card_id: str, workspace: Path, **kwargs) -> Any:

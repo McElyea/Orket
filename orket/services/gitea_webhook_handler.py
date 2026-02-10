@@ -34,7 +34,12 @@ class GiteaWebhookHandler:
     def __init__(self, gitea_url: str = "http://localhost:3000", workspace: Optional[Path] = None):
         self.gitea_url = gitea_url
         self.gitea_user = os.getenv("GITEA_ADMIN_USER", "Orket")
-        self.gitea_password = os.getenv("GITEA_ADMIN_PASSWORD", "")
+        self.gitea_password = os.getenv("GITEA_ADMIN_PASSWORD")
+        if not self.gitea_password:
+            raise RuntimeError(
+                "GITEA_ADMIN_PASSWORD environment variable is not set. "
+                "Set it before initializing the webhook handler."
+            )
         self.workspace = workspace or Path.cwd()
         self.auth = (self.gitea_user, self.gitea_password)
 

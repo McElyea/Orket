@@ -1,7 +1,7 @@
 import sqlite3
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from orket.repositories import CardRepository, SessionRepository, SnapshotRepository
@@ -90,7 +90,7 @@ class SQLiteCardRepository(CardRepository):
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (card_data['id'], card_data.get('session_id'), card_data.get('build_id'), card_data['seat'], summary, 
                  card_data['type'], card_data['priority'], card_data.get('sprint'), card_data['status'], card_data.get('note'),
-                 v_json, m_json, datetime.now().isoformat())
+                 v_json, m_json, datetime.now(UTC).isoformat())
             )
             conn.commit()
 
@@ -126,7 +126,7 @@ class SQLiteCardRepository(CardRepository):
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT OR IGNORE INTO issues (id, session_id, seat, summary, type, priority, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (issue_id, session_id, seat, summary, i_type, priority, "ready", datetime.now().isoformat())
+                (issue_id, session_id, seat, summary, i_type, priority, "ready", datetime.now(UTC).isoformat())
             )
             conn.commit()
         return issue_id
@@ -145,7 +145,7 @@ class SQLiteCardRepository(CardRepository):
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT INTO comments (issue_id, author, content, created_at) VALUES (?, ?, ?, ?)",
-                (card_id, author, content, datetime.now().isoformat())
+                (card_id, author, content, datetime.now(UTC).isoformat())
             )
             conn.commit()
 
@@ -204,7 +204,7 @@ class SQLiteSessionRepository(SessionRepository):
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT OR IGNORE INTO sessions (id, type, name, department, status, task_input, start_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (session_id, data['type'], data['name'], data['department'], "Started", data['task_input'], datetime.now().isoformat())
+                (session_id, data['type'], data['name'], data['department'], "Started", data['task_input'], datetime.now(UTC).isoformat())
             )
             conn.commit()
 
@@ -218,7 +218,7 @@ class SQLiteSessionRepository(SessionRepository):
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "UPDATE sessions SET status = ?, transcript = ?, end_time = ? WHERE id = ?",
-                (status, json.dumps(transcript), datetime.now().isoformat(), session_id)
+                (status, json.dumps(transcript), datetime.now(UTC).isoformat(), session_id)
             )
             conn.commit()
 
@@ -243,7 +243,7 @@ class SQLiteSnapshotRepository(SnapshotRepository):
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT OR REPLACE INTO session_snapshots (session_id, config_json, log_history, captured_at) VALUES (?, ?, ?, ?)",
-                (session_id, json.dumps(config), json.dumps(logs), datetime.now().isoformat())
+                (session_id, json.dumps(config), json.dumps(logs), datetime.now(UTC).isoformat())
             )
             conn.commit()
 

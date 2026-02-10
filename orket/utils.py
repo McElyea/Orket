@@ -25,12 +25,12 @@ def get_reload_excludes() -> list[str]:
 
 def get_eos_sprint(date_obj: datetime = None) -> str:
     """Calculates EOS Sprint based on 1-week sprints (Mon-Fri) and 13-sprint quarters."""
-    if date_obj is None: date_obj = datetime.now()
+    if date_obj is None: date_obj = datetime.now(UTC)
     
     # Simple calculation based on your provided info: 
     # Feb 6, 2026 is end of Q1 S6.
     # Base date: Feb 2, 2026 was start of Q1 S6.
-    base_date = datetime(2026, 2, 2)
+    base_date = datetime(2026, 2, 2, tzinfo=UTC)
     base_q, base_s = 1, 6
     
     delta_weeks = (date_obj - base_date).days // 7

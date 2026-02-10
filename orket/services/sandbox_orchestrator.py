@@ -7,6 +7,7 @@ Coordinates Docker Compose creation, deployment, health monitoring, and cleanup.
 from __future__ import annotations
 from typing import Optional, Dict, Any
 from pathlib import Path
+import secrets
 import subprocess
 import json
 from datetime import datetime, UTC
@@ -250,16 +251,19 @@ class SandboxOrchestrator:
 
         For now, uses simple templates. Could be enhanced with Jinja2.
         """
+        db_password = secrets.token_urlsafe(32)
+        admin_password = secrets.token_urlsafe(32)
+
         if sandbox.tech_stack == TechStack.FASTAPI_REACT_POSTGRES:
-            return self._template_fastapi_react_postgres(sandbox)
+            return self._template_fastapi_react_postgres(sandbox, db_password, admin_password)
         elif sandbox.tech_stack == TechStack.FASTAPI_VUE_MONGO:
             return self._template_fastapi_vue_mongo(sandbox)
         elif sandbox.tech_stack == TechStack.CSHARP_RAZOR_EF:
-            return self._template_csharp_razor_ef(sandbox)
+            return self._template_csharp_razor_ef(sandbox, db_password)
         else:
             raise ValueError(f"Unsupported tech stack: {sandbox.tech_stack}")
 
-    def _template_fastapi_react_postgres(self, sandbox: Sandbox) -> str:
+    def _template_fastapi_react_postgres(self, sandbox: Sandbox, db_password: str, admin_password: str) -> str:
         """FastAPI + React + PostgreSQL template."""
         return f"""version: "3.8"
 
@@ -271,7 +275,7 @@ services:
     ports:
       - "{sandbox.ports.api}:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/appdb
+      - DATABASE_URL=postgresql://postgres:{db_password}@db:5432/appdb
     depends_on:
       - db
     restart: unless-stopped
@@ -292,7 +296,7 @@ services:
     image: postgres:16
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD={db_password}
       - POSTGRES_DB=appdb
     ports:
       - "{sandbox.ports.database}:5432"
@@ -304,7 +308,7 @@ services:
     image: dpage/pgadmin4:latest
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@orket.local
-      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_DEFAULT_PASSWORD={admin_password}
     ports:
       - "{sandbox.ports.admin_tool}:80"
     depends_on:
@@ -366,7 +370,7 @@ volumes:
   mongo-data:
 """
 
-    def _template_csharp_razor_ef(self, sandbox: Sandbox) -> str:
+    def _template_csharp_razor_ef(self, sandbox: Sandbox, db_password: str) -> str:
         """C# WebAPI + Razor Pages + EF Core template."""
         return f"""version: "3.8"
 
@@ -380,7 +384,7 @@ services:
       - "{sandbox.ports.frontend}:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=appdb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=db;Database=appdb;User=sa;Password={db_password};TrustServerCertificate=True
     depends_on:
       - db
     restart: unless-stopped
@@ -389,7 +393,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong!Passw0rd
+      - SA_PASSWORD={db_password}
     ports:
       - "{sandbox.ports.database}:1433"
     volumes:
@@ -400,14 +404,14 @@ volumes:
   mssql-data:
 """
 
-    def _get_database_url(self, tech_stack: TechStack, ports: PortAllocation) -> str:
+    def _get_database_url(self, tech_stack: TechStack, ports: PortAllocation, db_password: str = "") -> str:
         """Generate database connection URL."""
         if "mongo" in tech_stack.value:
             return f"mongodb://localhost:{ports.database}/appdb"
         elif "csharp" in tech_stack.value:
-            return f"Server=localhost,{ports.database};Database=appdb;User=sa;Password=YourStrong!Passw0rd"
+            return f"Server=localhost,{ports.database};Database=appdb;User=sa;Password={db_password}"
         else:
-            return f"postgresql://postgres:postgres@localhost:{ports.database}/appdb"
+            return f"postgresql://postgres:{db_password}@localhost:{ports.database}/appdb"
 
     async def _deploy_sandbox(self, sandbox: Sandbox, compose_path: Path) -> None:
         """Execute docker-compose up -d."""

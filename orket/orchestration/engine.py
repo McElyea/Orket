@@ -1,19 +1,11 @@
-import asyncio
-import uuid
-import json
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Type
+from typing import List, Dict, Any, Optional
 
-from orket.schema import (
-    CardStatus, EpicConfig, RockConfig, IssueConfig, 
-    OrganizationConfig, CardType
-)
 from orket.infrastructure.sqlite_repositories import (
-    SQLiteCardRepository, SQLiteSessionRepository, SQLiteSnapshotRepository
+    SQLiteSessionRepository, SQLiteSnapshotRepository
 )
-from orket.infrastructure.async_card_repository import AsyncCardRepository, CardRepositoryAdapter
+from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.logging import log_event
-from orket.utils import sanitize_name
 
 class OrchestrationEngine:
     """
@@ -115,11 +107,10 @@ class OrchestrationEngine:
         """Stops and deletes a sandbox."""
         await self._pipeline.sandbox_orchestrator.delete_sandbox(sandbox_id)
 
-    def halt_session(self, session_id: str):
+    async def halt_session(self, session_id: str):
         """Halts an active session by signaling the runtime state."""
         from orket.state import runtime_state
-        if session_id in runtime_state.active_tasks:
-            task = runtime_state.active_tasks.get(session_id)
-            if task:
-                task.cancel()
-                log_event("session_halted", {"session_id": session_id}, self.workspace_root)
+        task = await runtime_state.get_task(session_id)
+        if task:
+            task.cancel()
+            log_event("session_halted", {"session_id": session_id}, self.workspace_root)

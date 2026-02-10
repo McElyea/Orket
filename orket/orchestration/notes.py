@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 
@@ -8,11 +8,11 @@ class Note(BaseModel):
     Notes allow agents to pass tactical directives or findings 
     without polluting the global task description.
     """
-    id: str = Field(default_factory=lambda: str(datetime.now().timestamp()))
+    id: str = Field(default_factory=lambda: str(datetime.now(UTC).timestamp()))
     from_role: str
     to_role: Optional[str] = None  # None = Broadcast to all
     content: str
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     step_index: int
 
 class NoteStore:

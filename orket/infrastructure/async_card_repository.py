@@ -205,21 +205,3 @@ class AsyncCardRepository(CardRepository):
                 row[target] = [] if target == 'depends_on' else {}
         return row
 
-class CardRepositoryAdapter(CardRepository):
-    def __init__(self, async_repo: AsyncCardRepository):
-        self._async_repo = async_repo
-        self._loop = asyncio.get_event_loop()
-
-    def get_by_id(self, card_id: str) -> Optional[Dict[str, Any]]:
-        record = self._loop.run_until_complete(self._async_repo.get_by_id(card_id))
-        return record.model_dump() if record else None
-
-    def get_by_build(self, build_id: str) -> List[Dict[str, Any]]:
-        records = self._loop.run_until_complete(self._async_repo.get_by_build(build_id))
-        return [r.model_dump() for r in records]
-
-    def save(self, card_data: Dict[str, Any]) -> None:
-        self._loop.run_until_complete(self._async_repo.save(card_data))
-
-    def update_status(self, card_id: str, status: CardStatus, assignee: Optional[str] = None) -> None:
-        self._loop.run_until_complete(self._async_repo.update_status(card_id, status, assignee))

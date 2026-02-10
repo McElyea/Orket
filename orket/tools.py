@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import List, Dict, Any, Callable, Optional
 
@@ -163,7 +163,7 @@ class AcademyTools(BaseTools):
         # Resolve source from workspace relative path
         src = self.workspace_root.parent / "runs" / session_id
         # Resolve destination from project root (or as per system policy)
-        dest = self.workspace_root.parent.parent / "evals" / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
+        dest = self.workspace_root.parent.parent / "evals" / f"{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
         
         try:
             dest.parent.mkdir(parents=True, exist_ok=True)

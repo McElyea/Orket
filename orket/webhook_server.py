@@ -35,7 +35,13 @@ webhook_handler = GiteaWebhookHandler(
 )
 
 # Webhook secret for HMAC validation (set in Gitea webhook config)
-WEBHOOK_SECRET = os.getenv("GITEA_WEBHOOK_SECRET", "").encode()
+_webhook_secret_raw = os.getenv("GITEA_WEBHOOK_SECRET", "")
+if not _webhook_secret_raw.strip():
+    raise RuntimeError(
+        "GITEA_WEBHOOK_SECRET environment variable is not set. "
+        "Configure it before starting the webhook server."
+    )
+WEBHOOK_SECRET = _webhook_secret_raw.encode()
 
 
 def validate_signature(payload: bytes, signature: str) -> bool:
