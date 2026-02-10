@@ -19,6 +19,7 @@ class IssueRecord(BaseModel):
     status: CardStatus = CardStatus.READY
     assignee: Optional[str] = None
     note: Optional[str] = None
+    depends_on: List[str] = Field(default_factory=list)
     verification: Dict[str, Any] = Field(default_factory=dict)
     metrics: Dict[str, Any] = Field(default_factory=dict)
     created_at: Optional[str] = None

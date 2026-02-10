@@ -91,6 +91,7 @@ class ToolGate:
 
             # 2. iDesign Governance Enforcement
             from orket.services.idesign_validator import iDesignValidator
+            from orket.services.ast_validator import ASTValidator
             from orket.domain.execution import ExecutionTurn, ToolCall
             
             # Create a mock turn containing this single write_file call to validate
@@ -100,10 +101,19 @@ class ToolGate:
                 tool_calls=[ToolCall(tool="write_file", args=args)]
             )
             
+            # Path-based validation
             violations = iDesignValidator.validate_turn(temp_turn, self.workspace_root)
             if violations:
-                # Return the first violation message for now, or a concatenated list
                 return f"iDesign Violation: {violations[0].message} (Code: {violations[0].code.value})"
+
+            # AST-based validation for Python source code
+            if full_path.suffix == ".py":
+                content = args.get("content", "")
+                ast_violations = ASTValidator.validate_code(content, full_path.name)
+                # We filter for errors (warnings are non-blocking)
+                errors = [v for v in ast_violations if v.severity == "error"]
+                if errors:
+                    return f"iDesign AST Violation: {errors[0].message} (Line: {errors[0].line})"
 
             # 3. Check for forbidden file types (legacy policy)
             if self.org and hasattr(self.org, "forbidden_file_types"):

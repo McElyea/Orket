@@ -6,6 +6,7 @@ import json
 import uuid
 import asyncio
 from datetime import datetime, UTC
+from functools import lru_cache
 
 from orket.llm import LocalModelProvider
 from orket.logging import log_event
@@ -18,6 +19,7 @@ from orket.exceptions import CardNotFound, ExecutionFailed, StateConflict, Compl
 from orket.infrastructure.sqlite_repositories import SQLiteSessionRepository, SQLiteSnapshotRepository
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.orchestration.turn_executor import TurnExecutor
+from orket.orchestration.orchestrator import Orchestrator
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from orket.domain.bug_fix_phase import BugFixPhaseManager
 from orket.services.webhook_db import WebhookDatabase
@@ -76,18 +78,22 @@ class ConfigLoader:
         return None
 
     def load_asset(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
+        return model_type.model_validate_json(self._load_asset_raw(category, name, self.department))
+
+    @lru_cache(maxsize=256)
+    def _load_asset_raw(self, category: str, name: str, dept: str) -> str:
         # 1. Unified Config
         paths = [
             self.config_dir / category / f"{name}.json",
-            self.model_dir / self.department / category / f"{name}.json",
+            self.model_dir / dept / category / f"{name}.json",
             self.model_dir / "core" / category / f"{name}.json"
         ]
         
         for p in paths:
             if p.exists():
-                return model_type.model_validate_json(p.read_text(encoding="utf-8"))
+                return p.read_text(encoding="utf-8")
         
-        raise CardNotFound(f"Asset '{name}' not found in category '{category}' for department '{self.department}'.")
+        raise CardNotFound(f"Asset '{name}' not found in category '{category}' for department '{dept}'.")
 
     def list_assets(self, category: str) -> List[str]:
         assets = set()
@@ -143,6 +149,16 @@ class ExecutionPipeline:
             organization_config=self.org.process_rules if self.org else {},
             db=self.webhook_db
         )
+        self.orchestrator = Orchestrator(
+            workspace=self.workspace,
+            async_cards=self.async_cards,
+            snapshots=self.snapshots,
+            org=self.org,
+            config_root=self.config_root,
+            db_path=self.db_path,
+            loader=self.loader,
+            sandbox_orchestrator=self.sandbox_orchestrator
+        )
 
     async def run_card(self, card_id: str, **kwargs) -> Any:
         epics = self.loader.list_assets("epics")
@@ -197,7 +213,19 @@ class ExecutionPipeline:
                 await self.async_cards.save(card_data)
 
         log_event("session_start", {"epic": epic.name, "run_id": run_id, "build_id": active_build}, workspace=self.workspace)
-        await self._traction_loop(active_build, run_id, epic, team, env, driver_steered, target_issue_id)
+        
+        # Delegate traction loop to the Orchestrator
+        await self.orchestrator.execute_epic(
+            active_build=active_build,
+            run_id=run_id,
+            epic=epic,
+            team=team,
+            env=env,
+            target_issue_id=target_issue_id
+        )
+        
+        # Sync the transcript from orchestrator for session reporting
+        self.transcript = self.orchestrator.transcript
         
         legacy_transcript = [
             {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
@@ -240,231 +268,10 @@ class ExecutionPipeline:
             except (FileNotFoundError, ValueError, CardNotFound): continue
         return None, None, None
 
-    async def verify_issue(self, issue_id: str) -> VerificationResult:
-        """
-        Runs empirical verification for a specific issue.
-        Loads the configuration, executes the 'FIT' fixtures, and updates persistence.
-        """
-        # 1. Load the latest IssueConfig from DB
-        issue_data = await self.async_cards.get_by_id(issue_id)
-        if not issue_data:
-            raise CardNotFound(f"Cannot verify non-existent issue {issue_id}")
-            
-        # Re-hydrate into IssueConfig object
-        from orket.schema import IssueConfig
-        from orket.domain.verification import VerificationResult
-        issue = IssueConfig.model_validate(issue_data.model_dump())
-        
-        # 2. Execute Verification (Fixtures)
-        from orket.domain.verification import VerificationEngine
-        print(f"  [VERIFIER] Running empirical tests for {issue_id}...")
-        result = VerificationEngine.verify(issue.verification, self.workspace)
-        
-        # 3. Optional: Execute Sandbox Verification (HTTP)
-        rock_id = issue.build_id # Simplification for mapping
-        sandbox = self.sandbox_orchestrator.registry.get(f"sandbox-{rock_id}")
-        if sandbox and sandbox.status == SandboxStatus.RUNNING:
-            print(f"  [VERIFIER] Running sandbox HTTP tests for {issue_id}...")
-            sb_result = await VerificationEngine.verify_sandbox(sandbox, issue.verification)
-            # Merge results
-            result.passed += sb_result.passed
-            result.failed += sb_result.failed
-            result.total_scenarios += sb_result.total_scenarios
-            result.logs.extend(sb_result.logs)
+    async def verify_issue(self, issue_id: str) -> Any:
+        """Runs empirical verification via the Orchestrator."""
+        return await self.orchestrator.verify_issue(issue_id)
 
-        # 4. Update the Issue with the new verification state
-        issue.verification.last_run = result
-        
-        # Save back to database
-        await self.async_cards.save(issue.model_dump())
-        
-        return result
-
-    async def _save_checkpoint(self, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str):
-        """Saves current state snapshot for crash recovery."""
-        snapshot_data = {
-            "epic": epic.model_dump(),
-            "team": team.model_dump(),
-            "env": env.model_dump(),
-            "build_id": active_build,
-            "timestamp": datetime.now(UTC).isoformat()
-        }
-        legacy_transcript = [
-            {"role": t.role, "issue": t.issue_id, "content": t.content}
-            for t in self.transcript
-        ]
-        self.snapshots.record(run_id, snapshot_data, legacy_transcript)
-
-    async def _trigger_sandbox(self, epic: EpicConfig):
-        """Helper to trigger sandbox deployment."""
-        from orket.domain.sandbox import TechStack, SandboxStatus
-        rock_id = epic.parent_id or epic.id
-        
-        # Check if already running to avoid spam
-        existing = self.sandbox_orchestrator.registry.get(f"sandbox-{rock_id}")
-        if existing and existing.status == SandboxStatus.RUNNING:
-            return
-
-        print(f"  [SANDBOX] Deploying environment for {rock_id}...")
-        try:
-            await self.sandbox_orchestrator.create_sandbox(
-                rock_id=rock_id,
-                project_name=epic.name,
-                tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-                workspace_path=str(self.workspace)
-            )
-        except Exception as e:
-            print(f"  [SANDBOX] WARN: Deployment failed: {e}")
-
-    async def _traction_loop(self, active_build: str, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, driver_steered: bool, target_issue_id: str = None):
-        """
-        The reconstructed Traction Loop.
-        Uses TurnExecutor and handles loop logic with proper async patterns.
-        """
-        from orket.orchestration.models import ModelSelector
-        from orket.domain.state_machine import StateMachine
-        from orket.settings import load_user_settings
-        from orket.services.tool_gate import ToolGate
-        
-        # 1. Setup Environment
-        settings_path = self.config_root / "user_settings.json"
-        user_settings = json.loads(settings_path.read_text(encoding="utf-8")) if settings_path.exists() else load_user_settings()
-        model_selector = ModelSelector(organization=self.org, user_settings=user_settings)
-        
-        tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
-        executor = TurnExecutor(StateMachine(), tool_gate, self.workspace)
-        
-        # Aggregated ToolBox
-        policy = create_session_policy(str(self.workspace), epic.references)
-        toolbox = ToolBox(policy, str(self.workspace), epic.references, db_path=self.db_path)
-        tool_map = get_tool_map(toolbox)
-
-        # Mock ModelClient for now (to be replaced with real async provider integration)
-        class AsyncModelClient:
-            def __init__(self, provider): self.provider = provider
-            async def complete(self, messages): return await self.provider.complete(messages)
-
-        print(f"  [RECONSTRUCTION] Entering Traction Loop for '{epic.name}'")
-        iteration_count = 0
-        max_iterations = 10
-
-        while iteration_count < max_iterations:
-            iteration_count += 1
-            backlog = await self.async_cards.get_by_build(active_build)
-            
-            # Prioritize Code Review over Ready work
-            in_review = [i for i in backlog if i.status == CardStatus.CODE_REVIEW]
-            ready = [i for i in backlog if i.status == CardStatus.READY]
-            
-            if target_issue_id:
-                target = next((i for i in backlog if i.id == target_issue_id), None)
-                candidates = [target] if target and target.status in [CardStatus.READY, CardStatus.CODE_REVIEW] else []
-            else:
-                candidates = in_review + ready
-
-            if not candidates: break
-            
-            issue_data = candidates[0]
-            issue = IssueConfig.model_validate(issue_data.model_dump())
-            is_review_turn = issue.status == CardStatus.CODE_REVIEW
-            
-            # Select Seat & Role
-            seat_name = issue.seat
-            if is_review_turn:
-                # RUN EMPIRICAL VERIFICATION (FIT)
-                verification_result = await self.verify_issue(issue.id)
-                v_msg = f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
-                self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
-                
-                verifier_seat = next((name for name, s in team.seats.items() if "integrity_guard" in s.roles), None)
-                if verifier_seat: seat_name = verifier_seat
-
-            seat_obj = team.seats.get(sanitize_name(seat_name))
-            if not seat_obj:
-                await self.async_cards.update_status(issue.id, CardStatus.CANCELED)
-                continue
-
-            # Determine target status for this turn
-            turn_status = CardStatus.IN_PROGRESS if not is_review_turn else CardStatus.CODE_REVIEW
-            
-            # Update status to reflect active work
-            await self.async_cards.update_status(issue.id, turn_status, assignee=seat_name)
-
-            # Prepare Role
-            roles_to_load = list(seat_obj.roles)
-            if is_review_turn and "integrity_guard" not in roles_to_load:
-                roles_to_load = ["integrity_guard"] + roles_to_load
-
-            role_config = self.loader.load_asset("roles", roles_to_load[0], RoleConfig)
-            
-            # Select Model
-            selected_model = model_selector.select(role=roles_to_load[0], asset_config=epic)
-            dialect_name = model_selector.get_dialect_name(selected_model)
-            dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
-            provider = LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
-            client = AsyncModelClient(provider)
-
-            # Compile Prompt
-            skill = SkillConfig(
-                name=role_config.name or seat_name,
-                intent=role_config.description,
-                responsibilities=[ro.description for ro in [role_config]],
-                tools=role_config.tools
-            )
-            system_desc = PromptCompiler.compile(skill, dialect)
-
-            context = {
-                "session_id": run_id,
-                "issue_id": issue.id,
-                "workspace": str(self.workspace),
-                "role": seat_name,
-                "roles": roles_to_load,
-                "current_status": turn_status.value,
-                "history": [{"role": t.role, "content": t.content} for t in self.transcript[-5:]] # Windowed history
-            }
-
-            print(f"  [ORKESTRATE] {seat_name} -> {issue.id} ({issue.status.value})")
-
-            # EXECUTE TURN
-            result = await executor.execute_turn(issue, role_config, client, toolbox, context, system_prompt=system_desc)
-
-            if result.success:
-                print(f"    [DEBUG] Turn succeeded. Tool calls: {[tc.tool for tc in result.turn.tool_calls]}")
-                self.transcript.append(result.turn)
-                # Check for CODE_REVIEW transition
-                updated_issue = await self.async_cards.get_by_id(issue.id)
-                if updated_issue.status == CardStatus.CODE_REVIEW:
-                    await self._trigger_sandbox(epic)
-                
-                # Auto-transition if not already updated by tool calls and not already in review
-                if updated_issue.status == issue.status and not is_review_turn:
-                    await self.async_cards.update_status(issue.id, CardStatus.CODE_REVIEW)
-                    await self._trigger_sandbox(epic)
-                
-                # --- MEMORY HYGIENE ---
-                await provider.clear_context()
-                
-                # --- CHECKPOINT ---
-                await self._save_checkpoint(run_id, epic, team, env, active_build)
-                
-            else:
-                from orket.exceptions import ExecutionFailed, GovernanceViolation
-                print(f"  [FAILURE] Turn failed: {result.error}")
-                # --- GENERATE POLICY REPORT ---
-                from orket.domain.failure_reporter import FailureReporter
-                await FailureReporter.generate_report(
-                    workspace=self.workspace,
-                    session_id=run_id,
-                    card_id=issue.id,
-                    violation=result.error or "Unknown failure",
-                    transcript=self.transcript,
-                    roles=roles_to_load
-                )
-                await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
-                
-                if result.violations:
-                    raise GovernanceViolation(f"iDesign Violation: {result.error}")
-                raise ExecutionFailed(f"Orchestration Turn Failed: {result.error}")
 
 
         if iteration_count >= max_iterations:

@@ -101,10 +101,10 @@ class VisionTools(BaseTools):
         except Exception as e: return {"ok": False, "error": str(e)}
 
 class CardManagementTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: List[Path], db_path: str = "orket_persistence.db"):
+    def __init__(self, workspace_root: Path, references: List[Path], db_path: str = "orket_persistence.db", cards_repo: Optional[AsyncCardRepository] = None):
         super().__init__(workspace_root, references)
         from orket.infrastructure.async_card_repository import AsyncCardRepository
-        self.cards = AsyncCardRepository(db_path)
+        self.cards = cards_repo or AsyncCardRepository(db_path)
 
     async def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
@@ -184,13 +184,13 @@ class AcademyTools(BaseTools):
         except Exception as e: return {"ok": False, "error": str(e)}
 
 class ToolBox:
-    def __init__(self, policy, workspace_root: str, references: List[str], db_path: str = "orket_persistence.db"):
+    def __init__(self, policy, workspace_root: str, references: List[str], db_path: str = "orket_persistence.db", cards_repo: Optional[AsyncCardRepository] = None):
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
         self.db_path = db_path
         self.fs = FileSystemTools(self.root, self.refs)
         self.vision = VisionTools(self.root, self.refs)
-        self.cards = CardManagementTools(self.root, self.refs, db_path=self.db_path)
+        self.cards = CardManagementTools(self.root, self.refs, db_path=self.db_path, cards_repo=cards_repo)
         self.academy = AcademyTools(self.root, self.refs)
 
     async def execute(self, tool_name: str, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
