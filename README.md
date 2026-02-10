@@ -1,4 +1,4 @@
-# Orket (v0.3.9)
+# Orket
 
 Orket is a professional-grade orchestration engine for autonomous engineering operations.
 It utilizes a high-precision **Prompt Engine** and **iDesign architectural governance** to manage complexity through volatility decomposition.

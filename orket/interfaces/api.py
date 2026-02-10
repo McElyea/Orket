@@ -8,13 +8,14 @@ from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from orket import __version__
 from orket.orchestration.engine import OrchestrationEngine
 from orket.logging import subscribe_to_events
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.settings import load_user_settings
 
-app = FastAPI(title="Orket API")
+app = FastAPI(title="Orket API", version=__version__)
 
 app.add_middleware(
     CORSMiddleware,

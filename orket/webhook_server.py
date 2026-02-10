@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import uvicorn
 
+from orket import __version__
 from orket.services.gitea_webhook_handler import GiteaWebhookHandler
 from orket.logging import log_event
 
@@ -24,7 +25,7 @@ load_dotenv()
 app = FastAPI(
     title="Orket Webhook Server",
     description="Handles webhooks from Gitea for PR review automation",
-    version="0.3.9"
+    version=__version__
 )
 
 # Initialize webhook handler
@@ -67,7 +68,7 @@ async def root():
     return {
         "service": "Orket Webhook Server",
         "status": "running",
-        "version": "0.3.9"
+        "version": __version__
     }
 
 

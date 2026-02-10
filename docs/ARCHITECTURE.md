@@ -1,4 +1,4 @@
-# Orket Architecture: Volatility Decomposition (v0.3.9)
+# Orket Architecture: Volatility Decomposition
 
 This document defines the structural and philosophical foundations of the Vibe Rail Orket engine.
 

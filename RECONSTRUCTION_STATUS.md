@@ -1,4 +1,4 @@
-# Reconstruction Status (v0.3.9) - DO NOT DELETE
+# Reconstruction Status - DO NOT DELETE
 
 **Session**: 2026-02-09
 **Status**: IN PROGRESS - Context about to compact

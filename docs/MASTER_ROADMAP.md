@@ -1,4 +1,4 @@
-# Orket Master Roadmap: The Path to v1.0 (v0.3.9)
+# Orket Master Roadmap: The Path to v1.0
 
 This is the unified source of truth for the Orket platform, combining the original roadmap vision with the February 2026 reconstruction requirements.
 
