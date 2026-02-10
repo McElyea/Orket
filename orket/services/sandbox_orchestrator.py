@@ -59,6 +59,9 @@ class SandboxOrchestrator:
 
         # 1. Allocate ports
         ports = self.registry.port_allocator.allocate(sandbox_id, tech_stack)
+        
+        # Hardened Credentials (v1.0 Ready)
+        db_password = secrets.token_urlsafe(32)
 
         # 2. Create Sandbox entity
         sandbox = Sandbox(
@@ -71,7 +74,7 @@ class SandboxOrchestrator:
             workspace_path=workspace_path,
             api_url=f"http://localhost:{ports.api}",
             frontend_url=f"http://localhost:{ports.frontend}",
-            database_url=self._get_database_url(tech_stack, ports),
+            database_url=self._get_database_url(tech_stack, ports, db_password),
             admin_url=f"http://localhost:{ports.admin_tool}" if ports.admin_tool else None
         )
 
@@ -80,7 +83,7 @@ class SandboxOrchestrator:
 
         # 4. Generate docker-compose.yml
         from orket.domain.verification import AGENT_OUTPUT_DIR
-        compose_content = self._generate_compose_file(sandbox)
+        compose_content = self._generate_compose_file(sandbox, db_password)
         compose_path = Path(workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"
         await self.fs.write_file(str(compose_path), compose_content)
 
@@ -245,19 +248,18 @@ class SandboxOrchestrator:
     # Private Helpers
     # -------------------------------------------------------------------------
 
-    def _generate_compose_file(self, sandbox: Sandbox) -> str:
+    def _generate_compose_file(self, sandbox: Sandbox, db_password: str) -> str:
         """
         Generate docker-compose.yml content from template.
 
         For now, uses simple templates. Could be enhanced with Jinja2.
         """
-        db_password = secrets.token_urlsafe(32)
         admin_password = secrets.token_urlsafe(32)
 
         if sandbox.tech_stack == TechStack.FASTAPI_REACT_POSTGRES:
             return self._template_fastapi_react_postgres(sandbox, db_password, admin_password)
         elif sandbox.tech_stack == TechStack.FASTAPI_VUE_MONGO:
-            return self._template_fastapi_vue_mongo(sandbox)
+            return self._template_fastapi_vue_mongo(sandbox, db_password, admin_password)
         elif sandbox.tech_stack == TechStack.CSHARP_RAZOR_EF:
             return self._template_csharp_razor_ef(sandbox, db_password)
         else:
@@ -319,7 +321,7 @@ volumes:
   db-data:
 """
 
-    def _template_fastapi_vue_mongo(self, sandbox: Sandbox) -> str:
+    def _template_fastapi_vue_mongo(self, sandbox: Sandbox, db_password: str, admin_password: str) -> str:
         """FastAPI + Vue + MongoDB template."""
         return f"""version: "3.8"
 
@@ -331,7 +333,7 @@ services:
     ports:
       - "{sandbox.ports.api}:8000"
     environment:
-      - MONGO_URL=mongodb://mongo:27017/appdb
+      - MONGO_URL=mongodb://orket:{db_password}@mongo:27017/appdb?authSource=admin
     depends_on:
       - mongo
     restart: unless-stopped
@@ -350,6 +352,9 @@ services:
 
   mongo:
     image: mongo:7
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=orket
+      - MONGO_INITDB_ROOT_PASSWORD={db_password}
     ports:
       - "{sandbox.ports.database}:27017"
     volumes:
@@ -359,7 +364,11 @@ services:
   mongo-express:
     image: mongo-express:latest
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://mongo:27017/
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=orket
+      - ME_CONFIG_MONGODB_ADMINPASSWORD={db_password}
+      - ME_CONFIG_MONGODB_URL=mongodb://orket:{db_password}@mongo:27017/
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD={admin_password}
     ports:
       - "{sandbox.ports.admin_tool}:8081"
     depends_on:

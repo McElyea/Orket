@@ -41,7 +41,7 @@ origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
@@ -135,7 +135,7 @@ async def run_active_asset(data: Dict[str, Any] = Body(...)):
     return {"session_id": session_id}
 
 @v1_router.get("/runs")
-async def list_runs(): return engine.sessions.get_recent_runs()
+async def list_runs(): return await engine.sessions.get_recent_runs()
 
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
@@ -145,17 +145,17 @@ async def get_run_metrics(session_id: str):
     return get_member_metrics(workspace)
 
 @v1_router.get("/runs/{session_id}/backlog")
-async def get_backlog(session_id: str): return engine.sessions.get_session_issues(session_id)
+async def get_backlog(session_id: str): return await engine.sessions.get_session_issues(session_id)
 
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
-    session = engine.sessions.get_session(session_id)
+    session = await engine.sessions.get_session(session_id)
     if not session: raise HTTPException(404)
     return session
 
 @v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str):
-    snapshot = engine.snapshots.get(session_id)
+    snapshot = await engine.snapshots.get(session_id)
     if not snapshot: raise HTTPException(404)
     return snapshot
 

@@ -11,7 +11,7 @@ from orket.schema import (
     CardStatus, RoleConfig, DialectConfig, SkillConfig
 )
 from orket.infrastructure.async_card_repository import AsyncCardRepository
-from orket.infrastructure.sqlite_repositories import SQLiteSnapshotRepository
+from orket.infrastructure.async_repositories import AsyncSnapshotRepository
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.orchestration.models import ModelSelector
 from orket.orchestration.notes import NoteStore, Note
@@ -45,7 +45,7 @@ class Orchestrator:
         self,
         workspace: Path,
         async_cards: AsyncCardRepository,
-        snapshots: SQLiteSnapshotRepository,
+        snapshots: AsyncSnapshotRepository,
         org: Any,
         config_root: Path,
         db_path: str,
@@ -324,7 +324,7 @@ class Orchestrator:
             {"role": t.role, "issue": t.issue_id, "content": t.content}
             for t in self.transcript
         ]
-        self.snapshots.record(run_id, snapshot_data, legacy_transcript)
+        await self.snapshots.record(run_id, snapshot_data, legacy_transcript)
 
     async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, roles: List[str]):
         from orket.domain.failure_reporter import FailureReporter

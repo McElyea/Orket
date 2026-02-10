@@ -16,7 +16,7 @@ from orket.tools import ToolBox, get_tool_map
 from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, IssueConfig, CardStatus, SkillConfig, DialectConfig, RoleConfig, CardType
 from orket.utils import get_eos_sprint, sanitize_name
 from orket.exceptions import CardNotFound, ComplexityViolation
-from orket.infrastructure.sqlite_repositories import SQLiteSessionRepository, SQLiteSnapshotRepository
+from orket.infrastructure.async_repositories import AsyncSessionRepository, AsyncSnapshotRepository
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.orchestration.orchestrator import Orchestrator
@@ -153,8 +153,8 @@ class ExecutionPipeline:
                  db_path: str = "orket_persistence.db", 
                  config_root: Optional[Path] = None,
                  cards_repo: Optional[AsyncCardRepository] = None,
-                 sessions_repo: Optional[SQLiteSessionRepository] = None,
-                 snapshots_repo: Optional[SQLiteSnapshotRepository] = None):
+                 sessions_repo: Optional[AsyncSessionRepository] = None,
+                 snapshots_repo: Optional[AsyncSnapshotRepository] = None):
         self.workspace = workspace
         self.department = department
         self.config_root = config_root or Path(".").resolve()
@@ -166,8 +166,8 @@ class ExecutionPipeline:
         
         # Injected or default repositories
         self.async_cards = cards_repo or AsyncCardRepository(self.db_path)
-        self.sessions = sessions_repo or SQLiteSessionRepository(self.db_path)
-        self.snapshots = snapshots_repo or SQLiteSnapshotRepository(self.db_path)
+        self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
+        self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         
         self.notes = NoteStore()
         self.transcript = []
@@ -222,8 +222,8 @@ class ExecutionPipeline:
         run_id = session_id or str(uuid.uuid4())[:8]
         active_build = build_id or f"build-{sanitize_name(epic_name)}"
         
-        if not self.sessions.get_session(run_id):
-            self.sessions.start_session(run_id, {"type": "epic", "name": epic.name, "department": self.department, "task_input": epic.description})
+        if not await self.sessions.get_session(run_id):
+            await self.sessions.start_session(run_id, {"type": "epic", "name": epic.name, "department": self.department, "task_input": epic.description})
         
         existing = await self.async_cards.get_by_build(active_build)
         if existing:
@@ -259,9 +259,9 @@ class ExecutionPipeline:
             {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
             for i, t in enumerate(self.transcript)
         ]
-        self.sessions.complete_session(run_id, "done", legacy_transcript)
+        await self.sessions.complete_session(run_id, "done", legacy_transcript)
         log_event("session_end", {"run_id": run_id}, workspace=self.workspace)
-        self.snapshots.record(run_id, {"epic": epic.model_dump(), "team": team.model_dump(), "env": env.model_dump(), "build_id": active_build}, legacy_transcript)
+        await self.snapshots.record(run_id, {"epic": epic.model_dump(), "team": team.model_dump(), "env": env.model_dump(), "build_id": active_build}, legacy_transcript)
 
         # Clear active log for UI cleanliness
         root_log = Path("workspace/default/orket.log")

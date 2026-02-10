@@ -18,9 +18,7 @@ def run_wizard():
     print("==========================================")
     print("   Orket EOS Initialization Wizard        ")
     print("==========================================")
-    print("
-This wizard will set up your local Orket environment.
-")
+    print("\nThis wizard will set up your local Orket environment.\n")
 
     # 1. Organization Setup
     org_name = input("Organization Name [Vibe Rail]: ") or "Vibe Rail"
@@ -57,12 +55,10 @@ This wizard will set up your local Orket environment.
     with org_file.open("w", encoding="utf-8") as f:
         f.write(config.model_dump_json(indent=4))
 
-    print(f"
-✅ Initialization complete!")
+    print("\n✅ Initialization complete!")
     print(f"   Config saved to: {org_file}")
     print(f"   Workspace ready at: {workspace_path}")
-    print("
-Next: Add your first Team and Epic to start the loop.")
+    print("\nNext: Add your first Team and Epic to start the loop.")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, UTC
 
 @dataclass
 class ToolCall:
@@ -18,7 +18,7 @@ class ExecutionTurn:
     content: str = ""
     tool_calls: List[ToolCall] = field(default_factory=list)
     tokens_used: int = 0
-    timestamp: datetime = field(default_factory=datetime.now)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     note: str = ""
     raw: Dict[str, Any] = field(default_factory=dict)
 

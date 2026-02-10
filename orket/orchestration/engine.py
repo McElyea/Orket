@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from orket.infrastructure.sqlite_repositories import (
-    SQLiteSessionRepository, SQLiteSnapshotRepository
+from orket.infrastructure.async_repositories import (
+    AsyncSessionRepository, AsyncSnapshotRepository
 )
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.logging import log_event
@@ -18,8 +18,8 @@ class OrchestrationEngine:
                  db_path: str = "orket_persistence.db", 
                  config_root: Optional[Path] = None,
                  cards_repo: Optional[AsyncCardRepository] = None,
-                 sessions_repo: Optional[SQLiteSessionRepository] = None,
-                 snapshots_repo: Optional[SQLiteSnapshotRepository] = None):
+                 sessions_repo: Optional[AsyncSessionRepository] = None,
+                 snapshots_repo: Optional[AsyncSnapshotRepository] = None):
         from orket.settings import load_env
         load_env()
         self.workspace_root = workspace_root
@@ -29,8 +29,8 @@ class OrchestrationEngine:
         
         # Repositories (Accessors)
         self.cards = cards_repo or AsyncCardRepository(self.db_path)
-        self.sessions = sessions_repo or SQLiteSessionRepository(self.db_path)
-        self.snapshots = snapshots_repo or SQLiteSnapshotRepository(self.db_path)
+        self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
+        self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         
         # Config & Assets
         from orket.orket import ConfigLoader
