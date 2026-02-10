@@ -15,41 +15,37 @@ class Message:
 @dataclass
 class Session:
     id: str
-    organization_name: str
-    task: str
-    messages: List[Message] = field(default_factory=list)
+    type: str # 'rock', 'epic', 'issue'
+    name: str
+    department: str
+    status: str = "started"
+    task_input: str = ""
+    transcript: List[Dict[str, Any]] = field(default_factory=list)
+    start_time: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    end_time: Optional[str] = None
 
     @classmethod
-    def start(cls, organization_name: str, task: str) -> "Session":
+    def start(cls, session_id: str, card_type: str, name: str, department: str, task_input: str) -> "Session":
         return cls(
-            id=str(uuid.uuid4()),
-            organization_name=organization_name,
-            task=task,
-            messages=[
-                Message(
-                    role="user",
-                    content=task,
-                    ts=datetime.now(UTC).isoformat(),
-                )
-            ],
+            id=session_id,
+            type=card_type,
+            name=name,
+            department=department,
+            task_input=task_input
         )
 
-    def add_message(self, role: str, content: str) -> None:
-        self.messages.append(
-            Message(
-                role=role,
-                content=content,
-                ts=datetime.now(UTC).isoformat(),
-            )
-        )
+    def add_turn(self, turn_data: Dict[str, Any]) -> None:
+        self.transcript.append(turn_data)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
-            "organization": self.organization_name,
-            "task": self.task,
-            "messages": [
-                {"role": m.role, "content": m.content, "ts": m.ts}
-                for m in self.messages
-            ],
+            "type": self.type,
+            "name": self.name,
+            "department": self.department,
+            "status": self.status,
+            "task_input": self.task_input,
+            "transcript": self.transcript,
+            "start_time": self.start_time,
+            "end_time": self.end_time
         }

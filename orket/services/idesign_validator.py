@@ -52,21 +52,27 @@ class iDesignValidator:
                 
                 # Check if the primary directory is an allowed category
                 category = parts[0].lower()
+                
+                # Check for product/src nesting
+                if category in {"product", "src"} and len(parts) > 1:
+                    category = parts[1].lower()
+                    if category == "product" and len(parts) > 2:
+                        category = parts[2].lower()
+
                 if category not in iDesignValidator.ALLOWED_CATEGORIES:
-                    # Special case: products/sub-projects might have their own internal structure
-                    if category == "product" or category == "src":
-                        # If it's src/ or product/, check the next level
-                        if len(parts) > 2:
-                            sub_cat = parts[1].lower()
-                            # If it's product/name/category, check the 3rd part
-                            if category == "product" and len(parts) > 3:
-                                sub_cat = parts[2].lower()
-                                
-                            if sub_cat not in iDesignValidator.ALLOWED_CATEGORIES:
-                                return f"iDesign Violation: '{path_str}' is in an unrecognized component category '{sub_cat}'. Allowed: {list(iDesignValidator.ALLOWED_CATEGORIES)}"
-                        else:
-                            return f"iDesign Violation: '{path_str}' must be placed within a component subdirectory."
-                    else:
-                        return f"iDesign Violation: Unrecognized component category '{category}'. Files should be organized into: {list(iDesignValidator.ALLOWED_CATEGORIES)}"
+                     return f"iDesign Violation: Unrecognized component category '{category}'. Files should be organized into: {list(iDesignValidator.ALLOWED_CATEGORIES)}"
+
+                # --- NAMING CONVENTION ENFORCEMENT ---
+                filename = p.name.lower()
+                if category == "managers" and "manager" not in filename:
+                    return f"iDesign Violation: Manager component '{path_str}' must include 'Manager' in the filename."
+                
+                if category == "engines" and "engine" not in filename:
+                    return f"iDesign Violation: Engine component '{path_str}' must include 'Engine' in the filename."
+                
+                if category == "accessors" and "accessor" not in filename:
+                    # Accessors are often named after the resource, but iDesign prefers explicit naming.
+                    # We'll make this a warning or just enforce it for consistency.
+                    return f"iDesign Violation: Accessor component '{path_str}' must include 'Accessor' in the filename."
         
         return None

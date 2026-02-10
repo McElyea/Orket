@@ -66,13 +66,13 @@ class BaseCardConfig(BaseModel):
     The polymorphic base for all Orket Units of Work.
     Rocks, Epics, and Issues ARE Cards.
     """
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra='ignore')
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
     name: Optional[str] = Field(None, alias="summary")
     type: CardType = Field(default=CardType.ISSUE)
     status: CardStatus = Field(default=CardStatus.READY)
     description: Optional[str] = None
-    priority: float = Field(default=2.0)  # 3.0=High, 2.0=Medium, 1.0=Low
+    priority: Union[float, str] = Field(default=2.0)  # 3.0=High, 2.0=Medium, 1.0=Low
     wait_reason: Optional[WaitReason] = None  # Why is this card blocked/waiting?
     note: Optional[str] = None
 
@@ -91,8 +91,17 @@ class BaseCardConfig(BaseModel):
     def convert_priority(cls, v):
         """Migrate legacy string priorities to numeric values."""
         if isinstance(v, str):
+            # 1. Handle actual level keywords
             mapping = {"high": 3.0, "medium": 2.0, "low": 1.0}
-            return mapping.get(v.lower(), 2.0)
+            val = mapping.get(v.lower())
+            if val is not None:
+                return val
+            
+            # 2. Handle strings that are already numbers (e.g. '3.0')
+            try:
+                return float(v)
+            except ValueError:
+                raise ValueError(f"Unrecognized priority level: '{v}'. Expected 'High', 'Medium', 'Low', or a numeric value.")
         return v
 
 # ---------------------------------------------------------------------------
@@ -254,6 +263,7 @@ class ContactInfo(BaseModel):
 
 
 class BottleneckThresholds(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     """
     Configurable thresholds for bottleneck detection.
     Prevents alert fatigue by distinguishing normal operation from real problems.
@@ -268,7 +278,7 @@ class BottleneckThresholds(BaseModel):
 
 
 class OrganizationConfig(BaseModel):
-
+    model_config = ConfigDict(extra='ignore')
     name: str
 
     vision: str
@@ -286,5 +296,3 @@ class OrganizationConfig(BaseModel):
     process_rules: Dict[str, Any] = Field(default_factory=dict)
 
     bottleneck_thresholds: BottleneckThresholds = Field(default_factory=BottleneckThresholds)
-
-    bypass_governance: bool = Field(default=False)

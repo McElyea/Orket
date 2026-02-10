@@ -36,7 +36,7 @@ def unsubscribe_from_events(callback: Callable[[Dict[str, Any]], None]):
     if callback in _subscribers:
         _subscribers.remove(callback)
 
-from orket.utils import sanitize_name
+from orket.naming import sanitize_name
 
 def _log_path(workspace: Path, role: str = None) -> Path:
     root_log = Path("workspace/default/orket.log")
@@ -53,12 +53,36 @@ def _log_path(workspace: Path, role: str = None) -> Path:
     return workspace / "orket.log"
 
 
-def log_event(event: str, data: Dict[str, Any], workspace: Path, role: str = None) -> None:
+def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path] = None, role: str = None, **kwargs) -> None:
+    """
+    Unified log router.
+    Supports:
+    - log_event("event_name", data_dict, workspace, role="X")
+    - log_event("event_name", data_dict, workspace=workspace)
+    - log_event(level, component, event, payload) [Legacy Compat]
+    """
+    # 1. Handle legacy signature if 'event' looks like a level and data is component-like
+    if event in {"debug", "info", "warn", "warning", "error", "critical"} and isinstance(data, str) and len(kwargs) == 0:
+        # Shift args: event -> level, data -> component, workspace -> event, role -> payload
+        level = event
+        component = data
+        actual_event = workspace if isinstance(workspace, str) else "generic_event"
+        actual_data = role if isinstance(role, dict) else {}
+        # Recurse with unified signature
+        return log_event(actual_event, actual_data, role=component, level=level)
+
+    if data is None: data = {}
+    if workspace is None:
+        workspace = Path("workspace/default")
+    
+    # Merge extra kwargs into data for observability
+    full_data = {**data, **kwargs}
+    
     record = {
         "timestamp": datetime.now(UTC).isoformat(),
-        "role": role or data.get("role") or "system", 
+        "role": role or full_data.get("role") or "system", 
         "event": event,
-        "data": data,
+        "data": full_data,
     }
     
     # 1. Ensure logging is set up for this workspace

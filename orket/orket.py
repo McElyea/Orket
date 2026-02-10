@@ -16,8 +16,8 @@ from orket.tools import ToolBox, get_tool_map
 from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, IssueConfig, CardStatus, SkillConfig, DialectConfig, RoleConfig, CardType
 from orket.utils import get_eos_sprint, sanitize_name
 from orket.exceptions import CardNotFound, ExecutionFailed, StateConflict
-from orket.infrastructure.sqlite_repositories import SQLiteCardRepository, SQLiteSessionRepository, SQLiteSnapshotRepository
-from orket.infrastructure.async_card_repository import AsyncCardRepository, CardRepositoryAdapter
+from orket.infrastructure.sqlite_repositories import SQLiteSessionRepository, SQLiteSnapshotRepository
+from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from orket.domain.bug_fix_phase import BugFixPhaseManager
@@ -112,9 +112,8 @@ class ExecutionPipeline:
         # Load Organization
         self.org = self.loader.load_organization()
         
-        # Async-ready repository with sync adapter for legacy code
+        # Async-native repository
         self.async_cards = AsyncCardRepository(self.db_path)
-        self.cards = CardRepositoryAdapter(self.async_cards)
         
         self.sessions = SQLiteSessionRepository(self.db_path)
         self.snapshots = SQLiteSnapshotRepository(self.db_path)
@@ -180,7 +179,7 @@ class ExecutionPipeline:
                 await self.async_cards.save(card_data)
 
         log_event("session_start", {"epic": epic.name, "run_id": run_id, "build_id": active_build}, workspace=self.workspace)
-        await self._traction_loop_v2(active_build, run_id, epic, team, env, driver_steered, target_issue_id)
+        await self._traction_loop(active_build, run_id, epic, team, env, driver_steered, target_issue_id)
         
         legacy_transcript = [
             {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
@@ -286,7 +285,7 @@ class ExecutionPipeline:
         print(f"  [ANTICIPATOR] Scanning Epic '{epic.name}' for critical path risks...")
 
         while True:
-            backlog = self.cards.get_by_build(active_build)
+            backlog = await self.async_cards.get_by_build(active_build)
             
             # Prioritize Code Review over Ready work
             in_review = [i for i in backlog if i["status"] == CardStatus.CODE_REVIEW]
@@ -303,7 +302,8 @@ class ExecutionPipeline:
             if not candidates: break
             
             issue = candidates[0]
-            issue_id, original_seat = issue["id"], issue["seat"]
+            issue_id = issue["id"]
+            original_seat = issue["seat"]
             is_review_turn = issue["status"] == CardStatus.CODE_REVIEW
             
             # 1. Determine the active seat for this turn
@@ -331,18 +331,18 @@ class ExecutionPipeline:
 
             seat_obj = team.seats.get(sanitize_name(seat_name))
             if not seat_obj:
-                self.cards.update_status(issue_id, CardStatus.CANCELED)
+                await self.async_cards.update_status(issue_id, CardStatus.CANCELED)
                 continue
 
             # 2. Determine and record the status for this turn
             current_status = issue["status"]
             if not is_review_turn:
                 # Execution turns MUST be in_progress
-                self.cards.update_status(issue_id, CardStatus.IN_PROGRESS, assignee=seat_name)
+                await self.async_cards.update_status(issue_id, CardStatus.IN_PROGRESS, assignee=seat_name)
                 current_status = CardStatus.IN_PROGRESS
             else:
                 # Review turns stay in code_review
-                self.cards.update_status(issue_id, CardStatus.CODE_REVIEW, assignee=seat_name)
+                await self.async_cards.update_status(issue_id, CardStatus.CODE_REVIEW, assignee=seat_name)
                 current_status = CardStatus.CODE_REVIEW
 
             success = False
@@ -461,17 +461,17 @@ class ExecutionPipeline:
             if not success:
                 # Retries exhausted
                 from orket.domain.failure_reporter import FailureReporter
-                FailureReporter.generate_report(self.workspace, run_id, issue_id, last_violation or "Unknown failure", self.transcript)
-                self.cards.update_status(issue_id, CardStatus.BLOCKED)
+                await FailureReporter.generate_report(self.workspace, run_id, issue_id, last_violation or "Unknown failure", self.transcript)
+                await self.async_cards.update_status(issue_id, CardStatus.BLOCKED)
                 self.sessions.complete_session(run_id, "failed", self.transcript)
                 raise ExecutionFailed(f"Governance Policy Violation: {last_violation}. Card {issue_id} is now BLOCKED.")
 
             # Turn succeeded, check if we need a final status update
-            current_db_issue = self.cards.get_by_id(issue_id)
+            current_db_issue = await self.async_cards.get_by_id(issue_id)
             if current_db_issue["status"] == CardStatus.IN_PROGRESS:
                 if not is_review_turn:
                     # Auto-move to review if execution turn didn't update status
-                    self.cards.update_status(issue_id, CardStatus.CODE_REVIEW)
+                    await self.async_cards.update_status(issue_id, CardStatus.CODE_REVIEW)
 
     async def _save_checkpoint(self, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str):
         """Saves current state snapshot for crash recovery."""
@@ -509,7 +509,7 @@ class ExecutionPipeline:
         except Exception as e:
             print(f"  [SANDBOX] WARN: Deployment failed: {e}")
 
-    async def _traction_loop_v2(self, active_build: str, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, driver_steered: bool, target_issue_id: str = None):
+    async def _traction_loop(self, active_build: str, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, driver_steered: bool, target_issue_id: str = None):
         """
         The reconstructed Traction Loop.
         Uses TurnExecutor and handles loop logic with proper async patterns.
@@ -517,13 +517,15 @@ class ExecutionPipeline:
         from orket.orchestration.models import ModelSelector
         from orket.domain.state_machine import StateMachine
         from orket.settings import load_user_settings
+        from orket.services.tool_gate import ToolGate
         
         # 1. Setup Environment
         settings_path = self.config_root / "user_settings.json"
         user_settings = json.loads(settings_path.read_text(encoding="utf-8")) if settings_path.exists() else load_user_settings()
         model_selector = ModelSelector(organization=self.org, user_settings=user_settings)
         
-        executor = TurnExecutor(StateMachine(), self.workspace)
+        tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
+        executor = TurnExecutor(StateMachine(), tool_gate, self.workspace)
         
         # Aggregated ToolBox
         policy = create_session_policy(str(self.workspace), epic.references)
@@ -535,7 +537,7 @@ class ExecutionPipeline:
             def __init__(self, provider): self.provider = provider
             async def complete(self, messages): return await self.provider.complete(messages)
 
-        print(f"  [RECONSTRUCTION] Entering Traction Loop v2 for '{epic.name}'")
+        print(f"  [RECONSTRUCTION] Entering Traction Loop for '{epic.name}'")
         iteration_count = 0
         max_iterations = 10
 
@@ -610,7 +612,7 @@ class ExecutionPipeline:
                 "workspace": str(self.workspace),
                 "role": seat_name,
                 "roles": roles_to_load,
-                "current_status": issue.status.value,
+                "current_status": turn_status.value,
                 "history": [{"role": t.role, "content": t.content} for t in self.transcript[-5:]] # Windowed history
             }
 
@@ -653,7 +655,7 @@ class ExecutionPipeline:
                 break
 
         if iteration_count >= max_iterations:
-            raise ExecutionFailed(f"Traction Loop v2 exhausted iterations ({max_iterations}) without completion.")
+            raise ExecutionFailed(f"Traction Loop exhausted iterations ({max_iterations}) without completion.")
 
 # Shims
 async def orchestrate_card(card_id: str, workspace: Path, **kwargs) -> Any:

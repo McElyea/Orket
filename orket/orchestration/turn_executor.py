@@ -22,6 +22,7 @@ from orket.schema import IssueConfig, CardStatus, RoleConfig
 from orket.domain.state_machine import StateMachine, StateMachineError, WaitReason
 from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.logging import log_event
+from orket.services.tool_gate import ToolGate
 
 
 @dataclass
@@ -74,6 +75,7 @@ class TurnExecutor:
     def __init__(
         self,
         state_machine: StateMachine,
+        tool_gate: ToolGate,
         workspace: Path
     ):
         """
@@ -81,9 +83,11 @@ class TurnExecutor:
 
         Args:
             state_machine: State machine for validation
+            tool_gate: Tool gate for organizational policy enforcement
             workspace: Workspace root for logging
         """
         self.state = state_machine
+        self.tool_gate = tool_gate
         self.workspace = workspace
 
     async def execute_turn(
@@ -328,24 +332,21 @@ class TurnExecutor:
         Execute all tool calls in a turn.
         """
         violations = []
+        roles = context.get("roles", [turn.role])
 
         for tool_call in turn.tool_calls:
             try:
-                # --- MECHANICAL GOVERNANCE: State Machine Validation ---
-                if tool_call.tool == "update_issue_status":
-                    req_status_str = tool_call.args.get("status")
-                    if req_status_str:
-                        from orket.schema import CardStatus, CardType
-                        req_status = CardStatus(req_status_str)
-                        current_status = CardStatus(context.get("current_status", "ready"))
-                        
-                        # Validate transition
-                        self.state.validate_transition(
-                            card_type=CardType.ISSUE,
-                            current=current_status,
-                            requested=req_status,
-                            roles=context.get("roles", [turn.role])
-                        )
+                # --- MECHANICAL GOVERNANCE: Tool Gate Enforcement ---
+                gate_violation = self.tool_gate.validate(
+                    tool_name=tool_call.tool,
+                    args=tool_call.args,
+                    context=context,
+                    roles=roles
+                )
+                
+                if gate_violation:
+                    violations.append(f"Governance Violation: {gate_violation}")
+                    continue
 
                 # Execute tool (toolbox handles path validation)
                 result = await toolbox.execute(

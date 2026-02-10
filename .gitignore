@@ -52,11 +52,15 @@ product/**/*.db
 product/**/*.log
 *.db
 
+# Agent Settings
+.claude/settings.local.json
+
 # Temp
 .env
 .gemini/
 C:/Users/jonmc/.gemini/tmp/
 project_dumper_small.py
+project_dump_small.txt
 project_dumper_small.txt
 **/project_dumper_small.py
 **/project_dumper_small.txt

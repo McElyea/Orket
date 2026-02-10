@@ -21,6 +21,8 @@ class OrchestrationEngine:
     Encapsulates all logic previously smeared across main.py and server.py.
     """
     def __init__(self, workspace_root: Path, department: str = "core", db_path: str = "orket_persistence.db", config_root: Optional[Path] = None):
+        from orket.settings import load_env
+        load_env()
         self.workspace_root = workspace_root
         self.department = department
         self.db_path = db_path
@@ -34,6 +36,15 @@ class OrchestrationEngine:
         
         # Load Organization (Global Policy)
         self.org = self._load_organization()
+        
+        # PERSISTENT PIEPELINE (Avoid rebuilds)
+        from orket.orket import ExecutionPipeline
+        self._pipeline = ExecutionPipeline(
+            self.workspace_root, 
+            self.department, 
+            db_path=self.db_path, 
+            config_root=self.config_root
+        )
 
     def _load_organization(self) -> Optional[OrganizationConfig]:
         org_path = self.config_root / "config" / "organization.json"
@@ -46,10 +57,13 @@ class OrchestrationEngine:
 
     async def run_card(self, card_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, target_issue_id: str = None) -> Dict[str, Any]:
         """Runs a generic card by identifying its type and delegating."""
-        # This will use the same logic from ExecutionPipeline but centralized
-        from orket.orket import ExecutionPipeline
-        pipeline = ExecutionPipeline(self.workspace_root, self.department, db_path=self.db_path, config_root=self.config_root)
-        return await pipeline.run_card(card_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered, target_issue_id=target_issue_id)
+        return await self._pipeline.run_card(
+            card_id, 
+            build_id=build_id, 
+            session_id=session_id, 
+            driver_steered=driver_steered, 
+            target_issue_id=target_issue_id
+        )
 
     def get_board(self) -> Dict[str, Any]:
         from orket.board import get_board_hierarchy
@@ -57,17 +71,18 @@ class OrchestrationEngine:
 
     async def get_sandboxes(self) -> List[Dict[str, Any]]:
         """Returns list of active sandboxes."""
-        from orket.orket import ExecutionPipeline
-        pipeline = ExecutionPipeline(self.workspace_root, self.department, db_path=self.db_path, config_root=self.config_root)
-        registry = pipeline.sandbox_orchestrator.registry
+        registry = self._pipeline.sandbox_orchestrator.registry
         return [s.model_dump() for s in registry.list_all()]
 
     async def stop_sandbox(self, sandbox_id: str):
         """Stops and deletes a sandbox."""
-        from orket.orket import ExecutionPipeline
-        pipeline = ExecutionPipeline(self.workspace_root, self.department, db_path=self.db_path, config_root=self.config_root)
-        await pipeline.sandbox_orchestrator.delete_sandbox(sandbox_id)
+        await self._pipeline.sandbox_orchestrator.delete_sandbox(sandbox_id)
 
     def halt_session(self, session_id: str):
-        # Implementation of halt logic
-        pass
+        """Halts an active session by signaling the runtime state."""
+        from orket.state import runtime_state
+        if session_id in runtime_state.active_tasks:
+            task = runtime_state.active_tasks.get(session_id)
+            if task:
+                task.cancel()
+                log_event("session_halted", {"session_id": session_id}, self.workspace_root)

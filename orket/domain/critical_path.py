@@ -26,7 +26,7 @@ class CriticalPathEngine:
         # 2. Calculate recursive weights
         weights = {}
         for issue_id in blocked_by_me:
-            weights[issue_id] = CriticalPathEngine._calculate_weight(issue_id, blocked_by_me)
+            weights[issue_id] = CriticalPathEngine.calculate_weight(issue_id, blocked_by_me)
 
         # 3. Calculate combined priority scores (base priority + dependency weight)
         def calculate_score(issue) -> float:
@@ -39,7 +39,7 @@ class CriticalPathEngine:
         return [i.id for i in ready_issues]
 
     @staticmethod
-    def _calculate_weight(issue_id: str, adj_map: Dict[str, Set[str]], visited=None) -> int:
+    def calculate_weight(issue_id: str, adj_map: Dict[str, Set[str]], visited=None) -> int:
         """Recursively counts how many issues are blocked by this one."""
         if visited is None: visited = set()
         

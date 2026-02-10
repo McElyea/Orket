@@ -50,8 +50,8 @@ def validate_signature(payload: bytes, signature: str) -> bool:
         True if signature is valid, False otherwise
     """
     if not WEBHOOK_SECRET:
-        log_event("webhook", "WARNING: GITEA_WEBHOOK_SECRET not set, skipping validation", "warning")
-        return True  # Skip validation if no secret configured
+        log_event("webhook", "CRITICAL: GITEA_WEBHOOK_SECRET not set. Authentication disabled.", "error")
+        return False  # Reject if not configured
 
     expected_signature = hmac.new(
         WEBHOOK_SECRET,

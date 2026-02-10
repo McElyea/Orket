@@ -77,7 +77,7 @@ class VisionTools(BaseTools):
         self._image_pipeline = None
 
     def image_analyze(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        return {"ok": True, "analysis": "Visual analysis tool orkestrated. No anomalies detected."}
+        return {"ok": False, "error": "Visual analysis tool not implemented. Image analysis requires a vision-capable model or secondary API."}
 
     def image_generate(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
@@ -162,8 +162,14 @@ class AcademyTools(BaseTools):
     def archive_eval(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         session_id = args.get("session_id")
         if not session_id: return {"ok": False, "error": "session_id required"}
-        src, dest = Path(f"workspace/runs/{session_id}"), Path(f"evals/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}")
+        
+        # Resolve source from workspace relative path
+        src = self.workspace_root.parent / "runs" / session_id
+        # Resolve destination from project root (or as per system policy)
+        dest = self.workspace_root.parent.parent / "evals" / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
+        
         try:
+            dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(src, dest)
             return {"ok": True, "path": str(dest)}
         except Exception as e: return {"ok": False, "error": str(e)}
@@ -172,7 +178,8 @@ class AcademyTools(BaseTools):
         seat, content = args.get("seat"), args.get("content")
         if not seat or not content: return {"ok": False, "error": "Missing params"}
         from orket.utils import sanitize_name
-        dest = Path(f"prompts/{sanitize_name(seat)}/{args.get('model_family', 'qwen')}.txt")
+        # Resolve destination from project root
+        dest = self.workspace_root.parent.parent / "prompts" / sanitize_name(seat) / f"{args.get('model_family', 'qwen')}.txt"
         try:
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(content, encoding="utf-8")

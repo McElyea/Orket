@@ -13,7 +13,10 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 # Security configuration
-SECRET_KEY = os.getenv("ORKET_AUTH_SECRET", "orket-dev-secret-keep-it-local")
+SECRET_KEY = os.getenv("ORKET_AUTH_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError("ORKET_AUTH_SECRET environment variable is not set. Refusing to start in insecure mode.")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 1 day
 
