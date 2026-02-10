@@ -14,14 +14,14 @@ The engine operates on a continuous "traction" cycle:
 
 ### 2. Mechanical Governance
 Orket enforces strict operational boundaries to ensure system integrity:
-- **State Machine**: Prevents illegal status transitions (e.g., a card cannot jump from READY to DONE without verification).
-- **Tool Gating**: Restricts file operations to specific sandbox directories (agent_output/) to prevent unauthorized system access.
+- **State Machine**: Prevents illegal status transitions (e.g., a card cannot jump from `READY` to `DONE` without verification).
+- **Tool Gating**: Restricts file operations to specific sandbox directories (`agent_output/`) to prevent unauthorized system access.
 - **Directory Isolation**: Separates execution fixtures from agent output to eliminate write-then-execute vulnerabilities.
 
 ### 3. Local-First Sovereignty
 Orket is designed to run entirely on local hardware:
-- **Orchestration**: Asynchronous Python engine (FastAPI + aiosqlite).
-- **Models**: Integration with local Ollama instances.
+- **Orchestration**: Asynchronous Python engine (`FastAPI` + `aiosqlite`).
+- **Models**: Integration with local `Ollama` instances.
 - **Storage**: Local SQLite database and filesystem-based workspaces.
 
 ## Current Limitations
@@ -37,7 +37,7 @@ Orket is designed to run entirely on local hardware:
     ```
 
 2. **Setup Environment:**
-    Create a .env file from the provided template.
+    Create a `.env` file from the provided template.
 
 3. **Launch the Core:**
     ```bash
