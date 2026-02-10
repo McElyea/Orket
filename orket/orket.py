@@ -16,7 +16,7 @@ from orket.tools import ToolBox, get_tool_map
 from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, IssueConfig, CardStatus, SkillConfig, DialectConfig, RoleConfig, CardType
 from orket.utils import get_eos_sprint, sanitize_name
 from orket.exceptions import CardNotFound, ComplexityViolation
-from orket.infrastructure.async_repositories import AsyncSessionRepository, AsyncSnapshotRepository
+from orket.infrastructure.async_repositories import AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.orchestration.orchestrator import Orchestrator
@@ -154,7 +154,8 @@ class ExecutionPipeline:
                  config_root: Optional[Path] = None,
                  cards_repo: Optional[AsyncCardRepository] = None,
                  sessions_repo: Optional[AsyncSessionRepository] = None,
-                 snapshots_repo: Optional[AsyncSnapshotRepository] = None):
+                 snapshots_repo: Optional[AsyncSnapshotRepository] = None,
+                 success_repo: Optional[AsyncSuccessRepository] = None):
         self.workspace = workspace
         self.department = department
         self.config_root = config_root or Path(".").resolve()
@@ -168,6 +169,7 @@ class ExecutionPipeline:
         self.async_cards = cards_repo or AsyncCardRepository(self.db_path)
         self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
+        self.success = success_repo or AsyncSuccessRepository(self.db_path)
         
         self.notes = NoteStore()
         self.transcript = []
@@ -262,6 +264,19 @@ class ExecutionPipeline:
         await self.sessions.complete_session(run_id, "done", legacy_transcript)
         log_event("session_end", {"run_id": run_id}, workspace=self.workspace)
         await self.snapshots.record(run_id, {"epic": epic.model_dump(), "team": team.model_dump(), "env": env.model_dump(), "build_id": active_build}, legacy_transcript)
+
+        # --- IRREVERSIBLE SUCCESS CRITERION ---
+        backlog = await self.async_cards.get_by_build(active_build)
+        is_truly_done = all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)
+        if is_truly_done:
+            # We record a WIN
+            await self.success.record_success(
+                session_id=run_id,
+                success_type="EPIC_COMPLETED",
+                artifact_ref=f"build:{active_build}",
+                human_ack=None # Pending judge approval
+            )
+            log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
 
         # Clear active log for UI cleanliness
         root_log = Path("workspace/default/orket.log")

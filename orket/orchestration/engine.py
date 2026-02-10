@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 from orket.infrastructure.async_repositories import (
-    AsyncSessionRepository, AsyncSnapshotRepository
+    AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository
 )
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.logging import log_event
@@ -19,7 +19,8 @@ class OrchestrationEngine:
                  config_root: Optional[Path] = None,
                  cards_repo: Optional[AsyncCardRepository] = None,
                  sessions_repo: Optional[AsyncSessionRepository] = None,
-                 snapshots_repo: Optional[AsyncSnapshotRepository] = None):
+                 snapshots_repo: Optional[AsyncSnapshotRepository] = None,
+                 success_repo: Optional[AsyncSuccessRepository] = None):
         from orket.settings import load_env
         load_env()
         self.workspace_root = workspace_root
@@ -31,6 +32,7 @@ class OrchestrationEngine:
         self.cards = cards_repo or AsyncCardRepository(self.db_path)
         self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
+        self.success = success_repo or AsyncSuccessRepository(self.db_path)
         
         # Config & Assets
         from orket.orket import ConfigLoader
@@ -49,7 +51,8 @@ class OrchestrationEngine:
             config_root=self.config_root,
             cards_repo=self.cards,
             sessions_repo=self.sessions,
-            snapshots_repo=self.snapshots
+            snapshots_repo=self.snapshots,
+            success_repo=self.success
         )
 
 

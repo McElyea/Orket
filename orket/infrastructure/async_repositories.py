@@ -118,3 +118,38 @@ class AsyncSnapshotRepository(SnapshotRepository):
                 cursor = await conn.execute("SELECT * FROM session_snapshots WHERE session_id = ?", (session_id,))
                 row = await cursor.fetchone()
                 return dict(row) if row else None
+
+class AsyncSuccessRepository:
+    """
+    Success Ledger - Irreversible Success Criterion enforcement.
+    One row per run. Incomplete until a success record is written.
+    """
+    def __init__(self, db_path: str | Path):
+        self.db_path = str(db_path)
+        self._initialized = False
+        self._lock = asyncio.Lock()
+
+    async def _ensure_initialized(self, conn: aiosqlite.Connection):
+        if self._initialized:
+            return
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS success_ledger (
+                session_id TEXT PRIMARY KEY,
+                success_type TEXT, -- e.g. 'PR_MERGED', 'ARTIFACT_GENERATED', 'FIT_VERIFIED'
+                artifact_ref TEXT, -- Path, PR URL, or Hash
+                human_ack TEXT,    -- Nullable: 'Yes'/'No' from the judge
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        await conn.commit()
+        self._initialized = True
+
+    async def record_success(self, session_id: str, success_type: str, artifact_ref: str, human_ack: Optional[str] = None):
+        async with self._lock:
+            async with aiosqlite.connect(self.db_path) as conn:
+                await self._ensure_initialized(conn)
+                await conn.execute(
+                    "INSERT OR REPLACE INTO success_ledger (session_id, success_type, artifact_ref, human_ack) VALUES (?, ?, ?, ?)",
+                    (session_id, success_type, artifact_ref, human_ack)
+                )
+                await conn.commit()
