@@ -1,5 +1,5 @@
 {
-    "name": "Vibe Rail",
+    "name": "Orket Organizational Unit",
     "vision": "To deliver local-first, high-fidelity automation tools that empower users with autonomous market intelligence.",
     "ethos": "Excellence through iteration, transparency in process, and local-first sovereignty.",
     "branding": {
@@ -8,7 +8,10 @@
             "secondary": "#2D3748",
             "accent": "#4A5568"
         },
-        "fonts": ["Inter", "Roboto Mono"],
+        "fonts": [
+            "Inter",
+            "Roboto Mono"
+        ],
         "design_dos": [
             "Use clear, professional labels",
             "Prefer flat structures for simple tasks",
@@ -37,9 +40,29 @@
             "github": "VibeRail"
         }
     },
-    "departments": ["core", "engineering", "marketing", "product", "quality", "training", "uiux"],
+    "departments": [
+        "core",
+        "engineering",
+        "marketing",
+        "product",
+        "quality",
+        "training",
+        "uiux"
+    ],
     "process_rules": {
-        "card_flow": ["Ready", "In Progress", "Blocked", "Cancelled", "Waiting_For_Developer", "Ready_For_Testing", "Code_Review", "Done"],
-        "final_states": ["Done", "Canceled"]
+        "card_flow": [
+            "Ready",
+            "In Progress",
+            "Blocked",
+            "Cancelled",
+            "Waiting_For_Developer",
+            "Ready_For_Testing",
+            "Code_Review",
+            "Done"
+        ],
+        "final_states": [
+            "Done",
+            "Canceled"
+        ]
     }
 }

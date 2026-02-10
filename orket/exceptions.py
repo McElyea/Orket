@@ -29,3 +29,12 @@ class ModelTimeoutError(ModelProviderError):
 class ModelConnectionError(ModelProviderError):
     """Raised when the LLM provider (e.g., Ollama) is unreachable."""
     pass
+
+class GovernanceViolation(ExecutionFailed):
+    """Raised when an architectural or organizational policy is violated."""
+    pass
+
+class ComplexityViolation(GovernanceViolation):
+    """Raised when an Epic exceeds the iDesign complexity threshold."""
+    pass
+

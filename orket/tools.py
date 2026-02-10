@@ -34,13 +34,10 @@ class BaseTools:
             raise PermissionError(f"Access to path '{path_str}' is denied by security policy.")
 
         if write:
-            # Agents can ONLY write to the designated output directory
-            output_root = (workspace_resolved / AGENT_OUTPUT_DIR).resolve()
-            if not resolved.is_relative_to(output_root):
-                raise PermissionError(
-                    f"Write access to '{path_str}' is denied. "
-                    f"Agents may only write to '{AGENT_OUTPUT_DIR}/'."
-                )
+            # We enforce workspace boundaries. 
+            # Architectural governance is handled by ToolGate.
+            if not in_workspace:
+                raise PermissionError(f"Write access to path '{path_str}' is denied.")
 
         return resolved
 

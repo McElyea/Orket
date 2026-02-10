@@ -1,5 +1,5 @@
 import re
-from utils.price_utils import normalize_price
+from workspace.default.utils.price_utils import normalize_price
 
 class PriceDiscoveryEngine:
     def __init__(self):

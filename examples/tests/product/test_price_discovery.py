@@ -1,15 +1,17 @@
 import unittest
-from managers.price_discovery_manager import PriceDiscoveryManager
+from unittest import IsolatedAsyncioTestCase
+import pytest
+from product.sneaky_price_watch.managers.price_discovery_manager import PriceDiscoveryManager
 
 
-class TestPriceDiscovery(unittest.TestCase):
+class TestPriceDiscovery(IsolatedAsyncioTestCase):
     def setUp(self):
         self.manager = PriceDiscoveryManager()
 
-    def test_discover_prices(self):
+    async def test_discover_prices(self):
         # Test price discovery functionality
         urls = ['http://example.com/product1', 'http://example.com/product2']
-        result = self.manager.discover_prices(urls)
+        result = await self.manager.discover_prices(urls)
         self.assertIsInstance(result, list)
 
     def test_get_price_history(self):

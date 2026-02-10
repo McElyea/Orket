@@ -135,7 +135,7 @@ async def test_golden_flow(tmp_path, monkeypatch):
     assert sanity_file.read_text() == "Orket is Operational"
 
     issue = await engine.cards.get_by_id("ISSUE-01")
-    assert issue["status"] == "done", f"Expected 'done' after verifier turn, got '{issue['status']}'"
+    assert issue.status == "done", f"Expected 'done' after verifier turn, got '{issue.status}'"
     assert dummy_provider.turns >= 2, "Should have taken at least 2 turns (Dev + Verifier)"
 
 @pytest.mark.asyncio
@@ -198,7 +198,7 @@ async def test_session_resumption(tmp_path, monkeypatch):
     await engine.run_card("resume_epic", target_issue_id="I2")
 
     issue2 = await engine.cards.get_by_id("I2")
-    assert issue2["status"] == "done"
+    assert issue2.status == "done"
     
     issue1 = await engine.cards.get_by_id("I1")
-    assert issue1["status"] == "done"
+    assert issue1.status == "done"

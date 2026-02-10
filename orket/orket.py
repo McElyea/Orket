@@ -10,12 +10,11 @@ from datetime import datetime, UTC
 from orket.llm import LocalModelProvider
 from orket.logging import log_event
 from orket.state import runtime_state
-from orket.agents.agent import Agent
 from orket.policy import create_session_policy
 from orket.tools import ToolBox, get_tool_map
 from orket.schema import EpicConfig, TeamConfig, EnvironmentConfig, RockConfig, IssueConfig, CardStatus, SkillConfig, DialectConfig, RoleConfig, CardType
 from orket.utils import get_eos_sprint, sanitize_name
-from orket.exceptions import CardNotFound, ExecutionFailed, StateConflict
+from orket.exceptions import CardNotFound, ExecutionFailed, StateConflict, ComplexityViolation
 from orket.infrastructure.sqlite_repositories import SQLiteSessionRepository, SQLiteSnapshotRepository
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.orchestration.turn_executor import TurnExecutor
@@ -23,7 +22,6 @@ from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from orket.domain.bug_fix_phase import BugFixPhaseManager
 from orket.services.webhook_db import WebhookDatabase
 from orket.domain.sandbox import SandboxRegistry, SandboxStatus
-from orket.domain.execution import ExecutionTurn
 from orket.services.prompt_compiler import PromptCompiler
 from pydantic import BaseModel
 
@@ -44,14 +42,27 @@ class ConfigLoader:
 
     def load_organization(self) -> Optional[OrganizationConfig]:
         from orket.schema import OrganizationConfig
+        from orket.settings import get_setting
+        
+        org = None
         paths = [
             self.config_dir / "organization.json",
             self.model_dir / "organization.json"
         ]
         for p in paths:
             if p.exists():
-                return OrganizationConfig.model_validate_json(p.read_text(encoding="utf-8"))
-        return None
+                org = OrganizationConfig.model_validate_json(p.read_text(encoding="utf-8"))
+                break
+        
+        if org:
+            # Overrides
+            env_name = get_setting("ORKET_ORG_NAME")
+            if env_name: org.name = env_name
+            
+            env_vision = get_setting("ORKET_ORG_VISION")
+            if env_vision: org.vision = env_vision
+            
+        return org
 
     def load_department(self, name: str) -> Optional[DepartmentConfig]:
         from orket.schema import DepartmentConfig
@@ -102,7 +113,14 @@ class ExecutionPipeline:
     The central engine for Orket Unit execution.
     Load → Validate → Plan → Execute → Persist → Report
     """
-    def __init__(self, workspace: Path, department: str = "core", db_path: str = "orket_persistence.db", config_root: Optional[Path] = None):
+    def __init__(self, 
+                 workspace: Path, 
+                 department: str = "core", 
+                 db_path: str = "orket_persistence.db", 
+                 config_root: Optional[Path] = None,
+                 cards_repo: Optional[AsyncCardRepository] = None,
+                 sessions_repo: Optional[SQLiteSessionRepository] = None,
+                 snapshots_repo: Optional[SQLiteSnapshotRepository] = None):
         self.workspace = workspace
         self.department = department
         self.config_root = config_root or Path(".").resolve()
@@ -112,11 +130,10 @@ class ExecutionPipeline:
         # Load Organization
         self.org = self.loader.load_organization()
         
-        # Async-native repository
-        self.async_cards = AsyncCardRepository(self.db_path)
-        
-        self.sessions = SQLiteSessionRepository(self.db_path)
-        self.snapshots = SQLiteSnapshotRepository(self.db_path)
+        # Injected or default repositories
+        self.async_cards = cards_repo or AsyncCardRepository(self.db_path)
+        self.sessions = sessions_repo or SQLiteSessionRepository(self.db_path)
+        self.snapshots = snapshots_repo or SQLiteSnapshotRepository(self.db_path)
         
         self.notes = NoteStore()
         self.transcript = []
@@ -152,10 +169,11 @@ class ExecutionPipeline:
             threshold = self.org.architecture.idesign_threshold
             
         if len(epic.issues) > threshold and not epic.architecture_governance.idesign:
-            raise ExecutionFailed(
+            raise ComplexityViolation(
                 f"Complexity Gate Violation: Epic '{epic.name}' has {len(epic.issues)} issues "
                 f"which exceeds the threshold of {threshold}. iDesign structure is REQUIRED."
             )
+
 
         run_id = session_id or str(uuid.uuid4())[:8]
         active_build = build_id or f"build-{sanitize_name(epic_name)}"
@@ -167,14 +185,14 @@ class ExecutionPipeline:
         if existing:
             if target_issue_id:
                 # Only reset the target issue if it exists in DB
-                if any(ex["id"] == target_issue_id for ex in existing):
+                if any(ex.id == target_issue_id for ex in existing):
                     await self.async_cards.update_status(target_issue_id, CardStatus.READY)
             else:
                 await self.async_cards.reset_build(active_build)
         
         for i in epic.issues:
-            if not any(ex["id"] == i.id for ex in existing):
-                card_data = i.model_dump()
+            if not any(ex.id == i.id for ex in existing):
+                card_data = i.model_dump(by_alias=True)
                 card_data.update({"session_id": run_id, "build_id": active_build, "sprint": get_eos_sprint(), "status": CardStatus.READY})
                 await self.async_cards.save(card_data)
 
@@ -235,7 +253,7 @@ class ExecutionPipeline:
         # Re-hydrate into IssueConfig object
         from orket.schema import IssueConfig
         from orket.domain.verification import VerificationResult
-        issue = IssueConfig.model_validate(issue_data)
+        issue = IssueConfig.model_validate(issue_data.model_dump())
         
         # 2. Execute Verification (Fixtures)
         from orket.domain.verification import VerificationEngine
@@ -261,217 +279,6 @@ class ExecutionPipeline:
         await self.async_cards.save(issue.model_dump())
         
         return result
-
-    async def _traction_loop(self, active_build: str, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, driver_steered: bool, target_issue_id: str = None):
-        policy = create_session_policy(str(self.workspace), epic.references)
-        toolbox = ToolBox(policy, str(self.workspace), epic.references, db_path=self.db_path)
-        tool_map = get_tool_map(toolbox)
-        
-        from orket.orchestration.models import ModelSelector
-        from orket.domain.state_machine import StateMachine, StateMachineError
-        from orket.settings import load_user_settings
-        from orket.schema import RoleConfig, CardType, CardStatus
-        
-        # Load settings relative to config_root for tests
-        settings_path = self.config_root / "user_settings.json"
-        user_settings = {}
-        if settings_path.exists():
-            user_settings = json.loads(settings_path.read_text(encoding="utf-8"))
-        else:
-            user_settings = load_user_settings()
-
-        model_selector = ModelSelector(organization=self.org, user_settings=user_settings)
-
-        print(f"  [ANTICIPATOR] Scanning Epic '{epic.name}' for critical path risks...")
-
-        while True:
-            backlog = await self.async_cards.get_by_build(active_build)
-            
-            # Prioritize Code Review over Ready work
-            in_review = [i for i in backlog if i["status"] == CardStatus.CODE_REVIEW]
-            ready = [i for i in backlog if i["status"] == CardStatus.READY]
-            
-            if target_issue_id:
-                target = next((i for i in backlog if i["id"] == target_issue_id), None)
-                if target and target["status"] in [CardStatus.READY, CardStatus.CODE_REVIEW]:
-                    candidates = [target]
-                else: candidates = []
-            else:
-                candidates = in_review + ready
-
-            if not candidates: break
-            
-            issue = candidates[0]
-            issue_id = issue["id"]
-            original_seat = issue["seat"]
-            is_review_turn = issue["status"] == CardStatus.CODE_REVIEW
-            
-            # 1. Determine the active seat for this turn
-            seat_name = original_seat
-            if is_review_turn:
-                # RUN EMPIRICAL VERIFICATION (FIT)
-                verification_result = await self.verify_issue(issue_id)
-                
-                # Inject verification result as a note from the system
-                v_msg = f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
-                if verification_result.failed > 0:
-                    v_msg += f" Failures: {verification_result.failed}."
-                self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
-                
-                # Find a seat with the 'integrity_guard' role
-                verifier_seat = next((name for name, s in team.seats.items() if "integrity_guard" in s.roles), None)
-                if verifier_seat:
-                    seat_name = verifier_seat
-                else:
-                    # Fallback: original seat but we will force the role later
-                    print(f"  [WARN] No explicit verifier seat in team. Falling back to {seat_name} for review.")
-
-            governance_retries = 0
-            all_hands_on_deck = False
-
-            seat_obj = team.seats.get(sanitize_name(seat_name))
-            if not seat_obj:
-                await self.async_cards.update_status(issue_id, CardStatus.CANCELED)
-                continue
-
-            # 2. Determine and record the status for this turn
-            current_status = issue["status"]
-            if not is_review_turn:
-                # Execution turns MUST be in_progress
-                await self.async_cards.update_status(issue_id, CardStatus.IN_PROGRESS, assignee=seat_name)
-                current_status = CardStatus.IN_PROGRESS
-            else:
-                # Review turns stay in code_review
-                await self.async_cards.update_status(issue_id, CardStatus.CODE_REVIEW, assignee=seat_name)
-                current_status = CardStatus.CODE_REVIEW
-
-            success = False
-            last_violation = None
-
-            while governance_retries < 2:
-                # Action B: Summon all roles if first retry failed
-                roles_to_load = list(seat_obj.roles) if not all_hands_on_deck else list(team.roles.keys())
-                
-                # Force integrity_guard role if it's a review turn and not already there
-                if is_review_turn and "integrity_guard" not in roles_to_load:
-                    roles_to_load = ["integrity_guard"] + list(roles_to_load)
-
-                role_configs = []
-                for r_name in roles_to_load:
-                    try: role_configs.append(self.loader.load_asset("roles", r_name, RoleConfig))
-                    except (FileNotFoundError, ValueError, CardNotFound): pass
-
-                selected_model = model_selector.select(role=roles_to_load[0], asset_config=epic)
-                dialect_name = model_selector.get_dialect_name(selected_model)
-                dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
-                provider = LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
-
-                # Convert primary Role to Skill for compiler
-                primary_role = role_configs[0]
-                skill = SkillConfig(
-                    name=primary_role.name or primary_role.summary or seat_name,
-                    intent=primary_role.description,
-                    responsibilities=[ro.description for ro in role_configs],
-                    idesign_constraints=self.org.architecture.cicd_rules if self.org else [],
-                    tools=primary_role.tools
-                )
-
-                patch = ""
-                if is_review_turn:
-                    patch += "\n[PROTOCOL: CODE REVIEW] This card is currently in CODE_REVIEW. Evaluate the work and finalize to 'DONE' if satisfied.\n"
-                if all_hands_on_deck:
-                    patch += "\n[CRITICAL] ALL HANDS ON DECK: Previous turns failed governance. All team personas are now active.\n"
-                
-                relevant_notes = self.notes.get_for_role(seat_name, len(self.transcript))
-                if relevant_notes:
-                    patch += "\n[INTER-AGENT NOTES]\n" + "\n".join([f"- From {n.from_role}: {n.content}" for n in relevant_notes])
-
-                if self.org:
-                    patch += f"\n[ORGANIZATION: {self.org.name}]\nEthos: {self.org.ethos}\n"
-
-                system_desc = PromptCompiler.compile(skill, dialect, patch=patch)
-
-                # Aggregate tools
-                tools = {}
-                for ro in role_configs:
-                    for tn in ro.tools:
-                        if tn in tool_map:
-                            tools[tn] = tool_map[tn]
-
-                print(f"  [ORKESTRATE] {seat_name} -> {issue_id} ({'REVIEW' if is_review_turn else 'EXECUTE'}) (Model: {selected_model})")
-
-                # --- TOOL GATE: Mechanical Enforcement at tool level ---
-                from orket.services.tool_gate import ToolGate
-                tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
-
-                agent = Agent(seat_name, system_desc, tools, provider, config_root=self.config_root, tool_gate=tool_gate)
-                turn: ExecutionTurn = await agent.run(
-                    task={"description": f"{epic.description}\n\nTask: {issue['summary']}"},
-                    context={
-                        "session_id": run_id,
-                        "issue_id": issue_id,
-                        "workspace": str(self.workspace),
-                        "role": seat_name,
-                        "roles": roles_to_load,
-                        "current_status": current_status.value
-                    },
-                    workspace=self.workspace,
-                    transcript=[{"role": t.role, "summary": t.content} for t in self.transcript]
-                )
-
-                # --- MECHANICAL ENFORCEMENT (Teeth) ---
-                violation = None
-                
-                # 1. State Machine Validation
-                for call in turn.tool_calls:
-                    if call.tool == "update_issue_status":
-                        try:
-                            req_status = CardStatus(call.args.get("status"))
-                            # Apply StateMachine check with active roles
-                            if not self.org or not self.org.bypass_governance:
-                                StateMachine.validate_transition(CardType.ISSUE, current_status, req_status, roles=roles_to_load)
-                        except Exception as e:
-                            violation = str(e)
-                            break
-                
-                # 2. iDesign Structural Validation
-                if not violation and epic.architecture_governance.idesign:
-                    from orket.services.idesign_validator import iDesignValidator
-                    violation = iDesignValidator.validate_turn(turn, self.workspace)
-
-                if violation:
-                    governance_retries += 1
-                    last_violation = violation
-                    print(f"  [GOVERNANCE] Turn failed: {violation} (Retry {governance_retries}/2)")
-                    
-                    if governance_retries == 1:
-                        self.notes.add(Note(from_role="system", content=f"GOVERNANCE ERROR: {violation}. Re-attempting task with strict adherence to policy.", step_index=len(self.transcript)))
-                        continue
-                    else:
-                        all_hands_on_deck = True
-                        self.notes.add(Note(from_role="system", content=f"CRITICAL BLOCK: {violation}. All team personas are now active to resolve this block.", step_index=len(self.transcript)))
-                        continue
-
-                # Success!
-                self.transcript.append(turn)
-                success = True
-                break
-
-            # --- HANDLE RESULTS ---
-            if not success:
-                # Retries exhausted
-                from orket.domain.failure_reporter import FailureReporter
-                await FailureReporter.generate_report(self.workspace, run_id, issue_id, last_violation or "Unknown failure", self.transcript)
-                await self.async_cards.update_status(issue_id, CardStatus.BLOCKED)
-                self.sessions.complete_session(run_id, "failed", self.transcript)
-                raise ExecutionFailed(f"Governance Policy Violation: {last_violation}. Card {issue_id} is now BLOCKED.")
-
-            # Turn succeeded, check if we need a final status update
-            current_db_issue = await self.async_cards.get_by_id(issue_id)
-            if current_db_issue["status"] == CardStatus.IN_PROGRESS:
-                if not is_review_turn:
-                    # Auto-move to review if execution turn didn't update status
-                    await self.async_cards.update_status(issue_id, CardStatus.CODE_REVIEW)
 
     async def _save_checkpoint(self, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str):
         """Saves current state snapshot for crash recovery."""
@@ -546,19 +353,19 @@ class ExecutionPipeline:
             backlog = await self.async_cards.get_by_build(active_build)
             
             # Prioritize Code Review over Ready work
-            in_review = [i for i in backlog if i["status"] == CardStatus.CODE_REVIEW]
-            ready = [i for i in backlog if i["status"] == CardStatus.READY]
+            in_review = [i for i in backlog if i.status == CardStatus.CODE_REVIEW]
+            ready = [i for i in backlog if i.status == CardStatus.READY]
             
             if target_issue_id:
-                target = next((i for i in backlog if i["id"] == target_issue_id), None)
-                candidates = [target] if target and target["status"] in [CardStatus.READY, CardStatus.CODE_REVIEW] else []
+                target = next((i for i in backlog if i.id == target_issue_id), None)
+                candidates = [target] if target and target.status in [CardStatus.READY, CardStatus.CODE_REVIEW] else []
             else:
                 candidates = in_review + ready
 
             if not candidates: break
             
             issue_data = candidates[0]
-            issue = IssueConfig.model_validate(issue_data)
+            issue = IssueConfig.model_validate(issue_data.model_dump())
             is_review_turn = issue.status == CardStatus.CODE_REVIEW
             
             # Select Seat & Role
@@ -626,11 +433,11 @@ class ExecutionPipeline:
                 self.transcript.append(result.turn)
                 # Check for CODE_REVIEW transition
                 updated_issue = await self.async_cards.get_by_id(issue.id)
-                if updated_issue["status"] == CardStatus.CODE_REVIEW:
+                if updated_issue.status == CardStatus.CODE_REVIEW:
                     await self._trigger_sandbox(epic)
                 
                 # Auto-transition if not already updated by tool calls and not already in review
-                if updated_issue["status"] == issue.status and not is_review_turn:
+                if updated_issue.status == issue.status and not is_review_turn:
                     await self.async_cards.update_status(issue.id, CardStatus.CODE_REVIEW)
                     await self._trigger_sandbox(epic)
                 
@@ -639,7 +446,9 @@ class ExecutionPipeline:
                 
                 # --- CHECKPOINT ---
                 await self._save_checkpoint(run_id, epic, team, env, active_build)
+                
             else:
+                from orket.exceptions import ExecutionFailed, GovernanceViolation
                 print(f"  [FAILURE] Turn failed: {result.error}")
                 # --- GENERATE POLICY REPORT ---
                 from orket.domain.failure_reporter import FailureReporter
@@ -652,7 +461,11 @@ class ExecutionPipeline:
                     roles=roles_to_load
                 )
                 await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
-                break
+                
+                if result.violations:
+                    raise GovernanceViolation(f"iDesign Violation: {result.error}")
+                raise ExecutionFailed(f"Orchestration Turn Failed: {result.error}")
+
 
         if iteration_count >= max_iterations:
             raise ExecutionFailed(f"Traction Loop exhausted iterations ({max_iterations}) without completion.")

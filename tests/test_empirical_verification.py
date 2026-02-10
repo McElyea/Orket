@@ -24,9 +24,10 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
     
     workspace = root / "workspace"
     workspace.mkdir()
+    (workspace / "verification").mkdir()
     
-    # 1. Create Fixture File
-    fixture_file = workspace / "test_fixture.py"
+    # 1. Create Fixture File in verification/ directory
+    fixture_file = workspace / "verification" / "test_fixture.py"
     fixture_file.write_text(FIXTURE_CONTENT)
 
     # 2. Create assets
@@ -55,7 +56,7 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
             {
                 "id": "I1", "summary": "Task", "seat": "lead_architect",
                 "verification": {
-                    "fixture_path": "test_fixture.py",
+                    "fixture_path": "verification/test_fixture.py",
                     "scenarios": [
                         {"description": "Success Case", "input_data": {"value": 42}, "expected_output": 42}
                     ]
@@ -95,13 +96,13 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
     await engine.run_card("verify_epic")
 
     # 5. Assertions
-    issue = engine.cards.get_by_id("I1")
-    assert issue["status"] == "done"
+    issue = await engine.cards.get_by_id("I1")
+    assert issue.status == "done"
     
     # Check that verification result was persisted
     # Note: SQLiteCardRepository returns a dict where complex types are in 'verification' key
     # after being loaded from 'verification_json'
-    assert "verification" in issue
-    v = issue["verification"]
+    assert hasattr(issue, "verification")
+    v = issue.verification
     assert v["last_run"]["passed"] == 1
     assert v["scenarios"][0]["status"] == "pass"

@@ -18,7 +18,8 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
 
 from orket.repositories import CardRepository
-from orket.schema import CardStatus
+from orket.schema import CardStatus, CardType
+from orket.domain.records import IssueRecord, CardRecord
 
 
 class AsyncCardRepository(CardRepository):
@@ -90,7 +91,7 @@ class AsyncCardRepository(CardRepository):
 
         self._initialized = True
 
-    async def get_by_id(self, card_id: str) -> Optional[Dict[str, Any]]:
+    async def get_by_id(self, card_id: str) -> Optional[IssueRecord]:
         """
         Get card by ID.
 
@@ -98,7 +99,7 @@ class AsyncCardRepository(CardRepository):
             card_id: Card ID to fetch
 
         Returns:
-            Card data dict or None if not found
+            IssueRecord or None if not found
         """
         await self._ensure_initialized()
 
@@ -113,9 +114,10 @@ class AsyncCardRepository(CardRepository):
             if not row:
                 return None
 
-            return self._deserialize_row(dict(row))
+            data = self._deserialize_row(dict(row))
+            return IssueRecord.model_validate(data)
 
-    async def get_by_build(self, build_id: str) -> List[Dict[str, Any]]:
+    async def get_by_build(self, build_id: str) -> List[IssueRecord]:
         """
         Get all cards for a build.
 
@@ -123,7 +125,7 @@ class AsyncCardRepository(CardRepository):
             build_id: Build ID
 
         Returns:
-            List of card data dicts
+            List of IssueRecord objects
         """
         await self._ensure_initialized()
 
@@ -135,20 +137,24 @@ class AsyncCardRepository(CardRepository):
             )
             rows = await cursor.fetchall()
 
-            return [self._deserialize_row(dict(row)) for row in rows]
+            return [IssueRecord.model_validate(self._deserialize_row(dict(row))) for row in rows]
 
-    async def save(self, card_data: Dict[str, Any]) -> None:
+    async def save(self, record: IssueRecord | Dict[str, Any]) -> None:
         """
         Save or update a card.
 
         Args:
-            card_data: Card data to save
+            record: IssueRecord or dict to save
         """
         await self._ensure_initialized()
+        
+        if isinstance(record, dict):
+            # For backward compatibility during migration
+            record = IssueRecord.model_validate(record)
 
-        summary = card_data.get('summary') or card_data.get('name') or "Unnamed Unit"
-        v_json = json.dumps(card_data.get('verification', {}))
-        m_json = json.dumps(card_data.get('metrics', {}))
+        summary = record.summary or "Unnamed Unit"
+        v_json = json.dumps(record.verification)
+        m_json = json.dumps(record.metrics)
 
         async with aiosqlite.connect(self.db_path) as conn:
             await conn.execute(
@@ -157,19 +163,19 @@ class AsyncCardRepository(CardRepository):
                     status, note, verification_json, metrics_json, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    card_data['id'],
-                    card_data.get('session_id'),
-                    card_data.get('build_id'),
-                    card_data['seat'],
+                    record.id,
+                    record.session_id,
+                    record.build_id,
+                    record.seat,
                     summary,
-                    card_data['type'],
-                    card_data['priority'],
-                    card_data.get('sprint'),
-                    card_data['status'],
-                    card_data.get('note'),
+                    record.type.value if hasattr(record.type, "value") else str(record.type),
+                    record.priority,
+                    record.sprint,
+                    record.status.value if hasattr(record.status, "value") else str(record.status),
+                    record.note,
                     v_json,
                     m_json,
-                    datetime.now(UTC).isoformat()
+                    record.created_at or datetime.now(UTC).isoformat()
                 )
             )
             await conn.commit()
@@ -341,15 +347,18 @@ class CardRepositoryAdapter(CardRepository):
 
     def get_by_id(self, card_id: str) -> Optional[Dict[str, Any]]:
         """Sync wrapper for get_by_id."""
-        return self._loop.run_until_complete(
+        record = self._loop.run_until_complete(
             self._async_repo.get_by_id(card_id)
         )
+        return record.model_dump() if record else None
 
     def get_by_build(self, build_id: str) -> List[Dict[str, Any]]:
         """Sync wrapper for get_by_build."""
-        return self._loop.run_until_complete(
+        records = self._loop.run_until_complete(
             self._async_repo.get_by_build(build_id)
         )
+        return [r.model_dump() for r in records]
+
 
     def save(self, card_data: Dict[str, Any]) -> None:
         """Sync wrapper for save."""

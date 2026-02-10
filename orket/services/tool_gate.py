@@ -72,12 +72,12 @@ class ToolGate:
         return None  # Tool call is allowed
 
     def _validate_file_write(self, args: Dict[str, Any]) -> Optional[str]:
-        """Enforce workspace boundaries and file type restrictions."""
+        """Enforce workspace boundaries, file type restrictions, and iDesign rules."""
         file_path = args.get("path")
         if not file_path:
             return "write_file requires 'path' argument"
 
-        # Normalize path
+        # 1. Normalize and Security Check
         try:
             full_path = Path(file_path)
             if not full_path.is_absolute():
@@ -89,7 +89,23 @@ class ToolGate:
             except ValueError:
                 return f"Security violation: Cannot write outside workspace ({file_path})"
 
-            # Check for suspicious file types (if configured)
+            # 2. iDesign Governance Enforcement
+            from orket.services.idesign_validator import iDesignValidator
+            from orket.domain.execution import ExecutionTurn, ToolCall
+            
+            # Create a mock turn containing this single write_file call to validate
+            temp_turn = ExecutionTurn(
+                role="unknown", 
+                issue_id="unknown", 
+                tool_calls=[ToolCall(tool="write_file", args=args)]
+            )
+            
+            violations = iDesignValidator.validate_turn(temp_turn, self.workspace_root)
+            if violations:
+                # Return the first violation message for now, or a concatenated list
+                return f"iDesign Violation: {violations[0].message} (Code: {violations[0].code.value})"
+
+            # 3. Check for forbidden file types (legacy policy)
             if self.org and hasattr(self.org, "forbidden_file_types"):
                 forbidden = self.org.forbidden_file_types
                 if any(str(full_path).endswith(ext) for ext in forbidden):
@@ -99,6 +115,7 @@ class ToolGate:
             return f"Invalid file path: {e}"
 
         return None
+
 
     def _validate_state_change(
         self,

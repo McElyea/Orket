@@ -1,5 +1,5 @@
-from engines.price_discovery_engine import PriceDiscoveryEngine
-from accessors.price_data_accessor import PriceDataAccessor
+from product.sneaky_price_watch.engines.price_discovery_engine import PriceDiscoveryEngine
+from product.sneaky_price_watch.accessors.price_data_accessor import PriceDataAccessor
 
 class PriceDiscoveryManager:
     def __init__(self):

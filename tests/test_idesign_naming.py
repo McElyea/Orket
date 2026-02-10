@@ -1,6 +1,5 @@
-import pytest
 from pathlib import Path
-from orket.services.idesign_validator import iDesignValidator
+from orket.services.idesign_validator import iDesignValidator, ViolationCode
 from orket.domain.execution import ExecutionTurn, ToolCall
 
 def test_idesign_naming_violations():
@@ -13,9 +12,10 @@ def test_idesign_naming_violations():
             ToolCall(tool="write_file", args={"path": "managers/my_logic.py", "content": "..."})
         ]
     )
-    violation = iDesignValidator.validate_turn(turn, Path("."))
-    assert "Manager component" in violation
-    assert "must include 'Manager' in the filename" in violation
+    violations = iDesignValidator.validate_turn(turn, Path("."))
+    assert len(violations) == 1
+    assert violations[0].code == ViolationCode.NAMING_VIOLATION
+    assert "Manager component" in violations[0].message
 
     # 2. Engine naming violation
     turn = ExecutionTurn(
@@ -26,9 +26,10 @@ def test_idesign_naming_violations():
             ToolCall(tool="write_file", args={"path": "engines/compute.py", "content": "..."})
         ]
     )
-    violation = iDesignValidator.validate_turn(turn, Path("."))
-    assert "Engine component" in violation
-    assert "must include 'Engine' in the filename" in violation
+    violations = iDesignValidator.validate_turn(turn, Path("."))
+    assert len(violations) == 1
+    assert violations[0].code == ViolationCode.NAMING_VIOLATION
+    assert "Engine component" in violations[0].message
 
     # 3. Valid naming
     turn = ExecutionTurn(
@@ -39,8 +40,8 @@ def test_idesign_naming_violations():
             ToolCall(tool="write_file", args={"path": "managers/AuthManager.py", "content": "..."})
         ]
     )
-    violation = iDesignValidator.validate_turn(turn, Path("."))
-    assert violation is None
+    violations = iDesignValidator.validate_turn(turn, Path("."))
+    assert len(violations) == 0
 
 def test_idesign_allowed_categories():
     # 1. Invalid category
@@ -52,5 +53,8 @@ def test_idesign_allowed_categories():
             ToolCall(tool="write_file", args={"path": "utilities/helpers.py", "content": "..."})
         ]
     )
-    violation = iDesignValidator.validate_turn(turn, Path("."))
-    assert "Unrecognized component category 'utilities'" in violation
+    violations = iDesignValidator.validate_turn(turn, Path("."))
+    assert len(violations) == 1
+    assert violations[0].code == ViolationCode.CATEGORY_VIOLATION
+    assert "Unrecognized component category 'utilities'" in violations[0].message
+

@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 from orket import __version__
@@ -16,6 +16,7 @@ from orket.hardware import get_metrics_snapshot
 from orket.settings import load_user_settings
 
 app = FastAPI(title="Orket API", version=__version__)
+v1_router = APIRouter(prefix="/v1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,14 +33,20 @@ engine = OrchestrationEngine(PROJECT_ROOT / "workspace" / "default")
 @app.get("/health")
 async def health(): return {"status": "ok", "organization": "Orket"}
 
-@app.post("/system/clear-logs")
+# --- v1 Endpoints ---
+
+@v1_router.get("/version")
+async def get_version():
+    return {"version": __version__, "api": "v1"}
+
+@v1_router.post("/system/clear-logs")
 async def clear_logs():
     log_path = PROJECT_ROOT / "workspace" / "default" / "orket.log"
     if log_path.exists():
         log_path.write_text("", encoding="utf-8")
     return {"ok": True}
 
-@app.get("/system/heartbeat")
+@v1_router.get("/system/heartbeat")
 async def heartbeat():
     return {
         "status": "online",
@@ -47,10 +54,10 @@ async def heartbeat():
         "active_tasks": len(runtime_state.active_tasks)
     }
 
-@app.get("/system/metrics")
+@v1_router.get("/system/metrics")
 async def get_metrics(): return get_metrics_snapshot()
 
-@app.get("/system/explorer")
+@v1_router.get("/system/explorer")
 async def list_system_files(path: str = "."):
     rel_path = path.strip("./") if path and path != "." else ""
     target = (PROJECT_ROOT / rel_path).resolve()
@@ -65,13 +72,13 @@ async def list_system_files(path: str = "."):
     items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
     return {"items": items, "path": path}
 
-@app.get("/system/read")
+@v1_router.get("/system/read")
 async def read_system_file(path: str):
     target = (PROJECT_ROOT / path).resolve()
     if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
     return {"content": target.read_text(encoding="utf-8")}
 
-@app.post("/system/save")
+@v1_router.post("/system/save")
 async def save_system_file(data: Dict[str, str] = Body(...)):
     path_str = data.get("path")
     content = data.get("content")
@@ -81,7 +88,7 @@ async def save_system_file(data: Dict[str, str] = Body(...)):
     target.write_text(content, encoding="utf-8")
     return {"ok": True}
 
-@app.get("/system/calendar")
+@v1_router.get("/system/calendar")
 async def get_calendar():
     from orket.utils import get_eos_sprint
     now = datetime.now()
@@ -91,7 +98,7 @@ async def get_calendar():
         "sprint_end": (now + timedelta(days=4-now.weekday())).strftime("%Y-%m-%d")
     }
 
-@app.post("/system/run-active")
+@v1_router.post("/system/run-active")
 async def run_active_asset(data: Dict[str, Any] = Body(...)):
     path_str = data.get("path")
     build_id = data.get("build_id")
@@ -99,84 +106,74 @@ async def run_active_asset(data: Dict[str, Any] = Body(...)):
     issue_id = data.get("issue_id")
     session_id = str(uuid.uuid4())[:8]
 
-    # If it's a specific issue, run that ID. Otherwise, use the filename stem.
     asset_id = issue_id if issue_id else Path(path_str).stem if path_str else None
-    
-    if not asset_id:
-        raise HTTPException(status_code=400, detail="No asset ID provided.")
+    if not asset_id: raise HTTPException(status_code=400, detail="No asset ID provided.")
 
-    print(f"  [API] EXECUTE: {asset_id} (Type: {asset_type}, Session: {session_id})")
-
+    print(f"  [API] v1 EXECUTE: {asset_id} (Type: {asset_type}, Session: {session_id})")
     task = asyncio.create_task(engine.run_card(asset_id, build_id=build_id, session_id=session_id))
     runtime_state.active_tasks[session_id] = task
     return {"session_id": session_id}
 
-@app.get("/runs")
+@v1_router.get("/runs")
 async def list_runs(): return engine.sessions.get_recent_runs()
 
-@app.get("/runs/{session_id}/metrics")
+@v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
     from orket.logging import get_member_metrics
     workspace = PROJECT_ROOT / "workspace" / "runs" / session_id
     if not workspace.exists(): workspace = PROJECT_ROOT / "workspace" / "default"
     return get_member_metrics(workspace)
 
-@app.get("/runs/{session_id}/backlog")
+@v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str): return engine.sessions.get_session_issues(session_id)
 
-@app.get("/api/sessions/{session_id}")
+@v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
     session = engine.sessions.get_session(session_id)
     if not session: raise HTTPException(404)
     return session
 
-@app.get("/api/sessions/{session_id}/snapshot")
+@v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str):
     snapshot = engine.snapshots.get(session_id)
     if not snapshot: raise HTTPException(404)
     return snapshot
 
-@app.get("/api/sandboxes")
+@v1_router.get("/sandboxes")
 async def list_sandboxes():
     return await engine.get_sandboxes()
 
-@app.post("/api/sandboxes/{sandbox_id}/stop")
+@v1_router.post("/sandboxes/{sandbox_id}/stop")
 async def stop_sandbox(sandbox_id: str):
     await engine.stop_sandbox(sandbox_id)
     return {"ok": True}
 
-@app.get("/api/sandboxes/{sandbox_id}/logs")
+@v1_router.get("/sandboxes/{sandbox_id}/logs")
 async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
     from orket.orket import ExecutionPipeline
     pipeline = ExecutionPipeline(PROJECT_ROOT / "workspace" / "default")
     return {"logs": pipeline.sandbox_orchestrator.get_logs(sandbox_id, service)}
 
-@app.get("/system/board")
+@v1_router.get("/system/board")
 async def get_system_board(dept: str = "core"):
     return engine.get_board()
 
-@app.get("/system/preview-asset")
+@v1_router.get("/system/preview-asset")
 async def preview_asset(path: str, issue_id: Optional[str] = None):
     from orket.preview import PreviewBuilder
     p = Path(path)
     asset_name = p.stem
-    
     dept = "core"
     if "model" in p.parts:
         idx = p.parts.index("model")
         if len(p.parts) > idx + 1: dept = p.parts[idx+1]
-        
     builder = PreviewBuilder(PROJECT_ROOT / "model")
-    if issue_id:
-        res = await builder.build_issue_preview(issue_id, asset_name, dept)
-    elif "rocks" in str(p):
-        res = await builder.build_rock_preview(asset_name, dept)
-    else:
-        res = await builder.build_epic_preview(asset_name, dept)
-        
+    if issue_id: res = await builder.build_issue_preview(issue_id, asset_name, dept)
+    elif "rocks" in str(p): res = await builder.build_rock_preview(asset_name, dept)
+    else: res = await builder.build_epic_preview(asset_name, dept)
     return res
 
-@app.post("/system/chat-driver")
+@v1_router.post("/system/chat-driver")
 async def chat_driver(data: Dict[str, str] = Body(...)):
     from orket.driver import OrketDriver
     message = data.get("message")
@@ -184,6 +181,8 @@ async def chat_driver(data: Dict[str, str] = Body(...)):
     driver = OrketDriver()
     response = await driver.process_request(message)
     return {"response": response}
+
+app.include_router(v1_router)
 
 # --- WS ---
 

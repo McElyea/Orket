@@ -47,6 +47,6 @@ class CriticalPathEngine:
         for blocked_id in adj_map.get(issue_id, set()):
             if blocked_id not in visited:
                 visited.add(blocked_id)
-                weight += 1 + CriticalPathEngine._calculate_weight(blocked_id, adj_map, visited)
+                weight += 1 + CriticalPathEngine.calculate_weight(blocked_id, adj_map, visited)
         
         return weight

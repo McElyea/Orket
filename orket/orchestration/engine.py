@@ -20,7 +20,14 @@ class OrchestrationEngine:
     The Single Source of Truth for executing Orket Units.
     Encapsulates all logic previously smeared across main.py and server.py.
     """
-    def __init__(self, workspace_root: Path, department: str = "core", db_path: str = "orket_persistence.db", config_root: Optional[Path] = None):
+    def __init__(self, 
+                 workspace_root: Path, 
+                 department: str = "core", 
+                 db_path: str = "orket_persistence.db", 
+                 config_root: Optional[Path] = None,
+                 cards_repo: Optional[AsyncCardRepository] = None,
+                 sessions_repo: Optional[SQLiteSessionRepository] = None,
+                 snapshots_repo: Optional[SQLiteSnapshotRepository] = None):
         from orket.settings import load_env
         load_env()
         self.workspace_root = workspace_root
@@ -29,13 +36,17 @@ class OrchestrationEngine:
         self.config_root = config_root or Path(".").resolve()
         
         # Repositories (Accessors)
-        self.cards = AsyncCardRepository(self.db_path)
+        self.cards = cards_repo or AsyncCardRepository(self.db_path)
+        self.sessions = sessions_repo or SQLiteSessionRepository(self.db_path)
+        self.snapshots = snapshots_repo or SQLiteSnapshotRepository(self.db_path)
         
-        self.sessions = SQLiteSessionRepository(self.db_path)
-        self.snapshots = SQLiteSnapshotRepository(self.db_path)
+        # Config & Assets
+        from orket.orket import ConfigLoader
+        self.loader = ConfigLoader(self.config_root, self.department)
         
         # Load Organization (Global Policy)
-        self.org = self._load_organization()
+        self.org = self.loader.load_organization()
+
         
         # PERSISTENT PIEPELINE (Avoid rebuilds)
         from orket.orket import ExecutionPipeline
@@ -43,20 +54,18 @@ class OrchestrationEngine:
             self.workspace_root, 
             self.department, 
             db_path=self.db_path, 
-            config_root=self.config_root
+            config_root=self.config_root,
+            cards_repo=self.cards,
+            sessions_repo=self.sessions,
+            snapshots_repo=self.snapshots
         )
 
-    def _load_organization(self) -> Optional[OrganizationConfig]:
-        org_path = self.config_root / "config" / "organization.json"
-        if not org_path.exists():
-            org_path = self.config_root / "model" / "organization.json"
-            
-        if org_path.exists():
-            return OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
-        return None
 
     async def run_card(self, card_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, target_issue_id: str = None) -> Dict[str, Any]:
-        """Runs a generic card by identifying its type and delegating."""
+        """
+        [DEPRECATED] Generic card runner. 
+        Use run_epic, run_rock, or run_issue for explicit intent.
+        """
         return await self._pipeline.run_card(
             card_id, 
             build_id=build_id, 
@@ -64,6 +73,34 @@ class OrchestrationEngine:
             driver_steered=driver_steered, 
             target_issue_id=target_issue_id
         )
+
+    async def run_epic(self, epic_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> List[Dict]:
+        """Executes a full epic orchestration."""
+        return await self._pipeline.run_epic(
+            epic_id,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered
+        )
+
+    async def run_rock(self, rock_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> Dict:
+        """Executes a multi-epic rock orchestration."""
+        return await self._pipeline.run_rock(
+            rock_id,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered
+        )
+
+    async def run_issue(self, issue_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> List[Dict]:
+        """Resumes or executes a single atomic issue."""
+        return await self._pipeline.run_card(
+            issue_id,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered
+        )
+
 
     def get_board(self) -> Dict[str, Any]:
         from orket.board import get_board_hierarchy

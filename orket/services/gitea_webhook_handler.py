@@ -407,10 +407,8 @@ Your code has been deployed to a live environment for testing:
 The sandbox will remain active during the Bug Fix Phase. Bugs discovered will automatically create Issues for remediation.
 """
 
-        requests.post(
+        await self.client.post(
             url,
-            auth=self.auth,
             headers={"Content-Type": "application/json"},
-            json={"body": comment},
-            timeout=10
+            json={"body": comment}
         )
