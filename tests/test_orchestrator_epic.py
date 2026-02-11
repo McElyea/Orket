@@ -216,3 +216,100 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
 
     assert custom_node.provider_calls == 1
     assert custom_node.client_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path):
+    """Execution-path seam test: execute_epic builds ToolBox from orchestrator registry and uses custom tool strategy."""
+    from orket.schema import CardStatus
+    from orket.orchestration.turn_executor import TurnResult
+
+    issue_ready = SimpleNamespace(id="I1", status=CardStatus.READY, seat="lead_architect", model_dump=lambda: {"id": "I1", "seat": "lead_architect", "summary": "Test", "status": "ready"})
+    issue_done = SimpleNamespace(id="I1", status=CardStatus.DONE, seat="lead_architect")
+
+    async_cards = AsyncMock()
+    async_cards.get_by_build = AsyncMock(side_effect=[[issue_ready], [issue_done]])
+    async_cards.get_independent_ready_issues = AsyncMock(side_effect=[[issue_ready], []])
+    async_cards.get_by_id = AsyncMock(return_value=SimpleNamespace(status=CardStatus.DONE))
+    async_cards.update_status = AsyncMock()
+
+    snapshots = AsyncMock()
+    loader = MagicMock()
+    sandbox = MagicMock()
+
+    org = SimpleNamespace(process_rules={"tool_strategy_node": "custom-tool-strategy"})
+    orch = Orchestrator(
+        workspace=tmp_path,
+        async_cards=async_cards,
+        snapshots=snapshots,
+        org=org,
+        config_root=tmp_path,
+        db_path="test.db",
+        loader=loader,
+        sandbox_orchestrator=sandbox,
+    )
+
+    class CustomToolStrategy:
+        def compose(self, toolbox):
+            return {
+                "custom_noop": lambda args, context=None: {"ok": True, "tool": "custom_noop", "args": args},
+            }
+
+    orch.decision_nodes.register_tool_strategy("custom-tool-strategy", CustomToolStrategy())
+
+    epic = SimpleNamespace(name="Tool Strategy Epic", references=[], issues=[], parent_id=None, id="EPIC-1")
+    team = SimpleNamespace(seats={"lead_architect": SimpleNamespace(roles=["lead_architect"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.load_asset.side_effect = [
+        SimpleNamespace(name="lead_architect", description="Role", tools=["custom_noop"]),
+        SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+    ]
+
+    class FakeModelClientNode:
+        def create_provider(self, selected_model, env):
+            class P:
+                async def clear_context(self):
+                    return None
+            return P()
+
+        def create_client(self, provider):
+            class C:
+                async def complete(self, messages):
+                    return SimpleNamespace(content="ok", raw={})
+            return C()
+
+    orch.model_client_node = FakeModelClientNode()
+    orch.memory.search = AsyncMock(return_value=[])
+    orch.memory.remember = AsyncMock()
+    orch._save_checkpoint = AsyncMock()
+
+    class FakePromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    orch.decision_nodes.resolve_prompt_strategy = MagicMock(return_value=FakePromptStrategy())
+
+    tool_strategy_hit = {"used": False}
+
+    async def fake_execute_turn(self, issue, role_config, client, toolbox, context, system_prompt):
+        res = await toolbox.execute("custom_noop", {"x": 1}, context=context)
+        tool_strategy_hit["used"] = res.get("ok") is True and res.get("tool") == "custom_noop"
+        return TurnResult(
+            success=True,
+            turn=SimpleNamespace(role=context["role"], issue_id=context["issue_id"], content="done", note=""),
+        )
+
+    with patch("orket.orchestration.orchestrator.TurnExecutor.execute_turn", new=fake_execute_turn):
+        await orch.execute_epic(
+            active_build="build-tool-strategy",
+            run_id="run-tool-strategy",
+            epic=epic,
+            team=team,
+            env=env,
+        )
+
+    assert tool_strategy_hit["used"] is True

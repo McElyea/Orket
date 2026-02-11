@@ -174,6 +174,7 @@ class Orchestrator:
             cards_repo=self.async_cards,
             tool_gate=tool_gate,
             organization=self.org,
+            decision_nodes=self.decision_nodes,
         )
         
         # Concurrency/loop control via loop policy node.
@@ -282,18 +283,24 @@ class Orchestrator:
         if memory_context:
             system_desc += f"\n\nPROJECT CONTEXT (PAST DECISIONS):\n{memory_context}"
 
-        context = {
-            "session_id": run_id,
-            "issue_id": issue.id,
-            "workspace": str(self.workspace),
-            "role": seat_name,
-            "roles": roles_to_load,
-            "current_status": turn_status.value,
-            "history": self._history_context()
-        }
+        context = self._build_turn_context(
+            run_id=run_id,
+            issue=issue,
+            seat_name=seat_name,
+            roles_to_load=roles_to_load,
+            turn_status=turn_status,
+        )
 
         print(f"  [ORCHESTRATOR] {seat_name} -> {issue.id} ({issue.status.value})")
-        result = await executor.execute_turn(issue, role_config, client, toolbox, context, system_prompt=system_desc)
+        result = await self._dispatch_turn(
+            executor=executor,
+            issue=issue,
+            role_config=role_config,
+            client=client,
+            toolbox=toolbox,
+            context=context,
+            system_prompt=system_desc,
+        )
 
         if result.success:
             self.transcript.append(result.turn)
@@ -324,6 +331,43 @@ class Orchestrator:
             await self._save_checkpoint(run_id, epic, team, env, active_build)
         else:
             await self._handle_failure(issue, result, run_id, roles_to_load)
+
+    def _build_turn_context(
+        self,
+        run_id: str,
+        issue: IssueConfig,
+        seat_name: str,
+        roles_to_load: List[str],
+        turn_status: CardStatus,
+    ) -> Dict[str, Any]:
+        return {
+            "session_id": run_id,
+            "issue_id": issue.id,
+            "workspace": str(self.workspace),
+            "role": seat_name,
+            "roles": roles_to_load,
+            "current_status": turn_status.value,
+            "history": self._history_context(),
+        }
+
+    async def _dispatch_turn(
+        self,
+        executor: TurnExecutor,
+        issue: IssueConfig,
+        role_config: RoleConfig,
+        client: Any,
+        toolbox: ToolBox,
+        context: Dict[str, Any],
+        system_prompt: str,
+    ) -> Any:
+        return await executor.execute_turn(
+            issue,
+            role_config,
+            client,
+            toolbox,
+            context,
+            system_prompt=system_prompt,
+        )
 
     async def _save_checkpoint(self, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str):
         snapshot_data = {

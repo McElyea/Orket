@@ -6,8 +6,8 @@ Architecture authority: `docs/OrketArchitectureModel.md`.
 ## Current State
 
 The prior release gate is complete:
-1. `python -m pytest tests/ -q` -> 204 passed.
-2. `python -m pytest --collect-only -q` -> 204 collected.
+1. `python -m pytest tests/ -q` -> 205 passed.
+2. `python -m pytest --collect-only -q` -> 205 collected.
 3. `rg -n "except Exception" orket` -> 0 matches.
 4. Load artifact archived: `benchmarks/results/2026-02-11_phase5_load.json`.
 5. CI includes `quality`, `docker_smoke`, and `migration_smoke` jobs.
@@ -90,13 +90,18 @@ The prior release gate is complete:
 27. Tool family class extraction started with compatibility exports:
 - Added `orket/tool_families/` package (`base`, `filesystem`, `vision`, `cards`, `academy`).
 - `orket/tools.py` now composes `ToolBox` over extracted families and re-exports legacy class names.
+28. End-to-end tool strategy override coverage added:
+- Added execution-path coverage in `tests/test_orchestrator_epic.py` proving custom `tool_strategy_node` is used through `execute_epic` turn flow.
+29. Orchestrator execution-turn prep seams split:
+- Added `_build_turn_context()` seam for context assembly.
+- Added `_dispatch_turn()` seam for execution dispatch.
+- `_execute_issue_turn()` now delegates to both seams.
 
-## Phase P: Volatility Decomposition (Next)
+## Phase Q: Backlog Refresh
 
-Goal: keep reducing monolithic hotspots while preserving behavior parity.
+Goal: no active volatility-decomposition item is open; refresh backlog from new churn evidence when needed.
 
-1. Add end-to-end override test for extracted tool-family composition path (custom `tool_strategy_node` through real orchestration turn).
-2. Begin splitting `orchestrator.py` execution-turn preparation into focused seams (context assembly vs execution dispatch).
+1. No active item.
 
 ## Working Model
 
