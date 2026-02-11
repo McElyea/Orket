@@ -23,14 +23,16 @@ The prior release gate is complete:
 9. Release pipeline closure completed:
 - CI uploads benchmark evidence artifacts (`benchmarks/results/*.json`).
 - One-command release smoke script added: `python scripts/release_smoke.py`.
+10. Volatility evidence archived:
+- Churn report artifact: `benchmarks/results/2026-02-11_phaseH_churn.json`.
+- Repro command: `python scripts/churn_report.py --scope orket --top 20`.
 
 ## Phase H: Volatility Decomposition
 
 Goal: continue dogfooding architecture by extracting the next high-churn volatility seams.
 
-1. Build and archive code churn evidence (file-level and class/function-level) to guide extraction order.
-2. Extract API runtime strategy seams from `orket/interfaces/api.py` where behavior is expected to vary.
-3. Extract sandbox/runtime policy seams from:
+1. Extract API runtime strategy seams from `orket/interfaces/api.py` where behavior is expected to vary.
+2. Extract sandbox/runtime policy seams from:
 - `orket/services/sandbox_orchestrator.py`
 - `orket/orchestration/engine.py`
 
