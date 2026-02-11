@@ -6,8 +6,8 @@ Architecture authority: `docs/OrketArchitectureModel.md`.
 ## Current State
 
 The prior release gate is complete:
-1. `python -m pytest tests/ -q` -> 194 passed.
-2. `python -m pytest --collect-only -q` -> 194 collected.
+1. `python -m pytest tests/ -q` -> 196 passed.
+2. `python -m pytest --collect-only -q` -> 196 collected.
 3. `rg -n "except Exception" orket` -> 0 matches.
 4. Load artifact archived: `benchmarks/results/2026-02-11_phase5_load.json`.
 5. CI includes `quality`, `docker_smoke`, and `migration_smoke` jobs.
@@ -57,13 +57,19 @@ The prior release gate is complete:
 - Script: `scripts/check_dependency_direction.py`.
 - CI quality job now enforces architecture dependency direction rules.
 - Rules aligned with `docs/ARCHITECTURE.md`.
+17. Runtime module split completed with compatibility shims:
+- `ConfigLoader` moved to `orket/runtime/config_loader.py`.
+- `ExecutionPipeline` + entrypoints moved to `orket/runtime/execution_pipeline.py`.
+- `orket/orket.py` now re-exports legacy symbols for compatibility.
+18. Decision-node override matrix smoke tests added:
+- `tests/test_decision_node_override_matrix.py` verifies process-rules and env override behavior across runtime seams.
 
-## Phase K: Volatility Decomposition (Next)
+## Phase L: Volatility Decomposition (Next)
 
 Goal: keep reducing monolithic hotspots while preserving behavior parity.
 
-1. Split `orket/orket.py` into package modules (`config_loader`, `execution_pipeline`, `entrypoints`) with compatibility shims.
-2. Add architecture smoke tests for decision-node override matrix across runtime seams.
+1. Extract `sandbox_orchestrator` command runner mechanics into an infrastructure adapter seam.
+2. Add lint checks for docs/code drift on roadmap metrics (pytest pass/collect counters).
 
 ## Working Model
 

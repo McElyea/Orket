@@ -1,10 +1,5 @@
-"""Compatibility shim for legacy imports.
-
-Primary runtime modules now live under `orket.runtime`.
-"""
-
-from orket.runtime import (
-    ConfigLoader,
+from orket.runtime.config_loader import ConfigLoader
+from orket.runtime.execution_pipeline import (
     ExecutionPipeline,
     orchestrate,
     orchestrate_card,
