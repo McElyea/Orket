@@ -18,8 +18,8 @@ from orket.domain.sandbox import (
     TechStack,
     PortAllocation,
     SandboxRegistry,
-    PortAllocator
 )
+from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 
 
@@ -35,9 +35,18 @@ class SandboxOrchestrator:
     5. Clean up (docker-compose down -v)
     """
 
-    def __init__(self, workspace_root: Path, registry: Optional[SandboxRegistry] = None):
+    def __init__(
+        self,
+        workspace_root: Path,
+        registry: Optional[SandboxRegistry] = None,
+        organization: Any = None,
+        decision_nodes: Optional[DecisionNodeRegistry] = None,
+    ):
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
+        self.organization = organization
+        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.sandbox_policy_node = self.decision_nodes.resolve_sandbox_policy(self.organization)
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
         from orket.infrastructure.async_file_tools import AsyncFileTools
         self.fs = AsyncFileTools(workspace_root)
@@ -52,10 +61,7 @@ class SandboxOrchestrator:
         """
         Create and deploy a new sandbox environment.
         """
-        import re
-        # Docker project names must be lowercase alphanumeric, hyphens, or underscores
-        sanitized_rock = re.sub(r'[^a-z0-9_-]', '', rock_id.lower())
-        sandbox_id = f"sandbox-{sanitized_rock}"
+        sandbox_id = self.sandbox_policy_node.build_sandbox_id(rock_id)
 
         # 1. Allocate ports
         ports = self.registry.port_allocator.allocate(sandbox_id, tech_stack)
@@ -70,7 +76,7 @@ class SandboxOrchestrator:
             project_name=project_name,
             tech_stack=tech_stack,
             ports=ports,
-            compose_project=f"orket-{sandbox_id}",
+            compose_project=self.sandbox_policy_node.build_compose_project(sandbox_id),
             workspace_path=workspace_path,
             api_url=f"http://localhost:{ports.api}",
             frontend_url=f"http://localhost:{ports.frontend}",
@@ -250,177 +256,17 @@ class SandboxOrchestrator:
 
     def _generate_compose_file(self, sandbox: Sandbox, db_password: str) -> str:
         """
-        Generate docker-compose.yml content from template.
-
-        For now, uses simple templates. Could be enhanced with Jinja2.
+        Generate docker-compose.yml content through sandbox policy node.
         """
         admin_password = secrets.token_urlsafe(32)
-
-        if sandbox.tech_stack == TechStack.FASTAPI_REACT_POSTGRES:
-            return self._template_fastapi_react_postgres(sandbox, db_password, admin_password)
-        elif sandbox.tech_stack == TechStack.FASTAPI_VUE_MONGO:
-            return self._template_fastapi_vue_mongo(sandbox, db_password, admin_password)
-        elif sandbox.tech_stack == TechStack.CSHARP_RAZOR_EF:
-            return self._template_csharp_razor_ef(sandbox, db_password)
-        else:
-            raise ValueError(f"Unsupported tech stack: {sandbox.tech_stack}")
-
-    def _template_fastapi_react_postgres(self, sandbox: Sandbox, db_password: str, admin_password: str) -> str:
-        """FastAPI + React + PostgreSQL template."""
-        return f"""version: "3.8"
-
-services:
-  api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "{sandbox.ports.api}:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:{db_password}@db:5432/appdb
-    depends_on:
-      - db
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "{sandbox.ports.frontend}:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:{sandbox.ports.api}
-    depends_on:
-      - api
-    restart: unless-stopped
-
-  db:
-    image: postgres:16
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD={db_password}
-      - POSTGRES_DB=appdb
-    ports:
-      - "{sandbox.ports.database}:5432"
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@orket.local
-      - PGADMIN_DEFAULT_PASSWORD={admin_password}
-    ports:
-      - "{sandbox.ports.admin_tool}:80"
-    depends_on:
-      - db
-    restart: unless-stopped
-
-volumes:
-  db-data:
-"""
-
-    def _template_fastapi_vue_mongo(self, sandbox: Sandbox, db_password: str, admin_password: str) -> str:
-        """FastAPI + Vue + MongoDB template."""
-        return f"""version: "3.8"
-
-services:
-  api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "{sandbox.ports.api}:8000"
-    environment:
-      - MONGO_URL=mongodb://orket:{db_password}@mongo:27017/appdb?authSource=admin
-    depends_on:
-      - mongo
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "{sandbox.ports.frontend}:3000"
-    environment:
-      - VUE_APP_API_URL=http://localhost:{sandbox.ports.api}
-    depends_on:
-      - api
-    restart: unless-stopped
-
-  mongo:
-    image: mongo:7
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=orket
-      - MONGO_INITDB_ROOT_PASSWORD={db_password}
-    ports:
-      - "{sandbox.ports.database}:27017"
-    volumes:
-      - mongo-data:/data/db
-    restart: unless-stopped
-
-  mongo-express:
-    image: mongo-express:latest
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=orket
-      - ME_CONFIG_MONGODB_ADMINPASSWORD={db_password}
-      - ME_CONFIG_MONGODB_URL=mongodb://orket:{db_password}@mongo:27017/
-      - ME_CONFIG_BASICAUTH_USERNAME=admin
-      - ME_CONFIG_BASICAUTH_PASSWORD={admin_password}
-    ports:
-      - "{sandbox.ports.admin_tool}:8081"
-    depends_on:
-      - mongo
-    restart: unless-stopped
-
-volumes:
-  mongo-data:
-"""
-
-    def _template_csharp_razor_ef(self, sandbox: Sandbox, db_password: str) -> str:
-        """C# WebAPI + Razor Pages + EF Core template."""
-        return f"""version: "3.8"
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "{sandbox.ports.api}:8080"
-      - "{sandbox.ports.frontend}:8443"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=appdb;User=sa;Password={db_password};TrustServerCertificate=True
-    depends_on:
-      - db
-    restart: unless-stopped
-
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD={db_password}
-    ports:
-      - "{sandbox.ports.database}:1433"
-    volumes:
-      - mssql-data:/var/opt/mssql
-    restart: unless-stopped
-
-volumes:
-  mssql-data:
-"""
+        return self.sandbox_policy_node.generate_compose_file(
+            sandbox=sandbox,
+            db_password=db_password,
+            admin_password=admin_password,
+        )
 
     def _get_database_url(self, tech_stack: TechStack, ports: PortAllocation, db_password: str = "") -> str:
-        """Generate database connection URL."""
-        if "mongo" in tech_stack.value:
-            return f"mongodb://localhost:{ports.database}/appdb"
-        elif "csharp" in tech_stack.value:
-            return f"Server=localhost,{ports.database};Database=appdb;User=sa;Password={db_password}"
-        else:
-            return f"postgresql://postgres:{db_password}@localhost:{ports.database}/appdb"
+        return self.sandbox_policy_node.get_database_url(tech_stack, ports, db_password)
 
     async def _deploy_sandbox(self, sandbox: Sandbox, compose_path: Path) -> None:
         """Execute docker-compose up -d."""

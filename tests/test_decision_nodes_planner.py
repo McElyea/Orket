@@ -361,3 +361,77 @@ def test_registry_api_runtime_env_override_wins(monkeypatch):
     node = registry.resolve_api_runtime(org)
 
     assert node is custom
+
+
+def test_registry_resolves_default_sandbox_policy():
+    registry = DecisionNodeRegistry()
+    node = registry.resolve_sandbox_policy()
+    from orket.decision_nodes.builtins import DefaultSandboxPolicyNode
+    assert isinstance(node, DefaultSandboxPolicyNode)
+
+
+def test_registry_resolves_custom_sandbox_policy(monkeypatch):
+    class CustomSandboxPolicy:
+        def build_sandbox_id(self, rock_id):
+            return "sandbox-custom"
+
+        def build_compose_project(self, sandbox_id):
+            return "orket-custom"
+
+        def get_database_url(self, tech_stack, ports, db_password=""):
+            return "db://custom"
+
+        def generate_compose_file(self, sandbox, db_password, admin_password):
+            return "version: '3.8'"
+
+    monkeypatch.delenv("ORKET_SANDBOX_POLICY_NODE", raising=False)
+    registry = DecisionNodeRegistry()
+    custom = CustomSandboxPolicy()
+    registry.register_sandbox_policy("custom-sandbox", custom)
+    org = SimpleNamespace(process_rules={"sandbox_policy_node": "custom-sandbox"})
+    assert registry.resolve_sandbox_policy(org) is custom
+
+
+def test_registry_sandbox_policy_env_override_wins(monkeypatch):
+    class CustomSandboxPolicy:
+        def build_sandbox_id(self, rock_id):
+            return "sandbox-custom"
+
+        def build_compose_project(self, sandbox_id):
+            return "orket-custom"
+
+        def get_database_url(self, tech_stack, ports, db_password=""):
+            return "db://custom"
+
+        def generate_compose_file(self, sandbox, db_password, admin_password):
+            return "version: '3.8'"
+
+    monkeypatch.setenv("ORKET_SANDBOX_POLICY_NODE", "custom-sandbox")
+    registry = DecisionNodeRegistry()
+    custom = CustomSandboxPolicy()
+    registry.register_sandbox_policy("custom-sandbox", custom)
+    org = SimpleNamespace(process_rules={"sandbox_policy_node": "default"})
+    assert registry.resolve_sandbox_policy(org) is custom
+
+
+def test_registry_resolves_default_engine_runtime():
+    registry = DecisionNodeRegistry()
+    node = registry.resolve_engine_runtime()
+    from orket.decision_nodes.builtins import DefaultEngineRuntimePolicyNode
+    assert isinstance(node, DefaultEngineRuntimePolicyNode)
+
+
+def test_registry_engine_runtime_env_override_wins(monkeypatch):
+    class CustomEngineRuntime:
+        def bootstrap_environment(self):
+            return None
+
+        def resolve_config_root(self, config_root):
+            return config_root
+
+    monkeypatch.setenv("ORKET_ENGINE_RUNTIME_NODE", "custom-engine")
+    registry = DecisionNodeRegistry()
+    custom = CustomEngineRuntime()
+    registry.register_engine_runtime("custom-engine", custom)
+    org = SimpleNamespace(process_rules={"engine_runtime_node": "default"})
+    assert registry.resolve_engine_runtime(org) is custom

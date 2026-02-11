@@ -71,3 +71,29 @@ class ApiRuntimeStrategyNode(Protocol):
 
     def create_session_id(self) -> str:
         ...
+
+
+class SandboxPolicyNode(Protocol):
+    """Decision node: sandbox lifecycle policy choices."""
+
+    def build_sandbox_id(self, rock_id: str) -> str:
+        ...
+
+    def build_compose_project(self, sandbox_id: str) -> str:
+        ...
+
+    def get_database_url(self, tech_stack: Any, ports: Any, db_password: str = "") -> str:
+        ...
+
+    def generate_compose_file(self, sandbox: Any, db_password: str, admin_password: str) -> str:
+        ...
+
+
+class EngineRuntimePolicyNode(Protocol):
+    """Decision node: engine bootstrap/runtime wiring choices."""
+
+    def bootstrap_environment(self) -> None:
+        ...
+
+    def resolve_config_root(self, config_root: Any) -> Any:
+        ...

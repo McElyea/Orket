@@ -5,6 +5,7 @@ from orket.infrastructure.async_repositories import (
     AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository
 )
 from orket.infrastructure.async_card_repository import AsyncCardRepository
+from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 
 class OrchestrationEngine:
@@ -20,13 +21,15 @@ class OrchestrationEngine:
                  cards_repo: Optional[AsyncCardRepository] = None,
                  sessions_repo: Optional[AsyncSessionRepository] = None,
                  snapshots_repo: Optional[AsyncSnapshotRepository] = None,
-                 success_repo: Optional[AsyncSuccessRepository] = None):
-        from orket.settings import load_env
-        load_env()
+                 success_repo: Optional[AsyncSuccessRepository] = None,
+                 decision_nodes: Optional[DecisionNodeRegistry] = None):
+        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.engine_runtime_node = self.decision_nodes.resolve_engine_runtime()
+        self.engine_runtime_node.bootstrap_environment()
         self.workspace_root = workspace_root
         self.department = department
         self.db_path = db_path
-        self.config_root = config_root or Path(".").resolve()
+        self.config_root = self.engine_runtime_node.resolve_config_root(config_root)
         
         # Repositories (Accessors)
         self.cards = cards_repo or AsyncCardRepository(self.db_path)

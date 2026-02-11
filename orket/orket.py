@@ -212,7 +212,7 @@ class ExecutionPipeline:
         
         self.notes = NoteStore()
         self.transcript = []
-        self.sandbox_orchestrator = SandboxOrchestrator(self.workspace)
+        self.sandbox_orchestrator = SandboxOrchestrator(self.workspace, organization=self.org)
         self.webhook_db = WebhookDatabase()
         self.bug_fix_manager = BugFixPhaseManager(
             organization_config=self.org.process_rules if self.org else {},

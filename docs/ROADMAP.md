@@ -30,14 +30,20 @@ The prior release gate is complete:
 - Added `ApiRuntimeStrategyNode` with default implementation.
 - `orket/interfaces/api.py` now resolves origins/session-id/asset-id through decision node.
 - Supports `process_rules.api_runtime_node` with `ORKET_API_RUNTIME_NODE` env override.
+12. Sandbox + engine runtime policy seams extracted:
+- Added `SandboxPolicyNode` and `EngineRuntimePolicyNode` with default implementations.
+- `orket/services/sandbox_orchestrator.py` now resolves sandbox id/compose/database policy through node.
+- `orket/orchestration/engine.py` now resolves environment bootstrap and config-root policy through node.
+- Supports `process_rules` selection plus env overrides:
+  - `ORKET_SANDBOX_POLICY_NODE`
+  - `ORKET_ENGINE_RUNTIME_NODE`
 
-## Phase H: Volatility Decomposition
+## Phase I: Volatility Decomposition (Next)
 
-Goal: continue dogfooding architecture by extracting the next high-churn volatility seams.
+Goal: continue extracting high-churn seams identified by churn evidence.
 
-1. Extract sandbox/runtime policy seams from:
-- `orket/services/sandbox_orchestrator.py`
-- `orket/orchestration/engine.py`
+1. Extract `orket/orket.py` loader/runtime selection strategy seams (currently highest total churn).
+2. Extract `orket/tools.py` family registration/composition into dedicated package modules (`tool_runtime/`, `tool_strategy/`) while preserving current decision-node API.
 
 ## Working Model
 

@@ -4,18 +4,22 @@ from typing import Any, Dict
 
 from orket.decision_nodes.builtins import (
     DefaultApiRuntimeStrategyNode,
+    DefaultEngineRuntimePolicyNode,
     DefaultEvaluatorNode,
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
     DefaultRouterNode,
+    DefaultSandboxPolicyNode,
     DefaultToolStrategyNode,
 )
 from orket.decision_nodes.contracts import (
     EvaluatorNode,
+    EngineRuntimePolicyNode,
     PlannerNode,
     PromptStrategyNode,
     RouterNode,
     ApiRuntimeStrategyNode,
+    SandboxPolicyNode,
     ToolStrategyNode,
 )
 from orket.settings import get_setting
@@ -35,6 +39,12 @@ class DecisionNodeRegistry:
         self._api_runtime_nodes: Dict[str, ApiRuntimeStrategyNode] = {
             "default": DefaultApiRuntimeStrategyNode()
         }
+        self._sandbox_policy_nodes: Dict[str, SandboxPolicyNode] = {
+            "default": DefaultSandboxPolicyNode()
+        }
+        self._engine_runtime_nodes: Dict[str, EngineRuntimePolicyNode] = {
+            "default": DefaultEngineRuntimePolicyNode()
+        }
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -53,6 +63,12 @@ class DecisionNodeRegistry:
 
     def register_api_runtime(self, name: str, node: ApiRuntimeStrategyNode) -> None:
         self._api_runtime_nodes[name] = node
+
+    def register_sandbox_policy(self, name: str, node: SandboxPolicyNode) -> None:
+        self._sandbox_policy_nodes[name] = node
+
+    def register_engine_runtime(self, name: str, node: EngineRuntimePolicyNode) -> None:
+        self._engine_runtime_nodes[name] = node
 
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
@@ -101,3 +117,25 @@ class DecisionNodeRegistry:
             api_runtime_name = env_override.strip()
 
         return self._api_runtime_nodes.get(api_runtime_name, self._api_runtime_nodes["default"])
+
+    def resolve_sandbox_policy(self, organization: Any = None) -> SandboxPolicyNode:
+        sandbox_policy_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            sandbox_policy_name = organization.process_rules.get("sandbox_policy_node", "default")
+
+        env_override = get_setting("ORKET_SANDBOX_POLICY_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            sandbox_policy_name = env_override.strip()
+
+        return self._sandbox_policy_nodes.get(sandbox_policy_name, self._sandbox_policy_nodes["default"])
+
+    def resolve_engine_runtime(self, organization: Any = None) -> EngineRuntimePolicyNode:
+        engine_runtime_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            engine_runtime_name = organization.process_rules.get("engine_runtime_node", "default")
+
+        env_override = get_setting("ORKET_ENGINE_RUNTIME_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            engine_runtime_name = env_override.strip()
+
+        return self._engine_runtime_nodes.get(engine_runtime_name, self._engine_runtime_nodes["default"])
