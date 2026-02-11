@@ -277,6 +277,8 @@ The RCE mitigation (directory separation) is necessary but insufficient. `import
 
 Long-term: Docker container execution.
 
+**Status**: [x] DONE (Subprocess Baseline). Verification fixtures now execute in isolated subprocesses with timeout enforcement, network blocking, and best-effort CPU/memory limits.
+
 ### 5.2 CI/CD Pipeline
 
 No CI currently exists. Create:
@@ -288,11 +290,15 @@ No CI currently exists. Create:
 - grep -rn "datetime.now()" orket/ --include="*.py" | grep -v "now(UTC)" && exit 1
 ```
 
+**Status**: [x] DONE. Added `.github/workflows/quality.yml` with pytest+coverage, ruff, mypy, and UTC datetime guard.
+
 ### 5.3 Rate Limiting
 
 Webhook endpoint has no rate limiting. Add:
 - Token bucket or sliding window rate limiter
 - Configurable via `ORKET_RATE_LIMIT` env var
+
+**Status**: [x] DONE. Added sliding-window limiter on `/webhook/gitea` with `ORKET_RATE_LIMIT` configuration and HTTP 429 enforcement.
 
 ### 5.4 Input Validation
 
@@ -301,6 +307,8 @@ API endpoints accept raw `Dict[str, Any]`. Replace with Pydantic models:
 - `GiteaWebhookPayload` for `/webhook/gitea`
 - `SaveFileRequest` for `/system/save`
 
+**Status**: [x] DONE. Strong request models are in place for `/system/run-active`, `/webhook/gitea`, `/system/save`, and `/webhook/test`.
+
 ### 5.5 Load Testing
 
 Before claiming production-ready:
@@ -308,6 +316,8 @@ Before claiming production-ready:
 - 10 parallel epic executions
 - 50 simultaneous WebSocket connections
 - Measure: response time p50/p95/p99, error rate, memory usage
+
+**Status**: [> ] IN PROGRESS. Added `benchmarks/phase5_load_test.py` harness for concurrent webhook/API load and percentile/error metrics; full target-scale runs remain pending.
 
 ---
 

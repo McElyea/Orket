@@ -7,10 +7,14 @@ SECURITY: Fixtures are loaded from a READ-ONLY verification directory.
 Agents can only write to their workspace, NOT to the verification directory.
 This prevents the write-then-execute RCE vulnerability.
 """
-import importlib.util
+from __future__ import annotations
 import sys
+import os
+import json
+import subprocess
 from pathlib import Path
 from datetime import datetime, UTC
+from typing import Any
 
 from orket.schema import IssueVerification, VerificationResult
 from orket.logging import log_event
@@ -38,6 +42,93 @@ class VerificationEngine:
     - Agents write to workspace/agent_output/ (cannot be executed)
     - This separation prevents write-then-execute attacks
     """
+
+    _RUNNER_CODE = r"""
+import json
+import os
+import sys
+import socket
+import importlib.util
+import traceback
+
+
+def _disable_network():
+    def _blocked(*args, **kwargs):
+        raise RuntimeError("Network access disabled in verification subprocess")
+    socket.create_connection = _blocked
+    base_socket = socket.socket
+    class GuardedSocket(base_socket):
+        def connect(self, *args, **kwargs):
+            raise RuntimeError("Network access disabled in verification subprocess")
+        def connect_ex(self, *args, **kwargs):
+            raise RuntimeError("Network access disabled in verification subprocess")
+    socket.socket = GuardedSocket
+
+
+def _apply_limits():
+    try:
+        import resource
+        cpu_sec = int(os.getenv("ORKET_VERIFY_CPU_SEC", "2"))
+        mem_mb = int(os.getenv("ORKET_VERIFY_MEM_MB", "256"))
+        resource.setrlimit(resource.RLIMIT_CPU, (cpu_sec, cpu_sec))
+        mem_bytes = mem_mb * 1024 * 1024
+        resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+    except Exception:
+        # Best effort on non-posix platforms.
+        pass
+
+
+def main():
+    _disable_network()
+    _apply_limits()
+
+    payload = json.loads(sys.stdin.read())
+    fixture_path = payload["fixture_path"]
+    scenarios = payload.get("scenarios", [])
+    response = {"ok": True, "results": [], "fatal_error": None}
+
+    try:
+        spec = importlib.util.spec_from_file_location("verification_fixture_subprocess", fixture_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    except Exception as exc:
+        response["ok"] = False
+        response["fatal_error"] = f"{type(exc).__name__}: {exc}"
+        response["traceback"] = traceback.format_exc()
+        print(json.dumps(response))
+        return
+
+    for sc in scenarios:
+        scenario_id = sc["id"]
+        input_data = sc.get("input_data")
+        expected_output = sc.get("expected_output")
+        verify_fn = getattr(module, f"verify_{scenario_id}", None) or getattr(module, "verify", None)
+        result = {
+            "id": scenario_id,
+            "expected_output": expected_output,
+            "actual_output": None,
+            "status": "fail",
+            "error": None,
+        }
+        if verify_fn is None:
+            result["error"] = f"No verify function found for scenario {scenario_id}"
+            response["results"].append(result)
+            continue
+
+        try:
+            actual = verify_fn(input_data)
+            result["actual_output"] = actual
+            result["status"] = "pass" if actual == expected_output else "fail"
+        except Exception as exc:
+            result["error"] = f"{type(exc).__name__}: {exc}"
+        response["results"].append(result)
+
+    print(json.dumps(response))
+
+
+if __name__ == "__main__":
+    main()
+"""
 
     @staticmethod
     def verify(verification: IssueVerification, workspace_root: Path) -> VerificationResult:
@@ -84,51 +175,80 @@ class VerificationEngine:
                 passed=0, failed=failed, logs=logs
             )
 
+        timeout_sec = int(os.getenv("ORKET_VERIFY_TIMEOUT_SEC", "5"))
+        payload = {
+            "fixture_path": str(fixture_path),
+            "scenarios": [
+                {
+                    "id": scenario.id,
+                    "input_data": scenario.input_data,
+                    "expected_output": scenario.expected_output,
+                }
+                for scenario in verification.scenarios
+            ],
+        }
+
         try:
-            spec = importlib.util.spec_from_file_location("verification_fixture", fixture_path)
-            module = importlib.util.module_from_spec(spec)
+            env = os.environ.copy()
+            env["PYTHONPATH"] = ""
+            result = subprocess.run(
+                [sys.executable, "-I", "-c", VerificationEngine._RUNNER_CODE],
+                input=json.dumps(payload),
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+                cwd=str(verification_root),
+                env=env,
+                check=False,
+            )
 
-            # Add ONLY the verification directory to sys.path (not the full workspace)
-            sys.path.insert(0, str(verification_root))
-            spec.loader.exec_module(module)
-
-            for scenario in verification.scenarios:
-                logs.append(f"Running Scenario: {scenario.description}")
-                verify_fn = getattr(module, f"verify_{scenario.id}", None) or getattr(module, "verify", None)
-
-                if not verify_fn:
-                    logs.append(f"  [FAIL] No verify function found for scenario {scenario.id}")
-                    scenario.status = "fail"
-                    failed += 1
-                    continue
-
+            if result.returncode != 0:
+                logs.append(f"FATAL ERROR loading fixture: subprocess exit code {result.returncode}")
+                if result.stderr:
+                    logs.append(f"STDERR: {result.stderr.strip()}")
+            else:
                 try:
-                    actual = verify_fn(scenario.input_data)
-                    scenario.actual_output = actual
-                    if actual == scenario.expected_output:
-                        logs.append(f"  [PASS] Actual matches Expected: {actual}")
-                        scenario.status = "pass"
-                        passed += 1
-                    else:
-                        logs.append(f"  [FAIL] Expected {scenario.expected_output}, got {actual}")
-                        scenario.status = "fail"
-                        failed += 1
-                except Exception as e:
-                    logs.append(f"  [ERROR] Execution error: {type(e).__name__}: {e}")
-                    scenario.status = "fail"
-                    failed += 1
+                    parsed = json.loads(result.stdout or "{}")
+                except json.JSONDecodeError as exc:
+                    parsed = {"ok": False, "fatal_error": f"Invalid subprocess JSON output: {exc}", "results": []}
 
+                if not parsed.get("ok", False):
+                    logs.append(f"FATAL ERROR loading fixture: {parsed.get('fatal_error', 'unknown')}")
+                    if parsed.get("traceback"):
+                        logs.append(parsed["traceback"])
+                else:
+                    outcomes = {item.get("id"): item for item in parsed.get("results", [])}
+                    for scenario in verification.scenarios:
+                        logs.append(f"Running Scenario: {scenario.description}")
+                        outcome = outcomes.get(scenario.id)
+                        if not outcome:
+                            logs.append(f"  [FAIL] Missing subprocess result for scenario {scenario.id}")
+                            scenario.status = "fail"
+                            failed += 1
+                            continue
+                        scenario.actual_output = outcome.get("actual_output")
+                        if outcome.get("status") == "pass":
+                            logs.append(f"  [PASS] Actual matches Expected: {scenario.actual_output}")
+                            scenario.status = "pass"
+                            passed += 1
+                        else:
+                            if outcome.get("error"):
+                                logs.append(f"  [ERROR] Execution error: {outcome['error']}")
+                            else:
+                                logs.append(
+                                    f"  [FAIL] Expected {scenario.expected_output}, got {scenario.actual_output}"
+                                )
+                            scenario.status = "fail"
+                            failed += 1
+        except subprocess.TimeoutExpired:
+            logs.append(f"FATAL ERROR loading fixture: subprocess timeout after {timeout_sec}s")
+            for scenario in verification.scenarios:
+                scenario.status = "fail"
+            failed = len(verification.scenarios)
         except VerificationSecurityError:
             raise
-        except ImportError as e:
-            logs.append(f"FATAL ERROR loading fixture (import): {e}")
-        except SyntaxError as e:
-            logs.append(f"FATAL ERROR loading fixture (syntax): {e}")
         except Exception as e:
             logs.append(f"FATAL ERROR loading fixture: {type(e).__name__}: {e}")
-        finally:
-            if str(verification_root) in sys.path:
-                sys.path.remove(str(verification_root))
 
         logs.append(f"--- Verification Complete: {passed} Passed, {failed} Failed ---")
         return VerificationResult(

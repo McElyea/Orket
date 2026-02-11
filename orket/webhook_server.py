@@ -8,7 +8,11 @@ from __future__ import annotations
 import hmac
 import hashlib
 import os
-from typing import Dict, Any
+import json
+import asyncio
+import time
+from collections import deque
+from typing import Dict, Any, Optional
 from pathlib import Path
 
 from fastapi import FastAPI, Request, HTTPException, Header
@@ -44,6 +48,35 @@ if not _webhook_secret_raw.strip():
 WEBHOOK_SECRET = _webhook_secret_raw.encode()
 
 
+class SlidingWindowRateLimiter:
+    """Simple per-process sliding-window limiter."""
+
+    def __init__(self, limit: int, window_seconds: int = 60):
+        self.limit = max(1, int(limit))
+        self.window_seconds = window_seconds
+        self._events: deque[float] = deque()
+        self._lock = asyncio.Lock()
+
+    async def allow(self) -> bool:
+        now = time.monotonic()
+        cutoff = now - self.window_seconds
+        async with self._lock:
+            while self._events and self._events[0] < cutoff:
+                self._events.popleft()
+            if len(self._events) >= self.limit:
+                return False
+            self._events.append(now)
+            return True
+
+
+_rate_limit_raw = os.getenv("ORKET_RATE_LIMIT", "60")
+try:
+    _rate_limit = int(_rate_limit_raw)
+except ValueError:
+    _rate_limit = 60
+webhook_rate_limiter = SlidingWindowRateLimiter(_rate_limit, window_seconds=60)
+
+
 def validate_signature(payload: bytes, signature: str) -> bool:
     """
     Validate HMAC-SHA256 signature from Gitea webhook.
@@ -56,7 +89,11 @@ def validate_signature(payload: bytes, signature: str) -> bool:
         True if signature is valid, False otherwise
     """
     if not WEBHOOK_SECRET:
-        log_event("webhook", "CRITICAL: GITEA_WEBHOOK_SECRET not set. Authentication disabled.", "error")
+        log_event(
+            "webhook",
+            {"message": "GITEA_WEBHOOK_SECRET not set. Authentication disabled.", "level": "error"},
+            workspace=Path.cwd(),
+        )
         return False  # Reject if not configured
 
     expected_signature = hmac.new(
@@ -94,6 +131,12 @@ class GiteaWebhookPayload(BaseModel):
     review: Optional[Dict[str, Any]] = None
     sender: Optional[Dict[str, Any]] = None
 
+
+class TestWebhookPayload(BaseModel):
+    event: str = "test"
+    action: Optional[str] = None
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
 @app.post("/webhook/gitea")
 async def gitea_webhook(
     request: Request,
@@ -103,6 +146,13 @@ async def gitea_webhook(
     """
     Main Gitea webhook endpoint.
     """
+    if not await webhook_rate_limiter.allow():
+        raise HTTPException(
+            status_code=429,
+            detail="Webhook rate limit exceeded",
+            headers={"Retry-After": "60"},
+        )
+
     # Size limit: 1MB
     MAX_SIZE = 1024 * 1024
     body = await request.body()
@@ -112,7 +162,7 @@ async def gitea_webhook(
     # Validate signature
     if x_gitea_signature:
         if not validate_signature(body, x_gitea_signature):
-            log_event("webhook", "Invalid webhook signature", "error")
+            log_event("webhook", {"message": "Invalid webhook signature", "level": "error"}, workspace=Path.cwd())
             raise HTTPException(status_code=401, detail="Invalid signature")
 
     # Parse and validate JSON payload
@@ -120,32 +170,33 @@ async def gitea_webhook(
         payload_data = json.loads(body)
         payload = GiteaWebhookPayload.model_validate(payload_data)
     except Exception as e:
-        log_event("webhook", f"Failed to parse or validate webhook payload: {e}", "error")
+        log_event(
+            "webhook",
+            {"message": f"Failed to parse or validate webhook payload: {e}", "level": "error"},
+            workspace=Path.cwd(),
+        )
         raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
 
     # Log webhook event
-    log_event(
-        "webhook",
-        f"Received Gitea webhook: {x_gitea_event}",
-        "info",
-        details={
-            "event": x_gitea_event,
-            "repo": payload.repository.get("full_name") if payload.repository else None,
-            "pr_number": payload.number
-        }
-    )
+    log_event("webhook", {
+        "message": f"Received Gitea webhook: {x_gitea_event}",
+        "level": "info",
+        "event": x_gitea_event,
+        "repo": payload.repository.get("full_name") if payload.repository else None,
+        "pr_number": payload.number,
+    }, workspace=Path.cwd())
 
     # Route to handler
     try:
         result = await webhook_handler.handle_webhook(x_gitea_event, payload.model_dump())
         return JSONResponse(content=result, status_code=200)
     except Exception as e:
-        log_event("webhook", f"Webhook handler error: {e}", "error")
+        log_event("webhook", {"message": f"Webhook handler error: {e}", "level": "error"}, workspace=Path.cwd())
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/webhook/test")
-async def test_webhook(payload: Dict[str, Any]):
+async def test_webhook(req: TestWebhookPayload):
     """
     Test endpoint for manual webhook testing (no signature validation).
 
@@ -154,10 +205,13 @@ async def test_webhook(payload: Dict[str, Any]):
              -H "Content-Type: application/json" \
              -d '{"event": "pull_request_review", "action": "approved"}'
     """
-    event_type = payload.get("event", "test")
-    log_event("webhook", f"Test webhook received: {event_type}", "info")
+    event_type = req.event or "test"
+    log_event("webhook", {"message": f"Test webhook received: {event_type}", "level": "info"}, workspace=Path.cwd())
 
-    result = await webhook_handler.handle_webhook(event_type, payload)
+    handler_payload = req.payload or {}
+    if req.action and "action" not in handler_payload:
+        handler_payload["action"] = req.action
+    result = await webhook_handler.handle_webhook(event_type, handler_payload)
     return JSONResponse(content=result, status_code=200)
 
 
@@ -169,7 +223,7 @@ def start_server(host: str = "0.0.0.0", port: int = 8080):
         host: Host to bind to (default: 0.0.0.0 for all interfaces)
         port: Port to bind to (default: 8080)
     """
-    log_event("webhook_server", f"Starting webhook server on {host}:{port}", "info")
+    log_event("webhook_server", {"message": f"Starting webhook server on {host}:{port}", "level": "info"}, workspace=Path.cwd())
 
     uvicorn.run(
         app,

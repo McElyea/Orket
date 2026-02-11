@@ -1,0 +1,39 @@
+name: Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run tests with coverage
+        run: pytest tests/ --cov=orket --cov-fail-under=60
+
+      - name: Ruff lint
+        run: ruff check orket/
+
+      - name: Mypy type check
+        run: mypy orket/ --ignore-missing-imports
+
+      - name: Enforce datetime.now UTC usage
+        run: |
+          if grep -R --line-number "datetime.now()" orket --include="*.py" | grep -v "now(UTC)"; then
+            echo "Found disallowed datetime.now() usage"
+            exit 1
+          fi
