@@ -95,7 +95,11 @@ class ExecutionPipeline:
         parent_epic, parent_ename, _ = await self._find_parent_epic(card_id)
         if not parent_epic:
             raise CardNotFound(f"Card {card_id} not found.")
-        print(f"  [PIPELINE] Executing Atomic Issue: {card_id} (Parent: {parent_epic.name})")
+        log_event(
+            "pipeline_atomic_issue",
+            {"card_id": card_id, "parent_epic": parent_epic.name},
+            workspace=self.workspace,
+        )
         return await self.run_epic(parent_ename, target_issue_id=card_id, **kwargs)
 
     async def run_epic(
@@ -229,7 +233,11 @@ class ExecutionPipeline:
             )
             results.append({"epic": entry["epic"], "transcript": res})
 
-        print(f"  [PHASE] Rock '{rock.name}' complete. Starting Bug Fix Phase...")
+        log_event(
+            "rock_phase_transition",
+            {"rock": rock.name, "phase": "bug_fix"},
+            workspace=self.workspace,
+        )
         await self.bug_fix_manager.start_phase(rock.id)
 
         return {"rock": rock.name, "results": results}

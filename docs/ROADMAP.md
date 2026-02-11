@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 222 passed.
-2. `python -m pytest --collect-only -q` -> 222 collected.
+1. `python -m pytest tests/ -q` -> 227 passed.
+2. `python -m pytest --collect-only -q` -> 227 collected.
 
 ## Open Phases
 
@@ -61,11 +61,14 @@ Completed:
    - run-active unsupported method behavior
    - run-metrics workspace seam usage
    - sandbox logs pipeline-factory seam usage
+   - session detail missing-session 404 behavior
+   - session snapshot missing-session 404 behavior
+   - sandboxes list/stop route behavior
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
 2. Reduce transport-layer churn and branch density in `orket/interfaces/api.py`.
-3. Add parity tests for additional endpoints (`sessions`, `snapshot`, `sandboxes list/stop`) where seams exist.
+3. Add parity tests for remaining endpoint behaviors with conditional branches (error/empty-state cases).
 
 Acceptance:
 1. API handlers are transport-focused (validation/status/serialization).
@@ -115,6 +118,7 @@ Completed:
 1. Event logging infrastructure exists and is consumed in core flows.
 2. Added warning telemetry for `clear-logs` suppression path.
 3. Replaced hot-path `print` calls in `api.py` and key `orchestrator.py` flow points with `log_event`.
+4. Replaced `execution_pipeline.py` phase/status prints with structured `log_event` calls.
 
 Remaining:
 1. Replace remaining runtime `print` calls in `execution_pipeline.py` and other runtime hot paths.

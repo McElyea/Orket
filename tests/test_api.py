@@ -240,3 +240,50 @@ def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"logs": "fake-logs"}
     assert captured["log_args"] == ("sb-1", "api")
+
+
+def test_session_detail_returns_404_when_missing(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_get_session(_session_id):
+        return None
+
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+
+    response = client.get("/v1/sessions/NOPE", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 404
+
+
+def test_session_snapshot_returns_404_when_missing(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_get_snapshot(_session_id):
+        return None
+
+    monkeypatch.setattr(api_module.engine.snapshots, "get", fake_get_snapshot)
+
+    response = client.get("/v1/sessions/NOPE/snapshot", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 404
+
+
+def test_sandboxes_list_and_stop(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    async def fake_get_sandboxes():
+        return [{"id": "sb-1"}]
+
+    async def fake_stop_sandbox(sandbox_id):
+        captured["stopped"] = sandbox_id
+
+    monkeypatch.setattr(api_module.engine, "get_sandboxes", fake_get_sandboxes)
+    monkeypatch.setattr(api_module.engine, "stop_sandbox", fake_stop_sandbox)
+
+    list_response = client.get("/v1/sandboxes", headers={"X-API-Key": "test-key"})
+    stop_response = client.post("/v1/sandboxes/sb-1/stop", headers={"X-API-Key": "test-key"})
+
+    assert list_response.status_code == 200
+    assert list_response.json() == [{"id": "sb-1"}]
+    assert stop_response.status_code == 200
+    assert stop_response.json() == {"ok": True}
+    assert captured["stopped"] == "sb-1"
