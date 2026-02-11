@@ -144,6 +144,45 @@ async def test_execute_epic_honors_custom_loop_policy(orchestrator, mock_cards):
 
 
 @pytest.mark.asyncio
+async def test_execute_epic_does_not_false_exhaust_on_iteration_boundary(orchestrator, mock_cards):
+    """If the last allowed iteration completes work and backlog is then done, exhaustion should not raise."""
+    ready_issue = MagicMock(id="I1", status=CardStatus.READY)
+    done_issue = MagicMock(id="I1", status=CardStatus.DONE)
+
+    epic = MagicMock(spec=EpicConfig)
+    epic.name = "Boundary Epic"
+    epic.issues = [ready_issue]
+    epic.references = []
+
+    mock_cards.get_by_build.side_effect = [[ready_issue], [done_issue]]
+    mock_cards.get_independent_ready_issues.return_value = [ready_issue]
+
+    class CustomLoopPolicy:
+        def concurrency_limit(self, organization):
+            return 1
+
+        def max_iterations(self, organization):
+            return 1
+
+        def is_backlog_done(self, backlog):
+            return all(i.status == CardStatus.DONE for i in backlog)
+
+    orchestrator.loop_policy_node = CustomLoopPolicy()
+    orchestrator._execute_issue_turn = AsyncMock(return_value=None)
+
+    with patch("pathlib.Path.read_text", return_value='{"llm": {"provider": "ollama"}}'):
+        await orchestrator.execute_epic(
+            active_build="build-boundary",
+            run_id="run-boundary",
+            epic=epic,
+            team=MagicMock(),
+            env=MagicMock(),
+        )
+
+    orchestrator._execute_issue_turn.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mock_cards, monkeypatch):
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
     issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())

@@ -219,7 +219,9 @@ class Orchestrator:
             await asyncio.gather(*(semaphore_wrapper(c) for c in candidates))
 
         if iteration_count >= max_iterations:
-             raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
+            final_backlog = await self.async_cards.get_by_build(active_build)
+            if not self.loop_policy_node.is_backlog_done(final_backlog):
+                raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
 
     async def _execute_issue_turn(
         self, 

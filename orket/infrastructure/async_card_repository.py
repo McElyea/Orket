@@ -192,6 +192,20 @@ class AsyncCardRepository(CardRepository):
                 rows = await cursor.fetchall()
                 return [dict(row) for row in rows]
 
+    async def add_credits(self, issue_id: str, amount: float) -> None:
+        async with self._lock:
+            async with aiosqlite.connect(self.db_path) as conn:
+                await self._ensure_initialized(conn)
+                await conn.execute(
+                    "UPDATE issues SET credits_spent = credits_spent + ? WHERE id = ?",
+                    (amount, issue_id),
+                )
+                await conn.execute(
+                    "INSERT INTO card_transactions (card_id, role, action) VALUES (?, ?, ?)",
+                    (issue_id, "system", f"Reported {amount} credits"),
+                )
+                await conn.commit()
+
     async def get_independent_ready_issues(self, build_id: str) -> List[IssueRecord]:
         # Uses existing locked methods gracefully
         all_issues = await self.get_by_build(build_id)

@@ -26,6 +26,7 @@ class CardManagementTools(BaseTools):
         self.tool_gate = tool_gate
 
     async def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        context = context or {}
         session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
         if not all([session_id, seat, summary]):
             return {"ok": False, "error": "Missing params"}
@@ -97,6 +98,7 @@ class CardManagementTools(BaseTools):
         return {"ok": True, "issue_id": issue_id, "status": new_status.value}
 
     async def add_issue_comment(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        context = context or {}
         issue_id, content = context.get("issue_id"), args.get("comment")
         if not issue_id or not content:
             return {"ok": False, "error": "Missing params"}
@@ -104,14 +106,31 @@ class CardManagementTools(BaseTools):
         return {"ok": True, "message": "Comment added."}
 
     async def get_issue_context(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+        context = context or {}
         issue_id = args.get("issue_id") or context.get("issue_id")
         if not issue_id:
             return {"ok": False, "error": "No issue_id"}
         comments = await self.cards.get_comments(issue_id)
-        issue_data = await self.cards.get_by_id(issue_id) or {}
+        issue_data = await self.cards.get_by_id(issue_id)
+        if issue_data is None:
+            issue_payload: Dict[str, Any] = {}
+        elif hasattr(issue_data, "model_dump"):
+            issue_payload = issue_data.model_dump()
+        elif isinstance(issue_data, dict):
+            issue_payload = issue_data
+        else:
+            issue_payload = {
+                "status": getattr(issue_data, "status", None),
+                "summary": getattr(issue_data, "summary", None),
+            }
+
+        status = issue_payload.get("status")
+        if hasattr(status, "value"):
+            status = status.value
+
         return {
             "ok": True,
-            "status": issue_data.get("status"),
-            "summary": issue_data.get("summary"),
+            "status": status,
+            "summary": issue_payload.get("summary"),
             "comments": comments,
         }

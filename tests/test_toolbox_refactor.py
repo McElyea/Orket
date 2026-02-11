@@ -1,7 +1,9 @@
 import pytest
+import sqlite3
 from pathlib import Path
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.tools import ToolBox, FileSystemTools, CardManagementTools, VisionTools, AcademyTools, get_tool_map
+from orket.core.types import CardStatus
 
 def test_toolbox_composition(tmp_path):
     workspace = tmp_path / "workspace"
@@ -146,3 +148,95 @@ async def test_card_management_create_issue(tmp_path):
     issue = await cards.cards.get_by_id(res["issue_id"])
     assert issue.summary == "Fix bug"
     assert float(issue.priority) == 3.0
+
+
+@pytest.mark.asyncio
+async def test_toolbox_report_credits_uses_async_repository(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    db_path = tmp_path / "test.db"
+
+    toolbox = ToolBox(policy={}, workspace_root=str(workspace), references=[], db_path=str(db_path))
+
+    create_res = await toolbox.cards.create_issue(
+        {"seat": "dev", "summary": "Credit test"},
+        context={"session_id": "sess-credits"},
+    )
+    issue_id = create_res["issue_id"]
+
+    result = await toolbox.execute("report_credits", {"amount": 2.5}, context={"issue_id": issue_id})
+
+    assert result["ok"] is True
+
+    with sqlite3.connect(str(db_path)) as conn:
+        row = conn.execute("SELECT credits_spent FROM issues WHERE id = ?", (issue_id,)).fetchone()
+    assert row is not None
+    assert float(row[0]) == 2.5
+
+
+@pytest.mark.asyncio
+async def test_toolbox_request_excuse_updates_issue_status(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    db_path = tmp_path / "test.db"
+
+    toolbox = ToolBox(policy={}, workspace_root=str(workspace), references=[], db_path=str(db_path))
+
+    create_res = await toolbox.cards.create_issue(
+        {"seat": "dev", "summary": "Excuse test"},
+        context={"session_id": "sess-excuse"},
+    )
+    issue_id = create_res["issue_id"]
+
+    result = await toolbox.execute(
+        "request_excuse",
+        {"reason": "Blocked waiting for external dependency"},
+        context={"issue_id": issue_id, "role": "lead_architect"},
+    )
+
+    assert result["ok"] is True
+
+    issue = await toolbox.cards.cards.get_by_id(issue_id)
+    assert issue is not None
+    assert issue.status == CardStatus.WAITING_FOR_DEVELOPER
+
+    comments = await toolbox.cards.cards.get_comments(issue_id)
+    assert any(c["content"] == "Blocked waiting for external dependency" for c in comments)
+
+
+@pytest.mark.asyncio
+async def test_get_issue_context_handles_issue_record_shape(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    db_path = tmp_path / "test.db"
+
+    cards = CardManagementTools(workspace, [], db_path=str(db_path))
+
+    create_res = await cards.create_issue(
+        {"seat": "dev", "summary": "Context test"},
+        context={"session_id": "sess-context"},
+    )
+    issue_id = create_res["issue_id"]
+
+    await cards.add_issue_comment(
+        {"comment": "First comment"},
+        context={"issue_id": issue_id, "role": "dev"},
+    )
+
+    result = await cards.get_issue_context({}, context={"issue_id": issue_id})
+
+    assert result["ok"] is True
+    assert result["status"] == CardStatus.READY.value
+    assert result["summary"] == "Context test"
+    assert len(result["comments"]) == 1
+
+
+def test_nominate_card_handles_none_context(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    toolbox = ToolBox(policy={}, workspace_root=str(workspace), references=[])
+
+    result = toolbox.nominate_card({"issue_id": "ISSUE-1"}, context=None)
+
+    assert result["ok"] is True
