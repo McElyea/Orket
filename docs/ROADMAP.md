@@ -18,17 +18,21 @@ The prior release gate is complete:
 7. Architecture documentation published:
 - `docs/ARCHITECTURE.md` now defines folder architecture and dependency direction rules.
 - Decision-node override examples documented, including `tool_strategy_node` + `ORKET_TOOL_STRATEGY_NODE`.
+8. FastAPI lifecycle migration completed:
+- Replaced deprecated startup hook with lifespan handlers in `orket/interfaces/api.py`.
+9. Release pipeline closure completed:
+- CI uploads benchmark evidence artifacts (`benchmarks/results/*.json`).
+- One-command release smoke script added: `python scripts/release_smoke.py`.
 
-## Phase G: Operational Tightening
+## Phase H: Volatility Decomposition
 
-Goal: close remaining operational risks before broader feature expansion.
+Goal: continue dogfooding architecture by extracting the next high-churn volatility seams.
 
-1. Replace deprecated FastAPI startup hook with lifespan handlers (`orket/interfaces/api.py`).
-2. Add CI artifact upload for load evidence JSON from benchmark runs.
-3. Add a one-command local release smoke script that runs:
-- tests
-- migrations
-- docker health check
+1. Build and archive code churn evidence (file-level and class/function-level) to guide extraction order.
+2. Extract API runtime strategy seams from `orket/interfaces/api.py` where behavior is expected to vary.
+3. Extract sandbox/runtime policy seams from:
+- `orket/services/sandbox_orchestrator.py`
+- `orket/orchestration/engine.py`
 
 ## Working Model
 

@@ -3,6 +3,7 @@ import uuid
 import json
 from pathlib import Path
 from datetime import datetime, timedelta, UTC
+from contextlib import asynccontextmanager
 from typing import List, Optional, Dict, Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request, APIRouter, Depends, Security
@@ -47,7 +48,30 @@ async def get_api_key(api_key_header: str = Security(api_key_header)):
         )
     return api_key_header
 
-app = FastAPI(title="Orket API", version=__version__)
+# --- Lifespan ---
+
+def _on_log_record_factory(loop: asyncio.AbstractEventLoop):
+    def on_log_record(record):
+        loop.call_soon_threadsafe(runtime_state.event_queue.put_nowait, record)
+    return on_log_record
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    broadcaster_task = asyncio.create_task(event_broadcaster())
+    loop = asyncio.get_running_loop()
+    subscribe_to_events(_on_log_record_factory(loop))
+    try:
+        yield
+    finally:
+        broadcaster_task.cancel()
+        try:
+            await broadcaster_task
+        except asyncio.CancelledError:
+            pass
+
+
+app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 # Apply auth to all v1 endpoints if configured
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 
@@ -239,14 +263,6 @@ async def event_broadcaster():
             except (WebSocketDisconnect, RuntimeError, ValueError):
                 await runtime_state.remove_websocket(ws)
         runtime_state.event_queue.task_done()
-
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(event_broadcaster())
-    def on_log_record(record):
-        loop = asyncio.get_event_loop()
-        loop.call_soon_threadsafe(runtime_state.event_queue.put_nowait, record)
-    subscribe_to_events(on_log_record)
 
 @app.websocket("/ws/events")
 async def websocket_endpoint(websocket: WebSocket):

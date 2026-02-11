@@ -70,6 +70,17 @@ Before release, verify:
 3. Migration smoke passes (`migration_smoke` job validates runtime and webhook DB migration tables).
 4. Latest load artifact exists under `benchmarks/results/` and is linked in release notes.
 
+### One-command local smoke
+Run a local pre-release smoke in one command:
+```bash
+python scripts/release_smoke.py
+```
+
+Optional:
+```bash
+python scripts/release_smoke.py --skip-docker
+```
+
 ## Incident Playbook
 ### 1. Elevated 5xx from API
 1. Check `workspace/default/orket.log`.

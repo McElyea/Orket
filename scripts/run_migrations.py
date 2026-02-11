@@ -40,8 +40,11 @@ def apply_sql_migration(conn: sqlite3.Connection, migration_path: Path) -> bool:
     return True
 
 
-def run(db_path: Path, migration_dir: Path) -> tuple[int, int]:
-    migration_files = sorted(migration_dir.glob("*.sql"))
+def run(db_path: Path, migration_dir: Path, target: str) -> tuple[int, int]:
+    migration_files = sorted(
+        p for p in migration_dir.glob("*.sql")
+        if f"_{target}_" in p.name
+    )
     if not migration_files:
         return 0, 0
 
@@ -72,9 +75,8 @@ def main() -> None:
     runtime_db = Path(args.runtime_db)
     webhook_db = Path(args.webhook_db)
 
-    # Apply all migrations to each DB; SQL is idempotent and table-agnostic via IF EXISTS patterns.
-    run(runtime_db, migration_dir)
-    run(webhook_db, migration_dir)
+    run(runtime_db, migration_dir, target="runtime")
+    run(webhook_db, migration_dir, target="webhook")
 
 
 if __name__ == "__main__":
