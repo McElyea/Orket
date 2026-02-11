@@ -1,9 +1,18 @@
 # orket/hardware.py
 import psutil
 import subprocess
+import time
+import os
 from dataclasses import dataclass
 from datetime import datetime, UTC
 from typing import Optional, Dict, Any
+
+
+_VRAM_CACHE = {
+    "ts": 0.0,
+    "total": 0.0,
+    "used": 0.0,
+}
 
 @dataclass
 class HardwareProfile:
@@ -42,13 +51,34 @@ def get_current_profile() -> HardwareProfile:
 def get_metrics_snapshot() -> Dict[str, Any]:
     """Returns real-time usage stats for graphs."""
     vm = psutil.virtual_memory()
+    cache_ttl_sec = 5.0
+    try:
+        cache_ttl_sec = max(0.0, float(os.getenv("ORKET_METRICS_VRAM_CACHE_SEC", "5")))
+    except (TypeError, ValueError):
+        cache_ttl_sec = 5.0
+
+    vram = _cached_vram_metrics(cache_ttl_sec)
     return {
         "cpu_percent": psutil.cpu_percent(interval=None),
         "ram_percent": vm.percent,
-        "vram_gb_used": get_vram_usage(),
-        "vram_total_gb": get_vram_info(),
+        "vram_gb_used": vram["used"],
+        "vram_total_gb": vram["total"],
         "timestamp": datetime.now(UTC).isoformat(),
     }
+
+
+def _cached_vram_metrics(cache_ttl_sec: float) -> Dict[str, float]:
+    now = time.monotonic()
+    age = now - _VRAM_CACHE["ts"]
+    if age <= cache_ttl_sec:
+        return {"total": _VRAM_CACHE["total"], "used": _VRAM_CACHE["used"]}
+
+    total = get_vram_info()
+    used = get_vram_usage()
+    _VRAM_CACHE["ts"] = now
+    _VRAM_CACHE["total"] = total
+    _VRAM_CACHE["used"] = used
+    return {"total": total, "used": used}
 
 def get_vram_usage() -> float:
     try:

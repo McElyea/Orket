@@ -1,5 +1,6 @@
 from orket.domain.verification import VerificationEngine
 from orket.schema import IssueVerification, VerificationScenario
+import subprocess
 
 
 def test_verification_runs_in_subprocess_and_passes(tmp_path):
@@ -108,3 +109,66 @@ def test_verification_subprocess_fatal_exit_marks_all_failed(tmp_path):
     assert result.failed == 1
     assert result.passed == 0
     assert any("subprocess exit code" in entry.lower() for entry in result.logs)
+
+
+def test_verification_parsed_not_ok_marks_all_failed(tmp_path):
+    workspace = tmp_path / "workspace"
+    verification_dir = workspace / "verification"
+    verification_dir.mkdir(parents=True)
+    fixture_path = verification_dir / "fixture_bad_syntax.py"
+    fixture_path.write_text(
+        "def verify(input_data)\n"
+        "    return 1\n",
+        encoding="utf-8",
+    )
+
+    verification = IssueVerification(
+        fixture_path="verification/fixture_bad_syntax.py",
+        scenarios=[
+            VerificationScenario(
+                id="B1",
+                description="bad syntax fixture",
+                input_data={"value": 1},
+                expected_output=1,
+            )
+        ],
+    )
+
+    result = VerificationEngine.verify(verification, workspace)
+    assert result.failed == 1
+    assert result.passed == 0
+    assert any("fatal error" in entry.lower() for entry in result.logs)
+
+
+def test_verification_subprocess_oserror_marks_all_failed(tmp_path, monkeypatch):
+    workspace = tmp_path / "workspace"
+    verification_dir = workspace / "verification"
+    verification_dir.mkdir(parents=True)
+    fixture_path = verification_dir / "fixture_pass.py"
+    fixture_path.write_text(
+        "def verify(input_data):\n"
+        "    return input_data.get('value', 0)\n",
+        encoding="utf-8",
+    )
+
+    verification = IssueVerification(
+        fixture_path="verification/fixture_pass.py",
+        scenarios=[
+            VerificationScenario(
+                id="O1",
+                description="oserror path",
+                input_data={"value": 1},
+                expected_output=1,
+            )
+        ],
+    )
+
+    def raise_oserror(*_args, **_kwargs):
+        raise OSError("simulated subprocess failure")
+
+    monkeypatch.setattr(subprocess, "run", raise_oserror)
+
+    result = VerificationEngine.verify(verification, workspace)
+    assert result.failed == 1
+    assert result.passed == 0
+    assert any("fatal error" in entry.lower() for entry in result.logs)

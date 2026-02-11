@@ -227,6 +227,8 @@ def test_default_evaluator_failure_governance_violation():
 
     assert decision["action"] == "governance_violation"
     assert decision["next_retry_count"] == 1
+    assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.BLOCKED
+    assert evaluator.should_cancel_session(decision["action"]) is False
 
 
 def test_default_evaluator_failure_retry():
@@ -238,6 +240,8 @@ def test_default_evaluator_failure_retry():
 
     assert decision["action"] == "retry"
     assert decision["next_retry_count"] == 2
+    assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.READY
+    assert evaluator.should_cancel_session(decision["action"]) is False
 
 
 def test_default_evaluator_failure_catastrophic():
@@ -249,6 +253,8 @@ def test_default_evaluator_failure_catastrophic():
 
     assert decision["action"] == "catastrophic"
     assert decision["next_retry_count"] == 4
+    assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.BLOCKED
+    assert evaluator.should_cancel_session(decision["action"]) is True
 
 
 def test_registry_resolves_custom_evaluator():

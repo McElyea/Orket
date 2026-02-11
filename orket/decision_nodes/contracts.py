@@ -42,6 +42,12 @@ class EvaluatorNode(Protocol):
     def evaluate_failure(self, issue: Any, result: Any) -> Any:
         ...
 
+    def status_for_failure_action(self, action: str) -> Any:
+        ...
+
+    def should_cancel_session(self, action: str) -> bool:
+        ...
+
 
 class PromptStrategyNode(Protocol):
     """Decision node: chooses model and dialect strategy for a turn."""

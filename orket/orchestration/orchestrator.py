@@ -92,14 +92,14 @@ class Orchestrator:
         issue = IssueConfig.model_validate(issue_data.model_dump())
         
         # 2. Execute Verification (Fixtures)
-        print(f"  [ORCHESTRATOR] Running empirical tests for {issue_id}...")
-        result = VerificationEngine.verify(issue.verification, self.workspace)
+        log_event("verification_started", {"issue_id": issue_id}, self.workspace)
+        result = await asyncio.to_thread(VerificationEngine.verify, issue.verification, self.workspace)
         
         # 3. Optional: Execute Sandbox Verification (HTTP)
         rock_id = issue.build_id
         sandbox = self.sandbox_orchestrator.registry.get(f"sandbox-{rock_id}")
         if sandbox and sandbox.status == SandboxStatus.RUNNING:
-            print(f"  [ORCHESTRATOR] Running sandbox HTTP tests for {issue_id}...")
+            log_event("verification_sandbox_started", {"issue_id": issue_id}, self.workspace)
             sb_result = await VerificationEngine.verify_sandbox(sandbox, issue.verification)
             # Merge results
             result.passed += sb_result.passed
@@ -123,7 +123,7 @@ class Orchestrator:
             if existing and existing.status == SandboxStatus.RUNNING:
                 return
 
-            print(f"  [ORCHESTRATOR] Deploying environment for {rock_id}...")
+            log_event("sandbox_deploy_started", {"rock_id": rock_id}, self.workspace)
             try:
                 await self.sandbox_orchestrator.create_sandbox(
                     rock_id=rock_id,
@@ -132,7 +132,7 @@ class Orchestrator:
                     workspace_path=str(self.workspace)
                 )
             except (RuntimeError, ValueError, OSError) as e:
-                print(f"  [ORCHESTRATOR] WARN: Deployment failed: {e}")
+                log_event("sandbox_deploy_failed", {"rock_id": rock_id, "error": str(e)}, self.workspace)
 
     async def execute_epic(
         self, 
@@ -202,10 +202,14 @@ class Orchestrator:
                 # Check if we are actually done or just blocked
                 is_done = self.loop_policy_node.is_backlog_done(backlog)
                 if is_done:
-                    print(f"  [ORCHESTRATOR] Epic '{epic.name}' complete.")
+                    log_event("orchestrator_epic_complete", {"epic": epic.name, "run_id": run_id}, self.workspace)
                 break
             
-            print(f"  [TICK] Running {len(candidates)} tasks in parallel...")
+            log_event(
+                "orchestrator_tick",
+                {"run_id": run_id, "candidate_count": len(candidates), "iteration": iteration_count},
+                self.workspace,
+            )
 
             # 2. Parallel Dispatch with Semaphore
             async def semaphore_wrapper(issue_data):
@@ -290,7 +294,11 @@ class Orchestrator:
             turn_status=turn_status,
         )
 
-        print(f"  [ORCHESTRATOR] {seat_name} -> {issue.id} ({issue.status.value})")
+        log_event(
+            "orchestrator_dispatch",
+            {"seat": seat_name, "issue_id": issue.id, "status": issue.status.value},
+            self.workspace,
+        )
         result = await self._dispatch_turn(
             executor=executor,
             issue=issue,
@@ -401,8 +409,9 @@ class Orchestrator:
 
         # Mechanical governance violations are terminal for the issue.
         if action == "governance_violation":
-            await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
-            issue.status = CardStatus.BLOCKED
+            failure_status = self.evaluator_node.status_for_failure_action(action)
+            await self.async_cards.update_status(issue.id, failure_status)
+            issue.status = failure_status
             await self.async_cards.save(issue.model_dump())
             raise GovernanceViolation(f"iDesign Violation: {result.error}")
 
@@ -412,16 +421,18 @@ class Orchestrator:
                 "retry_count": issue.retry_count,
                 "error": result.error
             }, self.workspace)
-            await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
+            failure_status = self.evaluator_node.status_for_failure_action(action)
+            await self.async_cards.update_status(issue.id, failure_status)
             await self.async_cards.save(issue.model_dump())
             
             # Catastrophic failure shuts down the session
             from orket.state import runtime_state
-            task = await runtime_state.get_task(run_id)
-            if task:
-                cancel_result = task.cancel()
-                if asyncio.iscoroutine(cancel_result):
-                    await cancel_result
+            if self.evaluator_node.should_cancel_session(action):
+                task = await runtime_state.get_task(run_id)
+                if task:
+                    cancel_result = task.cancel()
+                    if asyncio.iscoroutine(cancel_result):
+                        await cancel_result
                 
             raise CatastrophicFailure(
                 f"MAX RETRIES EXCEEDED for {issue.id}. "
@@ -439,7 +450,7 @@ class Orchestrator:
             "error": result.error
         }, self.workspace)
         
-        await self.async_cards.update_status(issue.id, CardStatus.READY)
+        await self.async_cards.update_status(issue.id, self.evaluator_node.status_for_failure_action(action))
         await self.async_cards.save(issue.model_dump())
 
         raise ExecutionFailed(f"Orchestration Turn Failed (Retry {issue.retry_count}/{issue.max_retries}): {result.error}")

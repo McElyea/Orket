@@ -10,7 +10,7 @@ from fastapi.security import APIKeyHeader
 import os
 
 from orket import __version__
-from orket.logging import subscribe_to_events
+from orket.logging import subscribe_to_events, log_event
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.decision_nodes.registry import DecisionNodeRegistry
@@ -103,8 +103,12 @@ async def clear_logs():
     fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
     try:
         await fs.write_file(log_path, "")
-    except (PermissionError, FileNotFoundError, OSError):
-        pass
+    except (PermissionError, FileNotFoundError, OSError) as exc:
+        log_event(
+            "clear_logs_skipped",
+            {"path": log_path, "error": str(exc)},
+            PROJECT_ROOT,
+        )
     return {"ok": True}
 
 @v1_router.get("/system/heartbeat")
@@ -185,7 +189,16 @@ async def run_active_asset(req: RunAssetRequest):
     if engine_method is None:
         raise HTTPException(status_code=400, detail=f"Unsupported run method '{method_name}'.")
 
-    print(f"  [API] v1 EXECUTE: {asset_id} (Type: {req.type}, Session: {session_id}, Method: {method_name})")
+    log_event(
+        "api_run_active",
+        {
+            "asset_id": asset_id,
+            "request_type": req.type,
+            "session_id": session_id,
+            "method_name": method_name,
+        },
+        PROJECT_ROOT,
+    )
     task = asyncio.create_task(engine_method(**kwargs))
     await runtime_state.add_task(session_id, task)
     return {"session_id": session_id}

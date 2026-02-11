@@ -105,6 +105,17 @@ class DefaultEvaluatorNode:
 
         return {"action": "retry", "next_retry_count": next_retry_count}
 
+    def status_for_failure_action(self, action: str) -> Any:
+        mapping = {
+            "governance_violation": CardStatus.BLOCKED,
+            "catastrophic": CardStatus.BLOCKED,
+            "retry": CardStatus.READY,
+        }
+        return mapping.get(action, CardStatus.BLOCKED)
+
+    def should_cancel_session(self, action: str) -> bool:
+        return action == "catastrophic"
+
 
 class DefaultToolStrategyNode:
     """
