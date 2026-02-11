@@ -236,7 +236,7 @@ class Orchestrator:
     ):
         """Executes a single turn for one issue."""
         issue = IssueConfig.model_validate(issue_data.model_dump())
-        is_review_turn = issue.status == CardStatus.CODE_REVIEW
+        is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
         
         # RUN EMPIRICAL VERIFICATION (FIT) for review turns
         if is_review_turn:
@@ -249,16 +249,14 @@ class Orchestrator:
 
         seat_obj = team.seats.get(sanitize_name(seat_name))
         if not seat_obj:
-            await self.async_cards.update_status(issue.id, CardStatus.CANCELED)
+            await self.async_cards.update_status(issue.id, self.loop_policy_node.missing_seat_status())
             return
 
-        turn_status = CardStatus.IN_PROGRESS if not is_review_turn else CardStatus.CODE_REVIEW
+        turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
         await self.async_cards.update_status(issue.id, turn_status, assignee=seat_name)
 
         # Prepare Role & Model
-        roles_to_load = list(seat_obj.roles)
-        if is_review_turn and "integrity_guard" not in roles_to_load:
-            roles_to_load = ["integrity_guard"] + roles_to_load
+        roles_to_load = self.loop_policy_node.role_order_for_turn(list(seat_obj.roles), is_review_turn)
 
         role_config = self.loader.load_asset("roles", roles_to_load[0], RoleConfig)
         selected_model = prompt_strategy_node.select_model(role=roles_to_load[0], asset_config=epic)

@@ -125,6 +125,9 @@ class DefaultApiRuntimeStrategyNode:
     def parse_allowed_origins(self, origins_value: str) -> List[str]:
         return [origin.strip() for origin in origins_value.split(",") if origin.strip()]
 
+    def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
+        return (not expected_key) or (provided_key == expected_key)
+
     def resolve_asset_id(self, path: str | None, issue_id: str | None) -> str | None:
         if issue_id:
             return issue_id
@@ -207,6 +210,33 @@ class DefaultApiRuntimeStrategyNode:
 
         return {"mode": mode, "asset_name": asset_name, "department": department}
 
+    def select_preview_build_method(self, mode: str) -> str:
+        method_map = {
+            "issue": "build_issue_preview",
+            "rock": "build_rock_preview",
+        }
+        return method_map.get(mode, "build_epic_preview")
+
+    def resolve_preview_invocation(self, target: Dict[str, str], issue_id: str | None) -> Dict[str, Any]:
+        method_name = self.select_preview_build_method(target["mode"])
+        if target["mode"] == "issue":
+            return {
+                "method_name": method_name,
+                "args": [issue_id, target["asset_name"], target["department"]],
+            }
+        return {
+            "method_name": method_name,
+            "args": [target["asset_name"], target["department"]],
+        }
+
+    def create_preview_builder(self, model_root: Any) -> Any:
+        from orket.preview import PreviewBuilder
+        return PreviewBuilder(model_root)
+
+    def create_chat_driver(self) -> Any:
+        from orket.driver import OrketDriver
+        return OrketDriver()
+
     def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
         workspace = project_root / "workspace" / "runs" / session_id
         if workspace.exists():
@@ -215,6 +245,13 @@ class DefaultApiRuntimeStrategyNode:
 
     def resolve_sandbox_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
+
+    def create_execution_pipeline(self, workspace_root: Any) -> Any:
+        from orket.orket import ExecutionPipeline
+        return ExecutionPipeline(workspace_root)
+
+    def should_remove_websocket(self, exception: Exception) -> bool:
+        return isinstance(exception, (RuntimeError, ValueError))
 
 
 class DefaultSandboxPolicyNode:
@@ -535,6 +572,21 @@ class DefaultOrchestrationLoopPolicyNode:
             return max(1, int(raw))
         except (TypeError, ValueError):
             return 10
+
+    def is_review_turn(self, issue_status: Any) -> bool:
+        return issue_status == CardStatus.CODE_REVIEW
+
+    def turn_status_for_issue(self, is_review_turn: bool) -> Any:
+        return CardStatus.CODE_REVIEW if is_review_turn else CardStatus.IN_PROGRESS
+
+    def role_order_for_turn(self, roles: List[str], is_review_turn: bool) -> List[str]:
+        ordered_roles = list(roles)
+        if is_review_turn and "integrity_guard" not in ordered_roles:
+            ordered_roles.insert(0, "integrity_guard")
+        return ordered_roles
+
+    def missing_seat_status(self) -> Any:
+        return CardStatus.CANCELED
 
     def is_backlog_done(self, backlog: List[Any]) -> bool:
         return all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)

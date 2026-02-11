@@ -313,6 +313,9 @@ def test_default_api_runtime_strategy_parity():
     node = DefaultApiRuntimeStrategyNode()
 
     assert node.parse_allowed_origins("http://a, http://b") == ["http://a", "http://b"]
+    assert node.is_api_key_valid(None, None) is True
+    assert node.is_api_key_valid("k", "k") is True
+    assert node.is_api_key_valid("k", "x") is False
     assert node.resolve_asset_id(path="model/core/issues/demo.json", issue_id=None) == "demo"
     assert node.resolve_asset_id(path=None, issue_id="ISSUE-1") == "ISSUE-1"
     assert node.resolve_asset_id(path=None, issue_id=None) is None
@@ -358,8 +361,21 @@ def test_default_api_runtime_strategy_parity():
         "asset_name": "my_epic",
         "department": "product",
     }
+    assert node.select_preview_build_method("issue") == "build_issue_preview"
+    assert node.select_preview_build_method("rock") == "build_rock_preview"
+    assert node.select_preview_build_method("epic") == "build_epic_preview"
+    assert node.resolve_preview_invocation(
+        {"mode": "issue", "asset_name": "my_epic", "department": "product"},
+        "ISSUE-1",
+    ) == {
+        "method_name": "build_issue_preview",
+        "args": ["ISSUE-1", "my_epic", "product"],
+    }
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
+    assert node.should_remove_websocket(RuntimeError("x")) is True
+    assert node.should_remove_websocket(ValueError("x")) is True
+    assert node.should_remove_websocket(Exception("x")) is False
 
 
 def test_registry_resolves_custom_api_runtime_from_process_rules(monkeypatch):
@@ -584,6 +600,13 @@ def test_registry_resolves_default_orchestration_loop_policy():
     node = registry.resolve_orchestration_loop()
     assert isinstance(node, DefaultOrchestrationLoopPolicyNode)
     assert node.context_window(None) == 10
+    assert node.is_review_turn(CardStatus.CODE_REVIEW) is True
+    assert node.is_review_turn(CardStatus.READY) is False
+    assert node.turn_status_for_issue(True) == CardStatus.CODE_REVIEW
+    assert node.turn_status_for_issue(False) == CardStatus.IN_PROGRESS
+    assert node.role_order_for_turn(["coder"], is_review_turn=False) == ["coder"]
+    assert node.role_order_for_turn(["coder"], is_review_turn=True) == ["integrity_guard", "coder"]
+    assert node.missing_seat_status() == CardStatus.CANCELED
 
 
 def test_registry_orchestration_loop_env_override_wins(monkeypatch):

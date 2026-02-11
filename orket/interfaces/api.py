@@ -20,6 +20,8 @@ from orket.decision_nodes.registry import DecisionNodeRegistry
 
 from pydantic import BaseModel
 
+api_runtime_node = DecisionNodeRegistry().resolve_api_runtime()
+
 class SaveFileRequest(BaseModel):
     path: str
     content: str
@@ -39,7 +41,7 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 async def get_api_key(api_key_header: str = Security(api_key_header)):
     expected_key = os.getenv("ORKET_API_KEY")
-    if expected_key and api_key_header != expected_key:
+    if not api_runtime_node.is_api_key_valid(expected_key, api_key_header):
         raise HTTPException(
             status_code=403,
             detail="Could not validate credentials",
@@ -74,7 +76,6 @@ app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 
 origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
-api_runtime_node = DecisionNodeRegistry().resolve_api_runtime()
 origins = api_runtime_node.parse_allowed_origins(origins_str)
 
 app.add_middleware(
@@ -226,8 +227,9 @@ async def stop_sandbox(sandbox_id: str):
 
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
 async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
-    from orket.orket import ExecutionPipeline
-    pipeline = ExecutionPipeline(api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT))
+    pipeline = api_runtime_node.create_execution_pipeline(
+        api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT)
+    )
     return {"logs": pipeline.sandbox_orchestrator.get_logs(sandbox_id, service)}
 
 @v1_router.get("/system/board")
@@ -236,21 +238,17 @@ async def get_system_board(dept: str = "core"):
 
 @v1_router.get("/system/preview-asset")
 async def preview_asset(path: str, issue_id: Optional[str] = None):
-    from orket.preview import PreviewBuilder
     target = api_runtime_node.resolve_preview_target(path, issue_id)
-    builder = PreviewBuilder(PROJECT_ROOT / "model")
-    if target["mode"] == "issue":
-        res = await builder.build_issue_preview(issue_id, target["asset_name"], target["department"])
-    elif target["mode"] == "rock":
-        res = await builder.build_rock_preview(target["asset_name"], target["department"])
-    else:
-        res = await builder.build_epic_preview(target["asset_name"], target["department"])
-    return res
+    invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)
+    builder = api_runtime_node.create_preview_builder(PROJECT_ROOT / "model")
+    build_method = getattr(builder, invocation["method_name"], None)
+    if build_method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported preview mode '{target['mode']}'.")
+    return await build_method(*invocation["args"])
 
 @v1_router.post("/system/chat-driver")
 async def chat_driver(req: ChatDriverRequest):
-    from orket.driver import OrketDriver
-    driver = OrketDriver()
+    driver = api_runtime_node.create_chat_driver()
     response = await driver.process_request(req.message)
     return {"response": response}
 
@@ -263,8 +261,9 @@ async def event_broadcaster():
         record = await runtime_state.event_queue.get()
         for ws in await runtime_state.get_websockets():
             try: await ws.send_json(record)
-            except (WebSocketDisconnect, RuntimeError, ValueError):
-                await runtime_state.remove_websocket(ws)
+            except (WebSocketDisconnect, RuntimeError, ValueError) as exc:
+                if isinstance(exc, WebSocketDisconnect) or api_runtime_node.should_remove_websocket(exc):
+                    await runtime_state.remove_websocket(ws)
         runtime_state.event_queue.task_done()
 
 @app.websocket("/ws/events")
