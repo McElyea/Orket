@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Dict, Any, List
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.llm import LocalModelProvider
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig, SkillConfig, DialectConfig
@@ -13,13 +14,14 @@ class OrketDriver:
     It manages Rocks, Epics, Issues, and Team Selection.
     """
     def __init__(self, model: str = None):
+        self.fs = AsyncFileTools(Path("."))
         # 1. Load Organization context
         from orket.schema import OrganizationConfig
         org_path = Path("model/organization.json")
         self.org = None
         if org_path.exists():
             try:
-                self.org = OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
+                self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
             except (ValueError, FileNotFoundError):
                 pass
 
@@ -174,7 +176,7 @@ Example for turn_directive:
             if not path.exists(): path = self.model_root / "core" / "epics" / f"{parent_epic}.json"
             
             if path.exists():
-                epic_data = json.loads(path.read_text(encoding="utf-8"))
+                epic_data = json.loads(self.fs.read_file_sync(str(path)))
                 if "issues" not in epic_data: epic_data["issues"] = []
                 issue_entry = {
                     "summary": new_asset.get("summary", "New Task"),
@@ -183,7 +185,7 @@ Example for turn_directive:
                     "note": new_asset.get("note", "")
                 }
                 epic_data["issues"].append(issue_entry)
-                path.write_text(json.dumps(epic_data, indent=2), encoding="utf-8")
+                self.fs.write_file_sync(str(path), epic_data)
                 log_event("create_issue", {"epic": parent_epic, "summary": issue_entry["summary"]}, workspace_path, role="DRIVER")
                 return f"Added issue '{issue_entry['summary']}' to Epic '{parent_epic}' in {path.parent.parent.name}."
             return f"Error: Target epic {parent_epic} not found in core or {suggested_dept}."
@@ -192,7 +194,7 @@ Example for turn_directive:
             epic_name = new_asset.get("name", "new_epic")
             epic_path = dept_root / "epics" / f"{epic_name}.json"
             epic_path.parent.mkdir(parents=True, exist_ok=True)
-            epic_path.write_text(json.dumps(new_asset, indent=2), encoding="utf-8")
+            self.fs.write_file_sync(str(epic_path), new_asset)
             
             parent_rock = plan.get("target_parent")
             rock_path = dept_root / "rocks" / f"{parent_rock}.json"
@@ -208,15 +210,15 @@ Example for turn_directive:
                     "owner_department": suggested_dept,
                     "epics": [{"epic": epic_name, "department": suggested_dept}]
                 }
-                nom_path.write_text(json.dumps(rock_data, indent=2), encoding="utf-8")
+                self.fs.write_file_sync(str(nom_path), rock_data)
                 log_event("create_epic", {"name": epic_name, "rock": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
                 log_event("create_rock", {"name": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
                 return f"Created Epic '{epic_name}' and nominated new parent Rock '{parent_rock}' in {suggested_dept}."
             else:
-                rock_data = json.loads(rock_path.read_text(encoding="utf-8"))
+                rock_data = json.loads(self.fs.read_file_sync(str(rock_path)))
                 if "epics" not in rock_data: rock_data["epics"] = []
                 rock_data["epics"].append({"epic": epic_name, "department": suggested_dept})
-                rock_path.write_text(json.dumps(rock_data, indent=2), encoding="utf-8")
+                self.fs.write_file_sync(str(rock_path), rock_data)
                 log_event("create_epic", {"name": epic_name, "rock": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
                 return f"Created Epic '{epic_name}' and linked to existing Rock '{parent_rock}' in {rock_path.parent.parent.name}."
 
@@ -224,7 +226,7 @@ Example for turn_directive:
             rock_name = new_asset.get("name", "new_rock")
             path = dept_root / "rocks" / f"{rock_name}.json"
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps(new_asset, indent=2), encoding="utf-8")
+            self.fs.write_file_sync(str(path), new_asset)
             log_event("create_rock", {"name": rock_name, "dept": suggested_dept}, workspace_path, role="DRIVER")
             return f"Nominated new Rock: '{rock_name}' in {suggested_dept}."
 

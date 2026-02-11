@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import json
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig, TeamConfig, EnvironmentConfig, SkillConfig, DialectConfig
 from orket.agents.agent import Agent
@@ -14,6 +15,7 @@ class PreviewBuilder:
     """
     def __init__(self, model_root: Path = Path("model")):
         self.model_root = model_root
+        self.fs = AsyncFileTools(Path("."))
         
         # Load Organization
         org_path = model_root / "organization.json"
@@ -21,7 +23,7 @@ class PreviewBuilder:
         if org_path.exists():
             from orket.schema import OrganizationConfig
             try:
-                self.org = OrganizationConfig.model_validate_json(org_path.read_text(encoding="utf-8"))
+                self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
             except (ValueError, FileNotFoundError) as e:
                 print(f"  [PREVIEW] Info: Could not load organization config: {e}")
                 pass

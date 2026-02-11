@@ -185,7 +185,7 @@ This addresses ChatGPT's review finding: "Each test reconstructs an entire minia
 
 Three implementations exist: `FileSystemTools` (sync, tools.py), `AsyncFileTools` (async, infrastructure/), and raw `Path.read_text()` calls in api.py, logging.py, orket.py.
 
-**Status**: [> ] IN PROGRESS. `AsyncFileTools` integrated into `tools.py`; `api.py` read/save endpoints and `orket.py` config loading paths now migrated. Remaining direct file I/O cleanup continues in other modules.
+**Status**: [x] DONE. `AsyncFileTools` is now the unified file I/O path across runtime-facing modules; raw `Path.read_text()/write_text()` usage in `orket/` has been eliminated.
 
 ### 3.2 Consolidate Status Update Logic
 
@@ -196,7 +196,7 @@ Status validation is duplicated in:
 
 Target: StateMachine is the single authority. ToolGate delegates to StateMachine. CardManagementTools delegates to ToolGate.
 
-**Status**: [> ] PARTIAL. `ToolGate` delegates to `StateMachine`, and `CardManagementTools.update_issue_status()` now validates via `StateMachine` (remaining alignment: explicit ToolGate delegation path).
+**Status**: [x] DONE. `ToolGate` delegates to `StateMachine`, and `CardManagementTools.update_issue_status()` now delegates to `ToolGate` (single governance path).
 
 ### 3.3 Complete GovernanceAuditor
 

@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from orket.tools import ToolBox, FileSystemTools, CardManagementTools
+from orket.tools import ToolBox, FileSystemTools, CardManagementTools, VisionTools, AcademyTools
 
 def test_toolbox_composition(tmp_path):
     workspace = tmp_path / "workspace"
@@ -12,7 +12,8 @@ def test_toolbox_composition(tmp_path):
     assert isinstance(toolbox.cards, CardManagementTools)
     assert toolbox.fs.workspace_root == workspace
 
-def test_filesystem_tools_security(tmp_path):
+@pytest.mark.asyncio
+async def test_filesystem_tools_security(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     outside = tmp_path / "outside.txt"
@@ -23,21 +24,22 @@ def test_filesystem_tools_security(tmp_path):
     # Read within workspace
     inside = workspace / "test.txt"
     inside.write_text("hello")
-    res = fs.read_file({"path": "test.txt"})
+    res = await fs.read_file({"path": "test.txt"})
     assert res["ok"] is True
     assert res["content"] == "hello"
     
     # Read outside workspace (should fail)
-    res = fs.read_file({"path": str(outside)})
+    res = await fs.read_file({"path": str(outside)})
     assert res["ok"] is False
     assert "denied" in res["error"].lower()
 
-def test_write_file_creation(tmp_path):
+@pytest.mark.asyncio
+async def test_write_file_creation(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     fs = FileSystemTools(workspace, [])
     
-    res = fs.write_file({"path": "subdir/new.txt", "content": "data"})
+    res = await fs.write_file({"path": "subdir/new.txt", "content": "data"})
     assert res["ok"] is True
     assert (workspace / "subdir" / "new.txt").read_text() == "data"
 
@@ -50,7 +52,8 @@ def test_vision_tools_stub(tmp_path):
     assert res["ok"] is False
     assert "not implemented" in res["error"]
 
-def test_academy_tools_promote_prompt(tmp_path):
+@pytest.mark.asyncio
+async def test_academy_tools_promote_prompt(tmp_path):
     # Setup project structure
     project_root = tmp_path
     workspace = project_root / "workspace" / "default"
@@ -59,7 +62,7 @@ def test_academy_tools_promote_prompt(tmp_path):
     
     academy = AcademyTools(workspace, [])
     
-    res = academy.promote_prompt({
+    res = await academy.promote_prompt({
         "seat": "lead_architect",
         "content": "You are a lead architect.",
         "model_family": "qwen"
@@ -89,4 +92,4 @@ async def test_card_management_create_issue(tmp_path):
     
     issue = await cards.cards.get_by_id(res["issue_id"])
     assert issue.summary == "Fix bug"
-    assert issue.priority == "High"
+    assert float(issue.priority) == 3.0

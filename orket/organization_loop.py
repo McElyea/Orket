@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 from typing import Optional, List
 
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader, ExecutionPipeline
 from orket.schema import CardStatus, RockConfig, EpicConfig, OrganizationConfig
 from orket.domain.critical_path import CriticalPathEngine
@@ -9,13 +10,14 @@ from orket.domain.critical_path import CriticalPathEngine
 class OrganizationLoop:
     def __init__(self, organization_path: Path = Path("config/organization.json")):
         self.org_path = organization_path
+        self.fs = AsyncFileTools(Path("."))
         if not self.org_path.exists():
             self.org_path = Path("model/organization.json")
         self.org = self._load_org()
         self.running = False
 
     def _load_org(self) -> OrganizationConfig:
-        return OrganizationConfig.model_validate_json(self.org_path.read_text(encoding="utf-8"))
+        return OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(self.org_path)))
 
     async def run_forever(self):
         self.running = True

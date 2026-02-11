@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional
+from orket.infrastructure.async_file_tools import AsyncFileTools
 
 SETTINGS_FILE = Path("user_settings.json")
 ENV_FILE = Path(".env")
@@ -15,7 +16,8 @@ def set_settings_file(path: Path):
 def load_env():
     """Simple .env loader to avoid extra dependencies."""
     if ENV_FILE.exists():
-        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+        fs = AsyncFileTools(Path("."))
+        for line in fs.read_file_sync(str(ENV_FILE)).splitlines():
             line = line.strip()
             if line and not line.startswith("#"):
                 key, _, value = line.partition("=")

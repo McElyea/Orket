@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 from typing import List, Dict, Any
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, TeamConfig, EngineRegistry
 
@@ -26,7 +27,8 @@ def refresh_engine_mappings():
     registry_path = Path("model/core/engines.json")
     if not registry_path.exists(): return {}
     
-    registry = EngineRegistry.model_validate_json(registry_path.read_text(encoding="utf-8"))
+    fs = AsyncFileTools(Path("."))
+    registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
     recommendations = {}
 
     for cat, mapping in registry.mappings.items():
@@ -56,7 +58,8 @@ def get_engine_recommendations():
     registry_path = Path("model/core/engines.json")
     if not registry_path.exists(): return []
     
-    registry = EngineRegistry.model_validate_json(registry_path.read_text(encoding="utf-8"))
+    fs = AsyncFileTools(Path("."))
+    registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
     suggestions = []
 
     for category, mapping in registry.mappings.items():

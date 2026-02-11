@@ -3,10 +3,13 @@ import os
 import shutil
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import List, Dict, Any, Callable, Optional
+from typing import List, Dict, Any, Callable, Optional, TYPE_CHECKING
 
 from orket.infrastructure.sqlite_repositories import SQLiteCardRepository
 from orket.settings import get_setting
+
+if TYPE_CHECKING:
+    from orket.services.tool_gate import ToolGate
 
 class BaseTools:
     def __init__(self, workspace_root: Path, references: List[Path]):
@@ -104,10 +107,18 @@ class VisionTools(BaseTools):
         except Exception as e: return {"ok": False, "error": str(e)}
 
 class CardManagementTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: List[Path], db_path: str = "orket_persistence.db", cards_repo: Optional[AsyncCardRepository] = None):
+    def __init__(
+        self,
+        workspace_root: Path,
+        references: List[Path],
+        db_path: str = "orket_persistence.db",
+        cards_repo: Optional[AsyncCardRepository] = None,
+        tool_gate: Optional["ToolGate"] = None,
+    ):
         super().__init__(workspace_root, references)
         from orket.infrastructure.async_card_repository import AsyncCardRepository
         self.cards = cards_repo or AsyncCardRepository(db_path)
+        self.tool_gate = tool_gate
 
     async def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
@@ -121,7 +132,7 @@ class CardManagementTools(BaseTools):
             "session_id": session_id,
             "seat": seat,
             "summary": summary,
-            "type": args.get("type", "story"),
+            "type": args.get("type", "issue"),
             "priority": args.get("priority", "Medium"),
             "status": "ready"
         }
@@ -134,7 +145,6 @@ class CardManagementTools(BaseTools):
         context = context or {}
         issue_id = args.get("issue_id") or context.get("issue_id")
         new_status_str = args.get("status", "").lower()
-        role = context.get("role", "")
         if not issue_id or not new_status_str: return {"ok": False, "error": "Missing params"}
         
         try:
@@ -147,18 +157,36 @@ class CardManagementTools(BaseTools):
             return {"ok": False, "error": f"Issue not found: {issue_id}"}
 
         current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status))
-        roles = [role] if role else []
-        wait_reason = args.get("wait_reason")
-        try:
-            StateMachine.validate_transition(
-                card_type=CardType.ISSUE,
-                current=current_status,
-                requested=new_status,
+
+        # Phase 3.2: delegate status governance through ToolGate when available.
+        roles = context.get("roles")
+        if roles is None:
+            role = context.get("role", "")
+            roles = [role] if role else []
+
+        gate_context = {**context, "current_status": current_status.value}
+        if self.tool_gate:
+            gate_violation = self.tool_gate.validate(
+                tool_name="update_issue_status",
+                args=args,
+                context=gate_context,
                 roles=roles,
-                wait_reason=wait_reason
             )
-        except StateMachineError as exc:
-            return {"ok": False, "error": str(exc)}
+            if gate_violation:
+                return {"ok": False, "error": gate_violation}
+        else:
+            # Fallback for direct tool usage outside orchestrated execution.
+            wait_reason = args.get("wait_reason")
+            try:
+                StateMachine.validate_transition(
+                    card_type=CardType.ISSUE,
+                    current=current_status,
+                    requested=new_status,
+                    roles=roles,
+                    wait_reason=wait_reason
+                )
+            except StateMachineError as exc:
+                return {"ok": False, "error": str(exc)}
             
         await self.cards.update_status(issue_id, new_status)
         return {"ok": True, "issue_id": issue_id, "status": new_status.value}
@@ -177,6 +205,12 @@ class CardManagementTools(BaseTools):
         return {"ok": True, "status": issue_data.get("status"), "summary": issue_data.get("summary"), "comments": comments}
 
 class AcademyTools(BaseTools):
+    def __init__(self, workspace_root: Path, references: List[Path]):
+        super().__init__(workspace_root, references)
+        from orket.infrastructure.async_file_tools import AsyncFileTools
+        self.project_root = self.workspace_root.parent.parent
+        self.async_fs = AsyncFileTools(self.project_root)
+
     def archive_eval(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         session_id = args.get("session_id")
         if not session_id: return {"ok": False, "error": "session_id required"}
@@ -192,26 +226,38 @@ class AcademyTools(BaseTools):
             return {"ok": True, "path": str(dest)}
         except Exception as e: return {"ok": False, "error": str(e)}
 
-    def promote_prompt(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def promote_prompt(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         seat, content = args.get("seat"), args.get("content")
         if not seat or not content: return {"ok": False, "error": "Missing params"}
         from orket.utils import sanitize_name
-        # Resolve destination from project root
-        dest = self.workspace_root.parent.parent / "prompts" / sanitize_name(seat) / f"{args.get('model_family', 'qwen')}.txt"
+        relative_dest = Path("prompts") / sanitize_name(seat) / f"{args.get('model_family', 'qwen')}.txt"
         try:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(content, encoding="utf-8")
-            return {"ok": True, "path": str(dest)}
+            path = await self.async_fs.write_file(str(relative_dest), content)
+            return {"ok": True, "path": path}
         except Exception as e: return {"ok": False, "error": str(e)}
 
 class ToolBox:
-    def __init__(self, policy, workspace_root: str, references: List[str], db_path: str = "orket_persistence.db", cards_repo: Optional[AsyncCardRepository] = None):
+    def __init__(
+        self,
+        policy,
+        workspace_root: str,
+        references: List[str],
+        db_path: str = "orket_persistence.db",
+        cards_repo: Optional[AsyncCardRepository] = None,
+        tool_gate: Optional["ToolGate"] = None,
+    ):
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
         self.db_path = db_path
         self.fs = FileSystemTools(self.root, self.refs)
         self.vision = VisionTools(self.root, self.refs)
-        self.cards = CardManagementTools(self.root, self.refs, db_path=self.db_path, cards_repo=cards_repo)
+        self.cards = CardManagementTools(
+            self.root,
+            self.refs,
+            db_path=self.db_path,
+            cards_repo=cards_repo,
+            tool_gate=tool_gate,
+        )
         self.academy = AcademyTools(self.root, self.refs)
 
     async def execute(self, tool_name: str, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:

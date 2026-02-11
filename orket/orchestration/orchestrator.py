@@ -11,6 +11,7 @@ from orket.schema import (
     CardStatus, RoleConfig, DialectConfig, SkillConfig
 )
 from orket.infrastructure.async_card_repository import AsyncCardRepository
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.infrastructure.async_repositories import AsyncSnapshotRepository
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.orchestration.models import ModelSelector
@@ -147,7 +148,11 @@ class Orchestrator:
         
         # 1. Setup Execution Environment
         settings_path = self.config_root / "user_settings.json"
-        user_settings = json.loads(settings_path.read_text(encoding="utf-8")) if settings_path.exists() else load_user_settings()
+        if settings_path.exists():
+            fs = AsyncFileTools(self.config_root)
+            user_settings = json.loads(await fs.read_file("user_settings.json"))
+        else:
+            user_settings = load_user_settings()
         model_selector = ModelSelector(organization=self.org, user_settings=user_settings)
         
         tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
@@ -155,7 +160,14 @@ class Orchestrator:
         
         from orket.policy import create_session_policy
         policy = create_session_policy(str(self.workspace), epic.references)
-        toolbox = ToolBox(policy, str(self.workspace), epic.references, db_path=self.db_path, cards_repo=self.async_cards)
+        toolbox = ToolBox(
+            policy,
+            str(self.workspace),
+            epic.references,
+            db_path=self.db_path,
+            cards_repo=self.async_cards,
+            tool_gate=tool_gate,
+        )
         
         # Concurrency Control (Phase 6.2)
         concurrency_limit = 3 # Can be made configurable in OrganizationConfig

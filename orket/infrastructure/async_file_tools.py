@@ -8,9 +8,11 @@ This replaces the blocking Path.write_text and Path.read_text
 calls in the agent tools.
 """
 from __future__ import annotations
+import asyncio
 import aiofiles
 import os
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
@@ -23,6 +25,15 @@ class AsyncFileTools:
     def __init__(self, workspace_root: Path, references: List[Path] = None):
         self.workspace_root = workspace_root
         self.references = references or []
+
+    def _run_async(self, coro):
+        """Run async file operations from sync call sites safely."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(lambda: asyncio.run(coro)).result()
 
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
         """
@@ -103,3 +114,12 @@ class AsyncFileTools:
         loop = asyncio.get_event_loop()
         items = await loop.run_in_executor(None, os.listdir, path)
         return sorted(items)
+
+    def read_file_sync(self, path_str: str) -> str:
+        return self._run_async(self.read_file(path_str))
+
+    def write_file_sync(self, path_str: str, content: str | Dict) -> str:
+        return self._run_async(self.write_file(path_str, content))
+
+    def list_directory_sync(self, path_str: str = ".") -> List[str]:
+        return self._run_async(self.list_directory(path_str))

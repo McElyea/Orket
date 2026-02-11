@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import List, Dict, Any
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig
 
@@ -11,6 +12,7 @@ class StructuralReconciler:
     """
     def __init__(self, root_path: Path = Path("model")):
         self.root_path = root_path
+        self.fs = AsyncFileTools(root_path)
         self.default_rock_id = "run_the_business"
         self.default_epic_id = "unplanned_support"
 
@@ -29,7 +31,7 @@ class StructuralReconciler:
             if rock_path.exists():
                 for rf in rock_path.glob("*.json"):
                     try:
-                        data = json.loads(rf.read_text(encoding="utf-8"))
+                        data = json.loads(self.fs.read_file_sync(str(rf)))
                         for e in data.get("epics", []):
                             linked_epics.add(e["epic"])
                     except (json.JSONDecodeError, OSError, KeyError) as e:
@@ -43,7 +45,7 @@ class StructuralReconciler:
             if epic_path.exists():
                 for ef in epic_path.glob("*.json"):
                     try:
-                        data = json.loads(ef.read_text(encoding="utf-8"))
+                        data = json.loads(self.fs.read_file_sync(str(ef)))
                         for i in data.get("issues", []) or data.get("stories", []):
                             # Issues are usually embedded, but we track names to find standalone orphan files
                             linked_issues.add(i.get("id") or i.get("name") or i.get("summary"))
@@ -61,7 +63,7 @@ class StructuralReconciler:
         rtb_path = self.root_path / "core" / "rocks" / f"{self.default_rock_id}.json"
         if not rtb_path.exists(): return
         
-        rtb_data = json.loads(rtb_path.read_text(encoding="utf-8"))
+        rtb_data = json.loads(self.fs.read_file_sync(str(rtb_path)))
         dirty = False
 
         for dept_dir in self.root_path.iterdir():
@@ -82,13 +84,13 @@ class StructuralReconciler:
                         dirty = True
         
         if dirty:
-            rtb_path.write_text(json.dumps(rtb_data, indent=4), encoding="utf-8")
+            self.fs.write_file_sync(str(rtb_path), rtb_data)
 
     def _adopt_issues(self, linked_issues: set):
         ups_path = self.root_path / "core" / "epics" / f"{self.default_epic_id}.json"
         if not ups_path.exists(): return
         
-        ups_data = json.loads(ups_path.read_text(encoding="utf-8"))
+        ups_data = json.loads(self.fs.read_file_sync(str(ups_path)))
         dirty = False
 
         for dept_dir in self.root_path.iterdir():
@@ -101,7 +103,7 @@ class StructuralReconciler:
                         print(f"  [RECONCILER] Adopting orphan standalone Issue: {issue_id} into 'unplanned support'")
                         # Load issue data to embed it
                         try:
-                            issue_data = json.loads(isf.read_text(encoding="utf-8"))
+                            issue_data = json.loads(self.fs.read_file_sync(str(isf)))
                             if "issues" not in ups_data: ups_data["issues"] = []
                             ups_data["issues"].append(issue_data)
                             dirty = True
@@ -110,4 +112,4 @@ class StructuralReconciler:
                             continue
         
         if dirty:
-            ups_path.write_text(json.dumps(ups_data, indent=4), encoding="utf-8")
+            self.fs.write_file_sync(str(ups_path), ups_data)
