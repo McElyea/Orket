@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-11 - "The Dogfood Cut"
+
+### Added
+- **Decision Node Architecture**: Introduced planner, router, prompt-strategy, and evaluator decision-node contracts with plugin registry and default built-ins.
+- **Contract Tests**: Added decision-node contract/registry tests and expanded policy + webhook DB test coverage.
+- **Load Evidence Artifacts**: Archived benchmark evidence under `benchmarks/results/`.
+
+### Changed
+- **Orchestrator Decomposition**: Candidate planning, seat routing, model/dialect strategy, and success/failure evaluation now route through decision-node boundaries.
+- **Governance Hardening**: Removed broad `except Exception` handlers across `orket/` and replaced with typed exception handling.
+- **Release Pipeline**: Added CI Docker smoke and migration smoke jobs, plus runbook release checklist alignment.
+
+### Removed
+- **Legacy Review Doc**: Deleted `CODE_REVIEW.md` from tracked repository during cleanup.
+
 ## [0.3.11] - 2026-02-10 - "The Clean Sweep"
 
 ### Changed

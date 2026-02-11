@@ -77,6 +77,8 @@ class Orchestrator:
         self.context_window = max(1, int(os.getenv("ORKET_CONTEXT_WINDOW", "10")))
         self.decision_nodes = DecisionNodeRegistry()
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
+        self.router_node = self.decision_nodes.resolve_router(self.org)
+        self.evaluator_node = self.decision_nodes.resolve_evaluator(self.org)
 
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
@@ -163,6 +165,7 @@ class Orchestrator:
         else:
             user_settings = load_user_settings()
         model_selector = ModelSelector(organization=self.org, user_settings=user_settings)
+        prompt_strategy_node = self.decision_nodes.resolve_prompt_strategy(model_selector, self.org)
         
         tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
         executor = TurnExecutor(StateMachine(), tool_gate, self.workspace)
@@ -214,7 +217,7 @@ class Orchestrator:
                 async with semaphore:
                     return await self._execute_issue_turn(
                         issue_data, epic, team, env, run_id, active_build, 
-                        model_selector, executor, toolbox
+                        prompt_strategy_node, executor, toolbox
                     )
 
             await asyncio.gather(*(semaphore_wrapper(c) for c in candidates))
@@ -230,7 +233,7 @@ class Orchestrator:
         env: EnvironmentConfig, 
         run_id: str, 
         active_build: str,
-        model_selector: ModelSelector,
+        prompt_strategy_node: Any,
         executor: TurnExecutor,
         toolbox: ToolBox
     ):
@@ -238,16 +241,14 @@ class Orchestrator:
         issue = IssueConfig.model_validate(issue_data.model_dump())
         is_review_turn = issue.status == CardStatus.CODE_REVIEW
         
-        # Select Seat & Role
-        seat_name = issue.seat
+        # RUN EMPIRICAL VERIFICATION (FIT) for review turns
         if is_review_turn:
-            # RUN EMPIRICAL VERIFICATION (FIT)
             verification_result = await self.verify_issue(issue.id)
             v_msg = f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
             self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
-            
-            verifier_seat = next((name for name, s in team.seats.items() if "integrity_guard" in s.roles), None)
-            if verifier_seat: seat_name = verifier_seat
+
+        # Select Seat via router decision node
+        seat_name = self.router_node.route(issue, team, is_review_turn)
 
         seat_obj = team.seats.get(sanitize_name(seat_name))
         if not seat_obj:
@@ -263,8 +264,8 @@ class Orchestrator:
             roles_to_load = ["integrity_guard"] + roles_to_load
 
         role_config = self.loader.load_asset("roles", roles_to_load[0], RoleConfig)
-        selected_model = model_selector.select(role=roles_to_load[0], asset_config=epic)
-        dialect_name = model_selector.get_dialect_name(selected_model)
+        selected_model = prompt_strategy_node.select_model(role=roles_to_load[0], asset_config=epic)
+        dialect_name = prompt_strategy_node.select_dialect(selected_model)
         dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
         
         provider = LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
@@ -302,19 +303,26 @@ class Orchestrator:
         if result.success:
             self.transcript.append(result.turn)
             updated_issue = await self.async_cards.get_by_id(issue.id)
-            
+
+            success_eval = self.evaluator_node.evaluate_success(
+                issue=issue,
+                updated_issue=updated_issue,
+                turn=result.turn,
+                seat_name=seat_name,
+                is_review_turn=is_review_turn,
+            )
+
             # Record significant turns in memory
-            if "decision" in result.turn.content.lower() or "architect" in seat_name:
+            if success_eval.get("remember_decision"):
                 await self.memory.remember(
                     content=f"Decision by {seat_name} on {issue.id}: {result.turn.content[:200]}...",
                     metadata={"issue_id": issue.id, "role": seat_name, "type": "decision"}
                 )
             
             # Sandbox triggering
-            if (updated_issue.status == CardStatus.CODE_REVIEW or 
-                (updated_issue.status == issue.status and not is_review_turn)):
+            if success_eval.get("trigger_sandbox"):
                 await self._trigger_sandbox(epic)
-                if updated_issue.status == issue.status:
+                if success_eval.get("promote_code_review"):
                     await self.async_cards.update_status(issue.id, CardStatus.CODE_REVIEW)
             
             await provider.clear_context()
@@ -349,16 +357,18 @@ class Orchestrator:
             roles=roles
         )
 
+        eval_decision = self.evaluator_node.evaluate_failure(issue, result)
+        issue.retry_count = eval_decision.get("next_retry_count", issue.retry_count)
+        action = eval_decision.get("action")
+
         # Mechanical governance violations are terminal for the issue.
-        if result.violations:
+        if action == "governance_violation":
             await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
             issue.status = CardStatus.BLOCKED
             await self.async_cards.save(issue.model_dump())
             raise GovernanceViolation(f"iDesign Violation: {result.error}")
-        
-        issue.retry_count += 1
-        
-        if issue.retry_count > issue.max_retries:
+
+        if action == "catastrophic":
             log_event("catastrophic_failure", {
                 "issue_id": issue.id,
                 "retry_count": issue.retry_count,
@@ -379,6 +389,9 @@ class Orchestrator:
                 f"MAX RETRIES EXCEEDED for {issue.id}. "
                 f"Limit: {issue.max_retries}. Shutting down project orchestration."
             )
+
+        if action != "retry":
+            raise ExecutionFailed(f"Unexpected evaluator action '{action}' for {issue.id}")
 
         # Log retry and reset to READY
         log_event("retry_triggered", {

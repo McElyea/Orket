@@ -29,7 +29,17 @@ class RouterNode(Protocol):
 class EvaluatorNode(Protocol):
     """Decision node: evaluates issue outcomes and quality signals."""
 
-    def evaluate(self, issue: Any, result: Any) -> Any:
+    def evaluate_success(
+        self,
+        issue: Any,
+        updated_issue: Any,
+        turn: Any,
+        seat_name: str,
+        is_review_turn: bool,
+    ) -> Any:
+        ...
+
+    def evaluate_failure(self, issue: Any, result: Any) -> Any:
         ...
 
 
