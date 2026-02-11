@@ -1,11 +1,10 @@
 import asyncio
-import json
 from pathlib import Path
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, UTC
 from contextlib import asynccontextmanager
-from typing import List, Optional, Dict, Any
+from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body, Request, APIRouter, Depends, Security
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 import os
@@ -16,11 +15,10 @@ from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.logging import subscribe_to_events
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
-from orket.settings import load_user_settings
 from orket.decision_nodes.registry import DecisionNodeRegistry
 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 class SaveFileRequest(BaseModel):
     path: str
@@ -102,7 +100,7 @@ async def get_version():
 
 @v1_router.post("/system/clear-logs")
 async def clear_logs():
-    log_path = "workspace/default/orket.log"
+    log_path = api_runtime_node.resolve_clear_logs_path()
     fs = AsyncFileTools(PROJECT_ROOT)
     try:
         await fs.write_file(log_path, "")
@@ -162,10 +160,11 @@ async def save_system_file(req: SaveFileRequest):
 async def get_calendar():
     from orket.utils import get_eos_sprint
     now = datetime.now(UTC)
+    calendar_window = api_runtime_node.calendar_window(now)
     return {
         "current_sprint": get_eos_sprint(now),
-        "sprint_start": (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d"),
-        "sprint_end": (now + timedelta(days=4-now.weekday())).strftime("%Y-%m-%d")
+        "sprint_start": calendar_window["sprint_start"],
+        "sprint_end": calendar_window["sprint_end"],
     }
 
 @v1_router.post("/system/run-active")
@@ -175,8 +174,20 @@ async def run_active_asset(req: RunAssetRequest):
     asset_id = api_runtime_node.resolve_asset_id(req.path, req.issue_id)
     if not asset_id: raise HTTPException(status_code=400, detail="No asset ID provided.")
 
-    print(f"  [API] v1 EXECUTE: {asset_id} (Type: {req.type}, Session: {session_id})")
-    task = asyncio.create_task(engine.run_card(asset_id, build_id=req.build_id, session_id=session_id))
+    invocation = api_runtime_node.resolve_run_active_invocation(
+        asset_id=asset_id,
+        build_id=req.build_id,
+        session_id=session_id,
+        request_type=req.type,
+    )
+    method_name = invocation["method_name"]
+    kwargs = invocation["kwargs"]
+    engine_method = getattr(engine, method_name, None)
+    if engine_method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported run method '{method_name}'.")
+
+    print(f"  [API] v1 EXECUTE: {asset_id} (Type: {req.type}, Session: {session_id}, Method: {method_name})")
+    task = asyncio.create_task(engine_method(**kwargs))
     await runtime_state.add_task(session_id, task)
     return {"session_id": session_id}
 
@@ -216,7 +227,7 @@ async def stop_sandbox(sandbox_id: str):
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
 async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
     from orket.orket import ExecutionPipeline
-    pipeline = ExecutionPipeline(PROJECT_ROOT / "workspace" / "default")
+    pipeline = ExecutionPipeline(api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT))
     return {"logs": pipeline.sandbox_orchestrator.get_logs(sandbox_id, service)}
 
 @v1_router.get("/system/board")

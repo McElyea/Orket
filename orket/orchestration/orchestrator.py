@@ -1,7 +1,6 @@
 import asyncio
 import json
 import uuid
-import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
@@ -66,12 +65,12 @@ class Orchestrator:
         self.notes = NoteStore()
         self.transcript = []
         self._sandbox_locks = defaultdict(asyncio.Lock)
-        self.context_window = max(1, int(os.getenv("ORKET_CONTEXT_WINDOW", "10")))
         self.decision_nodes = DecisionNodeRegistry()
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
         self.router_node = self.decision_nodes.resolve_router(self.org)
         self.evaluator_node = self.decision_nodes.resolve_evaluator(self.org)
         self.loop_policy_node = self.decision_nodes.resolve_orchestration_loop(self.org)
+        self.context_window = self.loop_policy_node.context_window(self.org)
         self.model_client_node = self.decision_nodes.resolve_model_client(self.org)
 
     def _history_context(self) -> List[Dict[str, str]]:

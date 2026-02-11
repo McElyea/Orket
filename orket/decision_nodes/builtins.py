@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, List
 from pathlib import Path
+from datetime import timedelta
 import uuid
 import re
+import os
 
 from orket.decision_nodes.contracts import PlanningInput
 from orket.schema import CardStatus
@@ -133,6 +135,25 @@ class DefaultApiRuntimeStrategyNode:
     def create_session_id(self) -> str:
         return str(uuid.uuid4())[:8]
 
+    def resolve_run_active_invocation(
+        self,
+        asset_id: str,
+        build_id: str | None,
+        session_id: str,
+        request_type: str | None,
+    ) -> Dict[str, Any]:
+        return {
+            "method_name": "run_card",
+            "kwargs": {
+                "card_id": asset_id,
+                "build_id": build_id,
+                "session_id": session_id,
+            },
+        }
+
+    def resolve_clear_logs_path(self) -> str:
+        return "workspace/default/orket.log"
+
     def normalize_metrics(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
         normalized = dict(snapshot)
         if "cpu" not in normalized and "cpu_percent" in normalized:
@@ -140,6 +161,12 @@ class DefaultApiRuntimeStrategyNode:
         if "memory" not in normalized and "ram_percent" in normalized:
             normalized["memory"] = normalized["ram_percent"]
         return normalized
+
+    def calendar_window(self, now: Any) -> Dict[str, str]:
+        return {
+            "sprint_start": (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d"),
+            "sprint_end": (now + timedelta(days=4 - now.weekday())).strftime("%Y-%m-%d"),
+        }
 
     def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
         candidate_path = path or "."
@@ -184,6 +211,9 @@ class DefaultApiRuntimeStrategyNode:
         workspace = project_root / "workspace" / "runs" / session_id
         if workspace.exists():
             return workspace
+        return project_root / "workspace" / "default"
+
+    def resolve_sandbox_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
 
 
@@ -498,6 +528,13 @@ class DefaultOrchestrationLoopPolicyNode:
 
     def max_iterations(self, organization: Any) -> int:
         return 20
+
+    def context_window(self, organization: Any) -> int:
+        raw = os.getenv("ORKET_CONTEXT_WINDOW", "10")
+        try:
+            return max(1, int(raw))
+        except (TypeError, ValueError):
+            return 10
 
     def is_backlog_done(self, backlog: List[Any]) -> bool:
         return all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)

@@ -72,7 +72,22 @@ class ApiRuntimeStrategyNode(Protocol):
     def create_session_id(self) -> str:
         ...
 
+    def resolve_run_active_invocation(
+        self,
+        asset_id: str,
+        build_id: str | None,
+        session_id: str,
+        request_type: str | None,
+    ) -> Dict[str, Any]:
+        ...
+
+    def resolve_clear_logs_path(self) -> str:
+        ...
+
     def normalize_metrics(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+        ...
+
+    def calendar_window(self, now: Any) -> Dict[str, str]:
         ...
 
     def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
@@ -88,6 +103,9 @@ class ApiRuntimeStrategyNode(Protocol):
         ...
 
     def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
+        ...
+
+    def resolve_sandbox_workspace(self, project_root: Any) -> Any:
         ...
 
 
@@ -191,6 +209,9 @@ class OrchestrationLoopPolicyNode(Protocol):
         ...
 
     def max_iterations(self, organization: Any) -> int:
+        ...
+
+    def context_window(self, organization: Any) -> int:
         ...
 
     def is_backlog_done(self, backlog: List[Any]) -> bool:

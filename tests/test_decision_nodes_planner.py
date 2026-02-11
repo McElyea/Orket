@@ -1,3 +1,4 @@
+from datetime import datetime, UTC
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -316,11 +317,29 @@ def test_default_api_runtime_strategy_parity():
     assert node.resolve_asset_id(path=None, issue_id="ISSUE-1") == "ISSUE-1"
     assert node.resolve_asset_id(path=None, issue_id=None) is None
     assert len(node.create_session_id()) == 8
+    assert node.resolve_run_active_invocation(
+        asset_id="ISSUE-1",
+        build_id="BUILD-1",
+        session_id="SESSION-1",
+        request_type="issue",
+    ) == {
+        "method_name": "run_card",
+        "kwargs": {
+            "card_id": "ISSUE-1",
+            "build_id": "BUILD-1",
+            "session_id": "SESSION-1",
+        },
+    }
+    assert node.resolve_clear_logs_path() == "workspace/default/orket.log"
     assert node.normalize_metrics({"cpu_percent": 12, "ram_percent": 34}) == {
         "cpu_percent": 12,
         "ram_percent": 34,
         "cpu": 12,
         "memory": 34,
+    }
+    assert node.calendar_window(datetime(2026, 2, 11, tzinfo=UTC)) == {
+        "sprint_start": "2026-02-09",
+        "sprint_end": "2026-02-13",
     }
     assert node.resolve_explorer_path(Path("/tmp/root"), "../../evil") is None
     assert node.include_explorer_entry(".git") is False
@@ -340,6 +359,7 @@ def test_default_api_runtime_strategy_parity():
         "department": "product",
     }
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
+    assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
 
 
 def test_registry_resolves_custom_api_runtime_from_process_rules(monkeypatch):
@@ -561,7 +581,9 @@ def test_registry_pipeline_wiring_env_override_wins(monkeypatch):
 def test_registry_resolves_default_orchestration_loop_policy():
     registry = DecisionNodeRegistry()
     from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
-    assert isinstance(registry.resolve_orchestration_loop(), DefaultOrchestrationLoopPolicyNode)
+    node = registry.resolve_orchestration_loop()
+    assert isinstance(node, DefaultOrchestrationLoopPolicyNode)
+    assert node.context_window(None) == 10
 
 
 def test_registry_orchestration_loop_env_override_wins(monkeypatch):
@@ -581,6 +603,17 @@ def test_registry_orchestration_loop_env_override_wins(monkeypatch):
     registry.register_orchestration_loop("custom-loop", custom)
     org = SimpleNamespace(process_rules={"orchestration_loop_node": "default"})
     assert registry.resolve_orchestration_loop(org) is custom
+
+
+def test_default_orchestration_loop_context_window_env_override(monkeypatch):
+    from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
+
+    monkeypatch.setenv("ORKET_CONTEXT_WINDOW", "3")
+    node = DefaultOrchestrationLoopPolicyNode()
+    assert node.context_window(None) == 3
+
+    monkeypatch.setenv("ORKET_CONTEXT_WINDOW", "bad")
+    assert node.context_window(None) == 10
 
 
 def test_registry_resolves_default_model_client_policy():
