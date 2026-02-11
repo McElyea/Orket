@@ -42,30 +42,33 @@ class BaseTools:
         return resolved
 
 class FileSystemTools(BaseTools):
-    def read_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    def __init__(self, workspace_root: Path, references: List[Path]):
+        super().__init__(workspace_root, references)
+        from orket.infrastructure.async_file_tools import AsyncFileTools
+        self.async_fs = AsyncFileTools(workspace_root, references)
+
+    async def read_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
-            path = self._resolve_safe_path(args.get("path"))
-            if not path.exists(): return {"ok": False, "error": "File not found"}
-            return {"ok": True, "content": path.read_text(encoding="utf-8")}
+            path_str = args.get("path")
+            content = await self.async_fs.read_file(path_str)
+            return {"ok": True, "content": content}
+        except FileNotFoundError: return {"ok": False, "error": "File not found"}
         except Exception as e: return {"ok": False, "error": str(e)}
 
-    def write_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def write_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
-            path = self._resolve_safe_path(args.get("path"), write=True)
-            path.parent.mkdir(parents=True, exist_ok=True)
+            path_str = args.get("path")
             content = args.get("content")
-            if not isinstance(content, str):
-                content = json.dumps(content, indent=2)
-            path.write_text(content, encoding="utf-8")
-            return {"ok": True, "path": str(path)}
+            path = await self.async_fs.write_file(path_str, content)
+            return {"ok": True, "path": path}
         except Exception as e: return {"ok": False, "error": str(e)}
 
-    def list_directory(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def list_directory(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
-            path = self._resolve_safe_path(args.get("path", "."))
-            if not path.exists(): return {"ok": False, "error": "Dir not found"}
-            items = [f.name for f in path.iterdir()]
+            path_str = args.get("path", ".")
+            items = await self.async_fs.list_directory(path_str)
             return {"ok": True, "items": items}
+        except FileNotFoundError: return {"ok": False, "error": "Dir not found"}
         except Exception as e: return {"ok": False, "error": str(e)}
 
 class VisionTools(BaseTools):

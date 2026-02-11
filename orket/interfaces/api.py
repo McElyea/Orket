@@ -12,6 +12,7 @@ import os
 
 from orket import __version__
 from orket.orchestration.engine import OrchestrationEngine
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.logging import subscribe_to_events
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
@@ -76,9 +77,12 @@ async def get_version():
 
 @v1_router.post("/system/clear-logs")
 async def clear_logs():
-    log_path = PROJECT_ROOT / "workspace" / "default" / "orket.log"
-    if log_path.exists():
-        log_path.write_text("", encoding="utf-8")
+    log_path = "workspace/default/orket.log"
+    fs = AsyncFileTools(PROJECT_ROOT)
+    try:
+        await fs.write_file(log_path, "")
+    except Exception:
+        pass
     return {"ok": True}
 
 @v1_router.get("/system/heartbeat")

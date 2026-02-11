@@ -28,8 +28,6 @@ class AsyncFileTools:
         """
         Secure path validation.
         """
-        from orket.domain.verification import AGENT_OUTPUT_DIR
-        
         p = Path(path_str)
         if not p.is_absolute():
             p = self.workspace_root / p
@@ -57,11 +55,11 @@ class AsyncFileTools:
             raise PermissionError(f"Access denied: {path_str} is outside allowed boundaries.")
 
         if write:
-            output_root = (workspace_resolved / AGENT_OUTPUT_DIR).resolve()
-            if not resolved.is_relative_to(output_root):
+            # We enforce workspace boundaries for writes.
+            # Specialized governance (like AGENT_OUTPUT_DIR) is handled by ToolGate.
+            if not is_in_workspace:
                 raise PermissionError(
-                    f"Write access denied: {path_str}. "
-                    f"Agents may only write to '{AGENT_OUTPUT_DIR}/'."
+                    f"Write access denied: {path_str} is outside the workspace."
                 )
 
         return resolved

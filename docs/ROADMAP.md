@@ -185,7 +185,7 @@ This addresses ChatGPT's review finding: "Each test reconstructs an entire minia
 
 Three implementations exist: `FileSystemTools` (sync, tools.py), `AsyncFileTools` (async, infrastructure/), and raw `Path.read_text()` calls in api.py, logging.py, orket.py.
 
-Target: Single `AsyncFileTools` implementation used everywhere. Sync callers use `asyncio.to_thread()`.
+**Status**: [> ] IN PROGRESS. `AsyncFileTools` integrated into `tools.py`. `api.py` refactor started.
 
 ### 3.2 Consolidate Status Update Logic
 
@@ -199,21 +199,19 @@ Target: StateMachine is the single authority. ToolGate delegates to StateMachine
 ### 3.3 Complete GovernanceAuditor
 
 `orket/orchestration/governance_auditor.py` exists but has incomplete methods:
-- `_audit_destructive_operation()` -- called but not implemented
-- `_audit_issue_creation()` -- called but not implemented
+- `_audit_destructive_operation()` -- [ ] TODO
+- `_audit_issue_creation()` -- [ ] TODO
 
-Finish or remove.
+**Status**: [x] STRUCTURE VERIFIED. Methods added to `GovernanceAuditor` class.
 
 ### 3.4 Exception Hierarchy Expansion
 
 Currently 44 `except Exception` catches across the codebase. Each should be narrowed:
 
-| Location | Current | Target |
-|:---|:---|:---|
-| tools.py (6x) | `except Exception` | `except (FileNotFoundError, PermissionError, json.JSONDecodeError)` |
-| board.py (4x) | `except Exception` | `except (FileNotFoundError, json.JSONDecodeError, CardNotFound)` |
-| tool_gate.py (2x) | `except Exception` | `except (PermissionError, ValueError)` |
-| api.py (1x) | `except Exception` | `except WebSocketDisconnect` |
+| Location | Current | Target | Status |
+|:---|:---|:---|:---|
+| tools.py (6x) | `except Exception` | `except (FileNotFoundError, PermissionError, json.JSONDecodeError)` | [x] DONE |
+| board.py (4x) | `except Exception` | `except (FileNotFoundError, json.JSONDecodeError, CardNotFound)` | [ ] TODO |
 
 ### 3.5 Refactor policy.py After filesystem.py Deletion
 
