@@ -10,8 +10,6 @@ from fastapi.security import APIKeyHeader
 import os
 
 from orket import __version__
-from orket.orchestration.engine import OrchestrationEngine
-from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.logging import subscribe_to_events
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
@@ -75,7 +73,7 @@ app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 # Apply auth to all v1 endpoints if configured
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 
-origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", api_runtime_node.default_allowed_origins_value())
 origins = api_runtime_node.parse_allowed_origins(origins_str)
 
 app.add_middleware(
@@ -86,7 +84,7 @@ app.add_middleware(
 )
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
-engine = OrchestrationEngine(PROJECT_ROOT / "workspace" / "default")
+engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT))
 
 # --- System Endpoints ---
 
@@ -102,7 +100,7 @@ async def get_version():
 @v1_router.post("/system/clear-logs")
 async def clear_logs():
     log_path = api_runtime_node.resolve_clear_logs_path()
-    fs = AsyncFileTools(PROJECT_ROOT)
+    fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
     try:
         await fs.write_file(log_path, "")
     except (PermissionError, FileNotFoundError, OSError):
@@ -139,7 +137,7 @@ async def list_system_files(path: str = "."):
 
 @v1_router.get("/system/read")
 async def read_system_file(path: str):
-    fs = AsyncFileTools(PROJECT_ROOT)
+    fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
     try:
         content = await fs.read_file(path)
     except PermissionError as exc:
@@ -150,7 +148,7 @@ async def read_system_file(path: str):
 
 @v1_router.post("/system/save")
 async def save_system_file(req: SaveFileRequest):
-    fs = AsyncFileTools(PROJECT_ROOT)
+    fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
     try:
         await fs.write_file(req.path, req.content)
     except PermissionError as exc:

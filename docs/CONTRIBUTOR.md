@@ -18,6 +18,7 @@ This guide is human/agent agnostic.
 3. Keep governance mechanical (no retry theater).
 4. Prefer small, reversible changes.
 5. Do not commit secrets, `.env`, or local database files.
+6. Keep repo root clean; do not add tool-specific metadata folders in root when they can live under `Agents/`.
 
 ## Project Map
 - Rocks: `model/core/rocks/`

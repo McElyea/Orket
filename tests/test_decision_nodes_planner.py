@@ -312,6 +312,7 @@ def test_registry_tool_strategy_env_override_wins(monkeypatch):
 def test_default_api_runtime_strategy_parity():
     node = DefaultApiRuntimeStrategyNode()
 
+    assert node.default_allowed_origins_value() == "http://localhost:5173,http://127.0.0.1:5173"
     assert node.parse_allowed_origins("http://a, http://b") == ["http://a", "http://b"]
     assert node.is_api_key_valid(None, None) is True
     assert node.is_api_key_valid("k", "k") is True
@@ -373,6 +374,7 @@ def test_default_api_runtime_strategy_parity():
     }
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
+    assert node.resolve_api_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
     assert node.should_remove_websocket(RuntimeError("x")) is True
     assert node.should_remove_websocket(ValueError("x")) is True
     assert node.should_remove_websocket(Exception("x")) is False

@@ -122,6 +122,9 @@ class DefaultApiRuntimeStrategyNode:
     Preserves existing API request/runtime decision behavior.
     """
 
+    def default_allowed_origins_value(self) -> str:
+        return "http://localhost:5173,http://127.0.0.1:5173"
+
     def parse_allowed_origins(self, origins_value: str) -> List[str]:
         return [origin.strip() for origin in origins_value.split(",") if origin.strip()]
 
@@ -249,6 +252,17 @@ class DefaultApiRuntimeStrategyNode:
     def create_execution_pipeline(self, workspace_root: Any) -> Any:
         from orket.orket import ExecutionPipeline
         return ExecutionPipeline(workspace_root)
+
+    def resolve_api_workspace(self, project_root: Any) -> Any:
+        return project_root / "workspace" / "default"
+
+    def create_engine(self, workspace_root: Any) -> Any:
+        from orket.orchestration.engine import OrchestrationEngine
+        return OrchestrationEngine(workspace_root)
+
+    def create_file_tools(self, project_root: Any) -> Any:
+        from orket.infrastructure.async_file_tools import AsyncFileTools
+        return AsyncFileTools(project_root)
 
     def should_remove_websocket(self, exception: Exception) -> bool:
         return isinstance(exception, (RuntimeError, ValueError))

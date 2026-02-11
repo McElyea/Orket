@@ -63,6 +63,9 @@ class ToolStrategyNode(Protocol):
 class ApiRuntimeStrategyNode(Protocol):
     """Decision node: runtime-variable API choices."""
 
+    def default_allowed_origins_value(self) -> str:
+        ...
+
     def parse_allowed_origins(self, origins_value: str) -> List[str]:
         ...
 
@@ -124,6 +127,15 @@ class ApiRuntimeStrategyNode(Protocol):
         ...
 
     def create_execution_pipeline(self, workspace_root: Any) -> Any:
+        ...
+
+    def resolve_api_workspace(self, project_root: Any) -> Any:
+        ...
+
+    def create_engine(self, workspace_root: Any) -> Any:
+        ...
+
+    def create_file_tools(self, project_root: Any) -> Any:
         ...
 
     def should_remove_websocket(self, exception: Exception) -> bool:
