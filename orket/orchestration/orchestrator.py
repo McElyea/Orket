@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
@@ -71,6 +72,10 @@ class Orchestrator:
         self.notes = NoteStore()
         self.transcript = []
         self._sandbox_locks = defaultdict(asyncio.Lock)
+        self.context_window = max(1, int(os.getenv("ORKET_CONTEXT_WINDOW", "10")))
+
+    def _history_context(self) -> List[Dict[str, str]]:
+        return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
 
     async def verify_issue(self, issue_id: str) -> Any:
         """
@@ -295,7 +300,7 @@ class Orchestrator:
             "role": seat_name,
             "roles": roles_to_load,
             "current_status": turn_status.value,
-            "history": [{"role": t.role, "content": t.content} for t in self.transcript[-5:]]
+            "history": self._history_context()
         }
 
         print(f"  [ORCHESTRATOR] {seat_name} -> {issue.id} ({issue.status.value})")

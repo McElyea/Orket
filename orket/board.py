@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig
+from orket.exceptions import CardNotFound
 
 def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dict[str, Any]:
     """
@@ -63,11 +64,11 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                         "issues": epic_issues
                     }
                     rock_node["epics"].append(epic_node)
-                except Exception as e:
+                except (FileNotFoundError, ValueError, CardNotFound, KeyError) as e:
                     rock_node["epics"].append({"id": ename, "name": ename, "error": str(e)})
             
             hierarchy["rocks"].append(rock_node)
-        except Exception:
+        except (FileNotFoundError, ValueError, CardNotFound):
             pass
 
     # 2. Find Orphaned Epics
@@ -88,7 +89,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                     issue_dict["name"] = i.name
                     orph_epic["issues"].append(issue_dict)
                 hierarchy["orphaned_epics"].append(orph_epic)
-            except Exception:
+            except (FileNotFoundError, ValueError, CardNotFound):
                 pass
 
     # 3. Find Orphaned Issues (Standalone files not referenced in any Epic)
@@ -99,7 +100,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                 issue_dict = issue.model_dump(by_alias=True)
                 issue_dict["name"] = issue.name
                 hierarchy["orphaned_issues"].append(issue_dict)
-        except Exception:
+        except (FileNotFoundError, ValueError, CardNotFound):
             pass
 
     if hierarchy["orphaned_epics"] or hierarchy["orphaned_issues"]:

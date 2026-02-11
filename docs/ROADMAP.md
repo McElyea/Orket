@@ -213,7 +213,7 @@ Currently 44 `except Exception` catches across the codebase. Each should be narr
 | Location | Current | Target | Status |
 |:---|:---|:---|:---|
 | tools.py (6x) | `except Exception` | `except (FileNotFoundError, PermissionError, json.JSONDecodeError)` | [x] DONE |
-| board.py (4x) | `except Exception` | `except (FileNotFoundError, json.JSONDecodeError, CardNotFound)` | [ ] TODO |
+| board.py (4x) | `except Exception` | `except (FileNotFoundError, json.JSONDecodeError, CardNotFound)` | [x] DONE |
 
 ### 3.5 Refactor policy.py After filesystem.py Deletion
 
@@ -222,6 +222,8 @@ Currently 44 `except Exception` catches across the codebase. Each should be narr
 - **B**: Have `policy.py` delegate to `BaseTools._resolve_safe_path()`
 
 Recommended: **A**. Keep it simple.
+
+**Status**: [x] DONE. `policy.py` now uses internal `Path.is_relative_to()` validation and no longer depends on deleted filesystem module.
 
 ---
 
@@ -236,11 +238,15 @@ The Orchestrator runs issues in parallel via `asyncio.gather()` with a semaphore
 - No tests for workspace file conflicts between parallel agents
 - No tests for database contention under parallel writes
 
+**Status**: [x] DONE. Added/validated race-focused coverage for parallel execution throughput, dependency-chain serialization, concurrent repository writes, and parallel same-path file writes.
+
 ### 4.2 File Locking for Parallel Agents
 
 When two agents write to the same workspace concurrently, file conflicts are possible. Implement:
 - Per-issue workspace subdirectories (agents cannot write outside their issue scope)
 - Or file-level advisory locking via `filelock`
+
+**Status**: [x] DONE. Implemented file-level advisory locking for tool writes (`FileSystemTools.write_file`) to serialize concurrent writes to the same resolved path.
 
 ### 4.3 Context Window Management
 
@@ -250,6 +256,8 @@ Options:
 - Increase window to 10 (simple, more tokens)
 - Implement summarization (compress old turns into a summary)
 - Use the Memory Store (already exists) to persist key decisions
+
+**Status**: [x] DONE (Option 1 + Memory Support). Increased sliding window to 10 by default with `ORKET_CONTEXT_WINDOW` override; existing Memory Store remains active for decision recall.
 
 ---
 
