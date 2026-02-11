@@ -7,7 +7,7 @@ This is the centralized policy enforcement point for all agent tool usage.
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from orket.schema import OrganizationConfig, CardStatus, CardType
-from orket.domain.state_machine import StateMachine
+from orket.domain.state_machine import StateMachine, StateMachineError
 
 
 class ToolGateViolation(Exception):
@@ -121,7 +121,7 @@ class ToolGate:
                 if any(str(full_path).endswith(ext) for ext in forbidden):
                     return f"Policy violation: File type not allowed ({file_path})"
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError) as e:
             return f"Invalid file path: {e}"
 
         return None
@@ -164,7 +164,7 @@ class ToolGate:
                     roles=roles,
                     wait_reason=wait_reason
                 )
-            except Exception as e:
+            except (StateMachineError, ValueError, TypeError) as e:
                 return str(e)
 
         return None

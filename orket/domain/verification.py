@@ -73,7 +73,7 @@ def _apply_limits():
         resource.setrlimit(resource.RLIMIT_CPU, (cpu_sec, cpu_sec))
         mem_bytes = mem_mb * 1024 * 1024
         resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
-    except Exception:
+    except (ImportError, OSError, ValueError, AttributeError):
         # Best effort on non-posix platforms.
         pass
 
@@ -91,7 +91,7 @@ def main():
         spec = importlib.util.spec_from_file_location("verification_fixture_subprocess", fixture_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-    except Exception as exc:
+    except (FileNotFoundError, ImportError, AttributeError, OSError, SyntaxError, ValueError, TypeError) as exc:
         response["ok"] = False
         response["fatal_error"] = f"{type(exc).__name__}: {exc}"
         response["traceback"] = traceback.format_exc()
@@ -119,7 +119,7 @@ def main():
             actual = verify_fn(input_data)
             result["actual_output"] = actual
             result["status"] = "pass" if actual == expected_output else "fail"
-        except Exception as exc:
+        except (RuntimeError, ValueError, TypeError, AssertionError, OSError) as exc:
             result["error"] = f"{type(exc).__name__}: {exc}"
         response["results"].append(result)
 
@@ -247,7 +247,7 @@ if __name__ == "__main__":
             failed = len(verification.scenarios)
         except VerificationSecurityError:
             raise
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as e:
             logs.append(f"FATAL ERROR loading fixture: {type(e).__name__}: {e}")
 
         logs.append(f"--- Verification Complete: {passed} Passed, {failed} Failed ---")
@@ -307,7 +307,7 @@ if __name__ == "__main__":
                         scenario.status = "fail"
                         failed += 1
 
-                except Exception as e:
+                except (httpx.HTTPError, ValueError, TypeError, OSError) as e:
                     logs.append(f"  [ERROR] Request failed: {e}")
                     scenario.status = "fail"
                     failed += 1

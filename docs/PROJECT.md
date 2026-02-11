@@ -1,46 +1,22 @@
-# Vibe Rail Project: Orket Maturation
+# Project Overview
 
-This document tracks the milestones, lessons learned, and quality benchmarks for the Orket platform.
+This document defines the stable project context for Orket.
 
-## Organization: Vibe Rail
-**Vision:** Local-first autonomous market intelligence.
-**Ethos:** Excellence through iteration, transparency, and sovereignty.
+## Organization
+- Name: Vibe Rail
+- Vision: Local-first autonomous market intelligence
+- Ethos: Excellence through iteration, transparency, and sovereignty
 
----
+## Operating Model
+- Architectural authority: `docs/OrketArchitectureModel.md`
+- Forward work authority: `docs/ROADMAP.md`
+- Version/change history: `CHANGELOG.md`
 
-## Current Status: v0.3.8 (The Diagnostic Intelligence)
+## Engineering Constraints
+- Volatile behavior must be isolated behind explicit decision boundaries.
+- Runtime actions must pass mechanical governance before state mutation.
+- Local-first execution is the default operating assumption.
 
-Building on the mechanical enforcement model, v0.3.8 adds diagnostic intelligence with WaitReason tracking, priority-based scheduling, and comprehensive bottleneck detection. The backend stabilization phase continues with enhanced testing and state machine governance.
-
-**Note:** For detailed version history, see [CHANGELOG.md](../CHANGELOG.md).
-
----
-
-## Maturation Roadmap
-
-### Phase 1: Ruthless Simplification (DONE)
-*   **Merge Skills into Roles:** Eliminate the complexity tax of dual persona layers.
-*   **Unified Configuration:** Established the `config/` directory with prioritized overrides.
-*   **Atomic Card Identity:** Ensure every Rock, Epic, and Issue has a stable, non-volatile ID.
-
-### Phase 2: Mechanical Enforcement (DONE - v0.3.8)
-*   ✅ **Hard State Machines:** Implemented WaitReason enforcement, multi-role validation, priority-based scheduling.
-*   ✅ **Tool Gating:** Centralized pre-execution validation in ToolGate service. Enforces workspace boundaries, state transitions, destructive operation protection.
-*   ✅ **Integration Testing:** 49 total tests across 9 test files. Golden flow validation for end-to-end orchestration.
-
-### Phase 3: Elegant Failure & Recovery
-*   **The Elegant Stop:** When an invariant is broken, the engine terminates with a clear "Policy Violation" report.
-*   **Memory Hygiene:** Implement logic to clear model context/memory on restart to prevent hallucination drift.
-*   **Restart Mechanism:** Enable resuming a run from the last valid state machine checkpoint.
-
-### Phase 4: Empirical Verification (North Star)
-*   **FIT Fixtures:** Integrated testing where Orket runs code and verifies results before advancing cards.
-*   **Local Sandboxing:** Host and verify applications in an isolated environment.
-
----
-
-## iDesign in Practice
-We utilize iDesign as a "Complexity Gate."
-*   **Current Threshold:** 7 Issues.
-*   **Mandatory Structure:** Managers, Engines, Accessors.
-*   **Goal:** To ensure that Orket never produces "Spaghetti Code" as it grows.
+## Complexity Gate
+- iDesign threshold: 7 issues
+- Preferred structure at threshold and above: managers, engines, accessors

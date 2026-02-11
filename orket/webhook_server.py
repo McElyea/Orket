@@ -121,7 +121,7 @@ async def health():
     return {"status": "healthy"}
 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 class GiteaWebhookPayload(BaseModel):
     action: Optional[str] = None
@@ -169,7 +169,7 @@ async def gitea_webhook(
     try:
         payload_data = json.loads(body)
         payload = GiteaWebhookPayload.model_validate(payload_data)
-    except Exception as e:
+    except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as e:
         log_event(
             "webhook",
             {"message": f"Failed to parse or validate webhook payload: {e}", "level": "error"},
@@ -190,7 +190,7 @@ async def gitea_webhook(
     try:
         result = await webhook_handler.handle_webhook(x_gitea_event, payload.model_dump())
         return JSONResponse(content=result, status_code=200)
-    except Exception as e:
+    except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
         log_event("webhook", {"message": f"Webhook handler error: {e}", "level": "error"}, workspace=Path.cwd())
         raise HTTPException(status_code=500, detail=str(e))
 

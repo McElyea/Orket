@@ -42,7 +42,7 @@ def test_fastapi_react_postgres_compose():
     )
 
     # Generate compose file
-    compose_content = orchestrator._generate_compose_file(sandbox)
+    compose_content = orchestrator._generate_compose_file(sandbox, db_password="test-password")
 
     # Verify content
     assert "version:" in compose_content
@@ -91,7 +91,7 @@ def test_fastapi_vue_mongo_compose():
         admin_url=f"http://localhost:{ports.admin_tool}"
     )
 
-    compose_content = orchestrator._generate_compose_file(sandbox)
+    compose_content = orchestrator._generate_compose_file(sandbox, db_password="test-password")
 
     assert "mongo:" in compose_content
     assert "mongo-express:" in compose_content

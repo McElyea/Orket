@@ -134,7 +134,7 @@ Example for turn_directive:
             return await self.execute_plan(plan)
         except json.JSONDecodeError as e:
             return f"Driver failed to parse JSON: {str(e)}"
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
             # Fallback for unexpected logical errors, but still better than a bare except
             import traceback
             print(f"ERROR: Driver process failed: {e}\n{traceback.format_exc()}")

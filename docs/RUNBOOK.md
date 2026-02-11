@@ -45,12 +45,30 @@ python scripts/run_migrations.py --runtime-db /data/orket_persistence.db --webho
 ## Load/Performance Validation
 Run pre-release load harness:
 ```bash
-python benchmarks/phase5_load_test.py --base-url http://127.0.0.1:8080
+python benchmarks/phase5_load_test.py \
+  --webhook-base-url http://127.0.0.1:8080 \
+  --api-base-url http://127.0.0.1:8082 \
+  --ws-url ws://127.0.0.1:8082/ws/events \
+  --webhook-total 100 \
+  --epic-total 10 \
+  --ws-clients 50 \
+  --out benchmarks/results/<timestamp>_phase5_load.json
 ```
 
 Track and archive:
 - p50/p95/p99 latency
 - error rate
+
+Archived evidence:
+- `benchmarks/results/2026-02-11_phase5_load.json`
+
+## Release Checklist
+Before release, verify:
+
+1. Quality pipeline passes (`quality` job).
+2. Docker smoke passes (`docker_smoke` job builds image and probes `/health`).
+3. Migration smoke passes (`migration_smoke` job validates runtime and webhook DB migration tables).
+4. Latest load artifact exists under `benchmarks/results/` and is linked in release notes.
 
 ## Incident Playbook
 ### 1. Elevated 5xx from API

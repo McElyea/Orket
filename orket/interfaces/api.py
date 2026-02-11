@@ -81,7 +81,7 @@ async def clear_logs():
     fs = AsyncFileTools(PROJECT_ROOT)
     try:
         await fs.write_file(log_path, "")
-    except Exception:
+    except (PermissionError, FileNotFoundError, OSError):
         pass
     return {"ok": True}
 
@@ -236,7 +236,7 @@ async def event_broadcaster():
         record = await runtime_state.event_queue.get()
         for ws in await runtime_state.get_websockets():
             try: await ws.send_json(record)
-            except Exception:
+            except (WebSocketDisconnect, RuntimeError, ValueError):
                 await runtime_state.remove_websocket(ws)
         runtime_state.event_queue.task_done()
 

@@ -132,7 +132,7 @@ class Orchestrator:
                     tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
                     workspace_path=str(self.workspace)
                 )
-            except Exception as e:
+            except (RuntimeError, ValueError, OSError) as e:
                 print(f"  [ORCHESTRATOR] WARN: Deployment failed: {e}")
 
     async def execute_epic(

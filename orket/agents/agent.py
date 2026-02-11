@@ -123,7 +123,7 @@ class Agent:
                 res = await tool_fn(args, context=context) if inspect.iscoroutinefunction(tool_fn) else tool_fn(args, context=context)
                 turn.tool_calls.append(ToolCall(tool=tool_name, args=args, result=res))
                 log_event("tool_call", {"tool": tool_name, "args": args, "result": res}, workspace, role=self.name)
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
                 turn.tool_calls.append(ToolCall(tool=tool_name, args=args, error=str(e)))
 
         turn.note = f"role={self.name}, tools={len(turn.tool_calls)}"

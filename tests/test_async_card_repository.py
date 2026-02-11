@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import aiosqlite
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.schema import CardStatus, CardType
 from orket.domain.records import IssueRecord
@@ -36,7 +37,7 @@ async def test_save_and_get_issue(repo):
 @pytest.mark.asyncio
 async def test_update_status(repo):
     """Test updating card status and assignee."""
-    issue = IssueRecord(id="ISSUE-02", summary="Update Me")
+    issue = IssueRecord(id="ISSUE-02", summary="Update Me", seat="standard")
     await repo.save(issue)
     
     await repo.update_status("ISSUE-02", CardStatus.IN_PROGRESS, assignee="agent-007")
@@ -48,9 +49,9 @@ async def test_update_status(repo):
 @pytest.mark.asyncio
 async def test_get_by_build(repo):
     """Test filtering issues by build_id."""
-    await repo.save(IssueRecord(id="I1", summary="B1-1", build_id="B1"))
-    await repo.save(IssueRecord(id="I2", summary="B1-2", build_id="B1"))
-    await repo.save(IssueRecord(id="I3", summary="B2-1", build_id="B2"))
+    await repo.save(IssueRecord(id="I1", summary="B1-1", build_id="B1", seat="standard"))
+    await repo.save(IssueRecord(id="I2", summary="B1-2", build_id="B1", seat="standard"))
+    await repo.save(IssueRecord(id="I3", summary="B2-1", build_id="B2", seat="standard"))
     
     b1_issues = await repo.get_by_build("B1")
     assert len(b1_issues) == 2
@@ -59,7 +60,7 @@ async def test_get_by_build(repo):
 @pytest.mark.asyncio
 async def test_transactions(repo):
     """Test manual transaction logging and history retrieval."""
-    await repo.save(IssueRecord(id="T1", summary="Tx Test"))
+    await repo.save(IssueRecord(id="T1", summary="Tx Test", seat="standard"))
     await repo.add_transaction("T1", "system", "First Action")
     await repo.add_transaction("T1", "developer", "Second Action")
     
@@ -71,7 +72,7 @@ async def test_transactions(repo):
 @pytest.mark.asyncio
 async def test_comments(repo):
     """Test adding and retrieving comments."""
-    await repo.save(IssueRecord(id="C1", summary="Comment Test"))
+    await repo.save(IssueRecord(id="C1", summary="Comment Test", seat="standard"))
     await repo.add_comment("C1", "author1", "Hello world")
     await repo.add_comment("C1", "author2", "Follow up")
     
@@ -83,8 +84,8 @@ async def test_comments(repo):
 @pytest.mark.asyncio
 async def test_reset_build(repo):
     """Verify that reset_build sets all issues in a build back to READY."""
-    await repo.save(IssueRecord(id="R1", summary="R1", build_id="BR", status=CardStatus.DONE))
-    await repo.save(IssueRecord(id="R2", summary="R2", build_id="BR", status=CardStatus.IN_PROGRESS))
+    await repo.save(IssueRecord(id="R1", summary="R1", build_id="BR", status=CardStatus.DONE, seat="standard"))
+    await repo.save(IssueRecord(id="R2", summary="R2", build_id="BR", status=CardStatus.IN_PROGRESS, seat="standard"))
     
     await repo.reset_build("BR")
     
@@ -95,13 +96,13 @@ async def test_reset_build(repo):
 async def test_independent_ready_issues(repo):
     """Test dependency-aware issue selection."""
     # I1: No deps, READY
-    await repo.save(IssueRecord(id="I1", summary="I1", build_id="DAG", status=CardStatus.READY))
+    await repo.save(IssueRecord(id="I1", summary="I1", build_id="DAG", status=CardStatus.READY, seat="standard"))
     # I2: Deps on I1, READY
-    await repo.save(IssueRecord(id="I2", summary="I2", build_id="DAG", status=CardStatus.READY, depends_on=["I1"]))
+    await repo.save(IssueRecord(id="I2", summary="I2", build_id="DAG", status=CardStatus.READY, depends_on=["I1"], seat="standard"))
     # I3: No deps, DONE
-    await repo.save(IssueRecord(id="I3", summary="I3", build_id="DAG", status=CardStatus.DONE))
+    await repo.save(IssueRecord(id="I3", summary="I3", build_id="DAG", status=CardStatus.DONE, seat="standard"))
     # I4: Deps on I3, READY
-    await repo.save(IssueRecord(id="I4", summary="I4", build_id="DAG", status=CardStatus.READY, depends_on=["I3"]))
+    await repo.save(IssueRecord(id="I4", summary="I4", build_id="DAG", status=CardStatus.READY, depends_on=["I3"], seat="standard"))
     
     ready = await repo.get_independent_ready_issues("DAG")
     # I1 is ready (no deps). I4 is ready (dep I3 is DONE). 
@@ -114,7 +115,7 @@ async def test_concurrency_stress(repo):
     """Stress test with concurrent saves to ensure locking works."""
     tasks = []
     for i in range(20):
-        issue = IssueRecord(id=f"CONC-{i}", summary=f"Stress {i}")
+        issue = IssueRecord(id=f"CONC-{i}", summary=f"Stress {i}", seat="standard")
         tasks.append(repo.save(issue))
     
     await asyncio.gather(*tasks)
@@ -129,17 +130,17 @@ async def test_serialization_edge_cases(repo):
     """Test handling of empty or malformed JSON in extended fields."""
     # Manually insert malformed JSON via direct sqlite if needed, 
     # but here we test the _deserialize_row through normal flow
-    issue = IssueRecord(id="EDGE", summary="Edge Case")
+    issue = IssueRecord(id="EDGE", summary="Edge Case", seat="standard")
     await repo.save(issue)
     
     retrieved = await repo.get_by_id("EDGE")
     assert retrieved.depends_on == []
-    assert retrieved.verification.scenarios == []
+    assert retrieved.verification == {}
 
 @pytest.mark.asyncio
 async def test_update_status_transaction_logging(repo):
     """Verify that update_status automatically logs a transaction."""
-    issue = IssueRecord(id="TX-LOG", summary="Tx Log Test")
+    issue = IssueRecord(id="TX-LOG", summary="Tx Log Test", seat="standard")
     await repo.save(issue)
     
     await repo.update_status("TX-LOG", CardStatus.IN_PROGRESS, assignee="agent-x")
@@ -155,8 +156,8 @@ async def test_deserialize_corrupted_json(repo):
         async with aiosqlite.connect(repo.db_path) as conn:
             await repo._ensure_initialized(conn)
             await conn.execute(
-                "INSERT INTO issues (id, summary, depends_on_json) VALUES (?, ?, ?)",
-                ("CORRUPT", "Corrupt Test", "{invalid json")
+                "INSERT INTO issues (id, seat, summary, type, priority, status, depends_on_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                ("CORRUPT", "standard", "Corrupt Test", "issue", 2.0, "ready", "{invalid json")
             )
             await conn.commit()
             

@@ -108,7 +108,7 @@ def perform_first_run_setup():
         from orket.domain.reconciler import StructuralReconciler
         reconciler = StructuralReconciler()
         reconciler.reconcile_all()
-    except Exception as e:
+    except (RuntimeError, ValueError, OSError, ImportError) as e:
         print(f"  [WARN] Structural Reconciliation failed: {e}")
 
     if load_user_settings().get("setup_complete"): return

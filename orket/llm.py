@@ -78,7 +78,7 @@ class LocalModelProvider:
                 print(f"  [WARN] Model connection error on attempt {attempt + 1}. Retrying in {retry_delay}s...")
             except asyncio.CancelledError:
                 raise
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError, KeyError, AttributeError, OSError) as e:
                 # Unexpected errors don't necessarily merit a retry unless specified
                 raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(e)}")
             

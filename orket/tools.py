@@ -66,7 +66,7 @@ class FileSystemTools(BaseTools):
             content = await self.async_fs.read_file(path_str)
             return {"ok": True, "content": content}
         except FileNotFoundError: return {"ok": False, "error": "File not found"}
-        except Exception as e: return {"ok": False, "error": str(e)}
+        except (PermissionError, FileNotFoundError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
 
     async def write_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
@@ -77,7 +77,7 @@ class FileSystemTools(BaseTools):
             async with lock:
                 path = await self.async_fs.write_file(str(resolved), content)
             return {"ok": True, "path": path}
-        except Exception as e: return {"ok": False, "error": str(e)}
+        except (PermissionError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
 
     async def list_directory(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
@@ -85,7 +85,7 @@ class FileSystemTools(BaseTools):
             items = await self.async_fs.list_directory(path_str)
             return {"ok": True, "items": items}
         except FileNotFoundError: return {"ok": False, "error": "Dir not found"}
-        except Exception as e: return {"ok": False, "error": str(e)}
+        except (PermissionError, FileNotFoundError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
 
 class VisionTools(BaseTools):
     def __init__(self, workspace_root: Path, references: List[Path]):
@@ -117,7 +117,7 @@ class VisionTools(BaseTools):
             path.parent.mkdir(parents=True, exist_ok=True)
             image.save(path)
             return {"ok": True, "path": str(path)}
-        except Exception as e: return {"ok": False, "error": str(e)}
+        except (ImportError, OSError, RuntimeError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
 
 class CardManagementTools(BaseTools):
     def __init__(
@@ -237,7 +237,7 @@ class AcademyTools(BaseTools):
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(src, dest)
             return {"ok": True, "path": str(dest)}
-        except Exception as e: return {"ok": False, "error": str(e)}
+        except (OSError, shutil.Error, RuntimeError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
 
     async def promote_prompt(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         seat, content = args.get("seat"), args.get("content")
@@ -247,7 +247,7 @@ class AcademyTools(BaseTools):
         try:
             path = await self.async_fs.write_file(str(relative_dest), content)
             return {"ok": True, "path": path}
-        except Exception as e: return {"ok": False, "error": str(e)}
+        except (PermissionError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
 
 class ToolBox:
     def __init__(
@@ -288,7 +288,7 @@ class ToolBox:
                 return await tool_fn(args, context=context)
             else:
                 return tool_fn(args, context=context)
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
             return {"ok": False, "error": str(e)}
 
     def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:

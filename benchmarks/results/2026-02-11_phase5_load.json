@@ -1,0 +1,49 @@
+{
+  "timestamp_utc": "2026-02-11T03:22:54.690798+00:00",
+  "config": {
+    "webhook_base_url": "http://127.0.0.1:8080",
+    "api_base_url": "http://127.0.0.1:8082",
+    "ws_url": "ws://127.0.0.1:8082/ws/events",
+    "webhook_total": 100,
+    "webhook_concurrency": 25,
+    "api_total": 200,
+    "api_concurrency": 50,
+    "epic_total": 10,
+    "epic_concurrency": 10,
+    "ws_clients": 50
+  },
+  "results": {
+    "webhook": {
+      "samples": 100,
+      "failures": 0,
+      "p50_ms": 19.973,
+      "p95_ms": 42.253,
+      "p99_ms": 51.361,
+      "error_rate_percent": 0.0
+    },
+    "api_heartbeat": {
+      "samples": 200,
+      "failures": 0,
+      "p50_ms": 33.588,
+      "p95_ms": 101.651,
+      "p99_ms": 121.648,
+      "error_rate_percent": 0.0
+    },
+    "parallel_epic_trigger": {
+      "samples": 10,
+      "failures": 0,
+      "p50_ms": 7.958,
+      "p95_ms": 9.361,
+      "p99_ms": 9.361,
+      "error_rate_percent": 0.0
+    },
+    "websocket_connect": {
+      "samples": 50,
+      "failures": 0,
+      "p50_ms": 96.64,
+      "p95_ms": 126.62,
+      "p99_ms": 130.295,
+      "error_rate_percent": 0.0
+    }
+  }
+}

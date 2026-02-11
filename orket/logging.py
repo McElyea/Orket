@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import Any, Dict, List, Callable
+from typing import Any, Dict, List, Callable, Optional
 
 # Initialize system logger
 _logger = logging.getLogger("orket")
@@ -95,7 +95,7 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
     for subscriber in _subscribers:
         try:
             subscriber(record)
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, OSError) as e:
             # Print to stderr but don't crash
             print(f"  [LOGGING] Subscriber failed: {e}")
             pass

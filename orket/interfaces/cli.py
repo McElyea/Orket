@@ -96,7 +96,7 @@ async def run_cli():
 
     except KeyboardInterrupt:
         print("\n[HALT] Interrupted by user.")
-    except Exception as e:
+    except (RuntimeError, ValueError, OSError, TypeError) as e:
         import traceback
         traceback.print_exc()
         print(f"\n[FATAL] {e}")

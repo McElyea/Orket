@@ -3,7 +3,7 @@ import psutil
 import subprocess
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict, Any
 
 @dataclass
 class HardwareProfile:
@@ -25,7 +25,7 @@ def get_vram_info() -> float:
         for line in res.stdout.strip().splitlines():
             total_vram += int(line)
         return total_vram / 1024.0 # Convert to GB
-    except Exception:
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError, ValueError):
         return 0.0
 
 def get_current_profile() -> HardwareProfile:

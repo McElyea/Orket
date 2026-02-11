@@ -97,7 +97,7 @@ class WebhookDatabase:
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_failure_pr_key ON review_failures(pr_key)")
 
             await conn.commit()
-            log_event("webhook_db", "Async database schema initialized", "info")
+            log_event("webhook_db", {"message": "Async database schema initialized"}, level="info")
 
         self._initialized = True
 
@@ -141,7 +141,7 @@ class WebhookDatabase:
             await conn.commit()
 
             new_count = row["cycle_count"]
-            log_event("webhook_db", f"Incremented PR cycle: {pr_key} -> {new_count}", "info")
+            log_event("webhook_db", {"message": f"Incremented PR cycle: {pr_key} -> {new_count}"}, level="info")
             return new_count
 
     async def add_failure_reason(self, repo_full_name: str, pr_number: int, reviewer: str, reason: str):
@@ -158,7 +158,7 @@ class WebhookDatabase:
                 VALUES (?, ?, ?, ?)
             """, (pr_key, cycle_count, reviewer, reason))
             await conn.commit()
-            log_event("webhook_db", f"Recorded failure reason for {pr_key}", "info")
+            log_event("webhook_db", {"message": f"Recorded failure reason for {pr_key}"}, level="info")
 
     async def get_failure_reasons(self, repo_full_name: str, pr_number: int) -> List[Dict[str, Any]]:
         """
@@ -218,7 +218,7 @@ class WebhookDatabase:
                 WHERE pr_key = ?
             """, (status, pr_key))
             await conn.commit()
-            log_event("webhook_db", f"Closed PR cycle: {pr_key} ({status})", "info")
+            log_event("webhook_db", {"message": f"Closed PR cycle: {pr_key} ({status})"}, level="info")
 
     async def log_webhook_event(self, event_type: str, pr_key: Optional[str], payload: str, result: str):
         """

@@ -39,10 +39,12 @@ async def test_execute_epic_completion(orchestrator, mock_cards):
     epic = MagicMock(spec=EpicConfig)
     epic.name = "Test Epic"
     epic.issues = []
+    epic.references = []
     
     mock_cards.get_by_build.return_value = [
         MagicMock(id="I1", status=CardStatus.DONE)
     ]
+    mock_cards.get_independent_ready_issues.return_value = []
     
     # Mocking settings to avoid FileNotFoundError
     with patch("pathlib.Path.read_text", return_value='{"llm": {"provider": "ollama"}}'):

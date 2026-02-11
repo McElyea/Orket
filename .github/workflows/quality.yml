@@ -37,3 +37,66 @@ jobs:
             echo "Found disallowed datetime.now() usage"
             exit 1
           fi
+
+  docker_smoke:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t orket:${{ github.sha }} .
+
+      - name: Start container
+        run: |
+          docker run -d --name orket-smoke -p 8082:8082 orket:${{ github.sha }}
+
+      - name: Probe health endpoint
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8082/health >/dev/null; then
+              echo "Health probe succeeded"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Health probe failed"
+          docker logs orket-smoke || true
+          exit 1
+
+      - name: Cleanup container
+        if: always()
+        run: |
+          docker rm -f orket-smoke || true
+
+  migration_smoke:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run migration smoke
+        run: |
+          python scripts/run_migrations.py --runtime-db .ci/runtime.db --webhook-db .ci/webhook.db
+
+      - name: Validate migration tables
+        run: |
+          python - <<'PY'
+          import sqlite3
+          for db in [".ci/runtime.db", ".ci/webhook.db"]:
+              conn = sqlite3.connect(db)
+              cur = conn.cursor()
+              cur.execute("SELECT COUNT(*) FROM _schema_migrations")
+              count = cur.fetchone()[0]
+              if count < 1:
+                  raise SystemExit(f"No migrations recorded for {db}")
+              conn.close()
+          print("Migration smoke validation passed")
+          PY

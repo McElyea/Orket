@@ -1,29 +1,26 @@
-# Orket Security & Governance (v0.3.8)
+# Orket Security and Governance
 
-This document defines the Vibe Rail integrity model.
+This document defines baseline security and governance requirements.
 
-## Integrity-Based Security
-At Vibe Rail, security is a subset of system integrity. We ensure that every agent turn is traceable and constrained by organizational rules.
+## 1. Credential Boundary
+- Store secrets in `.env`.
+- Keep secrets out of source control.
+- Do not hardcode credentials in runtime code or committed config.
 
-### 1. Environment-Based Credentials
-*   **Environment Management:** All sensitive credentials (passwords, API keys, secret keys) are stored in a local `.env` file.
-*   **Git Guards:** The `.gitignore` policy strictly excludes `.env`, `*.db`, and `user_settings.json` from version control.
+## 2. Filesystem Boundary
+- Runtime file operations stay inside approved workspace boundaries.
+- Path traversal outside approved roots is denied.
+- Write operations are limited to authorized output locations.
 
-### 2. Hardware & Path Sandboxing
-The refactored `FileSystemTools` enforces strict workspace boundaries:
-*   **Access Control:** Agents are strictly forbidden from traversing outside the `workspace/` and approved `references/` domains.
-*   **Write Restriction:** Write operations are limited exclusively to the active workspace.
-*   **Hardware Awareness:** Vision tools detect hardware capabilities (CUDA) to prevent system crashes on non-GPU environments.
+## 3. State and Governance Boundary
+- State transitions must pass state machine rules.
+- Tool calls must pass tool-gate validation before execution.
+- Governance violations block progression.
 
-### 3. LLM Resiliency & Error Handling
-*   **Exponential Backoff:** The `LocalModelProvider` implements retry logic for transient connection or timeout errors, preventing partial execution failures.
-*   **Bubbling Errors:** We no longer swallow exceptions as model text. Critical failures (timeouts, connection drops) are raised as specific `OrketError` types for the orchestrator to handle.
+## 4. Reliability Boundary
+- Runtime exceptions must be explicit and typed where possible.
+- Failures should be surfaced with actionable error context.
 
-### 4. Prompt Injection Hardening
-The `PromptCompiler` service acts as a grammar-level sandbox. By separating **Intent (Role)** from **Syntax (Dialect)**, we ensure that an agent's identity and constraints are injected at compile-time and cannot be overridden by user or model input.
-
-### 5. Code Review Gate
-No Card can move to `Done` without entering the `CODE_REVIEW` state. This creates a "Logical Freezer" that prevents unverified code from being considered functional.
-
-## Audit Trails
-The `NoteStore` and root `orket.log` provide a high-fidelity audit trail of exactly who (Seat), said what (Prompt), and did what (Tool Call) during every session.
+## 5. Auditability
+- Session activity and runtime actions must be observable through logs and datastore records.
+- Operational run procedures are maintained in `docs/RUNBOOK.md`.

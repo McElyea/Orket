@@ -27,7 +27,7 @@ from orket.domain.bug_fix_phase import BugFixPhaseManager
 from orket.services.webhook_db import WebhookDatabase
 from orket.domain.sandbox import SandboxRegistry, SandboxStatus
 from orket.services.prompt_compiler import PromptCompiler
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 # ---------------------------------------------------------------------------
 # 1. Configuration & Asset Loading (Application Service)
@@ -79,7 +79,7 @@ class ConfigLoader:
                 info = json.loads(await self._read_text(info_path))
                 arch = json.loads(await self._read_text(arch_path))
                 org_data = {**info, **arch}
-            except Exception as e:
+            except (json.JSONDecodeError, OSError, TypeError, ValueError) as e:
                 log_event("config_error", {"error": f"Failed to load modular config: {e}"})
 
         # 2. Key Fallback: Monolith (Legacy)
@@ -93,7 +93,7 @@ class ConfigLoader:
                     try:
                         org_data = json.loads(await self._read_text(p))
                         break
-                    except Exception:
+                    except (json.JSONDecodeError, OSError, TypeError, ValueError):
                         continue
         
         if not org_data:
@@ -102,7 +102,7 @@ class ConfigLoader:
         # Validate
         try:
             org = OrganizationConfig.model_validate(org_data)
-        except Exception as e:
+        except (ValidationError, ValueError, TypeError) as e:
             # Fallback or strict fail? Strict fail for now but log it.
             print(f"[CONFIG] Validation failed: {e}")
             return None

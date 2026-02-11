@@ -34,7 +34,7 @@ def load_user_settings() -> Dict[str, Any]:
             with SETTINGS_FILE.open("r", encoding="utf-8") as f:
                 _SETTINGS_CACHE = json.load(f)
                 return _SETTINGS_CACHE
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             return {}
     return {}
 

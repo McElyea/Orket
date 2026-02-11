@@ -188,7 +188,7 @@ class TurnExecutor:
             )
             return TurnResult.failed(str(e), should_retry=True)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as e:
             # Unexpected error - log with traceback and don't retry
             import traceback
             log_event(
@@ -362,7 +362,7 @@ class TurnExecutor:
                         f"Tool {tool_call.tool} failed: {result.get('error')}"
                     )
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as e:
                 tool_call.error = str(e)
                 violations.append(f"Tool {tool_call.tool} error: {e}")
 

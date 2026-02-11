@@ -387,7 +387,7 @@ Why did this fail even with guidance?
             print(f"   API: {sandbox.api_url}")
             print(f"   Frontend: {sandbox.frontend_url}")
 
-        except Exception as e:
+        except (RuntimeError, ValueError, OSError, httpx.HTTPError) as e:
             log_event("sandbox_deployment_failed", {
                 "repo": repo_full_name,
                 "pr": pr_number,

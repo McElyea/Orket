@@ -100,7 +100,7 @@ class SandboxOrchestrator:
             sandbox.status = SandboxStatus.RUNNING
             sandbox.deployed_at = datetime.now(UTC).isoformat()
             log_event("sandbox_deployed", {"sandbox_id": sandbox_id}, Path(workspace_path))
-        except Exception as e:
+        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
             sandbox.status = SandboxStatus.UNHEALTHY
             sandbox.last_error = str(e)
             log_event("sandbox_deploy_failed", {
@@ -154,7 +154,7 @@ class SandboxOrchestrator:
 
             log_event("sandbox_deleted", {"sandbox_id": sandbox_id}, Path(sandbox.workspace_path))
 
-        except Exception as e:
+        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
             sandbox.last_error = str(e)
             log_event("sandbox_delete_failed", {
                 "sandbox_id": sandbox_id,
@@ -207,7 +207,7 @@ class SandboxOrchestrator:
             sandbox.last_health_check = datetime.now(UTC).isoformat()
             return all_running
 
-        except Exception as e:
+        except (RuntimeError, ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError) as e:
             sandbox.health_checks_failed += 1
             sandbox.last_error = str(e)
             sandbox.last_health_check = datetime.now(UTC).isoformat()
