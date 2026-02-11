@@ -1,49 +1,104 @@
-# Orket Architecture: Loop & Governance
+# Orket Runtime Architecture
 
-This document defines the mechanical operation of the Orket execution engine.
+This document describes the current folder architecture, dependency direction rules, and decision-node override wiring used in the runtime.
 
----
+## 1. Folder Architecture
 
-## 1. Structural Enforcement
+`orket/` is organized by stable runtime layers plus volatile decision seams:
 
-Orket uses structural rules to manage workflow complexity.
+1. `orket/domain/`
+- Core business vocabulary and mechanical rules.
+- Examples: state transitions, verification behavior, failure reporting.
 
-### The Complexity Gate
-The engine enforces a component structure based on the quantity of work:
-*   **Issues <= 7:** "Flat" structure allowed (simple list of issues).
-*   **Issues > 7:** Mandatory structural decomposition (Managers, Engines, Accessors).
+2. `orket/infrastructure/`
+- External adapters and persistence mechanisms.
+- Examples: async SQLite repositories, async file I/O.
 
-### Card Separation
-Work units (Cards) are decomposed into specialized models:
-*   **Metrics:** Tracking scores and completion thresholds.
-*   **Verification:** Defining fixture paths and test scenarios.
+3. `orket/services/`
+- Application services that coordinate domain + infrastructure.
+- Examples: `ToolGate`, `PromptCompiler`, sandbox orchestration.
 
----
+4. `orket/orchestration/`
+- Stable orchestration flow and execution lifecycle.
+- Owns loop structure, retries, checkpointing, and session execution.
 
-## 2. Prompt Compilation
+5. `orket/decision_nodes/`
+- Volatile behavior seams behind contracts.
+- Current built-in node families:
+  - planner
+  - router
+  - prompt strategy
+  - evaluator
+  - tool strategy
 
-The `PromptCompiler` assembles system instructions at runtime by merging three vectors:
-1.  **Intent:** The persona and toolset defined in `roles/*.json`.
-2.  **Syntax:** The model-specific formatting rules defined in `dialects/*.json`.
-3.  **Context:** The current organizational ethos and design rules.
+6. `orket/interfaces/`
+- System edges (HTTP/API, CLI).
+- Framework-specific integration only.
 
----
+7. `orket/tools.py`
+- Tool families (`FileSystemTools`, `CardManagementTools`, etc.).
+- Uses:
+  - stable invocation runtime seam (`ToolRuntimeExecutor`)
+  - volatile mapping seam (`ToolStrategyNode`)
 
-## 3. Data Persistence
+## 2. Dependency Direction Rules
 
-Orket utilizes an asynchronous repository pattern for all state management:
-*   **AsyncCardRepository:** Manages card states, comments, and transactions using `aiosqlite`.
-*   **WebhookDatabase:** Tracks PR review cycles and event history.
-*   **FileSystem:** All file operations are non-blocking and path-validated.
+Dependencies must point inward to stable contracts.
 
----
+Allowed direction:
+1. `interfaces -> orchestration/services/decision_nodes`
+2. `orchestration -> domain/services/infrastructure/decision_nodes`
+3. `services -> domain/infrastructure`
+4. `decision_nodes -> decision_nodes.contracts + domain vocabulary`
+5. `infrastructure -> standard libs + external libraries`
 
-## 4. State Machine (Lifecycle Enforcement)
+Disallowed direction:
+1. `domain -> orchestration`
+2. `domain -> interfaces`
+3. `domain -> framework/runtime glue`
+4. `decision_nodes -> interfaces`
 
-All work units follow a enforced lifecycle:
-`Ready` -> `In Progress` -> `Ready_For_Testing` -> `Code_Review` -> `Done`.
+Rule of thumb:
+1. Stable layers own workflow mechanics.
+2. Decision nodes own change-prone choices.
+3. Swapping a decision node must not require changing the orchestration loop shape.
 
-### Governance Gates
-*   **WaitReason**: Transitions to `BLOCKED` require an explicit reason (`RESOURCE`, `DEPENDENCY`, `REVIEW`, `INPUT`).
-*   **Integrity Guard**: Transitions to `DONE` are restricted to specific system roles.
-*   **Boundary Enforcement**: Tool calls that attempt to write outside of the `agent_output/` directory result in immediate card blockage and a policy violation report.
+## 3. Decision Node Overrides
+
+Node selection resolves from organization process rules and can be locally overridden by environment variables where implemented.
+
+### Organization process rules example
+
+```json
+{
+  "process_rules": {
+    "planner_node": "default",
+    "router_node": "default",
+    "prompt_strategy_node": "default",
+    "evaluator_node": "default",
+    "tool_strategy_node": "default"
+  }
+}
+```
+
+### Tool strategy environment override
+
+`ToolStrategyNode` can be overridden via:
+
+1. `process_rules.tool_strategy_node`
+2. `ORKET_TOOL_STRATEGY_NODE` (wins over `process_rules`)
+
+Example:
+
+```powershell
+$env:ORKET_TOOL_STRATEGY_NODE="default"
+python -m pytest tests/test_toolbox_refactor.py -q
+```
+
+### Runtime behavior
+
+1. `DecisionNodeRegistry.resolve_tool_strategy()` selects the node.
+2. `ToolBox` composes tool map through the selected node.
+3. `ToolRuntimeExecutor` performs invocation mechanics (sync/async call handling + error normalization).
+
+This keeps orchestration and tool execution stable while allowing targeted volatility in strategy selection.

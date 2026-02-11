@@ -15,27 +15,9 @@ The prior release gate is complete:
 - Stable runtime invocation seam (`ToolRuntimeExecutor`).
 - Tool strategy decision node with `process_rules` + `ORKET_TOOL_STRATEGY_NODE` override.
 - Default mapping parity validated with contract/parity tests.
-
-## Phase F: Architecture Completion
-
-Goal: finish dogfooding the architecture by reducing volatile behavior remaining in orchestration and runtime seams.
-
-Planning decisions (locked for this phase):
-1. Current runtime behavior remains the default baseline (no attempt to force "plugin purity" upfront).
-2. First decomposition target is `tools.py`.
-3. Plugin resolution supports config + environment override.
-4. Controlled behavior changes are allowed during extraction when explicitly documented and tested.
-5. Keep a monorepo structure (no repo split in this phase).
-6. Contract tests + parity tests are required before enabling non-default nodes.
-
-Working assumptions (can be revised):
-1. Ownership model: shared ownership for now; revisit when stable node families emerge.
-2. Completion artifact: roadmap milestones + target folder architecture + dependency rules.
-
-Remaining milestones:
-1. Documentation:
-- Publish folder architecture and dependency direction rules in `docs/`.
-- Document config + env override examples.
+7. Architecture documentation published:
+- `docs/ARCHITECTURE.md` now defines folder architecture and dependency direction rules.
+- Decision-node override examples documented, including `tool_strategy_node` + `ORKET_TOOL_STRATEGY_NODE`.
 
 ## Phase G: Operational Tightening
 
