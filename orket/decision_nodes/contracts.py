@@ -72,6 +72,24 @@ class ApiRuntimeStrategyNode(Protocol):
     def create_session_id(self) -> str:
         ...
 
+    def normalize_metrics(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+        ...
+
+    def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
+        ...
+
+    def include_explorer_entry(self, entry_name: str) -> bool:
+        ...
+
+    def sort_explorer_items(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        ...
+
+    def resolve_preview_target(self, path: str, issue_id: str | None) -> Dict[str, str]:
+        ...
+
+    def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
+        ...
+
 
 class SandboxPolicyNode(Protocol):
     """Decision node: sandbox lifecycle policy choices."""

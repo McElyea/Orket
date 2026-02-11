@@ -133,6 +133,59 @@ class DefaultApiRuntimeStrategyNode:
     def create_session_id(self) -> str:
         return str(uuid.uuid4())[:8]
 
+    def normalize_metrics(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = dict(snapshot)
+        if "cpu" not in normalized and "cpu_percent" in normalized:
+            normalized["cpu"] = normalized["cpu_percent"]
+        if "memory" not in normalized and "ram_percent" in normalized:
+            normalized["memory"] = normalized["ram_percent"]
+        return normalized
+
+    def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
+        candidate_path = path or "."
+        if any(part == ".." for part in Path(candidate_path).parts):
+            return None
+        rel_path = candidate_path.strip("./") if candidate_path != "." else ""
+        target = (project_root / rel_path).resolve()
+        if not target.is_relative_to(project_root):
+            return None
+        return target
+
+    def include_explorer_entry(self, entry_name: str) -> bool:
+        if entry_name.startswith("."):
+            return False
+        if "__pycache__" in entry_name:
+            return False
+        if entry_name == "node_modules":
+            return False
+        return True
+
+    def sort_explorer_items(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        return sorted(items, key=lambda item: (not item["is_dir"], item["name"].lower()))
+
+    def resolve_preview_target(self, path: str, issue_id: str | None) -> Dict[str, str]:
+        resolved_path = Path(path)
+        asset_name = resolved_path.stem
+        department = "core"
+        if "model" in resolved_path.parts:
+            model_index = resolved_path.parts.index("model")
+            if len(resolved_path.parts) > model_index + 1:
+                department = resolved_path.parts[model_index + 1]
+
+        mode = "epic"
+        if issue_id:
+            mode = "issue"
+        elif "rocks" in resolved_path.parts:
+            mode = "rock"
+
+        return {"mode": mode, "asset_name": asset_name, "department": department}
+
+    def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
+        workspace = project_root / "workspace" / "runs" / session_id
+        if workspace.exists():
+            return workspace
+        return project_root / "workspace" / "default"
+
 
 class DefaultSandboxPolicyNode:
     """

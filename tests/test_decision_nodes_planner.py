@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from pathlib import Path
 
 from orket.decision_nodes.builtins import (
     DefaultApiRuntimeStrategyNode,
@@ -315,6 +316,30 @@ def test_default_api_runtime_strategy_parity():
     assert node.resolve_asset_id(path=None, issue_id="ISSUE-1") == "ISSUE-1"
     assert node.resolve_asset_id(path=None, issue_id=None) is None
     assert len(node.create_session_id()) == 8
+    assert node.normalize_metrics({"cpu_percent": 12, "ram_percent": 34}) == {
+        "cpu_percent": 12,
+        "ram_percent": 34,
+        "cpu": 12,
+        "memory": 34,
+    }
+    assert node.resolve_explorer_path(Path("/tmp/root"), "../../evil") is None
+    assert node.include_explorer_entry(".git") is False
+    assert node.include_explorer_entry("node_modules") is False
+    assert node.include_explorer_entry("app.py") is True
+    assert node.sort_explorer_items(
+        [{"name": "z.txt", "is_dir": False}, {"name": "A", "is_dir": True}]
+    ) == [{"name": "A", "is_dir": True}, {"name": "z.txt", "is_dir": False}]
+    assert node.resolve_preview_target("model/core/rocks/demo.json", None) == {
+        "mode": "rock",
+        "asset_name": "demo",
+        "department": "core",
+    }
+    assert node.resolve_preview_target("model/product/epics/my_epic.json", "ISSUE-1") == {
+        "mode": "issue",
+        "asset_name": "my_epic",
+        "department": "product",
+    }
+    assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
 
 
 def test_registry_resolves_custom_api_runtime_from_process_rules(monkeypatch):

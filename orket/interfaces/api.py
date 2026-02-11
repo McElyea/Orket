@@ -120,29 +120,23 @@ async def heartbeat():
 
 @v1_router.get("/system/metrics")
 async def get_metrics():
-    snapshot = get_metrics_snapshot()
-    if "cpu" not in snapshot and "cpu_percent" in snapshot:
-        snapshot["cpu"] = snapshot["cpu_percent"]
-    if "memory" not in snapshot and "ram_percent" in snapshot:
-        snapshot["memory"] = snapshot["ram_percent"]
-    return snapshot
+    return api_runtime_node.normalize_metrics(get_metrics_snapshot())
 
 @v1_router.get("/system/explorer")
 async def list_system_files(path: str = "."):
-    if any(part == ".." for part in Path(path).parts):
+    target = api_runtime_node.resolve_explorer_path(PROJECT_ROOT, path)
+    if target is None:
         raise HTTPException(403)
-    rel_path = path.strip("./") if path and path != "." else ""
-    target = (PROJECT_ROOT / rel_path).resolve()
-    if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
-    if not target.exists(): return {"items": [], "path": path}
+    if not target.exists():
+        return {"items": [], "path": path}
     
     items = []
     for p in target.iterdir():
-        if p.name.startswith(".") or "__pycache__" in p.name or p.name == "node_modules": continue
+        if not api_runtime_node.include_explorer_entry(p.name):
+            continue
         is_dir = p.is_dir()
         items.append({"name": p.name, "is_dir": is_dir, "ext": p.suffix})
-    items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
-    return {"items": items, "path": path}
+    return {"items": api_runtime_node.sort_explorer_items(items), "path": path}
 
 @v1_router.get("/system/read")
 async def read_system_file(path: str):
@@ -192,8 +186,7 @@ async def list_runs(): return await engine.sessions.get_recent_runs()
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
     from orket.logging import get_member_metrics
-    workspace = PROJECT_ROOT / "workspace" / "runs" / session_id
-    if not workspace.exists(): workspace = PROJECT_ROOT / "workspace" / "default"
+    workspace = api_runtime_node.resolve_member_metrics_workspace(PROJECT_ROOT, session_id)
     return get_member_metrics(workspace)
 
 @v1_router.get("/runs/{session_id}/backlog")
@@ -233,16 +226,14 @@ async def get_system_board(dept: str = "core"):
 @v1_router.get("/system/preview-asset")
 async def preview_asset(path: str, issue_id: Optional[str] = None):
     from orket.preview import PreviewBuilder
-    p = Path(path)
-    asset_name = p.stem
-    dept = "core"
-    if "model" in p.parts:
-        idx = p.parts.index("model")
-        if len(p.parts) > idx + 1: dept = p.parts[idx+1]
+    target = api_runtime_node.resolve_preview_target(path, issue_id)
     builder = PreviewBuilder(PROJECT_ROOT / "model")
-    if issue_id: res = await builder.build_issue_preview(issue_id, asset_name, dept)
-    elif "rocks" in str(p): res = await builder.build_rock_preview(asset_name, dept)
-    else: res = await builder.build_epic_preview(asset_name, dept)
+    if target["mode"] == "issue":
+        res = await builder.build_issue_preview(issue_id, target["asset_name"], target["department"])
+    elif target["mode"] == "rock":
+        res = await builder.build_rock_preview(target["asset_name"], target["department"])
+    else:
+        res = await builder.build_epic_preview(target["asset_name"], target["department"])
     return res
 
 @v1_router.post("/system/chat-driver")
