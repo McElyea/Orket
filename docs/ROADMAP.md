@@ -332,11 +332,22 @@ Before claiming production-ready:
 - Zero bare `except:` or overly broad `except Exception`
 - Sub-second API response times under load
 
+**Status**: [> ] IN PROGRESS.
+- Current collected tests: 122 (target: 150+)
+- Broad `except Exception` in `orket/`: 36 (target: 0)
+- CI quality gate exists; full-suite coverage gate remains blocked by existing unstable tests outside Phase 6 changes.
+
 ### 6.2 Deliverables
 - Production Dockerfile with health checks
 - Migration scripts for database schema changes
 - Runbook for common operational scenarios
 - Security audit report (internal or external)
+
+**Status**: [> ] MOSTLY DONE.
+- [x] Production Dockerfile with `/health` probe
+- [x] Migration runner and SQL migrations (`scripts/run_migrations.py`, `scripts/migrations/*.sql`)
+- [x] Operational runbook (`docs/RUNBOOK.md`)
+- [x] Internal security audit report (`docs/SECURITY_AUDIT_2026-02-11.md`)
 
 ---
 

@@ -355,6 +355,13 @@ class Orchestrator:
             transcript=self.transcript,
             roles=roles
         )
+
+        # Mechanical governance violations are terminal for the issue.
+        if result.violations:
+            await self.async_cards.update_status(issue.id, CardStatus.BLOCKED)
+            issue.status = CardStatus.BLOCKED
+            await self.async_cards.save(issue.model_dump())
+            raise GovernanceViolation(f"iDesign Violation: {result.error}")
         
         issue.retry_count += 1
         
@@ -371,7 +378,9 @@ class Orchestrator:
             from orket.state import runtime_state
             task = await runtime_state.get_task(run_id)
             if task:
-                task.cancel()
+                cancel_result = task.cancel()
+                if asyncio.iscoroutine(cancel_result):
+                    await cancel_result
                 
             raise CatastrophicFailure(
                 f"MAX RETRIES EXCEEDED for {issue.id}. "
@@ -388,7 +397,5 @@ class Orchestrator:
         
         await self.async_cards.update_status(issue.id, CardStatus.READY)
         await self.async_cards.save(issue.model_dump())
-        
-        if result.violations:
-            raise GovernanceViolation(f"iDesign Violation: {result.error}")
+
         raise ExecutionFailed(f"Orchestration Turn Failed (Retry {issue.retry_count}/{issue.max_retries}): {result.error}")

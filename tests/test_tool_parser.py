@@ -26,7 +26,7 @@ def test_parse_openai_format():
     assert results[0]["args"]["path"] == "out.py"
 
 def test_parse_openai_string_arguments():
-    text = '{"name": "write_file", "arguments": "{"path": "out.py"}"}'
+    text = '{"name": "write_file", "arguments": "{\\"path\\": \\"out.py\\"}"}'
     results = ToolParser.parse(text)
     assert len(results) == 1
     assert results[0]["tool"] == "write_file"
@@ -65,9 +65,9 @@ def test_parse_malformed_json_recovery():
     assert results[0]["tool"] == "good"
 
 def test_parse_legacy_dsl_fallback():
-    text = 'TOOL: write_file
+    text = """TOOL: write_file
 PATH: script.py
-CONTENT: print("hello")'
+CONTENT: print("hello")"""
     results = ToolParser.parse(text)
     assert len(results) == 1
     assert results[0]["tool"] == "write_file"
@@ -75,9 +75,9 @@ CONTENT: print("hello")'
     assert results[0]["args"]["content"] == 'print("hello")'
 
 def test_parse_legacy_dsl_shorthand():
-    text = '[create_issue]
+    text = """[create_issue]
 PATH: task.txt
-CONTENT: New task'
+CONTENT: New task"""
     results = ToolParser.parse(text)
     assert len(results) == 1
     assert results[0]["tool"] == "create_issue"
