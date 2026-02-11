@@ -70,13 +70,16 @@ The prior release gate is complete:
 20. Roadmap metrics drift gate added:
 - Script: `scripts/check_roadmap_metrics.py`.
 - CI quality job enforces roadmap pass/collect counters against live pytest output.
+21. CI architecture fast-path added:
+- New `architecture_gates` job runs before `quality`.
+- Fast gate enforces dependency direction and quick roadmap metric validation.
 
-## Phase M: Volatility Decomposition (Next)
+## Phase N: Volatility Decomposition (Next)
 
 Goal: keep reducing monolithic hotspots while preserving behavior parity.
 
 1. Extract orchestration execution-loop policy seams from `orket/orchestration/orchestrator.py` into focused decision/runtime nodes.
-2. Add CI fast-path for architecture gates (`dependency_direction`, `roadmap_metrics`) to run before full test matrix.
+2. Add architecture coverage tests for orchestrator seam overrides in at least one end-to-end execution scenario.
 
 ## Working Model
 

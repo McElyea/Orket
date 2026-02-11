@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import argparse
 from pathlib import Path
 
 
@@ -36,14 +37,24 @@ def _extract_actual_collected(collect_output: str) -> int:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Check ROADMAP pytest metrics against live pytest output.")
+    parser.add_argument(
+        "--quick",
+        action="store_true",
+        help="Only validate collected count (fast mode for CI pre-gates).",
+    )
+    args = parser.parse_args()
+
     roadmap_text = ROADMAP_PATH.read_text(encoding="utf-8")
     expected_passed, expected_collected = _extract_expected_metrics(roadmap_text)
 
-    actual_passed = _extract_actual_passed(_run(["python", "-m", "pytest", "tests/", "-q"]))
     actual_collected = _extract_actual_collected(_run(["python", "-m", "pytest", "--collect-only", "-q"]))
+    actual_passed = expected_passed
+    if not args.quick:
+        actual_passed = _extract_actual_passed(_run(["python", "-m", "pytest", "tests/", "-q"]))
 
     failures = []
-    if expected_passed != actual_passed:
+    if not args.quick and expected_passed != actual_passed:
         failures.append(f"ROADMAP passed mismatch: expected {expected_passed}, actual {actual_passed}")
     if expected_collected != actual_collected:
         failures.append(f"ROADMAP collected mismatch: expected {expected_collected}, actual {actual_collected}")
