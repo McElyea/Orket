@@ -44,12 +44,17 @@ The prior release gate is complete:
 - Supports `process_rules` + env overrides:
   - `ORKET_LOADER_STRATEGY_NODE`
   - `ORKET_EXECUTION_RUNTIME_NODE`
+14. Tools package decomposition completed:
+- Extracted stable runtime invocation to `orket/tool_runtime/runtime.py`.
+- Extracted default tool-map composition to `orket/tool_strategy/default.py`.
+- Preserved existing decision-node API (`DefaultToolStrategyNode`) by delegating to new module.
 
-## Phase I: Volatility Decomposition (Next)
+## Phase J: Volatility Decomposition (Next)
 
-Goal: continue extracting high-churn seams identified by churn evidence.
+Goal: keep reducing monolithic hotspots while preserving behavior parity.
 
-1. Extract `orket/tools.py` family registration/composition into dedicated package modules (`tool_runtime/`, `tool_strategy/`) while preserving current decision-node API.
+1. Extract remaining high-churn seams from `orket/orket.py` `ExecutionPipeline` wiring and subordinate pipeline spawn policy.
+2. Add explicit dependency-direction checks (lint/script gate) aligned to `docs/ARCHITECTURE.md`.
 
 ## Working Model
 
