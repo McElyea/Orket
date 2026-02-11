@@ -8,6 +8,7 @@ from orket.decision_nodes.builtins import (
     DefaultExecutionRuntimeStrategyNode,
     DefaultEvaluatorNode,
     DefaultLoaderStrategyNode,
+    DefaultModelClientPolicyNode,
     DefaultOrchestrationLoopPolicyNode,
     DefaultPipelineWiringStrategyNode,
     DefaultPlannerNode,
@@ -21,6 +22,7 @@ from orket.decision_nodes.contracts import (
     EngineRuntimePolicyNode,
     ExecutionRuntimeStrategyNode,
     LoaderStrategyNode,
+    ModelClientPolicyNode,
     OrchestrationLoopPolicyNode,
     PipelineWiringStrategyNode,
     PlannerNode,
@@ -65,6 +67,9 @@ class DecisionNodeRegistry:
         self._orchestration_loop_nodes: Dict[str, OrchestrationLoopPolicyNode] = {
             "default": DefaultOrchestrationLoopPolicyNode()
         }
+        self._model_client_nodes: Dict[str, ModelClientPolicyNode] = {
+            "default": DefaultModelClientPolicyNode()
+        }
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -101,6 +106,9 @@ class DecisionNodeRegistry:
 
     def register_orchestration_loop(self, name: str, node: OrchestrationLoopPolicyNode) -> None:
         self._orchestration_loop_nodes[name] = node
+
+    def register_model_client(self, name: str, node: ModelClientPolicyNode) -> None:
+        self._model_client_nodes[name] = node
 
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
@@ -223,4 +231,18 @@ class DecisionNodeRegistry:
         return self._orchestration_loop_nodes.get(
             loop_policy_name,
             self._orchestration_loop_nodes["default"],
+        )
+
+    def resolve_model_client(self, organization: Any = None) -> ModelClientPolicyNode:
+        model_client_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            model_client_name = organization.process_rules.get("model_client_node", "default")
+
+        env_override = get_setting("ORKET_MODEL_CLIENT_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            model_client_name = env_override.strip()
+
+        return self._model_client_nodes.get(
+            model_client_name,
+            self._model_client_nodes["default"],
         )

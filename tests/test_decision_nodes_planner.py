@@ -556,3 +556,25 @@ def test_registry_orchestration_loop_env_override_wins(monkeypatch):
     registry.register_orchestration_loop("custom-loop", custom)
     org = SimpleNamespace(process_rules={"orchestration_loop_node": "default"})
     assert registry.resolve_orchestration_loop(org) is custom
+
+
+def test_registry_resolves_default_model_client_policy():
+    registry = DecisionNodeRegistry()
+    from orket.decision_nodes.builtins import DefaultModelClientPolicyNode
+    assert isinstance(registry.resolve_model_client(), DefaultModelClientPolicyNode)
+
+
+def test_registry_model_client_env_override_wins(monkeypatch):
+    class CustomModelClient:
+        def create_provider(self, selected_model, env):
+            return object()
+
+        def create_client(self, provider):
+            return object()
+
+    monkeypatch.setenv("ORKET_MODEL_CLIENT_NODE", "custom-model-client")
+    registry = DecisionNodeRegistry()
+    custom = CustomModelClient()
+    registry.register_model_client("custom-model-client", custom)
+    org = SimpleNamespace(process_rules={"model_client_node": "default"})
+    assert registry.resolve_model_client(org) is custom

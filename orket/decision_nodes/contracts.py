@@ -177,3 +177,13 @@ class OrchestrationLoopPolicyNode(Protocol):
 
     def is_backlog_done(self, backlog: List[Any]) -> bool:
         ...
+
+
+class ModelClientPolicyNode(Protocol):
+    """Decision node: model provider/client construction policy."""
+
+    def create_provider(self, selected_model: str, env: Any) -> Any:
+        ...
+
+    def create_client(self, provider: Any) -> Any:
+        ...

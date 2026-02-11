@@ -22,18 +22,10 @@ from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.services.prompt_compiler import PromptCompiler
 from orket.services.tool_gate import ToolGate
 from orket.tools import ToolBox, get_tool_map
-from orket.llm import LocalModelProvider
 from orket.logging import log_event
 from orket.exceptions import ExecutionFailed, GovernanceViolation
 from orket.domain.state_machine import StateMachine
 from orket.utils import sanitize_name
-
-class AsyncModelClient:
-    """Async wrapper for model providers."""
-    def __init__(self, provider):
-        self.provider = provider
-    async def complete(self, messages):
-        return await self.provider.complete(messages)
 
 class Orchestrator:
     """
@@ -80,6 +72,7 @@ class Orchestrator:
         self.router_node = self.decision_nodes.resolve_router(self.org)
         self.evaluator_node = self.decision_nodes.resolve_evaluator(self.org)
         self.loop_policy_node = self.decision_nodes.resolve_orchestration_loop(self.org)
+        self.model_client_node = self.decision_nodes.resolve_model_client(self.org)
 
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
@@ -270,8 +263,8 @@ class Orchestrator:
         dialect_name = prompt_strategy_node.select_dialect(selected_model)
         dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
         
-        provider = LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
-        client = AsyncModelClient(provider)
+        provider = self.model_client_node.create_provider(selected_model, env)
+        client = self.model_client_node.create_client(provider)
 
         # Compile Prompt
         skill = SkillConfig(

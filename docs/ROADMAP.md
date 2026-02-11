@@ -6,8 +6,8 @@ Architecture authority: `docs/OrketArchitectureModel.md`.
 ## Current State
 
 The prior release gate is complete:
-1. `python -m pytest tests/ -q` -> 201 passed.
-2. `python -m pytest --collect-only -q` -> 201 collected.
+1. `python -m pytest tests/ -q` -> 204 passed.
+2. `python -m pytest --collect-only -q` -> 204 collected.
 3. `rg -n "except Exception" orket` -> 0 matches.
 4. Load artifact archived: `benchmarks/results/2026-02-11_phase5_load.json`.
 5. CI includes `quality`, `docker_smoke`, and `migration_smoke` jobs.
@@ -81,12 +81,22 @@ The prior release gate is complete:
 - Added runtime seam coverage in `tests/test_orchestrator_epic.py` for custom loop policy override behavior.
 24. Runtime shim compatibility coverage added:
 - Added `tests/test_runtime_shim_compat.py` to enforce `orket/orket.py` export parity with `orket.runtime`.
+25. Orchestrator model-client seam extracted:
+- Added `ModelClientPolicyNode` with default implementation.
+- `Orchestrator` now resolves provider/client construction via node policy.
+- Supports `process_rules.model_client_node` + `ORKET_MODEL_CLIENT_NODE`.
+26. Orchestrator model-client override coverage added:
+- Added execution-path coverage in `tests/test_orchestrator_epic.py` to verify custom `model_client_node` is used.
+27. Tool family class extraction started with compatibility exports:
+- Added `orket/tool_families/` package (`base`, `filesystem`, `vision`, `cards`, `academy`).
+- `orket/tools.py` now composes `ToolBox` over extracted families and re-exports legacy class names.
 
-## Phase O: Volatility Decomposition (Next)
+## Phase P: Volatility Decomposition (Next)
 
 Goal: keep reducing monolithic hotspots while preserving behavior parity.
 
-1. Extract model-provider/client selection seam from `orket/orchestration/orchestrator.py` into decision/runtime node.
+1. Add end-to-end override test for extracted tool-family composition path (custom `tool_strategy_node` through real orchestration turn).
+2. Begin splitting `orchestrator.py` execution-turn preparation into focused seams (context assembly vs execution dispatch).
 
 ## Working Model
 

@@ -1,256 +1,17 @@
-import json
-import os
-import shutil
-import asyncio
-from datetime import datetime, UTC
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, Dict, Any, Callable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.settings import get_setting
+from orket.tool_families import AcademyTools, BaseTools, CardManagementTools, FileSystemTools, VisionTools
 from orket.tool_runtime import ToolRuntimeExecutor
 
 if TYPE_CHECKING:
     from orket.infrastructure.async_card_repository import AsyncCardRepository
-    from orket.services.tool_gate import ToolGate
     from orket.schema import OrganizationConfig
+    from orket.services.tool_gate import ToolGate
 
-class BaseTools:
-    def __init__(self, workspace_root: Path, references: List[Path]):
-        self.workspace_root = workspace_root
-        self.references = references
-
-    def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
-        """
-        Resolve and validate a file path against security policy.
-        """
-        from orket.domain.verification import AGENT_OUTPUT_DIR, VERIFICATION_DIR
-        
-        p = Path(path_str)
-        if not p.is_absolute():
-            p = self.workspace_root / p
-
-        resolved = p.resolve()
-        workspace_resolved = self.workspace_root.resolve()
-
-        # Check if within workspace
-        in_workspace = resolved.is_relative_to(workspace_resolved)
-        in_references = any(resolved.is_relative_to(r.resolve()) for r in self.references)
-
-        if not (in_workspace or in_references):
-            raise PermissionError(f"Access to path '{path_str}' is denied by security policy.")
-
-        if write:
-            # We enforce workspace boundaries. 
-            # Architectural governance is handled by ToolGate.
-            if not in_workspace:
-                raise PermissionError(f"Write access to path '{path_str}' is denied.")
-
-        return resolved
-
-class FileSystemTools(BaseTools):
-    _path_locks: dict[str, asyncio.Lock] = {}
-
-    def __init__(self, workspace_root: Path, references: List[Path]):
-        super().__init__(workspace_root, references)
-        from orket.infrastructure.async_file_tools import AsyncFileTools
-        self.async_fs = AsyncFileTools(workspace_root, references)
-
-    @classmethod
-    def _get_path_lock(cls, resolved_path: Path) -> asyncio.Lock:
-        key = str(resolved_path)
-        if key not in cls._path_locks:
-            cls._path_locks[key] = asyncio.Lock()
-        return cls._path_locks[key]
-
-    async def read_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        try:
-            path_str = args.get("path")
-            content = await self.async_fs.read_file(path_str)
-            return {"ok": True, "content": content}
-        except FileNotFoundError: return {"ok": False, "error": "File not found"}
-        except (PermissionError, FileNotFoundError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
-
-    async def write_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        try:
-            path_str = args.get("path")
-            content = args.get("content")
-            resolved = self.async_fs._resolve_safe_path(path_str, write=True)
-            lock = self._get_path_lock(resolved)
-            async with lock:
-                path = await self.async_fs.write_file(str(resolved), content)
-            return {"ok": True, "path": path}
-        except (PermissionError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
-
-    async def list_directory(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        try:
-            path_str = args.get("path", ".")
-            items = await self.async_fs.list_directory(path_str)
-            return {"ok": True, "items": items}
-        except FileNotFoundError: return {"ok": False, "error": "Dir not found"}
-        except (PermissionError, FileNotFoundError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
-
-class VisionTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: List[Path]):
-        super().__init__(workspace_root, references)
-        self._image_pipeline = None
-
-    def image_analyze(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        return {"ok": False, "error": "Visual analysis tool not implemented. Image analysis requires a vision-capable model or secondary API."}
-
-    def image_generate(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        try:
-            path = self._resolve_safe_path(args.get("path", "generated.png"), write=True)
-            if self._image_pipeline is None:
-                try:
-                    import torch
-                    from diffusers import StableDiffusionPipeline
-                except ImportError:
-                    return {"ok": False, "error": "Dependencies missing: pip install torch diffusers transformers accelerate"}
-
-                model_id = get_setting("sd_model", "runwayml/stable-diffusion-v1-5")
-                device = "cuda" if torch.cuda.is_available() else "cpu"
-                dtype = torch.float16 if device == "cuda" else torch.float32
-                
-                print(f"  [SYSTEM] Loading Stable Diffusion ({model_id}) on {device}...")
-                self._image_pipeline = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
-                self._image_pipeline.to(device)
-
-            image = self._image_pipeline(args.get("prompt")).images[0]
-            path.parent.mkdir(parents=True, exist_ok=True)
-            image.save(path)
-            return {"ok": True, "path": str(path)}
-        except (ImportError, OSError, RuntimeError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
-
-class CardManagementTools(BaseTools):
-    def __init__(
-        self,
-        workspace_root: Path,
-        references: List[Path],
-        db_path: str = "orket_persistence.db",
-        cards_repo: Optional["AsyncCardRepository"] = None,
-        tool_gate: Optional["ToolGate"] = None,
-    ):
-        super().__init__(workspace_root, references)
-        from orket.infrastructure.async_card_repository import AsyncCardRepository
-        self.cards = cards_repo or AsyncCardRepository(db_path)
-        self.tool_gate = tool_gate
-
-    async def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        session_id, seat, summary = context.get("session_id"), args.get("seat"), args.get("summary")
-        if not all([session_id, seat, summary]): return {"ok": False, "error": "Missing params"}
-        # Note: add_issue is currently in SQLiteCardRepository but not in AsyncCardRepository interface.
-        # I'll use save() which is polymorphic.
-        import uuid
-        issue_id = f"ISSUE-{str(uuid.uuid4())[:4].upper()}"
-        card_data = {
-            "id": issue_id,
-            "session_id": session_id,
-            "seat": seat,
-            "summary": summary,
-            "type": args.get("type", "issue"),
-            "priority": args.get("priority", "Medium"),
-            "status": "ready"
-        }
-        await self.cards.save(card_data)
-        return {"ok": True, "issue_id": issue_id}
-
-    async def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        from orket.schema import CardStatus, CardType
-        from orket.domain.state_machine import StateMachine, StateMachineError
-        context = context or {}
-        issue_id = args.get("issue_id") or context.get("issue_id")
-        new_status_str = args.get("status", "").lower()
-        if not issue_id or not new_status_str: return {"ok": False, "error": "Missing params"}
-        
-        try:
-            new_status = CardStatus(new_status_str)
-        except ValueError:
-            return {"ok": False, "error": f"Invalid status: {new_status_str}"}
-
-        issue = await self.cards.get_by_id(issue_id)
-        if not issue:
-            return {"ok": False, "error": f"Issue not found: {issue_id}"}
-
-        current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status))
-
-        # Phase 3.2: delegate status governance through ToolGate when available.
-        roles = context.get("roles")
-        if roles is None:
-            role = context.get("role", "")
-            roles = [role] if role else []
-
-        gate_context = {**context, "current_status": current_status.value}
-        if self.tool_gate:
-            gate_violation = self.tool_gate.validate(
-                tool_name="update_issue_status",
-                args=args,
-                context=gate_context,
-                roles=roles,
-            )
-            if gate_violation:
-                return {"ok": False, "error": gate_violation}
-        else:
-            # Fallback for direct tool usage outside orchestrated execution.
-            wait_reason = args.get("wait_reason")
-            try:
-                StateMachine.validate_transition(
-                    card_type=CardType.ISSUE,
-                    current=current_status,
-                    requested=new_status,
-                    roles=roles,
-                    wait_reason=wait_reason
-                )
-            except StateMachineError as exc:
-                return {"ok": False, "error": str(exc)}
-            
-        await self.cards.update_status(issue_id, new_status)
-        return {"ok": True, "issue_id": issue_id, "status": new_status.value}
-
-    async def add_issue_comment(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        issue_id, content = context.get("issue_id"), args.get("comment")
-        if not issue_id or not content: return {"ok": False, "error": "Missing params"}
-        await self.cards.add_comment(issue_id, context.get("role", "Unknown"), content)
-        return {"ok": True, "message": "Comment added."}
-
-    async def get_issue_context(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        issue_id = args.get("issue_id") or context.get("issue_id")
-        if not issue_id: return {"ok": False, "error": "No issue_id"}
-        comments = await self.cards.get_comments(issue_id)
-        issue_data = await self.cards.get_by_id(issue_id) or {}
-        return {"ok": True, "status": issue_data.get("status"), "summary": issue_data.get("summary"), "comments": comments}
-
-class AcademyTools(BaseTools):
-    def __init__(self, workspace_root: Path, references: List[Path]):
-        super().__init__(workspace_root, references)
-        from orket.infrastructure.async_file_tools import AsyncFileTools
-        self.project_root = self.workspace_root.parent.parent
-        self.async_fs = AsyncFileTools(self.project_root)
-
-    def archive_eval(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        session_id = args.get("session_id")
-        if not session_id: return {"ok": False, "error": "session_id required"}
-        
-        # Resolve source from workspace relative path
-        src = self.workspace_root.parent / "runs" / session_id
-        # Resolve destination from project root (or as per system policy)
-        dest = self.workspace_root.parent.parent / "evals" / f"{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
-        
-        try:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(src, dest)
-            return {"ok": True, "path": str(dest)}
-        except (OSError, shutil.Error, RuntimeError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
-
-    async def promote_prompt(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        seat, content = args.get("seat"), args.get("content")
-        if not seat or not content: return {"ok": False, "error": "Missing params"}
-        from orket.utils import sanitize_name
-        relative_dest = Path("prompts") / sanitize_name(seat) / f"{args.get('model_family', 'qwen')}.txt"
-        try:
-            path = await self.async_fs.write_file(str(relative_dest), content)
-            return {"ok": True, "path": path}
-        except (PermissionError, OSError, ValueError, TypeError) as e: return {"ok": False, "error": str(e)}
 
 class ToolBox:
     def __init__(
@@ -284,37 +45,50 @@ class ToolBox:
         self.academy = AcademyTools(self.root, self.refs)
 
     async def execute(self, tool_name: str, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        """
-        Execute a tool by name with provided arguments and context.
-        """
         tool_map = get_tool_map(self)
         if tool_name not in tool_map:
             return {"ok": False, "error": f"Unknown tool '{tool_name}'"}
-        
+
         tool_fn = tool_map[tool_name]
         return await self.runtime_executor.invoke(tool_fn, args, context=context)
 
     def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         from orket.logging import log_event
+
         log_event("card_nomination", {**args, "nominated_by": context.get("role")}, self.root, role="SYS")
         return {"ok": True, "message": "Nomination recorded."}
 
     def report_credits(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         issue_id, amount = context.get("issue_id"), args.get("amount", 0.0)
-        if not issue_id or amount <= 0: return {"ok": False, "error": "Invalid params"}
+        if not issue_id or amount <= 0:
+            return {"ok": False, "error": "Invalid params"}
         self.cards.cards.add_credits(issue_id, amount)
         return {"ok": True, "message": f"Reported {amount} credits."}
 
     def refinement_proposal(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         from orket.logging import log_event
+
         log_event("refinement_proposed", args, self.root, role="SYS")
         return {"ok": True, "message": "Proposal logged."}
 
     def request_excuse(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         issue_id = context.get("issue_id")
-        if not issue_id: return {"ok": False, "error": "No active Issue"}
+        if not issue_id:
+            return {"ok": False, "error": "No active Issue"}
         self.cards.cards.update_issue_status(issue_id, "excuse_requested")
         return {"ok": True, "message": "Excuse requested."}
 
+
 def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
     return toolbox.tool_strategy_node.compose(toolbox)
+
+
+__all__ = [
+    "BaseTools",
+    "FileSystemTools",
+    "VisionTools",
+    "CardManagementTools",
+    "AcademyTools",
+    "ToolBox",
+    "get_tool_map",
+]

@@ -448,3 +448,25 @@ class DefaultOrchestrationLoopPolicyNode:
 
     def is_backlog_done(self, backlog: List[Any]) -> bool:
         return all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)
+
+
+class _DefaultAsyncModelClient:
+    def __init__(self, provider: Any):
+        self.provider = provider
+
+    async def complete(self, messages):
+        return await self.provider.complete(messages)
+
+
+class DefaultModelClientPolicyNode:
+    """
+    Built-in model client policy node.
+    Preserves LocalModelProvider selection and async client wrapping behavior.
+    """
+
+    def create_provider(self, selected_model: str, env: Any) -> Any:
+        from orket.llm import LocalModelProvider
+        return LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
+
+    def create_client(self, provider: Any) -> Any:
+        return _DefaultAsyncModelClient(provider)
