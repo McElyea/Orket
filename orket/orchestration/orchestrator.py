@@ -17,6 +17,8 @@ from orket.infrastructure.async_repositories import AsyncSnapshotRepository
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.orchestration.models import ModelSelector
 from orket.orchestration.notes import NoteStore, Note
+from orket.decision_nodes.contracts import PlanningInput
+from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.services.prompt_compiler import PromptCompiler
 from orket.services.tool_gate import ToolGate
 from orket.tools import ToolBox, get_tool_map
@@ -73,6 +75,8 @@ class Orchestrator:
         self.transcript = []
         self._sandbox_locks = defaultdict(asyncio.Lock)
         self.context_window = max(1, int(os.getenv("ORKET_CONTEXT_WINDOW", "10")))
+        self.decision_nodes = DecisionNodeRegistry()
+        self.planner_node = self.decision_nodes.resolve_planner(self.org)
 
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
@@ -186,26 +190,15 @@ class Orchestrator:
         while iteration_count < max_iterations:
             iteration_count += 1
             
-            # 1. Identify all candidates
-            # Prioritize CODE_REVIEW (serial for verification stability) + READY (parallel)
             backlog = await self.async_cards.get_by_build(active_build)
-            in_review = [i for i in backlog if i.status == CardStatus.CODE_REVIEW]
-            
-            # Get issues whose dependencies are met
             independent_ready = await self.async_cards.get_independent_ready_issues(active_build)
-            
-            if target_issue_id:
-                # Target mode: Only run the target if it's ready/review
-                target = next((i for i in backlog if i.id == target_issue_id), None)
-                if not target: break
-                if target.status == CardStatus.CODE_REVIEW:
-                    candidates = [target]
-                elif target.status == CardStatus.READY and any(i.id == target_issue_id for i in independent_ready):
-                    candidates = [target]
-                else:
-                    candidates = [] # Target not ready yet
-            else:
-                candidates = in_review + independent_ready
+            candidates = self.planner_node.plan(
+                PlanningInput(
+                    backlog=backlog,
+                    independent_ready=independent_ready,
+                    target_issue_id=target_issue_id,
+                )
+            )
 
             if not candidates:
                 # Check if we are actually done or just blocked

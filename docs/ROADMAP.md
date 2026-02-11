@@ -53,17 +53,21 @@ Goal: Prove deployability from source to running service.
 Goal: Run Orket using the same volatility-first architecture it prescribes.
 
 1. Define stable contracts for volatile Decision Nodes:
-- Planner
-- Router
-- Evaluator
-- Prompt Strategy / Model Selection
+- Completed contracts:
+  - Planner
+  - Router
+  - Evaluator
+  - Prompt Strategy / Model Selection
 2. Add plugin registry and resolver for Decision Node implementations.
 3. Keep current runtime behavior as default built-in plugins.
+  - Completed for planner via `DefaultPlannerNode`.
 4. Extract one volatile path at a time behind contracts:
-- Start with planning/routing.
-- Then evaluation/prompting.
+  - Completed first extraction: planning/routing candidate selection now runs via planner decision node.
+  - Remaining: evaluation and prompting/model-selection extraction.
 5. Add contract tests per Decision Node interface.
+  - Completed initial planner/registry contract tests.
 6. Make Orchestrator responsible for stable flow only (wiring + governance + persistence).
+  - In progress.
 
 ## Management Model: Exists -> Working -> Done
 
