@@ -531,3 +531,28 @@ def test_registry_pipeline_wiring_env_override_wins(monkeypatch):
     registry.register_pipeline_wiring("custom-pipeline", custom)
     org = SimpleNamespace(process_rules={"pipeline_wiring_node": "default"})
     assert registry.resolve_pipeline_wiring(org) is custom
+
+
+def test_registry_resolves_default_orchestration_loop_policy():
+    registry = DecisionNodeRegistry()
+    from orket.decision_nodes.builtins import DefaultOrchestrationLoopPolicyNode
+    assert isinstance(registry.resolve_orchestration_loop(), DefaultOrchestrationLoopPolicyNode)
+
+
+def test_registry_orchestration_loop_env_override_wins(monkeypatch):
+    class CustomLoop:
+        def concurrency_limit(self, organization):
+            return 1
+
+        def max_iterations(self, organization):
+            return 5
+
+        def is_backlog_done(self, backlog):
+            return False
+
+    monkeypatch.setenv("ORKET_ORCHESTRATION_LOOP_NODE", "custom-loop")
+    registry = DecisionNodeRegistry()
+    custom = CustomLoop()
+    registry.register_orchestration_loop("custom-loop", custom)
+    org = SimpleNamespace(process_rules={"orchestration_loop_node": "default"})
+    assert registry.resolve_orchestration_loop(org) is custom

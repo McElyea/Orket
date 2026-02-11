@@ -103,3 +103,40 @@ async def test_handle_failure_retry_increment(orchestrator, mock_cards):
     args, _ = mock_cards.save.call_args
     assert args[0]["retry_count"] == 1
     assert args[0]["status"] == CardStatus.READY
+
+
+@pytest.mark.asyncio
+async def test_execute_epic_honors_custom_loop_policy(orchestrator, mock_cards):
+    """Runtime seam test: custom loop policy controls execute_epic iteration behavior."""
+    issue = MagicMock(id="I1", status=CardStatus.READY)
+    epic = MagicMock(spec=EpicConfig)
+    epic.name = "Policy Epic"
+    epic.issues = [issue]
+    epic.references = []
+
+    mock_cards.get_by_build.return_value = [issue]
+    mock_cards.get_independent_ready_issues.return_value = [issue]
+
+    class CustomLoopPolicy:
+        def concurrency_limit(self, organization):
+            return 1
+
+        def max_iterations(self, organization):
+            return 1
+
+        def is_backlog_done(self, backlog):
+            return False
+
+    orchestrator.loop_policy_node = CustomLoopPolicy()
+    orchestrator._execute_issue_turn = AsyncMock(return_value=None)
+
+    with pytest.raises(ExecutionFailed, match="Hyper-Loop exhausted iterations"):
+        await orchestrator.execute_epic(
+            active_build="build-policy",
+            run_id="run-policy",
+            epic=epic,
+            team=MagicMock(),
+            env=MagicMock(),
+        )
+
+    orchestrator._execute_issue_turn.assert_awaited_once()

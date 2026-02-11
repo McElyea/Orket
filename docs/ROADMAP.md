@@ -6,8 +6,8 @@ Architecture authority: `docs/OrketArchitectureModel.md`.
 ## Current State
 
 The prior release gate is complete:
-1. `python -m pytest tests/ -q` -> 197 passed.
-2. `python -m pytest --collect-only -q` -> 197 collected.
+1. `python -m pytest tests/ -q` -> 201 passed.
+2. `python -m pytest --collect-only -q` -> 201 collected.
 3. `rg -n "except Exception" orket` -> 0 matches.
 4. Load artifact archived: `benchmarks/results/2026-02-11_phase5_load.json`.
 5. CI includes `quality`, `docker_smoke`, and `migration_smoke` jobs.
@@ -73,13 +73,20 @@ The prior release gate is complete:
 21. CI architecture fast-path added:
 - New `architecture_gates` job runs before `quality`.
 - Fast gate enforces dependency direction and quick roadmap metric validation.
+22. Orchestrator loop policy seam extracted:
+- Added `OrchestrationLoopPolicyNode` with default implementation.
+- `Orchestrator.execute_epic` now resolves concurrency, max-iterations, and done-check via node.
+- Supports `process_rules.orchestration_loop_node` + `ORKET_ORCHESTRATION_LOOP_NODE`.
+23. Orchestrator override coverage added:
+- Added runtime seam coverage in `tests/test_orchestrator_epic.py` for custom loop policy override behavior.
+24. Runtime shim compatibility coverage added:
+- Added `tests/test_runtime_shim_compat.py` to enforce `orket/orket.py` export parity with `orket.runtime`.
 
-## Phase N: Volatility Decomposition (Next)
+## Phase O: Volatility Decomposition (Next)
 
 Goal: keep reducing monolithic hotspots while preserving behavior parity.
 
-1. Extract orchestration execution-loop policy seams from `orket/orchestration/orchestrator.py` into focused decision/runtime nodes.
-2. Add architecture coverage tests for orchestrator seam overrides in at least one end-to-end execution scenario.
+1. Extract model-provider/client selection seam from `orket/orchestration/orchestrator.py` into decision/runtime node.
 
 ## Working Model
 

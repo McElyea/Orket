@@ -79,6 +79,7 @@ class Orchestrator:
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
         self.router_node = self.decision_nodes.resolve_router(self.org)
         self.evaluator_node = self.decision_nodes.resolve_evaluator(self.org)
+        self.loop_policy_node = self.decision_nodes.resolve_orchestration_loop(self.org)
 
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
@@ -182,14 +183,14 @@ class Orchestrator:
             organization=self.org,
         )
         
-        # Concurrency Control (Phase 6.2)
-        concurrency_limit = 3 # Can be made configurable in OrganizationConfig
+        # Concurrency/loop control via loop policy node.
+        concurrency_limit = self.loop_policy_node.concurrency_limit(self.org)
         semaphore = asyncio.Semaphore(concurrency_limit)
 
         log_event("orchestrator_hyper_loop_start", {"epic": epic.name, "run_id": run_id, "concurrency": concurrency_limit}, self.workspace)
 
         iteration_count = 0
-        max_iterations = 20
+        max_iterations = self.loop_policy_node.max_iterations(self.org)
 
         while iteration_count < max_iterations:
             iteration_count += 1
@@ -206,7 +207,7 @@ class Orchestrator:
 
             if not candidates:
                 # Check if we are actually done or just blocked
-                is_done = all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)
+                is_done = self.loop_policy_node.is_backlog_done(backlog)
                 if is_done:
                     print(f"  [ORCHESTRATOR] Epic '{epic.name}' complete.")
                 break

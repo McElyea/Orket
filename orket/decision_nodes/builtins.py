@@ -432,3 +432,19 @@ class DefaultPipelineWiringStrategyNode:
             config_root=parent_pipeline.config_root,
             decision_nodes=parent_pipeline.decision_nodes,
         )
+
+
+class DefaultOrchestrationLoopPolicyNode:
+    """
+    Built-in orchestrator loop policy node.
+    Preserves existing concurrency and iteration defaults.
+    """
+
+    def concurrency_limit(self, organization: Any) -> int:
+        return 3
+
+    def max_iterations(self, organization: Any) -> int:
+        return 20
+
+    def is_backlog_done(self, backlog: List[Any]) -> bool:
+        return all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)

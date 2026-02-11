@@ -164,3 +164,16 @@ class PipelineWiringStrategyNode(Protocol):
 
     def create_sub_pipeline(self, parent_pipeline: Any, epic_workspace: Any, department: str) -> Any:
         ...
+
+
+class OrchestrationLoopPolicyNode(Protocol):
+    """Decision node: execution-loop policy knobs for orchestrator runtime."""
+
+    def concurrency_limit(self, organization: Any) -> int:
+        ...
+
+    def max_iterations(self, organization: Any) -> int:
+        ...
+
+    def is_backlog_done(self, backlog: List[Any]) -> bool:
+        ...

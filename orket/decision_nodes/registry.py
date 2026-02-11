@@ -8,6 +8,7 @@ from orket.decision_nodes.builtins import (
     DefaultExecutionRuntimeStrategyNode,
     DefaultEvaluatorNode,
     DefaultLoaderStrategyNode,
+    DefaultOrchestrationLoopPolicyNode,
     DefaultPipelineWiringStrategyNode,
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
@@ -20,6 +21,7 @@ from orket.decision_nodes.contracts import (
     EngineRuntimePolicyNode,
     ExecutionRuntimeStrategyNode,
     LoaderStrategyNode,
+    OrchestrationLoopPolicyNode,
     PipelineWiringStrategyNode,
     PlannerNode,
     PromptStrategyNode,
@@ -60,6 +62,9 @@ class DecisionNodeRegistry:
         self._pipeline_wiring_nodes: Dict[str, PipelineWiringStrategyNode] = {
             "default": DefaultPipelineWiringStrategyNode()
         }
+        self._orchestration_loop_nodes: Dict[str, OrchestrationLoopPolicyNode] = {
+            "default": DefaultOrchestrationLoopPolicyNode()
+        }
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -93,6 +98,9 @@ class DecisionNodeRegistry:
 
     def register_pipeline_wiring(self, name: str, node: PipelineWiringStrategyNode) -> None:
         self._pipeline_wiring_nodes[name] = node
+
+    def register_orchestration_loop(self, name: str, node: OrchestrationLoopPolicyNode) -> None:
+        self._orchestration_loop_nodes[name] = node
 
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
@@ -201,4 +209,18 @@ class DecisionNodeRegistry:
         return self._pipeline_wiring_nodes.get(
             pipeline_wiring_name,
             self._pipeline_wiring_nodes["default"],
+        )
+
+    def resolve_orchestration_loop(self, organization: Any = None) -> OrchestrationLoopPolicyNode:
+        loop_policy_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            loop_policy_name = organization.process_rules.get("orchestration_loop_node", "default")
+
+        env_override = get_setting("ORKET_ORCHESTRATION_LOOP_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            loop_policy_name = env_override.strip()
+
+        return self._orchestration_loop_nodes.get(
+            loop_policy_name,
+            self._orchestration_loop_nodes["default"],
         )
