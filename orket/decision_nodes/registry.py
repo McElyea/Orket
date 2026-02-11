@@ -5,7 +5,9 @@ from typing import Any, Dict
 from orket.decision_nodes.builtins import (
     DefaultApiRuntimeStrategyNode,
     DefaultEngineRuntimePolicyNode,
+    DefaultExecutionRuntimeStrategyNode,
     DefaultEvaluatorNode,
+    DefaultLoaderStrategyNode,
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
     DefaultRouterNode,
@@ -15,6 +17,8 @@ from orket.decision_nodes.builtins import (
 from orket.decision_nodes.contracts import (
     EvaluatorNode,
     EngineRuntimePolicyNode,
+    ExecutionRuntimeStrategyNode,
+    LoaderStrategyNode,
     PlannerNode,
     PromptStrategyNode,
     RouterNode,
@@ -45,6 +49,12 @@ class DecisionNodeRegistry:
         self._engine_runtime_nodes: Dict[str, EngineRuntimePolicyNode] = {
             "default": DefaultEngineRuntimePolicyNode()
         }
+        self._loader_strategy_nodes: Dict[str, LoaderStrategyNode] = {
+            "default": DefaultLoaderStrategyNode()
+        }
+        self._execution_runtime_nodes: Dict[str, ExecutionRuntimeStrategyNode] = {
+            "default": DefaultExecutionRuntimeStrategyNode()
+        }
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -69,6 +79,12 @@ class DecisionNodeRegistry:
 
     def register_engine_runtime(self, name: str, node: EngineRuntimePolicyNode) -> None:
         self._engine_runtime_nodes[name] = node
+
+    def register_loader_strategy(self, name: str, node: LoaderStrategyNode) -> None:
+        self._loader_strategy_nodes[name] = node
+
+    def register_execution_runtime(self, name: str, node: ExecutionRuntimeStrategyNode) -> None:
+        self._execution_runtime_nodes[name] = node
 
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
@@ -139,3 +155,28 @@ class DecisionNodeRegistry:
             engine_runtime_name = env_override.strip()
 
         return self._engine_runtime_nodes.get(engine_runtime_name, self._engine_runtime_nodes["default"])
+
+    def resolve_loader_strategy(self, organization: Any = None) -> LoaderStrategyNode:
+        loader_strategy_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            loader_strategy_name = organization.process_rules.get("loader_strategy_node", "default")
+
+        env_override = get_setting("ORKET_LOADER_STRATEGY_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            loader_strategy_name = env_override.strip()
+
+        return self._loader_strategy_nodes.get(loader_strategy_name, self._loader_strategy_nodes["default"])
+
+    def resolve_execution_runtime(self, organization: Any = None) -> ExecutionRuntimeStrategyNode:
+        execution_runtime_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            execution_runtime_name = organization.process_rules.get("execution_runtime_node", "default")
+
+        env_override = get_setting("ORKET_EXECUTION_RUNTIME_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            execution_runtime_name = env_override.strip()
+
+        return self._execution_runtime_nodes.get(
+            execution_runtime_name,
+            self._execution_runtime_nodes["default"],
+        )

@@ -435,3 +435,68 @@ def test_registry_engine_runtime_env_override_wins(monkeypatch):
     registry.register_engine_runtime("custom-engine", custom)
     org = SimpleNamespace(process_rules={"engine_runtime_node": "default"})
     assert registry.resolve_engine_runtime(org) is custom
+
+
+def test_registry_resolves_default_loader_strategy():
+    registry = DecisionNodeRegistry()
+    from orket.decision_nodes.builtins import DefaultLoaderStrategyNode
+    assert isinstance(registry.resolve_loader_strategy(), DefaultLoaderStrategyNode)
+
+
+def test_registry_loader_strategy_env_override_wins(monkeypatch):
+    class CustomLoaderStrategy:
+        def organization_modular_paths(self, config_dir):
+            return (config_dir / "a.json", config_dir / "b.json")
+
+        def organization_fallback_paths(self, config_dir, model_dir):
+            return [config_dir / "organization.json"]
+
+        def department_paths(self, config_dir, model_dir, name):
+            return [config_dir / f"{name}.json"]
+
+        def asset_paths(self, config_dir, model_dir, dept, category, name):
+            return [config_dir / category / f"{name}.json"]
+
+        def list_asset_search_paths(self, config_dir, model_dir, dept, category):
+            return [config_dir / category]
+
+        def apply_organization_overrides(self, org, get_setting):
+            return org
+
+    monkeypatch.setenv("ORKET_LOADER_STRATEGY_NODE", "custom-loader")
+    registry = DecisionNodeRegistry()
+    custom = CustomLoaderStrategy()
+    registry.register_loader_strategy("custom-loader", custom)
+    org = SimpleNamespace(process_rules={"loader_strategy_node": "default"})
+    assert registry.resolve_loader_strategy(org) is custom
+
+
+def test_registry_resolves_default_execution_runtime():
+    registry = DecisionNodeRegistry()
+    from orket.decision_nodes.builtins import DefaultExecutionRuntimeStrategyNode
+    node = registry.resolve_execution_runtime()
+    assert isinstance(node, DefaultExecutionRuntimeStrategyNode)
+    assert len(node.select_run_id(None)) == 8
+    assert node.select_epic_build_id(None, "My Epic", lambda s: s.lower().replace(" ", "-")) == "build-my-epic"
+
+
+def test_registry_execution_runtime_env_override_wins(monkeypatch):
+    class CustomExecutionRuntime:
+        def select_run_id(self, session_id):
+            return "RUNX"
+
+        def select_epic_build_id(self, build_id, epic_name, sanitize_name):
+            return "BUILDX"
+
+        def select_rock_session_id(self, session_id):
+            return "ROCKRUNX"
+
+        def select_rock_build_id(self, build_id, rock_name, sanitize_name):
+            return "ROCKBUILDX"
+
+    monkeypatch.setenv("ORKET_EXECUTION_RUNTIME_NODE", "custom-runtime")
+    registry = DecisionNodeRegistry()
+    custom = CustomExecutionRuntime()
+    registry.register_execution_runtime("custom-runtime", custom)
+    org = SimpleNamespace(process_rules={"execution_runtime_node": "default"})
+    assert registry.resolve_execution_runtime(org) is custom

@@ -6,8 +6,8 @@ Architecture authority: `docs/OrketArchitectureModel.md`.
 ## Current State
 
 The prior release gate is complete:
-1. `python -m pytest tests/ -q` -> 180 passed.
-2. `python -m pytest --collect-only -q` -> 180 collected.
+1. `python -m pytest tests/ -q` -> 192 passed.
+2. `python -m pytest --collect-only -q` -> 192 collected.
 3. `rg -n "except Exception" orket` -> 0 matches.
 4. Load artifact archived: `benchmarks/results/2026-02-11_phase5_load.json`.
 5. CI includes `quality`, `docker_smoke`, and `migration_smoke` jobs.
@@ -37,13 +37,19 @@ The prior release gate is complete:
 - Supports `process_rules` selection plus env overrides:
   - `ORKET_SANDBOX_POLICY_NODE`
   - `ORKET_ENGINE_RUNTIME_NODE`
+13. Loader/runtime selection seams extracted from `orket/orket.py`:
+- Added `LoaderStrategyNode` and `ExecutionRuntimeStrategyNode` with default implementations.
+- `ConfigLoader` now resolves path/override policy through loader strategy node.
+- `ExecutionPipeline` now resolves run/build id selection through execution runtime strategy node.
+- Supports `process_rules` + env overrides:
+  - `ORKET_LOADER_STRATEGY_NODE`
+  - `ORKET_EXECUTION_RUNTIME_NODE`
 
 ## Phase I: Volatility Decomposition (Next)
 
 Goal: continue extracting high-churn seams identified by churn evidence.
 
-1. Extract `orket/orket.py` loader/runtime selection strategy seams (currently highest total churn).
-2. Extract `orket/tools.py` family registration/composition into dedicated package modules (`tool_runtime/`, `tool_strategy/`) while preserving current decision-node API.
+1. Extract `orket/tools.py` family registration/composition into dedicated package modules (`tool_runtime/`, `tool_strategy/`) while preserving current decision-node API.
 
 ## Working Model
 

@@ -97,3 +97,41 @@ class EngineRuntimePolicyNode(Protocol):
 
     def resolve_config_root(self, config_root: Any) -> Any:
         ...
+
+
+class LoaderStrategyNode(Protocol):
+    """Decision node: config/model loader path and override policy."""
+
+    def organization_modular_paths(self, config_dir: Any) -> tuple[Any, Any]:
+        ...
+
+    def organization_fallback_paths(self, config_dir: Any, model_dir: Any) -> List[Any]:
+        ...
+
+    def department_paths(self, config_dir: Any, model_dir: Any, name: str) -> List[Any]:
+        ...
+
+    def asset_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str, name: str) -> List[Any]:
+        ...
+
+    def list_asset_search_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str) -> List[Any]:
+        ...
+
+    def apply_organization_overrides(self, org: Any, get_setting: Any) -> Any:
+        ...
+
+
+class ExecutionRuntimeStrategyNode(Protocol):
+    """Decision node: execution runtime id/build selection policy."""
+
+    def select_run_id(self, session_id: str | None) -> str:
+        ...
+
+    def select_epic_build_id(self, build_id: str | None, epic_name: str, sanitize_name: Any) -> str:
+        ...
+
+    def select_rock_session_id(self, session_id: str | None) -> str:
+        ...
+
+    def select_rock_build_id(self, build_id: str | None, rock_name: str, sanitize_name: Any) -> str:
+        ...

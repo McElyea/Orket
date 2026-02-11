@@ -331,3 +331,65 @@ class DefaultEngineRuntimePolicyNode:
 
     def resolve_config_root(self, config_root: Any) -> Any:
         return config_root or Path(".").resolve()
+
+
+class DefaultLoaderStrategyNode:
+    """
+    Built-in loader strategy node.
+    Preserves ConfigLoader path priority and organization env override behavior.
+    """
+
+    def organization_modular_paths(self, config_dir: Any) -> tuple[Any, Any]:
+        return (config_dir / "org_info.json", config_dir / "architecture.json")
+
+    def organization_fallback_paths(self, config_dir: Any, model_dir: Any) -> List[Any]:
+        return [config_dir / "organization.json", model_dir / "organization.json"]
+
+    def department_paths(self, config_dir: Any, model_dir: Any, name: str) -> List[Any]:
+        return [
+            config_dir / "departments" / f"{name}.json",
+            model_dir / name / "department.json",
+        ]
+
+    def asset_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str, name: str) -> List[Any]:
+        return [
+            config_dir / category / f"{name}.json",
+            model_dir / dept / category / f"{name}.json",
+            model_dir / "core" / category / f"{name}.json",
+        ]
+
+    def list_asset_search_paths(self, config_dir: Any, model_dir: Any, dept: str, category: str) -> List[Any]:
+        return [
+            config_dir / category,
+            model_dir / dept / category,
+            model_dir / "core" / category,
+        ]
+
+    def apply_organization_overrides(self, org: Any, get_setting: Any) -> Any:
+        env_name = get_setting("ORKET_ORG_NAME")
+        if env_name:
+            org.name = env_name
+
+        env_vision = get_setting("ORKET_ORG_VISION")
+        if env_vision:
+            org.vision = env_vision
+        return org
+
+
+class DefaultExecutionRuntimeStrategyNode:
+    """
+    Built-in execution runtime strategy node.
+    Preserves run/build id selection behavior.
+    """
+
+    def select_run_id(self, session_id: str | None) -> str:
+        return session_id or str(uuid.uuid4())[:8]
+
+    def select_epic_build_id(self, build_id: str | None, epic_name: str, sanitize_name: Any) -> str:
+        return build_id or f"build-{sanitize_name(epic_name)}"
+
+    def select_rock_session_id(self, session_id: str | None) -> str:
+        return session_id or str(uuid.uuid4())[:8]
+
+    def select_rock_build_id(self, build_id: str | None, rock_name: str, sanitize_name: Any) -> str:
+        return build_id or f"rock-build-{sanitize_name(rock_name)}"

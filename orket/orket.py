@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
 import json
-import uuid
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, UTC
@@ -22,6 +21,7 @@ from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.orchestration.orchestrator import Orchestrator
+from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from orket.domain.bug_fix_phase import BugFixPhaseManager
 from orket.services.webhook_db import WebhookDatabase
@@ -38,11 +38,20 @@ class ConfigLoader:
     Unified Configuration and Asset Loader.
     Priority: 1. config/ (Unified) 2. model/{dept}/ (Legacy) 3. model/core/ (Fallback)
     """
-    def __init__(self, root: Path, department: str = "core"):
+    def __init__(
+        self,
+        root: Path,
+        department: str = "core",
+        organization: Optional[Any] = None,
+        decision_nodes: Optional[DecisionNodeRegistry] = None,
+    ):
         self.root = root
         self.config_dir = root / "config"
         self.model_dir = root / "model"
         self.department = department
+        self.organization = organization
+        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.loader_strategy_node = self.decision_nodes.resolve_loader_strategy(self.organization)
         self.file_tools = AsyncFileTools(self.root)
 
     def _run_async(self, coro):
@@ -71,8 +80,7 @@ class ConfigLoader:
         org_data = {}
         
         # 1. Try Modular Configs (New Standard)
-        info_path = self.config_dir / "org_info.json"
-        arch_path = self.config_dir / "architecture.json"
+        info_path, arch_path = self.loader_strategy_node.organization_modular_paths(self.config_dir)
         
         if info_path.exists() and arch_path.exists():
             try:
@@ -84,10 +92,7 @@ class ConfigLoader:
 
         # 2. Key Fallback: Monolith (Legacy)
         if not org_data:
-            paths = [
-                self.config_dir / "organization.json",
-                self.model_dir / "organization.json"
-            ]
+            paths = self.loader_strategy_node.organization_fallback_paths(self.config_dir, self.model_dir)
             for p in paths:
                 if p.exists():
                     try:
@@ -108,23 +113,14 @@ class ConfigLoader:
             return None
         
         # Overrides
-        env_name = get_setting("ORKET_ORG_NAME")
-        if env_name: org.name = env_name
-        
-        env_vision = get_setting("ORKET_ORG_VISION")
-        if env_vision: org.vision = env_vision
-            
-        return org
+        return self.loader_strategy_node.apply_organization_overrides(org, get_setting)
 
     def load_department(self, name: str) -> Optional[DepartmentConfig]:
         return self._run_async(self.load_department_async(name))
 
     async def load_department_async(self, name: str) -> Optional[DepartmentConfig]:
         from orket.schema import DepartmentConfig
-        paths = [
-            self.config_dir / "departments" / f"{name}.json",
-            self.model_dir / name / "department.json" # Legacy check
-        ]
+        paths = self.loader_strategy_node.department_paths(self.config_dir, self.model_dir, name)
         for p in paths:
             if p.exists():
                 raw = await self._read_text(p)
@@ -143,12 +139,13 @@ class ConfigLoader:
         return self._run_async(self._load_asset_raw_async(category, name, dept))
 
     async def _load_asset_raw_async(self, category: str, name: str, dept: str) -> str:
-        # 1. Unified Config
-        paths = [
-            self.config_dir / category / f"{name}.json",
-            self.model_dir / dept / category / f"{name}.json",
-            self.model_dir / "core" / category / f"{name}.json"
-        ]
+        paths = self.loader_strategy_node.asset_paths(
+            self.config_dir,
+            self.model_dir,
+            dept,
+            category,
+            name,
+        )
         
         for p in paths:
             if p.exists():
@@ -162,11 +159,12 @@ class ConfigLoader:
     async def list_assets_async(self, category: str) -> List[str]:
         def _collect_assets() -> List[str]:
             assets = set()
-            search_paths = [
-                self.config_dir / category,
-                self.model_dir / self.department / category,
-                self.model_dir / "core" / category
-            ]
+            search_paths = self.loader_strategy_node.list_asset_search_paths(
+                self.config_dir,
+                self.model_dir,
+                self.department,
+                category,
+            )
             for p in search_paths:
                 if p.exists():
                     for f in p.glob("*.json"):
@@ -194,15 +192,18 @@ class ExecutionPipeline:
                  cards_repo: Optional[AsyncCardRepository] = None,
                  sessions_repo: Optional[AsyncSessionRepository] = None,
                  snapshots_repo: Optional[AsyncSnapshotRepository] = None,
-                 success_repo: Optional[AsyncSuccessRepository] = None):
+                 success_repo: Optional[AsyncSuccessRepository] = None,
+                 decision_nodes: Optional[DecisionNodeRegistry] = None):
         self.workspace = workspace
         self.department = department
+        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.config_root = config_root or Path(".").resolve()
-        self.loader = ConfigLoader(self.config_root, department)
+        self.loader = ConfigLoader(self.config_root, department, decision_nodes=self.decision_nodes)
         self.db_path = db_path
         
         # Load Organization
         self.org = self.loader.load_organization()
+        self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
         
         # Injected or default repositories
         self.async_cards = cards_repo or AsyncCardRepository(self.db_path)
@@ -260,8 +261,8 @@ class ExecutionPipeline:
             )
 
 
-        run_id = session_id or str(uuid.uuid4())[:8]
-        active_build = build_id or f"build-{sanitize_name(epic_name)}"
+        run_id = self.execution_runtime_node.select_run_id(session_id)
+        active_build = self.execution_runtime_node.select_epic_build_id(build_id, epic_name, sanitize_name)
         
         if not await self.sessions.get_session(run_id):
             await self.sessions.start_session(run_id, {"type": "epic", "name": epic.name, "department": self.department, "task_input": epic.description})
@@ -326,8 +327,8 @@ class ExecutionPipeline:
 
     async def run_rock(self, rock_name: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, **kwargs) -> Dict:
         rock = await self.loader.load_asset_async("rocks", rock_name, RockConfig)
-        sid = session_id or str(uuid.uuid4())[:8]
-        active_build = build_id or f"rock-build-{sanitize_name(rock_name)}"
+        sid = self.execution_runtime_node.select_rock_session_id(session_id)
+        active_build = self.execution_runtime_node.select_rock_build_id(build_id, rock_name, sanitize_name)
         results = []
         for entry in rock.epics:
             epic_ws = self.workspace / entry["epic"]
