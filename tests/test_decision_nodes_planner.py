@@ -500,3 +500,34 @@ def test_registry_execution_runtime_env_override_wins(monkeypatch):
     registry.register_execution_runtime("custom-runtime", custom)
     org = SimpleNamespace(process_rules={"execution_runtime_node": "default"})
     assert registry.resolve_execution_runtime(org) is custom
+
+
+def test_registry_resolves_default_pipeline_wiring():
+    registry = DecisionNodeRegistry()
+    from orket.decision_nodes.builtins import DefaultPipelineWiringStrategyNode
+    assert isinstance(registry.resolve_pipeline_wiring(), DefaultPipelineWiringStrategyNode)
+
+
+def test_registry_pipeline_wiring_env_override_wins(monkeypatch):
+    class CustomPipelineWiring:
+        def create_sandbox_orchestrator(self, workspace, organization):
+            return object()
+
+        def create_webhook_database(self):
+            return object()
+
+        def create_bug_fix_manager(self, organization, webhook_db):
+            return object()
+
+        def create_orchestrator(self, workspace, async_cards, snapshots, org, config_root, db_path, loader, sandbox_orchestrator):
+            return object()
+
+        def create_sub_pipeline(self, parent_pipeline, epic_workspace, department):
+            return object()
+
+    monkeypatch.setenv("ORKET_PIPELINE_WIRING_NODE", "custom-pipeline")
+    registry = DecisionNodeRegistry()
+    custom = CustomPipelineWiring()
+    registry.register_pipeline_wiring("custom-pipeline", custom)
+    org = SimpleNamespace(process_rules={"pipeline_wiring_node": "default"})
+    assert registry.resolve_pipeline_wiring(org) is custom

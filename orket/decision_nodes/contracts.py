@@ -135,3 +135,32 @@ class ExecutionRuntimeStrategyNode(Protocol):
 
     def select_rock_build_id(self, build_id: str | None, rock_name: str, sanitize_name: Any) -> str:
         ...
+
+
+class PipelineWiringStrategyNode(Protocol):
+    """Decision node: execution pipeline wiring and subordinate spawn policy."""
+
+    def create_sandbox_orchestrator(self, workspace: Any, organization: Any) -> Any:
+        ...
+
+    def create_webhook_database(self) -> Any:
+        ...
+
+    def create_bug_fix_manager(self, organization: Any, webhook_db: Any) -> Any:
+        ...
+
+    def create_orchestrator(
+        self,
+        workspace: Any,
+        async_cards: Any,
+        snapshots: Any,
+        org: Any,
+        config_root: Any,
+        db_path: str,
+        loader: Any,
+        sandbox_orchestrator: Any,
+    ) -> Any:
+        ...
+
+    def create_sub_pipeline(self, parent_pipeline: Any, epic_workspace: Any, department: str) -> Any:
+        ...

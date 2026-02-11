@@ -50,13 +50,14 @@ Allowed direction:
 2. `orchestration -> domain/services/infrastructure/decision_nodes`
 3. `services -> domain/infrastructure`
 4. `decision_nodes -> decision_nodes.contracts + domain vocabulary`
-5. `infrastructure -> standard libs + external libraries`
+5. `infrastructure -> domain vocabulary + standard libs + external libraries`
 
 Disallowed direction:
 1. `domain -> orchestration`
 2. `domain -> interfaces`
 3. `domain -> framework/runtime glue`
 4. `decision_nodes -> interfaces`
+5. `infrastructure -> services/orchestration/interfaces/decision_nodes`
 
 Rule of thumb:
 1. Stable layers own workflow mechanics.

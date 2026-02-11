@@ -20,11 +20,7 @@ from orket.infrastructure.async_repositories import AsyncSessionRepository, Asyn
 from orket.infrastructure.async_card_repository import AsyncCardRepository
 from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orchestration.turn_executor import TurnExecutor
-from orket.orchestration.orchestrator import Orchestrator
 from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.services.sandbox_orchestrator import SandboxOrchestrator
-from orket.domain.bug_fix_phase import BugFixPhaseManager
-from orket.services.webhook_db import WebhookDatabase
 from orket.domain.sandbox import SandboxRegistry, SandboxStatus
 from orket.services.prompt_compiler import PromptCompiler
 from pydantic import BaseModel, ValidationError
@@ -204,6 +200,7 @@ class ExecutionPipeline:
         # Load Organization
         self.org = self.loader.load_organization()
         self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
+        self.pipeline_wiring_node = self.decision_nodes.resolve_pipeline_wiring(self.org)
         
         # Injected or default repositories
         self.async_cards = cards_repo or AsyncCardRepository(self.db_path)
@@ -213,13 +210,16 @@ class ExecutionPipeline:
         
         self.notes = NoteStore()
         self.transcript = []
-        self.sandbox_orchestrator = SandboxOrchestrator(self.workspace, organization=self.org)
-        self.webhook_db = WebhookDatabase()
-        self.bug_fix_manager = BugFixPhaseManager(
-            organization_config=self.org.process_rules if self.org else {},
-            db=self.webhook_db
+        self.sandbox_orchestrator = self.pipeline_wiring_node.create_sandbox_orchestrator(
+            workspace=self.workspace,
+            organization=self.org,
         )
-        self.orchestrator = Orchestrator(
+        self.webhook_db = self.pipeline_wiring_node.create_webhook_database()
+        self.bug_fix_manager = self.pipeline_wiring_node.create_bug_fix_manager(
+            organization=self.org,
+            webhook_db=self.webhook_db,
+        )
+        self.orchestrator = self.pipeline_wiring_node.create_orchestrator(
             workspace=self.workspace,
             async_cards=self.async_cards,
             snapshots=self.snapshots,
@@ -227,7 +227,7 @@ class ExecutionPipeline:
             config_root=self.config_root,
             db_path=self.db_path,
             loader=self.loader,
-            sandbox_orchestrator=self.sandbox_orchestrator
+            sandbox_orchestrator=self.sandbox_orchestrator,
         )
 
     async def run_card(self, card_id: str, **kwargs) -> Any:
@@ -332,7 +332,11 @@ class ExecutionPipeline:
         results = []
         for entry in rock.epics:
             epic_ws = self.workspace / entry["epic"]
-            sub_pipeline = ExecutionPipeline(epic_ws, entry["department"], db_path=self.db_path, config_root=self.config_root)
+            sub_pipeline = self.pipeline_wiring_node.create_sub_pipeline(
+                parent_pipeline=self,
+                epic_workspace=epic_ws,
+                department=entry["department"],
+            )
             res = await sub_pipeline.run_epic(entry["epic"], build_id=active_build, session_id=sid, driver_steered=driver_steered)
             results.append({"epic": entry["epic"], "transcript": res})
         

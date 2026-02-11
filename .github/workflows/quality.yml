@@ -38,6 +38,10 @@ jobs:
             exit 1
           fi
 
+      - name: Enforce dependency direction rules
+        run: |
+          python scripts/check_dependency_direction.py
+
       - name: Upload load evidence artifacts
         if: always()
         uses: actions/upload-artifact@v4

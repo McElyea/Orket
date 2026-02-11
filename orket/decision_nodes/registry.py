@@ -8,6 +8,7 @@ from orket.decision_nodes.builtins import (
     DefaultExecutionRuntimeStrategyNode,
     DefaultEvaluatorNode,
     DefaultLoaderStrategyNode,
+    DefaultPipelineWiringStrategyNode,
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
     DefaultRouterNode,
@@ -19,6 +20,7 @@ from orket.decision_nodes.contracts import (
     EngineRuntimePolicyNode,
     ExecutionRuntimeStrategyNode,
     LoaderStrategyNode,
+    PipelineWiringStrategyNode,
     PlannerNode,
     PromptStrategyNode,
     RouterNode,
@@ -55,6 +57,9 @@ class DecisionNodeRegistry:
         self._execution_runtime_nodes: Dict[str, ExecutionRuntimeStrategyNode] = {
             "default": DefaultExecutionRuntimeStrategyNode()
         }
+        self._pipeline_wiring_nodes: Dict[str, PipelineWiringStrategyNode] = {
+            "default": DefaultPipelineWiringStrategyNode()
+        }
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -85,6 +90,9 @@ class DecisionNodeRegistry:
 
     def register_execution_runtime(self, name: str, node: ExecutionRuntimeStrategyNode) -> None:
         self._execution_runtime_nodes[name] = node
+
+    def register_pipeline_wiring(self, name: str, node: PipelineWiringStrategyNode) -> None:
+        self._pipeline_wiring_nodes[name] = node
 
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
@@ -179,4 +187,18 @@ class DecisionNodeRegistry:
         return self._execution_runtime_nodes.get(
             execution_runtime_name,
             self._execution_runtime_nodes["default"],
+        )
+
+    def resolve_pipeline_wiring(self, organization: Any = None) -> PipelineWiringStrategyNode:
+        pipeline_wiring_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            pipeline_wiring_name = organization.process_rules.get("pipeline_wiring_node", "default")
+
+        env_override = get_setting("ORKET_PIPELINE_WIRING_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            pipeline_wiring_name = env_override.strip()
+
+        return self._pipeline_wiring_nodes.get(
+            pipeline_wiring_name,
+            self._pipeline_wiring_nodes["default"],
         )
