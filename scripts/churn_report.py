@@ -174,7 +174,7 @@ def main() -> None:
     }
 
     out_path = Path(args.out) if args.out else Path(
-        f"benchmarks/results/{datetime.now(UTC).strftime('%Y-%m-%d')}_phaseH_churn.json"
+        f"benchmarks/results/{datetime.now(UTC).strftime('%Y-%m-%d')}_churn.json"
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

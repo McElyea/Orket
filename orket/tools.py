@@ -3,9 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
-from orket.core.types import CardStatus
 from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.tool_families import AcademyTools, BaseTools, CardManagementTools, FileSystemTools, VisionTools
+from orket.tool_families import (
+    AcademyTools,
+    BaseTools,
+    CardManagementTools,
+    FileSystemTools,
+    GovernanceTools,
+    VisionTools,
+)
 from orket.tool_runtime import ToolRuntimeExecutor
 
 if TYPE_CHECKING:
@@ -43,6 +49,7 @@ class ToolBox:
             cards_repo=cards_repo,
             tool_gate=tool_gate,
         )
+        self.governance = GovernanceTools(self.root, self.refs, cards=self.cards)
         self.academy = AcademyTools(self.root, self.refs)
 
     async def execute(self, tool_name: str, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -54,50 +61,16 @@ class ToolBox:
         return await self.runtime_executor.invoke(tool_fn, args, context=context)
 
     def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        from orket.logging import log_event
-
-        context = context or {}
-        log_event("card_nomination", {**args, "nominated_by": context.get("role")}, self.root, role="SYS")
-        return {"ok": True, "message": "Nomination recorded."}
+        return self.governance.nominate_card(args, context=context)
 
     async def report_credits(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        context = context or {}
-        issue_id = context.get("issue_id") or args.get("issue_id")
-        amount = args.get("amount", 0.0)
-        try:
-            amount = float(amount)
-        except (TypeError, ValueError):
-            return {"ok": False, "error": "Invalid params"}
-        if not issue_id or amount <= 0:
-            return {"ok": False, "error": "Invalid params"}
-
-        add_credits_fn = getattr(self.cards.cards, "add_credits", None)
-        if add_credits_fn is None:
-            return {"ok": False, "error": "Credits repository adapter unavailable"}
-
-        await add_credits_fn(issue_id, amount)
-        return {"ok": True, "message": f"Reported {amount} credits."}
+        return await self.governance.report_credits(args, context=context)
 
     def refinement_proposal(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        from orket.logging import log_event
-
-        log_event("refinement_proposed", args, self.root, role="SYS")
-        return {"ok": True, "message": "Proposal logged."}
+        return self.governance.refinement_proposal(args, context=context)
 
     async def request_excuse(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        context = context or {}
-        issue_id = context.get("issue_id") or args.get("issue_id")
-        if not issue_id:
-            return {"ok": False, "error": "No active Issue"}
-
-        await self.cards.cards.update_status(issue_id, CardStatus.WAITING_FOR_DEVELOPER)
-
-        reason = args.get("reason")
-        if reason:
-            comment_context = {**context, "issue_id": issue_id, "role": context.get("role", "SYS")}
-            await self.cards.add_issue_comment({"comment": reason}, context=comment_context)
-
-        return {"ok": True, "message": "Excuse requested."}
+        return await self.governance.request_excuse(args, context=context)
 
 
 def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
@@ -109,6 +82,7 @@ __all__ = [
     "FileSystemTools",
     "VisionTools",
     "CardManagementTools",
+    "GovernanceTools",
     "AcademyTools",
     "ToolBox",
     "get_tool_map",

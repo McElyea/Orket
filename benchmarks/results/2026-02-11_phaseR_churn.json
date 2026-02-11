@@ -1,0 +1,322 @@
+{
+  "generated_at_utc": "2026-02-11T05:51:49.126328+00:00",
+  "scope": "orket",
+  "method": {
+    "file_level": "git log --numstat touch/add/delete aggregation",
+    "symbol_level": "git patch symbol-definition touches plus inferred body token hits",
+    "notes": [
+      "symbol-level churn is approximate",
+      "renames/moves are attributed by current path in diffs"
+    ]
+  },
+  "totals": {
+    "files_analyzed": 90,
+    "symbols_analyzed": 652
+  },
+  "top_files_by_touches": [
+    {
+      "path": "orket/orket.py",
+      "adds": 2190,
+      "deletes": 2170,
+      "touches": 32
+    },
+    {
+      "path": "orket/tools.py",
+      "adds": 1058,
+      "deletes": 943,
+      "touches": 27
+    },
+    {
+      "path": "orket/interfaces/api.py",
+      "adds": 383,
+      "deletes": 108,
+      "touches": 17
+    },
+    {
+      "path": "orket/agents/agent.py",
+      "adds": 814,
+      "deletes": 684,
+      "touches": 17
+    },
+    {
+      "path": "orket/schema.py",
+      "adds": 464,
+      "deletes": 200,
+      "touches": 15
+    },
+    {
+      "path": "orket/orchestration/orchestrator.py",
+      "adds": 524,
+      "deletes": 76,
+      "touches": 14
+    },
+    {
+      "path": "orket/logging.py",
+      "adds": 251,
+      "deletes": 60,
+      "touches": 12
+    },
+    {
+      "path": "orket/discovery.py",
+      "adds": 337,
+      "deletes": 164,
+      "touches": 11
+    },
+    {
+      "path": "orket/decision_nodes/builtins.py",
+      "adds": 491,
+      "deletes": 19,
+      "touches": 10
+    },
+    {
+      "path": "orket/orchestration/engine.py",
+      "adds": 188,
+      "deletes": 66,
+      "touches": 10
+    },
+    {
+      "path": "orket/decision_nodes/__init__.py",
+      "adds": 36,
+      "deletes": 1,
+      "touches": 9
+    },
+    {
+      "path": "orket/decision_nodes/contracts.py",
+      "adds": 191,
+      "deletes": 2,
+      "touches": 9
+    },
+    {
+      "path": "orket/decision_nodes/registry.py",
+      "adds": 251,
+      "deletes": 3,
+      "touches": 9
+    },
+    {
+      "path": "orket/llm.py",
+      "adds": 407,
+      "deletes": 311,
+      "touches": 9
+    },
+    {
+      "path": "orket/services/sandbox_orchestrator.py",
+      "adds": 604,
+      "deletes": 307,
+      "touches": 8
+    }
+  ],
+  "top_symbols_by_touches": [
+    {
+      "symbol": "orket/tools.py:function:__init__",
+      "touches": 27,
+      "adds": 14,
+      "deletes": 13,
+      "inferred_hits": 8
+    },
+    {
+      "symbol": "orket/infrastructure/async_repositories.py:function:__init__",
+      "touches": 9,
+      "adds": 9,
+      "deletes": 0,
+      "inferred_hits": 0
+    },
+    {
+      "symbol": "orket/infrastructure/async_repositories.py:function:_ensure_initialized",
+      "touches": 9,
+      "adds": 9,
+      "deletes": 0,
+      "inferred_hits": 21
+    },
+    {
+      "symbol": "orket/agents/agent.py:function:__init__",
+      "touches": 9,
+      "adds": 5,
+      "deletes": 4,
+      "inferred_hits": 0
+    },
+    {
+      "symbol": "orket/infrastructure/sqlite_repositories.py:function:_init_db",
+      "touches": 9,
+      "adds": 9,
+      "deletes": 0,
+      "inferred_hits": 9
+    },
+    {
+      "symbol": "orket/agents/agent.py:function:run",
+      "touches": 9,
+      "adds": 5,
+      "deletes": 4,
+      "inferred_hits": 0
+    },
+    {
+      "symbol": "orket/infrastructure/sqlite_repositories.py:function:__init__",
+      "touches": 9,
+      "adds": 9,
+      "deletes": 0,
+      "inferred_hits": 0
+    },
+    {
+      "symbol": "orket/infrastructure/async_card_repository.py:function:update_status",
+      "touches": 7,
+      "adds": 4,
+      "deletes": 3,
+      "inferred_hits": 4
+    },
+    {
+      "symbol": "orket/tools.py:function:report_credits",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 0
+    },
+    {
+      "symbol": "orket/tools.py:function:request_excuse",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 0
+    },
+    {
+      "symbol": "orket/infrastructure/async_card_repository.py:function:get_by_id",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 4
+    },
+    {
+      "symbol": "orket/infrastructure/async_card_repository.py:function:get_by_build",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 5
+    },
+    {
+      "symbol": "orket/infrastructure/async_card_repository.py:function:save",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 4
+    },
+    {
+      "symbol": "orket/orchestration/engine.py:function:__init__",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 0
+    },
+    {
+      "symbol": "orket/logging.py:function:log_event",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 6
+    }
+  ],
+  "top_symbols_by_inferred_hits": [
+    {
+      "symbol": "orket/infrastructure/async_card_repository.py:function:_ensure_initialized",
+      "touches": 3,
+      "adds": 2,
+      "deletes": 1,
+      "inferred_hits": 28
+    },
+    {
+      "symbol": "orket/infrastructure/async_repositories.py:function:_ensure_initialized",
+      "touches": 9,
+      "adds": 9,
+      "deletes": 0,
+      "inferred_hits": 21
+    },
+    {
+      "symbol": "orket/infrastructure/sqlite_repositories.py:function:get",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 18
+    },
+    {
+      "symbol": "orket/discovery.py:function:find_best",
+      "touches": 3,
+      "adds": 2,
+      "deletes": 1,
+      "inferred_hits": 16
+    },
+    {
+      "symbol": "orket/domain/critical_path.py:class:CriticalPathEngine",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 14
+    },
+    {
+      "symbol": "orket/domain/bug_fix_phase.py:class:BugFixPhase",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 12
+    },
+    {
+      "symbol": "orket/policy.py:class:FilesystemPolicy",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 11
+    },
+    {
+      "symbol": "orket/llm.py:class:ModelResponse",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 11
+    },
+    {
+      "symbol": "orket/infrastructure/async_card_repository.py:function:_deserialize_row",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 10
+    },
+    {
+      "symbol": "orket/domain/critical_path.py:function:calculate_weight",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 9
+    },
+    {
+      "symbol": "orket/services/webhook_db.py:function:_ensure_initialized",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 9
+    },
+    {
+      "symbol": "orket/services/idesign_validator.py:class:iDesignValidator",
+      "touches": 1,
+      "adds": 1,
+      "deletes": 0,
+      "inferred_hits": 9
+    },
+    {
+      "symbol": "orket/infrastructure/sqlite_repositories.py:function:_init_db",
+      "touches": 9,
+      "adds": 9,
+      "deletes": 0,
+      "inferred_hits": 9
+    },
+    {
+      "symbol": "orket/schema.py:class:RoleConfig",
+      "touches": 5,
+      "adds": 3,
+      "deletes": 2,
+      "inferred_hits": 9
+    },
+    {
+      "symbol": "orket/tools.py:function:__init__",
+      "touches": 27,
+      "adds": 14,
+      "deletes": 13,
+      "inferred_hits": 8
+    }
+  ]
+}
