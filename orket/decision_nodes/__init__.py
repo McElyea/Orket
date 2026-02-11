@@ -3,6 +3,7 @@ from orket.decision_nodes.contracts import (
     PlannerNode,
     RouterNode,
     PromptStrategyNode,
+    ToolStrategyNode,
     PlanningInput,
 )
 from orket.decision_nodes.registry import DecisionNodeRegistry
@@ -12,6 +13,7 @@ __all__ = [
     "RouterNode",
     "EvaluatorNode",
     "PromptStrategyNode",
+    "ToolStrategyNode",
     "PlanningInput",
     "DecisionNodeRegistry",
 ]

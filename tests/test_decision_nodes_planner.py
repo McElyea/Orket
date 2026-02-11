@@ -260,3 +260,47 @@ def test_registry_resolves_custom_evaluator():
     evaluator = registry.resolve_evaluator(org)
 
     assert evaluator is custom
+
+
+def test_registry_resolves_default_tool_strategy():
+    registry = DecisionNodeRegistry()
+
+    node = registry.resolve_tool_strategy()
+
+    from orket.decision_nodes.builtins import DefaultToolStrategyNode
+
+    assert isinstance(node, DefaultToolStrategyNode)
+
+
+def test_registry_resolves_custom_tool_strategy_from_process_rules(monkeypatch):
+    class CustomToolStrategy:
+        def compose(self, toolbox):
+            return {"custom": lambda *_args, **_kwargs: {"ok": True}}
+
+    monkeypatch.delenv("ORKET_TOOL_STRATEGY_NODE", raising=False)
+
+    registry = DecisionNodeRegistry()
+    custom = CustomToolStrategy()
+    registry.register_tool_strategy("custom-tools", custom)
+    org = SimpleNamespace(process_rules={"tool_strategy_node": "custom-tools"})
+
+    node = registry.resolve_tool_strategy(org)
+
+    assert node is custom
+
+
+def test_registry_tool_strategy_env_override_wins(monkeypatch):
+    class CustomToolStrategy:
+        def compose(self, toolbox):
+            return {"custom": lambda *_args, **_kwargs: {"ok": True}}
+
+    monkeypatch.setenv("ORKET_TOOL_STRATEGY_NODE", "custom-tools")
+
+    registry = DecisionNodeRegistry()
+    custom = CustomToolStrategy()
+    registry.register_tool_strategy("custom-tools", custom)
+    org = SimpleNamespace(process_rules={"tool_strategy_node": "default"})
+
+    node = registry.resolve_tool_strategy(org)
+
+    assert node is custom

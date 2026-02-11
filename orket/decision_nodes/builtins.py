@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 from orket.decision_nodes.contracts import PlanningInput
 from orket.schema import CardStatus
@@ -98,3 +98,29 @@ class DefaultEvaluatorNode:
             return {"action": "catastrophic", "next_retry_count": next_retry_count}
 
         return {"action": "retry", "next_retry_count": next_retry_count}
+
+
+class DefaultToolStrategyNode:
+    """
+    Built-in tool strategy decision node.
+    Preserves the legacy static tool mapping behavior.
+    """
+
+    def compose(self, toolbox: Any) -> Dict[str, Callable]:
+        return {
+            "read_file": toolbox.fs.read_file,
+            "write_file": toolbox.fs.write_file,
+            "list_directory": toolbox.fs.list_directory,
+            "image_analyze": toolbox.vision.image_analyze,
+            "image_generate": toolbox.vision.image_generate,
+            "create_issue": toolbox.cards.create_issue,
+            "update_issue_status": toolbox.cards.update_issue_status,
+            "add_issue_comment": toolbox.cards.add_issue_comment,
+            "get_issue_context": toolbox.cards.get_issue_context,
+            "nominate_card": toolbox.nominate_card,
+            "report_credits": toolbox.report_credits,
+            "refinement_proposal": toolbox.refinement_proposal,
+            "request_excuse": toolbox.request_excuse,
+            "archive_eval": toolbox.academy.archive_eval,
+            "promote_prompt": toolbox.academy.promote_prompt,
+        }

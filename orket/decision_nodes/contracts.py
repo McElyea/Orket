@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, List, Protocol
+from typing import Any, Callable, Dict, List, Protocol
 
 
 @dataclass
@@ -50,4 +50,11 @@ class PromptStrategyNode(Protocol):
         ...
 
     def select_dialect(self, model: str) -> str:
+        ...
+
+
+class ToolStrategyNode(Protocol):
+    """Decision node: composes tool-name to callable mappings."""
+
+    def compose(self, toolbox: Any) -> Dict[str, Callable]:
         ...

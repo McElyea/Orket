@@ -179,6 +179,7 @@ class Orchestrator:
             db_path=self.db_path,
             cards_repo=self.async_cards,
             tool_gate=tool_gate,
+            organization=self.org,
         )
         
         # Concurrency Control (Phase 6.2)

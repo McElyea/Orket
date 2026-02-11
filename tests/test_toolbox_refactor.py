@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
-from orket.tools import ToolBox, FileSystemTools, CardManagementTools, VisionTools, AcademyTools
+from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.tools import ToolBox, FileSystemTools, CardManagementTools, VisionTools, AcademyTools, get_tool_map
 
 def test_toolbox_composition(tmp_path):
     workspace = tmp_path / "workspace"
@@ -11,6 +12,58 @@ def test_toolbox_composition(tmp_path):
     assert isinstance(toolbox.fs, FileSystemTools)
     assert isinstance(toolbox.cards, CardManagementTools)
     assert toolbox.fs.workspace_root == workspace
+
+
+def test_tool_map_default_parity(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    toolbox = ToolBox(policy={}, workspace_root=str(workspace), references=[])
+    tool_map = get_tool_map(toolbox)
+
+    assert sorted(tool_map.keys()) == sorted([
+        "read_file",
+        "write_file",
+        "list_directory",
+        "image_analyze",
+        "image_generate",
+        "create_issue",
+        "update_issue_status",
+        "add_issue_comment",
+        "get_issue_context",
+        "nominate_card",
+        "report_credits",
+        "refinement_proposal",
+        "request_excuse",
+        "archive_eval",
+        "promote_prompt",
+    ])
+
+
+@pytest.mark.asyncio
+async def test_toolbox_execute_uses_resolved_tool_strategy(tmp_path):
+    class CustomToolStrategy:
+        def compose(self, toolbox):
+            return {"custom_sync": lambda args, context=None: {"ok": True, "value": args["x"]}}
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    registry = DecisionNodeRegistry()
+    registry.register_tool_strategy("custom", CustomToolStrategy())
+    org = type("Org", (), {"process_rules": {"tool_strategy_node": "custom"}})()
+
+    toolbox = ToolBox(
+        policy={},
+        workspace_root=str(workspace),
+        references=[],
+        organization=org,
+        decision_nodes=registry,
+    )
+
+    res = await toolbox.execute("custom_sync", {"x": 7})
+
+    assert res == {"ok": True, "value": 7}
 
 @pytest.mark.asyncio
 async def test_filesystem_tools_security(tmp_path):

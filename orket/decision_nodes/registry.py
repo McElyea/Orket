@@ -7,8 +7,16 @@ from orket.decision_nodes.builtins import (
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
     DefaultRouterNode,
+    DefaultToolStrategyNode,
 )
-from orket.decision_nodes.contracts import EvaluatorNode, PlannerNode, PromptStrategyNode, RouterNode
+from orket.decision_nodes.contracts import (
+    EvaluatorNode,
+    PlannerNode,
+    PromptStrategyNode,
+    RouterNode,
+    ToolStrategyNode,
+)
+from orket.settings import get_setting
 
 
 class DecisionNodeRegistry:
@@ -21,6 +29,7 @@ class DecisionNodeRegistry:
         self._router_nodes: Dict[str, RouterNode] = {"default": DefaultRouterNode()}
         self._prompt_strategy_nodes: Dict[str, PromptStrategyNode] = {}
         self._evaluator_nodes: Dict[str, EvaluatorNode] = {"default": DefaultEvaluatorNode()}
+        self._tool_strategy_nodes: Dict[str, ToolStrategyNode] = {"default": DefaultToolStrategyNode()}
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -33,6 +42,9 @@ class DecisionNodeRegistry:
 
     def register_evaluator(self, name: str, node: EvaluatorNode) -> None:
         self._evaluator_nodes[name] = node
+
+    def register_tool_strategy(self, name: str, node: ToolStrategyNode) -> None:
+        self._tool_strategy_nodes[name] = node
 
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
@@ -59,3 +71,14 @@ class DecisionNodeRegistry:
         if organization and getattr(organization, "process_rules", None):
             evaluator_name = organization.process_rules.get("evaluator_node", "default")
         return self._evaluator_nodes.get(evaluator_name, self._evaluator_nodes["default"])
+
+    def resolve_tool_strategy(self, organization: Any = None) -> ToolStrategyNode:
+        tool_strategy_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            tool_strategy_name = organization.process_rules.get("tool_strategy_node", "default")
+
+        env_override = get_setting("ORKET_TOOL_STRATEGY_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            tool_strategy_name = env_override.strip()
+
+        return self._tool_strategy_nodes.get(tool_strategy_name, self._tool_strategy_nodes["default"])

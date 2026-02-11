@@ -2,15 +2,35 @@ import json
 import os
 import shutil
 import asyncio
+import inspect
 from datetime import datetime, UTC
 from pathlib import Path
 from typing import List, Dict, Any, Callable, Optional, TYPE_CHECKING
 
-from orket.infrastructure.sqlite_repositories import SQLiteCardRepository
+from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.settings import get_setting
 
 if TYPE_CHECKING:
+    from orket.infrastructure.async_card_repository import AsyncCardRepository
     from orket.services.tool_gate import ToolGate
+    from orket.schema import OrganizationConfig
+
+
+class ToolRuntimeExecutor:
+    """Stable runtime seam for invoking mapped tool callables."""
+
+    async def invoke(
+        self,
+        tool_fn: Callable,
+        args: Dict[str, Any],
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        try:
+            if inspect.iscoroutinefunction(tool_fn):
+                return await tool_fn(args, context=context)
+            return tool_fn(args, context=context)
+        except (RuntimeError, ValueError, TypeError, KeyError, OSError) as exc:
+            return {"ok": False, "error": str(exc)}
 
 class BaseTools:
     def __init__(self, workspace_root: Path, references: List[Path]):
@@ -125,7 +145,7 @@ class CardManagementTools(BaseTools):
         workspace_root: Path,
         references: List[Path],
         db_path: str = "orket_persistence.db",
-        cards_repo: Optional[AsyncCardRepository] = None,
+        cards_repo: Optional["AsyncCardRepository"] = None,
         tool_gate: Optional["ToolGate"] = None,
     ):
         super().__init__(workspace_root, references)
@@ -256,12 +276,19 @@ class ToolBox:
         workspace_root: str,
         references: List[str],
         db_path: str = "orket_persistence.db",
-        cards_repo: Optional[AsyncCardRepository] = None,
+        cards_repo: Optional["AsyncCardRepository"] = None,
         tool_gate: Optional["ToolGate"] = None,
+        organization: Optional["OrganizationConfig"] = None,
+        decision_nodes: Optional[DecisionNodeRegistry] = None,
+        runtime_executor: Optional[ToolRuntimeExecutor] = None,
     ):
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
         self.db_path = db_path
+        self.organization = organization
+        self.decision_nodes = decision_nodes or DecisionNodeRegistry()
+        self.tool_strategy_node = self.decision_nodes.resolve_tool_strategy(self.organization)
+        self.runtime_executor = runtime_executor or ToolRuntimeExecutor()
         self.fs = FileSystemTools(self.root, self.refs)
         self.vision = VisionTools(self.root, self.refs)
         self.cards = CardManagementTools(
@@ -282,14 +309,7 @@ class ToolBox:
             return {"ok": False, "error": f"Unknown tool '{tool_name}'"}
         
         tool_fn = tool_map[tool_name]
-        try:
-            import inspect
-            if inspect.iscoroutinefunction(tool_fn):
-                return await tool_fn(args, context=context)
-            else:
-                return tool_fn(args, context=context)
-        except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
-            return {"ok": False, "error": str(e)}
+        return await self.runtime_executor.invoke(tool_fn, args, context=context)
 
     def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         from orket.logging import log_event
@@ -314,20 +334,4 @@ class ToolBox:
         return {"ok": True, "message": "Excuse requested."}
 
 def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
-    return {
-        "read_file": toolbox.fs.read_file,
-        "write_file": toolbox.fs.write_file,
-        "list_directory": toolbox.fs.list_directory,
-        "image_analyze": toolbox.vision.image_analyze,
-        "image_generate": toolbox.vision.image_generate,
-        "create_issue": toolbox.cards.create_issue,
-        "update_issue_status": toolbox.cards.update_issue_status,
-        "add_issue_comment": toolbox.cards.add_issue_comment,
-        "get_issue_context": toolbox.cards.get_issue_context,
-        "nominate_card": toolbox.nominate_card,
-        "report_credits": toolbox.report_credits,
-        "refinement_proposal": toolbox.refinement_proposal,
-        "request_excuse": toolbox.request_excuse,
-        "archive_eval": toolbox.academy.archive_eval,
-        "promote_prompt": toolbox.academy.promote_prompt,
-    }
+    return toolbox.tool_strategy_node.compose(toolbox)
