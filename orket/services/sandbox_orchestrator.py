@@ -19,6 +19,7 @@ from orket.domain.sandbox import (
     PortAllocation,
     SandboxRegistry,
 )
+from orket.infrastructure.command_runner import CommandRunner
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 
@@ -41,12 +42,14 @@ class SandboxOrchestrator:
         registry: Optional[SandboxRegistry] = None,
         organization: Any = None,
         decision_nodes: Optional[DecisionNodeRegistry] = None,
+        command_runner: Optional[CommandRunner] = None,
     ):
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
         self.organization = organization
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.sandbox_policy_node = self.decision_nodes.resolve_sandbox_policy(self.organization)
+        self.command_runner = command_runner or CommandRunner()
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
         from orket.infrastructure.async_file_tools import AsyncFileTools
         self.fs = AsyncFileTools(workspace_root)
@@ -134,20 +137,18 @@ class SandboxOrchestrator:
         compose_path = Path(sandbox.workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"
 
         try:
-            import asyncio
-            # docker-compose down -v (remove volumes)
-            process = await asyncio.create_subprocess_exec(
+            result = await self.command_runner.run_async(
                 "docker-compose",
-                "-f", str(compose_path),
-                "-p", sandbox.compose_project,
-                "down", "-v",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                "-f",
+                str(compose_path),
+                "-p",
+                sandbox.compose_project,
+                "down",
+                "-v",
             )
-            stdout, stderr = await process.communicate()
 
-            if process.returncode != 0:
-                raise RuntimeError(f"Failed to stop sandbox: {stderr.decode()}")
+            if result.returncode != 0:
+                raise RuntimeError(f"Failed to stop sandbox: {result.stderr}")
 
             sandbox.status = SandboxStatus.DELETED
             sandbox.deleted_at = datetime.now(UTC).isoformat()
@@ -180,26 +181,25 @@ class SandboxOrchestrator:
             return False
 
         try:
-            import asyncio
             from orket.domain.verification import AGENT_OUTPUT_DIR
-            # docker-compose ps --format json
-            process = await asyncio.create_subprocess_exec(
+            result = await self.command_runner.run_async(
                 "docker-compose",
-                "-f", str(Path(sandbox.workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"),
-                "-p", sandbox.compose_project,
-                "ps", "--format", "json",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                "-f",
+                str(Path(sandbox.workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"),
+                "-p",
+                sandbox.compose_project,
+                "ps",
+                "--format",
+                "json",
             )
-            stdout, stderr = await process.communicate()
 
-            if process.returncode != 0:
+            if result.returncode != 0:
                 sandbox.health_checks_failed += 1
                 sandbox.last_health_check = datetime.now(UTC).isoformat()
                 return False
 
             # Parse container status
-            containers = json.loads(stdout.decode()) if stdout else []
+            containers = json.loads(result.stdout) if result.stdout else []
             all_running = all(c.get("State") == "running" for c in containers)
 
             if all_running:
@@ -247,7 +247,7 @@ class SandboxOrchestrator:
         if service:
             cmd.append(service)
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        result = self.command_runner.run_sync(*cmd, timeout=10)
         return result.stdout
 
     # -------------------------------------------------------------------------
@@ -270,30 +270,28 @@ class SandboxOrchestrator:
 
     async def _deploy_sandbox(self, sandbox: Sandbox, compose_path: Path) -> None:
         """Execute docker-compose up -d."""
-        import asyncio
-        process = await asyncio.create_subprocess_exec(
+        result = await self.command_runner.run_async(
             "docker-compose",
-            "-f", str(compose_path),
-            "-p", sandbox.compose_project,
-            "up", "-d", "--build",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            "-f",
+            str(compose_path),
+            "-p",
+            sandbox.compose_project,
+            "up",
+            "-d",
+            "--build",
         )
-        stdout, stderr = await process.communicate()
-
-        if process.returncode != 0:
-            raise RuntimeError(f"Docker Compose failed: {stderr.decode()}")
+        if result.returncode != 0:
+            raise RuntimeError(f"Docker Compose failed: {result.stderr}")
 
         # Capture container IDs
-        ps_process = await asyncio.create_subprocess_exec(
+        ps_result = await self.command_runner.run_async(
             "docker-compose",
-            "-f", str(compose_path),
-            "-p", sandbox.compose_project,
-            "ps", "-q",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            "-f",
+            str(compose_path),
+            "-p",
+            sandbox.compose_project,
+            "ps",
+            "-q",
         )
-        ps_stdout, _ = await ps_process.communicate()
-
-        container_ids = ps_stdout.decode().strip().split("\n")
+        container_ids = ps_result.stdout.strip().split("\n")
         sandbox.container_ids = {f"container-{i}": cid for i, cid in enumerate(container_ids)}

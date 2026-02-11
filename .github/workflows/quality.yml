@@ -42,6 +42,10 @@ jobs:
         run: |
           python scripts/check_dependency_direction.py
 
+      - name: Enforce roadmap pytest metrics
+        run: |
+          python scripts/check_roadmap_metrics.py
+
       - name: Upload load evidence artifacts
         if: always()
         uses: actions/upload-artifact@v4

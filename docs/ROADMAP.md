@@ -6,8 +6,8 @@ Architecture authority: `docs/OrketArchitectureModel.md`.
 ## Current State
 
 The prior release gate is complete:
-1. `python -m pytest tests/ -q` -> 196 passed.
-2. `python -m pytest --collect-only -q` -> 196 collected.
+1. `python -m pytest tests/ -q` -> 197 passed.
+2. `python -m pytest --collect-only -q` -> 197 collected.
 3. `rg -n "except Exception" orket` -> 0 matches.
 4. Load artifact archived: `benchmarks/results/2026-02-11_phase5_load.json`.
 5. CI includes `quality`, `docker_smoke`, and `migration_smoke` jobs.
@@ -63,13 +63,20 @@ The prior release gate is complete:
 - `orket/orket.py` now re-exports legacy symbols for compatibility.
 18. Decision-node override matrix smoke tests added:
 - `tests/test_decision_node_override_matrix.py` verifies process-rules and env override behavior across runtime seams.
+19. Sandbox command-runner seam extracted:
+- Added infrastructure adapter: `orket/infrastructure/command_runner.py`.
+- `SandboxOrchestrator` now delegates subprocess execution through `CommandRunner`.
+- Added runner-injection test: `tests/test_sandbox_command_runner.py`.
+20. Roadmap metrics drift gate added:
+- Script: `scripts/check_roadmap_metrics.py`.
+- CI quality job enforces roadmap pass/collect counters against live pytest output.
 
-## Phase L: Volatility Decomposition (Next)
+## Phase M: Volatility Decomposition (Next)
 
 Goal: keep reducing monolithic hotspots while preserving behavior parity.
 
-1. Extract `sandbox_orchestrator` command runner mechanics into an infrastructure adapter seam.
-2. Add lint checks for docs/code drift on roadmap metrics (pytest pass/collect counters).
+1. Extract orchestration execution-loop policy seams from `orket/orchestration/orchestrator.py` into focused decision/runtime nodes.
+2. Add CI fast-path for architecture gates (`dependency_direction`, `roadmap_metrics`) to run before full test matrix.
 
 ## Working Model
 
