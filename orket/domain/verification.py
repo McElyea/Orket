@@ -131,6 +131,12 @@ if __name__ == "__main__":
 """
 
     @staticmethod
+    def _mark_all_failed(verification: IssueVerification) -> int:
+        for scenario in verification.scenarios:
+            scenario.status = "fail"
+        return len(verification.scenarios)
+
+    @staticmethod
     def verify(verification: IssueVerification, workspace_root: Path) -> VerificationResult:
         """Execute verification logic for an issue."""
         logs = []
@@ -169,10 +175,13 @@ if __name__ == "__main__":
 
         if not fixture_path.exists():
             logs.append(f"ERROR: Fixture file not found at {fixture_path}")
+            failed = VerificationEngine._mark_all_failed(verification)
             return VerificationResult(
                 timestamp=now,
                 total_scenarios=len(verification.scenarios),
-                passed=0, failed=failed, logs=logs
+                passed=0,
+                failed=failed,
+                logs=logs,
             )
 
         timeout_sec = int(os.getenv("ORKET_VERIFY_TIMEOUT_SEC", "5"))
@@ -206,6 +215,7 @@ if __name__ == "__main__":
                 logs.append(f"FATAL ERROR loading fixture: subprocess exit code {result.returncode}")
                 if result.stderr:
                     logs.append(f"STDERR: {result.stderr.strip()}")
+                failed = VerificationEngine._mark_all_failed(verification)
             else:
                 try:
                     parsed = json.loads(result.stdout or "{}")
@@ -216,6 +226,7 @@ if __name__ == "__main__":
                     logs.append(f"FATAL ERROR loading fixture: {parsed.get('fatal_error', 'unknown')}")
                     if parsed.get("traceback"):
                         logs.append(parsed["traceback"])
+                    failed = VerificationEngine._mark_all_failed(verification)
                 else:
                     outcomes = {item.get("id"): item for item in parsed.get("results", [])}
                     for scenario in verification.scenarios:
@@ -242,13 +253,12 @@ if __name__ == "__main__":
                             failed += 1
         except subprocess.TimeoutExpired:
             logs.append(f"FATAL ERROR loading fixture: subprocess timeout after {timeout_sec}s")
-            for scenario in verification.scenarios:
-                scenario.status = "fail"
-            failed = len(verification.scenarios)
+            failed = VerificationEngine._mark_all_failed(verification)
         except VerificationSecurityError:
             raise
         except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as e:
             logs.append(f"FATAL ERROR loading fixture: {type(e).__name__}: {e}")
+            failed = VerificationEngine._mark_all_failed(verification)
 
         logs.append(f"--- Verification Complete: {passed} Passed, {failed} Failed ---")
         return VerificationResult(

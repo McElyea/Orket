@@ -232,7 +232,7 @@ async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
 
 @v1_router.get("/system/board")
 async def get_system_board(dept: str = "core"):
-    return engine.get_board()
+    return api_runtime_node.resolve_system_board(dept)
 
 @v1_router.get("/system/preview-asset")
 async def preview_asset(path: str, issue_id: Optional[str] = None):

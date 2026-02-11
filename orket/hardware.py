@@ -1,8 +1,8 @@
 # orket/hardware.py
 import psutil
 import subprocess
-import os
 from dataclasses import dataclass
+from datetime import datetime, UTC
 from typing import Optional, Dict, Any
 
 @dataclass
@@ -47,7 +47,7 @@ def get_metrics_snapshot() -> Dict[str, Any]:
         "ram_percent": vm.percent,
         "vram_gb_used": get_vram_usage(),
         "vram_total_gb": get_vram_info(),
-        "timestamp": os.getlogin() # Placeholder for timestamp logic
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 def get_vram_usage() -> float:

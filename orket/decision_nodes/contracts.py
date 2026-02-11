@@ -138,6 +138,9 @@ class ApiRuntimeStrategyNode(Protocol):
     def create_file_tools(self, project_root: Any) -> Any:
         ...
 
+    def resolve_system_board(self, department: str) -> Any:
+        ...
+
     def should_remove_websocket(self, exception: Exception) -> bool:
         ...
 

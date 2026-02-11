@@ -264,6 +264,10 @@ class DefaultApiRuntimeStrategyNode:
         from orket.infrastructure.async_file_tools import AsyncFileTools
         return AsyncFileTools(project_root)
 
+    def resolve_system_board(self, department: str) -> Any:
+        from orket.board import get_board_hierarchy
+        return get_board_hierarchy(department)
+
     def should_remove_websocket(self, exception: Exception) -> bool:
         return isinstance(exception, (RuntimeError, ValueError))
 

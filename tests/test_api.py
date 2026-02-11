@@ -1,6 +1,8 @@
 import pytest
+from datetime import datetime
 from fastapi.testclient import TestClient
 from orket.interfaces.api import app
+import orket.interfaces.api as api_module
 import os
 
 client = TestClient(app)
@@ -67,3 +69,18 @@ def test_metrics():
         data = response.json()
         assert "cpu" in data
         assert "memory" in data
+        assert "timestamp" in data
+        datetime.fromisoformat(data["timestamp"])
+
+
+def test_system_board_uses_dept_query(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    def fake_board(department):
+        return {"department": department}
+
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_system_board", fake_board)
+
+    response = client.get("/v1/system/board?dept=product", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json() == {"department": "product"}

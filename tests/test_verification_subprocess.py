@@ -58,3 +58,53 @@ def test_verification_subprocess_timeout_marks_failure(tmp_path, monkeypatch):
     result = VerificationEngine.verify(verification, workspace)
     assert result.failed == 1
     assert any("timeout" in entry.lower() for entry in result.logs)
+
+
+def test_verification_missing_fixture_marks_all_failed(tmp_path):
+    workspace = tmp_path / "workspace"
+    (workspace / "verification").mkdir(parents=True)
+
+    verification = IssueVerification(
+        fixture_path="verification/missing_fixture.py",
+        scenarios=[
+            VerificationScenario(
+                id="M1",
+                description="missing fixture",
+                input_data={"value": 1},
+                expected_output=1,
+            )
+        ],
+    )
+
+    result = VerificationEngine.verify(verification, workspace)
+    assert result.failed == 1
+    assert result.passed == 0
+    assert any("not found" in entry.lower() for entry in result.logs)
+
+
+def test_verification_subprocess_fatal_exit_marks_all_failed(tmp_path):
+    workspace = tmp_path / "workspace"
+    verification_dir = workspace / "verification"
+    verification_dir.mkdir(parents=True)
+    fixture_path = verification_dir / "fixture_fatal_exit.py"
+    fixture_path.write_text(
+        "raise SystemExit(3)\n",
+        encoding="utf-8",
+    )
+
+    verification = IssueVerification(
+        fixture_path="verification/fixture_fatal_exit.py",
+        scenarios=[
+            VerificationScenario(
+                id="F1",
+                description="fatal subprocess exit",
+                input_data={"value": 1},
+                expected_output=1,
+            )
+        ],
+    )
+
+    result = VerificationEngine.verify(verification, workspace)
+    assert result.failed == 1
+    assert result.passed == 0
+    assert any("subprocess exit code" in entry.lower() for entry in result.logs)
