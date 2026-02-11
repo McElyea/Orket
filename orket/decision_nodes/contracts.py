@@ -58,3 +58,16 @@ class ToolStrategyNode(Protocol):
 
     def compose(self, toolbox: Any) -> Dict[str, Callable]:
         ...
+
+
+class ApiRuntimeStrategyNode(Protocol):
+    """Decision node: runtime-variable API choices."""
+
+    def parse_allowed_origins(self, origins_value: str) -> List[str]:
+        ...
+
+    def resolve_asset_id(self, path: str | None, issue_id: str | None) -> str | None:
+        ...
+
+    def create_session_id(self) -> str:
+        ...

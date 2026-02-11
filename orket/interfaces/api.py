@@ -1,5 +1,4 @@
 import asyncio
-import uuid
 import json
 from pathlib import Path
 from datetime import datetime, timedelta, UTC
@@ -18,6 +17,7 @@ from orket.logging import subscribe_to_events
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.settings import load_user_settings
+from orket.decision_nodes.registry import DecisionNodeRegistry
 
 
 from pydantic import BaseModel, Field
@@ -76,7 +76,8 @@ app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
 
 origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
-origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
+api_runtime_node = DecisionNodeRegistry().resolve_api_runtime()
+origins = api_runtime_node.parse_allowed_origins(origins_str)
 
 app.add_middleware(
     CORSMiddleware,
@@ -175,9 +176,9 @@ async def get_calendar():
 
 @v1_router.post("/system/run-active")
 async def run_active_asset(req: RunAssetRequest):
-    session_id = str(uuid.uuid4())[:8]
+    session_id = api_runtime_node.create_session_id()
 
-    asset_id = req.issue_id if req.issue_id else Path(req.path).stem if req.path else None
+    asset_id = api_runtime_node.resolve_asset_id(req.path, req.issue_id)
     if not asset_id: raise HTTPException(status_code=400, detail="No asset ID provided.")
 
     print(f"  [API] v1 EXECUTE: {asset_id} (Type: {req.type}, Session: {session_id})")

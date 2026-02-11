@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from orket.decision_nodes.builtins import (
+    DefaultApiRuntimeStrategyNode,
     DefaultEvaluatorNode,
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
@@ -14,6 +15,7 @@ from orket.decision_nodes.contracts import (
     PlannerNode,
     PromptStrategyNode,
     RouterNode,
+    ApiRuntimeStrategyNode,
     ToolStrategyNode,
 )
 from orket.settings import get_setting
@@ -30,6 +32,9 @@ class DecisionNodeRegistry:
         self._prompt_strategy_nodes: Dict[str, PromptStrategyNode] = {}
         self._evaluator_nodes: Dict[str, EvaluatorNode] = {"default": DefaultEvaluatorNode()}
         self._tool_strategy_nodes: Dict[str, ToolStrategyNode] = {"default": DefaultToolStrategyNode()}
+        self._api_runtime_nodes: Dict[str, ApiRuntimeStrategyNode] = {
+            "default": DefaultApiRuntimeStrategyNode()
+        }
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node
@@ -45,6 +50,9 @@ class DecisionNodeRegistry:
 
     def register_tool_strategy(self, name: str, node: ToolStrategyNode) -> None:
         self._tool_strategy_nodes[name] = node
+
+    def register_api_runtime(self, name: str, node: ApiRuntimeStrategyNode) -> None:
+        self._api_runtime_nodes[name] = node
 
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
@@ -82,3 +90,14 @@ class DecisionNodeRegistry:
             tool_strategy_name = env_override.strip()
 
         return self._tool_strategy_nodes.get(tool_strategy_name, self._tool_strategy_nodes["default"])
+
+    def resolve_api_runtime(self, organization: Any = None) -> ApiRuntimeStrategyNode:
+        api_runtime_name = "default"
+        if organization and getattr(organization, "process_rules", None):
+            api_runtime_name = organization.process_rules.get("api_runtime_node", "default")
+
+        env_override = get_setting("ORKET_API_RUNTIME_NODE")
+        if isinstance(env_override, str) and env_override.strip():
+            api_runtime_name = env_override.strip()
+
+        return self._api_runtime_nodes.get(api_runtime_name, self._api_runtime_nodes["default"])

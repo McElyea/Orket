@@ -26,13 +26,16 @@ The prior release gate is complete:
 10. Volatility evidence archived:
 - Churn report artifact: `benchmarks/results/2026-02-11_phaseH_churn.json`.
 - Repro command: `python scripts/churn_report.py --scope orket --top 20`.
+11. API runtime strategy seam extracted:
+- Added `ApiRuntimeStrategyNode` with default implementation.
+- `orket/interfaces/api.py` now resolves origins/session-id/asset-id through decision node.
+- Supports `process_rules.api_runtime_node` with `ORKET_API_RUNTIME_NODE` env override.
 
 ## Phase H: Volatility Decomposition
 
 Goal: continue dogfooding architecture by extracting the next high-churn volatility seams.
 
-1. Extract API runtime strategy seams from `orket/interfaces/api.py` where behavior is expected to vary.
-2. Extract sandbox/runtime policy seams from:
+1. Extract sandbox/runtime policy seams from:
 - `orket/services/sandbox_orchestrator.py`
 - `orket/orchestration/engine.py`
 

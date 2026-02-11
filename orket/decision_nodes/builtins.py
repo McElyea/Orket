@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List
+from pathlib import Path
+import uuid
 
 from orket.decision_nodes.contracts import PlanningInput
 from orket.schema import CardStatus
@@ -124,3 +126,23 @@ class DefaultToolStrategyNode:
             "archive_eval": toolbox.academy.archive_eval,
             "promote_prompt": toolbox.academy.promote_prompt,
         }
+
+
+class DefaultApiRuntimeStrategyNode:
+    """
+    Built-in API runtime strategy node.
+    Preserves existing API request/runtime decision behavior.
+    """
+
+    def parse_allowed_origins(self, origins_value: str) -> List[str]:
+        return [origin.strip() for origin in origins_value.split(",") if origin.strip()]
+
+    def resolve_asset_id(self, path: str | None, issue_id: str | None) -> str | None:
+        if issue_id:
+            return issue_id
+        if path:
+            return Path(path).stem
+        return None
+
+    def create_session_id(self) -> str:
+        return str(uuid.uuid4())[:8]

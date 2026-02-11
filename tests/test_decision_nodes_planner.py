@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from orket.decision_nodes.builtins import (
+    DefaultApiRuntimeStrategyNode,
     DefaultEvaluatorNode,
     DefaultPlannerNode,
     DefaultPromptStrategyNode,
@@ -302,5 +303,61 @@ def test_registry_tool_strategy_env_override_wins(monkeypatch):
     org = SimpleNamespace(process_rules={"tool_strategy_node": "default"})
 
     node = registry.resolve_tool_strategy(org)
+
+    assert node is custom
+
+
+def test_default_api_runtime_strategy_parity():
+    node = DefaultApiRuntimeStrategyNode()
+
+    assert node.parse_allowed_origins("http://a, http://b") == ["http://a", "http://b"]
+    assert node.resolve_asset_id(path="model/core/issues/demo.json", issue_id=None) == "demo"
+    assert node.resolve_asset_id(path=None, issue_id="ISSUE-1") == "ISSUE-1"
+    assert node.resolve_asset_id(path=None, issue_id=None) is None
+    assert len(node.create_session_id()) == 8
+
+
+def test_registry_resolves_custom_api_runtime_from_process_rules(monkeypatch):
+    class CustomApiRuntime:
+        def parse_allowed_origins(self, origins_value):
+            return ["http://custom"]
+
+        def resolve_asset_id(self, path, issue_id):
+            return "X"
+
+        def create_session_id(self):
+            return "SESSIONX"
+
+    monkeypatch.delenv("ORKET_API_RUNTIME_NODE", raising=False)
+
+    registry = DecisionNodeRegistry()
+    custom = CustomApiRuntime()
+    registry.register_api_runtime("custom-api", custom)
+    org = SimpleNamespace(process_rules={"api_runtime_node": "custom-api"})
+
+    node = registry.resolve_api_runtime(org)
+
+    assert node is custom
+
+
+def test_registry_api_runtime_env_override_wins(monkeypatch):
+    class CustomApiRuntime:
+        def parse_allowed_origins(self, origins_value):
+            return ["http://custom"]
+
+        def resolve_asset_id(self, path, issue_id):
+            return "X"
+
+        def create_session_id(self):
+            return "SESSIONX"
+
+    monkeypatch.setenv("ORKET_API_RUNTIME_NODE", "custom-api")
+
+    registry = DecisionNodeRegistry()
+    custom = CustomApiRuntime()
+    registry.register_api_runtime("custom-api", custom)
+    org = SimpleNamespace(process_rules={"api_runtime_node": "default"})
+
+    node = registry.resolve_api_runtime(org)
 
     assert node is custom
