@@ -185,7 +185,7 @@ This addresses ChatGPT's review finding: "Each test reconstructs an entire minia
 
 Three implementations exist: `FileSystemTools` (sync, tools.py), `AsyncFileTools` (async, infrastructure/), and raw `Path.read_text()` calls in api.py, logging.py, orket.py.
 
-**Status**: [> ] IN PROGRESS. `AsyncFileTools` integrated into `tools.py`. `api.py` refactor started.
+**Status**: [> ] IN PROGRESS. `AsyncFileTools` integrated into `tools.py`; `api.py` read/save endpoints and `orket.py` config loading paths now migrated. Remaining direct file I/O cleanup continues in other modules.
 
 ### 3.2 Consolidate Status Update Logic
 
@@ -196,13 +196,15 @@ Status validation is duplicated in:
 
 Target: StateMachine is the single authority. ToolGate delegates to StateMachine. CardManagementTools delegates to ToolGate.
 
+**Status**: [> ] PARTIAL. `ToolGate` delegates to `StateMachine`, and `CardManagementTools.update_issue_status()` now validates via `StateMachine` (remaining alignment: explicit ToolGate delegation path).
+
 ### 3.3 Complete GovernanceAuditor
 
 `orket/orchestration/governance_auditor.py` exists but has incomplete methods:
-- `_audit_destructive_operation()` -- [ ] TODO
-- `_audit_issue_creation()` -- [ ] TODO
+- `_audit_destructive_operation()` -- [x] DONE
+- `_audit_issue_creation()` -- [x] DONE
 
-**Status**: [x] STRUCTURE VERIFIED. Methods added to `GovernanceAuditor` class.
+**Status**: [x] DONE. Methods implemented and wired into tool-call auditing.
 
 ### 3.4 Exception Hierarchy Expansion
 

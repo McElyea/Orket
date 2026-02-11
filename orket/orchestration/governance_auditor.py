@@ -15,6 +15,8 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from orket.domain.execution import ExecutionTurn, ToolCall
+from orket.domain.state_machine import StateMachine, StateMachineError
+from orket.schema import CardStatus, CardType
 from orket.logging import log_event
 
 
@@ -136,6 +138,14 @@ class GovernanceAuditor:
         if tool_call.tool == "update_issue_status":
             violations.extend(self._audit_status_change(tool_call, role_name))
 
+        # Check destructive operation safeguards
+        if tool_call.tool in {"delete_file", "reset_issue"}:
+            violations.extend(self._audit_destructive_operation(tool_call))
+
+        # Check issue creation guardrails
+        if tool_call.tool == "create_issue":
+            violations.extend(self._audit_issue_creation(tool_call))
+
         return violations
 
     def _audit_write_file(self, tool_call: ToolCall, role_name: str) -> List[str]:
@@ -162,22 +172,43 @@ class GovernanceAuditor:
         return violations
 
     def _audit_status_change(self, tool_call: ToolCall, role_name: str) -> List[str]:
-        """Audit status change tool calls for permission violations."""
+        """Audit status change using StateMachine as the single authority."""
         violations = []
         args = tool_call.args or {}
-        new_status = args.get("status", "").lower()
+        requested = args.get("status")
+        current = args.get("current_status")
+        if not requested:
+            violations.append("update_issue_status missing required 'status'")
+            return violations
 
-        # Only project_manager can cancel
-        if new_status == "canceled" and "project_manager" not in role_name.lower():
-            violations.append(
-                f"Role '{role_name}' cannot set status to 'canceled' (PM only)"
-            )
+        # If current status is missing, defer transition checks to pre-execution ToolGate.
+        if not current:
+            return violations
 
-        # Only reviewer roles can set to done
-        reviewer_roles = ["integrity_guard", "reviewer", "lead_architect"]
-        if new_status == "done" and not any(r in role_name.lower() for r in reviewer_roles):
-            violations.append(
-                f"Role '{role_name}' cannot set status to 'done' (reviewer roles only)"
+        try:
+            StateMachine.validate_transition(
+                card_type=CardType.ISSUE,
+                current=CardStatus(str(current).lower()),
+                requested=CardStatus(str(requested).lower()),
+                roles=[role_name],
+                wait_reason=args.get("wait_reason"),
             )
+        except (ValueError, StateMachineError) as exc:
+            violations.append(str(exc))
 
         return violations
+
+    def _audit_destructive_operation(self, tool_call: ToolCall) -> List[str]:
+        """Ensure destructive operations have explicit confirmation."""
+        args = tool_call.args or {}
+        if not args.get("confirm", False):
+            return [f"Destructive operation '{tool_call.tool}' missing confirm=true"]
+        return []
+
+    def _audit_issue_creation(self, tool_call: ToolCall) -> List[str]:
+        """Ensure newly created issues have minimally meaningful summaries."""
+        args = tool_call.args or {}
+        summary = str(args.get("summary", "")).strip()
+        if len(summary) < 5:
+            return ["Issue summary must be at least 5 characters"]
+        return []

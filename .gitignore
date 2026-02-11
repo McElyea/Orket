@@ -57,6 +57,7 @@ product/**/*.log
 
 # Temp
 .env
+.claude/
 .gemini/
 C:/Users/jonmc/.gemini/tmp/
 project_dumper_small.py

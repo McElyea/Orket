@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Type
 import json
 import uuid
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, UTC
 from functools import lru_cache
 
@@ -18,6 +19,7 @@ from orket.utils import get_eos_sprint, sanitize_name
 from orket.exceptions import CardNotFound, ComplexityViolation
 from orket.infrastructure.async_repositories import AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository
 from orket.infrastructure.async_card_repository import AsyncCardRepository
+from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orchestration.turn_executor import TurnExecutor
 from orket.orchestration.orchestrator import Orchestrator
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
@@ -41,8 +43,28 @@ class ConfigLoader:
         self.config_dir = root / "config"
         self.model_dir = root / "model"
         self.department = department
+        self.file_tools = AsyncFileTools(self.root)
+
+    def _run_async(self, coro):
+        """Run async file ops from sync callers without nested-loop failures."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(lambda: asyncio.run(coro)).result()
+
+    async def _read_text(self, p: Path) -> str:
+        try:
+            relative_path = p.resolve().relative_to(self.root.resolve()).as_posix()
+        except ValueError:
+            relative_path = str(p)
+        return await self.file_tools.read_file(relative_path)
 
     def load_organization(self) -> Optional[OrganizationConfig]:
+        return self._run_async(self.load_organization_async())
+
+    async def load_organization_async(self) -> Optional[OrganizationConfig]:
         from orket.schema import OrganizationConfig
         from orket.settings import get_setting
         
@@ -54,8 +76,8 @@ class ConfigLoader:
         
         if info_path.exists() and arch_path.exists():
             try:
-                info = json.loads(info_path.read_text(encoding="utf-8"))
-                arch = json.loads(arch_path.read_text(encoding="utf-8"))
+                info = json.loads(await self._read_text(info_path))
+                arch = json.loads(await self._read_text(arch_path))
                 org_data = {**info, **arch}
             except Exception as e:
                 log_event("config_error", {"error": f"Failed to load modular config: {e}"})
@@ -69,7 +91,7 @@ class ConfigLoader:
             for p in paths:
                 if p.exists():
                     try:
-                        org_data = json.loads(p.read_text(encoding="utf-8"))
+                        org_data = json.loads(await self._read_text(p))
                         break
                     except Exception:
                         continue
@@ -95,6 +117,9 @@ class ConfigLoader:
         return org
 
     def load_department(self, name: str) -> Optional[DepartmentConfig]:
+        return self._run_async(self.load_department_async(name))
+
+    async def load_department_async(self, name: str) -> Optional[DepartmentConfig]:
         from orket.schema import DepartmentConfig
         paths = [
             self.config_dir / "departments" / f"{name}.json",
@@ -102,14 +127,22 @@ class ConfigLoader:
         ]
         for p in paths:
             if p.exists():
-                return DepartmentConfig.model_validate_json(p.read_text(encoding="utf-8"))
+                raw = await self._read_text(p)
+                return DepartmentConfig.model_validate_json(raw)
         return None
 
     def load_asset(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
-        return model_type.model_validate_json(self._load_asset_raw(category, name, self.department))
+        return self._run_async(self.load_asset_async(category, name, model_type))
+
+    async def load_asset_async(self, category: str, name: str, model_type: Type[BaseModel]) -> Any:
+        raw = await self._load_asset_raw_async(category, name, self.department)
+        return model_type.model_validate_json(raw)
 
     @lru_cache(maxsize=256)
     def _load_asset_raw(self, category: str, name: str, dept: str) -> str:
+        return self._run_async(self._load_asset_raw_async(category, name, dept))
+
+    async def _load_asset_raw_async(self, category: str, name: str, dept: str) -> str:
         # 1. Unified Config
         paths = [
             self.config_dir / category / f"{name}.json",
@@ -119,22 +152,28 @@ class ConfigLoader:
         
         for p in paths:
             if p.exists():
-                return p.read_text(encoding="utf-8")
+                return await self._read_text(p)
         
         raise CardNotFound(f"Asset '{name}' not found in category '{category}' for department '{dept}'.")
 
     def list_assets(self, category: str) -> List[str]:
-        assets = set()
-        search_paths = [
-            self.config_dir / category,
-            self.model_dir / self.department / category,
-            self.model_dir / "core" / category
-        ]
-        for p in search_paths:
-            if p.exists():
-                for f in p.glob("*.json"):
-                    assets.add(f.stem)
-        return sorted(list(assets))
+        return self._run_async(self.list_assets_async(category))
+
+    async def list_assets_async(self, category: str) -> List[str]:
+        def _collect_assets() -> List[str]:
+            assets = set()
+            search_paths = [
+                self.config_dir / category,
+                self.model_dir / self.department / category,
+                self.model_dir / "core" / category
+            ]
+            for p in search_paths:
+                if p.exists():
+                    for f in p.glob("*.json"):
+                        assets.add(f.stem)
+            return sorted(list(assets))
+
+        return await asyncio.to_thread(_collect_assets)
 
 # ---------------------------------------------------------------------------
 # 2. The Execution Pipeline (Explicit Orchestration Flow)
@@ -191,23 +230,23 @@ class ExecutionPipeline:
         )
 
     async def run_card(self, card_id: str, **kwargs) -> Any:
-        epics = self.loader.list_assets("epics")
+        epics = await self.loader.list_assets_async("epics")
         if card_id in epics:
             return await self.run_epic(card_id, **kwargs)
         
-        rocks = self.loader.list_assets("rocks")
+        rocks = await self.loader.list_assets_async("rocks")
         if card_id in rocks:
             return await self.run_rock(card_id, **kwargs)
 
-        parent_epic, parent_ename, target_issue = self._find_parent_epic(card_id)
+        parent_epic, parent_ename, target_issue = await self._find_parent_epic(card_id)
         if not parent_epic: raise CardNotFound(f"Card {card_id} not found.")
         print(f"  [PIPELINE] Executing Atomic Issue: {card_id} (Parent: {parent_epic.name})")
         return await self.run_epic(parent_ename, target_issue_id=card_id, **kwargs)
 
     async def run_epic(self, epic_name: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, target_issue_id: str = None, **kwargs) -> List[Dict]:
-        epic = self.loader.load_asset("epics", epic_name, EpicConfig)
-        team = self.loader.load_asset("teams", epic.team, TeamConfig)
-        env = self.loader.load_asset("environments", epic.environment, EnvironmentConfig)
+        epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
+        team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
+        env = await self.loader.load_asset_async("environments", epic.environment, EnvironmentConfig)
         
         # --- COMPLEXITY GATE (iDesign Enforcement) ---
         threshold = 7
@@ -281,12 +320,12 @@ class ExecutionPipeline:
         # Clear active log for UI cleanliness
         root_log = Path("workspace/default/orket.log")
         if root_log.exists():
-            root_log.write_text("", encoding="utf-8")
+            await self.loader.file_tools.write_file("workspace/default/orket.log", "")
 
         return legacy_transcript
 
     async def run_rock(self, rock_name: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, **kwargs) -> Dict:
-        rock = self.loader.load_asset("rocks", rock_name, RockConfig)
+        rock = await self.loader.load_asset_async("rocks", rock_name, RockConfig)
         sid = session_id or str(uuid.uuid4())[:8]
         active_build = build_id or f"rock-build-{sanitize_name(rock_name)}"
         results = []
@@ -302,10 +341,10 @@ class ExecutionPipeline:
         
         return {"rock": rock.name, "results": results}
 
-    def _find_parent_epic(self, issue_id: str) -> tuple[EpicConfig | None, str | None, IssueConfig | None]:
-        for ename in self.loader.list_assets("epics"):
+    async def _find_parent_epic(self, issue_id: str) -> tuple[EpicConfig | None, str | None, IssueConfig | None]:
+        for ename in await self.loader.list_assets_async("epics"):
             try:
-                epic = self.loader.load_asset("epics", ename, EpicConfig)
+                epic = await self.loader.load_asset_async("epics", ename, EpicConfig)
                 for i in epic.issues:
                     if i.id == issue_id: return epic, ename, i
             except (FileNotFoundError, ValueError, CardNotFound): continue

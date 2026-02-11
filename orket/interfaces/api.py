@@ -94,10 +94,18 @@ async def heartbeat():
     }
 
 @v1_router.get("/system/metrics")
-async def get_metrics(): return get_metrics_snapshot()
+async def get_metrics():
+    snapshot = get_metrics_snapshot()
+    if "cpu" not in snapshot and "cpu_percent" in snapshot:
+        snapshot["cpu"] = snapshot["cpu_percent"]
+    if "memory" not in snapshot and "ram_percent" in snapshot:
+        snapshot["memory"] = snapshot["ram_percent"]
+    return snapshot
 
 @v1_router.get("/system/explorer")
 async def list_system_files(path: str = "."):
+    if any(part == ".." for part in Path(path).parts):
+        raise HTTPException(403)
     rel_path = path.strip("./") if path and path != "." else ""
     target = (PROJECT_ROOT / rel_path).resolve()
     if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
@@ -113,15 +121,22 @@ async def list_system_files(path: str = "."):
 
 @v1_router.get("/system/read")
 async def read_system_file(path: str):
-    target = (PROJECT_ROOT / path).resolve()
-    if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
-    return {"content": target.read_text(encoding="utf-8")}
+    fs = AsyncFileTools(PROJECT_ROOT)
+    try:
+        content = await fs.read_file(path)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="File not found") from exc
+    return {"content": content}
 
 @v1_router.post("/system/save")
 async def save_system_file(req: SaveFileRequest):
-    target = (PROJECT_ROOT / req.path).resolve()
-    if not target.is_relative_to(PROJECT_ROOT): raise HTTPException(403)
-    target.write_text(req.content, encoding="utf-8")
+    fs = AsyncFileTools(PROJECT_ROOT)
+    try:
+        await fs.write_file(req.path, req.content)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     return {"ok": True}
 
 @v1_router.get("/system/calendar")

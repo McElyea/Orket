@@ -129,9 +129,12 @@ class CardManagementTools(BaseTools):
         return {"ok": True, "issue_id": issue_id}
 
     async def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        from orket.schema import CardStatus
+        from orket.schema import CardStatus, CardType
+        from orket.domain.state_machine import StateMachine, StateMachineError
+        context = context or {}
         issue_id = args.get("issue_id") or context.get("issue_id")
-        new_status_str, role = args.get("status", "").lower(), context.get("role", "")
+        new_status_str = args.get("status", "").lower()
+        role = context.get("role", "")
         if not issue_id or not new_status_str: return {"ok": False, "error": "Missing params"}
         
         try:
@@ -139,8 +142,23 @@ class CardManagementTools(BaseTools):
         except ValueError:
             return {"ok": False, "error": f"Invalid status: {new_status_str}"}
 
-        if new_status == CardStatus.CANCELED and "project_manager" not in role.lower():
-            return {"ok": False, "error": "Permission Denied: Only PM can cancel work."}
+        issue = await self.cards.get_by_id(issue_id)
+        if not issue:
+            return {"ok": False, "error": f"Issue not found: {issue_id}"}
+
+        current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status))
+        roles = [role] if role else []
+        wait_reason = args.get("wait_reason")
+        try:
+            StateMachine.validate_transition(
+                card_type=CardType.ISSUE,
+                current=current_status,
+                requested=new_status,
+                roles=roles,
+                wait_reason=wait_reason
+            )
+        except StateMachineError as exc:
+            return {"ok": False, "error": str(exc)}
             
         await self.cards.update_status(issue_id, new_status)
         return {"ok": True, "issue_id": issue_id, "status": new_status.value}
