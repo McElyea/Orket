@@ -52,6 +52,32 @@ def test_read_security(monkeypatch):
     response = client.get("/v1/system/read?path=../../etc/passwd", headers={"X-API-Key": "test-key"})
     assert response.status_code == 403
 
+def test_read_missing_file_returns_404(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeFs:
+        async def read_file(self, path):
+            raise FileNotFoundError(path)
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    response = client.get("/v1/system/read?path=missing.txt", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 404
+
+def test_save_permission_denied_returns_403(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeFs:
+        async def write_file(self, path, content):
+            raise PermissionError("blocked")
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    response = client.post(
+        "/v1/system/save",
+        json={"path": "x.txt", "content": "hello"},
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 403
+
 def test_calendar():
     # Public or private? api.py says it's in v1_router
     headers = {"X-API-Key": os.getenv("ORKET_API_KEY", "")}
@@ -118,6 +144,33 @@ def test_preview_asset_uses_runtime_invocation(monkeypatch):
     )
     assert response.status_code == 200
     assert response.json() == {"mode": "issue", "issue_id": "ISSUE-9", "asset_name": "asset-x", "department": "core"}
+
+
+def test_preview_asset_rejects_unsupported_mode(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeBuilder:
+        async def build_epic_preview(self, asset_name, department):
+            return {"asset_name": asset_name, "department": department}
+
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_preview_target",
+        lambda path, issue_id: {"mode": "custom", "asset_name": "asset-x", "department": "core"},
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_preview_invocation",
+        lambda target, issue_id: {"method_name": "build_custom_preview", "args": [target["asset_name"], target["department"]]},
+    )
+    monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
+
+    response = client.get(
+        "/v1/system/preview-asset?path=model/core/epics/x.json",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 400
+    assert "Unsupported preview mode" in response.json()["detail"]
 
 
 def test_run_active_uses_runtime_invocation(monkeypatch):

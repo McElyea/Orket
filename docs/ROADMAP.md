@@ -75,6 +75,10 @@ Completed:
    - `/v1/sandboxes`
    - `/v1/sandboxes/{sandbox_id}/stop`
 7. Added runtime policy and error-path parity tests for sandbox route invocation behavior.
+8. Added conditional error-path API parity tests:
+   - `/v1/system/read` missing-file 404
+   - `/v1/system/save` permission-denied 403
+   - `/v1/system/preview-asset` unsupported-mode 400
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
