@@ -328,6 +328,9 @@ class DefaultApiRuntimeStrategyNode:
         from orket.driver import OrketDriver
         return OrketDriver()
 
+    def resolve_chat_driver_invocation(self, message: str) -> Dict[str, Any]:
+        return {"method_name": "process_request", "args": [message]}
+
     def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
         workspace = project_root / "workspace" / "runs" / session_id
         if workspace.exists():

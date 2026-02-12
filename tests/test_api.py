@@ -302,6 +302,57 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
     assert response.json()["detail"] == "Unsupported preview invocation 'build_custom_preview' for mode 'custom'"
 
 
+def test_chat_driver_uses_runtime_invocation(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    class FakeDriver:
+        async def process_custom(self, message):
+            captured["message"] = message
+            return f"echo:{message}"
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_chat_driver", lambda: FakeDriver())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_chat_driver_invocation",
+        lambda message: {"method_name": "process_custom", "args": [message]},
+    )
+
+    response = client.post(
+        "/v1/system/chat-driver",
+        json={"message": "hello"},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"response": "echo:hello"}
+    assert captured["message"] == "hello"
+
+
+def test_chat_driver_rejects_unsupported_runtime_method(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeDriver:
+        async def process_request(self, message):
+            return f"echo:{message}"
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_chat_driver", lambda: FakeDriver())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_chat_driver_invocation",
+        lambda message: {"method_name": "missing_method", "args": [message]},
+    )
+
+    response = client.post(
+        "/v1/system/chat-driver",
+        json={"message": "hello"},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 400
+    assert "Unsupported chat driver method" in response.json()["detail"]
+
+
 def test_run_active_uses_runtime_invocation(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 

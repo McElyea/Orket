@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 251 passed.
-2. `python -m pytest --collect-only -q` -> 251 collected.
+1. `python -m pytest tests/ -q` -> 253 passed.
+2. `python -m pytest --collect-only -q` -> 253 collected.
 
 ## Open Chunk Gates
 
@@ -112,6 +112,11 @@ Completed:
 14. Moved preview unsupported-mode error-detail policy into `ApiRuntimeStrategyNode`:
    - added `preview_unsupported_detail(target, invocation)` seam
 15. Added preview unsupported-mode runtime-detail parity test to verify API uses seam-provided error messages.
+16. Moved `/v1/system/chat-driver` invocation wiring into `ApiRuntimeStrategyNode`:
+   - added `resolve_chat_driver_invocation(message)` seam
+17. Added chat-driver runtime-invocation parity/error-path tests:
+   - custom invocation method dispatch path
+   - unsupported runtime method 400 guard
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

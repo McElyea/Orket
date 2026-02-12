@@ -430,6 +430,10 @@ def test_default_api_runtime_strategy_parity():
         {"mode": "custom", "asset_name": "x", "department": "core"},
         {"method_name": "build_custom_preview", "args": []},
     ) == "Unsupported preview mode 'custom'."
+    assert node.resolve_chat_driver_invocation("hello") == {
+        "method_name": "process_request",
+        "args": ["hello"],
+    }
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_logs_invocation("sb-1", "api") == {

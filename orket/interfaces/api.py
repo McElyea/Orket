@@ -299,7 +299,8 @@ async def preview_asset(path: str, issue_id: Optional[str] = None):
 @v1_router.post("/system/chat-driver")
 async def chat_driver(req: ChatDriverRequest):
     driver = api_runtime_node.create_chat_driver()
-    response = await driver.process_request(req.message)
+    invocation = api_runtime_node.resolve_chat_driver_invocation(req.message)
+    response = await _invoke_async_method(driver, invocation, "chat driver")
     return {"response": response}
 
 app.include_router(v1_router)

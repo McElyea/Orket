@@ -186,6 +186,9 @@ class ApiRuntimeStrategyNode(Protocol):
     def create_chat_driver(self) -> Any:
         ...
 
+    def resolve_chat_driver_invocation(self, message: str) -> Dict[str, Any]:
+        ...
+
     def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
         ...
 
