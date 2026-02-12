@@ -163,7 +163,8 @@ async def list_system_files(path: str = "."):
 async def read_system_file(path: str):
     fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
     try:
-        content = await fs.read_file(path)
+        invocation = api_runtime_node.resolve_read_invocation(path)
+        content = await _invoke_async_method(fs, invocation, "read")
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     except FileNotFoundError as exc:
@@ -174,7 +175,8 @@ async def read_system_file(path: str):
 async def save_system_file(req: SaveFileRequest):
     fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
     try:
-        await fs.write_file(req.path, req.content)
+        invocation = api_runtime_node.resolve_save_invocation(req.path, req.content)
+        await _invoke_async_method(fs, invocation, "save")
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     return {"ok": True}
