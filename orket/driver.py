@@ -137,7 +137,12 @@ Example for turn_directive:
         except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
             # Fallback for unexpected logical errors, but still better than a bare except
             import traceback
-            print(f"ERROR: Driver process failed: {e}\n{traceback.format_exc()}")
+            log_event(
+                "driver_process_failed",
+                {"error": str(e), "traceback": traceback.format_exc()},
+                Path("workspace/default"),
+                role="DRIVER",
+            )
             return f"Driver failed to process request due to internal error: {str(e)}"
 
     async def execute_plan(self, plan: Dict[str, Any]) -> str:

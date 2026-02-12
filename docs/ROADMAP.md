@@ -139,9 +139,13 @@ Completed:
    - API now emits `session_id` for run metrics/backlog/session detail/session snapshot routes.
    - Orchestrator now emits `run_id` in dispatch/failure events and threads it into verification/sandbox deployment events when available.
 7. Added API regression coverage for correlation log payloads on session-scoped endpoints (`tests/test_api.py`).
+8. Replaced additional high-frequency runtime `print` calls with structured logging:
+   - `llm.py` retry warnings (`model_timeout_retry`, `model_connection_retry`)
+   - `logging.py` subscriber failure handling (`logging_subscriber_failed`)
+   - `driver.py` process-failure fallback (`driver_process_failed`)
 
 Remaining:
-1. Replace remaining non-test runtime `print` calls in hot paths (excluding intentional subprocess fixture stdout in verification runner code).
+1. Replace remaining non-test `print` usage in non-core command/bootstrap flows (CLI/discovery/setup scripts) where structured logging is preferable.
 
 Acceptance:
 1. Runtime logs are structured, machine-parseable, and correlated.

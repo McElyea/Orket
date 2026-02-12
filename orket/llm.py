@@ -5,6 +5,7 @@ from pathlib import Path
 import asyncio
 import ollama
 from orket.exceptions import ModelTimeoutError, ModelConnectionError, ModelProviderError
+from orket.logging import log_event
 
 @dataclass
 class ModelResponse:
@@ -71,11 +72,22 @@ class LocalModelProvider:
             except (asyncio.TimeoutError, ModelTimeoutError) as e:
                 if attempt == max_retries - 1:
                     raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.")
-                print(f"  [WARN] Model timeout on attempt {attempt + 1}. Retrying in {retry_delay}s...")
+                log_event(
+                    "model_timeout_retry",
+                    {"model": self.model, "attempt": attempt + 1, "retry_delay_sec": retry_delay},
+                )
             except (ConnectionError, ollama.ResponseError, ModelConnectionError) as e:
                 if attempt == max_retries - 1:
                     raise ModelConnectionError(f"Ollama connection failed after {max_retries} attempts: {str(e)}")
-                print(f"  [WARN] Model connection error on attempt {attempt + 1}. Retrying in {retry_delay}s...")
+                log_event(
+                    "model_connection_retry",
+                    {
+                        "model": self.model,
+                        "attempt": attempt + 1,
+                        "retry_delay_sec": retry_delay,
+                        "error": str(e),
+                    },
+                )
             except asyncio.CancelledError:
                 raise
             except (RuntimeError, ValueError, TypeError, KeyError, AttributeError, OSError) as e:

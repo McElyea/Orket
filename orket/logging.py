@@ -96,9 +96,13 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
         try:
             subscriber(record)
         except (RuntimeError, ValueError, TypeError, OSError) as e:
-            # Print to stderr but don't crash
-            print(f"  [LOGGING] Subscriber failed: {e}")
-            pass
+            failure_record = {
+                "timestamp": datetime.now(UTC).isoformat(),
+                "role": "system",
+                "event": "logging_subscriber_failed",
+                "data": {"error": str(e)},
+            }
+            _logger.error(json.dumps(failure_record, ensure_ascii=False))
 
 
 def log_model_selected(role: str, model: str, temperature: float, seed, epic: str, workspace: Path) -> None:
