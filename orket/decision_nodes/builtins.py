@@ -130,6 +130,27 @@ class DefaultEvaluatorNode:
         }
         return mapping.get(action)
 
+    def governance_violation_message(self, error: str | None) -> str:
+        return f"iDesign Violation: {error}"
+
+    def catastrophic_failure_message(self, issue_id: str, max_retries: int) -> str:
+        return (
+            f"MAX RETRIES EXCEEDED for {issue_id}. "
+            f"Limit: {max_retries}. Shutting down project orchestration."
+        )
+
+    def unexpected_failure_action_message(self, action: str, issue_id: str) -> str:
+        return f"Unexpected evaluator action '{action}' for {issue_id}"
+
+    def retry_failure_message(
+        self,
+        issue_id: str,
+        retry_count: int,
+        max_retries: int,
+        error: str | None,
+    ) -> str:
+        return f"Orchestration Turn Failed (Retry {retry_count}/{max_retries}): {error}"
+
 
 class DefaultToolStrategyNode:
     """

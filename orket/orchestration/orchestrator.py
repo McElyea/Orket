@@ -414,7 +414,7 @@ class Orchestrator:
             await self.async_cards.update_status(issue.id, failure_status)
             issue.status = failure_status
             await self.async_cards.save(issue.model_dump())
-            raise GovernanceViolation(f"iDesign Violation: {result.error}")
+            raise GovernanceViolation(self.evaluator_node.governance_violation_message(result.error))
 
         if action == "catastrophic":
             event_name = self.evaluator_node.failure_event_name(action)
@@ -438,12 +438,11 @@ class Orchestrator:
                         await cancel_result
                 
             raise CatastrophicFailure(
-                f"MAX RETRIES EXCEEDED for {issue.id}. "
-                f"Limit: {issue.max_retries}. Shutting down project orchestration."
+                self.evaluator_node.catastrophic_failure_message(issue.id, issue.max_retries)
             )
 
         if action != "retry":
-            raise ExecutionFailed(f"Unexpected evaluator action '{action}' for {issue.id}")
+            raise ExecutionFailed(self.evaluator_node.unexpected_failure_action_message(action, issue.id))
 
         # Log retry and reset to READY
         event_name = self.evaluator_node.failure_event_name(action)
@@ -458,4 +457,11 @@ class Orchestrator:
         await self.async_cards.update_status(issue.id, self.evaluator_node.status_for_failure_action(action))
         await self.async_cards.save(issue.model_dump())
 
-        raise ExecutionFailed(f"Orchestration Turn Failed (Retry {issue.retry_count}/{issue.max_retries}): {result.error}")
+        raise ExecutionFailed(
+            self.evaluator_node.retry_failure_message(
+                issue.id,
+                issue.retry_count,
+                issue.max_retries,
+                result.error,
+            )
+        )

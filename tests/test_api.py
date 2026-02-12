@@ -287,3 +287,24 @@ def test_sandboxes_list_and_stop(monkeypatch):
     assert stop_response.status_code == 200
     assert stop_response.json() == {"ok": True}
     assert captured["stopped"] == "sb-1"
+
+
+def test_runs_and_backlog_delegation(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_recent_runs():
+        return [{"session_id": "S1"}]
+
+    async def fake_backlog(session_id):
+        return [{"id": "I1", "session_id": session_id}]
+
+    monkeypatch.setattr(api_module.engine.sessions, "get_recent_runs", fake_recent_runs)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session_issues", fake_backlog, raising=False)
+
+    runs_response = client.get("/v1/runs", headers={"X-API-Key": "test-key"})
+    backlog_response = client.get("/v1/runs/S1/backlog", headers={"X-API-Key": "test-key"})
+
+    assert runs_response.status_code == 200
+    assert runs_response.json() == [{"session_id": "S1"}]
+    assert backlog_response.status_code == 200
+    assert backlog_response.json() == [{"id": "I1", "session_id": "S1"}]

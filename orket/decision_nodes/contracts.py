@@ -54,6 +54,24 @@ class EvaluatorNode(Protocol):
     def failure_event_name(self, action: str) -> str | None:
         ...
 
+    def governance_violation_message(self, error: str | None) -> str:
+        ...
+
+    def catastrophic_failure_message(self, issue_id: str, max_retries: int) -> str:
+        ...
+
+    def unexpected_failure_action_message(self, action: str, issue_id: str) -> str:
+        ...
+
+    def retry_failure_message(
+        self,
+        issue_id: str,
+        retry_count: int,
+        max_retries: int,
+        error: str | None,
+    ) -> str:
+        ...
+
 
 class PromptStrategyNode(Protocol):
     """Decision node: chooses model and dialect strategy for a turn."""

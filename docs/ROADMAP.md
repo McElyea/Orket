@@ -64,6 +64,7 @@ Completed:
    - session detail missing-session 404 behavior
    - session snapshot missing-session 404 behavior
    - sandboxes list/stop route behavior
+   - runs list/backlog delegation behavior
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
@@ -91,10 +92,15 @@ Completed:
 3. Extracted additional success/failure lifecycle policy into `EvaluatorNode`:
    - `success_post_actions` (sandbox trigger + next-status policy)
    - `failure_event_name` (action -> event routing policy)
+4. Extracted failure-message composition policy into `EvaluatorNode`:
+   - governance violation message
+   - catastrophic failure message
+   - unexpected action message
+   - retry failure message
 
 Remaining:
 1. Extract remaining `_execute_issue_turn` policy branches (sandbox-trigger gating and review promotion conditions).
-2. Extract remaining failure exception/message policy shape from `_handle_failure` into evaluator/loop seams.
+2. Extract failure exception-type policy choice from `_handle_failure` into evaluator/loop seams.
 3. Keep core `execute_epic` loop shape stable while reducing direct policy branching.
 
 Acceptance:

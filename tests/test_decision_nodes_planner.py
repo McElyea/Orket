@@ -234,6 +234,7 @@ def test_default_evaluator_failure_governance_violation():
     assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.BLOCKED
     assert evaluator.should_cancel_session(decision["action"]) is False
     assert evaluator.failure_event_name(decision["action"]) is None
+    assert evaluator.governance_violation_message("blocked") == "iDesign Violation: blocked"
 
 
 def test_default_evaluator_failure_retry():
@@ -248,6 +249,7 @@ def test_default_evaluator_failure_retry():
     assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.READY
     assert evaluator.should_cancel_session(decision["action"]) is False
     assert evaluator.failure_event_name(decision["action"]) == "retry_triggered"
+    assert evaluator.retry_failure_message("I1", 2, 3, "oops") == "Orchestration Turn Failed (Retry 2/3): oops"
 
 
 def test_default_evaluator_failure_catastrophic():
@@ -262,6 +264,10 @@ def test_default_evaluator_failure_catastrophic():
     assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.BLOCKED
     assert evaluator.should_cancel_session(decision["action"]) is True
     assert evaluator.failure_event_name(decision["action"]) == "catastrophic_failure"
+    assert evaluator.catastrophic_failure_message("I1", 3) == (
+        "MAX RETRIES EXCEEDED for I1. Limit: 3. Shutting down project orchestration."
+    )
+    assert evaluator.unexpected_failure_action_message("weird", "I1") == "Unexpected evaluator action 'weird' for I1"
 
 
 def test_registry_resolves_custom_evaluator():
