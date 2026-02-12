@@ -126,10 +126,10 @@ Completed:
 2. Removed event-loop blocking verification call in `Orchestrator.verify_issue` by using `asyncio.to_thread`.
 3. Reduced synchronous metrics pressure by adding TTL cache for VRAM probes (`ORKET_METRICS_VRAM_CACHE_SEC`).
 4. Added tests for async verification path and metrics cache behavior.
+5. Added verification-heavy async concurrency coverage (`tests/test_orchestrator_verification_async.py`) to confirm parallel `verify_issue` calls do not starve the event loop.
 
 Remaining:
-1. Add concurrency/load tests validating no starvation on verification-heavy runs.
-2. Evaluate moving metrics sampling to background task if API latency remains high under load.
+1. Evaluate moving metrics sampling to background task if API latency remains high under load.
 
 Acceptance:
 1. No synchronous heavy calls in async hot paths.

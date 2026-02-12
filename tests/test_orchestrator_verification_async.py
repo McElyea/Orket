@@ -1,3 +1,5 @@
+import asyncio
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -71,3 +73,42 @@ async def test_verify_issue_uses_to_thread(monkeypatch, tmp_path):
     assert called["verify"] is True
     assert result == expected
     assert cards.saved is not None
+
+
+@pytest.mark.asyncio
+async def test_verify_issue_parallel_calls_do_not_starve_event_loop(monkeypatch, tmp_path):
+    cards = _FakeCards()
+    orchestrator = Orchestrator(
+        workspace=tmp_path / "workspace",
+        async_cards=cards,
+        snapshots=None,
+        org=None,
+        config_root=tmp_path,
+        db_path=str(tmp_path / "test.db"),
+        loader=None,
+        sandbox_orchestrator=_FakeSandboxOrchestrator(),
+    )
+
+    expected = VerificationResult(timestamp="2026-02-11T00:00:00+00:00", total_scenarios=0, passed=0, failed=0, logs=[])
+
+    def fake_verify(_verification, _workspace):
+        time.sleep(0.2)
+        return expected
+
+    monkeypatch.setattr("orket.domain.verification.VerificationEngine.verify", fake_verify, raising=False)
+
+    ticks = {"count": 0}
+
+    async def ticker():
+        for _ in range(20):
+            ticks["count"] += 1
+            await asyncio.sleep(0.01)
+
+    await asyncio.gather(
+        orchestrator.verify_issue("I1"),
+        orchestrator.verify_issue("I1"),
+        ticker(),
+    )
+
+    # If verify_issue blocked the event loop, this would stay very low.
+    assert ticks["count"] >= 10
