@@ -230,6 +230,12 @@ class DefaultApiRuntimeStrategyNode:
     def resolve_session_snapshot_invocation(self, session_id: str) -> Dict[str, Any]:
         return {"method_name": "get", "args": [session_id]}
 
+    def resolve_sandboxes_list_invocation(self) -> Dict[str, Any]:
+        return {"method_name": "get_sandboxes", "args": []}
+
+    def resolve_sandbox_stop_invocation(self, sandbox_id: str) -> Dict[str, Any]:
+        return {"method_name": "stop_sandbox", "args": [sandbox_id]}
+
     def resolve_clear_logs_path(self) -> str:
         return "workspace/default/orket.log"
 

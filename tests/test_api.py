@@ -289,6 +289,57 @@ def test_sandboxes_list_and_stop(monkeypatch):
     assert captured["stopped"] == "sb-1"
 
 
+def test_sandboxes_use_runtime_invocation_policies(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    async def fake_get_sandboxes():
+        captured["list_called"] = True
+        return [{"id": "sb-2"}]
+
+    async def fake_stop_sandbox(sandbox_id):
+        captured["stop_called"] = sandbox_id
+
+    monkeypatch.setattr(api_module.engine, "get_sandboxes", fake_get_sandboxes)
+    monkeypatch.setattr(api_module.engine, "stop_sandbox", fake_stop_sandbox)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_sandboxes_list_invocation",
+        lambda: {"method_name": "get_sandboxes", "args": []},
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_sandbox_stop_invocation",
+        lambda sandbox_id: {"method_name": "stop_sandbox", "args": [sandbox_id]},
+    )
+
+    list_response = client.get("/v1/sandboxes", headers={"X-API-Key": "test-key"})
+    stop_response = client.post("/v1/sandboxes/sb-2/stop", headers={"X-API-Key": "test-key"})
+
+    assert list_response.status_code == 200
+    assert list_response.json() == [{"id": "sb-2"}]
+    assert stop_response.status_code == 200
+    assert captured["list_called"] is True
+    assert captured["stop_called"] == "sb-2"
+
+
+def test_sandboxes_reject_unsupported_runtime_methods(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_sandboxes_list_invocation",
+        lambda: {"method_name": "nope", "args": []},
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_sandbox_stop_invocation",
+        lambda _sandbox_id: {"method_name": "nope", "args": []},
+    )
+
+    assert client.get("/v1/sandboxes", headers={"X-API-Key": "test-key"}).status_code == 400
+    assert client.post("/v1/sandboxes/sb-2/stop", headers={"X-API-Key": "test-key"}).status_code == 400
+
+
 def test_runs_and_backlog_delegation(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 

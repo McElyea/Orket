@@ -378,6 +378,11 @@ def test_default_api_runtime_strategy_parity():
         "method_name": "get",
         "args": ["SESS-1"],
     }
+    assert node.resolve_sandboxes_list_invocation() == {"method_name": "get_sandboxes", "args": []}
+    assert node.resolve_sandbox_stop_invocation("sb-1") == {
+        "method_name": "stop_sandbox",
+        "args": ["sb-1"],
+    }
     assert node.resolve_clear_logs_path() == "workspace/default/orket.log"
     assert node.normalize_metrics({"cpu_percent": 12, "ram_percent": 34}) == {
         "cpu_percent": 12,

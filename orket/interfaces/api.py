@@ -251,11 +251,19 @@ async def get_session_snapshot(session_id: str):
 
 @v1_router.get("/sandboxes")
 async def list_sandboxes():
-    return await engine.get_sandboxes()
+    invocation = api_runtime_node.resolve_sandboxes_list_invocation()
+    method = getattr(engine, invocation["method_name"], None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported sandboxes method '{invocation['method_name']}'.")
+    return await method(*invocation.get("args", []))
 
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
 async def stop_sandbox(sandbox_id: str):
-    await engine.stop_sandbox(sandbox_id)
+    invocation = api_runtime_node.resolve_sandbox_stop_invocation(sandbox_id)
+    method = getattr(engine, invocation["method_name"], None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported sandbox stop method '{invocation['method_name']}'.")
+    await method(*invocation.get("args", []))
     return {"ok": True}
 
 @v1_router.get("/sandboxes/{sandbox_id}/logs")

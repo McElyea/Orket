@@ -71,6 +71,10 @@ Completed:
    - `/v1/sessions/{session_id}`
    - `/v1/sessions/{session_id}/snapshot`
 5. Added runtime policy and error-path parity tests for those routes (unsupported method guards included).
+6. Moved sandbox route invocation wiring into `ApiRuntimeStrategyNode`:
+   - `/v1/sandboxes`
+   - `/v1/sandboxes/{sandbox_id}/stop`
+7. Added runtime policy and error-path parity tests for sandbox route invocation behavior.
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
