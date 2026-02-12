@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 261 passed.
-2. `python -m pytest --collect-only -q` -> 261 collected.
+1. `python -m pytest tests/ -q` -> 262 passed.
+2. `python -m pytest --collect-only -q` -> 262 collected.
 
 ## Open Chunk Gates
 
@@ -140,6 +140,9 @@ Completed:
 25. Added runtime-policy parity tests for read/save error details:
    - read missing-file detail from seam
    - save permission-denied detail from seam
+26. Moved API-key invalid-auth detail into `ApiRuntimeStrategyNode`:
+   - added `api_key_invalid_detail()` seam
+27. Added auth parity test proving API uses seam-provided 403 detail.
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

@@ -192,6 +192,9 @@ class DefaultApiRuntimeStrategyNode:
     def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
         return (not expected_key) or (provided_key == expected_key)
 
+    def api_key_invalid_detail(self) -> str:
+        return "Could not validate credentials"
+
     def resolve_asset_id(self, path: str | None, issue_id: str | None) -> str | None:
         if issue_id:
             return issue_id

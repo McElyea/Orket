@@ -28,6 +28,14 @@ def test_version_authenticated(monkeypatch):
     assert response.status_code == 200
     assert "version" in response.json()
 
+
+def test_auth_uses_runtime_invalid_detail(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module.api_runtime_node, "api_key_invalid_detail", lambda: "Auth denied by policy")
+    response = client.get("/v1/version", headers={"X-API-Key": "wrong-key"})
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Auth denied by policy"
+
 def test_heartbeat():
     response = client.get("/v1/system/heartbeat")
     # Heartbeat might be under v1_router which requires auth if configured

@@ -348,6 +348,7 @@ def test_default_api_runtime_strategy_parity():
     assert node.is_api_key_valid(None, None) is True
     assert node.is_api_key_valid("k", "k") is True
     assert node.is_api_key_valid("k", "x") is False
+    assert node.api_key_invalid_detail() == "Could not validate credentials"
     assert node.resolve_asset_id(path="model/core/issues/demo.json", issue_id=None) == "demo"
     assert node.resolve_asset_id(path=None, issue_id="ISSUE-1") == "ISSUE-1"
     assert node.resolve_asset_id(path=None, issue_id=None) is None

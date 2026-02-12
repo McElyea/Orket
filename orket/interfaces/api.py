@@ -70,7 +70,7 @@ async def get_api_key(api_key_header: str = Security(api_key_header)):
     if not api_runtime_node.is_api_key_valid(expected_key, api_key_header):
         raise HTTPException(
             status_code=403,
-            detail="Could not validate credentials",
+            detail=api_runtime_node.api_key_invalid_detail(),
         )
     return api_key_header
 

@@ -111,6 +111,9 @@ class ApiRuntimeStrategyNode(Protocol):
     def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
         ...
 
+    def api_key_invalid_detail(self) -> str:
+        ...
+
     def resolve_asset_id(self, path: str | None, issue_id: str | None) -> str | None:
         ...
 
