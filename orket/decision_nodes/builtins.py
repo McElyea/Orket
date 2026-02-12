@@ -254,6 +254,12 @@ class DefaultApiRuntimeStrategyNode:
     def resolve_read_invocation(self, path: str) -> Dict[str, Any]:
         return {"method_name": "read_file", "args": [path]}
 
+    def read_not_found_detail(self, path: str) -> str:
+        return "File not found"
+
+    def permission_denied_detail(self, operation: str, error: str) -> str:
+        return error
+
     def resolve_save_invocation(self, path: str, content: str) -> Dict[str, Any]:
         return {"method_name": "write_file", "args": [path, content]}
 

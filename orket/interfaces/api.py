@@ -175,9 +175,12 @@ async def read_system_file(path: str):
         invocation = api_runtime_node.resolve_read_invocation(path)
         content = await _invoke_async_method(fs, invocation, "read")
     except PermissionError as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=403,
+            detail=api_runtime_node.permission_denied_detail("read", str(exc)),
+        ) from exc
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail="File not found") from exc
+        raise HTTPException(status_code=404, detail=api_runtime_node.read_not_found_detail(path)) from exc
     return {"content": content}
 
 @v1_router.post("/system/save")
@@ -187,7 +190,10 @@ async def save_system_file(req: SaveFileRequest):
         invocation = api_runtime_node.resolve_save_invocation(req.path, req.content)
         await _invoke_async_method(fs, invocation, "save")
     except PermissionError as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=403,
+            detail=api_runtime_node.permission_denied_detail("save", str(exc)),
+        ) from exc
     return {"ok": True}
 
 @v1_router.get("/system/calendar")

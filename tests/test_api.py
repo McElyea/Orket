@@ -130,6 +130,25 @@ def test_read_missing_file_returns_404(monkeypatch):
     response = client.get("/v1/system/read?path=missing.txt", headers={"X-API-Key": "test-key"})
     assert response.status_code == 404
 
+
+def test_read_uses_runtime_not_found_detail(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeFs:
+        async def read_file(self, path):
+            raise FileNotFoundError(path)
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "read_not_found_detail",
+        lambda path: f"Missing by policy: {path}",
+    )
+
+    response = client.get("/v1/system/read?path=missing.txt", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Missing by policy: missing.txt"
+
 def test_read_uses_runtime_invocation(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
@@ -182,6 +201,28 @@ def test_save_permission_denied_returns_403(monkeypatch):
         headers={"X-API-Key": "test-key"},
     )
     assert response.status_code == 403
+
+
+def test_save_uses_runtime_permission_denied_detail(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeFs:
+        async def write_file(self, path, content):
+            raise PermissionError("blocked")
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "permission_denied_detail",
+        lambda operation, error: f"{operation} denied by policy: {error}",
+    )
+    response = client.post(
+        "/v1/system/save",
+        json={"path": "x.txt", "content": "hello"},
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "save denied by policy: blocked"
 
 def test_save_uses_runtime_invocation(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")

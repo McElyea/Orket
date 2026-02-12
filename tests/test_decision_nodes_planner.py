@@ -392,6 +392,8 @@ def test_default_api_runtime_strategy_parity():
         "args": ["workspace/default/orket.log", ""],
     }
     assert node.resolve_read_invocation("x.txt") == {"method_name": "read_file", "args": ["x.txt"]}
+    assert node.read_not_found_detail("x.txt") == "File not found"
+    assert node.permission_denied_detail("read", "denied") == "denied"
     assert node.resolve_save_invocation("x.txt", "hello") == {
         "method_name": "write_file",
         "args": ["x.txt", "hello"],

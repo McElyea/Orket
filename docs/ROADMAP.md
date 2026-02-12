@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 259 passed.
-2. `python -m pytest --collect-only -q` -> 259 collected.
+1. `python -m pytest tests/ -q` -> 261 passed.
+2. `python -m pytest --collect-only -q` -> 261 collected.
 
 ## Open Chunk Gates
 
@@ -134,6 +134,12 @@ Completed:
    - added `session_snapshot_not_found_error(session_id)` seam
 23. Added runtime-policy parity tests for session/snapshot not-found behavior:
    - custom status/detail from seam are honored by API endpoints
+24. Moved read/save HTTP error-detail policy into `ApiRuntimeStrategyNode`:
+   - added `read_not_found_detail(path)` seam
+   - added `permission_denied_detail(operation, error)` seam
+25. Added runtime-policy parity tests for read/save error details:
+   - read missing-file detail from seam
+   - save permission-denied detail from seam
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
