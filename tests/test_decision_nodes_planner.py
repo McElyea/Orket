@@ -410,6 +410,8 @@ def test_default_api_runtime_strategy_parity():
         "sprint_end": "2026-02-13",
     }
     assert node.resolve_explorer_path(Path("/tmp/root"), "../../evil") is None
+    assert node.resolve_explorer_forbidden_error("../../evil") == {"status_code": 403}
+    assert node.resolve_explorer_missing_response("missing") == {"items": [], "path": "missing"}
     assert node.include_explorer_entry(".git") is False
     assert node.include_explorer_entry("node_modules") is False
     assert node.include_explorer_entry("app.py") is True

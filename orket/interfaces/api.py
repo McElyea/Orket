@@ -32,9 +32,13 @@ def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
     return method
 
 
-def _resolve_sync_method(target: object, method_name: str, error_prefix: str):
+def _resolve_sync_method(target: object, invocation: dict, error_prefix: str):
+    method_name = invocation["method_name"]
     method = getattr(target, method_name, None)
     if method is None:
+        detail = invocation.get("unsupported_detail")
+        if detail:
+            raise HTTPException(status_code=400, detail=detail)
         raise HTTPException(status_code=400, detail=f"Unsupported {error_prefix} method '{method_name}'.")
     return method
 
@@ -44,8 +48,19 @@ async def _invoke_async_method(target: object, invocation: dict, error_prefix: s
     return await method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
 
+async def _schedule_async_invocation_task(
+    target: object,
+    invocation: dict,
+    error_prefix: str,
+    session_id: str,
+):
+    method = _resolve_async_method(target, invocation, error_prefix)
+    task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
+    await runtime_state.add_task(session_id, task)
+
+
 def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
-    method = _resolve_sync_method(target, invocation["method_name"], error_prefix)
+    method = _resolve_sync_method(target, invocation, error_prefix)
     return method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
 class SaveFileRequest(BaseModel):
@@ -156,9 +171,9 @@ async def get_metrics():
 async def list_system_files(path: str = "."):
     target = api_runtime_node.resolve_explorer_path(PROJECT_ROOT, path)
     if target is None:
-        raise HTTPException(403)
+        raise HTTPException(**api_runtime_node.resolve_explorer_forbidden_error(path))
     if not target.exists():
-        return {"items": [], "path": path}
+        return api_runtime_node.resolve_explorer_missing_response(path)
     
     items = []
     for p in target.iterdir():
@@ -236,9 +251,7 @@ async def run_active_asset(req: RunAssetRequest):
         },
         PROJECT_ROOT,
     )
-    method = _resolve_async_method(engine, invocation, "run")
-    task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
-    await runtime_state.add_task(session_id, task)
+    await _schedule_async_invocation_task(engine, invocation, "run", session_id)
     return {"session_id": session_id}
 
 @v1_router.get("/runs")

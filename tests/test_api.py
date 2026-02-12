@@ -121,6 +121,38 @@ def test_explorer_security(monkeypatch):
     response = client.get("/v1/system/explorer?path=../../", headers={"X-API-Key": "test-key"})
     assert response.status_code == 403
 
+
+def test_explorer_uses_runtime_forbidden_error_policy(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_explorer_path", lambda project_root, path: None)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_explorer_forbidden_error",
+        lambda path: {"status_code": 451, "detail": f"Blocked path: {path}"},
+    )
+
+    response = client.get("/v1/system/explorer?path=../../", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 451
+    assert response.json()["detail"] == "Blocked path: ../../"
+
+
+def test_explorer_uses_runtime_missing_response_policy(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_explorer_path",
+        lambda project_root, path: project_root / "does-not-exist",
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_explorer_missing_response",
+        lambda path: {"items": [], "path": path, "source": "runtime-policy"},
+    )
+
+    response = client.get("/v1/system/explorer?path=does-not-exist", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json() == {"items": [], "path": "does-not-exist", "source": "runtime-policy"}
+
 def test_read_security(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     # Try to read something sensitive outside root
@@ -698,6 +730,37 @@ def test_sandbox_logs_reject_unsupported_runtime_method(monkeypatch):
 
     assert response.status_code == 400
     assert "Unsupported sandbox logs method" in response.json()["detail"]
+
+
+def test_sandbox_logs_uses_runtime_unsupported_detail(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeSandboxOrchestrator:
+        def get_logs(self, sandbox_id, service):
+            return f"{sandbox_id}:{service}"
+
+    class FakePipeline:
+        sandbox_orchestrator = FakeSandboxOrchestrator()
+
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
+    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_sandbox_logs_invocation",
+        lambda sandbox_id, service: {
+            "method_name": "missing_logs_method",
+            "args": [sandbox_id, service],
+            "unsupported_detail": f"Sandbox log provider unavailable for {sandbox_id}",
+        },
+    )
+
+    response = client.get(
+        "/v1/sandboxes/sb-9/logs?service=frontend",
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Sandbox log provider unavailable for sb-9"
 
 
 def test_session_detail_returns_404_when_missing(monkeypatch):

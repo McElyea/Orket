@@ -290,6 +290,12 @@ class DefaultApiRuntimeStrategyNode:
             return None
         return target
 
+    def resolve_explorer_forbidden_error(self, path: str) -> Dict[str, Any]:
+        return {"status_code": 403}
+
+    def resolve_explorer_missing_response(self, path: str) -> Dict[str, Any]:
+        return {"items": [], "path": path}
+
     def include_explorer_entry(self, entry_name: str) -> bool:
         if entry_name.startswith("."):
             return False

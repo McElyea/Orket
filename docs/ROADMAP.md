@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 262 passed.
-2. `python -m pytest --collect-only -q` -> 262 collected.
+1. `python -m pytest tests/ -q` -> 265 passed.
+2. `python -m pytest --collect-only -q` -> 265 collected.
 
 ## Open Chunk Gates
 
@@ -143,6 +143,16 @@ Completed:
 26. Moved API-key invalid-auth detail into `ApiRuntimeStrategyNode`:
    - added `api_key_invalid_detail()` seam
 27. Added auth parity test proving API uses seam-provided 403 detail.
+28. Moved explorer forbidden/missing response policy into `ApiRuntimeStrategyNode`:
+   - added `resolve_explorer_forbidden_error(path)` seam
+   - added `resolve_explorer_missing_response(path)` seam
+29. Added explorer parity tests:
+   - custom forbidden status/detail from seam
+   - custom missing-path response payload from seam
+30. Reduced run-active transport duplication in `orket/interfaces/api.py` by introducing shared async task scheduling helper (`_schedule_async_invocation_task`) with request-time method validation preserved.
+31. Aligned sync invocation error policy with async invocation policy:
+   - `_resolve_sync_method` now honors seam-provided `unsupported_detail`
+   - added sandbox logs parity test for custom unsupported detail
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
