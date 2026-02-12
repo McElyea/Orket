@@ -365,6 +365,19 @@ def test_default_api_runtime_strategy_parity():
             "session_id": "SESSION-1",
         },
     }
+    assert node.resolve_runs_invocation() == {"method_name": "get_recent_runs", "args": []}
+    assert node.resolve_backlog_invocation("SESS-1") == {
+        "method_name": "get_session_issues",
+        "args": ["SESS-1"],
+    }
+    assert node.resolve_session_detail_invocation("SESS-1") == {
+        "method_name": "get_session",
+        "args": ["SESS-1"],
+    }
+    assert node.resolve_session_snapshot_invocation("SESS-1") == {
+        "method_name": "get",
+        "args": ["SESS-1"],
+    }
     assert node.resolve_clear_logs_path() == "workspace/default/orket.log"
     assert node.normalize_metrics({"cpu_percent": 12, "ram_percent": 34}) == {
         "cpu_percent": 12,

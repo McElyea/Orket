@@ -310,6 +310,62 @@ def test_runs_and_backlog_delegation(monkeypatch):
     assert backlog_response.json() == [{"id": "I1", "session_id": "S1"}]
 
 
+def test_runs_sessions_use_runtime_invocation_policies(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_recent_runs():
+        return [{"session_id": "S2"}]
+
+    async def fake_backlog(session_id):
+        return [{"id": "I2", "session_id": session_id}]
+
+    async def fake_get_session(session_id):
+        return {"session_id": session_id}
+
+    async def fake_get_snapshot(session_id):
+        return {"snapshot_id": session_id}
+
+    monkeypatch.setattr(api_module.engine.sessions, "get_recent_runs", fake_recent_runs)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session_issues", fake_backlog, raising=False)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+    monkeypatch.setattr(api_module.engine.snapshots, "get", fake_get_snapshot)
+
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_runs_invocation", lambda: {"method_name": "get_recent_runs", "args": []})
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_backlog_invocation",
+        lambda session_id: {"method_name": "get_session_issues", "args": [session_id]},
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_session_detail_invocation",
+        lambda session_id: {"method_name": "get_session", "args": [session_id]},
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_session_snapshot_invocation",
+        lambda session_id: {"method_name": "get", "args": [session_id]},
+    )
+
+    assert client.get("/v1/runs", headers={"X-API-Key": "test-key"}).json() == [{"session_id": "S2"}]
+    assert client.get("/v1/runs/S2/backlog", headers={"X-API-Key": "test-key"}).json() == [{"id": "I2", "session_id": "S2"}]
+    assert client.get("/v1/sessions/S2", headers={"X-API-Key": "test-key"}).json() == {"session_id": "S2"}
+    assert client.get("/v1/sessions/S2/snapshot", headers={"X-API-Key": "test-key"}).json() == {"snapshot_id": "S2"}
+
+
+def test_runs_sessions_reject_unsupported_runtime_methods(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_runs_invocation", lambda: {"method_name": "nope", "args": []})
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_backlog_invocation", lambda _s: {"method_name": "nope", "args": []})
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_session_detail_invocation", lambda _s: {"method_name": "nope", "args": []})
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_session_snapshot_invocation", lambda _s: {"method_name": "nope", "args": []})
+
+    assert client.get("/v1/runs", headers={"X-API-Key": "test-key"}).status_code == 400
+    assert client.get("/v1/runs/S2/backlog", headers={"X-API-Key": "test-key"}).status_code == 400
+    assert client.get("/v1/sessions/S2", headers={"X-API-Key": "test-key"}).status_code == 400
+    assert client.get("/v1/sessions/S2/snapshot", headers={"X-API-Key": "test-key"}).status_code == 400
+
+
 def test_session_endpoints_emit_correlation_logs(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured_events = []

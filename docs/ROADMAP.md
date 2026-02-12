@@ -65,6 +65,12 @@ Completed:
    - session snapshot missing-session 404 behavior
    - sandboxes list/stop route behavior
    - runs list/backlog delegation behavior
+4. Moved additional route invocation wiring into `ApiRuntimeStrategyNode`:
+   - `/v1/runs`
+   - `/v1/runs/{session_id}/backlog`
+   - `/v1/sessions/{session_id}`
+   - `/v1/sessions/{session_id}/snapshot`
+5. Added runtime policy and error-path parity tests for those routes (unsupported method guards included).
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

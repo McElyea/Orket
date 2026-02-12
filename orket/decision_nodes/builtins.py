@@ -218,6 +218,18 @@ class DefaultApiRuntimeStrategyNode:
             },
         }
 
+    def resolve_runs_invocation(self) -> Dict[str, Any]:
+        return {"method_name": "get_recent_runs", "args": []}
+
+    def resolve_backlog_invocation(self, session_id: str) -> Dict[str, Any]:
+        return {"method_name": "get_session_issues", "args": [session_id]}
+
+    def resolve_session_detail_invocation(self, session_id: str) -> Dict[str, Any]:
+        return {"method_name": "get_session", "args": [session_id]}
+
+    def resolve_session_snapshot_invocation(self, session_id: str) -> Dict[str, Any]:
+        return {"method_name": "get", "args": [session_id]}
+
     def resolve_clear_logs_path(self) -> str:
         return "workspace/default/orket.log"
 

@@ -204,7 +204,12 @@ async def run_active_asset(req: RunAssetRequest):
     return {"session_id": session_id}
 
 @v1_router.get("/runs")
-async def list_runs(): return await engine.sessions.get_recent_runs()
+async def list_runs():
+    invocation = api_runtime_node.resolve_runs_invocation()
+    method = getattr(engine.sessions, invocation["method_name"], None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported runs method '{invocation['method_name']}'.")
+    return await method(*invocation.get("args", []))
 
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
@@ -216,19 +221,31 @@ async def get_run_metrics(session_id: str):
 @v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str):
     log_event("api_backlog", {"session_id": session_id}, PROJECT_ROOT)
-    return await engine.sessions.get_session_issues(session_id)
+    invocation = api_runtime_node.resolve_backlog_invocation(session_id)
+    method = getattr(engine.sessions, invocation["method_name"], None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported backlog method '{invocation['method_name']}'.")
+    return await method(*invocation.get("args", []))
 
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
     log_event("api_session_detail", {"session_id": session_id}, PROJECT_ROOT)
-    session = await engine.sessions.get_session(session_id)
+    invocation = api_runtime_node.resolve_session_detail_invocation(session_id)
+    method = getattr(engine.sessions, invocation["method_name"], None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported session method '{invocation['method_name']}'.")
+    session = await method(*invocation.get("args", []))
     if not session: raise HTTPException(404)
     return session
 
 @v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str):
     log_event("api_session_snapshot", {"session_id": session_id}, PROJECT_ROOT)
-    snapshot = await engine.snapshots.get(session_id)
+    invocation = api_runtime_node.resolve_session_snapshot_invocation(session_id)
+    method = getattr(engine.snapshots, invocation["method_name"], None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported snapshot method '{invocation['method_name']}'.")
+    snapshot = await method(*invocation.get("args", []))
     if not snapshot: raise HTTPException(404)
     return snapshot
 
