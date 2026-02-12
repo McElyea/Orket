@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 241 passed.
-2. `python -m pytest --collect-only -q` -> 241 collected.
+1. `python -m pytest tests/ -q` -> 243 passed.
+2. `python -m pytest --collect-only -q` -> 243 collected.
 
 ## Open Chunk Gates
 
@@ -187,9 +187,10 @@ Completed:
    - `organization_loop.py` loop lifecycle/skip warnings
    - `discovery.py` reconciliation failure warning
 10. Replaced additional runtime `print` in `tool_families/vision.py` pipeline-load path with structured telemetry.
+11. Added print-usage policy guard (`tests/test_runtime_print_policy.py`) with explicit allowlist for intentional interactive/stdout cases.
 
 Remaining:
-1. Classify remaining `print` usage as either intentional interactive UX output (CLI/setup/discovery manifest) or convert to structured logging where non-interactive.
+1. None.
 
 Acceptance:
 1. Runtime logs are structured, machine-parseable, and correlated.
