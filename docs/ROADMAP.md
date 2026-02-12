@@ -123,6 +123,9 @@ Completed:
    - custom invocation method dispatch path
    - unsupported runtime method 400 guard
    - suppression/logging path for permission errors
+20. Reduced preview endpoint transport branching in `orket/interfaces/api.py`:
+   - `_resolve_async_method` now supports seam-provided `unsupported_detail`
+   - `/v1/system/preview-asset` now dispatches through shared async invocation helper
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

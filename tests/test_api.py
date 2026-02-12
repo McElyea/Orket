@@ -297,7 +297,11 @@ def test_preview_asset_uses_runtime_invocation(monkeypatch):
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_preview_invocation",
-        lambda target, issue_id: {"method_name": "build_issue_preview", "args": [issue_id, target["asset_name"], target["department"]]},
+        lambda target, issue_id: {
+            "method_name": "build_issue_preview",
+            "args": [issue_id, target["asset_name"], target["department"]],
+            "unsupported_detail": "Unsupported preview mode 'issue'.",
+        },
     )
     monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
 
@@ -324,7 +328,11 @@ def test_preview_asset_rejects_unsupported_mode(monkeypatch):
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_preview_invocation",
-        lambda target, issue_id: {"method_name": "build_custom_preview", "args": [target["asset_name"], target["department"]]},
+        lambda target, issue_id: {
+            "method_name": "build_custom_preview",
+            "args": [target["asset_name"], target["department"]],
+            "unsupported_detail": "Unsupported preview mode 'custom'.",
+        },
     )
     monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
 
@@ -351,12 +359,11 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
     monkeypatch.setattr(
         api_module.api_runtime_node,
         "resolve_preview_invocation",
-        lambda target, issue_id: {"method_name": "build_custom_preview", "args": [target["asset_name"], target["department"]]},
-    )
-    monkeypatch.setattr(
-        api_module.api_runtime_node,
-        "preview_unsupported_detail",
-        lambda target, invocation: f"Unsupported preview invocation '{invocation['method_name']}' for mode '{target['mode']}'",
+        lambda target, issue_id: {
+            "method_name": "build_custom_preview",
+            "args": [target["asset_name"], target["department"]],
+            "unsupported_detail": f"Unsupported preview invocation 'build_custom_preview' for mode '{target['mode']}'",
+        },
     )
     monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
 

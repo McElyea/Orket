@@ -429,6 +429,7 @@ def test_default_api_runtime_strategy_parity():
     ) == {
         "method_name": "build_issue_preview",
         "args": ["ISSUE-1", "my_epic", "product"],
+        "unsupported_detail": "Unsupported preview mode 'issue'.",
     }
     assert node.preview_unsupported_detail(
         {"mode": "custom", "asset_name": "x", "department": "core"},

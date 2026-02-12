@@ -25,6 +25,9 @@ def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
     method_name = invocation["method_name"]
     method = getattr(target, method_name, None)
     if method is None:
+        detail = invocation.get("unsupported_detail")
+        if detail:
+            raise HTTPException(status_code=400, detail=detail)
         raise HTTPException(status_code=400, detail=f"Unsupported {error_prefix} method '{method_name}'.")
     return method
 
@@ -291,11 +294,7 @@ async def preview_asset(path: str, issue_id: Optional[str] = None):
     target = api_runtime_node.resolve_preview_target(path, issue_id)
     invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)
     builder = api_runtime_node.create_preview_builder(PROJECT_ROOT / "model")
-    build_method = getattr(builder, invocation["method_name"], None)
-    if build_method is None:
-        detail = api_runtime_node.preview_unsupported_detail(target, invocation)
-        raise HTTPException(status_code=400, detail=detail)
-    return await build_method(*invocation["args"])
+    return await _invoke_async_method(builder, invocation, "preview")
 
 @v1_router.post("/system/chat-driver")
 async def chat_driver(req: ChatDriverRequest):

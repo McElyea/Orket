@@ -310,14 +310,20 @@ class DefaultApiRuntimeStrategyNode:
 
     def resolve_preview_invocation(self, target: Dict[str, str], issue_id: str | None) -> Dict[str, Any]:
         method_name = self.select_preview_build_method(target["mode"])
+        unsupported_detail = self.preview_unsupported_detail(
+            target,
+            {"method_name": method_name},
+        )
         if target["mode"] == "issue":
             return {
                 "method_name": method_name,
                 "args": [issue_id, target["asset_name"], target["department"]],
+                "unsupported_detail": unsupported_detail,
             }
         return {
             "method_name": method_name,
             "args": [target["asset_name"], target["department"]],
+            "unsupported_detail": unsupported_detail,
         }
 
     def preview_unsupported_detail(self, target: Dict[str, str], invocation: Dict[str, Any]) -> str:
