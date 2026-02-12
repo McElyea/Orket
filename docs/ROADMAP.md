@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 253 passed.
-2. `python -m pytest --collect-only -q` -> 253 collected.
+1. `python -m pytest tests/ -q` -> 256 passed.
+2. `python -m pytest --collect-only -q` -> 256 collected.
 
 ## Open Chunk Gates
 
@@ -117,6 +117,12 @@ Completed:
 17. Added chat-driver runtime-invocation parity/error-path tests:
    - custom invocation method dispatch path
    - unsupported runtime method 400 guard
+18. Moved `/v1/system/clear-logs` method wiring into `ApiRuntimeStrategyNode`:
+   - added `resolve_clear_logs_invocation(log_path)` seam
+19. Added clear-logs runtime behavior tests:
+   - custom invocation method dispatch path
+   - unsupported runtime method 400 guard
+   - suppression/logging path for permission errors
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

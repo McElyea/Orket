@@ -239,6 +239,9 @@ class DefaultApiRuntimeStrategyNode:
     def resolve_clear_logs_path(self) -> str:
         return "workspace/default/orket.log"
 
+    def resolve_clear_logs_invocation(self, log_path: str) -> Dict[str, Any]:
+        return {"method_name": "write_file", "args": [log_path, ""]}
+
     def resolve_read_invocation(self, path: str) -> Dict[str, Any]:
         return {"method_name": "read_file", "args": [path]}
 

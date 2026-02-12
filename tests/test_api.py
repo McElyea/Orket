@@ -40,6 +40,73 @@ def test_heartbeat():
         assert data["status"] == "online"
         assert "timestamp" in data
 
+
+def test_clear_logs_uses_runtime_invocation(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    class FakeFs:
+        async def clear_sink(self, path, content):
+            captured["args"] = (path, content)
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_clear_logs_path",
+        lambda: "workspace/default/orket.log",
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_clear_logs_invocation",
+        lambda log_path: {"method_name": "clear_sink", "args": [log_path, ""]},
+    )
+
+    response = client.post("/v1/system/clear-logs", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+    assert captured["args"] == ("workspace/default/orket.log", "")
+
+
+def test_clear_logs_rejects_unsupported_runtime_method(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeFs:
+        async def write_file(self, path, content):
+            return None
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_clear_logs_invocation",
+        lambda log_path: {"method_name": "missing_method", "args": [log_path, ""]},
+    )
+
+    response = client.post("/v1/system/clear-logs", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 400
+    assert "Unsupported clear logs method" in response.json()["detail"]
+
+
+def test_clear_logs_suppresses_permission_errors(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    class FakeFs:
+        async def write_file(self, path, content):
+            raise PermissionError("denied")
+
+    def fake_log_event(name, payload, workspace=None):
+        captured["event"] = (name, payload)
+
+    monkeypatch.setattr(api_module.api_runtime_node, "create_file_tools", lambda _root: FakeFs())
+    monkeypatch.setattr(api_module, "log_event", fake_log_event)
+
+    response = client.post("/v1/system/clear-logs", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+    assert captured["event"][0] == "clear_logs_skipped"
+    assert "denied" in captured["event"][1]["error"]
+
+
 def test_explorer_security(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     # Try to escape PROJECT_ROOT

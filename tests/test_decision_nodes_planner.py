@@ -384,6 +384,10 @@ def test_default_api_runtime_strategy_parity():
         "args": ["sb-1"],
     }
     assert node.resolve_clear_logs_path() == "workspace/default/orket.log"
+    assert node.resolve_clear_logs_invocation("workspace/default/orket.log") == {
+        "method_name": "write_file",
+        "args": ["workspace/default/orket.log", ""],
+    }
     assert node.resolve_read_invocation("x.txt") == {"method_name": "read_file", "args": ["x.txt"]}
     assert node.resolve_save_invocation("x.txt", "hello") == {
         "method_name": "write_file",

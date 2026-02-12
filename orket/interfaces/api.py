@@ -127,7 +127,8 @@ async def clear_logs():
     log_path = api_runtime_node.resolve_clear_logs_path()
     fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
     try:
-        await fs.write_file(log_path, "")
+        invocation = api_runtime_node.resolve_clear_logs_invocation(log_path)
+        await _invoke_async_method(fs, invocation, "clear logs")
     except (PermissionError, FileNotFoundError, OSError) as exc:
         log_event(
             "clear_logs_skipped",

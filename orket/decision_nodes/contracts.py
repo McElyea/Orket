@@ -147,6 +147,9 @@ class ApiRuntimeStrategyNode(Protocol):
     def resolve_clear_logs_path(self) -> str:
         ...
 
+    def resolve_clear_logs_invocation(self, log_path: str) -> Dict[str, Any]:
+        ...
+
     def resolve_read_invocation(self, path: str) -> Dict[str, Any]:
         ...
 
