@@ -365,6 +365,7 @@ def test_default_api_runtime_strategy_parity():
             "session_id": "SESSION-1",
         },
     }
+    assert node.run_active_missing_asset_detail() == "No asset ID provided."
     assert node.resolve_runs_invocation() == {"method_name": "get_recent_runs", "args": []}
     assert node.resolve_backlog_invocation("SESS-1") == {
         "method_name": "get_session_issues",

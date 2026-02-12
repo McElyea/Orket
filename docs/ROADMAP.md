@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 256 passed.
-2. `python -m pytest --collect-only -q` -> 256 collected.
+1. `python -m pytest tests/ -q` -> 257 passed.
+2. `python -m pytest --collect-only -q` -> 257 collected.
 
 ## Open Chunk Gates
 
@@ -126,6 +126,9 @@ Completed:
 20. Reduced preview endpoint transport branching in `orket/interfaces/api.py`:
    - `_resolve_async_method` now supports seam-provided `unsupported_detail`
    - `/v1/system/preview-asset` now dispatches through shared async invocation helper
+21. Moved `run-active` missing-asset error detail into `ApiRuntimeStrategyNode`:
+   - added `run_active_missing_asset_detail()` seam
+   - endpoint now uses seam-provided 400 detail
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

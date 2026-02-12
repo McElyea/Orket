@@ -206,7 +206,11 @@ async def run_active_asset(req: RunAssetRequest):
     session_id = api_runtime_node.create_session_id()
 
     asset_id = api_runtime_node.resolve_asset_id(req.path, req.issue_id)
-    if not asset_id: raise HTTPException(status_code=400, detail="No asset ID provided.")
+    if not asset_id:
+        raise HTTPException(
+            status_code=400,
+            detail=api_runtime_node.run_active_missing_asset_detail(),
+        )
 
     invocation = api_runtime_node.resolve_run_active_invocation(
         asset_id=asset_id,

@@ -126,6 +126,9 @@ class ApiRuntimeStrategyNode(Protocol):
     ) -> Dict[str, Any]:
         ...
 
+    def run_active_missing_asset_detail(self) -> str:
+        ...
+
     def resolve_runs_invocation(self) -> Dict[str, Any]:
         ...
 

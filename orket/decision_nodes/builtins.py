@@ -218,6 +218,9 @@ class DefaultApiRuntimeStrategyNode:
             },
         }
 
+    def run_active_missing_asset_detail(self) -> str:
+        return "No asset ID provided."
+
     def resolve_runs_invocation(self) -> Dict[str, Any]:
         return {"method_name": "get_recent_runs", "args": []}
 

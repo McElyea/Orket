@@ -491,6 +491,26 @@ def test_run_active_rejects_unsupported_method(monkeypatch):
     assert "Unsupported run method" in response.json()["detail"]
 
 
+def test_run_active_uses_runtime_missing_asset_detail(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module.api_runtime_node, "create_session_id", lambda: "SESSX")
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_asset_id", lambda path, issue_id: None)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "run_active_missing_asset_detail",
+        lambda: "Asset is required by policy.",
+    )
+
+    response = client.post(
+        "/v1/system/run-active",
+        json={"path": "", "type": "issue"},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Asset is required by policy."
+
+
 def test_run_metrics_uses_runtime_workspace(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
