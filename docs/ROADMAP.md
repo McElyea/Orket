@@ -177,11 +177,13 @@ Acceptance:
 ### P6. Verification and Quality Gates
 Completed:
 1. Baseline suite is green.
+2. Added repo-level line-ending policy and CI normalization gate:
+   - `.gitattributes` sets LF as default with CRLF exceptions for `*.bat`/`*.cmd`.
+   - `quality.yml` now fails if `git add --renormalize .` produces staged drift.
 
 Remaining:
 1. Add regression tests for all critical findings in `Agents/CodexReview.md`.
-2. Add CI gate for line-ending normalization policy to reduce noisy diffs.
-3. Add API contract tests for route parameters currently at risk of drift.
+2. Add API contract tests for route parameters currently at risk of drift.
 
 Acceptance:
 1. Critical regression classes are guarded by tests.
