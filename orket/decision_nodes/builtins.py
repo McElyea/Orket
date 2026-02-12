@@ -317,6 +317,9 @@ class DefaultApiRuntimeStrategyNode:
             "args": [target["asset_name"], target["department"]],
         }
 
+    def preview_unsupported_detail(self, target: Dict[str, str], invocation: Dict[str, Any]) -> str:
+        return f"Unsupported preview mode '{target['mode']}'."
+
     def create_preview_builder(self, model_root: Any) -> Any:
         from orket.preview import PreviewBuilder
         return PreviewBuilder(model_root)

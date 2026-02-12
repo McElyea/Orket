@@ -292,7 +292,8 @@ async def preview_asset(path: str, issue_id: Optional[str] = None):
     builder = api_runtime_node.create_preview_builder(PROJECT_ROOT / "model")
     build_method = getattr(builder, invocation["method_name"], None)
     if build_method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported preview mode '{target['mode']}'.")
+        detail = api_runtime_node.preview_unsupported_detail(target, invocation)
+        raise HTTPException(status_code=400, detail=detail)
     return await build_method(*invocation["args"])
 
 @v1_router.post("/system/chat-driver")

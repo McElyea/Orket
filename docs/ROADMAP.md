@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 250 passed.
-2. `python -m pytest --collect-only -q` -> 250 collected.
+1. `python -m pytest tests/ -q` -> 251 passed.
+2. `python -m pytest --collect-only -q` -> 251 collected.
 
 ## Open Chunk Gates
 
@@ -109,6 +109,9 @@ Completed:
 13. Added sandbox logs runtime-invocation parity/error-path tests:
    - custom invocation method dispatch path
    - unsupported runtime method 400 guard
+14. Moved preview unsupported-mode error-detail policy into `ApiRuntimeStrategyNode`:
+   - added `preview_unsupported_detail(target, invocation)` seam
+15. Added preview unsupported-mode runtime-detail parity test to verify API uses seam-provided error messages.
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

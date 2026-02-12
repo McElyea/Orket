@@ -177,6 +177,9 @@ class ApiRuntimeStrategyNode(Protocol):
     def resolve_preview_invocation(self, target: Dict[str, str], issue_id: str | None) -> Dict[str, Any]:
         ...
 
+    def preview_unsupported_detail(self, target: Dict[str, str], invocation: Dict[str, Any]) -> str:
+        ...
+
     def create_preview_builder(self, model_root: Any) -> Any:
         ...
 

@@ -269,6 +269,39 @@ def test_preview_asset_rejects_unsupported_mode(monkeypatch):
     assert "Unsupported preview mode" in response.json()["detail"]
 
 
+def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeBuilder:
+        async def build_epic_preview(self, asset_name, department):
+            return {"asset_name": asset_name, "department": department}
+
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_preview_target",
+        lambda path, issue_id: {"mode": "custom", "asset_name": "asset-x", "department": "core"},
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_preview_invocation",
+        lambda target, issue_id: {"method_name": "build_custom_preview", "args": [target["asset_name"], target["department"]]},
+    )
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "preview_unsupported_detail",
+        lambda target, invocation: f"Unsupported preview invocation '{invocation['method_name']}' for mode '{target['mode']}'",
+    )
+    monkeypatch.setattr(api_module.api_runtime_node, "create_preview_builder", lambda _model_root: FakeBuilder())
+
+    response = client.get(
+        "/v1/system/preview-asset?path=model/core/epics/x.json",
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Unsupported preview invocation 'build_custom_preview' for mode 'custom'"
+
+
 def test_run_active_uses_runtime_invocation(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 

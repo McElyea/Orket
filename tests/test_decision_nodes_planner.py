@@ -426,6 +426,10 @@ def test_default_api_runtime_strategy_parity():
         "method_name": "build_issue_preview",
         "args": ["ISSUE-1", "my_epic", "product"],
     }
+    assert node.preview_unsupported_detail(
+        {"mode": "custom", "asset_name": "x", "department": "core"},
+        {"method_name": "build_custom_preview", "args": []},
+    ) == "Unsupported preview mode 'custom'."
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_logs_invocation("sb-1", "api") == {
