@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 257 passed.
-2. `python -m pytest --collect-only -q` -> 257 collected.
+1. `python -m pytest tests/ -q` -> 259 passed.
+2. `python -m pytest --collect-only -q` -> 259 collected.
 
 ## Open Chunk Gates
 
@@ -129,6 +129,11 @@ Completed:
 21. Moved `run-active` missing-asset error detail into `ApiRuntimeStrategyNode`:
    - added `run_active_missing_asset_detail()` seam
    - endpoint now uses seam-provided 400 detail
+22. Moved session/snapshot missing-resource HTTP policy into `ApiRuntimeStrategyNode`:
+   - added `session_detail_not_found_error(session_id)` seam
+   - added `session_snapshot_not_found_error(session_id)` seam
+23. Added runtime-policy parity tests for session/snapshot not-found behavior:
+   - custom status/detail from seam are honored by API endpoints
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

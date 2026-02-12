@@ -675,6 +675,42 @@ def test_session_snapshot_returns_404_when_missing(monkeypatch):
     assert response.status_code == 404
 
 
+def test_session_detail_uses_runtime_not_found_policy(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_get_session(_session_id):
+        return None
+
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "session_detail_not_found_error",
+        lambda session_id: {"status_code": 410, "detail": f"Session '{session_id}' expired"},
+    )
+
+    response = client.get("/v1/sessions/NOPE", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 410
+    assert response.json()["detail"] == "Session 'NOPE' expired"
+
+
+def test_session_snapshot_uses_runtime_not_found_policy(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_get_snapshot(_session_id):
+        return None
+
+    monkeypatch.setattr(api_module.engine.snapshots, "get", fake_get_snapshot)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "session_snapshot_not_found_error",
+        lambda session_id: {"status_code": 410, "detail": f"Snapshot for '{session_id}' expired"},
+    )
+
+    response = client.get("/v1/sessions/NOPE/snapshot", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 410
+    assert response.json()["detail"] == "Snapshot for 'NOPE' expired"
+
+
 def test_sandboxes_list_and_stop(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}

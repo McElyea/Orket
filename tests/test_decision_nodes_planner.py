@@ -375,10 +375,12 @@ def test_default_api_runtime_strategy_parity():
         "method_name": "get_session",
         "args": ["SESS-1"],
     }
+    assert node.session_detail_not_found_error("SESS-1") == {"status_code": 404}
     assert node.resolve_session_snapshot_invocation("SESS-1") == {
         "method_name": "get",
         "args": ["SESS-1"],
     }
+    assert node.session_snapshot_not_found_error("SESS-1") == {"status_code": 404}
     assert node.resolve_sandboxes_list_invocation() == {"method_name": "get_sandboxes", "args": []}
     assert node.resolve_sandbox_stop_invocation("sb-1") == {
         "method_name": "stop_sandbox",

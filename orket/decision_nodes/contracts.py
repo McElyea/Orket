@@ -138,7 +138,13 @@ class ApiRuntimeStrategyNode(Protocol):
     def resolve_session_detail_invocation(self, session_id: str) -> Dict[str, Any]:
         ...
 
+    def session_detail_not_found_error(self, session_id: str) -> Dict[str, Any]:
+        ...
+
     def resolve_session_snapshot_invocation(self, session_id: str) -> Dict[str, Any]:
+        ...
+
+    def session_snapshot_not_found_error(self, session_id: str) -> Dict[str, Any]:
         ...
 
     def resolve_sandboxes_list_invocation(self) -> Dict[str, Any]:

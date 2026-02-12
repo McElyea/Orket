@@ -258,7 +258,8 @@ async def get_session_detail(session_id: str):
     log_event("api_session_detail", {"session_id": session_id}, PROJECT_ROOT)
     invocation = api_runtime_node.resolve_session_detail_invocation(session_id)
     session = await _invoke_async_method(engine.sessions, invocation, "session")
-    if not session: raise HTTPException(404)
+    if not session:
+        raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
     return session
 
 @v1_router.get("/sessions/{session_id}/snapshot")
@@ -266,7 +267,8 @@ async def get_session_snapshot(session_id: str):
     log_event("api_session_snapshot", {"session_id": session_id}, PROJECT_ROOT)
     invocation = api_runtime_node.resolve_session_snapshot_invocation(session_id)
     snapshot = await _invoke_async_method(engine.snapshots, invocation, "snapshot")
-    if not snapshot: raise HTTPException(404)
+    if not snapshot:
+        raise HTTPException(**api_runtime_node.session_snapshot_not_found_error(session_id))
     return snapshot
 
 @v1_router.get("/sandboxes")
