@@ -40,6 +40,11 @@ async def _invoke_async_method(target: object, invocation: dict, error_prefix: s
     method = _resolve_async_method(target, invocation, error_prefix)
     return await method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
+
+def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
+    method = _resolve_sync_method(target, invocation["method_name"], error_prefix)
+    return method(*invocation.get("args", []), **invocation.get("kwargs", {}))
+
 class SaveFileRequest(BaseModel):
     path: str
     content: str
@@ -272,8 +277,9 @@ async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
     pipeline = api_runtime_node.create_execution_pipeline(
         api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT)
     )
-    get_logs = _resolve_sync_method(pipeline.sandbox_orchestrator, "get_logs", "sandbox logs")
-    return {"logs": get_logs(sandbox_id, service)}
+    invocation = api_runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
+    logs = _invoke_sync_method(pipeline.sandbox_orchestrator, invocation, "sandbox logs")
+    return {"logs": logs}
 
 @v1_router.get("/system/board")
 async def get_system_board(dept: str = "core"):

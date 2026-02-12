@@ -338,6 +338,9 @@ class DefaultApiRuntimeStrategyNode:
         from orket.orket import ExecutionPipeline
         return ExecutionPipeline(workspace_root)
 
+    def resolve_sandbox_logs_invocation(self, sandbox_id: str, service: str | None) -> Dict[str, Any]:
+        return {"method_name": "get_logs", "args": [sandbox_id, service]}
+
     def resolve_api_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
 

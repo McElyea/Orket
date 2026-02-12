@@ -416,6 +416,63 @@ def test_sandbox_logs_forwards_optional_service_param(monkeypatch):
     assert captured["log_args"] == ("sb-1", None)
 
 
+def test_sandbox_logs_use_runtime_invocation_policy(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    class FakeSandboxOrchestrator:
+        def fetch_logs(self, sandbox_id, service):
+            captured["log_args"] = (sandbox_id, service)
+            return "policy-logs"
+
+    class FakePipeline:
+        sandbox_orchestrator = FakeSandboxOrchestrator()
+
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
+    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_sandbox_logs_invocation",
+        lambda sandbox_id, service: {"method_name": "fetch_logs", "args": [sandbox_id, service]},
+    )
+
+    response = client.get(
+        "/v1/sandboxes/sb-9/logs?service=frontend",
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"logs": "policy-logs"}
+    assert captured["log_args"] == ("sb-9", "frontend")
+
+
+def test_sandbox_logs_reject_unsupported_runtime_method(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    class FakeSandboxOrchestrator:
+        def get_logs(self, sandbox_id, service):
+            return f"{sandbox_id}:{service}"
+
+    class FakePipeline:
+        sandbox_orchestrator = FakeSandboxOrchestrator()
+
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
+    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_sandbox_logs_invocation",
+        lambda sandbox_id, service: {"method_name": "missing_logs_method", "args": [sandbox_id, service]},
+    )
+
+    response = client.get(
+        "/v1/sandboxes/sb-9/logs?service=frontend",
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 400
+    assert "Unsupported sandbox logs method" in response.json()["detail"]
+
+
 def test_session_detail_returns_404_when_missing(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 

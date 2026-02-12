@@ -428,6 +428,10 @@ def test_default_api_runtime_strategy_parity():
     }
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
+    assert node.resolve_sandbox_logs_invocation("sb-1", "api") == {
+        "method_name": "get_logs",
+        "args": ["sb-1", "api"],
+    }
     assert node.resolve_api_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
     assert node.should_remove_websocket(RuntimeError("x")) is True
     assert node.should_remove_websocket(ValueError("x")) is True

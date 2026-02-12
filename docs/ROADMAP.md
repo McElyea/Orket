@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 247 passed.
-2. `python -m pytest --collect-only -q` -> 247 collected.
+1. `python -m pytest tests/ -q` -> 250 passed.
+2. `python -m pytest --collect-only -q` -> 250 collected.
 
 ## Open Chunk Gates
 
@@ -103,6 +103,12 @@ Completed:
 9. Reduced repeated API transport branching by introducing shared async invocation helper in `orket/interfaces/api.py` for seam-resolved method dispatch/guarding.
 10. Extended invocation helper usage to additional transport paths (sandbox logs guard path) to reduce duplicated method-resolution branches.
 11. Moved `/v1/system/read` and `/v1/system/save` invocation wiring into `ApiRuntimeStrategyNode` with runtime-policy parity/error-path tests.
+12. Moved `/v1/sandboxes/{sandbox_id}/logs` invocation wiring into `ApiRuntimeStrategyNode`:
+   - added `resolve_sandbox_logs_invocation(sandbox_id, service)` seam
+   - transport now performs sync dispatch via invocation helper
+13. Added sandbox logs runtime-invocation parity/error-path tests:
+   - custom invocation method dispatch path
+   - unsupported runtime method 400 guard
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.

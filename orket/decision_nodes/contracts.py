@@ -192,6 +192,9 @@ class ApiRuntimeStrategyNode(Protocol):
     def create_execution_pipeline(self, workspace_root: Any) -> Any:
         ...
 
+    def resolve_sandbox_logs_invocation(self, sandbox_id: str, service: str | None) -> Dict[str, Any]:
+        ...
+
     def resolve_api_workspace(self, project_root: Any) -> Any:
         ...
 
