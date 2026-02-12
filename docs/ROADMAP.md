@@ -135,10 +135,13 @@ Completed:
    - `runtime/config_loader.py` validation failures
    - `domain/failure_reporter.py` report-created notice
    - `services/gitea_webhook_handler.py` sandbox deploy/failure notices
+6. Standardized session/run correlation payloads across API and orchestrator logs:
+   - API now emits `session_id` for run metrics/backlog/session detail/session snapshot routes.
+   - Orchestrator now emits `run_id` in dispatch/failure events and threads it into verification/sandbox deployment events when available.
+7. Added API regression coverage for correlation log payloads on session-scoped endpoints (`tests/test_api.py`).
 
 Remaining:
 1. Replace remaining non-test runtime `print` calls in hot paths (excluding intentional subprocess fixture stdout in verification runner code).
-2. Standardize run/session correlation IDs in logs for API -> orchestrator traceability.
 
 Acceptance:
 1. Runtime logs are structured, machine-parseable, and correlated.

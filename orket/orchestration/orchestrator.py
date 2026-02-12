@@ -76,7 +76,7 @@ class Orchestrator:
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
 
-    async def verify_issue(self, issue_id: str) -> Any:
+    async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
         """
         Runs empirical verification for a specific issue.
         """
@@ -92,14 +92,20 @@ class Orchestrator:
         issue = IssueConfig.model_validate(issue_data.model_dump())
         
         # 2. Execute Verification (Fixtures)
-        log_event("verification_started", {"issue_id": issue_id}, self.workspace)
+        verification_event = {"issue_id": issue_id}
+        if run_id:
+            verification_event["run_id"] = run_id
+        log_event("verification_started", verification_event, self.workspace)
         result = await asyncio.to_thread(VerificationEngine.verify, issue.verification, self.workspace)
         
         # 3. Optional: Execute Sandbox Verification (HTTP)
         rock_id = issue.build_id
         sandbox = self.sandbox_orchestrator.registry.get(f"sandbox-{rock_id}")
         if sandbox and sandbox.status == SandboxStatus.RUNNING:
-            log_event("verification_sandbox_started", {"issue_id": issue_id}, self.workspace)
+            sandbox_event = {"issue_id": issue_id}
+            if run_id:
+                sandbox_event["run_id"] = run_id
+            log_event("verification_sandbox_started", sandbox_event, self.workspace)
             sb_result = await VerificationEngine.verify_sandbox(sandbox, issue.verification)
             # Merge results
             result.passed += sb_result.passed
@@ -112,7 +118,7 @@ class Orchestrator:
         await self.async_cards.save(issue.model_dump())
         return result
 
-    async def _trigger_sandbox(self, epic: EpicConfig):
+    async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
         """Helper to trigger sandbox deployment with per-epic locking."""
         from orket.domain.sandbox import TechStack, SandboxStatus
         rock_id = epic.parent_id or epic.id
@@ -123,7 +129,10 @@ class Orchestrator:
             if existing and existing.status == SandboxStatus.RUNNING:
                 return
 
-            log_event("sandbox_deploy_started", {"rock_id": rock_id}, self.workspace)
+            deploy_start = {"rock_id": rock_id}
+            if run_id:
+                deploy_start["run_id"] = run_id
+            log_event("sandbox_deploy_started", deploy_start, self.workspace)
             try:
                 await self.sandbox_orchestrator.create_sandbox(
                     rock_id=rock_id,
@@ -132,7 +141,10 @@ class Orchestrator:
                     workspace_path=str(self.workspace)
                 )
             except (RuntimeError, ValueError, OSError) as e:
-                log_event("sandbox_deploy_failed", {"rock_id": rock_id, "error": str(e)}, self.workspace)
+                deploy_failed = {"rock_id": rock_id, "error": str(e)}
+                if run_id:
+                    deploy_failed["run_id"] = run_id
+                log_event("sandbox_deploy_failed", deploy_failed, self.workspace)
 
     async def execute_epic(
         self, 
@@ -244,7 +256,7 @@ class Orchestrator:
         
         # RUN EMPIRICAL VERIFICATION (FIT) for review turns
         if is_review_turn:
-            verification_result = await self.verify_issue(issue.id)
+            verification_result = await self.verify_issue(issue.id, run_id=run_id)
             v_msg = f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
             self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
 
@@ -296,7 +308,7 @@ class Orchestrator:
 
         log_event(
             "orchestrator_dispatch",
-            {"seat": seat_name, "issue_id": issue.id, "status": issue.status.value},
+            {"run_id": run_id, "seat": seat_name, "issue_id": issue.id, "status": issue.status.value},
             self.workspace,
         )
         result = await self._dispatch_turn(
@@ -331,7 +343,7 @@ class Orchestrator:
             # Sandbox triggering
             success_actions = self.evaluator_node.success_post_actions(success_eval)
             if self.evaluator_node.should_trigger_sandbox(success_actions):
-                await self._trigger_sandbox(epic)
+                await self._trigger_sandbox(epic, run_id=run_id)
                 next_status = self.evaluator_node.next_status_after_success(success_actions)
                 if next_status is not None:
                     await self.async_cards.update_status(issue.id, next_status)
@@ -421,6 +433,7 @@ class Orchestrator:
             event_name = self.evaluator_node.failure_event_name(action)
             if event_name:
                 log_event(event_name, {
+                    "run_id": run_id,
                     "issue_id": issue.id,
                     "retry_count": issue.retry_count,
                     "error": result.error
@@ -449,6 +462,7 @@ class Orchestrator:
         event_name = self.evaluator_node.failure_event_name(action)
         if event_name:
             log_event(event_name, {
+                "run_id": run_id,
                 "issue_id": issue.id,
                 "retry_count": issue.retry_count,
                 "max_retries": issue.max_retries,

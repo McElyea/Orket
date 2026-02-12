@@ -308,3 +308,37 @@ def test_runs_and_backlog_delegation(monkeypatch):
     assert runs_response.json() == [{"session_id": "S1"}]
     assert backlog_response.status_code == 200
     assert backlog_response.json() == [{"id": "I1", "session_id": "S1"}]
+
+
+def test_session_endpoints_emit_correlation_logs(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured_events = []
+
+    def fake_log_event(name, payload, workspace=None):
+        captured_events.append((name, payload))
+
+    async def fake_get_session(_session_id):
+        return {"session_id": "S1", "status": "done"}
+
+    async def fake_get_snapshot(_session_id):
+        return {"session_id": "S1", "snapshot": True}
+
+    async def fake_backlog(session_id):
+        return [{"id": "I1", "session_id": session_id}]
+
+    monkeypatch.setattr(api_module, "log_event", fake_log_event)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+    monkeypatch.setattr(api_module.engine.snapshots, "get", fake_get_snapshot)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session_issues", fake_backlog, raising=False)
+    monkeypatch.setattr(logging_module, "get_member_metrics", lambda workspace: {"workspace": str(workspace)})
+
+    _ = client.get("/v1/runs/S1/metrics", headers={"X-API-Key": "test-key"})
+    _ = client.get("/v1/runs/S1/backlog", headers={"X-API-Key": "test-key"})
+    _ = client.get("/v1/sessions/S1", headers={"X-API-Key": "test-key"})
+    _ = client.get("/v1/sessions/S1/snapshot", headers={"X-API-Key": "test-key"})
+
+    event_map = {name: payload for name, payload in captured_events}
+    assert event_map["api_run_metrics"]["session_id"] == "S1"
+    assert event_map["api_backlog"]["session_id"] == "S1"
+    assert event_map["api_session_detail"]["session_id"] == "S1"
+    assert event_map["api_session_snapshot"]["session_id"] == "S1"

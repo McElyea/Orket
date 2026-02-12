@@ -209,20 +209,25 @@ async def list_runs(): return await engine.sessions.get_recent_runs()
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
     from orket.logging import get_member_metrics
+    log_event("api_run_metrics", {"session_id": session_id}, PROJECT_ROOT)
     workspace = api_runtime_node.resolve_member_metrics_workspace(PROJECT_ROOT, session_id)
     return get_member_metrics(workspace)
 
 @v1_router.get("/runs/{session_id}/backlog")
-async def get_backlog(session_id: str): return await engine.sessions.get_session_issues(session_id)
+async def get_backlog(session_id: str):
+    log_event("api_backlog", {"session_id": session_id}, PROJECT_ROOT)
+    return await engine.sessions.get_session_issues(session_id)
 
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
+    log_event("api_session_detail", {"session_id": session_id}, PROJECT_ROOT)
     session = await engine.sessions.get_session(session_id)
     if not session: raise HTTPException(404)
     return session
 
 @v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str):
+    log_event("api_session_snapshot", {"session_id": session_id}, PROJECT_ROOT)
     snapshot = await engine.snapshots.get(session_id)
     if not snapshot: raise HTTPException(404)
     return snapshot
