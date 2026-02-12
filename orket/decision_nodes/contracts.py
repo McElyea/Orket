@@ -328,6 +328,17 @@ class OrchestrationLoopPolicyNode(Protocol):
     def is_backlog_done(self, backlog: List[Any]) -> bool:
         ...
 
+    def no_candidate_outcome(self, backlog: List[Any]) -> Dict[str, Any]:
+        ...
+
+    def should_raise_exhaustion(
+        self,
+        iteration_count: int,
+        max_iterations: int,
+        backlog: List[Any],
+    ) -> bool:
+        ...
+
 
 class ModelClientPolicyNode(Protocol):
     """Decision node: model provider/client construction policy."""

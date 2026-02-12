@@ -140,9 +140,13 @@ Completed:
 6. Extracted remaining success-branch policy checks in `_execute_issue_turn` into `EvaluatorNode`:
    - `should_trigger_sandbox(success_actions)`
    - `next_status_after_success(success_actions)`
+7. Extracted execute-loop empty-candidate/exhaustion decisions into loop policy seams:
+   - `no_candidate_outcome(backlog)`
+   - `should_raise_exhaustion(iteration_count, max_iterations, backlog)`
+   with backward-compatible fallback behavior in orchestrator.
 
 Remaining:
-1. Keep core `execute_epic` loop shape stable while reducing direct policy branching.
+1. None.
 
 Acceptance:
 1. `execute_epic` behavior remains equivalent under current suite.

@@ -663,6 +663,16 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.role_order_for_turn(["coder"], is_review_turn=False) == ["coder"]
     assert node.role_order_for_turn(["coder"], is_review_turn=True) == ["integrity_guard", "coder"]
     assert node.missing_seat_status() == CardStatus.CANCELED
+    assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.DONE)]) == {
+        "is_done": True,
+        "event_name": "orchestrator_epic_complete",
+    }
+    assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.READY)]) == {
+        "is_done": False,
+        "event_name": None,
+    }
+    assert node.should_raise_exhaustion(20, 20, [SimpleNamespace(status=CardStatus.READY)]) is True
+    assert node.should_raise_exhaustion(20, 20, [SimpleNamespace(status=CardStatus.DONE)]) is False
 
 
 def test_registry_orchestration_loop_env_override_wins(monkeypatch):

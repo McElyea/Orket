@@ -694,6 +694,21 @@ class DefaultOrchestrationLoopPolicyNode:
     def is_backlog_done(self, backlog: List[Any]) -> bool:
         return all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)
 
+    def no_candidate_outcome(self, backlog: List[Any]) -> Dict[str, Any]:
+        is_done = self.is_backlog_done(backlog)
+        return {
+            "is_done": is_done,
+            "event_name": "orchestrator_epic_complete" if is_done else None,
+        }
+
+    def should_raise_exhaustion(
+        self,
+        iteration_count: int,
+        max_iterations: int,
+        backlog: List[Any],
+    ) -> bool:
+        return iteration_count >= max_iterations and not self.is_backlog_done(backlog)
+
 
 class _DefaultAsyncModelClient:
     def __init__(self, provider: Any):

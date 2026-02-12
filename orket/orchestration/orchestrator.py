@@ -211,10 +211,18 @@ class Orchestrator:
             )
 
             if not candidates:
-                # Check if we are actually done or just blocked
-                is_done = self.loop_policy_node.is_backlog_done(backlog)
-                if is_done:
-                    log_event("orchestrator_epic_complete", {"epic": epic.name, "run_id": run_id}, self.workspace)
+                # Empty-candidate policy (seam) with backward-compatible fallback.
+                outcome_fn = getattr(self.loop_policy_node, "no_candidate_outcome", None)
+                if callable(outcome_fn):
+                    outcome = outcome_fn(backlog)
+                else:
+                    is_done = self.loop_policy_node.is_backlog_done(backlog)
+                    outcome = {"is_done": is_done, "event_name": "orchestrator_epic_complete" if is_done else None}
+
+                if outcome.get("is_done"):
+                    event_name = outcome.get("event_name")
+                    if event_name:
+                        log_event(event_name, {"epic": epic.name, "run_id": run_id}, self.workspace)
                 break
             
             log_event(
@@ -235,7 +243,12 @@ class Orchestrator:
 
         if iteration_count >= max_iterations:
             final_backlog = await self.async_cards.get_by_build(active_build)
-            if not self.loop_policy_node.is_backlog_done(final_backlog):
+            exhaustion_fn = getattr(self.loop_policy_node, "should_raise_exhaustion", None)
+            if callable(exhaustion_fn):
+                should_raise = exhaustion_fn(iteration_count, max_iterations, final_backlog)
+            else:
+                should_raise = not self.loop_policy_node.is_backlog_done(final_backlog)
+            if should_raise:
                 raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
 
     async def _execute_issue_turn(
