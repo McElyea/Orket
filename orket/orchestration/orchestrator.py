@@ -22,7 +22,7 @@ from orket.services.prompt_compiler import PromptCompiler
 from orket.services.tool_gate import ToolGate
 from orket.tools import ToolBox, get_tool_map
 from orket.logging import log_event
-from orket.exceptions import ExecutionFailed, GovernanceViolation
+from orket.exceptions import ExecutionFailed
 from orket.domain.state_machine import StateMachine
 from orket.utils import sanitize_name
 
@@ -393,7 +393,6 @@ class Orchestrator:
 
     async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, roles: List[str]):
         from orket.domain.failure_reporter import FailureReporter
-        from orket.exceptions import CatastrophicFailure
 
         await FailureReporter.generate_report(
             workspace=self.workspace,
@@ -407,6 +406,7 @@ class Orchestrator:
         eval_decision = self.evaluator_node.evaluate_failure(issue, result)
         issue.retry_count = eval_decision.get("next_retry_count", issue.retry_count)
         action = eval_decision.get("action")
+        failure_exception_class = self.evaluator_node.failure_exception_class(action)
 
         # Mechanical governance violations are terminal for the issue.
         if action == "governance_violation":
@@ -414,7 +414,7 @@ class Orchestrator:
             await self.async_cards.update_status(issue.id, failure_status)
             issue.status = failure_status
             await self.async_cards.save(issue.model_dump())
-            raise GovernanceViolation(self.evaluator_node.governance_violation_message(result.error))
+            raise failure_exception_class(self.evaluator_node.governance_violation_message(result.error))
 
         if action == "catastrophic":
             event_name = self.evaluator_node.failure_event_name(action)
@@ -437,12 +437,12 @@ class Orchestrator:
                     if asyncio.iscoroutine(cancel_result):
                         await cancel_result
                 
-            raise CatastrophicFailure(
+            raise failure_exception_class(
                 self.evaluator_node.catastrophic_failure_message(issue.id, issue.max_retries)
             )
 
         if action != "retry":
-            raise ExecutionFailed(self.evaluator_node.unexpected_failure_action_message(action, issue.id))
+            raise failure_exception_class(self.evaluator_node.unexpected_failure_action_message(action, issue.id))
 
         # Log retry and reset to READY
         event_name = self.evaluator_node.failure_event_name(action)
@@ -457,7 +457,7 @@ class Orchestrator:
         await self.async_cards.update_status(issue.id, self.evaluator_node.status_for_failure_action(action))
         await self.async_cards.save(issue.model_dump())
 
-        raise ExecutionFailed(
+        raise failure_exception_class(
             self.evaluator_node.retry_failure_message(
                 issue.id,
                 issue.retry_count,

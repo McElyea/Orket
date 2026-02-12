@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 227 passed.
-2. `python -m pytest --collect-only -q` -> 227 collected.
+1. `python -m pytest tests/ -q` -> 230 passed.
+2. `python -m pytest --collect-only -q` -> 230 collected.
 
 ## Open Phases
 
@@ -97,11 +97,12 @@ Completed:
    - catastrophic failure message
    - unexpected action message
    - retry failure message
+5. Extracted failure exception-type selection into `EvaluatorNode`:
+   - `failure_exception_class(action)` now controls raised exception class for governance/catastrophic/retry/unknown actions.
 
 Remaining:
 1. Extract remaining `_execute_issue_turn` policy branches (sandbox-trigger gating and review promotion conditions).
-2. Extract failure exception-type policy choice from `_handle_failure` into evaluator/loop seams.
-3. Keep core `execute_epic` loop shape stable while reducing direct policy branching.
+2. Keep core `execute_epic` loop shape stable while reducing direct policy branching.
 
 Acceptance:
 1. `execute_epic` behavior remains equivalent under current suite.
@@ -128,9 +129,13 @@ Completed:
 2. Added warning telemetry for `clear-logs` suppression path.
 3. Replaced hot-path `print` calls in `api.py` and key `orchestrator.py` flow points with `log_event`.
 4. Replaced `execution_pipeline.py` phase/status prints with structured `log_event` calls.
+5. Replaced additional runtime/service `print` calls with structured logging:
+   - `runtime/config_loader.py` validation failures
+   - `domain/failure_reporter.py` report-created notice
+   - `services/gitea_webhook_handler.py` sandbox deploy/failure notices
 
 Remaining:
-1. Replace remaining runtime `print` calls in `execution_pipeline.py` and other runtime hot paths.
+1. Replace remaining non-test runtime `print` calls in hot paths (excluding intentional subprocess fixture stdout in verification runner code).
 2. Standardize run/session correlation IDs in logs for API -> orchestrator traceability.
 
 Acceptance:

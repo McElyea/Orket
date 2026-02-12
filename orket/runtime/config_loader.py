@@ -87,7 +87,7 @@ class ConfigLoader:
         try:
             org = OrganizationConfig.model_validate(org_data)
         except (ValidationError, ValueError, TypeError) as exc:
-            print(f"[CONFIG] Validation failed: {exc}")
+            log_event("config_validation_failed", {"error": str(exc)}, workspace=self.root)
             return None
 
         return self.loader_strategy_node.apply_organization_overrides(org, get_setting)

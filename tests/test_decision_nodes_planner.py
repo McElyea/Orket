@@ -11,6 +11,7 @@ from orket.decision_nodes.builtins import (
 )
 from orket.decision_nodes.contracts import PlanningInput
 from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
 from orket.schema import CardStatus
 
 
@@ -268,6 +269,14 @@ def test_default_evaluator_failure_catastrophic():
         "MAX RETRIES EXCEEDED for I1. Limit: 3. Shutting down project orchestration."
     )
     assert evaluator.unexpected_failure_action_message("weird", "I1") == "Unexpected evaluator action 'weird' for I1"
+
+
+def test_default_evaluator_failure_exception_class_mapping():
+    evaluator = DefaultEvaluatorNode()
+    assert evaluator.failure_exception_class("governance_violation") is GovernanceViolation
+    assert evaluator.failure_exception_class("catastrophic") is CatastrophicFailure
+    assert evaluator.failure_exception_class("retry") is ExecutionFailed
+    assert evaluator.failure_exception_class("unknown") is ExecutionFailed
 
 
 def test_registry_resolves_custom_evaluator():

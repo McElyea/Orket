@@ -10,6 +10,7 @@ import os
 from orket.decision_nodes.contracts import PlanningInput
 from orket.schema import CardStatus
 from orket.tool_strategy.default import compose_default_tool_map
+from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
 
 
 class DefaultPlannerNode:
@@ -150,6 +151,14 @@ class DefaultEvaluatorNode:
         error: str | None,
     ) -> str:
         return f"Orchestration Turn Failed (Retry {retry_count}/{max_retries}): {error}"
+
+    def failure_exception_class(self, action: str) -> Any:
+        mapping = {
+            "governance_violation": GovernanceViolation,
+            "catastrophic": CatastrophicFailure,
+            "retry": ExecutionFailed,
+        }
+        return mapping.get(action, ExecutionFailed)
 
 
 class DefaultToolStrategyNode:

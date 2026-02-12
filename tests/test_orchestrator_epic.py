@@ -107,6 +107,41 @@ async def test_handle_failure_retry_increment(orchestrator, mock_cards):
 
 
 @pytest.mark.asyncio
+async def test_handle_failure_uses_evaluator_exception_policy(orchestrator):
+    issue = IssueConfig(
+        id="I1",
+        seat="dev",
+        summary="Test",
+        retry_count=0,
+        max_retries=3,
+    )
+    result = MagicMock()
+    result.error = "Fixable error"
+    result.violations = []
+
+    class CustomEvaluator:
+        def evaluate_failure(self, issue, result):
+            return {"action": "retry", "next_retry_count": issue.retry_count + 1}
+
+        def failure_exception_class(self, action):
+            return RuntimeError
+
+        def status_for_failure_action(self, action):
+            return CardStatus.READY
+
+        def failure_event_name(self, action):
+            return None
+
+        def retry_failure_message(self, issue_id, retry_count, max_retries, error):
+            return f"CUSTOM RETRY {issue_id} {retry_count}/{max_retries}: {error}"
+
+    orchestrator.evaluator_node = CustomEvaluator()
+
+    with pytest.raises(RuntimeError, match="CUSTOM RETRY I1 1/3: Fixable error"):
+        await orchestrator._handle_failure(issue, result, "run-1", ["dev"])
+
+
+@pytest.mark.asyncio
 async def test_execute_epic_honors_custom_loop_policy(orchestrator, mock_cards):
     """Runtime seam test: custom loop policy controls execute_epic iteration behavior."""
     issue = MagicMock(id="I1", status=CardStatus.READY)

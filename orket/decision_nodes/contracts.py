@@ -72,6 +72,9 @@ class EvaluatorNode(Protocol):
     ) -> str:
         ...
 
+    def failure_exception_class(self, action: str) -> Any:
+        ...
+
 
 class PromptStrategyNode(Protocol):
     """Decision node: chooses model and dialect strategy for a turn."""

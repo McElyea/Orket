@@ -383,17 +383,12 @@ Why did this fail even with guidance?
             # Comment on PR with sandbox URLs
             await self._add_sandbox_comment(owner, repo_name, pr_number, sandbox)
 
-            print(f"🚀 Sandbox deployed for {repo_full_name} PR #{pr_number}")
-            print(f"   API: {sandbox.api_url}")
-            print(f"   Frontend: {sandbox.frontend_url}")
-
         except (RuntimeError, ValueError, OSError, httpx.HTTPError) as e:
             log_event("sandbox_deployment_failed", {
                 "repo": repo_full_name,
                 "pr": pr_number,
                 "error": str(e)
             }, self.workspace)
-            print(f"❌ Sandbox deployment failed: {e}")
 
     async def _add_sandbox_comment(self, owner: str, repo_name: str, pr_number: int, sandbox) -> None:
         """Add comment to PR with sandbox deployment URLs."""

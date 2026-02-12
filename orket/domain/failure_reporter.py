@@ -11,6 +11,7 @@ from pathlib import Path
 from datetime import datetime, UTC
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
+from orket.logging import log_event
 
 
 class PolicyViolationReport(BaseModel):
@@ -72,6 +73,10 @@ class FailureReporter:
         
         async with aiofiles.open(report_path, "w", encoding="utf-8") as f:
             await f.write(report.model_dump_json(indent=4))
-        
-        print(f"  [REPORT] Policy violation analysis saved to {report_path}")
+
+        log_event(
+            "policy_violation_report_saved",
+            {"session_id": session_id, "card_id": card_id, "path": str(report_path)},
+            workspace,
+        )
         return report_path
