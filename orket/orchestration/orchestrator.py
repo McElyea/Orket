@@ -329,10 +329,11 @@ class Orchestrator:
                 )
             
             # Sandbox triggering
-            if success_eval.get("trigger_sandbox"):
+            success_actions = self.evaluator_node.success_post_actions(success_eval)
+            if success_actions.get("trigger_sandbox"):
                 await self._trigger_sandbox(epic)
-                if success_eval.get("promote_code_review"):
-                    await self.async_cards.update_status(issue.id, CardStatus.CODE_REVIEW)
+                if success_actions.get("next_status") is not None:
+                    await self.async_cards.update_status(issue.id, success_actions["next_status"])
             
             await provider.clear_context()
             await self._save_checkpoint(run_id, epic, team, env, active_build)
@@ -416,11 +417,13 @@ class Orchestrator:
             raise GovernanceViolation(f"iDesign Violation: {result.error}")
 
         if action == "catastrophic":
-            log_event("catastrophic_failure", {
-                "issue_id": issue.id,
-                "retry_count": issue.retry_count,
-                "error": result.error
-            }, self.workspace)
+            event_name = self.evaluator_node.failure_event_name(action)
+            if event_name:
+                log_event(event_name, {
+                    "issue_id": issue.id,
+                    "retry_count": issue.retry_count,
+                    "error": result.error
+                }, self.workspace)
             failure_status = self.evaluator_node.status_for_failure_action(action)
             await self.async_cards.update_status(issue.id, failure_status)
             await self.async_cards.save(issue.model_dump())
@@ -443,12 +446,14 @@ class Orchestrator:
             raise ExecutionFailed(f"Unexpected evaluator action '{action}' for {issue.id}")
 
         # Log retry and reset to READY
-        log_event("retry_triggered", {
-            "issue_id": issue.id,
-            "retry_count": issue.retry_count,
-            "max_retries": issue.max_retries,
-            "error": result.error
-        }, self.workspace)
+        event_name = self.evaluator_node.failure_event_name(action)
+        if event_name:
+            log_event(event_name, {
+                "issue_id": issue.id,
+                "retry_count": issue.retry_count,
+                "max_retries": issue.max_retries,
+                "error": result.error
+            }, self.workspace)
         
         await self.async_cards.update_status(issue.id, self.evaluator_node.status_for_failure_action(action))
         await self.async_cards.save(issue.model_dump())

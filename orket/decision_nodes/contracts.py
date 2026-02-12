@@ -42,10 +42,16 @@ class EvaluatorNode(Protocol):
     def evaluate_failure(self, issue: Any, result: Any) -> Any:
         ...
 
+    def success_post_actions(self, success_eval: Dict[str, Any]) -> Dict[str, Any]:
+        ...
+
     def status_for_failure_action(self, action: str) -> Any:
         ...
 
     def should_cancel_session(self, action: str) -> bool:
+        ...
+
+    def failure_event_name(self, action: str) -> str | None:
         ...
 
 

@@ -216,6 +216,10 @@ def test_default_evaluator_success_decisions():
     assert result["remember_decision"] is True
     assert result["trigger_sandbox"] is True
     assert result["promote_code_review"] is True
+    assert evaluator.success_post_actions(result) == {
+        "trigger_sandbox": True,
+        "next_status": CardStatus.CODE_REVIEW,
+    }
 
 
 def test_default_evaluator_failure_governance_violation():
@@ -229,6 +233,7 @@ def test_default_evaluator_failure_governance_violation():
     assert decision["next_retry_count"] == 1
     assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.BLOCKED
     assert evaluator.should_cancel_session(decision["action"]) is False
+    assert evaluator.failure_event_name(decision["action"]) is None
 
 
 def test_default_evaluator_failure_retry():
@@ -242,6 +247,7 @@ def test_default_evaluator_failure_retry():
     assert decision["next_retry_count"] == 2
     assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.READY
     assert evaluator.should_cancel_session(decision["action"]) is False
+    assert evaluator.failure_event_name(decision["action"]) == "retry_triggered"
 
 
 def test_default_evaluator_failure_catastrophic():
@@ -255,6 +261,7 @@ def test_default_evaluator_failure_catastrophic():
     assert decision["next_retry_count"] == 4
     assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.BLOCKED
     assert evaluator.should_cancel_session(decision["action"]) is True
+    assert evaluator.failure_event_name(decision["action"]) == "catastrophic_failure"
 
 
 def test_registry_resolves_custom_evaluator():

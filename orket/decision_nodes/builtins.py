@@ -105,6 +105,13 @@ class DefaultEvaluatorNode:
 
         return {"action": "retry", "next_retry_count": next_retry_count}
 
+    def success_post_actions(self, success_eval: Dict[str, Any]) -> Dict[str, Any]:
+        trigger_sandbox = bool(success_eval.get("trigger_sandbox"))
+        next_status = None
+        if trigger_sandbox and success_eval.get("promote_code_review"):
+            next_status = CardStatus.CODE_REVIEW
+        return {"trigger_sandbox": trigger_sandbox, "next_status": next_status}
+
     def status_for_failure_action(self, action: str) -> Any:
         mapping = {
             "governance_violation": CardStatus.BLOCKED,
@@ -115,6 +122,13 @@ class DefaultEvaluatorNode:
 
     def should_cancel_session(self, action: str) -> bool:
         return action == "catastrophic"
+
+    def failure_event_name(self, action: str) -> str | None:
+        mapping = {
+            "catastrophic": "catastrophic_failure",
+            "retry": "retry_triggered",
+        }
+        return mapping.get(action)
 
 
 class DefaultToolStrategyNode:

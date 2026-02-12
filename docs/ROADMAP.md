@@ -88,10 +88,13 @@ Completed:
 2. Extracted failure-path status/cancel policy to `EvaluatorNode`:
    - `status_for_failure_action`
    - `should_cancel_session`
+3. Extracted additional success/failure lifecycle policy into `EvaluatorNode`:
+   - `success_post_actions` (sandbox trigger + next-status policy)
+   - `failure_event_name` (action -> event routing policy)
 
 Remaining:
 1. Extract remaining `_execute_issue_turn` policy branches (sandbox-trigger gating and review promotion conditions).
-2. Extract failure logging/event policy shape from `_handle_failure` into evaluator/loop seams.
+2. Extract remaining failure exception/message policy shape from `_handle_failure` into evaluator/loop seams.
 3. Keep core `execute_epic` loop shape stable while reducing direct policy branching.
 
 Acceptance:
