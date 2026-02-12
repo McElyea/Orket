@@ -3,7 +3,6 @@ from datetime import datetime
 from fastapi.testclient import TestClient
 from orket.interfaces.api import app
 import orket.interfaces.api as api_module
-import orket.logging as logging_module
 import os
 
 client = TestClient(app)
@@ -317,6 +316,14 @@ def test_calendar():
         assert "current_sprint" in data
         assert "sprint_start" in data
 
+
+def test_calendar_uses_runtime_current_sprint_policy(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_current_sprint", lambda now: "QX SY")
+    response = client.get("/v1/system/calendar", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["current_sprint"] == "QX SY"
+
 def test_metrics():
     headers = {"X-API-Key": os.getenv("ORKET_API_KEY", "")}
     response = client.get("/v1/system/metrics", headers=headers)
@@ -606,7 +613,7 @@ def test_run_metrics_uses_runtime_workspace(monkeypatch):
         return {"ok": True, "workspace": str(workspace)}
 
     monkeypatch.setattr(api_module.api_runtime_node, "resolve_member_metrics_workspace", fake_workspace)
-    monkeypatch.setattr(logging_module, "get_member_metrics", fake_member_metrics)
+    monkeypatch.setattr(api_module.api_runtime_node, "create_member_metrics_reader", lambda: fake_member_metrics)
 
     response = client.get("/v1/runs/SESS42/metrics", headers={"X-API-Key": "test-key"})
 
@@ -994,7 +1001,11 @@ def test_session_endpoints_emit_correlation_logs(monkeypatch):
     monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
     monkeypatch.setattr(api_module.engine.snapshots, "get", fake_get_snapshot)
     monkeypatch.setattr(api_module.engine.sessions, "get_session_issues", fake_backlog, raising=False)
-    monkeypatch.setattr(logging_module, "get_member_metrics", lambda workspace: {"workspace": str(workspace)})
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "create_member_metrics_reader",
+        lambda: (lambda workspace: {"workspace": str(workspace)}),
+    )
 
     _ = client.get("/v1/runs/S1/metrics", headers={"X-API-Key": "test-key"})
     _ = client.get("/v1/runs/S1/backlog", headers={"X-API-Key": "test-key"})

@@ -409,6 +409,7 @@ def test_default_api_runtime_strategy_parity():
         "sprint_start": "2026-02-09",
         "sprint_end": "2026-02-13",
     }
+    assert node.resolve_current_sprint(datetime(2026, 2, 11, tzinfo=UTC)) == "Q1 S7"
     assert node.resolve_explorer_path(Path("/tmp/root"), "../../evil") is None
     assert node.resolve_explorer_forbidden_error("../../evil") == {"status_code": 403}
     assert node.resolve_explorer_missing_response("missing") == {"items": [], "path": "missing"}
@@ -448,6 +449,7 @@ def test_default_api_runtime_strategy_parity():
         "args": ["hello"],
     }
     assert node.resolve_member_metrics_workspace(Path("/tmp/root"), "missing") == Path("/tmp/root/workspace/default")
+    assert callable(node.create_member_metrics_reader())
     assert node.resolve_sandbox_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
     assert node.resolve_sandbox_logs_invocation("sb-1", "api") == {
         "method_name": "get_logs",

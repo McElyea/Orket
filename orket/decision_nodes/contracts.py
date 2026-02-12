@@ -180,6 +180,9 @@ class ApiRuntimeStrategyNode(Protocol):
     def calendar_window(self, now: Any) -> Dict[str, str]:
         ...
 
+    def resolve_current_sprint(self, now: Any) -> str:
+        ...
+
     def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
         ...
 
@@ -217,6 +220,9 @@ class ApiRuntimeStrategyNode(Protocol):
         ...
 
     def resolve_member_metrics_workspace(self, project_root: Any, session_id: str) -> Any:
+        ...
+
+    def create_member_metrics_reader(self) -> Any:
         ...
 
     def resolve_sandbox_workspace(self, project_root: Any) -> Any:

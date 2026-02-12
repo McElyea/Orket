@@ -280,6 +280,10 @@ class DefaultApiRuntimeStrategyNode:
             "sprint_end": (now + timedelta(days=4 - now.weekday())).strftime("%Y-%m-%d"),
         }
 
+    def resolve_current_sprint(self, now: Any) -> str:
+        from orket.utils import get_eos_sprint
+        return get_eos_sprint(now)
+
     def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
         candidate_path = path or "."
         if any(part == ".." for part in Path(candidate_path).parts):
@@ -369,6 +373,10 @@ class DefaultApiRuntimeStrategyNode:
         if workspace.exists():
             return workspace
         return project_root / "workspace" / "default"
+
+    def create_member_metrics_reader(self) -> Any:
+        from orket.logging import get_member_metrics
+        return get_member_metrics
 
     def resolve_sandbox_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"

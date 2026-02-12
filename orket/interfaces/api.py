@@ -213,11 +213,10 @@ async def save_system_file(req: SaveFileRequest):
 
 @v1_router.get("/system/calendar")
 async def get_calendar():
-    from orket.utils import get_eos_sprint
     now = datetime.now(UTC)
     calendar_window = api_runtime_node.calendar_window(now)
     return {
-        "current_sprint": get_eos_sprint(now),
+        "current_sprint": api_runtime_node.resolve_current_sprint(now),
         "sprint_start": calendar_window["sprint_start"],
         "sprint_end": calendar_window["sprint_end"],
     }
@@ -261,10 +260,10 @@ async def list_runs():
 
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
-    from orket.logging import get_member_metrics
     log_event("api_run_metrics", {"session_id": session_id}, PROJECT_ROOT)
     workspace = api_runtime_node.resolve_member_metrics_workspace(PROJECT_ROOT, session_id)
-    return get_member_metrics(workspace)
+    metrics_reader = api_runtime_node.create_member_metrics_reader()
+    return metrics_reader(workspace)
 
 @v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str):

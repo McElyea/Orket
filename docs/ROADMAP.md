@@ -11,8 +11,8 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 265 passed.
-2. `python -m pytest --collect-only -q` -> 265 collected.
+1. `python -m pytest tests/ -q` -> 266 passed.
+2. `python -m pytest --collect-only -q` -> 266 collected.
 
 ## Open Chunk Gates
 
@@ -153,6 +153,13 @@ Completed:
 31. Aligned sync invocation error policy with async invocation policy:
    - `_resolve_sync_method` now honors seam-provided `unsupported_detail`
    - added sandbox logs parity test for custom unsupported detail
+32. Moved run-metrics reader wiring into `ApiRuntimeStrategyNode`:
+   - added `create_member_metrics_reader()` seam
+   - `/v1/runs/{session_id}/metrics` now resolves workspace and reader via runtime seams
+33. Moved calendar sprint-resolution wiring into `ApiRuntimeStrategyNode`:
+   - added `resolve_current_sprint(now)` seam
+   - `/v1/system/calendar` now resolves sprint identity via runtime seam
+34. Added calendar parity coverage proving seam-provided current sprint is honored.
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
