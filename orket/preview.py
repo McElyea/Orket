@@ -7,6 +7,7 @@ from orket.schema import RockConfig, EpicConfig, IssueConfig, TeamConfig, Enviro
 from orket.agents.agent import Agent
 from orket.utils import sanitize_name
 from orket.exceptions import CardNotFound
+from orket.logging import log_event
 
 class PreviewBuilder:
     """
@@ -25,7 +26,7 @@ class PreviewBuilder:
             try:
                 self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
             except (ValueError, FileNotFoundError) as e:
-                print(f"  [PREVIEW] Info: Could not load organization config: {e}")
+                log_event("preview_org_config_missing", {"error": str(e)}, workspace=Path("workspace/default"))
                 pass
 
     async def _get_compiled_prompt(self, seat_name: str, issue_summary: str, epic: EpicConfig, team: TeamConfig, department: str) -> str:
@@ -40,7 +41,11 @@ class PreviewBuilder:
             try:
                 role_objects.append(loader.load_asset("roles", r_name, RoleConfig))
             except (FileNotFoundError, ValueError, CardNotFound) as e:
-                print(f"  [PREVIEW] Info: Could not load role {r_name}: {e}")
+                log_event(
+                    "preview_role_asset_missing",
+                    {"role": r_name, "department": department, "error": str(e)},
+                    workspace=Path("workspace/default"),
+                )
                 pass
 
         # 2. Select Model

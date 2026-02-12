@@ -20,6 +20,26 @@ from pydantic import BaseModel
 
 api_runtime_node = DecisionNodeRegistry().resolve_api_runtime()
 
+
+def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
+    method_name = invocation["method_name"]
+    method = getattr(target, method_name, None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported {error_prefix} method '{method_name}'.")
+    return method
+
+
+def _resolve_sync_method(target: object, method_name: str, error_prefix: str):
+    method = getattr(target, method_name, None)
+    if method is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported {error_prefix} method '{method_name}'.")
+    return method
+
+
+async def _invoke_async_method(target: object, invocation: dict, error_prefix: str):
+    method = _resolve_async_method(target, invocation, error_prefix)
+    return await method(*invocation.get("args", []), **invocation.get("kwargs", {}))
+
 class SaveFileRequest(BaseModel):
     path: str
     content: str
@@ -184,10 +204,6 @@ async def run_active_asset(req: RunAssetRequest):
         request_type=req.type,
     )
     method_name = invocation["method_name"]
-    kwargs = invocation["kwargs"]
-    engine_method = getattr(engine, method_name, None)
-    if engine_method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported run method '{method_name}'.")
 
     log_event(
         "api_run_active",
@@ -199,17 +215,15 @@ async def run_active_asset(req: RunAssetRequest):
         },
         PROJECT_ROOT,
     )
-    task = asyncio.create_task(engine_method(**kwargs))
+    method = _resolve_async_method(engine, invocation, "run")
+    task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
     await runtime_state.add_task(session_id, task)
     return {"session_id": session_id}
 
 @v1_router.get("/runs")
 async def list_runs():
     invocation = api_runtime_node.resolve_runs_invocation()
-    method = getattr(engine.sessions, invocation["method_name"], None)
-    if method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported runs method '{invocation['method_name']}'.")
-    return await method(*invocation.get("args", []))
+    return await _invoke_async_method(engine.sessions, invocation, "runs")
 
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
@@ -222,19 +236,13 @@ async def get_run_metrics(session_id: str):
 async def get_backlog(session_id: str):
     log_event("api_backlog", {"session_id": session_id}, PROJECT_ROOT)
     invocation = api_runtime_node.resolve_backlog_invocation(session_id)
-    method = getattr(engine.sessions, invocation["method_name"], None)
-    if method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported backlog method '{invocation['method_name']}'.")
-    return await method(*invocation.get("args", []))
+    return await _invoke_async_method(engine.sessions, invocation, "backlog")
 
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
     log_event("api_session_detail", {"session_id": session_id}, PROJECT_ROOT)
     invocation = api_runtime_node.resolve_session_detail_invocation(session_id)
-    method = getattr(engine.sessions, invocation["method_name"], None)
-    if method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported session method '{invocation['method_name']}'.")
-    session = await method(*invocation.get("args", []))
+    session = await _invoke_async_method(engine.sessions, invocation, "session")
     if not session: raise HTTPException(404)
     return session
 
@@ -242,28 +250,19 @@ async def get_session_detail(session_id: str):
 async def get_session_snapshot(session_id: str):
     log_event("api_session_snapshot", {"session_id": session_id}, PROJECT_ROOT)
     invocation = api_runtime_node.resolve_session_snapshot_invocation(session_id)
-    method = getattr(engine.snapshots, invocation["method_name"], None)
-    if method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported snapshot method '{invocation['method_name']}'.")
-    snapshot = await method(*invocation.get("args", []))
+    snapshot = await _invoke_async_method(engine.snapshots, invocation, "snapshot")
     if not snapshot: raise HTTPException(404)
     return snapshot
 
 @v1_router.get("/sandboxes")
 async def list_sandboxes():
     invocation = api_runtime_node.resolve_sandboxes_list_invocation()
-    method = getattr(engine, invocation["method_name"], None)
-    if method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported sandboxes method '{invocation['method_name']}'.")
-    return await method(*invocation.get("args", []))
+    return await _invoke_async_method(engine, invocation, "sandboxes")
 
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
 async def stop_sandbox(sandbox_id: str):
     invocation = api_runtime_node.resolve_sandbox_stop_invocation(sandbox_id)
-    method = getattr(engine, invocation["method_name"], None)
-    if method is None:
-        raise HTTPException(status_code=400, detail=f"Unsupported sandbox stop method '{invocation['method_name']}'.")
-    await method(*invocation.get("args", []))
+    await _invoke_async_method(engine, invocation, "sandbox stop")
     return {"ok": True}
 
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
@@ -271,7 +270,8 @@ async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
     pipeline = api_runtime_node.create_execution_pipeline(
         api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT)
     )
-    return {"logs": pipeline.sandbox_orchestrator.get_logs(sandbox_id, service)}
+    get_logs = _resolve_sync_method(pipeline.sandbox_orchestrator, "get_logs", "sandbox logs")
+    return {"logs": get_logs(sandbox_id, service)}
 
 @v1_router.get("/system/board")
 async def get_system_board(dept: str = "core"):

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.logging import log_event
 from orket.settings import get_setting
 from orket.tool_families.base import BaseTools
 
@@ -35,7 +36,11 @@ class VisionTools(BaseTools):
                 device = "cuda" if torch.cuda.is_available() else "cpu"
                 dtype = torch.float16 if device == "cuda" else torch.float32
 
-                print(f"  [SYSTEM] Loading Stable Diffusion ({model_id}) on {device}...")
+                log_event(
+                    "vision_pipeline_loading",
+                    {"model_id": model_id, "device": device},
+                    workspace=self.workspace_root,
+                )
                 self._image_pipeline = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype)
                 self._image_pipeline.to(device)
 

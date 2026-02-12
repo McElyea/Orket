@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig
+from orket.logging import log_event
 
 class StructuralReconciler:
     """
@@ -18,7 +19,7 @@ class StructuralReconciler:
 
     def reconcile_all(self):
         """Runs the full reconciliation sweep across all departments."""
-        print("[RECONCILER] Starting organizational structural audit...")
+        log_event("reconciler_start", {"root_path": str(self.root_path)}, workspace=Path("workspace/default"))
         
         # 1. Gather all linked assets to identify orphans
         linked_epics = set()
@@ -35,7 +36,11 @@ class StructuralReconciler:
                         for e in data.get("epics", []):
                             linked_epics.add(e["epic"])
                     except (json.JSONDecodeError, OSError, KeyError) as e:
-                        print(f"  [RECONCILER] WARN: Failed to parse rock {rf.name}: {e}")
+                        log_event(
+                            "reconciler_rock_parse_failed",
+                            {"file": rf.name, "error": str(e)},
+                            workspace=Path("workspace/default"),
+                        )
                         continue
 
         # Scan Epics for linked Issues
@@ -50,7 +55,11 @@ class StructuralReconciler:
                             # Issues are usually embedded, but we track names to find standalone orphan files
                             linked_issues.add(i.get("id") or i.get("name") or i.get("summary"))
                     except (json.JSONDecodeError, OSError, KeyError) as e:
-                        print(f"  [RECONCILER] WARN: Failed to parse rock {rf.name}: {e}")
+                        log_event(
+                            "reconciler_epic_parse_failed",
+                            {"file": ef.name, "error": str(e)},
+                            workspace=Path("workspace/default"),
+                        )
                         continue
 
         # 2. Adopt Orphaned Epics into 'Run the Business'
@@ -75,7 +84,11 @@ class StructuralReconciler:
                     if epic_id == self.default_epic_id: continue # Don't adopt the catchment area
                     
                     if epic_id not in linked_epics:
-                        print(f"  [RECONCILER] Adopting orphan Epic: {epic_id} into 'Run the Business'")
+                        log_event(
+                            "reconciler_orphan_epic_adopted",
+                            {"epic_id": epic_id, "department": dept_dir.name, "target_rock": self.default_rock_id},
+                            workspace=Path("workspace/default"),
+                        )
                         rtb_data["epics"].append({
                             "epic": epic_id,
                             "department": dept_dir.name
@@ -100,7 +113,11 @@ class StructuralReconciler:
                 for isf in issue_dir.glob("*.json"):
                     issue_id = isf.stem
                     if issue_id not in linked_issues:
-                        print(f"  [RECONCILER] Adopting orphan standalone Issue: {issue_id} into 'unplanned support'")
+                        log_event(
+                            "reconciler_orphan_issue_adopted",
+                            {"issue_id": issue_id, "department": dept_dir.name, "target_epic": self.default_epic_id},
+                            workspace=Path("workspace/default"),
+                        )
                         # Load issue data to embed it
                         try:
                             issue_data = json.loads(self.fs.read_file_sync(str(isf)))
@@ -108,7 +125,11 @@ class StructuralReconciler:
                             ups_data["issues"].append(issue_data)
                             dirty = True
                         except (json.JSONDecodeError, OSError, KeyError) as e:
-                            print(f"  [RECONCILER] WARN: Failed to parse issue {isf.name}: {e}")
+                            log_event(
+                                "reconciler_issue_parse_failed",
+                                {"file": isf.name, "error": str(e)},
+                                workspace=Path("workspace/default"),
+                            )
                             continue
         
         if dirty:

@@ -112,6 +112,21 @@ def test_system_board_uses_dept_query(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"department": "product"}
 
+def test_system_board_defaults_to_core(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    def fake_board(department):
+        captured["department"] = department
+        return {"department": department}
+
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_system_board", fake_board)
+
+    response = client.get("/v1/system/board", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json() == {"department": "core"}
+    assert captured["department"] == "core"
+
 
 def test_preview_asset_uses_runtime_invocation(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -293,6 +308,31 @@ def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"logs": "fake-logs"}
     assert captured["log_args"] == ("sb-1", "api")
+
+
+def test_sandbox_logs_forwards_optional_service_param(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    class FakeSandboxOrchestrator:
+        def get_logs(self, sandbox_id, service):
+            captured["log_args"] = (sandbox_id, service)
+            return "fake-logs"
+
+    class FakePipeline:
+        sandbox_orchestrator = FakeSandboxOrchestrator()
+
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
+    monkeypatch.setattr(api_module.api_runtime_node, "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+
+    response = client.get(
+        "/v1/sandboxes/sb-1/logs",
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"logs": "fake-logs"}
+    assert captured["log_args"] == ("sb-1", None)
 
 
 def test_session_detail_returns_404_when_missing(monkeypatch):

@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, TeamConfig, EngineRegistry
+from orket.logging import log_event
 
 def get_installed_models() -> List[str]:
     try:
@@ -109,7 +110,7 @@ def perform_first_run_setup():
         reconciler = StructuralReconciler()
         reconciler.reconcile_all()
     except (RuntimeError, ValueError, OSError, ImportError) as e:
-        print(f"  [WARN] Structural Reconciliation failed: {e}")
+        log_event("discovery_reconcile_failed", {"error": str(e)})
 
     if load_user_settings().get("setup_complete"): return
     print("\n[FIRST RUN] Orket EOS Orkestrated.")

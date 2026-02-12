@@ -2,7 +2,7 @@
 
 Roadmap source of truth for active and upcoming work.  
 Architecture authority: `docs/OrketArchitectureModel.md`.  
-Last updated: 2026-02-11.
+Last updated: 2026-02-12.
 
 ## Operating Rule
 At handoff, update this file first:
@@ -11,12 +11,33 @@ At handoff, update this file first:
 3. Keep acceptance criteria measurable.
 
 ## Current Baseline
-1. `python -m pytest tests/ -q` -> 230 passed.
-2. `python -m pytest --collect-only -q` -> 230 collected.
+1. `python -m pytest tests/ -q` -> 241 passed.
+2. `python -m pytest --collect-only -q` -> 241 collected.
 
-## Open Phases
+## Open Chunk Gates
 
-### P0. Correctness Hotfixes (Immediate)
+Progression rule: move only by chunk-gate pass/fail criteria, not by dates or time windows.
+
+### P-1 Chunk Gate: OrketLabs Experiment
+Completed:
+1. Experiment scope defined (no code movement yet).
+
+Remaining:
+1. Create `c:\Source\OrketLabs` as an experiment-only workspace; keep `c:\Source\Orket` as source of truth.
+2. Implement one vertical slice only: run-session flow (`API entry -> orchestration kickoff -> status/log outputs`).
+3. Use Labs layering: `flows`, `nodes`, `seams`, `adapters/orket`.
+4. Reuse Orket via import/adapter first; avoid copying code unless required for bootstrap.
+5. Exclude non-goals for phase 1: DB migrations, webhook automation, sandbox deployment stack, UI.
+6. Add parity tests for chosen slice plus one seam-swap test proving policy replacement without flow rewrites.
+7. Record volatility metrics for the slice (flow edits vs seam/adapter edits).
+8. Decide outcome after slice: adopt pattern incrementally in Orket, run second slice, or retire experiment.
+
+Acceptance:
+1. One end-to-end slice runs in Labs with behavior parity on selected contracts.
+2. Policy changes happen mainly in `seams`/`adapters`, not `flows`.
+3. Orket production code remains unchanged by experiment bootstrap.
+
+### P0 Chunk Gate: Correctness Hotfixes
 Completed:
 1. Full test baseline is green (222/222).
 2. Fixed metrics timestamp correctness in `orket/hardware.py` (UTC ISO timestamp, removed `os.getlogin()` misuse).
@@ -37,7 +58,7 @@ Acceptance:
 2. Verification result counts never under-report failures on fatal paths.
 3. New tests cover both regression classes.
 
-### P1. R2 API Decomposition Finalization
+### P1 Chunk Gate: R2 API Decomposition Finalization
 Completed:
 1. Extracted significant API policy decisions into `ApiRuntimeStrategyNode`:
    - CORS parsing/defaults
@@ -79,10 +100,12 @@ Completed:
    - `/v1/system/read` missing-file 404
    - `/v1/system/save` permission-denied 403
    - `/v1/system/preview-asset` unsupported-mode 400
+9. Reduced repeated API transport branching by introducing shared async invocation helper in `orket/interfaces/api.py` for seam-resolved method dispatch/guarding.
+10. Extended invocation helper usage to additional transport paths (sandbox logs guard path) to reduce duplicated method-resolution branches.
 
 Remaining:
 1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
-2. Reduce transport-layer churn and branch density in `orket/interfaces/api.py`.
+2. Continue reducing transport-layer churn and branch density in `orket/interfaces/api.py`.
 3. Add parity tests for remaining endpoint behaviors with conditional branches (error/empty-state cases).
 
 Acceptance:
@@ -90,7 +113,7 @@ Acceptance:
 2. `orket/interfaces/api.py` shrinks in branch complexity and churn.
 3. API regression suite remains green.
 
-### P2. R3 Orchestrator Decomposition Completion
+### P2 Chunk Gate: R3 Orchestrator Decomposition Completion
 Completed:
 1. Extracted loop policy seams into `OrchestrationLoopPolicyNode`:
    - concurrency limit
@@ -124,7 +147,7 @@ Acceptance:
 1. `execute_epic` behavior remains equivalent under current suite.
 2. Policy changes happen in decision nodes without loop-shape edits.
 
-### P3. Async Safety and Throughput
+### P3 Chunk Gate: Async Safety and Throughput
 Completed:
 1. Verification is subprocess-isolated for fixture execution.
 2. Removed event-loop blocking verification call in `Orchestrator.verify_issue` by using `asyncio.to_thread`.
@@ -139,7 +162,7 @@ Acceptance:
 1. No synchronous heavy calls in async hot paths.
 2. Throughput under parallel turns remains stable.
 
-### P4. Observability and Operational Hygiene
+### P4 Chunk Gate: Observability and Operational Hygiene
 Completed:
 1. Event logging infrastructure exists and is consumed in core flows.
 2. Added warning telemetry for `clear-logs` suppression path.
@@ -157,37 +180,52 @@ Completed:
    - `llm.py` retry warnings (`model_timeout_retry`, `model_connection_retry`)
    - `logging.py` subscriber failure handling (`logging_subscriber_failed`)
    - `driver.py` process-failure fallback (`driver_process_failed`)
+9. Replaced additional non-interactive workflow prints with structured logging:
+   - `agents/agent.py` config-asset fallback notices
+   - `preview.py` org/role load fallback notices
+   - `domain/reconciler.py` reconciliation progress/warnings
+   - `organization_loop.py` loop lifecycle/skip warnings
+   - `discovery.py` reconciliation failure warning
+10. Replaced additional runtime `print` in `tool_families/vision.py` pipeline-load path with structured telemetry.
 
 Remaining:
-1. Replace remaining non-test `print` usage in non-core command/bootstrap flows (CLI/discovery/setup scripts) where structured logging is preferable.
+1. Classify remaining `print` usage as either intentional interactive UX output (CLI/setup/discovery manifest) or convert to structured logging where non-interactive.
 
 Acceptance:
 1. Runtime logs are structured, machine-parseable, and correlated.
 2. Operational failures are observable without reading stdout.
 
-### P5. Tool Boundary Reduction (R1 Completion)
+### P5 Chunk Gate: Tool Boundary Reduction (R1 Completion)
 Completed:
 1. `ToolBox` is strategy-composed and mostly forwarding-oriented.
+2. Audited `orket/tools.py` for residual business/process logic; confirmed forwarding-only shell behavior.
+3. Added forwarding delegation regression coverage in `tests/test_toolbox_refactor.py`.
+4. Verified backward compatibility by keeping toolbox/refactor suites green.
 
 Remaining:
-1. Audit `orket/tools.py` for residual non-forwarding business/process logic.
-2. Move any residual mixed responsibility into tool-family/runtime seams.
-3. Verify backward compatibility for existing tool-call patterns.
+1. None.
 
 Acceptance:
 1. `ToolBox` remains composition/compat shell only.
 2. `tests/test_toolbox_refactor.py` and `tests/test_decision_nodes_planner.py` remain green.
 
-### P6. Verification and Quality Gates
+### P6 Chunk Gate: Verification and Quality Gates
 Completed:
 1. Baseline suite is green.
 2. Added repo-level line-ending policy and CI normalization gate:
    - `.gitattributes` sets LF as default with CRLF exceptions for `*.bat`/`*.cmd`.
    - `quality.yml` now fails if `git add --renormalize .` produces staged drift.
+3. Added API contract coverage for route-parameter drift risks:
+   - `/v1/system/board` default `dept=core`
+   - `/v1/sandboxes/{sandbox_id}/logs` optional `service` propagation (`None` when omitted)
+4. Closed regression coverage for all critical findings in `Agents/CodexReview.md`:
+   - metrics timestamp validity
+   - board `dept` propagation
+   - fatal verification accounting
+   - async verification non-blocking path
 
 Remaining:
-1. Add regression tests for all critical findings in `Agents/CodexReview.md`.
-2. Add API contract tests for route parameters currently at risk of drift.
+1. None.
 
 Acceptance:
 1. Critical regression classes are guarded by tests.

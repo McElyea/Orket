@@ -41,7 +41,12 @@ class Agent:
         try:
             self.skill = loader.load_asset("roles", sanitize_name(self.name), SkillConfig)
         except (FileNotFoundError, ValueError, CardNotFound) as e:
-            print(f"  [AGENT] Info: Could not load role asset for {self.name}: {e}")
+            log_event(
+                "agent_role_asset_missing",
+                {"agent": self.name, "error": str(e)},
+                workspace=Path("workspace/default"),
+                role=self.name,
+            )
 
         model_name = self.provider.model.lower()
         family = "generic"
@@ -53,7 +58,12 @@ class Agent:
         try:
             self.dialect = loader.load_asset("dialects", family, DialectConfig)
         except (FileNotFoundError, ValueError, CardNotFound) as e:
-            print(f"  [AGENT] Info: Could not load dialect asset for family {family}: {e}")
+            log_event(
+                "agent_dialect_asset_missing",
+                {"agent": self.name, "family": family, "error": str(e)},
+                workspace=Path("workspace/default"),
+                role=self.name,
+            )
 
     def get_compiled_prompt(self) -> str:
         """Returns the fully compiled system instructions for this agent."""

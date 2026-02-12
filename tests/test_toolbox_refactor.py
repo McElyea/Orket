@@ -240,3 +240,30 @@ def test_nominate_card_handles_none_context(tmp_path):
     result = toolbox.nominate_card({"issue_id": "ISSUE-1"}, context=None)
 
     assert result["ok"] is True
+
+
+def test_toolbox_forwarding_methods_delegate_to_governance(tmp_path, monkeypatch):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    toolbox = ToolBox(policy={}, workspace_root=str(workspace), references=[])
+
+    captured = {}
+
+    def fake_nominate(args, context=None):
+        captured["nominate"] = (args, context)
+        return {"ok": True, "path": "nominate"}
+
+    def fake_refinement(args, context=None):
+        captured["refine"] = (args, context)
+        return {"ok": True, "path": "refine"}
+
+    monkeypatch.setattr(toolbox.governance, "nominate_card", fake_nominate)
+    monkeypatch.setattr(toolbox.governance, "refinement_proposal", fake_refinement)
+
+    nominate_result = toolbox.nominate_card({"issue_id": "I1"}, context={"role": "lead_architect"})
+    refinement_result = toolbox.refinement_proposal({"title": "x"}, context={"role": "lead_architect"})
+
+    assert nominate_result == {"ok": True, "path": "nominate"}
+    assert refinement_result == {"ok": True, "path": "refine"}
+    assert captured["nominate"][0] == {"issue_id": "I1"}
+    assert captured["refine"][0] == {"title": "x"}

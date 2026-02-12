@@ -6,6 +6,7 @@ from orket.infrastructure.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader, ExecutionPipeline
 from orket.schema import CardStatus, RockConfig, EpicConfig, OrganizationConfig
 from orket.domain.critical_path import CriticalPathEngine
+from orket.logging import log_event
 
 class OrganizationLoop:
     def __init__(self, organization_path: Path = Path("config/organization.json")):
@@ -21,13 +22,17 @@ class OrganizationLoop:
 
     async def run_forever(self):
         self.running = True
-        print(f"--- [Vibe Rail Organization Loop Started] ---")
+        log_event("organization_loop_started", {"mode": "critical_path"}, workspace=Path("workspace/default"))
         while self.running:
             # 1. Scan for next priority work based on Critical Path
             next_card = self._find_next_critical_card()
             
             if next_card:
-                print(f"--- [EXECUTING CRITICAL PATH CARD: {next_card['id']}] ---")
+                log_event(
+                    "organization_loop_execute_card",
+                    {"card_id": next_card["id"], "department": next_card["dept"]},
+                    workspace=Path("workspace/default"),
+                )
                 pipeline = ExecutionPipeline(Path("workspace/default"), next_card['dept'])
                 await pipeline.run_card(next_card['id'])
             else:
@@ -58,7 +63,11 @@ class OrganizationLoop:
                         })
                 except (FileNotFoundError, ValueError, StopIteration) as e:
                     # Log skip for visibility but continue scan
-                    print(f"  [ORG_LOOP] WARN: Skipping epic {epic_name} in {dept}: {e}")
+                    log_event(
+                        "organization_loop_skip_epic",
+                        {"epic": epic_name, "department": dept, "error": str(e)},
+                        workspace=Path("workspace/default"),
+                    )
                     continue
         
         if not candidates: return None
