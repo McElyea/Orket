@@ -99,10 +99,12 @@ Completed:
    - retry failure message
 5. Extracted failure exception-type selection into `EvaluatorNode`:
    - `failure_exception_class(action)` now controls raised exception class for governance/catastrophic/retry/unknown actions.
+6. Extracted remaining success-branch policy checks in `_execute_issue_turn` into `EvaluatorNode`:
+   - `should_trigger_sandbox(success_actions)`
+   - `next_status_after_success(success_actions)`
 
 Remaining:
-1. Extract remaining `_execute_issue_turn` policy branches (sandbox-trigger gating and review promotion conditions).
-2. Keep core `execute_epic` loop shape stable while reducing direct policy branching.
+1. Keep core `execute_epic` loop shape stable while reducing direct policy branching.
 
 Acceptance:
 1. `execute_epic` behavior remains equivalent under current suite.

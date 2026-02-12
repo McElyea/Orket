@@ -113,6 +113,12 @@ class DefaultEvaluatorNode:
             next_status = CardStatus.CODE_REVIEW
         return {"trigger_sandbox": trigger_sandbox, "next_status": next_status}
 
+    def should_trigger_sandbox(self, success_actions: Dict[str, Any]) -> bool:
+        return bool(success_actions.get("trigger_sandbox"))
+
+    def next_status_after_success(self, success_actions: Dict[str, Any]) -> Any:
+        return success_actions.get("next_status")
+
     def status_for_failure_action(self, action: str) -> Any:
         mapping = {
             "governance_violation": CardStatus.BLOCKED,

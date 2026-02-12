@@ -221,6 +221,9 @@ def test_default_evaluator_success_decisions():
         "trigger_sandbox": True,
         "next_status": CardStatus.CODE_REVIEW,
     }
+    actions = evaluator.success_post_actions(result)
+    assert evaluator.should_trigger_sandbox(actions) is True
+    assert evaluator.next_status_after_success(actions) == CardStatus.CODE_REVIEW
 
 
 def test_default_evaluator_failure_governance_violation():

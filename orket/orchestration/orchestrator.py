@@ -330,10 +330,11 @@ class Orchestrator:
             
             # Sandbox triggering
             success_actions = self.evaluator_node.success_post_actions(success_eval)
-            if success_actions.get("trigger_sandbox"):
+            if self.evaluator_node.should_trigger_sandbox(success_actions):
                 await self._trigger_sandbox(epic)
-                if success_actions.get("next_status") is not None:
-                    await self.async_cards.update_status(issue.id, success_actions["next_status"])
+                next_status = self.evaluator_node.next_status_after_success(success_actions)
+                if next_status is not None:
+                    await self.async_cards.update_status(issue.id, next_status)
             
             await provider.clear_context()
             await self._save_checkpoint(run_id, epic, team, env, active_build)
