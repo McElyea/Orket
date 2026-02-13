@@ -1,8 +1,8 @@
-import json
+﻿import json
 from pathlib import Path
 from typing import Dict, Any, List
-from orket.infrastructure.async_file_tools import AsyncFileTools
-from orket.llm import LocalModelProvider
+from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig, SkillConfig, DialectConfig
 from orket.logging import log_event
@@ -243,3 +243,4 @@ Example for turn_directive:
             return f"Structural Reconciler: Moving issue {issue_id} to Epic {target_epic}."
 
         return "No structural action taken."
+

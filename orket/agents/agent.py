@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 import json
@@ -6,14 +6,14 @@ import re
 import asyncio
 import inspect
 
-from orket.llm import LocalModelProvider
+from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.logging import log_event, log_model_usage
 from orket.utils import sanitize_name
 from orket.schema import SkillConfig, DialectConfig
 from orket.exceptions import CardNotFound
 from orket.domain.execution import ExecutionTurn, ToolCall
-from orket.services.prompt_compiler import PromptCompiler
-from orket.services.tool_parser import ToolParser
+from orket.application.services.prompt_compiler import PromptCompiler
+from orket.application.services.tool_parser import ToolParser
 
 class Agent:
     """

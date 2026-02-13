@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any, Callable, Dict, List
 from pathlib import Path
@@ -9,7 +9,7 @@ import os
 
 from orket.decision_nodes.contracts import PlanningInput
 from orket.schema import CardStatus
-from orket.tool_strategy.default import compose_default_tool_map
+from orket.adapters.tools.default_strategy import compose_default_tool_map
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
 
 
@@ -401,7 +401,7 @@ class DefaultApiRuntimeStrategyNode:
         return OrchestrationEngine(workspace_root)
 
     def create_file_tools(self, project_root: Any) -> Any:
-        from orket.infrastructure.async_file_tools import AsyncFileTools
+        from orket.adapters.storage.async_file_tools import AsyncFileTools
         return AsyncFileTools(project_root)
 
     def resolve_system_board(self, department: str) -> Any:
@@ -669,7 +669,7 @@ class DefaultPipelineWiringStrategyNode:
         return SandboxOrchestrator(workspace, organization=organization)
 
     def create_webhook_database(self) -> Any:
-        from orket.services.webhook_db import WebhookDatabase
+        from orket.adapters.vcs.webhook_db import WebhookDatabase
         return WebhookDatabase()
 
     def create_bug_fix_manager(self, organization: Any, webhook_db: Any) -> Any:
@@ -690,7 +690,7 @@ class DefaultPipelineWiringStrategyNode:
         loader: Any,
         sandbox_orchestrator: Any,
     ) -> Any:
-        from orket.orchestration.orchestrator import Orchestrator
+        from orket.application.workflows.orchestrator import Orchestrator
         return Orchestrator(
             workspace=workspace,
             async_cards=async_cards,
@@ -780,8 +780,9 @@ class DefaultModelClientPolicyNode:
     """
 
     def create_provider(self, selected_model: str, env: Any) -> Any:
-        from orket.llm import LocalModelProvider
+        from orket.adapters.llm.local_model_provider import LocalModelProvider
         return LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
 
     def create_client(self, provider: Any) -> Any:
         return _DefaultAsyncModelClient(provider)
+

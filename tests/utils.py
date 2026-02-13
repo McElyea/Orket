@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import random
 import threading
@@ -82,4 +82,5 @@ def wait_until(predicate: Callable[[], bool], timeout: float = 2.0, interval: fl
             return True
         time.sleep(interval)
     return False
+
 

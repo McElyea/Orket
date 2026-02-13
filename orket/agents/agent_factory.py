@@ -1,7 +1,7 @@
-# orket/agents/agent_factory.py
+﻿# orket/agents/agent_factory.py
 from typing import Dict
 from orket.agents.agent import Agent
-from orket.llm import LocalModelProvider
+from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.tools import get_tool_map, ToolBox
 
 

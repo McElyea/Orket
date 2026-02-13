@@ -61,8 +61,8 @@ def _docker_smoke(image_tag: str, port: int, timeout_sec: int) -> None:
 
 
 async def _bootstrap_databases(runtime_db: str, webhook_db: str) -> None:
-    from orket.infrastructure.async_card_repository import AsyncCardRepository
-    from orket.services.webhook_db import WebhookDatabase
+    from orket.adapters.storage.async_card_repository import AsyncCardRepository
+    from orket.adapters.vcs.webhook_db import WebhookDatabase
 
     runtime_repo = AsyncCardRepository(runtime_db)
     await runtime_repo.get_by_build("_release_smoke_bootstrap_")

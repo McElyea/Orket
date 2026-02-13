@@ -1,0 +1,64 @@
+﻿from __future__ import annotations
+
+import ast
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+LOW_VOL_ROOTS = [
+    PROJECT_ROOT / "orket" / "core" / "domain",
+    PROJECT_ROOT / "orket" / "core" / "contracts",
+]
+
+FORBIDDEN_PREFIXES = (
+    "orket.application",
+    "orket.adapters",
+    "orket.platform",
+    "orket.orchestration",
+    "orket.interfaces",
+    "orket.infrastructure",
+    "orket.runtime",
+    "orket.services",
+    "orket.agents",
+    "orket.vendors",
+)
+
+
+def _imports_for(path: Path) -> list[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    imports: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                imports.append(node.module)
+    return imports
+
+
+def test_low_volatility_layers_do_not_depend_on_high_volatility_layers():
+    violations: list[str] = []
+    for root in LOW_VOL_ROOTS:
+        for path in root.rglob("*.py"):
+            if path.name == "__init__.py":
+                continue
+            for imp in _imports_for(path):
+                if imp.startswith(FORBIDDEN_PREFIXES):
+                    rel = path.relative_to(PROJECT_ROOT)
+                    violations.append(f"{rel}: forbidden import '{imp}'")
+    assert not violations, "Architecture boundary violations:\n" + "\n".join(violations)
+
+
+def test_application_layer_does_not_depend_on_interfaces_layer():
+    app_root = PROJECT_ROOT / "orket" / "application"
+    violations: list[str] = []
+    for path in app_root.rglob("*.py"):
+        if path.name == "__init__.py":
+            continue
+        for imp in _imports_for(path):
+            if imp.startswith("orket.interfaces"):
+                rel = path.relative_to(PROJECT_ROOT)
+                violations.append(f"{rel}: forbidden import '{imp}'")
+    assert not violations, "Application->Interfaces boundary violations:\n" + "\n".join(violations)
+

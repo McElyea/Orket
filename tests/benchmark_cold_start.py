@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import os
 import shutil
 import uuid
@@ -135,3 +135,4 @@ class ColdStartReferee:
 if __name__ == "__main__":
     ref = ColdStartReferee(Path("."))
     asyncio.run(ref.run())
+

@@ -21,6 +21,8 @@ def _layer_for_module(module: str) -> str:
     if len(parts) < 2:
         return "root"
     top = parts[1]
+    if top in {"core", "application", "adapters", "interfaces", "platform"}:
+        return top
     if top in {"domain", "infrastructure", "services", "orchestration", "interfaces", "decision_nodes"}:
         return top
     return "root"
@@ -48,6 +50,14 @@ def _is_violation(src_layer: str, dst_module: str) -> bool:
         return False
 
     dst_layer = _layer_for_module(dst_module)
+
+    # Tiered volatility architecture rules.
+    if src_layer == "core" and dst_layer in {"application", "adapters", "interfaces"}:
+        return True
+    if src_layer == "application" and dst_layer == "interfaces":
+        return True
+    if src_layer == "adapters" and dst_layer == "interfaces":
+        return True
 
     if src_layer == "domain" and dst_layer in {"orchestration", "interfaces"}:
         return True

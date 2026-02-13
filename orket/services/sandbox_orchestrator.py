@@ -1,4 +1,4 @@
-"""
+﻿"""
 Sandbox Orchestrator - Phase 3: Elegant Failure & Recovery
 
 Application Service: Manages the full lifecycle of sandbox environments.
@@ -19,7 +19,7 @@ from orket.domain.sandbox import (
     PortAllocation,
     SandboxRegistry,
 )
-from orket.infrastructure.command_runner import CommandRunner
+from orket.adapters.storage.command_runner import CommandRunner
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 
@@ -51,7 +51,7 @@ class SandboxOrchestrator:
         self.sandbox_policy_node = self.decision_nodes.resolve_sandbox_policy(self.organization)
         self.command_runner = command_runner or CommandRunner()
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
-        from orket.infrastructure.async_file_tools import AsyncFileTools
+        from orket.adapters.storage.async_file_tools import AsyncFileTools
         self.fs = AsyncFileTools(workspace_root)
 
     async def create_sandbox(
@@ -295,3 +295,4 @@ class SandboxOrchestrator:
         )
         container_ids = ps_result.stdout.strip().split("\n")
         sandbox.container_ids = {f"container-{i}": cid for i, cid in enumerate(container_ids)}
+

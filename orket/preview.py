@@ -1,7 +1,7 @@
-from pathlib import Path
+﻿from pathlib import Path
 from typing import Dict, Any, List, Optional
 import json
-from orket.infrastructure.async_file_tools import AsyncFileTools
+from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig, TeamConfig, EnvironmentConfig, SkillConfig, DialectConfig
 from orket.agents.agent import Agent
@@ -65,7 +65,7 @@ class PreviewBuilder:
         if self.org:
             desc += f"\n[ORGANIZATION: {self.org.name}]\nEthos: {self.org.ethos}\nBranding Rules: {', '.join(self.org.branding.design_dos)}\n"
 
-        from orket.llm import LocalModelProvider
+        from orket.adapters.llm.local_model_provider import LocalModelProvider
         mock_provider = type("MockProvider", (), {"model": selected_model})
         agent = Agent(seat_name, desc, {}, mock_provider)
         return agent.get_compiled_prompt()
@@ -136,3 +136,4 @@ class PreviewBuilder:
             preview["epics"].append(epic_preview)
             
         return preview
+
