@@ -25,3 +25,24 @@ Mocks are a **last resort**, permitted ONLY for:
 
 ## Goal
 A passing test suite should give us 95% confidence that the code is ready for production. Mock-heavy suites rarely exceed 50% confidence.
+
+## CI Lane Policy
+Use explicit lanes with fixed budgets.
+
+1. `unit`
+   - Command: `npm run ci:unit`
+   - Scope: `tests/core`, `tests/application`, `tests/adapters`, `tests/interfaces`, `tests/platform`
+   - Budget: <= 6 minutes
+2. `integration`
+   - Command: `npm run ci:integration`
+   - Scope: `tests/integration`
+   - Budget: <= 10 minutes
+3. `acceptance`
+   - Command: `npm run ci:acceptance`
+   - Scope: acceptance-style integration + pipeline tests
+   - Budget: <= 12 minutes
+4. `live`
+   - Command: `npm run ci:live`
+   - Scope: `tests/live`
+   - Budget: <= 20 minutes
+   - Policy: opt-in only, excluded from default CI.

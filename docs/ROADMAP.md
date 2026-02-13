@@ -29,9 +29,11 @@ Last updated: 2026-02-13.
    - `tests/integration`
    - `tests/live`
 5. Current verification baseline:
-   - `python -m pytest tests -q` -> 299 passed, 1 skipped
+   - `python -m pytest tests -q` -> 310 passed, 1 skipped
    - `python scripts/check_dependency_direction.py` -> passed
    - `python scripts/check_volatility_boundaries.py` -> passed
+   - `python scripts/report_failure_modes.py --out benchmarks/results/failure_modes.json` -> passed
+   - `python scripts/prompt_lab/eval_harness.py --out benchmarks/results/prompt_eval_metrics.json` -> passed
 6. Volatility reorg P0 completed:
    - removed legacy runtime shims:
      - `orket/orchestration/{orchestrator.py,turn_executor.py}`
@@ -49,52 +51,69 @@ Last updated: 2026-02-13.
      - archive endpoint selector + response policy moved into `ApiRuntimeStrategyNode`
      - `orket/interfaces/api.py` now delegates archive policy branching to decision node methods
 
-## Phase 2: Middleware + Progress Enforcement
-1. Implement middleware hooks:
+## Phase 2: Middleware + Progress Enforcement (Completed)
+1. Middleware hooks implemented and wired in `TurnExecutor`:
    - `before_prompt`
    - `after_model`
    - `before_tool`
    - `after_tool`
    - `on_turn_failure`
-2. Add per-role progress contract checks.
-3. Allow one corrective reprompt, then deterministic fail with reason.
-4. Add coverage for hook order, short-circuit, recovery, and fail paths.
+2. Per-role progress contract checks implemented:
+   - roles with declared tools must emit at least one allowed tool call per turn.
+3. Corrective reprompt policy implemented:
+   - one corrective reprompt, then deterministic non-progress failure.
+4. Coverage added:
+   - `tests/application/test_turn_executor_middleware.py`
 
-## Phase 3: Guard Workflow Formalization
-1. Add explicit guard states/events:
+## Phase 3: Guard Workflow Formalization (Completed)
+1. Explicit guard states/events added:
    - `awaiting_guard_review`
    - `guard_approved`
    - `guard_rejected`
    - `guard_requested_changes`
-2. Enforce guard finalization authority in transitions.
-3. Add review payload schema (rationale, violations, remediation actions).
-4. Add live/integration acceptance for approve and reject flows.
+2. Guard finalization authority enforced in state machine:
+   - only `integrity_guard` can emit guard decision statuses and finalize `done`.
+3. Review payload schema added:
+   - `orket/core/domain/guard_review.py` (`rationale`, `violations`, `remediation_actions`)
+4. Acceptance coverage for approve/reject flows:
+   - `tests/integration/test_system_acceptance_flow.py`
+   - `tests/core/test_guard_state_machine.py`
 
-## Phase 4: Checkpoint/Resume + Replay
-1. Persist per-turn checkpoint artifacts (run/issue/turn ids, prompt hash, model, tool calls, state deltas).
-2. Add resume policy for stalled/interrupted runs.
-3. Add replay command for single-turn diagnostics.
-4. Guarantee idempotency on repeated tool execution during resume.
+## Phase 4: Checkpoint/Resume + Replay (Completed)
+1. Per-turn checkpoint artifacts persisted:
+   - `checkpoint.json` includes run/issue/turn ids, prompt hash, model, tool calls, state delta.
+2. Resume policy implemented:
+   - stalled/interrupted issue states are re-queued to `ready` with `resume_requeue_issue` events.
+3. Replay diagnostics implemented:
+   - engine API: `OrchestrationEngine.replay_turn(...)`
+   - CLI: `--replay-turn <run_id>:<issue_id>:<turn_index>[:role]`
+4. Resume idempotency implemented:
+   - tool results are persisted and replayed under `resume_mode` without re-executing tool call.
 
-## Phase 5: Observability + CI Lane Finalization
-1. Finalize event taxonomy and field schema across model/parser/tool/transition/guard.
-2. Add failure-mode and non-progress reports.
-3. Finalize CI lane policy:
-   - define lane names (`unit`/`integration`/`acceptance`/`live`) and mapping
-   - keep `live` opt-in and excluded from default CI
-   - assign time budgets per lane
-4. Add runbook troubleshooting flow for stalled role pipelines.
+## Phase 5: Observability + CI Lane Finalization (Completed)
+1. Event taxonomy finalized and documented:
+   - `docs/architecture/event_taxonomy.md`
+2. Failure-mode and non-progress reporting added:
+   - `scripts/report_failure_modes.py`
+3. CI lanes finalized:
+   - npm scripts: `ci:unit`, `ci:integration`, `ci:acceptance`, `ci:live`
+   - live lane remains opt-in and excluded from default lane.
+   - lane policy and budgets documented in `docs/TESTING_POLICY.md`.
+4. Runbook troubleshooting flow for stalled role pipelines added:
+   - `docs/RUNBOOK.md`
 
-## Phase 6: Prompt Optimization Program
-1. Build in-repo prompt eval harness from failing live scenarios.
-2. Track:
+## Phase 6: Prompt Optimization Program (Completed)
+1. In-repo prompt eval harness added:
+   - `scripts/prompt_lab/eval_harness.py`
+2. Metrics tracked:
    - tool parse rate
    - required-action completion rate
    - status progression rate
    - guard decision reach rate
-3. Tune prompts on regression set until metrics stabilize.
-4. Reassess PromptWizard after two optimization cycles.
-5. If adopted, keep PromptWizard optional under `scripts/prompt_lab/` and never runtime-critical.
+3. Prompt lab scaffolding finalized:
+   - `scripts/prompt_lab/README.md`
+4. PromptWizard decision:
+   - remains optional and non-runtime-critical under `scripts/prompt_lab/`.
 
 ## Exit Criteria
 1. Canonical tier boundaries are enforced in CI with no legacy shim paths in runtime imports.

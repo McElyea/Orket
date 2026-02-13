@@ -140,6 +140,13 @@ class ExecutionPipeline:
             )
 
         existing = await self.async_cards.get_by_build(active_build)
+        resume_mode = bool(target_issue_id) or any(
+            issue.status in {CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW, CardStatus.AWAITING_GUARD_REVIEW}
+            for issue in existing
+        )
+        if resume_mode:
+            await self._resume_stalled_issues(existing, run_id, active_build)
+
         if existing:
             if target_issue_id:
                 if any(ex.id == target_issue_id for ex in existing):
@@ -173,6 +180,7 @@ class ExecutionPipeline:
             team=team,
             env=env,
             target_issue_id=target_issue_id,
+            resume_mode=resume_mode,
         )
 
         self.transcript = self.orchestrator.transcript
@@ -252,6 +260,28 @@ class ExecutionPipeline:
             except (FileNotFoundError, ValueError, CardNotFound):
                 continue
         return None, None, None
+
+    async def _resume_stalled_issues(self, issues: List[Any], run_id: str, active_build: str) -> None:
+        stalled_states = {CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW, CardStatus.AWAITING_GUARD_REVIEW}
+        for issue in issues:
+            if issue.status in stalled_states:
+                await self.async_cards.update_status(
+                    issue.id,
+                    CardStatus.READY,
+                    reason="resume_requeue",
+                    metadata={"run_id": run_id, "build_id": active_build, "previous_status": issue.status.value},
+                )
+                log_event(
+                    "resume_requeue_issue",
+                    {
+                        "run_id": run_id,
+                        "build_id": active_build,
+                        "issue_id": issue.id,
+                        "previous_status": issue.status.value,
+                        "new_status": CardStatus.READY.value,
+                    },
+                    workspace=self.workspace,
+                )
 
     async def verify_issue(self, issue_id: str) -> Any:
         return await self.orchestrator.verify_issue(issue_id)

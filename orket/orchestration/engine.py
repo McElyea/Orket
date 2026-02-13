@@ -1,5 +1,6 @@
 ﻿from pathlib import Path
 from typing import List, Dict, Any, Optional
+import json
 
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository
@@ -148,4 +149,39 @@ class OrchestrationEngine:
         """Archive cards whose id/build/summary/note matches any token."""
         card_ids = await self.cards.find_related_card_ids(related_tokens, limit=limit)
         return await self.cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
+
+    def replay_turn(self, session_id: str, issue_id: str, turn_index: int, role: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Replay diagnostics for one turn from persisted observability artifacts.
+        """
+        run_root = self.workspace_root / "observability" / session_id / issue_id
+        if not run_root.exists():
+            raise FileNotFoundError(f"No observability artifacts found for run={session_id} issue={issue_id}")
+
+        prefix = f"{turn_index:03d}_"
+        candidates = [p for p in run_root.iterdir() if p.is_dir() and p.name.startswith(prefix)]
+        if role:
+            role_suffix = role.lower().replace(" ", "_")
+            candidates = [p for p in candidates if p.name.endswith(role_suffix)]
+        if not candidates:
+            raise FileNotFoundError(f"No turn artifacts found for turn_index={turn_index}")
+
+        target = sorted(candidates)[0]
+        checkpoint_path = target / "checkpoint.json"
+        messages_path = target / "messages.json"
+        model_path = target / "model_response.txt"
+        parsed_tools_path = target / "parsed_tool_calls.json"
+
+        def _read_json(path: Path) -> Any:
+            if not path.exists():
+                return None
+            return json.loads(path.read_text(encoding="utf-8"))
+
+        return {
+            "turn_dir": str(target),
+            "checkpoint": _read_json(checkpoint_path),
+            "messages": _read_json(messages_path),
+            "model_response": model_path.read_text(encoding="utf-8") if model_path.exists() else None,
+            "parsed_tool_calls": _read_json(parsed_tools_path),
+        }
 

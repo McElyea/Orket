@@ -5,6 +5,12 @@
     "dev:ui": "npm run dev --prefix ui",
     "dev:server": "python server.py",
     "dev": "npx concurrently \"npm run dev:server\" \"npm run dev:ui\"",
-    "ci:volatility": "python scripts/check_volatility_boundaries.py"
+    "ci:volatility": "python scripts/check_volatility_boundaries.py",
+    "ci:unit": "python -m pytest tests/core tests/application tests/adapters tests/interfaces tests/platform -q",
+    "ci:integration": "python -m pytest tests/integration -q",
+    "ci:acceptance": "python -m pytest tests/integration/test_system_acceptance_flow.py tests/live/test_system_acceptance_pipeline.py -q",
+    "ci:live": "python -m pytest tests/live -q",
+    "report:failures": "python scripts/report_failure_modes.py",
+    "prompt:eval": "python scripts/prompt_lab/eval_harness.py"
   }
 }

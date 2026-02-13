@@ -1,6 +1,7 @@
 ﻿import asyncio
 import json
 import uuid
+import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
@@ -22,6 +23,7 @@ from orket.tools import ToolBox, get_tool_map
 from orket.logging import log_event
 from orket.exceptions import ExecutionFailed
 from orket.core.domain.state_machine import StateMachine
+from orket.core.domain.guard_review import GuardReviewPayload
 from orket.utils import sanitize_name
 
 class Orchestrator:
@@ -151,7 +153,8 @@ class Orchestrator:
         epic: EpicConfig, 
         team: TeamConfig, 
         env: EnvironmentConfig, 
-        target_issue_id: str = None
+        target_issue_id: str = None,
+        resume_mode: bool = False,
     ):
         """
         Main execution loop for an Epic.
@@ -233,7 +236,7 @@ class Orchestrator:
                 async with semaphore:
                     return await self._execute_issue_turn(
                         issue_data, epic, team, env, run_id, active_build, 
-                        prompt_strategy_node, executor, toolbox
+                        prompt_strategy_node, executor, toolbox, resume_mode=resume_mode
                     )
 
             await asyncio.gather(*(semaphore_wrapper(c) for c in candidates))
@@ -258,7 +261,8 @@ class Orchestrator:
         active_build: str,
         prompt_strategy_node: Any,
         executor: TurnExecutor,
-        toolbox: ToolBox
+        toolbox: ToolBox,
+        resume_mode: bool = False,
     ):
         """Executes a single turn for one issue."""
         issue = IssueConfig.model_validate(issue_data.model_dump())
@@ -283,7 +287,10 @@ class Orchestrator:
             )
             return
 
+        is_guard_turn = is_review_turn and ("integrity_guard" in list(seat_obj.roles))
         turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
+        if is_guard_turn:
+            turn_status = CardStatus.AWAITING_GUARD_REVIEW
         await self.async_cards.update_status(
             issue.id,
             turn_status,
@@ -326,6 +333,7 @@ class Orchestrator:
             roles_to_load=roles_to_load,
             turn_status=turn_status,
             selected_model=selected_model,
+            resume_mode=resume_mode,
         )
 
         log_event(
@@ -346,6 +354,29 @@ class Orchestrator:
         if result.success:
             self.transcript.append(result.turn)
             updated_issue = await self.async_cards.get_by_id(issue.id)
+            if is_guard_turn:
+                guard_payload = self._extract_guard_review_payload(result.turn.content or "")
+                guard_event = self._resolve_guard_event(updated_issue.status)
+                if guard_event:
+                    log_event(
+                        guard_event,
+                        {
+                            "run_id": run_id,
+                            "issue_id": issue.id,
+                            "seat": seat_name,
+                            "review_payload": guard_payload.model_dump(),
+                        },
+                        self.workspace,
+                    )
+                    log_event(
+                        "guard_review_payload",
+                        {
+                            "run_id": run_id,
+                            "issue_id": issue.id,
+                            "payload": guard_payload.model_dump(),
+                        },
+                        self.workspace,
+                    )
 
             success_eval = self.evaluator_node.evaluate_success(
                 issue=issue,
@@ -388,6 +419,7 @@ class Orchestrator:
         roles_to_load: List[str],
         turn_status: CardStatus,
         selected_model: str,
+        resume_mode: bool = False,
     ) -> Dict[str, Any]:
         return {
             "session_id": run_id,
@@ -402,8 +434,34 @@ class Orchestrator:
                 "depends_on": issue.depends_on,
                 "dependency_count": len(issue.depends_on),
             },
+            "resume_mode": bool(resume_mode),
             "history": self._history_context(),
         }
+
+    def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
+        blob = content or ""
+        match = re.search(r"\{[\s\S]*\}", blob)
+        if match:
+            try:
+                parsed = json.loads(match.group(0))
+                if isinstance(parsed, dict):
+                    return GuardReviewPayload.model_validate(parsed)
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+        return GuardReviewPayload(
+            rationale=(blob.strip()[:500] if blob else "No rationale provided."),
+            violations=[],
+            remediation_actions=[],
+        )
+
+    def _resolve_guard_event(self, status: Any) -> Optional[str]:
+        if status == CardStatus.DONE:
+            return "guard_approved"
+        if status in {CardStatus.BLOCKED, CardStatus.GUARD_REJECTED}:
+            return "guard_rejected"
+        if status in {CardStatus.IN_PROGRESS, CardStatus.GUARD_REQUESTED_CHANGES, CardStatus.READY_FOR_TESTING}:
+            return "guard_requested_changes"
+        return None
 
     async def _dispatch_turn(
         self,

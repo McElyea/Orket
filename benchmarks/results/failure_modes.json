@@ -1,0 +1,58 @@
+{
+  "events": {
+    "webhook_db": 6371,
+    "pr_review": 697,
+    "pr_escalated": 230,
+    "pr_rejected": 115,
+    "orchestrator_hyper_loop_start": 1111,
+    "catastrophic_failure": 112,
+    "retry_triggered": 112,
+    "session_start": 750,
+    "turn_start": 2258,
+    "turn_complete": 2104,
+    "sandbox_create": 492,
+    "sandbox_deploy_failed": 1152,
+    "session_end": 599,
+    "success_recorded": 490,
+    "turn_failed": 153,
+    "webhook": 219,
+    "card_nomination": 71,
+    "orchestrator_tick": 1451,
+    "orchestrator_dispatch": 1628,
+    "sandbox_deploy_started": 660,
+    "verification_started": 840,
+    "orchestrator_epic_complete": 454,
+    "policy_violation_report_saved": 298,
+    "pr_opened": 23,
+    "webhook_security_posture": 42,
+    "webhook_security_warning": 14,
+    "tool_parser_diagnostic": 754,
+    "turn_no_tool_calls": 10,
+    "tool_call_start": 421,
+    "tool_call_result": 421,
+    "tool_call_blocked": 40,
+    "api_run_active": 230,
+    "api_run_metrics": 10,
+    "api_session_detail": 40,
+    "api_session_snapshot": 40,
+    "api_backlog": 30,
+    "guard_approved": 13,
+    "guard_review_payload": 14,
+    "turn_corrective_reprompt": 2,
+    "turn_non_progress": 1,
+    "tool_call_replayed": 1,
+    "guard_rejected": 1
+  },
+  "failure_by_type": {
+    "tool_violation": 152,
+    "RuntimeError": 1
+  },
+  "non_progress_by_role": {
+    "developer": 1
+  },
+  "guard_outcomes": {
+    "guard_approved": 13,
+    "guard_rejected": 1
+  },
+  "retry_triggered": 112
+}

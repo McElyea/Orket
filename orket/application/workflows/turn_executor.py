@@ -20,6 +20,7 @@ from pathlib import Path
 import json
 import time
 import hashlib
+import copy
 
 from orket.schema import IssueConfig, CardStatus, RoleConfig
 from orket.core.domain.state_machine import StateMachine, StateMachineError
@@ -28,6 +29,7 @@ from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.logging import log_event
 from orket.core.policies.tool_gate import ToolGate
 from orket.naming import sanitize_name
+from orket.application.middleware import MiddlewarePipeline
 
 
 @dataclass
@@ -81,7 +83,8 @@ class TurnExecutor:
         self,
         state_machine: StateMachine,
         tool_gate: ToolGate,
-        workspace: Path
+        workspace: Path,
+        middleware: Optional[MiddlewarePipeline] = None,
     ):
         """
         Initialize turn executor.
@@ -94,6 +97,7 @@ class TurnExecutor:
         self.state = state_machine
         self.tool_gate = tool_gate
         self.workspace = workspace
+        self.middleware = middleware or MiddlewarePipeline([])
 
     async def execute_turn(
         self,
@@ -135,6 +139,15 @@ class TurnExecutor:
 
             # 2. Prepare the prompt
             messages = await self._prepare_messages(issue, role, context, system_prompt)
+            messages, middleware_outcome = self.middleware.apply_before_prompt(
+                messages,
+                issue=issue,
+                role=role,
+                context=context,
+            )
+            if middleware_outcome and middleware_outcome.short_circuit:
+                reason = middleware_outcome.reason or "short-circuit before_prompt"
+                return TurnResult.failed(reason, should_retry=False)
             prompt_hash = self._message_hash(messages)
 
             # 3. Call LLM (async)
@@ -162,6 +175,15 @@ class TurnExecutor:
             )
 
             response = await model_client.complete(messages)
+            response, middleware_outcome = self.middleware.apply_after_model(
+                response,
+                issue=issue,
+                role=role,
+                context=context,
+            )
+            if middleware_outcome and middleware_outcome.short_circuit:
+                reason = middleware_outcome.reason or "short-circuit after_model"
+                return TurnResult.failed(reason, should_retry=False)
             response_content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
             response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
             self._write_turn_artifact(
@@ -188,6 +210,64 @@ class TurnExecutor:
                 role_name=role_name,
                 context=context,
             )
+            if not self._meets_progress_contract(turn, role):
+                retry_messages = copy.deepcopy(messages)
+                retry_messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "Corrective instruction: previous response did not make acceptable progress. "
+                            "You must emit at least one valid tool call from your allowed tool list."
+                        ),
+                    }
+                )
+                log_event(
+                    "turn_corrective_reprompt",
+                    {
+                        "issue_id": issue_id,
+                        "role": role_name,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "turn_trace_id": turn_trace_id,
+                        "reason": "progress_contract_not_met",
+                    },
+                    self.workspace,
+                )
+                response = await model_client.complete(retry_messages)
+                response, middleware_outcome = self.middleware.apply_after_model(
+                    response,
+                    issue=issue,
+                    role=role,
+                    context=context,
+                )
+                if middleware_outcome and middleware_outcome.short_circuit:
+                    reason = middleware_outcome.reason or "short-circuit after_model"
+                    return TurnResult.failed(reason, should_retry=False)
+
+                turn = self._parse_response(
+                    response=response,
+                    issue_id=issue_id,
+                    role_name=role_name,
+                    context=context,
+                )
+                if not self._meets_progress_contract(turn, role):
+                    log_event(
+                        "turn_non_progress",
+                        {
+                            "issue_id": issue_id,
+                            "role": role_name,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "turn_trace_id": turn_trace_id,
+                            "reason": "progress_contract_not_met_after_reprompt",
+                        },
+                        self.workspace,
+                    )
+                    return TurnResult.failed(
+                        "Deterministic failure: progress contract not met after corrective reprompt.",
+                        should_retry=False,
+                    )
+
             self._write_turn_artifact(
                 session_id,
                 issue_id,
@@ -200,10 +280,20 @@ class TurnExecutor:
                     ensure_ascii=False,
                 ),
             )
+            self._write_turn_checkpoint(
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+                prompt_hash=prompt_hash,
+                selected_model=context.get("selected_model"),
+                tool_calls=[{"tool": t.tool, "args": t.args} for t in turn.tool_calls],
+                state_delta=self._state_delta_from_tool_calls(context, turn),
+            )
 
             # 5. Execute tool calls (if any)
             if turn.tool_calls:
-                await self._execute_tools(turn, toolbox, context)
+                await self._execute_tools(turn, toolbox, context, issue=issue)
             else:
                 log_event(
                     "turn_no_tool_calls",
@@ -237,6 +327,7 @@ class TurnExecutor:
             return TurnResult.succeeded(turn)
 
         except StateMachineError as e:
+            self.middleware.apply_on_turn_failure(e, issue=issue, role=role, context=context)
             # State transition violation - don't retry
             log_event(
                 "turn_failed",
@@ -253,6 +344,7 @@ class TurnExecutor:
             return TurnResult.failed(f"State violation: {e}", should_retry=False)
 
         except ToolValidationError as e:
+            self.middleware.apply_on_turn_failure(e, issue=issue, role=role, context=context)
             # Tool call violation - can retry
             log_event(
                 "turn_failed",
@@ -269,6 +361,7 @@ class TurnExecutor:
             return TurnResult.governance_violation(e.violations)
 
         except ModelTimeoutError as e:
+            self.middleware.apply_on_turn_failure(e, issue=issue, role=role, context=context)
             # Transient error - should retry
             log_event(
                 "turn_failed",
@@ -285,6 +378,7 @@ class TurnExecutor:
             return TurnResult.failed(str(e), should_retry=True)
 
         except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as e:
+            self.middleware.apply_on_turn_failure(e, issue=issue, role=role, context=context)
             # Unexpected error - log with traceback and don't retry
             import traceback
             log_event(
@@ -332,7 +426,12 @@ class TurnExecutor:
 
         # Validate current status allows execution
         current_status = CardStatus(issue.status)
-        if current_status not in [CardStatus.READY, CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW]:
+        if current_status not in [
+            CardStatus.READY,
+            CardStatus.IN_PROGRESS,
+            CardStatus.CODE_REVIEW,
+            CardStatus.AWAITING_GUARD_REVIEW,
+        ]:
             raise StateMachineError(
                 f"Issue {issue.id} in status {current_status} cannot be executed"
             )
@@ -466,7 +565,8 @@ class TurnExecutor:
         self,
         turn: ExecutionTurn,
         toolbox: Any,
-        context: Dict[str, Any]
+        context: Dict[str, Any],
+        issue: Optional[IssueConfig] = None,
     ) -> None:
         """
         Execute all tool calls in a turn.
@@ -478,6 +578,21 @@ class TurnExecutor:
 
         for tool_call in turn.tool_calls:
             try:
+                middleware_outcome = self.middleware.apply_before_tool(
+                    tool_call.tool,
+                    tool_call.args,
+                    issue=issue,
+                    role_name=turn.role,
+                    context=context,
+                )
+                if middleware_outcome and middleware_outcome.short_circuit:
+                    tool_call.result = {
+                        "ok": False,
+                        "error": middleware_outcome.reason or "tool short-circuited by middleware",
+                    }
+                    violations.append(tool_call.result["error"])
+                    continue
+
                 # --- MECHANICAL GOVERNANCE: Tool Gate Enforcement ---
                 gate_violation = self.tool_gate.validate(
                     tool_name=tool_call.tool,
@@ -516,13 +631,53 @@ class TurnExecutor:
                     },
                     self.workspace,
                 )
-                result = await toolbox.execute(
+                replay_result = self._load_replay_tool_result(
+                    session_id=session_id,
+                    issue_id=turn.issue_id,
+                    role_name=turn.role,
+                    turn_index=turn_index,
+                    tool_name=tool_call.tool,
+                    tool_args=tool_call.args,
+                    resume_mode=bool(context.get("resume_mode")),
+                )
+                if replay_result is not None:
+                    result = replay_result
+                    log_event(
+                        "tool_call_replayed",
+                        {
+                            "issue_id": turn.issue_id,
+                            "role": turn.role,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "tool": tool_call.tool,
+                        },
+                        self.workspace,
+                    )
+                else:
+                    result = await toolbox.execute(
+                        tool_call.tool,
+                        tool_call.args,
+                        context
+                    )
+                result = self.middleware.apply_after_tool(
                     tool_call.tool,
                     tool_call.args,
-                    context
+                    result,
+                    issue=issue,
+                    role_name=turn.role,
+                    context=context,
                 )
 
                 tool_call.result = result
+                self._persist_tool_result(
+                    session_id=session_id,
+                    issue_id=turn.issue_id,
+                    role_name=turn.role,
+                    turn_index=turn_index,
+                    tool_name=tool_call.tool,
+                    tool_args=tool_call.args,
+                    result=result,
+                )
                 log_event(
                     "tool_call_result",
                     {
@@ -561,6 +716,16 @@ class TurnExecutor:
         if violations:
             raise ToolValidationError(violations)
 
+    def _meets_progress_contract(self, turn: ExecutionTurn, role: RoleConfig) -> bool:
+        allowed = set(role.tools or [])
+        if allowed:
+            if not turn.tool_calls:
+                return False
+            return any(call.tool in allowed for call in turn.tool_calls)
+        if turn.tool_calls:
+            return True
+        return bool((turn.content or "").strip())
+
     def _message_hash(self, messages: List[Dict[str, str]]) -> str:
         normalized = json.dumps(messages, sort_keys=True, ensure_ascii=False)
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
@@ -583,6 +748,121 @@ class TurnExecutor:
         )
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / filename).write_text(content, encoding="utf-8")
+
+    def _state_delta_from_tool_calls(self, context: Dict[str, Any], turn: ExecutionTurn) -> Dict[str, Any]:
+        current = context.get("current_status")
+        requested = None
+        for call in turn.tool_calls:
+            if call.tool == "update_issue_status":
+                requested = call.args.get("status")
+                break
+        return {"from": current, "to": requested}
+
+    def _write_turn_checkpoint(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        prompt_hash: str,
+        selected_model: Any,
+        tool_calls: List[Dict[str, Any]],
+        state_delta: Dict[str, Any],
+    ) -> None:
+        payload = {
+            "run_id": session_id,
+            "issue_id": issue_id,
+            "turn_index": turn_index,
+            "role": role_name,
+            "prompt_hash": prompt_hash,
+            "model": selected_model,
+            "tool_calls": tool_calls,
+            "state_delta": state_delta,
+            "captured_at": datetime.now(UTC).isoformat(),
+        }
+        self._write_turn_artifact(
+            session_id,
+            issue_id,
+            role_name,
+            turn_index,
+            "checkpoint.json",
+            json.dumps(payload, indent=2, ensure_ascii=False),
+        )
+
+    def _tool_replay_key(self, tool_name: str, tool_args: Dict[str, Any]) -> str:
+        normalized = json.dumps({"tool": tool_name, "args": tool_args}, sort_keys=True, ensure_ascii=False)
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
+
+    def _tool_result_path(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        tool_name: str,
+        tool_args: Dict[str, Any],
+    ) -> Path:
+        replay_key = self._tool_replay_key(tool_name, tool_args)
+        out_dir = (
+            self.workspace
+            / "observability"
+            / sanitize_name(session_id)
+            / sanitize_name(issue_id)
+            / f"{turn_index:03d}_{sanitize_name(role_name)}"
+        )
+        out_dir.mkdir(parents=True, exist_ok=True)
+        return out_dir / f"tool_result_{sanitize_name(tool_name)}_{replay_key}.json"
+
+    def _load_replay_tool_result(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        tool_name: str,
+        tool_args: Dict[str, Any],
+        resume_mode: bool,
+    ) -> Optional[Dict[str, Any]]:
+        if not resume_mode:
+            return None
+        path = self._tool_result_path(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            tool_name=tool_name,
+            tool_args=tool_args,
+        )
+        if not path.exists():
+            return None
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError, TypeError, ValueError):
+            return None
+
+    def _persist_tool_result(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        tool_name: str,
+        tool_args: Dict[str, Any],
+        result: Dict[str, Any],
+    ) -> None:
+        path = self._tool_result_path(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            tool_name=tool_name,
+            tool_args=tool_args,
+        )
+        path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 class ToolValidationError(Exception):

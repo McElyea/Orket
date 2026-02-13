@@ -57,6 +57,16 @@ Volatility boundary gate:
 python scripts/check_volatility_boundaries.py
 ```
 
+Failure/non-progress report:
+```bash
+python scripts/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/failure_modes.json
+```
+
+Prompt eval metrics:
+```bash
+python scripts/prompt_lab/eval_harness.py --out benchmarks/results/prompt_eval_metrics.json
+```
+
 Real-service stress (no mocks/fakes):
 ```bash
 python scripts/real_service_stress.py --profile heavy
@@ -90,6 +100,17 @@ Checklist:
 2. Check fixtures under `workspace/verification/`.
 3. Inspect logs for fixture load failures.
 
+### Stalled Role Pipeline
+1. Generate a failure/non-progress report:
+   - `python scripts/report_failure_modes.py --out benchmarks/results/failure_modes.json`
+2. Inspect per-turn checkpoints:
+   - `workspace/default/observability/<run_id>/<issue_id>/<turn_index>_<role>/checkpoint.json`
+3. Replay one turn for diagnostics:
+   - `python -m orket.interfaces.cli --replay-turn <run_id>:<issue_id>:<turn_index>[:role]`
+4. If repeated non-progress is present, run prompt metrics:
+   - `python scripts/prompt_lab/eval_harness.py`
+5. Resume by rerunning the same epic/session id after stalled cards are re-queued by resume policy.
+
 ## Archive Operations
 Archive cards related to removed projects (DB history preserved):
 ```bash
@@ -109,3 +130,4 @@ python -m orket.interfaces.cli --archive-build build-my-project --archive-reason
 ## Detailed Procedures
 - Product publish/mirroring: `docs/PRODUCT_PUBLISHING.md`
 - Local cleanup policy: `docs/LOCAL_CLEANUP_POLICY.md`
+- CI lane policy: `docs/TESTING_POLICY.md`

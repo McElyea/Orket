@@ -36,8 +36,29 @@ class StateMachine:
                 CardStatus.DONE,
                 CardStatus.IN_PROGRESS,
                 CardStatus.READY_FOR_TESTING,
+                CardStatus.AWAITING_GUARD_REVIEW,
+                CardStatus.GUARD_APPROVED,
+                CardStatus.GUARD_REJECTED,
+                CardStatus.GUARD_REQUESTED_CHANGES,
                 CardStatus.ARCHIVED,
             },
+            CardStatus.AWAITING_GUARD_REVIEW: {
+                CardStatus.GUARD_APPROVED,
+                CardStatus.GUARD_REJECTED,
+                CardStatus.GUARD_REQUESTED_CHANGES,
+                CardStatus.DONE,
+                CardStatus.BLOCKED,
+                CardStatus.ARCHIVED,
+            },
+            CardStatus.GUARD_REQUESTED_CHANGES: {
+                CardStatus.IN_PROGRESS,
+                CardStatus.CODE_REVIEW,
+                CardStatus.AWAITING_GUARD_REVIEW,
+                CardStatus.CANCELED,
+                CardStatus.ARCHIVED,
+            },
+            CardStatus.GUARD_REJECTED: {CardStatus.BLOCKED, CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.GUARD_APPROVED: {CardStatus.DONE, CardStatus.ARCHIVED},
             CardStatus.DONE: {CardStatus.ARCHIVED},
             CardStatus.CANCELED: {CardStatus.ARCHIVED},
             CardStatus.ARCHIVED: set(),
@@ -85,5 +106,15 @@ class StateMachine:
                 f"Issues to 'DONE'. Current roles: {role_list}"
             )
 
-        return True
+        guard_terminal_states = {
+            CardStatus.GUARD_APPROVED,
+            CardStatus.GUARD_REJECTED,
+            CardStatus.GUARD_REQUESTED_CHANGES,
+        }
+        if requested in guard_terminal_states and "integrity_guard" not in role_list:
+            raise StateMachineError(
+                "Permission Denied: Only the 'integrity_guard' role can emit guard decisions "
+                f"({requested.value}). Current roles: {role_list}"
+            )
 
+        return True

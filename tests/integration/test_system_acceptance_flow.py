@@ -27,6 +27,18 @@ class AcceptanceProvider:
                 raw={"model": "dummy", "total_tokens": 80},
             )
 
+        if self.mode == "reject":
+            system_prompt = messages[0]["content"]
+            if "CODE REVIEW" in system_prompt or "integrity_guard" in system_prompt.lower():
+                return ModelResponse(
+                    content='```json\n{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}\n```',
+                    raw={"model": "dummy", "total_tokens": 50},
+                )
+            return ModelResponse(
+                content='```json\n{"tool": "write_file", "args": {"path": "agent_output/acceptance.txt", "content": "ok"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+                raw={"model": "dummy", "total_tokens": 80},
+            )
+
         # Illegal state transition path: coder attempts direct READY -> DONE.
         return ModelResponse(
             content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
@@ -140,6 +152,30 @@ async def test_system_acceptance_guard_approves_actions(tmp_path, monkeypatch):
     issue = await engine.cards.get_by_id("ISSUE-A")
     assert issue.status == CardStatus.DONE
     assert (workspace / "agent_output" / "acceptance.txt").exists()
+    log_blob = (workspace / "orket.log").read_text(encoding="utf-8")
+    assert '"event": "guard_approved"' in log_blob
+    assert '"event": "guard_review_payload"' in log_blob
+
+
+@pytest.mark.asyncio
+async def test_system_acceptance_guard_rejects_actions(tmp_path, monkeypatch):
+    root = tmp_path
+    workspace = root / "workspace"
+    workspace.mkdir()
+    (workspace / "agent_output").mkdir()
+    (workspace / "verification").mkdir()
+    db_path = str(root / "acceptance_reject.db")
+
+    _build_assets(root, with_guard=True, epic_id="acceptance_reject")
+    _patch_provider(monkeypatch, AcceptanceProvider(mode="reject"))
+
+    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
+    await engine.run_card("acceptance_reject")
+
+    issue = await engine.cards.get_by_id("ISSUE-A")
+    assert issue.status == CardStatus.BLOCKED
+    log_blob = (workspace / "orket.log").read_text(encoding="utf-8")
+    assert '"event": "guard_rejected"' in log_blob
 
 
 @pytest.mark.asyncio

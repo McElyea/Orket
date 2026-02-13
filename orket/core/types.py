@@ -14,6 +14,10 @@ class CardStatus(str, Enum):
     WAITING_FOR_DEVELOPER = "waiting_for_developer" # Waiting on external input/dependency
     READY_FOR_TESTING = "ready_for_testing"
     CODE_REVIEW = "code_review"
+    AWAITING_GUARD_REVIEW = "awaiting_guard_review"
+    GUARD_APPROVED = "guard_approved"
+    GUARD_REJECTED = "guard_rejected"
+    GUARD_REQUESTED_CHANGES = "guard_requested_changes"
     DONE = "done"
     CANCELED = "canceled"
     ARCHIVED = "archived"

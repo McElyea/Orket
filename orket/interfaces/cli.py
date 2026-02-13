@@ -2,6 +2,7 @@ import argparse
 import sys
 import io
 import asyncio
+import json
 from pathlib import Path
 from orket.orchestration.engine import OrchestrationEngine
 from orket.discovery import print_orket_manifest, perform_first_run_setup
@@ -25,6 +26,7 @@ def parse_args():
     parser.add_argument("--archive-build", type=str, default=None, help="Archive all cards in a build.")
     parser.add_argument("--archive-related", action="append", default=[], help="Archive cards matching token in id/build/summary/note (repeatable).")
     parser.add_argument("--archive-reason", type=str, default="manual archive", help="Reason stored with archive transaction.")
+    parser.add_argument("--replay-turn", type=str, default=None, help="Replay diagnostics for one turn: <session_id>:<issue_id>:<turn_index>[:role].")
     return parser.parse_args()
 
 def print_board(hierarchy: dict):
@@ -85,6 +87,16 @@ async def run_cli():
                 print(f"Archived IDs: {', '.join(archived_ids)}")
             if missing_ids:
                 print(f"Missing IDs: {', '.join(missing_ids)}")
+            return
+
+        if args.replay_turn:
+            parts = args.replay_turn.split(":")
+            if len(parts) not in {3, 4}:
+                raise ValueError("--replay-turn format must be <session_id>:<issue_id>:<turn_index>[:role]")
+            session_id, issue_id, turn_index = parts[0], parts[1], int(parts[2])
+            role = parts[3] if len(parts) == 4 else None
+            replay = engine.replay_turn(session_id=session_id, issue_id=issue_id, turn_index=turn_index, role=role)
+            print(json.dumps(replay, indent=2, ensure_ascii=False))
             return
 
         print_orket_manifest(args.department)
