@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime, UTC
+from orket.time_utils import now_local
 
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -25,12 +26,14 @@ def get_reload_excludes() -> list[str]:
 
 def get_eos_sprint(date_obj: datetime = None) -> str:
     """Calculates EOS Sprint based on 1-week sprints (Mon-Fri) and 13-sprint quarters."""
-    if date_obj is None: date_obj = datetime.now(UTC)
+    if date_obj is None:
+        date_obj = now_local()
     
     # Simple calculation based on your provided info: 
     # Feb 6, 2026 is end of Q1 S6.
     # Base date: Feb 2, 2026 was start of Q1 S6.
-    base_date = datetime(2026, 2, 2, tzinfo=UTC)
+    base_tz = date_obj.tzinfo or UTC
+    base_date = datetime(2026, 2, 2, tzinfo=base_tz)
     base_q, base_s = 1, 6
     
     delta_weeks = (date_obj - base_date).days // 7
@@ -42,7 +45,7 @@ def get_eos_sprint(date_obj: datetime = None) -> str:
     return f"Q{q} S{s}"
 
 def _ts():
-    return datetime.now(UTC).isoformat()
+    return now_local().isoformat()
 
 
 from orket.logging import log_event

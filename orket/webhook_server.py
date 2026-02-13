@@ -48,6 +48,33 @@ if not _webhook_secret_raw.strip():
 WEBHOOK_SECRET = _webhook_secret_raw.encode()
 
 
+def _is_truthy(value: str | None) -> bool:
+    return (value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _validate_test_webhook_auth(x_api_key: str | None, x_webhook_test_token: str | None) -> tuple[bool, str | None, int]:
+    """
+    Validate auth for /webhook/test.
+    Priority:
+    1) ORKET_WEBHOOK_TEST_TOKEN via X-Webhook-Test-Token
+    2) ORKET_API_KEY via X-API-Key
+    """
+    test_token = os.getenv("ORKET_WEBHOOK_TEST_TOKEN", "").strip()
+    api_key = os.getenv("ORKET_API_KEY", "").strip()
+
+    if test_token:
+        if x_webhook_test_token == test_token:
+            return True, None, 200
+        return False, "Invalid test webhook token", 401
+
+    if api_key:
+        if x_api_key == api_key:
+            return True, None, 200
+        return False, "Invalid API key", 401
+
+    return False, "Test webhook auth not configured", 403
+
+
 class SlidingWindowRateLimiter:
     """Simple per-process sliding-window limiter."""
 
@@ -199,7 +226,11 @@ async def gitea_webhook(
 
 
 @app.post("/webhook/test")
-async def test_webhook(req: TestWebhookPayload):
+async def test_webhook(
+    req: TestWebhookPayload,
+    x_api_key: str = Header(None),
+    x_webhook_test_token: str = Header(None),
+):
     """
     Test endpoint for manual webhook testing (no signature validation).
 
@@ -208,9 +239,13 @@ async def test_webhook(req: TestWebhookPayload):
              -H "Content-Type: application/json" \
              -d '{"event": "pull_request_review", "action": "approved"}'
     """
-    enabled = os.getenv("ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT", "").strip().lower() in {"1", "true", "yes", "on"}
+    enabled = _is_truthy(os.getenv("ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT"))
     if not enabled:
         raise HTTPException(status_code=403, detail="Test webhook endpoint disabled")
+
+    allowed, detail, status_code = _validate_test_webhook_auth(x_api_key, x_webhook_test_token)
+    if not allowed:
+        raise HTTPException(status_code=status_code, detail=detail)
 
     event_type = req.event or "test"
     log_event("webhook", {"message": f"Test webhook received: {event_type}", "level": "info"}, workspace=Path.cwd())
@@ -238,6 +273,27 @@ def start_server(host: str = "0.0.0.0", port: int = 8080):
         port=port,
         log_level="info"
     )
+
+
+# Startup posture logging for operator visibility.
+if _is_truthy(os.getenv("ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT")):
+    _has_test_token = bool(os.getenv("ORKET_WEBHOOK_TEST_TOKEN", "").strip())
+    _has_api_key = bool(os.getenv("ORKET_API_KEY", "").strip())
+    log_event(
+        "webhook_security_posture",
+        {
+            "test_endpoint_enabled": True,
+            "test_token_configured": _has_test_token,
+            "api_key_configured": _has_api_key,
+        },
+        workspace=Path.cwd(),
+    )
+    if not _has_test_token and not _has_api_key:
+        log_event(
+            "webhook_security_warning",
+            {"message": "ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT is true but no test auth secret is configured."},
+            workspace=Path.cwd(),
+        )
 
 
 if __name__ == "__main__":

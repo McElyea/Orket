@@ -2,9 +2,9 @@ import json
 import os
 import logging
 import logging.handlers
-from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict, List, Callable, Optional
+from orket.time_utils import now_local
 
 # Initialize system logger
 _logger = logging.getLogger("orket")
@@ -79,7 +79,7 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
     full_data = {**data, **kwargs}
     
     record = {
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": now_local().isoformat(),
         "role": role or full_data.get("role") or "system", 
         "event": event,
         "data": full_data,
@@ -97,7 +97,7 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
             subscriber(record)
         except (RuntimeError, ValueError, TypeError, OSError) as e:
             failure_record = {
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": now_local().isoformat(),
                 "role": "system",
                 "event": "logging_subscriber_failed",
                 "data": {"error": str(e)},

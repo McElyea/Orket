@@ -74,6 +74,7 @@ async def _bootstrap_databases(runtime_db: str, webhook_db: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="One-command local release smoke")
     parser.add_argument("--skip-tests", action="store_true")
+    parser.add_argument("--skip-security-canary", action="store_true")
     parser.add_argument("--skip-migrations", action="store_true")
     parser.add_argument("--skip-docker", action="store_true")
     parser.add_argument("--runtime-db", default=".smoke/runtime.db")
@@ -87,6 +88,9 @@ def main() -> None:
 
     if not args.skip_tests:
         _run(["python", "-m", "pytest", "tests/", "-q"])
+
+    if not args.skip_security_canary:
+        _run(["python", "scripts/security_canary.py"])
 
     if not args.skip_migrations:
         print("[release-smoke] Bootstrapping database schemas")

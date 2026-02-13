@@ -1,9 +1,30 @@
 import pytest
 import aiosqlite
-from unittest.mock import AsyncMock, MagicMock
 
 from orket.services.gitea_webhook_handler import GiteaWebhookHandler
 from orket.services.webhook_db import WebhookDatabase
+
+
+class _FakeResponse:
+    def __init__(self, status_code=200):
+        self.status_code = status_code
+
+
+class _FakeClient:
+    def __init__(self):
+        self.post_calls = []
+        self.patch_calls = []
+
+    async def post(self, url, **kwargs):
+        self.post_calls.append((url, kwargs))
+        return _FakeResponse(status_code=200)
+
+    async def patch(self, url, **kwargs):
+        self.patch_calls.append((url, kwargs))
+        return _FakeResponse(status_code=200)
+
+    async def aclose(self):
+        return None
 
 
 @pytest.mark.asyncio
@@ -16,8 +37,7 @@ async def test_pr_cycle_tracking_real_db(monkeypatch, tmp_path):
 
     handler = GiteaWebhookHandler(workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
-    handler.client = AsyncMock()
-    handler.client.post.return_value = MagicMock(status_code=200)
+    handler.client = _FakeClient()
 
     payload = {
         "pull_request": {"number": 42},
@@ -43,9 +63,7 @@ async def test_auto_reject_after_4_cycles(monkeypatch, tmp_path):
 
     handler = GiteaWebhookHandler(workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
-    handler.client = AsyncMock()
-    handler.client.post.return_value = MagicMock(status_code=200)
-    handler.client.patch.return_value = MagicMock(status_code=200)
+    handler.client = _FakeClient()
 
     payload = {
         "pull_request": {"number": 99},
@@ -65,6 +83,6 @@ async def test_auto_reject_after_4_cycles(monkeypatch, tmp_path):
         row = await cursor.fetchone()
 
     assert row["status"] == "rejected"
-    assert handler.client.patch.called
+    assert len(handler.client.patch_calls) >= 1
 
     await handler.close()

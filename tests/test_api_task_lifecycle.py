@@ -77,3 +77,46 @@ async def test_heartbeat_active_tasks_converges_after_run_active_completion(monk
                 break
             await asyncio.sleep(0.01)
         assert settled_zero is True
+
+
+@pytest.mark.asyncio
+async def test_concurrent_run_active_task_cleanup_stress(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    base = "hbconcur"
+    counter = {"n": 0}
+
+    async def fake_run():
+        await asyncio.sleep(0.03)
+        return {"ok": True}
+
+    def _new_session_id():
+        counter["n"] += 1
+        return f"{base}-{counter['n']}"
+
+    monkeypatch.setattr(api_module.engine, "fake_run", fake_run, raising=False)
+    monkeypatch.setattr(api_module.api_runtime_node, "create_session_id", _new_session_id)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "resolve_run_active_invocation",
+        lambda asset_id, build_id, session_id, request_type: {"method_name": "fake_run", "args": []},
+    )
+
+    transport = ASGITransport(app=api_module.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        requests = [
+            client.post(
+                "/v1/system/run-active",
+                json={"issue_id": f"ISSUE-{i}"},
+                headers={"X-API-Key": "test-key"},
+            )
+            for i in range(20)
+        ]
+        responses = await asyncio.gather(*requests)
+        assert all(r.status_code == 200 for r in responses)
+
+        # Let tasks settle and cleanup callbacks fire.
+        await asyncio.sleep(0.3)
+
+        hb = await client.get("/v1/system/heartbeat", headers={"X-API-Key": "test-key"})
+        assert hb.status_code == 200
+        assert hb.json()["active_tasks"] == 0

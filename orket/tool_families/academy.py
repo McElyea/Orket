@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import shutil
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
 from orket.tool_families.base import BaseTools
+from orket.time_utils import now_local
 
 
 class AcademyTools(BaseTools):
@@ -22,7 +22,7 @@ class AcademyTools(BaseTools):
             return {"ok": False, "error": "session_id required"}
 
         src = self.workspace_root.parent / "runs" / session_id
-        dest = self.workspace_root.parent.parent / "evals" / f"{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
+        dest = self.workspace_root.parent.parent / "evals" / f"{now_local().strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
 
         try:
             dest.parent.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,5 @@
 import asyncio
 from pathlib import Path
-from datetime import datetime, UTC
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -14,6 +13,7 @@ from orket.logging import subscribe_to_events, log_event
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.time_utils import now_local
 
 
 from pydantic import BaseModel
@@ -115,6 +115,22 @@ async def lifespan(_app: FastAPI):
     broadcaster_task = asyncio.create_task(event_broadcaster())
     loop = asyncio.get_running_loop()
     subscribe_to_events(_on_log_record_factory(loop))
+    expected_key = os.getenv("ORKET_API_KEY", "").strip()
+    insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
+    log_event(
+        "api_security_posture",
+        {
+            "api_key_configured": bool(expected_key),
+            "insecure_no_api_key_bypass": insecure_bypass,
+        },
+        PROJECT_ROOT,
+    )
+    if insecure_bypass:
+        log_event(
+            "api_security_warning",
+            {"message": "ORKET_ALLOW_INSECURE_NO_API_KEY is enabled; /v1 auth is bypassed without ORKET_API_KEY."},
+            PROJECT_ROOT,
+        )
     try:
         yield
     finally:
@@ -172,7 +188,7 @@ async def clear_logs():
 async def heartbeat():
     return {
         "status": "online",
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": now_local().isoformat(),
         "active_tasks": len(runtime_state.active_tasks)  # Read-only len() is safe without lock
     }
 
@@ -226,7 +242,7 @@ async def save_system_file(req: SaveFileRequest):
 
 @v1_router.get("/system/calendar")
 async def get_calendar():
-    now = datetime.now(UTC)
+    now = now_local()
     calendar_window = api_runtime_node.calendar_window(now)
     return {
         "current_sprint": api_runtime_node.resolve_current_sprint(now),
