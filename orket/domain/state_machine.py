@@ -14,27 +14,30 @@ class StateMachine:
     # Define valid transitions for each Card Type
     _TRANSITIONS: Dict[CardType, Dict[CardStatus, Set[CardStatus]]] = {
         CardType.ISSUE: {
-            CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED},
-            CardStatus.IN_PROGRESS: {CardStatus.BLOCKED, CardStatus.WAITING_FOR_DEVELOPER, CardStatus.READY_FOR_TESTING, CardStatus.CODE_REVIEW, CardStatus.CANCELED},
-            CardStatus.BLOCKED: {CardStatus.IN_PROGRESS, CardStatus.CANCELED},
-            CardStatus.WAITING_FOR_DEVELOPER: {CardStatus.IN_PROGRESS, CardStatus.CANCELED},
-            CardStatus.READY_FOR_TESTING: {CardStatus.CODE_REVIEW, CardStatus.IN_PROGRESS, CardStatus.CANCELED},
-            CardStatus.CODE_REVIEW: {CardStatus.DONE, CardStatus.IN_PROGRESS, CardStatus.READY_FOR_TESTING},
-            CardStatus.DONE: set(), # Final State
-            CardStatus.CANCELED: set() # Final State
+            CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.IN_PROGRESS: {CardStatus.BLOCKED, CardStatus.WAITING_FOR_DEVELOPER, CardStatus.READY_FOR_TESTING, CardStatus.CODE_REVIEW, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.BLOCKED: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.WAITING_FOR_DEVELOPER: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.READY_FOR_TESTING: {CardStatus.CODE_REVIEW, CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.CODE_REVIEW: {CardStatus.DONE, CardStatus.IN_PROGRESS, CardStatus.READY_FOR_TESTING, CardStatus.ARCHIVED},
+            CardStatus.DONE: {CardStatus.ARCHIVED},
+            CardStatus.CANCELED: {CardStatus.ARCHIVED},
+            CardStatus.ARCHIVED: set(), # Final State
         },
         CardType.EPIC: {
-            CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED},
-            CardStatus.IN_PROGRESS: {CardStatus.CODE_REVIEW, CardStatus.DONE, CardStatus.CANCELED},
-            CardStatus.CODE_REVIEW: {CardStatus.DONE, CardStatus.IN_PROGRESS},
-            CardStatus.DONE: set(),
-            CardStatus.CANCELED: set()
+            CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.IN_PROGRESS: {CardStatus.CODE_REVIEW, CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.CODE_REVIEW: {CardStatus.DONE, CardStatus.IN_PROGRESS, CardStatus.ARCHIVED},
+            CardStatus.DONE: {CardStatus.ARCHIVED},
+            CardStatus.CANCELED: {CardStatus.ARCHIVED},
+            CardStatus.ARCHIVED: set(),
         },
         CardType.ROCK: {
-            CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED},
-            CardStatus.IN_PROGRESS: {CardStatus.DONE, CardStatus.CANCELED},
-            CardStatus.DONE: set(),
-            CardStatus.CANCELED: set()
+            CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.IN_PROGRESS: {CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.DONE: {CardStatus.ARCHIVED},
+            CardStatus.CANCELED: {CardStatus.ARCHIVED},
+            CardStatus.ARCHIVED: set(),
         }
     }
 

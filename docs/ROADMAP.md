@@ -1,301 +1,260 @@
 # Orket Roadmap
 
-Roadmap source of truth for active and upcoming work.  
-Architecture authority: `docs/OrketArchitectureModel.md`.  
+Roadmap source of truth for active and upcoming remediation work.
+Architecture authority: `docs/OrketArchitectureModel.md`.
 Last updated: 2026-02-12.
 
-## Operating Rule
-At handoff, update this file first:
-1. Move completed bullets into `Completed`.
-2. Rewrite `Remaining` with concrete next work.
-3. Keep acceptance criteria measurable.
+## Security Policy
+1. Security is fail-closed by default.
+2. Public endpoint behavior must be test-backed with non-mocked integration coverage for critical paths.
+3. Any endpoint in `/v1/*` or `/webhook/*` must have explicit auth policy, explicit error policy, and regression tests.
+4. Green tests only counts when full intended suites are discoverable and import-clean.
 
-## Current Baseline
-1. `python -m pytest tests/ -q` -> 266 passed.
-2. `python -m pytest --collect-only -q` -> 266 collected.
+## Priority Ladder
+1. P0: Security containment (auth + webhook trust boundary).
+2. P1: Runtime correctness (sandbox listing crash, task lifecycle leaks).
+3. P2: Test integrity and CI signal restoration.
+4. P3: Hardening and observability refinements.
 
-## Open Chunk Gates
+## P0 Chunk Gate: Security Containment
 
-Progression rule: move only by chunk-gate pass/fail criteria, not by dates or time windows.
+### Objective
+Close all externally reachable trust-boundary failures identified in review.
 
-### P-1 Chunk Gate: OrketLabs Experiment
+### Scope
+1. API auth fail-closed behavior.
+2. Mandatory webhook signature validation.
+3. Removal or strict gating of test webhook endpoint in non-dev contexts.
+
+### Work Items
+1. API auth fail-closed by default.
+- Change default policy in `orket/decision_nodes/builtins.py` so missing `ORKET_API_KEY` does not grant access.
+- Add explicit opt-in local-dev bypass env flag (example: `ORKET_ALLOW_INSECURE_NO_API_KEY=true`) and keep it disabled by default.
+- Ensure all `/v1/*` routes still use same dependency path in `orket/interfaces/api.py`.
+
+2. Enforce signature presence for `/webhook/gitea`.
+- Update `orket/webhook_server.py` to reject requests when `X-Gitea-Signature` is missing.
+- Keep current HMAC validation path for present signatures.
+- Return consistent auth error status/detail for missing vs invalid signatures.
+
+3. Gate `/webhook/test` to safe contexts only.
+- Preferred: disable in production by default and require explicit dev flag.
+- Secondary: require API key or separate webhook test secret if endpoint remains available.
+- Add startup warning log if unsafe mode is enabled.
+
+4. Security regression tests.
+- Add test: `/webhook/gitea` without signature returns auth failure.
+- Add test: `/webhook/gitea` with invalid signature returns auth failure.
+- Add test: `/webhook/test` blocked when dev flag disabled.
+- Add test: `/v1/version` fails when `ORKET_API_KEY` missing and insecure bypass disabled.
+
+### Acceptance Criteria
+1. No unsigned request reaches webhook handler logic.
+2. `/v1/*` is not publicly accessible when `ORKET_API_KEY` is unset unless explicit insecure override is enabled.
+3. `/webhook/test` is not callable in default production configuration.
+4. New security tests pass and fail if behavior regresses.
+
+### Exit Evidence
+1. Passing targeted tests in `tests/test_api.py`, `tests/test_webhook_rate_limit.py`, and any new webhook auth tests.
+2. Manual sanity checks:
+- Missing signature -> non-200.
+- Invalid signature -> non-200.
+- Missing API key in strict mode -> 403 on `/v1/version`.
+
+## P1 Chunk Gate: Runtime Correctness and Reliability
+
+### Objective
+Eliminate confirmed runtime breakages and stale state tracking.
+
+### Scope
+1. Sandbox endpoint crash.
+2. Active task lifecycle cleanup.
+
+### Work Items
+1. Fix `/v1/sandboxes` crash.
+- Correct method mismatch in `orket/orchestration/engine.py` (`list_all` vs `list_active`).
+- Verify behavior with real endpoint call path, not only monkeypatched tests.
+
+2. Add run task lifecycle cleanup.
+- In `orket/interfaces/api.py`, register task completion callback on scheduled tasks.
+- Ensure callback removes task from `runtime_state` for success, failure, and cancellation.
+- Protect callback path against race and missing-key cases.
+
+3. Heartbeat task count correctness.
+- Confirm `active_tasks` reflects in-flight tasks only.
+- Add test with a short-lived async task and assert count eventually decrements.
+
+### Acceptance Criteria
+1. `GET /v1/sandboxes` returns 200 with valid JSON payload (or empty list), not 500.
+2. `runtime_state.active_tasks` does not grow unbounded after completed runs.
+3. Heartbeat task count converges to expected value after task completion.
+
+### Exit Evidence
+1. Endpoint regression tests added and passing.
+2. Manual local call to `/v1/sandboxes` no longer throws `AttributeError`.
+
+## P2 Chunk Gate: Test Integrity and CI Signal
+
+### Objective
+Ensure green CI actually represents repo health for intended test surfaces.
+
+### Scope
+1. Resolve broken `product/sneaky_price_watch/tests` package/import structure.
+2. Decide and codify suite ownership and CI inclusion policy.
+
+### Work Items
+1. Triage and choose test strategy for `product/sneaky_price_watch`.
+- Option A: Make tests importable by packaging/module path fixes.
+- Option B: Mark as intentionally out-of-scope and move to `legacy/` or separate project.
+- Option C: Keep separate but add explicit CI job and invocation contract.
+
+2. Update pytest/CI discovery policy.
+- Adjust `pyproject.toml` `testpaths` only if this suite is intended active.
+- If excluded intentionally, document why and enforce via policy checks.
+
+3. Add CI guardrails.
+- Add a check ensuring intended test directories collect successfully.
+- Fail CI on collection errors in included suites.
+
+### Acceptance Criteria
+1. Included test suites are import-clean during collection.
+2. CI discovery configuration matches documented intent.
+3. No silently broken in-repo suite remains in ambiguous state.
+
+### Exit Evidence
+1. `python -m pytest --collect-only -q` matches expected suite inventory.
+2. CI job explicitly reports inclusion/exclusion rationale for product test subtree.
+
+## P3 Chunk Gate: Hardening and Operational Follow-Through
+
+### Objective
+Reduce recurrence probability for this class of defects.
+
+### Scope
+1. Policy defaults and startup safety checks.
+2. Threat-surface documentation.
+3. Post-fix verification runbook.
+
+### Work Items
+1. Startup safety assertions.
+- Emit startup warnings (or hard fail by mode) for unsafe auth/webhook config.
+- Add explicit config summary in logs without leaking secrets.
+
+2. Documentation alignment.
+- Update `docs/SECURITY.md` with precise webhook and API auth requirements.
+- Add explicit environment matrix: local-dev vs CI vs production.
+
+3. Regression canary checks.
+- Add lightweight smoke scripts for auth and webhook trust boundary validation.
+- Integrate into release smoke process (`scripts/release_smoke.py` if appropriate).
+
+### Acceptance Criteria
+1. Security configuration requirements are unambiguous in docs.
+2. Unsafe config states are visible immediately at startup.
+3. Release smoke catches signature/auth regressions before deployment.
+
+## Execution Sequence
+1. Execute P0 fully before any non-security refactors.
+2. Execute P1 immediately after P0 with strict endpoint verification.
+3. Execute P2 next to restore confidence in test signal.
+4. Execute P3 as hardening once correctness and security are stable.
+
+## Milestone Tracking Template
+Use this template when updating each chunk gate:
+
+1. Completed:
+- Itemized, file-specific changes.
+- Tests added/updated.
+
+2. Remaining:
+- Explicit unfinished steps only.
+
+3. Acceptance:
+- Pass/fail on each criterion.
+
+4. Evidence:
+- Exact command outputs (pass/fail summary).
+
+## Immediate Next Actions (First Implementation Batch)
+1. Patch `is_api_key_valid` behavior to fail-closed and add opt-in insecure override.
+2. Enforce required signature header for `/webhook/gitea`.
+3. Gate `/webhook/test` behind explicit dev-only flag.
+4. Add tests for all three.
+5. Patch sandbox list method mismatch.
+6. Add task completion cleanup callback and heartbeat-count regression test.
+
+## Definition of Done for This Roadmap
+1. All P0 and P1 acceptance criteria pass with automated tests.
+2. P2 test-scope decision is finalized and encoded in CI config.
+3. Security and runbook docs are updated to match runtime behavior.
+4. No known critical/high findings from `Agents/CodexReview2.md` remain open.
+
+## Execution Update (2026-02-12)
+
+### P0 Status
 Completed:
-1. Experiment scope defined (no code movement yet).
+1. API auth default is now fail-closed in `orket/decision_nodes/builtins.py` (`is_api_key_valid`).
+2. Added explicit insecure dev bypass toggle via `ORKET_ALLOW_INSECURE_NO_API_KEY`.
+3. `/webhook/gitea` now requires `X-Gitea-Signature`; missing signatures are rejected in `orket/webhook_server.py`.
+4. Invalid signatures continue to be rejected in `orket/webhook_server.py`.
+5. `/webhook/test` is now disabled by default and gated by `ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT`.
+6. Added regression coverage:
+- strict `/v1/version` auth default and insecure bypass (`tests/test_api.py`)
+- missing signature rejection (`tests/test_webhook_rate_limit.py`)
+- invalid signature rejection (`tests/test_webhook_rate_limit.py`)
+- test webhook endpoint disabled-by-default and enabled-by-flag behavior (`tests/test_webhook_rate_limit.py`)
+7. Updated parity expectations for runtime auth policy in `tests/test_decision_nodes_planner.py`.
 
 Remaining:
-1. Create `c:\Source\OrketLabs` as an experiment-only workspace; keep `c:\Source\Orket` as source of truth.
-2. Implement one vertical slice only: run-session flow (`API entry -> orchestration kickoff -> status/log outputs`).
-3. Use Labs layering: `flows`, `nodes`, `seams`, `adapters/orket`.
-4. Reuse Orket via import/adapter first; avoid copying code unless required for bootstrap.
-5. Exclude non-goals for phase 1: DB migrations, webhook automation, sandbox deployment stack, UI.
-6. Add parity tests for chosen slice plus one seam-swap test proving policy replacement without flow rewrites.
-7. Record volatility metrics for the slice (flow edits vs seam/adapter edits).
-8. Decide outcome after slice: adopt pattern incrementally in Orket, run second slice, or retire experiment.
+1. Optional hardening decision: require additional auth on `/webhook/test` even when enabled (currently dev-flag gated only).
+2. Documentation updates in `docs/SECURITY.md` and env setup docs to include new flags.
 
-Acceptance:
-1. One end-to-end slice runs in Labs with behavior parity on selected contracts.
-2. Policy changes happen mainly in `seams`/`adapters`, not `flows`.
-3. Orket production code remains unchanged by experiment bootstrap.
+Acceptance Check:
+1. Unsigned webhook requests rejected: PASS.
+2. `/v1/*` fail-closed when no API key and no bypass: PASS.
+3. `/webhook/test` disabled by default: PASS.
+4. Security regressions covered by tests: PASS.
 
-### P0 Chunk Gate: Correctness Hotfixes
+### P1 Status
 Completed:
-1. Full test baseline is green (222/222).
-2. Fixed metrics timestamp correctness in `orket/hardware.py` (UTC ISO timestamp, removed `os.getlogin()` misuse).
-3. Fixed verification fatal-path accounting in `orket/domain/verification.py`:
-   - missing fixture now marks all scenarios failed
-   - subprocess fatal exit now marks all scenarios failed
-4. Added regression tests for missing fixture and fatal subprocess exit (`tests/test_verification_subprocess.py`).
-5. Added metrics timestamp validity assertion in `tests/test_api.py`.
-6. Added coverage for additional fatal verification branches:
-   - parsed `ok=false` path
-   - generic `OSError` fallback path
+1. Fixed `/v1/sandboxes` runtime crash by switching to `list_active()` in `orket/orchestration/engine.py`.
+2. Added active task cleanup callback in `orket/interfaces/api.py` so completed/canceled tasks are removed from `runtime_state`.
+3. Added regression tests:
+- real `/v1/sandboxes` path no-crash assertion (`tests/test_api.py`)
+- scheduled task cleanup lifecycle (`tests/test_api_task_lifecycle.py`)
+- heartbeat active-task convergence via `/v1/system/heartbeat` after `run-active` completion (`tests/test_api_task_lifecycle.py`)
 
 Remaining:
-1. None.
+1. Stress test task cleanup under rapid concurrent run submissions.
 
-Acceptance:
-1. `/v1/system/metrics` always returns a valid UTC timestamp field.
-2. Verification result counts never under-report failures on fatal paths.
-3. New tests cover both regression classes.
+Acceptance Check:
+1. `/v1/sandboxes` no longer 500s from `list_all` mismatch: PASS.
+2. Active task map cleanup after completion: PASS.
+3. Heartbeat-specific convergence test: PASS.
 
-### P1 Chunk Gate: R2 API Decomposition Finalization
+### P2 Status
 Completed:
-1. Extracted significant API policy decisions into `ApiRuntimeStrategyNode`:
-   - CORS parsing/defaults
-   - API key policy
-   - run-active invocation policy
-   - clear-log path
-   - metrics normalization
-   - calendar window
-   - explorer path/filter/sort
-   - preview target/invocation
-   - run-metrics workspace selection
-   - sandbox workspace/pipeline creation
-   - chat driver creation
-   - websocket removal policy
-   - engine/file-tools creation seams
-2. Fixed `/v1/system/board` contract to honor `dept` via runtime seam.
-3. Added seam-driven endpoint parity tests:
-   - board `dept` propagation
-   - preview invocation wiring
-   - run-active invocation wiring
-   - run-active unsupported method behavior
-   - run-metrics workspace seam usage
-   - sandbox logs pipeline-factory seam usage
-   - session detail missing-session 404 behavior
-   - session snapshot missing-session 404 behavior
-   - sandboxes list/stop route behavior
-   - runs list/backlog delegation behavior
-4. Moved additional route invocation wiring into `ApiRuntimeStrategyNode`:
-   - `/v1/runs`
-   - `/v1/runs/{session_id}/backlog`
-   - `/v1/sessions/{session_id}`
-   - `/v1/sessions/{session_id}/snapshot`
-5. Added runtime policy and error-path parity tests for those routes (unsupported method guards included).
-6. Moved sandbox route invocation wiring into `ApiRuntimeStrategyNode`:
-   - `/v1/sandboxes`
-   - `/v1/sandboxes/{sandbox_id}/stop`
-7. Added runtime policy and error-path parity tests for sandbox route invocation behavior.
-8. Added conditional error-path API parity tests:
-   - `/v1/system/read` missing-file 404
-   - `/v1/system/save` permission-denied 403
-   - `/v1/system/preview-asset` unsupported-mode 400
-9. Reduced repeated API transport branching by introducing shared async invocation helper in `orket/interfaces/api.py` for seam-resolved method dispatch/guarding.
-10. Extended invocation helper usage to additional transport paths (sandbox logs guard path) to reduce duplicated method-resolution branches.
-11. Moved `/v1/system/read` and `/v1/system/save` invocation wiring into `ApiRuntimeStrategyNode` with runtime-policy parity/error-path tests.
-12. Moved `/v1/sandboxes/{sandbox_id}/logs` invocation wiring into `ApiRuntimeStrategyNode`:
-   - added `resolve_sandbox_logs_invocation(sandbox_id, service)` seam
-   - transport now performs sync dispatch via invocation helper
-13. Added sandbox logs runtime-invocation parity/error-path tests:
-   - custom invocation method dispatch path
-   - unsupported runtime method 400 guard
-14. Moved preview unsupported-mode error-detail policy into `ApiRuntimeStrategyNode`:
-   - added `preview_unsupported_detail(target, invocation)` seam
-15. Added preview unsupported-mode runtime-detail parity test to verify API uses seam-provided error messages.
-16. Moved `/v1/system/chat-driver` invocation wiring into `ApiRuntimeStrategyNode`:
-   - added `resolve_chat_driver_invocation(message)` seam
-17. Added chat-driver runtime-invocation parity/error-path tests:
-   - custom invocation method dispatch path
-   - unsupported runtime method 400 guard
-18. Moved `/v1/system/clear-logs` method wiring into `ApiRuntimeStrategyNode`:
-   - added `resolve_clear_logs_invocation(log_path)` seam
-19. Added clear-logs runtime behavior tests:
-   - custom invocation method dispatch path
-   - unsupported runtime method 400 guard
-   - suppression/logging path for permission errors
-20. Reduced preview endpoint transport branching in `orket/interfaces/api.py`:
-   - `_resolve_async_method` now supports seam-provided `unsupported_detail`
-   - `/v1/system/preview-asset` now dispatches through shared async invocation helper
-21. Moved `run-active` missing-asset error detail into `ApiRuntimeStrategyNode`:
-   - added `run_active_missing_asset_detail()` seam
-   - endpoint now uses seam-provided 400 detail
-22. Moved session/snapshot missing-resource HTTP policy into `ApiRuntimeStrategyNode`:
-   - added `session_detail_not_found_error(session_id)` seam
-   - added `session_snapshot_not_found_error(session_id)` seam
-23. Added runtime-policy parity tests for session/snapshot not-found behavior:
-   - custom status/detail from seam are honored by API endpoints
-24. Moved read/save HTTP error-detail policy into `ApiRuntimeStrategyNode`:
-   - added `read_not_found_detail(path)` seam
-   - added `permission_denied_detail(operation, error)` seam
-25. Added runtime-policy parity tests for read/save error details:
-   - read missing-file detail from seam
-   - save permission-denied detail from seam
-26. Moved API-key invalid-auth detail into `ApiRuntimeStrategyNode`:
-   - added `api_key_invalid_detail()` seam
-27. Added auth parity test proving API uses seam-provided 403 detail.
-28. Moved explorer forbidden/missing response policy into `ApiRuntimeStrategyNode`:
-   - added `resolve_explorer_forbidden_error(path)` seam
-   - added `resolve_explorer_missing_response(path)` seam
-29. Added explorer parity tests:
-   - custom forbidden status/detail from seam
-   - custom missing-path response payload from seam
-30. Reduced run-active transport duplication in `orket/interfaces/api.py` by introducing shared async task scheduling helper (`_schedule_async_invocation_task`) with request-time method validation preserved.
-31. Aligned sync invocation error policy with async invocation policy:
-   - `_resolve_sync_method` now honors seam-provided `unsupported_detail`
-   - added sandbox logs parity test for custom unsupported detail
-32. Moved run-metrics reader wiring into `ApiRuntimeStrategyNode`:
-   - added `create_member_metrics_reader()` seam
-   - `/v1/runs/{session_id}/metrics` now resolves workspace and reader via runtime seams
-33. Moved calendar sprint-resolution wiring into `ApiRuntimeStrategyNode`:
-   - added `resolve_current_sprint(now)` seam
-   - `/v1/system/calendar` now resolves sprint identity via runtime seam
-34. Added calendar parity coverage proving seam-provided current sprint is honored.
+1. Restored product suite executability by making `DataAccessor` backward-compatible with optional storage construction in `product/sneaky_price_watch/accessors/data_accessor.py`.
+2. Added compatibility helper `get_page_data(...)` used by stealth browser flow/tests in `product/sneaky_price_watch/accessors/data_accessor.py`.
+3. Added explicit CI job `product_quality` in `.gitea/workflows/quality.yml` to run:
+- `pytest product/sneaky_price_watch/tests -q`
+- with `PYTHONPATH=product/sneaky_price_watch`
+4. Updated downstream workflow dependencies so smoke/migration gates require both `quality` and `product_quality`.
+5. Validated product suite locally with CI-equivalent command.
+6. Added Gitea publishing automation for `product/*` split repos via `scripts/publish_products_to_gitea.py`.
+7. Documented product publish flow in `docs/RUNBOOK.md`.
 
 Remaining:
-1. Continue moving endpoint construction/wiring volatility from `orket/interfaces/api.py` to seams.
-2. Continue reducing transport-layer churn and branch density in `orket/interfaces/api.py`.
-3. Add parity tests for remaining endpoint behaviors with conditional branches (error/empty-state cases).
+1. Optional cleanup: migrate `product/sneaky_price_watch` imports from flat-module style to package-relative imports so `PYTHONPATH` override is no longer required.
 
-Acceptance:
-1. API handlers are transport-focused (validation/status/serialization).
-2. `orket/interfaces/api.py` shrinks in branch complexity and churn.
-3. API regression suite remains green.
+Acceptance Check:
+1. Included product suite is import-clean and passing in explicit CI command path: PASS.
+2. CI discovery policy is now explicit (core + product jobs): PASS.
+3. Product subtree is no longer silently broken/ignored: PASS.
 
-### P2 Chunk Gate: R3 Orchestrator Decomposition Completion
-Completed:
-1. Extracted loop policy seams into `OrchestrationLoopPolicyNode`:
-   - concurrency limit
-   - max iterations
-   - context window
-   - review-turn detection
-   - turn status selection
-   - role order policy
-   - missing-seat status
-2. Extracted failure-path status/cancel policy to `EvaluatorNode`:
-   - `status_for_failure_action`
-   - `should_cancel_session`
-3. Extracted additional success/failure lifecycle policy into `EvaluatorNode`:
-   - `success_post_actions` (sandbox trigger + next-status policy)
-   - `failure_event_name` (action -> event routing policy)
-4. Extracted failure-message composition policy into `EvaluatorNode`:
-   - governance violation message
-   - catastrophic failure message
-   - unexpected action message
-   - retry failure message
-5. Extracted failure exception-type selection into `EvaluatorNode`:
-   - `failure_exception_class(action)` now controls raised exception class for governance/catastrophic/retry/unknown actions.
-6. Extracted remaining success-branch policy checks in `_execute_issue_turn` into `EvaluatorNode`:
-   - `should_trigger_sandbox(success_actions)`
-   - `next_status_after_success(success_actions)`
-7. Extracted execute-loop empty-candidate/exhaustion decisions into loop policy seams:
-   - `no_candidate_outcome(backlog)`
-   - `should_raise_exhaustion(iteration_count, max_iterations, backlog)`
-   with backward-compatible fallback behavior in orchestrator.
-
-Remaining:
-1. None.
-
-Acceptance:
-1. `execute_epic` behavior remains equivalent under current suite.
-2. Policy changes happen in decision nodes without loop-shape edits.
-
-### P3 Chunk Gate: Async Safety and Throughput
-Completed:
-1. Verification is subprocess-isolated for fixture execution.
-2. Removed event-loop blocking verification call in `Orchestrator.verify_issue` by using `asyncio.to_thread`.
-3. Reduced synchronous metrics pressure by adding TTL cache for VRAM probes (`ORKET_METRICS_VRAM_CACHE_SEC`).
-4. Added tests for async verification path and metrics cache behavior.
-5. Added verification-heavy async concurrency coverage (`tests/test_orchestrator_verification_async.py`) to confirm parallel `verify_issue` calls do not starve the event loop.
-
-Remaining:
-1. Evaluate moving metrics sampling to background task if API latency remains high under load.
-
-Acceptance:
-1. No synchronous heavy calls in async hot paths.
-2. Throughput under parallel turns remains stable.
-
-### P4 Chunk Gate: Observability and Operational Hygiene
-Completed:
-1. Event logging infrastructure exists and is consumed in core flows.
-2. Added warning telemetry for `clear-logs` suppression path.
-3. Replaced hot-path `print` calls in `api.py` and key `orchestrator.py` flow points with `log_event`.
-4. Replaced `execution_pipeline.py` phase/status prints with structured `log_event` calls.
-5. Replaced additional runtime/service `print` calls with structured logging:
-   - `runtime/config_loader.py` validation failures
-   - `domain/failure_reporter.py` report-created notice
-   - `services/gitea_webhook_handler.py` sandbox deploy/failure notices
-6. Standardized session/run correlation payloads across API and orchestrator logs:
-   - API now emits `session_id` for run metrics/backlog/session detail/session snapshot routes.
-   - Orchestrator now emits `run_id` in dispatch/failure events and threads it into verification/sandbox deployment events when available.
-7. Added API regression coverage for correlation log payloads on session-scoped endpoints (`tests/test_api.py`).
-8. Replaced additional high-frequency runtime `print` calls with structured logging:
-   - `llm.py` retry warnings (`model_timeout_retry`, `model_connection_retry`)
-   - `logging.py` subscriber failure handling (`logging_subscriber_failed`)
-   - `driver.py` process-failure fallback (`driver_process_failed`)
-9. Replaced additional non-interactive workflow prints with structured logging:
-   - `agents/agent.py` config-asset fallback notices
-   - `preview.py` org/role load fallback notices
-   - `domain/reconciler.py` reconciliation progress/warnings
-   - `organization_loop.py` loop lifecycle/skip warnings
-   - `discovery.py` reconciliation failure warning
-10. Replaced additional runtime `print` in `tool_families/vision.py` pipeline-load path with structured telemetry.
-11. Added print-usage policy guard (`tests/test_runtime_print_policy.py`) with explicit allowlist for intentional interactive/stdout cases.
-
-Remaining:
-1. None.
-
-Acceptance:
-1. Runtime logs are structured, machine-parseable, and correlated.
-2. Operational failures are observable without reading stdout.
-
-### P5 Chunk Gate: Tool Boundary Reduction (R1 Completion)
-Completed:
-1. `ToolBox` is strategy-composed and mostly forwarding-oriented.
-2. Audited `orket/tools.py` for residual business/process logic; confirmed forwarding-only shell behavior.
-3. Added forwarding delegation regression coverage in `tests/test_toolbox_refactor.py`.
-4. Verified backward compatibility by keeping toolbox/refactor suites green.
-
-Remaining:
-1. None.
-
-Acceptance:
-1. `ToolBox` remains composition/compat shell only.
-2. `tests/test_toolbox_refactor.py` and `tests/test_decision_nodes_planner.py` remain green.
-
-### P6 Chunk Gate: Verification and Quality Gates
-Completed:
-1. Baseline suite is green.
-2. Added repo-level line-ending policy and CI normalization gate:
-   - `.gitattributes` sets LF as default with CRLF exceptions for `*.bat`/`*.cmd`.
-   - `quality.yml` now fails if `git add --renormalize .` produces staged drift.
-3. Added API contract coverage for route-parameter drift risks:
-   - `/v1/system/board` default `dept=core`
-   - `/v1/sandboxes/{sandbox_id}/logs` optional `service` propagation (`None` when omitted)
-4. Closed regression coverage for all critical findings in `Agents/CodexReview.md`:
-   - metrics timestamp validity
-   - board `dept` propagation
-   - fatal verification accounting
-   - async verification non-blocking path
-
-Remaining:
-1. None.
-
-Acceptance:
-1. Critical regression classes are guarded by tests.
-2. CI blocks known drift patterns before merge.
-
-## Done Workflow
-Use `Exists -> Working -> Done`:
-1. Exists: defined in this roadmap with measurable acceptance.
-2. Working: has explicit `Completed` and `Remaining` bullets.
-3. Done: acceptance verified, then remove from roadmap and add one `CHANGELOG.md` entry.
+### Verification Evidence
+1. `python -m pytest tests/test_webhook_rate_limit.py -q` -> 5 passed.
+2. `python -m pytest tests/test_api.py -q` -> 52 passed.
+3. `python -m pytest tests/test_api_task_lifecycle.py -q` -> 2 passed.
+4. `$env:PYTHONPATH='product/sneaky_price_watch'; python -m pytest product/sneaky_price_watch/tests -q` -> 17 passed.
+5. `python -m pytest tests/ -q` -> 274 passed.

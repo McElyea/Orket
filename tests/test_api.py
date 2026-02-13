@@ -1026,3 +1026,70 @@ def test_session_endpoints_emit_correlation_logs(monkeypatch):
     assert event_map["api_backlog"]["session_id"] == "S1"
     assert event_map["api_session_detail"]["session_id"] == "S1"
     assert event_map["api_session_snapshot"]["session_id"] == "S1"
+
+
+def test_cards_archive_requires_selector(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.post(
+        "/v1/cards/archive",
+        json={},
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 400
+    assert "Provide at least one selector" in response.json()["detail"]
+
+
+def test_cards_archive_by_ids(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    captured = {}
+
+    async def fake_archive_cards(card_ids, archived_by="system", reason=None):
+        captured["args"] = (card_ids, archived_by, reason)
+        return {"archived": ["I1"], "missing": ["I2"]}
+
+    monkeypatch.setattr(api_module.engine, "archive_cards", fake_archive_cards)
+
+    response = client.post(
+        "/v1/cards/archive",
+        json={"card_ids": ["I1", "I2"], "reason": "cleanup", "archived_by": "tester"},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["archived_count"] == 1
+    assert response.json()["archived_ids"] == ["I1"]
+    assert response.json()["missing_ids"] == ["I2"]
+    assert captured["args"] == (["I1", "I2"], "tester", "cleanup")
+
+
+def test_cards_archive_by_build_and_related(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_archive_cards(card_ids, archived_by="system", reason=None):
+        return {"archived": card_ids, "missing": []}
+
+    async def fake_archive_build(build_id, archived_by="system", reason=None):
+        assert build_id == "build-demo"
+        return 2
+
+    async def fake_archive_related_cards(tokens, archived_by="system", reason=None):
+        assert tokens == ["demo", "legacy"]
+        return {"archived": ["R1"], "missing": []}
+
+    monkeypatch.setattr(api_module.engine, "archive_cards", fake_archive_cards)
+    monkeypatch.setattr(api_module.engine, "archive_build", fake_archive_build)
+    monkeypatch.setattr(api_module.engine, "archive_related_cards", fake_archive_related_cards)
+
+    response = client.post(
+        "/v1/cards/archive",
+        json={"build_id": "build-demo", "related_tokens": ["demo", "legacy"]},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert data["archived_count"] == 3
+    assert data["archived_ids"] == ["R1"]

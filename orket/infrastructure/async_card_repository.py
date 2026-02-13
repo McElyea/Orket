@@ -148,6 +148,106 @@ class AsyncCardRepository(CardRepository):
                                  (card_id, assignee or "system", f"Set Status to '{status.value}'"))
                 await conn.commit()
 
+    async def archive_card(self, card_id: str, archived_by: str = "system", reason: Optional[str] = None) -> bool:
+        async with self._lock:
+            async with aiosqlite.connect(self.db_path) as conn:
+                await self._ensure_initialized(conn)
+                cursor = await conn.execute("SELECT id FROM issues WHERE id = ?", (card_id,))
+                row = await cursor.fetchone()
+                if not row:
+                    return False
+                await conn.execute(
+                    "UPDATE issues SET status = ?, assignee = ? WHERE id = ?",
+                    (CardStatus.ARCHIVED.value, archived_by, card_id),
+                )
+                action = "Archived card"
+                if reason:
+                    action += f" ({reason})"
+                await conn.execute(
+                    "INSERT INTO card_transactions (card_id, role, action) VALUES (?, ?, ?)",
+                    (card_id, archived_by, action),
+                )
+                await conn.commit()
+                return True
+
+    async def archive_cards(
+        self,
+        card_ids: List[str],
+        archived_by: str = "system",
+        reason: Optional[str] = None,
+    ) -> Dict[str, List[str]]:
+        archived: List[str] = []
+        missing: List[str] = []
+        for card_id in card_ids:
+            ok = await self.archive_card(card_id, archived_by=archived_by, reason=reason)
+            if ok:
+                archived.append(card_id)
+            else:
+                missing.append(card_id)
+        return {"archived": archived, "missing": missing}
+
+    async def archive_build(
+        self,
+        build_id: str,
+        archived_by: str = "system",
+        reason: Optional[str] = None,
+    ) -> int:
+        async with self._lock:
+            async with aiosqlite.connect(self.db_path) as conn:
+                conn.row_factory = aiosqlite.Row
+                await self._ensure_initialized(conn)
+                cursor = await conn.execute(
+                    "SELECT id FROM issues WHERE build_id = ?",
+                    (build_id,),
+                )
+                rows = await cursor.fetchall()
+                if not rows:
+                    return 0
+                ids = [r["id"] for r in rows]
+                await conn.execute(
+                    "UPDATE issues SET status = ?, assignee = ? WHERE build_id = ?",
+                    (CardStatus.ARCHIVED.value, archived_by, build_id),
+                )
+                action = f"Archived build '{build_id}'"
+                if reason:
+                    action += f" ({reason})"
+                for card_id in ids:
+                    await conn.execute(
+                        "INSERT INTO card_transactions (card_id, role, action) VALUES (?, ?, ?)",
+                        (card_id, archived_by, action),
+                    )
+                await conn.commit()
+                return len(ids)
+
+    async def find_related_card_ids(self, tokens: List[str], limit: int = 500) -> List[str]:
+        normalized = [t.strip().lower() for t in tokens if t and t.strip()]
+        if not normalized:
+            return []
+
+        clauses: List[str] = []
+        params: List[Any] = []
+        for token in normalized:
+            like = f"%{token}%"
+            clauses.append("(LOWER(id) LIKE ? OR LOWER(COALESCE(build_id, '')) LIKE ? OR LOWER(COALESCE(summary, '')) LIKE ? OR LOWER(COALESCE(note, '')) LIKE ?)")
+            params.extend([like, like, like, like])
+
+        query = f"""
+            SELECT id
+            FROM issues
+            WHERE {' OR '.join(clauses)}
+            ORDER BY created_at DESC
+            LIMIT ?
+        """
+        params.append(limit)
+
+        async with self._lock:
+            async with aiosqlite.connect(self.db_path) as conn:
+                conn.row_factory = aiosqlite.Row
+                await self._ensure_initialized(conn)
+                cursor = await conn.execute(query, tuple(params))
+                rows = await cursor.fetchall()
+                return [r["id"] for r in rows]
+
     async def add_transaction(self, card_id: str, role: str, action: str) -> None:
         async with self._lock:
             async with aiosqlite.connect(self.db_path) as conn:

@@ -82,6 +82,13 @@ class RunAssetRequest(BaseModel):
 class ChatDriverRequest(BaseModel):
     message: str
 
+class ArchiveCardsRequest(BaseModel):
+    card_ids: Optional[list[str]] = None
+    build_id: Optional[str] = None
+    related_tokens: Optional[list[str]] = None
+    reason: Optional[str] = None
+    archived_by: Optional[str] = "api"
+
 # Security dependency
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
@@ -332,6 +339,43 @@ async def chat_driver(req: ChatDriverRequest):
     invocation = api_runtime_node.resolve_chat_driver_invocation(req.message)
     response = await _invoke_async_method(driver, invocation, "chat driver")
     return {"response": response}
+
+@v1_router.post("/cards/archive")
+async def archive_cards(req: ArchiveCardsRequest):
+    selectors = [bool(req.card_ids), bool(req.build_id), bool(req.related_tokens)]
+    if not any(selectors):
+        raise HTTPException(status_code=400, detail="Provide at least one selector: card_ids, build_id, or related_tokens")
+
+    archived_ids: list[str] = []
+    missing_ids: list[str] = []
+    archived_count = 0
+    archived_by = req.archived_by or "api"
+
+    if req.card_ids:
+        result = await engine.archive_cards(req.card_ids, archived_by=archived_by, reason=req.reason)
+        archived_ids.extend(result.get("archived", []))
+        missing_ids.extend(result.get("missing", []))
+
+    if req.build_id:
+        count = await engine.archive_build(req.build_id, archived_by=archived_by, reason=req.reason)
+        archived_count += count
+
+    if req.related_tokens:
+        result = await engine.archive_related_cards(req.related_tokens, archived_by=archived_by, reason=req.reason)
+        archived_ids.extend(result.get("archived", []))
+        missing_ids.extend(result.get("missing", []))
+
+    # Keep deterministic output for clients.
+    archived_ids = sorted(set(archived_ids))
+    missing_ids = sorted(set(missing_ids))
+    archived_count += len(archived_ids)
+
+    return {
+        "ok": True,
+        "archived_count": archived_count,
+        "archived_ids": archived_ids,
+        "missing_ids": missing_ids,
+    }
 
 app.include_router(v1_router)
 

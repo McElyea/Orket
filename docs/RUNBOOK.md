@@ -81,6 +81,138 @@ Optional:
 python scripts/release_smoke.py --skip-docker
 ```
 
+## Product Repo Publishing (Gitea)
+Use this when you want each `<source-dir>/*` project mirrored into Gitea as its own repository and pushed by automation.
+
+### What it does
+1. Discovers folders under `<source-dir>/` (default `product/`).
+2. Creates repos in Gitea (unless `--no-create`).
+3. Uses `git subtree split` and pushes each project to its own repo branch.
+4. Can verify parity (remote head SHA + tree manifest).
+5. Can optionally delete local project folders after successful parity verification.
+
+### Required env vars
+```bash
+GITEA_URL=http://localhost:3000
+GITEA_ADMIN_USER=admin
+GITEA_ADMIN_PASSWORD=your-password
+GITEA_PRODUCT_OWNER=Orket
+```
+
+### Dry-run first
+```bash
+python scripts/publish_products_to_gitea.py
+```
+
+### Execute publish
+```bash
+python scripts/publish_products_to_gitea.py --execute --verify-parity --private --force
+```
+
+### Flexible source directory
+```bash
+python scripts/publish_products_to_gitea.py --execute --verify-parity --source-dir bin/projects
+```
+
+### Optional local deletion after verification
+```bash
+python scripts/publish_products_to_gitea.py --execute --verify-parity --delete-local --source-dir product
+```
+
+### Publish selected projects only
+```bash
+python scripts/publish_products_to_gitea.py --execute --projects sneaky_price_watch price_arbitrage
+```
+
+Notes:
+1. Destination repos are named after folder names by default (set `--repo-prefix` to change).
+2. Default branch target is the current local branch; override with `--branch`.
+3. `--delete-local` is optional and intentionally gated behind `--verify-parity`.
+4. `--force` is recommended on first sync if histories differ.
+5. This is a mirror/split workflow; source of truth remains this monorepo unless you choose otherwise.
+
+### Push Automation
+Automation is provided by `.gitea/workflows/product_publish.yml`.
+
+Behavior:
+1. Triggers on push to `main` with changes in `product/**` or `bin/**`.
+2. Runs only when repo variable `ENABLE_PRODUCT_REPO_PUBLISH=true`.
+3. Uses `self-hosted` runner (needed for local/private Gitea reachability).
+4. Performs publish + parity verification only (no delete in CI).
+
+Branch policy:
+1. Standard flow remains: feature branches open PRs and merge to `main`.
+2. Publish automation executes after merge-to-main push event.
+3. Destination branch defaults to `github.ref_name` unless overridden.
+
+### Governance Ownership
+1. Coder owns code changes.
+2. Reviewer owns approval via PR merge.
+3. Guard owns policy gates (`ENABLE_PRODUCT_REPO_PUBLISH`, required secrets, parity check).
+4. Workflow owns execution of push automation.
+
+### Required Repo Configuration (Gitea Actions)
+1. Repository variable:
+   - `ENABLE_PRODUCT_REPO_PUBLISH=true`
+2. Optional repository variables:
+   - `PRODUCT_PUBLISH_SOURCE_DIR=product` (or `bin/...`)
+   - `PRODUCT_PUBLISH_TARGET_BRANCH=main`
+   - `PRODUCT_PUBLISH_REPO_PREFIX=` (blank for folder-name repos)
+3. Required repository secrets:
+   - `GITEA_URL`
+   - `GITEA_ADMIN_USER`
+   - `GITEA_ADMIN_PASSWORD`
+   - `GITEA_PRODUCT_OWNER`
+
+### Safety Defaults
+1. CI job does not pass `--delete-local`.
+2. Local deletion remains explicit/manual and requires both:
+   - `--verify-parity`
+   - `--delete-local`
+
+## Local Space Conservation Policy
+Automated cleanup is available for parity-verified published projects.
+
+Defaults:
+1. `45 days` unchanged -> move local folder to archive.
+2. `90 days` in archive -> permanent delete.
+3. Cleanup only considers registry entries with `parity_verified=true`.
+4. Cleanup skips dirty git paths by default.
+
+### Registry
+Publisher writes registry metadata to:
+`/.orket/project_publish_registry.json`
+
+### Manual dry-run
+```bash
+python scripts/cleanup_published_projects.py
+```
+
+### Manual execute (default thresholds)
+```bash
+python scripts/cleanup_published_projects.py --execute
+```
+
+### Custom thresholds
+```bash
+python scripts/cleanup_published_projects.py --execute --archive-days 30 --hard-delete-days 75
+```
+
+### Scheduled automation
+Workflow: `.gitea/workflows/project_cleanup.yml`
+
+Required variable:
+1. `ENABLE_PROJECT_LOCAL_CLEANUP=true`
+
+Optional variables:
+1. `PROJECT_CLEANUP_SOURCE_DIR=product`
+2. `PROJECT_CLEANUP_ARCHIVE_DAYS=45`
+3. `PROJECT_CLEANUP_HARD_DELETE_DAYS=90`
+
+Safety:
+1. Scheduled cleanup is still constrained by parity-verified registry entries.
+2. It never acts on folders that were not recorded by publish automation.
+
 ## Incident Playbook
 ### 1. Elevated 5xx from API
 1. Check `workspace/default/orket.log`.

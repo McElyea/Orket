@@ -697,6 +697,10 @@ def test_registry_resolves_default_orchestration_loop_policy():
         "is_done": True,
         "event_name": "orchestrator_epic_complete",
     }
+    assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.ARCHIVED)]) == {
+        "is_done": True,
+        "event_name": "orchestrator_epic_complete",
+    }
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.READY)]) == {
         "is_done": False,
         "event_name": None,

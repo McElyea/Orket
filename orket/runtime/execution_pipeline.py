@@ -190,7 +190,7 @@ class ExecutionPipeline:
         )
 
         backlog = await self.async_cards.get_by_build(active_build)
-        is_truly_done = all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)
+        is_truly_done = all(i.status in [CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED] for i in backlog)
         if is_truly_done:
             await self.success.record_success(
                 session_id=run_id,

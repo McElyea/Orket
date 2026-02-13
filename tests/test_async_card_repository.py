@@ -163,3 +163,41 @@ async def test_deserialize_corrupted_json(repo):
             
     retrieved = await repo.get_by_id("CORRUPT")
     assert retrieved.depends_on == [] # Should fallback to empty list
+
+
+@pytest.mark.asyncio
+async def test_archive_single_card(repo):
+    await repo.save(IssueRecord(id="ARCH-1", summary="Archive me", seat="standard"))
+    ok = await repo.archive_card("ARCH-1", archived_by="tester", reason="cleanup")
+    assert ok is True
+
+    archived = await repo.get_by_id("ARCH-1")
+    assert archived is not None
+    assert archived.status == CardStatus.ARCHIVED
+    assert archived.assignee == "tester"
+
+
+@pytest.mark.asyncio
+async def test_archive_build(repo):
+    await repo.save(IssueRecord(id="AB-1", summary="One", build_id="BUILD-A", seat="standard"))
+    await repo.save(IssueRecord(id="AB-2", summary="Two", build_id="BUILD-A", seat="standard"))
+    await repo.save(IssueRecord(id="AB-3", summary="Three", build_id="BUILD-B", seat="standard"))
+
+    count = await repo.archive_build("BUILD-A", archived_by="tester", reason="project removed")
+    assert count == 2
+
+    b_a = await repo.get_by_build("BUILD-A")
+    assert all(i.status == CardStatus.ARCHIVED for i in b_a)
+
+    b_b = await repo.get_by_build("BUILD-B")
+    assert b_b[0].status == CardStatus.READY
+
+
+@pytest.mark.asyncio
+async def test_find_related_card_ids(repo):
+    await repo.save(IssueRecord(id="ISSUE-X1", summary="Price arbitrage worker", build_id="build-price-arbitrage", seat="standard"))
+    await repo.save(IssueRecord(id="ISSUE-X2", summary="Unrelated", build_id="build-core", seat="standard"))
+    await repo.save(IssueRecord(id="ISSUE-X3", summary="Cleanup sneaky watcher", build_id="build-sneaky-price-watch", seat="standard"))
+
+    ids = await repo.find_related_card_ids(["price-arbitrage", "sneaky-price-watch"])
+    assert set(ids) == {"ISSUE-X1", "ISSUE-X3"}

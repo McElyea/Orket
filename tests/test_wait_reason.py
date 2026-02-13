@@ -90,6 +90,16 @@ def test_state_machine_does_not_require_wait_reason_for_other_states():
     )
 
 
+def test_state_machine_allows_archive_from_done_issue():
+    """Test that completed issues can be archived."""
+    StateMachine.validate_transition(
+        card_type=CardType.ISSUE,
+        current=CardStatus.DONE,
+        requested=CardStatus.ARCHIVED,
+        wait_reason=None,
+    )
+
+
 def test_wait_reason_resource():
     """Test RESOURCE wait reason usage."""
     issue = IssueConfig(

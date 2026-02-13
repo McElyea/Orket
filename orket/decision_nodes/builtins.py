@@ -747,7 +747,7 @@ class DefaultOrchestrationLoopPolicyNode:
         return CardStatus.CANCELED
 
     def is_backlog_done(self, backlog: List[Any]) -> bool:
-        return all(i.status in [CardStatus.DONE, CardStatus.CANCELED] for i in backlog)
+        return all(i.status in [CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED] for i in backlog)
 
     def no_candidate_outcome(self, backlog: List[Any]) -> Dict[str, Any]:
         is_done = self.is_backlog_done(backlog)

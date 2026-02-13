@@ -21,6 +21,10 @@ def parse_args():
     parser.add_argument("--task", type=str, default=None, help="Optional task description override.")
     parser.add_argument("--board", action="store_true", help="Display the project board.")
     parser.add_argument("--loop", action="store_true", help="Start the Vibe Rail Organization Loop.")
+    parser.add_argument("--archive-card", action="append", default=[], help="Archive a card by ID (repeatable).")
+    parser.add_argument("--archive-build", type=str, default=None, help="Archive all cards in a build.")
+    parser.add_argument("--archive-related", action="append", default=[], help="Archive cards matching token in id/build/summary/note (repeatable).")
+    parser.add_argument("--archive-reason", type=str, default="manual archive", help="Reason stored with archive transaction.")
     return parser.parse_args()
 
 def print_board(hierarchy: dict):
@@ -56,6 +60,31 @@ async def run_cli():
         if args.loop:
             from orket.organization_loop import OrganizationLoop
             await OrganizationLoop().run_forever()
+            return
+
+        if args.archive_card or args.archive_build or args.archive_related:
+            archived_ids = []
+            missing_ids = []
+            archived_count = 0
+            if args.archive_card:
+                result = await engine.archive_cards(args.archive_card, archived_by="cli", reason=args.archive_reason)
+                archived_ids.extend(result.get("archived", []))
+                missing_ids.extend(result.get("missing", []))
+            if args.archive_build:
+                archived_count += await engine.archive_build(args.archive_build, archived_by="cli", reason=args.archive_reason)
+            if args.archive_related:
+                result = await engine.archive_related_cards(args.archive_related, archived_by="cli", reason=args.archive_reason)
+                archived_ids.extend(result.get("archived", []))
+                missing_ids.extend(result.get("missing", []))
+
+            archived_ids = sorted(set(archived_ids))
+            missing_ids = sorted(set(missing_ids))
+            archived_count += len(archived_ids)
+            print(f"Archived {archived_count} card(s).")
+            if archived_ids:
+                print(f"Archived IDs: {', '.join(archived_ids)}")
+            if missing_ids:
+                print(f"Missing IDs: {', '.join(missing_ids)}")
             return
 
         print_orket_manifest(args.department)

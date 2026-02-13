@@ -120,3 +120,31 @@ class OrchestrationEngine:
         if task:
             task.cancel()
             log_event("session_halted", {"session_id": session_id}, self.workspace_root)
+
+    async def archive_card(self, card_id: str, archived_by: str = "system", reason: Optional[str] = None) -> bool:
+        """Archive a single card record in persistence."""
+        return await self.cards.archive_card(card_id, archived_by=archived_by, reason=reason)
+
+    async def archive_cards(
+        self,
+        card_ids: List[str],
+        archived_by: str = "system",
+        reason: Optional[str] = None,
+    ) -> Dict[str, List[str]]:
+        """Archive multiple cards by id."""
+        return await self.cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
+
+    async def archive_build(self, build_id: str, archived_by: str = "system", reason: Optional[str] = None) -> int:
+        """Archive all cards under a build id."""
+        return await self.cards.archive_build(build_id, archived_by=archived_by, reason=reason)
+
+    async def archive_related_cards(
+        self,
+        related_tokens: List[str],
+        archived_by: str = "system",
+        reason: Optional[str] = None,
+        limit: int = 500,
+    ) -> Dict[str, List[str]]:
+        """Archive cards whose id/build/summary/note matches any token."""
+        card_ids = await self.cards.find_related_card_ids(related_tokens, limit=limit)
+        return await self.cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
