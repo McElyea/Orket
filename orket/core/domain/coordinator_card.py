@@ -29,4 +29,3 @@ class Card(BaseModel):
         if value not in valid:
             raise ValueError("state must be one of OPEN, CLAIMED, DONE, FAILED")
         return value
-

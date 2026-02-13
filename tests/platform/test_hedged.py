@@ -5,10 +5,10 @@ import sys
 import threading
 import time
 
-from coordinator.models import Card
+from orket.adapters.execution.worker_client import Worker
+from orket.core.domain.coordinator_card import Card
 sys.path.append(os.path.dirname(__file__))
 from utils import make_client, reset_store_with_cards
-from worker.worker import Worker
 
 
 def test_hedged_execution_first_completion_wins() -> None:

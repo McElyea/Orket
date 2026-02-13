@@ -7,8 +7,8 @@ from typing import Callable
 
 from fastapi.testclient import TestClient
 
-from coordinator.main import app, store
-from coordinator.models import Card
+from orket.core.domain.coordinator_card import Card
+from orket.interfaces.coordinator_api import app, store
 
 
 class DelayedTestClient:

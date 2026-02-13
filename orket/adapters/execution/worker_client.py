@@ -139,4 +139,3 @@ def make_random_delay(seed: int, minimum: float = 0.0, maximum: float = 0.02) ->
         time.sleep(rng.uniform(minimum, maximum))
 
     return _delay
-
