@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, UTC
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from orket.repositories import CardRepository, SessionRepository, SnapshotRepository
+from orket.core.contracts.repositories import CardRepository, SessionRepository, SnapshotRepository
 from orket.schema import CardStatus
 
 class SQLiteCardRepository(CardRepository):

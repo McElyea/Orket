@@ -15,7 +15,7 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from orket.domain.execution import ExecutionTurn, ToolCall
-from orket.domain.state_machine import StateMachine, StateMachineError
+from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType
 from orket.logging import log_event
 

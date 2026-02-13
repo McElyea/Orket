@@ -22,10 +22,11 @@ import time
 import hashlib
 
 from orket.schema import IssueConfig, CardStatus, RoleConfig
-from orket.domain.state_machine import StateMachine, StateMachineError, WaitReason
+from orket.core.domain.state_machine import StateMachine, StateMachineError
+from orket.schema import WaitReason
 from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.logging import log_event
-from orket.services.tool_gate import ToolGate
+from orket.core.policies.tool_gate import ToolGate
 from orket.naming import sanitize_name
 
 

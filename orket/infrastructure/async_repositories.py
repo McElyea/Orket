@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
 
-from orket.repositories import SessionRepository, SnapshotRepository
+from orket.core.contracts.repositories import SessionRepository, SnapshotRepository
 
 class AsyncSessionRepository(SessionRepository):
     """

@@ -17,7 +17,7 @@ from orket.tool_runtime import ToolRuntimeExecutor
 if TYPE_CHECKING:
     from orket.infrastructure.async_card_repository import AsyncCardRepository
     from orket.schema import OrganizationConfig
-    from orket.services.tool_gate import ToolGate
+    from orket.core.policies.tool_gate import ToolGate
 
 
 class ToolBox:

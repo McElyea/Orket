@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
 
-from orket.repositories import CardRepository
+from orket.core.contracts.repositories import CardRepository
 from orket.schema import CardStatus, CardType
-from orket.domain.records import IssueRecord, CardRecord
+from orket.core.domain.records import IssueRecord, CardRecord
 
 
 class AsyncCardRepository(CardRepository):

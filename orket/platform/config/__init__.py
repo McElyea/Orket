@@ -1,0 +1,2 @@
+"""Configuration platform components."""
+

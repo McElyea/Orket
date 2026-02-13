@@ -19,11 +19,11 @@ from orket.orchestration.notes import NoteStore, Note
 from orket.decision_nodes.contracts import PlanningInput
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.services.prompt_compiler import PromptCompiler
-from orket.services.tool_gate import ToolGate
+from orket.core.policies.tool_gate import ToolGate
 from orket.tools import ToolBox, get_tool_map
 from orket.logging import log_event
 from orket.exceptions import ExecutionFailed
-from orket.domain.state_machine import StateMachine
+from orket.core.domain.state_machine import StateMachine
 from orket.utils import sanitize_name
 
 class Orchestrator:

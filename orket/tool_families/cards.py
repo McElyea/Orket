@@ -7,7 +7,7 @@ from orket.tool_families.base import BaseTools
 
 if TYPE_CHECKING:
     from orket.infrastructure.async_card_repository import AsyncCardRepository
-    from orket.services.tool_gate import ToolGate
+    from orket.core.policies.tool_gate import ToolGate
 
 
 class CardManagementTools(BaseTools):
@@ -46,7 +46,7 @@ class CardManagementTools(BaseTools):
         return {"ok": True, "issue_id": issue_id}
 
     async def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        from orket.domain.state_machine import StateMachine, StateMachineError
+        from orket.core.domain.state_machine import StateMachine, StateMachineError
         from orket.schema import CardStatus, CardType
 
         context = context or {}
