@@ -4,6 +4,7 @@
   "scripts": {
     "dev:ui": "npm run dev --prefix ui",
     "dev:server": "python server.py",
-    "dev": "npx concurrently \"npm run dev:server\" \"npm run dev:ui\""
+    "dev": "npx concurrently \"npm run dev:server\" \"npm run dev:ui\"",
+    "ci:volatility": "python scripts/check_volatility_boundaries.py"
   }
 }

@@ -358,9 +358,8 @@ async def chat_driver(req: ChatDriverRequest):
 
 @v1_router.post("/cards/archive")
 async def archive_cards(req: ArchiveCardsRequest):
-    selectors = [bool(req.card_ids), bool(req.build_id), bool(req.related_tokens)]
-    if not any(selectors):
-        raise HTTPException(status_code=400, detail="Provide at least one selector: card_ids, build_id, or related_tokens")
+    if not api_runtime_node.has_archive_selector(req.card_ids, req.build_id, req.related_tokens):
+        raise HTTPException(status_code=400, detail=api_runtime_node.archive_selector_missing_detail())
 
     archived_ids: list[str] = []
     missing_ids: list[str] = []
@@ -381,17 +380,11 @@ async def archive_cards(req: ArchiveCardsRequest):
         archived_ids.extend(result.get("archived", []))
         missing_ids.extend(result.get("missing", []))
 
-    # Keep deterministic output for clients.
-    archived_ids = sorted(set(archived_ids))
-    missing_ids = sorted(set(missing_ids))
-    archived_count += len(archived_ids)
-
-    return {
-        "ok": True,
-        "archived_count": archived_count,
-        "archived_ids": archived_ids,
-        "missing_ids": missing_ids,
-    }
+    return api_runtime_node.normalize_archive_response(
+        archived_ids=archived_ids,
+        missing_ids=missing_ids,
+        archived_count=archived_count,
+    )
 
 app.include_router(v1_router)
 

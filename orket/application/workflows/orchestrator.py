@@ -10,9 +10,6 @@ from orket.schema import (
     EpicConfig, TeamConfig, EnvironmentConfig, IssueConfig,
     CardStatus, RoleConfig, DialectConfig, SkillConfig
 )
-from orket.adapters.storage.async_card_repository import AsyncCardRepository
-from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.adapters.storage.async_repositories import AsyncSnapshotRepository
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.orchestration.models import ModelSelector
 from orket.orchestration.notes import NoteStore, Note
@@ -20,6 +17,7 @@ from orket.decision_nodes.contracts import PlanningInput
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.core.policies.tool_gate import ToolGate
+from orket.core.contracts.repositories import CardRepository, SnapshotRepository
 from orket.tools import ToolBox, get_tool_map
 from orket.logging import log_event
 from orket.exceptions import ExecutionFailed
@@ -39,8 +37,8 @@ class Orchestrator:
     def __init__(
         self,
         workspace: Path,
-        async_cards: AsyncCardRepository,
-        snapshots: AsyncSnapshotRepository,
+        async_cards: CardRepository,
+        snapshots: SnapshotRepository,
         org: Any,
         config_root: Path,
         db_path: str,
@@ -165,8 +163,7 @@ class Orchestrator:
         # 1. Setup Execution Environment
         settings_path = self.config_root / "user_settings.json"
         if settings_path.exists():
-            fs = AsyncFileTools(self.config_root)
-            user_settings = json.loads(await fs.read_file("user_settings.json"))
+            user_settings = json.loads(settings_path.read_text(encoding="utf-8"))
         else:
             user_settings = load_user_settings()
         model_selector = ModelSelector(organization=self.org, user_settings=user_settings)

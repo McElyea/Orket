@@ -411,6 +411,33 @@ class DefaultApiRuntimeStrategyNode:
     def should_remove_websocket(self, exception: Exception) -> bool:
         return isinstance(exception, (RuntimeError, ValueError))
 
+    def has_archive_selector(
+        self,
+        card_ids: list[str] | None,
+        build_id: str | None,
+        related_tokens: list[str] | None,
+    ) -> bool:
+        return any([bool(card_ids), bool(build_id), bool(related_tokens)])
+
+    def archive_selector_missing_detail(self) -> str:
+        return "Provide at least one selector: card_ids, build_id, or related_tokens"
+
+    def normalize_archive_response(
+        self,
+        archived_ids: list[str],
+        missing_ids: list[str],
+        archived_count: int,
+    ) -> Dict[str, Any]:
+        unique_archived_ids = sorted(set(archived_ids))
+        unique_missing_ids = sorted(set(missing_ids))
+        total_archived = archived_count + len(unique_archived_ids)
+        return {
+            "ok": True,
+            "archived_count": total_archived,
+            "archived_ids": unique_archived_ids,
+            "missing_ids": unique_missing_ids,
+        }
+
 
 class DefaultSandboxPolicyNode:
     """

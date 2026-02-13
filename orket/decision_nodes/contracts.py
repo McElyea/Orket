@@ -249,6 +249,25 @@ class ApiRuntimeStrategyNode(Protocol):
     def should_remove_websocket(self, exception: Exception) -> bool:
         ...
 
+    def has_archive_selector(
+        self,
+        card_ids: list[str] | None,
+        build_id: str | None,
+        related_tokens: list[str] | None,
+    ) -> bool:
+        ...
+
+    def archive_selector_missing_detail(self) -> str:
+        ...
+
+    def normalize_archive_response(
+        self,
+        archived_ids: list[str],
+        missing_ids: list[str],
+        archived_count: int,
+    ) -> Dict[str, Any]:
+        ...
+
 
 class SandboxPolicyNode(Protocol):
     """Decision node: sandbox lifecycle policy choices."""

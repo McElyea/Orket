@@ -1039,6 +1039,23 @@ def test_cards_archive_requires_selector(monkeypatch):
     assert "Provide at least one selector" in response.json()["detail"]
 
 
+def test_cards_archive_uses_runtime_selector_policy(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module.api_runtime_node, "has_archive_selector", lambda *_args: False)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "archive_selector_missing_detail",
+        lambda: "Selector policy denied request",
+    )
+    response = client.post(
+        "/v1/cards/archive",
+        json={},
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Selector policy denied request"
+
+
 def test_cards_archive_by_ids(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
@@ -1093,4 +1110,39 @@ def test_cards_archive_by_build_and_related(monkeypatch):
     assert data["ok"] is True
     assert data["archived_count"] == 3
     assert data["archived_ids"] == ["R1"]
+
+
+def test_cards_archive_uses_runtime_response_normalization(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def fake_archive_cards(card_ids, archived_by="system", reason=None):
+        return {"archived": ["B", "A", "A"], "missing": ["Z", "Z"]}
+
+    monkeypatch.setattr(api_module.engine, "archive_cards", fake_archive_cards)
+    monkeypatch.setattr(
+        api_module.api_runtime_node,
+        "normalize_archive_response",
+        lambda archived_ids, missing_ids, archived_count: {
+            "ok": True,
+            "archived_count": 999,
+            "archived_ids": sorted(set(archived_ids)),
+            "missing_ids": sorted(set(missing_ids)),
+            "policy": "custom",
+        },
+    )
+
+    response = client.post(
+        "/v1/cards/archive",
+        json={"card_ids": ["I1"]},
+        headers={"X-API-Key": "test-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": True,
+        "archived_count": 999,
+        "archived_ids": ["A", "B"],
+        "missing_ids": ["Z"],
+        "policy": "custom",
+    }
 

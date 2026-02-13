@@ -52,6 +52,11 @@ Security canary only:
 python scripts/security_canary.py
 ```
 
+Volatility boundary gate:
+```bash
+python scripts/check_volatility_boundaries.py
+```
+
 Real-service stress (no mocks/fakes):
 ```bash
 python scripts/real_service_stress.py --profile heavy
@@ -64,9 +69,10 @@ python scripts/real_service_stress.py --profile aggressive
 
 Checklist:
 1. Quality workflow passes.
-2. Docker smoke passes (`/health` probe).
-3. Migration smoke passes.
-4. Latest load artifact exists in `benchmarks/results/`.
+2. Volatility boundary gate passes.
+3. Docker smoke passes (`/health` probe).
+4. Migration smoke passes.
+5. Latest load artifact exists in `benchmarks/results/`.
 
 ## Incident Playbook
 ### API 5xx spike
