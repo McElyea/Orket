@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
 from datetime import datetime, UTC
 from pathlib import Path
+import json
 
 from orket.schema import IssueConfig, CardStatus, RoleConfig
 from orket.domain.state_machine import StateMachine, StateMachineError, WaitReason
@@ -269,6 +270,18 @@ class TurnExecutor:
         messages.append({
             "role": "user",
             "content": f"Issue {issue.id}: {issue.name}\n\nType: {issue.type}\nPriority: {issue.priority}"
+        })
+
+        # Add stable, structured execution context for deterministic routing and dependency awareness.
+        execution_context = {
+            "issue_id": context.get("issue_id", issue.id),
+            "seat": context.get("role", role.name),
+            "status": context.get("current_status"),
+            "dependency_context": context.get("dependency_context", {}),
+        }
+        messages.append({
+            "role": "user",
+            "content": f"Execution Context JSON:\n{json.dumps(execution_context, sort_keys=True)}"
         })
 
         # Add any history (from context)

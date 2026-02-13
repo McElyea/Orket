@@ -381,6 +381,10 @@ class Orchestrator:
             "role": seat_name,
             "roles": roles_to_load,
             "current_status": turn_status.value,
+            "dependency_context": {
+                "depends_on": issue.depends_on,
+                "dependency_count": len(issue.depends_on),
+            },
             "history": self._history_context(),
         }
 
