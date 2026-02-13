@@ -278,11 +278,22 @@ class Orchestrator:
 
         seat_obj = team.seats.get(sanitize_name(seat_name))
         if not seat_obj:
-            await self.async_cards.update_status(issue.id, self.loop_policy_node.missing_seat_status())
+            await self.async_cards.update_status(
+                issue.id,
+                self.loop_policy_node.missing_seat_status(),
+                reason="missing_seat",
+                metadata={"seat": seat_name, "run_id": run_id},
+            )
             return
 
         turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
-        await self.async_cards.update_status(issue.id, turn_status, assignee=seat_name)
+        await self.async_cards.update_status(
+            issue.id,
+            turn_status,
+            assignee=seat_name,
+            reason="turn_dispatch",
+            metadata={"run_id": run_id, "review_turn": is_review_turn},
+        )
 
         # Prepare Role & Model
         roles_to_load = self.loop_policy_node.role_order_for_turn(list(seat_obj.roles), is_review_turn)
@@ -317,6 +328,7 @@ class Orchestrator:
             seat_name=seat_name,
             roles_to_load=roles_to_load,
             turn_status=turn_status,
+            selected_model=selected_model,
         )
 
         log_event(
@@ -359,7 +371,12 @@ class Orchestrator:
                 await self._trigger_sandbox(epic, run_id=run_id)
                 next_status = self.evaluator_node.next_status_after_success(success_actions)
                 if next_status is not None:
-                    await self.async_cards.update_status(issue.id, next_status)
+                    await self.async_cards.update_status(
+                        issue.id,
+                        next_status,
+                        reason="post_success_evaluator",
+                        metadata={"run_id": run_id, "seat": seat_name},
+                    )
             
             await provider.clear_context()
             await self._save_checkpoint(run_id, epic, team, env, active_build)
@@ -373,6 +390,7 @@ class Orchestrator:
         seat_name: str,
         roles_to_load: List[str],
         turn_status: CardStatus,
+        selected_model: str,
     ) -> Dict[str, Any]:
         return {
             "session_id": run_id,
@@ -381,6 +399,8 @@ class Orchestrator:
             "role": seat_name,
             "roles": roles_to_load,
             "current_status": turn_status.value,
+            "selected_model": selected_model,
+            "turn_index": len(self.transcript) + 1,
             "dependency_context": {
                 "depends_on": issue.depends_on,
                 "dependency_count": len(issue.depends_on),
@@ -441,7 +461,12 @@ class Orchestrator:
         # Mechanical governance violations are terminal for the issue.
         if action == "governance_violation":
             failure_status = self.evaluator_node.status_for_failure_action(action)
-            await self.async_cards.update_status(issue.id, failure_status)
+            await self.async_cards.update_status(
+                issue.id,
+                failure_status,
+                reason="governance_violation",
+                metadata={"run_id": run_id, "error": result.error},
+            )
             issue.status = failure_status
             await self.async_cards.save(issue.model_dump())
             raise failure_exception_class(self.evaluator_node.governance_violation_message(result.error))
@@ -456,7 +481,12 @@ class Orchestrator:
                     "error": result.error
                 }, self.workspace)
             failure_status = self.evaluator_node.status_for_failure_action(action)
-            await self.async_cards.update_status(issue.id, failure_status)
+            await self.async_cards.update_status(
+                issue.id,
+                failure_status,
+                reason="catastrophic_failure",
+                metadata={"run_id": run_id, "error": result.error},
+            )
             await self.async_cards.save(issue.model_dump())
             
             # Catastrophic failure shuts down the session
@@ -486,7 +516,17 @@ class Orchestrator:
                 "error": result.error
             }, self.workspace)
         
-        await self.async_cards.update_status(issue.id, self.evaluator_node.status_for_failure_action(action))
+        await self.async_cards.update_status(
+            issue.id,
+            self.evaluator_node.status_for_failure_action(action),
+            reason="retry_scheduled",
+            metadata={
+                "run_id": run_id,
+                "retry_count": issue.retry_count,
+                "max_retries": issue.max_retries,
+                "error": result.error,
+            },
+        )
         await self.async_cards.save(issue.model_dump())
 
         raise failure_exception_class(

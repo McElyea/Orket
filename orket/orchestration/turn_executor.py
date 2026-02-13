@@ -18,12 +18,15 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, UTC
 from pathlib import Path
 import json
+import time
+import hashlib
 
 from orket.schema import IssueConfig, CardStatus, RoleConfig
 from orket.domain.state_machine import StateMachine, StateMachineError, WaitReason
 from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.logging import log_event
 from orket.services.tool_gate import ToolGate
+from orket.naming import sanitize_name
 
 
 @dataclass
@@ -120,6 +123,10 @@ class TurnExecutor:
         """
         issue_id = issue.id
         role_name = role.name
+        session_id = context.get("session_id", "unknown-session")
+        turn_index = int(context.get("turn_index", 0))
+        turn_trace_id = f"{session_id}:{issue_id}:{role_name}:{turn_index}"
+        started_at = time.perf_counter()
 
         try:
             # 1. Validate we can execute this turn
@@ -127,26 +134,88 @@ class TurnExecutor:
 
             # 2. Prepare the prompt
             messages = await self._prepare_messages(issue, role, context, system_prompt)
+            prompt_hash = self._message_hash(messages)
 
             # 3. Call LLM (async)
             log_event(
                 "turn_start",
-                {"issue_id": issue_id, "role": role_name},
+                {
+                    "issue_id": issue_id,
+                    "role": role_name,
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
+                    "prompt_hash": prompt_hash,
+                    "message_count": len(messages),
+                    "selected_model": context.get("selected_model"),
+                },
                 self.workspace
+            )
+            self._write_turn_artifact(
+                session_id,
+                issue_id,
+                role_name,
+                turn_index,
+                "messages.json",
+                json.dumps(messages, indent=2, ensure_ascii=False),
             )
 
             response = await model_client.complete(messages)
+            response_content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
+            response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
+            self._write_turn_artifact(
+                session_id,
+                issue_id,
+                role_name,
+                turn_index,
+                "model_response.txt",
+                response_content or "",
+            )
+            self._write_turn_artifact(
+                session_id,
+                issue_id,
+                role_name,
+                turn_index,
+                "model_response_raw.json",
+                json.dumps(response_raw, indent=2, ensure_ascii=False, default=str),
+            )
 
             # 4. Parse response into ExecutionTurn
             turn = self._parse_response(
                 response=response,
                 issue_id=issue_id,
-                role_name=role_name
+                role_name=role_name,
+                context=context,
+            )
+            self._write_turn_artifact(
+                session_id,
+                issue_id,
+                role_name,
+                turn_index,
+                "parsed_tool_calls.json",
+                json.dumps(
+                    [{"tool": t.tool, "args": t.args} for t in turn.tool_calls],
+                    indent=2,
+                    ensure_ascii=False,
+                ),
             )
 
             # 5. Execute tool calls (if any)
             if turn.tool_calls:
                 await self._execute_tools(turn, toolbox, context)
+            else:
+                log_event(
+                    "turn_no_tool_calls",
+                    {
+                        "issue_id": issue_id,
+                        "role": role_name,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "turn_trace_id": turn_trace_id,
+                        "response_preview": (turn.content or "")[:240],
+                    },
+                    self.workspace,
+                )
 
             # 6. Log success
             log_event(
@@ -155,7 +224,11 @@ class TurnExecutor:
                     "issue_id": issue_id,
                     "role": role_name,
                     "tool_calls": len(turn.tool_calls),
-                    "tokens": turn.tokens_used
+                    "tokens": turn.tokens_used,
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
+                    "duration_ms": int((time.perf_counter() - started_at) * 1000),
                 },
                 self.workspace
             )
@@ -166,7 +239,14 @@ class TurnExecutor:
             # State transition violation - don't retry
             log_event(
                 "turn_failed",
-                {"issue_id": issue_id, "error": str(e), "type": "state_violation"},
+                {
+                    "issue_id": issue_id,
+                    "error": str(e),
+                    "type": "state_violation",
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
+                },
                 self.workspace
             )
             return TurnResult.failed(f"State violation: {e}", should_retry=False)
@@ -175,7 +255,14 @@ class TurnExecutor:
             # Tool call violation - can retry
             log_event(
                 "turn_failed",
-                {"issue_id": issue_id, "error": str(e), "type": "tool_violation"},
+                {
+                    "issue_id": issue_id,
+                    "error": str(e),
+                    "type": "tool_violation",
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
+                },
                 self.workspace
             )
             return TurnResult.governance_violation(e.violations)
@@ -184,7 +271,14 @@ class TurnExecutor:
             # Transient error - should retry
             log_event(
                 "turn_failed",
-                {"issue_id": issue_id, "error": str(e), "type": "timeout"},
+                {
+                    "issue_id": issue_id,
+                    "error": str(e),
+                    "type": "timeout",
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
+                },
                 self.workspace
             )
             return TurnResult.failed(str(e), should_retry=True)
@@ -198,7 +292,10 @@ class TurnExecutor:
                     "issue_id": issue_id,
                     "error": str(e),
                     "type": type(e).__name__,
-                    "traceback": traceback.format_exc()
+                    "traceback": traceback.format_exc(),
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
                 },
                 self.workspace
             )
@@ -294,7 +391,8 @@ class TurnExecutor:
         self,
         response: Any, # Can be ModelResponse or dict
         issue_id: str,
-        role_name: str
+        role_name: str,
+        context: Dict[str, Any],
     ) -> ExecutionTurn:
         """
         Parse LLM response into ExecutionTurn.
@@ -312,8 +410,36 @@ class TurnExecutor:
         content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
         raw_data = getattr(response, "raw", {}) if not isinstance(response, dict) else response
         
+        parser_diag: List[Dict[str, Any]] = []
+
+        def capture(stage: str, data: Dict[str, Any]) -> None:
+            parser_diag.append({"stage": stage, "data": data})
+
         # Parse tool calls using the standardized ToolParser
-        parsed_calls = ToolParser.parse(content)
+        parsed_calls = ToolParser.parse(content, diagnostics=capture)
+        session_id = context.get("session_id", "unknown-session")
+        turn_index = int(context.get("turn_index", 0))
+        for diag in parser_diag:
+            log_event(
+                "tool_parser_diagnostic",
+                {
+                    "issue_id": issue_id,
+                    "role": role_name,
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "stage": diag["stage"],
+                    "details": diag["data"],
+                },
+                self.workspace,
+            )
+        self._write_turn_artifact(
+            session_id,
+            issue_id,
+            role_name,
+            turn_index,
+            "tool_parser_diagnostics.json",
+            json.dumps(parser_diag, indent=2, ensure_ascii=False),
+        )
         
         tool_calls = []
         for pc in parsed_calls:
@@ -346,6 +472,8 @@ class TurnExecutor:
         """
         violations = []
         roles = context.get("roles", [turn.role])
+        session_id = context.get("session_id", "unknown-session")
+        turn_index = int(context.get("turn_index", 0))
 
         for tool_call in turn.tool_calls:
             try:
@@ -358,10 +486,35 @@ class TurnExecutor:
                 )
                 
                 if gate_violation:
+                    log_event(
+                        "tool_call_blocked",
+                        {
+                            "issue_id": turn.issue_id,
+                            "role": turn.role,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "tool": tool_call.tool,
+                            "args": tool_call.args,
+                            "reason": gate_violation,
+                        },
+                        self.workspace,
+                    )
                     violations.append(f"Governance Violation: {gate_violation}")
                     continue
 
                 # Execute tool (toolbox handles path validation)
+                log_event(
+                    "tool_call_start",
+                    {
+                        "issue_id": turn.issue_id,
+                        "role": turn.role,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "tool": tool_call.tool,
+                        "args": tool_call.args,
+                    },
+                    self.workspace,
+                )
                 result = await toolbox.execute(
                     tool_call.tool,
                     tool_call.args,
@@ -369,6 +522,19 @@ class TurnExecutor:
                 )
 
                 tool_call.result = result
+                log_event(
+                    "tool_call_result",
+                    {
+                        "issue_id": turn.issue_id,
+                        "role": turn.role,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "tool": tool_call.tool,
+                        "ok": bool(result.get("ok", False)),
+                        "error": result.get("error"),
+                    },
+                    self.workspace,
+                )
 
                 if not result.get("ok", False):
                     violations.append(
@@ -377,10 +543,45 @@ class TurnExecutor:
 
             except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as e:
                 tool_call.error = str(e)
+                log_event(
+                    "tool_call_exception",
+                    {
+                        "issue_id": turn.issue_id,
+                        "role": turn.role,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "tool": tool_call.tool,
+                        "error": str(e),
+                    },
+                    self.workspace,
+                )
                 violations.append(f"Tool {tool_call.tool} error: {e}")
 
         if violations:
             raise ToolValidationError(violations)
+
+    def _message_hash(self, messages: List[Dict[str, str]]) -> str:
+        normalized = json.dumps(messages, sort_keys=True, ensure_ascii=False)
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
+
+    def _write_turn_artifact(
+        self,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        filename: str,
+        content: str,
+    ) -> None:
+        out_dir = (
+            self.workspace
+            / "observability"
+            / sanitize_name(session_id)
+            / sanitize_name(issue_id)
+            / f"{turn_index:03d}_{sanitize_name(role_name)}"
+        )
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / filename).write_text(content, encoding="utf-8")
 
 
 class ToolValidationError(Exception):

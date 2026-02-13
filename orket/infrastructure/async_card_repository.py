@@ -134,18 +134,40 @@ class AsyncCardRepository(CardRepository):
                 )
                 await conn.commit()
 
-    async def update_status(self, card_id: str, status: CardStatus, assignee: Optional[str] = None) -> None:
+    async def update_status(
+        self,
+        card_id: str,
+        status: CardStatus,
+        assignee: Optional[str] = None,
+        reason: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
         async with self._lock:
             async with aiosqlite.connect(self.db_path) as conn:
+                conn.row_factory = aiosqlite.Row
                 await self._ensure_initialized(conn)
+                prev_cursor = await conn.execute("SELECT status FROM issues WHERE id = ?", (card_id,))
+                prev_row = await prev_cursor.fetchone()
+                prev_status = prev_row["status"] if prev_row else None
+
                 if assignee:
                     await conn.execute("UPDATE issues SET status = ?, assignee = ? WHERE id = ?", (status.value, assignee, card_id))
                 else:
                     await conn.execute("UPDATE issues SET status = ? WHERE id = ?", (status.value, card_id))
                 
                 # Internal transaction addition (bypass lock)
-                await conn.execute("INSERT INTO card_transactions (card_id, role, action) VALUES (?, ?, ?)",
-                                 (card_id, assignee or "system", f"Set Status to '{status.value}'"))
+                action = f"Set Status to '{status.value}'"
+                if prev_status is not None:
+                    action += f" (from '{prev_status}')"
+                if reason:
+                    action += f" reason='{reason}'"
+                if metadata:
+                    action += f" meta={json.dumps(metadata, ensure_ascii=False, sort_keys=True)}"
+
+                await conn.execute(
+                    "INSERT INTO card_transactions (card_id, role, action) VALUES (?, ?, ?)",
+                    (card_id, assignee or "system", action),
+                )
                 await conn.commit()
 
     async def archive_card(self, card_id: str, archived_by: str = "system", reason: Optional[str] = None) -> bool:

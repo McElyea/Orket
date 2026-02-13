@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 from pathlib import Path
 import statistics
 import time
@@ -89,6 +90,14 @@ async def run_webhook_load(base_url: str, total: int, concurrency: int) -> LoadR
         "payload": {"repository": {"full_name": "local/test"}},
     }
 
+    webhook_test_token = os.getenv("ORKET_WEBHOOK_TEST_TOKEN", "").strip()
+    api_key = os.getenv("ORKET_API_KEY", "").strip()
+    headers: Dict[str, str] = {}
+    if webhook_test_token:
+        headers["X-Webhook-Test-Token"] = webhook_test_token
+    elif api_key:
+        headers["X-API-Key"] = api_key
+
     async with httpx.AsyncClient(timeout=10.0) as client:
         async def worker(i: int):
             nonlocal failures
@@ -98,6 +107,7 @@ async def run_webhook_load(base_url: str, total: int, concurrency: int) -> LoadR
                     "POST",
                     f"{base_url}/webhook/test",
                     json=payload,
+                    headers=headers if headers else None,
                     expected_statuses={200},
                 )
                 durations.append(duration_ms)
@@ -113,6 +123,9 @@ async def run_api_load(base_url: str, total: int, concurrency: int) -> LoadResul
     durations: List[float] = []
     failures = 0
 
+    api_key = os.getenv("ORKET_API_KEY", "").strip()
+    headers = {"X-API-Key": api_key} if api_key else {}
+
     async with httpx.AsyncClient(timeout=10.0) as client:
         async def worker(i: int):
             nonlocal failures
@@ -121,6 +134,7 @@ async def run_api_load(base_url: str, total: int, concurrency: int) -> LoadResul
                     client,
                     "GET",
                     f"{base_url}/v1/system/heartbeat",
+                    headers=headers if headers else None,
                     expected_statuses={200},
                 )
                 durations.append(duration_ms)
@@ -136,6 +150,9 @@ async def run_parallel_epic_trigger_load(base_url: str, total: int, concurrency:
     durations: List[float] = []
     failures = 0
 
+    api_key = os.getenv("ORKET_API_KEY", "").strip()
+    headers = {"X-API-Key": api_key} if api_key else {}
+
     async with httpx.AsyncClient(timeout=10.0) as client:
         async def worker(i: int):
             nonlocal failures
@@ -145,6 +162,7 @@ async def run_parallel_epic_trigger_load(base_url: str, total: int, concurrency:
                     "POST",
                     f"{base_url}/v1/system/run-active",
                     json={"issue_id": f"LOAD-EPIC-{i}"},
+                    headers=headers if headers else None,
                     expected_statuses={200},
                 )
                 durations.append(duration_ms)

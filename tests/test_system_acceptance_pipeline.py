@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 
 import pytest
 
@@ -74,7 +75,7 @@ def _patch_dummy_model(monkeypatch, provider):
     monkeypatch.setattr(LocalModelProvider, "complete", provider.complete)
 
 
-def _write_core_assets(root, epic_id: str):
+def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
     (root / "config").mkdir()
     for d in ["epics", "roles", "dialects", "teams", "environments"]:
         (root / "model" / "core" / d).mkdir(parents=True, exist_ok=True)
@@ -100,21 +101,51 @@ def _write_core_assets(root, epic_id: str):
         )
 
     roles = {
-        "requirements_analyst": ["write_file", "update_issue_status"],
-        "architect": ["write_file", "update_issue_status"],
-        "developer": ["write_file", "update_issue_status"],
-        "code_reviewer": ["read_file", "update_issue_status"],
-        "integrity_guard": ["read_file", "update_issue_status"],
+        "requirements_analyst": {
+            "tools": ["get_issue_context", "add_issue_comment", "write_file", "update_issue_status"],
+            "description": (
+                "Produce concrete requirements for a tiny CLI summation program. "
+                "You must write agent_output/requirements.txt and then set status to code_review."
+            ),
+        },
+        "architect": {
+            "tools": ["get_issue_context", "add_issue_comment", "read_file", "write_file", "update_issue_status"],
+            "description": (
+                "Design a one-class implementation based on requirements. "
+                "You must write agent_output/design.txt and then set status to code_review."
+            ),
+        },
+        "developer": {
+            "tools": ["get_issue_context", "add_issue_comment", "read_file", "write_file", "update_issue_status"],
+            "description": (
+                "Implement from requirements and design. "
+                "You must write runnable Python code to agent_output/main.py and then set status to code_review."
+            ),
+        },
+        "code_reviewer": {
+            "tools": ["get_issue_context", "add_issue_comment", "read_file", "update_issue_status"],
+            "description": (
+                "Review implementation against requirements and design. "
+                "Read files, comment pass/fail rationale, then set status to code_review for guard finalization."
+            ),
+        },
+        "integrity_guard": {
+            "tools": ["read_file", "add_issue_comment", "update_issue_status"],
+            "description": (
+                "Final gatekeeper. Decide approve/reject and finalize card status. "
+                "Set status to done when acceptable; otherwise blocked with a comment."
+            ),
+        },
     }
-    for role_name, tools in roles.items():
+    for role_name, role_cfg in roles.items():
         (root / "model" / "core" / "roles" / f"{role_name}.json").write_text(
             json.dumps(
                 {
                     "id": role_name.upper(),
                     "summary": role_name,
                     "type": "utility",
-                    "description": role_name,
-                    "tools": tools,
+                    "description": role_cfg["description"],
+                    "tools": role_cfg["tools"],
                 }
             ),
             encoding="utf-8",
@@ -137,7 +168,7 @@ def _write_core_assets(root, epic_id: str):
     )
 
     (root / "model" / "core" / "environments" / "standard.json").write_text(
-        json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1, "timeout": 300}),
+        json.dumps({"name": "standard", "model": environment_model, "temperature": 0.1, "timeout": 300}),
         encoding="utf-8",
     )
 
@@ -150,6 +181,15 @@ def _write_core_assets(root, epic_id: str):
                 "team": "standard",
                 "environment": "standard",
                 "description": "Role-pipeline acceptance",
+                "params": {
+                    "model_overrides": {
+                        "requirements_analyst": environment_model,
+                        "architect": environment_model,
+                        "developer": environment_model,
+                        "code_reviewer": environment_model,
+                        "integrity_guard": environment_model,
+                    }
+                },
                 "architecture_governance": {"idesign": False, "pattern": "Tactical"},
                 "issues": [
                     {"id": "REQ-1", "summary": "Write requirements", "seat": "requirements_analyst", "priority": "High"},
@@ -203,6 +243,60 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
     assert (workspace / "agent_output" / "requirements.txt").exists()
     assert (workspace / "agent_output" / "design.txt").exists()
     assert (workspace / "agent_output" / "main.py").exists()
+
+
+@pytest.mark.asyncio
+async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path):
+    if os.getenv("ORKET_LIVE_ACCEPTANCE", "").lower() not in {"1", "true", "yes"}:
+        pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with Ollama.")
+
+    model_name = os.getenv("ORKET_LIVE_MODEL", "llama3.2:3b")
+
+    root = tmp_path
+    workspace = root / "workspace"
+    workspace.mkdir()
+    (workspace / "agent_output").mkdir()
+    (workspace / "verification").mkdir()
+    db_path = str(root / "acceptance_pipeline_live.db")
+
+    _write_core_assets(root, epic_id="acceptance_pipeline_live", environment_model=model_name)
+
+    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
+    await engine.run_card("acceptance_pipeline_live")
+
+    req_issue = await engine.cards.get_by_id("REQ-1")
+    arc_issue = await engine.cards.get_by_id("ARC-1")
+    dev_issue = await engine.cards.get_by_id("DEV-1")
+    rev_issue = await engine.cards.get_by_id("REV-1")
+
+    requirements_path = workspace / "agent_output" / "requirements.txt"
+    design_path = workspace / "agent_output" / "design.txt"
+    code_path = workspace / "agent_output" / "main.py"
+
+    requirements_text = requirements_path.read_text(encoding="utf-8") if requirements_path.exists() else ""
+    design_text = design_path.read_text(encoding="utf-8") if design_path.exists() else ""
+    code_text = code_path.read_text(encoding="utf-8") if code_path.exists() else ""
+
+    print(f"[live] model={model_name}")
+    print(f"[live] REQ-1 status={req_issue.status}")
+    print(f"[live] ARC-1 status={arc_issue.status}")
+    print(f"[live] DEV-1 status={dev_issue.status}")
+    print(f"[live] REV-1 status={rev_issue.status}")
+    print("[live] requirements.txt")
+    print(requirements_text)
+    print("[live] design.txt")
+    print(design_text)
+    print("[live] main.py")
+    print(code_text)
+
+    assert requirements_path.exists(), "requirements.txt not produced"
+    assert design_path.exists(), "design.txt not produced"
+    assert code_path.exists(), "main.py not produced"
+
+    assert req_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
+    assert arc_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
+    assert dev_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
+    assert rev_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
 
 
 @pytest.mark.asyncio

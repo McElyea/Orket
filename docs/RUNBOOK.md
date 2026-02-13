@@ -52,6 +52,16 @@ Security canary only:
 python scripts/security_canary.py
 ```
 
+Real-service stress (no mocks/fakes):
+```bash
+python scripts/real_service_stress.py --profile heavy
+```
+
+Maximum load profile:
+```bash
+python scripts/real_service_stress.py --profile aggressive
+```
+
 Checklist:
 1. Quality workflow passes.
 2. Docker smoke passes (`/health` probe).

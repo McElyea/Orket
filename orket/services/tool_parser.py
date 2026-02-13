@@ -1,6 +1,6 @@
 import json
 import re
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Callable, Optional
 
 class ToolParser:
     """
@@ -9,9 +9,18 @@ class ToolParser:
     """
     
     @staticmethod
-    def parse(text: str) -> List[Dict[str, Any]]:
+    def parse(
+        text: str,
+        diagnostics: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+    ) -> List[Dict[str, Any]]:
         text = text.strip()
         results = []
+
+        def emit(stage: str, data: Dict[str, Any]) -> None:
+            if diagnostics:
+                diagnostics(stage, data)
+
+        emit("parse_start", {"text_length": len(text)})
         
         # 1. Stack-based JSON extraction (Robust against nested blocks and conversational noise)
         stack = []
@@ -42,9 +51,27 @@ class ToolParser:
                                     args = f.get("arguments", {})
                                     if isinstance(args, str): args = json.loads(args)
                                     results.append({"tool": f.get("name"), "args": args})
-                        except (json.JSONDecodeError, KeyError, TypeError): pass
+                                else:
+                                    emit(
+                                        "json_candidate_ignored",
+                                        {
+                                            "reason": "missing_tool_keys",
+                                            "keys": sorted(data.keys())[:12],
+                                            "candidate_preview": candidate[:180],
+                                        },
+                                    )
+                        except (json.JSONDecodeError, KeyError, TypeError) as e:
+                            emit(
+                                "json_candidate_rejected",
+                                {
+                                    "reason": type(e).__name__,
+                                    "candidate_preview": candidate[:180],
+                                },
+                            )
 
-        if results: return results
+        if results:
+            emit("parse_success", {"strategy": "stack_json", "count": len(results)})
+            return results
 
         # 2. Legacy DSL Fallback (Regex based - fragile)
         dsl_blocks = re.split(r"(?:\[|TOOL:\s*)(write_file|create_issue|add_issue_comment|get_issue_context)(?:\]|\s*)", text)
@@ -56,5 +83,14 @@ class ToolParser:
                 content_match = re.search(r"(?:content|CONTENT):\s*\"*\"*\"*\n?(.*?)(?:\n\"*\"*\"*|$)", block_content, re.DOTALL)
                 if path_match and content_match:
                     results.append({"tool": tool_name, "args": {"path": path_match.group(1).strip().strip("'").strip('"'), "content": content_match.group(1).strip()}})
-        
+                else:
+                    emit(
+                        "dsl_block_rejected",
+                        {"tool": tool_name, "has_path": bool(path_match), "has_content": bool(content_match)},
+                    )
+
+        if results:
+            emit("parse_success", {"strategy": "legacy_dsl", "count": len(results)})
+        else:
+            emit("parse_empty", {"reason": "no_parseable_tool_calls"})
         return results

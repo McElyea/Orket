@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, List
 from pathlib import Path
 import asyncio
+import time
 import ollama
 from orket.exceptions import ModelTimeoutError, ModelConnectionError, ModelProviderError
 from orket.logging import log_event
@@ -39,6 +40,7 @@ class LocalModelProvider:
 
         for attempt in range(max_retries):
             try:
+                started_at = time.perf_counter()
                 response = await asyncio.wait_for(
                     self.client.chat(
                         model=self.model,
@@ -64,7 +66,9 @@ class LocalModelProvider:
                     "total_tokens": total_tokens,
                     "provider": "ollama-async",
                     "model": self.model,
-                    "retries": attempt
+                    "retries": attempt,
+                    "latency_ms": int((time.perf_counter() - started_at) * 1000),
+                    "response_chars": len(content),
                 }
 
                 return ModelResponse(content=content, raw=raw)
