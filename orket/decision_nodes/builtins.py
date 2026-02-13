@@ -190,7 +190,12 @@ class DefaultApiRuntimeStrategyNode:
         return [origin.strip() for origin in origins_value.split(",") if origin.strip()]
 
     def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
-        return (not expected_key) or (provided_key == expected_key)
+        if expected_key:
+            return provided_key == expected_key
+
+        # Fail closed by default. Explicit insecure bypass is for local dev only.
+        insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower()
+        return insecure_bypass in {"1", "true", "yes", "on"}
 
     def api_key_invalid_detail(self) -> str:
         return "Could not validate credentials"

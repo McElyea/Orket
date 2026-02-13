@@ -1,0 +1,56 @@
+name: Project Cleanup
+
+on:
+  schedule:
+    - cron: "20 3 * * *"
+  workflow_dispatch:
+    inputs:
+      source_dir:
+        description: "Optional source-dir filter (e.g., product)"
+        required: false
+        default: ""
+      archive_days:
+        description: "Inactive days before archive move"
+        required: false
+        default: "45"
+      hard_delete_days:
+        description: "Days in archive before hard delete"
+        required: false
+        default: "90"
+
+jobs:
+  cleanup:
+    runs-on: self-hosted
+    if: ${{ vars.ENABLE_PROJECT_LOCAL_CLEANUP == 'true' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Cleanup parity-verified local projects
+        env:
+          SOURCE_DIR: ${{ github.event.inputs.source_dir || vars.PROJECT_CLEANUP_SOURCE_DIR || '' }}
+          ARCHIVE_DAYS: ${{ github.event.inputs.archive_days || vars.PROJECT_CLEANUP_ARCHIVE_DAYS || '45' }}
+          HARD_DELETE_DAYS: ${{ github.event.inputs.hard_delete_days || vars.PROJECT_CLEANUP_HARD_DELETE_DAYS || '90' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARGS=(--execute --archive-days "$ARCHIVE_DAYS" --hard-delete-days "$HARD_DELETE_DAYS")
+          if [ -n "$SOURCE_DIR" ]; then
+            ARGS+=(--source-dir "$SOURCE_DIR")
+          fi
+          python scripts/cleanup_published_projects.py "${ARGS[@]}"
+

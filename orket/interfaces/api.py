@@ -58,6 +58,12 @@ async def _schedule_async_invocation_task(
     task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
     await runtime_state.add_task(session_id, task)
 
+    # Always remove completed/canceled tasks to keep active task tracking accurate.
+    def _cleanup(_done_task: asyncio.Task):
+        asyncio.create_task(runtime_state.remove_task(session_id))
+
+    task.add_done_callback(_cleanup)
+
 
 def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
     method = _resolve_sync_method(target, invocation, error_prefix)

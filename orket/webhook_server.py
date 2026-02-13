@@ -159,11 +159,14 @@ async def gitea_webhook(
     if len(body) > MAX_SIZE:
         raise HTTPException(status_code=413, detail="Payload too large")
 
-    # Validate signature
-    if x_gitea_signature:
-        if not validate_signature(body, x_gitea_signature):
-            log_event("webhook", {"message": "Invalid webhook signature", "level": "error"}, workspace=Path.cwd())
-            raise HTTPException(status_code=401, detail="Invalid signature")
+    # Signature is mandatory for trusted webhook ingress.
+    if not x_gitea_signature:
+        log_event("webhook", {"message": "Missing webhook signature", "level": "error"}, workspace=Path.cwd())
+        raise HTTPException(status_code=401, detail="Missing signature")
+
+    if not validate_signature(body, x_gitea_signature):
+        log_event("webhook", {"message": "Invalid webhook signature", "level": "error"}, workspace=Path.cwd())
+        raise HTTPException(status_code=401, detail="Invalid signature")
 
     # Parse and validate JSON payload
     try:
@@ -205,6 +208,10 @@ async def test_webhook(req: TestWebhookPayload):
              -H "Content-Type: application/json" \
              -d '{"event": "pull_request_review", "action": "approved"}'
     """
+    enabled = os.getenv("ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT", "").strip().lower() in {"1", "true", "yes", "on"}
+    if not enabled:
+        raise HTTPException(status_code=403, detail="Test webhook endpoint disabled")
+
     event_type = req.event or "test"
     log_event("webhook", {"message": f"Test webhook received: {event_type}", "level": "info"}, workspace=Path.cwd())
 

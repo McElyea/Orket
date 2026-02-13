@@ -340,11 +340,14 @@ def test_registry_tool_strategy_env_override_wins(monkeypatch):
     assert node is custom
 
 
-def test_default_api_runtime_strategy_parity():
+def test_default_api_runtime_strategy_parity(monkeypatch):
     node = DefaultApiRuntimeStrategyNode()
 
     assert node.default_allowed_origins_value() == "http://localhost:5173,http://127.0.0.1:5173"
     assert node.parse_allowed_origins("http://a, http://b") == ["http://a", "http://b"]
+    monkeypatch.delenv("ORKET_ALLOW_INSECURE_NO_API_KEY", raising=False)
+    assert node.is_api_key_valid(None, None) is False
+    monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
     assert node.is_api_key_valid(None, None) is True
     assert node.is_api_key_valid("k", "k") is True
     assert node.is_api_key_valid("k", "x") is False

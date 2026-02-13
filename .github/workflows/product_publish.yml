@@ -1,0 +1,92 @@
+name: Product Publish
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "product/**"
+      - "bin/**"
+      - "scripts/publish_products_to_gitea.py"
+  workflow_dispatch:
+    inputs:
+      source_dir:
+        description: "Source directory containing project folders"
+        required: false
+        default: "product"
+      branch:
+        description: "Target branch in destination repos"
+        required: false
+        default: ""
+      projects:
+        description: "Space-separated folder names to publish (blank = all)"
+        required: false
+        default: ""
+      force:
+        description: "Force push target branch"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  publish:
+    # Use self-hosted runner so local-network Gitea targets are reachable.
+    runs-on: self-hosted
+    if: ${{ vars.ENABLE_PRODUCT_REPO_PUBLISH == 'true' }}
+    concurrency:
+      group: product-publish-main
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${{ secrets.GITEA_URL }}" ] || { echo "Missing secret: GITEA_URL"; exit 1; }
+          [ -n "${{ secrets.GITEA_ADMIN_USER }}" ] || { echo "Missing secret: GITEA_ADMIN_USER"; exit 1; }
+          [ -n "${{ secrets.GITEA_ADMIN_PASSWORD }}" ] || { echo "Missing secret: GITEA_ADMIN_PASSWORD"; exit 1; }
+          [ -n "${{ secrets.GITEA_PRODUCT_OWNER }}" ] || { echo "Missing secret: GITEA_PRODUCT_OWNER"; exit 1; }
+
+      - name: Publish projects to Gitea
+        env:
+          GITEA_URL: ${{ secrets.GITEA_URL }}
+          GITEA_ADMIN_USER: ${{ secrets.GITEA_ADMIN_USER }}
+          GITEA_ADMIN_PASSWORD: ${{ secrets.GITEA_ADMIN_PASSWORD }}
+          GITEA_PRODUCT_OWNER: ${{ secrets.GITEA_PRODUCT_OWNER }}
+          SOURCE_DIR: ${{ github.event.inputs.source_dir || vars.PRODUCT_PUBLISH_SOURCE_DIR || 'product' }}
+          TARGET_BRANCH: ${{ github.event.inputs.branch || vars.PRODUCT_PUBLISH_TARGET_BRANCH || github.ref_name }}
+          REPO_PREFIX: ${{ vars.PRODUCT_PUBLISH_REPO_PREFIX || '' }}
+          PROJECTS: ${{ github.event.inputs.projects || '' }}
+          FORCE_PUSH: ${{ github.event.inputs.force || 'false' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARGS=(--execute --verify-parity --source-dir "$SOURCE_DIR" --branch "$TARGET_BRANCH")
+          if [ -n "${REPO_PREFIX}" ]; then
+            ARGS+=(--repo-prefix "$REPO_PREFIX")
+          fi
+          if [ "${FORCE_PUSH}" = "true" ]; then
+            ARGS+=(--force)
+          fi
+          if [ -n "${PROJECTS}" ]; then
+            # shellcheck disable=SC2206
+            PROJECT_ARRAY=(${PROJECTS})
+            ARGS+=(--projects "${PROJECT_ARRAY[@]}")
+          fi
+          # CI automation is intentionally non-destructive: no --delete-local here.
+          python scripts/publish_products_to_gitea.py "${ARGS[@]}"

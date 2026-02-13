@@ -107,7 +107,7 @@ class OrchestrationEngine:
     async def get_sandboxes(self) -> List[Dict[str, Any]]:
         """Returns list of active sandboxes."""
         registry = self._pipeline.sandbox_orchestrator.registry
-        return [s.model_dump() for s in registry.list_all()]
+        return [s.model_dump() for s in registry.list_active()]
 
     async def stop_sandbox(self, sandbox_id: str):
         """Stops and deletes a sandbox."""

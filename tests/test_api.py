@@ -13,13 +13,15 @@ def test_health_check():
     assert response.json() == {"status": "ok", "organization": "Orket"}
 
 def test_version_unauthenticated():
-    # If ORKET_API_KEY is not set, it might pass or fail depending on env
-    # For testing, we assume auth is required if the key is present
     response = client.get("/v1/version")
-    if os.getenv("ORKET_API_KEY"):
-        assert response.status_code == 403
-    else:
-        assert response.status_code == 200
+    assert response.status_code == 403
+
+
+def test_version_allows_explicit_insecure_bypass(monkeypatch):
+    monkeypatch.delenv("ORKET_API_KEY", raising=False)
+    monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
+    response = client.get("/v1/version")
+    assert response.status_code == 200
 
 def test_version_authenticated(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -851,6 +853,13 @@ def test_sandboxes_list_and_stop(monkeypatch):
     assert stop_response.status_code == 200
     assert stop_response.json() == {"ok": True}
     assert captured["stopped"] == "sb-1"
+
+
+def test_sandboxes_endpoint_no_crash_real_path(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.get("/v1/sandboxes", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
 
 
 def test_sandboxes_use_runtime_invocation_policies(monkeypatch):
