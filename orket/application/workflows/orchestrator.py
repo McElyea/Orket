@@ -529,6 +529,18 @@ class Orchestrator:
                 self.workspace,
             )
             runtime_result = await RuntimeVerifier(self.workspace, organization=self.org).verify()
+            runtime_report = {
+                "run_id": run_id,
+                "issue_id": issue.id,
+                "ok": bool(runtime_result.ok),
+                "checked_files": list(runtime_result.checked_files),
+                "errors": list(runtime_result.errors),
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+            await AsyncFileTools(self.workspace).write_file(
+                "agent_output/verification/runtime_verification.json",
+                json.dumps(runtime_report, indent=2),
+            )
             log_event(
                 "runtime_verifier_completed",
                 {

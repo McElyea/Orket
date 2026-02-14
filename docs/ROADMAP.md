@@ -32,6 +32,7 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 11. `P-1B` dependency manager stage landed with opt-in dependency file ownership gate in `ToolGate`.
 12. `P-1C` runtime verifier stage landed to block review dispatch when generated code fails compile verification.
 13. `P-1D` deployment planner stage landed with deterministic deployment baseline assets.
+14. Runtime verifier now emits machine-readable report artifact at `agent_output/verification/runtime_verification.json`.
 
 ## Current Status Snapshot
 1. `P-1 Pipeline Stabilizers`: Active, foundational slices (`P-1A` to `P-1D`) landed.
@@ -104,7 +105,7 @@ Goal: fail fast on non-runnable output before review/guard turns.
 Work:
 1. [x] Add runtime-verification stage after coder output and before reviewer dispatch.
 2. [~] Execute stack-appropriate checks (compile/build/test/type/lint) with deterministic command policy.
-3. [~] Emit machine-readable pass/fail report artifacts and bind them into turn context.
+3. [x] Emit machine-readable pass/fail report artifacts and bind them into turn context.
 4. [x] Gate reviewer dispatch on verifier pass; route failures back to coder with explicit diagnostics.
 
 Done when:

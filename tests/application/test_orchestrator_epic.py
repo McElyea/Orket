@@ -1,4 +1,5 @@
-﻿import pytest
+import json
+import pytest
 from types import SimpleNamespace
 
 from orket.exceptions import CatastrophicFailure, ExecutionFailed
@@ -698,6 +699,11 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
     assert executor.calls == 0
     assert cards.update_status.calls[-1][0][1] == CardStatus.BLOCKED
     assert cards.update_status.calls[-1][1]["reason"] == "runtime_verification_failed"
+    report_path = orch.workspace / "agent_output" / "verification" / "runtime_verification.json"
+    assert report_path.exists()
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["ok"] is False
+    assert report["issue_id"] == "REV-1"
 
 
 @pytest.mark.asyncio
@@ -1036,4 +1042,5 @@ async def test_build_dependency_context_resolves_dependency_statuses(orchestrato
     assert context["dependency_statuses"]["REQ-1"] == "code_review"
     assert context["dependency_statuses"]["MISSING-1"] == "missing"
     assert set(context["unresolved_dependencies"]) == {"REQ-1", "MISSING-1"}
+
 
