@@ -142,13 +142,7 @@ class RuntimeVerifier:
         if not required:
             return []
 
-        expected = process_rules.get(
-            "runtime_verifier_required_deployment_files",
-            [
-                "agent_output/deployment/Dockerfile",
-                "agent_output/deployment/docker-compose.yml",
-            ],
-        )
+        expected = self._resolve_expected_deployment_files(process_rules)
         if not isinstance(expected, list):
             return []
         missing: List[str] = []
@@ -159,6 +153,40 @@ class RuntimeVerifier:
             if not exists:
                 missing.append(str(rel_path))
         return missing
+
+    async def _resolve_stack_profile(self, process_rules: Dict[str, Any]) -> str:
+        stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
+        if stack_profile in {"python", "node", "polyglot"}:
+            return stack_profile
+        return await self._infer_stack_profile()
+
+    def _resolve_expected_deployment_files(self, process_rules: Dict[str, Any]) -> List[str]:
+        explicit = process_rules.get("runtime_verifier_required_deployment_files")
+        if isinstance(explicit, list):
+            return [str(item).strip() for item in explicit if str(item).strip()]
+
+        planner_required = process_rules.get("deployment_planner_required_files")
+        if isinstance(planner_required, dict):
+            inferred = [str(path).strip() for path in planner_required.keys() if str(path).strip()]
+            if inferred:
+                return inferred
+
+        stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "python")).strip().lower()
+        defaults = {
+            "python": [
+                "agent_output/deployment/Dockerfile",
+                "agent_output/deployment/docker-compose.yml",
+            ],
+            "node": [
+                "agent_output/deployment/Dockerfile",
+                "agent_output/deployment/docker-compose.yml",
+            ],
+            "polyglot": [
+                "agent_output/deployment/Dockerfile",
+                "agent_output/deployment/docker-compose.yml",
+            ],
+        }
+        return list(defaults.get(stack_profile, defaults["python"]))
 
     def _run_command(self, command: Any, timeout_sec: int, policy_source: str) -> Dict[str, Any]:
         if isinstance(command, list):

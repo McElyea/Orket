@@ -152,6 +152,65 @@ def test_dependency_manifest_write_allowed_for_owner_role(workspace):
     assert result is None
 
 
+def test_deployment_artifact_write_blocked_for_non_owner_role(workspace):
+    org = OrganizationConfig(
+        name="Test Org",
+        vision="Test",
+        ethos="Test",
+        branding={"design_dos": []},
+        architecture={
+            "cicd_rules": [],
+            "preferred_stack": {},
+            "idesign_threshold": 7
+        },
+        departments=["core"],
+        process_rules={
+            "deployment_file_ownership_enabled": True,
+            "deployment_managed_files": ["agent_output/deployment/Dockerfile"],
+            "deployment_file_owner_roles": ["deployment_planner"],
+        },
+    )
+    gate = ToolGate(organization=org, workspace_root=workspace)
+
+    result = gate.validate(
+        tool_name="write_file",
+        args={"path": "agent_output/deployment/Dockerfile", "content": "FROM python:3.11"},
+        context={"role": "coder"},
+        roles=["coder"],
+    )
+    assert result is not None
+    assert "deployment artifact" in result.lower()
+
+
+def test_deployment_artifact_write_allowed_for_owner_role(workspace):
+    org = OrganizationConfig(
+        name="Test Org",
+        vision="Test",
+        ethos="Test",
+        branding={"design_dos": []},
+        architecture={
+            "cicd_rules": [],
+            "preferred_stack": {},
+            "idesign_threshold": 7
+        },
+        departments=["core"],
+        process_rules={
+            "deployment_file_ownership_enabled": True,
+            "deployment_managed_files": ["agent_output/deployment/Dockerfile"],
+            "deployment_file_owner_roles": ["deployment_planner"],
+        },
+    )
+    gate = ToolGate(organization=org, workspace_root=workspace)
+
+    result = gate.validate(
+        tool_name="write_file",
+        args={"path": "agent_output/deployment/Dockerfile", "content": "FROM python:3.11"},
+        context={"role": "deployment_planner"},
+        roles=["deployment_planner"],
+    )
+    assert result is None
+
+
 # ============================================================================
 # State Transition Enforcement
 # ============================================================================

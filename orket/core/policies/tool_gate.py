@@ -107,6 +107,14 @@ class ToolGate:
             if ownership_violation:
                 return ownership_violation
 
+            deployment_ownership_violation = self._validate_deployment_file_ownership(
+                full_path=full_path,
+                context=context,
+                roles=roles,
+            )
+            if deployment_ownership_violation:
+                return deployment_ownership_violation
+
         except (OSError, ValueError, TypeError) as e:
             return f"Invalid file path: {e}"
 
@@ -132,6 +140,7 @@ class ToolGate:
             [
                 "agent_output/dependencies/pyproject.toml",
                 "agent_output/dependencies/requirements.txt",
+                "agent_output/dependencies/requirements-dev.txt",
                 "agent_output/dependencies/package.json",
             ],
         )
@@ -157,6 +166,54 @@ class ToolGate:
             return None
         return (
             f"Policy violation: dependency manifest '{rel_path}' is owned by roles "
+            f"{sorted(allowed_role_set)}"
+        )
+
+    def _validate_deployment_file_ownership(
+        self,
+        *,
+        full_path: Path,
+        context: Dict[str, Any],
+        roles: List[str],
+    ) -> Optional[str]:
+        if not self.org or not isinstance(getattr(self.org, "process_rules", None), dict):
+            return None
+        process_rules = self.org.process_rules
+
+        enabled = process_rules.get("deployment_file_ownership_enabled", False)
+        if not enabled:
+            return None
+
+        managed_files = process_rules.get(
+            "deployment_managed_files",
+            [
+                "agent_output/deployment/Dockerfile",
+                "agent_output/deployment/docker-compose.yml",
+                "agent_output/deployment/run_local.sh",
+            ],
+        )
+        if not isinstance(managed_files, list):
+            return None
+
+        allowed_roles = process_rules.get("deployment_file_owner_roles", ["deployment_planner"])
+        if not isinstance(allowed_roles, list):
+            allowed_roles = ["deployment_planner"]
+        allowed_role_set = {str(role).strip().lower() for role in allowed_roles if str(role).strip()}
+
+        rel_path = str(full_path.resolve().relative_to(self.workspace_root.resolve())).replace("\\", "/")
+        managed_set = {str(path).strip().replace("\\", "/") for path in managed_files if str(path).strip()}
+        if rel_path not in managed_set:
+            return None
+
+        normalized_roles = {str(role).strip().lower() for role in roles if str(role).strip()}
+        seat = str(context.get("role", "")).strip().lower()
+        if seat:
+            normalized_roles.add(seat)
+
+        if normalized_roles & allowed_role_set:
+            return None
+        return (
+            f"Policy violation: deployment artifact '{rel_path}' is owned by roles "
             f"{sorted(allowed_role_set)}"
         )
 

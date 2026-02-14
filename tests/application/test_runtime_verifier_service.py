@@ -93,6 +93,30 @@ async def test_runtime_verifier_can_require_deployment_files(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_verifier_uses_deployment_planner_required_files_when_present(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
+
+    org = type(
+        "Org",
+        (),
+        {
+            "process_rules": {
+                "runtime_verifier_require_deployment_files": True,
+                "deployment_planner_required_files": {
+                    "agent_output/deployment/custom.Dockerfile": "FROM scratch\n",
+                    "agent_output/deployment/custom-compose.yml": "services: {}\n",
+                },
+            }
+        },
+    )
+    result = await RuntimeVerifier(tmp_path, organization=org).verify()
+    assert result.ok is False
+    assert any("custom.Dockerfile" in err for err in result.errors)
+
+
+@pytest.mark.asyncio
 async def test_runtime_verifier_uses_profile_policy_commands(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)

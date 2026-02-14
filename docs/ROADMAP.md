@@ -20,10 +20,10 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 5. Keep governance mechanical and explicit in runtime evidence.
 
 ## Current Priority Order
-1. `P1 Highest`: Stage policy and stabilizer follow-through (`P-1B` to `P-1D` hardening).
-2. `P2 High`: Canonical asset alignment and acceptance gate hardening.
-3. `P3 Medium`: Architecture boundary enforcement and maintenance checks.
-4. `P4 Low`: Prompt Engine enhancement follow-ups (only if regressions emerge).
+1. `P2 Highest`: Canonical asset alignment and acceptance gate hardening.
+2. `P3 High`: Architecture boundary enforcement and maintenance checks.
+3. `P4 Medium`: Prompt Engine enhancement follow-ups (only if regressions emerge).
+4. `P5 Low`: Stabilizer tuning follow-ups from production telemetry.
 
 ## P0: Prompt Engine Program (Highest Priority)
 Objective: make prompts first-class, versioned, inspectable assets with deterministic runtime resolution.
@@ -43,13 +43,16 @@ Objective: complete and harden `P-1` stabilizers as deterministic policy contrac
 Remaining Slices:
 1. `P1-S1` (completed): expand dependency manager to policy-driven pinned/dev dependency sets.
 2. `P1-S2` (completed): expand runtime verifier command policy by stack profile and failure class.
-3. `P1-S3`: integrate deployment planner expectations into verifier policy for all stacks.
-4. `P1-S4`: enforce ownership boundaries for dependency/deployment artifacts when policy-enabled.
+3. `P1-S3` (completed): integrate deployment planner expectations into verifier policy for all stacks.
+4. `P1-S4` (completed): enforce ownership boundaries for dependency/deployment artifacts when policy-enabled.
 
 Exit Criteria:
 1. Stabilizer stages are fully policy-driven and test-covered.
 2. Runtime verifier failures are clearly attributed by stage and command source.
 3. `terminal_failure` runs are diagnosable without manual log archaeology.
+
+### Status
+`P1` is complete.
 
 Verification:
 1. `python -m pytest tests/application/test_orchestrator_epic.py -q`
