@@ -271,7 +271,7 @@ class ExecutionPipeline:
             if is_success_terminal:
                 session_status = "done"
             elif is_workflow_terminal:
-                session_status = "terminal_non_success"
+                session_status = "terminal_failure"
             else:
                 session_status = "incomplete"
 
@@ -291,8 +291,8 @@ class ExecutionPipeline:
                     {"run_id": run_id, "build_id": active_build, "open_issues": non_terminal},
                     workspace=self.workspace,
                 )
-            elif session_status == "terminal_non_success":
-                terminal_non_success = [
+            elif session_status == "terminal_failure":
+                terminal_failure = [
                     {
                         "id": issue.id,
                         "status": issue.status.value if hasattr(issue.status, "value") else str(issue.status),
@@ -301,8 +301,8 @@ class ExecutionPipeline:
                     if issue.status not in success_statuses
                 ]
                 log_event(
-                    "session_terminal_non_success",
-                    {"run_id": run_id, "build_id": active_build, "issues": terminal_non_success},
+                    "session_terminal_failure",
+                    {"run_id": run_id, "build_id": active_build, "issues": terminal_failure},
                     workspace=self.workspace,
                 )
             await self.snapshots.record(

@@ -76,7 +76,7 @@ async def test_run_epic_marks_session_incomplete_when_backlog_not_terminal(
 
 
 @pytest.mark.asyncio
-async def test_run_epic_marks_terminal_non_success_when_backlog_blocked(
+async def test_run_epic_marks_terminal_failure_when_backlog_blocked(
     test_root,
     workspace,
     db_path,
@@ -138,4 +138,4 @@ async def test_run_epic_marks_terminal_non_success_when_backlog_blocked(
     runs = await pipeline.sessions.get_recent_runs(limit=5)
     run = next((r for r in runs if r["id"] == "sess-status-epic-blocked"), None)
     assert run is not None
-    assert run["status"] == "terminal_non_success"
+    assert run["status"] == "terminal_failure"

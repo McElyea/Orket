@@ -147,8 +147,8 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
 
 
 @pytest.mark.asyncio
-async def test_run_ledger_records_terminal_non_success_run(test_root, workspace, db_path, monkeypatch):
-    _write_epic_assets(test_root, "ledger_epic_terminal_non_success")
+async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_path, monkeypatch):
+    _write_epic_assets(test_root, "ledger_epic_terminal_failure")
 
     pipeline = ExecutionPipeline(
         workspace=workspace,
@@ -167,7 +167,7 @@ async def test_run_ledger_records_terminal_non_success_run(test_root, workspace,
             "owner": "local",
             "repo": "artifacts",
             "branch": "main",
-            "path": "runs/2026-02-14/sess-ledger-terminal-non-success",
+            "path": "runs/2026-02-14/sess-ledger-terminal-failure",
             "commit": "xyz789",
             "url": "http://localhost:3000/local/artifacts",
         }
@@ -176,13 +176,13 @@ async def test_run_ledger_records_terminal_non_success_run(test_root, workspace,
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
 
     await pipeline.run_epic(
-        "ledger_epic_terminal_non_success",
-        build_id="build-ledger-epic-terminal-non-success",
-        session_id="sess-ledger-terminal-non-success",
+        "ledger_epic_terminal_failure",
+        build_id="build-ledger-epic-terminal-failure",
+        session_id="sess-ledger-terminal-failure",
     )
 
-    ledger = await pipeline.run_ledger.get_run("sess-ledger-terminal-non-success")
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-terminal-failure")
     assert ledger is not None
-    assert ledger["status"] == "terminal_non_success"
-    assert ledger["summary_json"]["session_status"] == "terminal_non_success"
+    assert ledger["status"] == "terminal_failure"
+    assert ledger["summary_json"]["session_status"] == "terminal_failure"
     assert ledger["summary_json"]["status_counts"]["blocked"] == 1
