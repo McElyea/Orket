@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import py_compile
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
@@ -14,6 +15,7 @@ class RuntimeVerificationResult:
     checked_files: List[str]
     errors: List[str]
     command_results: List[Dict[str, Any]]
+    failure_breakdown: Dict[str, int]
 
 
 class RuntimeVerifier:
@@ -33,26 +35,33 @@ class RuntimeVerifier:
         errors: List[str] = []
         checked_files: List[str] = []
         command_results: List[Dict[str, Any]] = []
+        failure_breakdown: Dict[str, int] = {}
         for target in targets:
             checked_files.append(str(target.relative_to(self.workspace_root)).replace("\\", "/"))
             try:
                 await asyncio.to_thread(py_compile.compile, str(target), doraise=True)
             except py_compile.PyCompileError as exc:
+                failure_breakdown["python_compile"] = failure_breakdown.get("python_compile", 0) + 1
                 errors.append(str(exc))
 
-        commands = self._resolve_runtime_commands()
+        command_plan = await self._resolve_runtime_command_plan()
+        commands = command_plan.get("commands", [])
+        policy_source = str(command_plan.get("source", "none"))
         timeout_sec = self._resolve_runtime_timeout_seconds()
         for command in commands:
-            result = await asyncio.to_thread(self._run_command, command, timeout_sec)
+            result = await asyncio.to_thread(self._run_command, command, timeout_sec, policy_source)
             command_results.append(result)
             if result.get("returncode", 1) != 0:
+                failure_class = str(result.get("failure_class") or "command_failed")
+                failure_breakdown[failure_class] = failure_breakdown.get(failure_class, 0) + 1
                 errors.append(
-                    f"runtime command failed ({result.get('command_display')}): "
+                    f"runtime command failed [{failure_class}] ({result.get('command_display')}): "
                     f"{(result.get('stderr') or result.get('stdout') or '').strip()[:240]}"
                 )
 
         deployment_missing = await self._validate_deployment_artifacts_if_required()
         if deployment_missing:
+            failure_breakdown["deployment_missing"] = failure_breakdown.get("deployment_missing", 0) + 1
             errors.append(
                 "missing deployment artifacts: " + ", ".join(sorted(deployment_missing))
             )
@@ -62,6 +71,7 @@ class RuntimeVerifier:
             checked_files=checked_files,
             errors=errors,
             command_results=command_results,
+            failure_breakdown=failure_breakdown,
         )
 
     async def _python_targets(self) -> List[Path]:
@@ -72,13 +82,46 @@ class RuntimeVerifier:
         files = await asyncio.to_thread(lambda: sorted([p for p in root.rglob("*.py") if p.is_file()]))
         return files
 
-    def _resolve_runtime_commands(self) -> List[Any]:
+    async def _resolve_runtime_command_plan(self) -> Dict[str, Any]:
         process_rules = {}
         if self.organization and isinstance(getattr(self.organization, "process_rules", None), dict):
             process_rules = self.organization.process_rules
         raw = process_rules.get("runtime_verifier_commands") if process_rules else None
         if isinstance(raw, list):
-            return [item for item in raw if item]
+            return {"commands": [item for item in raw if item], "source": "policy_override"}
+
+        stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
+        if stack_profile not in {"python", "node", "polyglot"}:
+            stack_profile = await self._infer_stack_profile()
+
+        by_profile = process_rules.get("runtime_verifier_commands_by_profile")
+        if isinstance(by_profile, dict):
+            selected = by_profile.get(stack_profile)
+            if isinstance(selected, list):
+                return {
+                    "commands": [item for item in selected if item],
+                    "source": f"profile_policy:{stack_profile}",
+                }
+        return {
+            "commands": self._default_commands_for_profile(stack_profile),
+            "source": f"profile_default:{stack_profile}",
+        }
+
+    async def _infer_stack_profile(self) -> str:
+        deps_root = self.workspace_root / "agent_output" / "dependencies"
+        has_pyproject = await asyncio.to_thread((deps_root / "pyproject.toml").is_file)
+        has_requirements = await asyncio.to_thread((deps_root / "requirements.txt").is_file)
+        has_package_json = await asyncio.to_thread((deps_root / "package.json").is_file)
+        if (has_pyproject or has_requirements) and has_package_json:
+            return "polyglot"
+        if has_package_json:
+            return "node"
+        return "python"
+
+    @staticmethod
+    def _default_commands_for_profile(stack_profile: str) -> List[Any]:
+        if stack_profile in {"python", "polyglot"}:
+            return [[sys.executable, "-m", "compileall", "-q", "agent_output"]]
         return []
 
     def _resolve_runtime_timeout_seconds(self) -> int:
@@ -117,7 +160,7 @@ class RuntimeVerifier:
                 missing.append(str(rel_path))
         return missing
 
-    def _run_command(self, command: Any, timeout_sec: int) -> Dict[str, Any]:
+    def _run_command(self, command: Any, timeout_sec: int, policy_source: str) -> Dict[str, Any]:
         if isinstance(command, list):
             cmd = [str(part) for part in command]
             display = " ".join(cmd)
@@ -142,6 +185,8 @@ class RuntimeVerifier:
                 "returncode": int(completed.returncode),
                 "stdout": (completed.stdout or "")[:2000],
                 "stderr": (completed.stderr or "")[:2000],
+                "failure_class": self._failure_class_from_returncode(int(completed.returncode)),
+                "policy_source": policy_source,
             }
         except subprocess.TimeoutExpired:
             return {
@@ -149,4 +194,16 @@ class RuntimeVerifier:
                 "returncode": 124,
                 "stdout": "",
                 "stderr": f"timeout after {timeout_sec}s",
+                "failure_class": "timeout",
+                "policy_source": policy_source,
             }
+
+    @staticmethod
+    def _failure_class_from_returncode(returncode: int) -> str:
+        if returncode == 0:
+            return "none"
+        if returncode == 124:
+            return "timeout"
+        if returncode in {126, 127}:
+            return "missing_runtime"
+        return "command_failed"

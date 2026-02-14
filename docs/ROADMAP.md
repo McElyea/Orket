@@ -41,8 +41,8 @@ Objective: make prompts first-class, versioned, inspectable assets with determin
 Objective: complete and harden `P-1` stabilizers as deterministic policy contracts.
 
 Remaining Slices:
-1. `P1-S1`: expand dependency manager to policy-driven pinned/dev dependency sets.
-2. `P1-S2`: expand runtime verifier command policy by stack profile and failure class.
+1. `P1-S1` (completed): expand dependency manager to policy-driven pinned/dev dependency sets.
+2. `P1-S2` (completed): expand runtime verifier command policy by stack profile and failure class.
 3. `P1-S3`: integrate deployment planner expectations into verifier policy for all stacks.
 4. `P1-S4`: enforce ownership boundaries for dependency/deployment artifacts when policy-enabled.
 
