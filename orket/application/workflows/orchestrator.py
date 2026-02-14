@@ -535,6 +535,7 @@ class Orchestrator:
                 "ok": bool(runtime_result.ok),
                 "checked_files": list(runtime_result.checked_files),
                 "errors": list(runtime_result.errors),
+                "command_results": list(getattr(runtime_result, "command_results", []) or []),
                 "timestamp": datetime.now(UTC).isoformat(),
             }
             await AsyncFileTools(self.workspace).write_file(
