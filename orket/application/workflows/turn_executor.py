@@ -163,6 +163,10 @@ class TurnExecutor:
                     "prompt_hash": prompt_hash,
                     "message_count": len(messages),
                     "selected_model": context.get("selected_model"),
+                    "prompt_id": (context.get("prompt_metadata") or {}).get("prompt_id"),
+                    "prompt_version": (context.get("prompt_metadata") or {}).get("prompt_version"),
+                    "prompt_checksum": (context.get("prompt_metadata") or {}).get("prompt_checksum"),
+                    "resolver_policy": (context.get("prompt_metadata") or {}).get("resolver_policy"),
                 },
                 self.workspace
             )
@@ -173,6 +177,14 @@ class TurnExecutor:
                 turn_index,
                 "messages.json",
                 json.dumps(messages, indent=2, ensure_ascii=False),
+            )
+            self._write_turn_artifact(
+                session_id,
+                issue_id,
+                role_name,
+                turn_index,
+                "prompt_layers.json",
+                json.dumps(context.get("prompt_layers", {}), indent=2, ensure_ascii=False, default=str),
             )
 
             response = await model_client.complete(messages)
@@ -301,6 +313,7 @@ class TurnExecutor:
                 selected_model=context.get("selected_model"),
                 tool_calls=[{"tool": t.tool, "args": t.args} for t in turn.tool_calls],
                 state_delta=self._state_delta_from_tool_calls(context, turn),
+                prompt_metadata=context.get("prompt_metadata"),
             )
 
             # 5. Execute tool calls (if any)
@@ -499,6 +512,7 @@ class TurnExecutor:
             "architecture_decision_path": context.get("architecture_decision_path"),
             "architecture_forced_pattern": context.get("architecture_forced_pattern"),
             "frontend_framework_forced": context.get("frontend_framework_forced"),
+            "prompt_metadata": context.get("prompt_metadata", {}),
         }
         messages.append({
             "role": "user",
@@ -1377,6 +1391,7 @@ class TurnExecutor:
         selected_model: Any,
         tool_calls: List[Dict[str, Any]],
         state_delta: Dict[str, Any],
+        prompt_metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         payload = {
             "run_id": session_id,
@@ -1387,6 +1402,7 @@ class TurnExecutor:
             "model": selected_model,
             "tool_calls": tool_calls,
             "state_delta": state_delta,
+            "prompt_metadata": prompt_metadata or {},
             "captured_at": datetime.now(UTC).isoformat(),
         }
         self._write_turn_artifact(

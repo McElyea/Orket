@@ -8,5 +8,25 @@
     "You MUST use tools to perform work. Do not just describe your plan.",
     "If you need to reason, do it briefly then output the JSON tool call."
   ],
-  "hallucination_guard": "If you output text before or after the JSON block, the engine will fail."
+  "hallucination_guard": "If you output text before or after the JSON block, the engine will fail.",
+  "prompt_metadata": {
+    "id": "dialect.deepseek-r1",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  },
+  "system_prefix": "",
+  "style_guidelines": [],
+  "tool_call_syntax": "openai_compatible"
 }

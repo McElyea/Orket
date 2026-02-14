@@ -7,5 +7,25 @@
     "Do NOT use markdown code blocks (```json) unless the tool requires content containing them.",
     "You MUST use 'update_issue_status' when a task is completed, blocked, or requires handover."
   ],
-  "hallucination_guard": "If you output text before or after the JSON block, the execution will fail."
+  "hallucination_guard": "If you output text before or after the JSON block, the execution will fail.",
+  "prompt_metadata": {
+    "id": "dialect.qwen",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  },
+  "system_prefix": "",
+  "style_guidelines": [],
+  "tool_call_syntax": "openai_compatible"
 }

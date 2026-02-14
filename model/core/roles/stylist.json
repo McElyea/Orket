@@ -9,5 +9,22 @@
     "image_generate",
     "add_issue_comment",
     "update_issue_status"
-  ]
+  ],
+  "prompt_metadata": {
+    "id": "role.stylist",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  }
 }

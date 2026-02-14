@@ -1,17 +1,31 @@
 {
   "model_family": "phi",
-  "dsl_format": "{
-  "tool": "write_file",
-  "args": {
-    "path": "filename.ext",
-    "content": "your code here"
-  }
-}",
+  "dsl_format": "{\"tool\": \"write_file\", \"args\": {\"path\": \"filename.ext\", \"content\": \"your code here\"}}",
   "constraints": [
     "NEVER include conversational filler.",
     "Maximum efficiency: Keep code comments to an absolute minimum.",
     "Stick strictly to the task description without expansion.",
     "JSON must be compact."
   ],
-  "hallucination_guard": "Output ONLY the JSON object."
+  "hallucination_guard": "Output ONLY the JSON object.",
+  "prompt_metadata": {
+    "id": "dialect.phi",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  },
+  "system_prefix": "",
+  "style_guidelines": [],
+  "tool_call_syntax": "openai_compatible"
 }

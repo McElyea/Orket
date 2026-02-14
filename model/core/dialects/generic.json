@@ -1,16 +1,30 @@
 {
   "model_family": "generic",
-  "dsl_format": "{
-  "tool": "write_file",
-  "args": {
-    "path": "filename.ext",
-    "content": "your code here"
-  }
-}",
+  "dsl_format": "{\n  \"tool\": \"write_file\",\n  \"args\": {\n    \"path\": \"filename.ext\",\n    \"content\": \"your code here\"\n  }\n}",
   "constraints": [
     "Produce valid JSON output.",
     "Be concise.",
     "Follow the requested tool format strictly."
   ],
-  "hallucination_guard": "Output only the tool call."
+  "hallucination_guard": "Output only the tool call.",
+  "prompt_metadata": {
+    "id": "dialect.generic",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  },
+  "system_prefix": "",
+  "style_guidelines": [],
+  "tool_call_syntax": "openai_compatible"
 }

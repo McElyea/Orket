@@ -1,6 +1,30 @@
 {
-    "name": "backend_specialist",
-    "type": "utility",
-    "description": "Expert in DB optimization, API design, and scaling.",
-    "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
+  "name": "backend_specialist",
+  "type": "utility",
+  "description": "Expert in DB optimization, API design, and scaling.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "list_directory",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ],
+  "prompt_metadata": {
+    "id": "role.backend_specialist",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  }
 }

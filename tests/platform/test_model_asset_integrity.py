@@ -8,6 +8,43 @@ def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _validate_prompt_metadata(metadata: dict, path: Path) -> list[str]:
+    errors: list[str] = []
+    prompt_id = str(metadata.get("id") or "").strip()
+    version = str(metadata.get("version") or "").strip()
+    status = str(metadata.get("status") or "").strip()
+    if not prompt_id:
+        errors.append(f"{path}: prompt_metadata.id missing.")
+    if not version:
+        errors.append(f"{path}: prompt_metadata.version missing.")
+    if status not in {"draft", "candidate", "canary", "stable", "deprecated"}:
+        errors.append(f"{path}: prompt_metadata.status invalid: {status!r}.")
+
+    lineage = metadata.get("lineage")
+    if not isinstance(lineage, dict):
+        errors.append(f"{path}: prompt_metadata.lineage must be an object.")
+    else:
+        parent = lineage.get("parent")
+        if parent is not None and not str(parent).strip():
+            errors.append(f"{path}: prompt_metadata.lineage.parent must be null or non-empty.")
+
+    changelog = metadata.get("changelog")
+    if not isinstance(changelog, list) or not changelog:
+        errors.append(f"{path}: prompt_metadata.changelog must be a non-empty list.")
+    else:
+        for idx, entry in enumerate(changelog):
+            if not isinstance(entry, dict):
+                errors.append(f"{path}: prompt_metadata.changelog[{idx}] must be an object.")
+                continue
+            if not str(entry.get("version") or "").strip():
+                errors.append(f"{path}: prompt_metadata.changelog[{idx}].version missing.")
+            if not str(entry.get("date") or "").strip():
+                errors.append(f"{path}: prompt_metadata.changelog[{idx}].date missing.")
+            if not str(entry.get("notes") or "").strip():
+                errors.append(f"{path}: prompt_metadata.changelog[{idx}].notes missing.")
+    return errors
+
+
 def test_core_team_role_links_are_valid() -> None:
     root = Path("model") / "core"
     roles_dir = root / "roles"
@@ -82,3 +119,35 @@ def test_core_epic_team_and_seat_links_are_valid() -> None:
                 )
 
     assert not errors, "Invalid epic->team/seat links:\n" + "\n".join(errors)
+
+
+def test_core_role_prompt_metadata_contract() -> None:
+    roles_dir = Path("model") / "core" / "roles"
+    errors: list[str] = []
+
+    for role_path in sorted(roles_dir.glob("*.json")):
+        role = _load_json(role_path)
+        metadata = role.get("prompt_metadata")
+        if not isinstance(metadata, dict):
+            errors.append(f"{role_path}: missing prompt_metadata object.")
+            continue
+
+        errors.extend(_validate_prompt_metadata(metadata, role_path))
+
+    assert not errors, "Invalid role prompt metadata:\n" + "\n".join(errors)
+
+
+def test_core_dialect_prompt_metadata_contract() -> None:
+    dialects_dir = Path("model") / "core" / "dialects"
+    errors: list[str] = []
+
+    for dialect_path in sorted(dialects_dir.glob("*.json")):
+        dialect = _load_json(dialect_path)
+        metadata = dialect.get("prompt_metadata")
+        if not isinstance(metadata, dict):
+            errors.append(f"{dialect_path}: missing prompt_metadata object.")
+            continue
+
+        errors.extend(_validate_prompt_metadata(metadata, dialect_path))
+
+    assert not errors, "Invalid dialect prompt metadata:\n" + "\n".join(errors)

@@ -19,6 +19,7 @@ from orket.orchestration.notes import NoteStore, Note
 from orket.decision_nodes.contracts import PlanningInput
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.application.services.prompt_compiler import PromptCompiler
+from orket.application.services.prompt_resolver import PromptResolver
 from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
 from orket.application.services.dependency_manager import (
     DependencyManager,
@@ -179,6 +180,52 @@ class Orchestrator:
             if isinstance(value, str):
                 return value.strip().lower() in {"1", "true", "yes", "on"}
         return False
+
+    def _resolve_prompt_resolver_mode(self) -> str:
+        env_raw = (os.environ.get("ORKET_PROMPT_RESOLVER_MODE") or "").strip().lower()
+        if env_raw in {"resolver", "compiler"}:
+            return env_raw
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = str(self.org.process_rules.get("prompt_resolver_mode", "")).strip().lower()
+            if value in {"resolver", "compiler"}:
+                return value
+        return "compiler"
+
+    def _resolve_prompt_selection_policy(self) -> str:
+        env_raw = (os.environ.get("ORKET_PROMPT_SELECTION_POLICY") or "").strip().lower()
+        if env_raw in {"stable", "canary", "exact"}:
+            return env_raw
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = str(self.org.process_rules.get("prompt_selection_policy", "")).strip().lower()
+            if value in {"stable", "canary", "exact"}:
+                return value
+        return "stable"
+
+    def _resolve_prompt_selection_strict(self) -> bool:
+        env_raw = (os.environ.get("ORKET_PROMPT_SELECTION_STRICT") or "").strip().lower()
+        if env_raw in {"1", "true", "yes", "on"}:
+            return True
+        if env_raw in {"0", "false", "no", "off"}:
+            return False
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = self.org.process_rules.get("prompt_selection_strict")
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                lowered = value.strip().lower()
+                if lowered in {"1", "true", "yes", "on"}:
+                    return True
+                if lowered in {"0", "false", "no", "off"}:
+                    return False
+        return True
+
+    def _resolve_prompt_version_exact(self) -> str:
+        env_raw = (os.environ.get("ORKET_PROMPT_VERSION_EXACT") or "").strip()
+        if env_raw:
+            return env_raw
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            return str(self.org.process_rules.get("prompt_version_exact", "")).strip()
+        return ""
 
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
@@ -621,16 +668,71 @@ class Orchestrator:
             name=role_config.name or seat_name,
             intent=role_config.description,
             responsibilities=[ro.description for ro in [role_config]],
-            tools=role_config.tools
+            tools=role_config.tools,
+            prompt_metadata=dict(getattr(role_config, "prompt_metadata", {}) or {}),
         )
         # Phase 6.4: RAG (Memory Context)
         search_query = (issue.name or "") + " " + (issue.note or "")
         memories = await self.memory.search(search_query.strip())
         memory_context = "\n".join([f"- {m['content']}" for m in memories])
         
-        system_desc = PromptCompiler.compile(skill, dialect)
+        prompt_mode = self._resolve_prompt_resolver_mode()
+        selection_policy = self._resolve_prompt_selection_policy()
+        selection_strict = self._resolve_prompt_selection_strict()
+        exact_version = self._resolve_prompt_version_exact()
+        provisional_context = self._build_turn_context(
+            run_id=run_id,
+            issue=issue,
+            seat_name=seat_name,
+            roles_to_load=roles_to_load,
+            turn_status=turn_status,
+            selected_model=selected_model,
+            dependency_context=dependency_context,
+            runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
+            prompt_metadata={},
+            prompt_layers={},
+            resume_mode=resume_mode,
+        )
+        prompt_metadata: Dict[str, Any] = {
+            "prompt_id": "legacy.prompt_compiler",
+            "prompt_version": "legacy",
+            "prompt_checksum": "",
+            "resolver_policy": "compiler",
+        }
+        prompt_layers: Dict[str, Any] = {
+            "role_base": {"name": str(skill.name or "").strip().lower(), "version": "legacy"},
+            "dialect_adapter": {"name": str(dialect.model_family or "").strip().lower(), "version": "legacy"},
+            "guards": [],
+            "context_profile": "default",
+        }
+        if prompt_mode == "resolver":
+            resolution = PromptResolver.resolve(
+                skill=skill,
+                dialect=dialect,
+                context={
+                    "prompt_context_profile": "long_project" if memory_context else "default",
+                    "prompt_resolver_policy": "resolver_v1",
+                    "prompt_selection_policy": selection_policy,
+                    "prompt_selection_strict": selection_strict,
+                    "prompt_version_exact": exact_version,
+                    "stage_gate_mode": provisional_context.get("stage_gate_mode"),
+                    "required_action_tools": provisional_context.get("required_action_tools", []),
+                    "required_statuses": provisional_context.get("required_statuses", []),
+                    "required_read_paths": provisional_context.get("required_read_paths", []),
+                    "required_write_paths": provisional_context.get("required_write_paths", []),
+                },
+                selection_policy=selection_policy,
+            )
+            system_desc = resolution.system_prompt
+            prompt_metadata = dict(resolution.metadata)
+            prompt_layers = dict(resolution.layers)
+        else:
+            system_desc = PromptCompiler.compile(skill, dialect)
         if memory_context:
             system_desc += f"\n\nPROJECT CONTEXT (PAST DECISIONS):\n{memory_context}"
+
+        import hashlib
+        prompt_metadata["prompt_checksum"] = hashlib.sha256(system_desc.encode("utf-8")).hexdigest()[:16]
 
         context = self._build_turn_context(
             run_id=run_id,
@@ -641,6 +743,8 @@ class Orchestrator:
             selected_model=selected_model,
             dependency_context=dependency_context,
             runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
+            prompt_metadata=prompt_metadata,
+            prompt_layers=prompt_layers,
             resume_mode=resume_mode,
         )
 
@@ -855,6 +959,8 @@ class Orchestrator:
         selected_model: str,
         dependency_context: Optional[Dict[str, Any]] = None,
         runtime_verifier_ok: Optional[bool] = None,
+        prompt_metadata: Optional[Dict[str, Any]] = None,
+        prompt_layers: Optional[Dict[str, Any]] = None,
         resume_mode: bool = False,
     ) -> Dict[str, Any]:
         required_action_tools = []
@@ -998,6 +1104,8 @@ class Orchestrator:
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
             "runtime_verifier_ok": runtime_verifier_ok,
+            "prompt_metadata": prompt_metadata or {},
+            "prompt_layers": prompt_layers or {},
             "architecture_mode": architecture_mode,
             "frontend_framework_mode": frontend_framework_mode,
             "architecture_decision_required": bool(is_architect_seat),

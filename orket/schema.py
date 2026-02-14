@@ -27,12 +27,17 @@ class SkillConfig(BaseModel):
     idesign_constraints: Optional[List[str]] = Field(default_factory=list)
     tools: List[str] = Field(default_factory=list)
     capabilities: Dict[str, Any] = Field(default_factory=dict)
+    prompt_metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class DialectConfig(BaseModel):
     model_family: str
     dsl_format: str
     constraints: List[str]
     hallucination_guard: str
+    system_prefix: str = ""
+    tool_call_syntax: Optional[str] = None
+    style_guidelines: List[str] = Field(default_factory=list)
+    prompt_metadata: Dict[str, Any] = Field(default_factory=dict)
 
 # ---------------------------------------------------------------------------
 # 2. Card Fundamentals (Universal Base)
@@ -174,6 +179,7 @@ class RoleConfig(BaseCardConfig):
     tools: List[str] = Field(default_factory=list)
     policy: Dict[str, Any] = Field(default_factory=dict)
     capabilities: Dict[str, Any] = Field(default_factory=dict)
+    prompt_metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class SeatConfig(BaseModel):
     name: str

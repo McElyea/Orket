@@ -9,5 +9,22 @@
     "add_issue_comment",
     "get_issue_context",
     "update_issue_status"
-  ]
+  ],
+  "prompt_metadata": {
+    "id": "role.architect",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  }
 }

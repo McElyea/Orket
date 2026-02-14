@@ -8,5 +8,22 @@
     "list_dir",
     "add_issue_comment",
     "update_issue_status"
-  ]
+  ],
+  "prompt_metadata": {
+    "id": "role.designer",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  }
 }
