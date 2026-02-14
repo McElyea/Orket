@@ -127,7 +127,22 @@ def validate_runtime_guard_rule_ids(
     *,
     registry: Dict[str, GuardRule] | None = None,
 ) -> List[str]:
-    normalized = normalize_rule_ids(runtime_guard_rule_ids)
+    if runtime_guard_rule_ids is None:
+        return []
+    raw_values = [
+        str(value or "").strip()
+        for value in runtime_guard_rule_ids
+        if str(value or "").strip()
+    ]
+    if len(raw_values) != len(set(raw_values)):
+        seen = set()
+        duplicates: List[str] = []
+        for item in raw_values:
+            if item in seen and item not in duplicates:
+                duplicates.append(item)
+            seen.add(item)
+        raise ValueError("Duplicate runtime guard rule_id values: " + ", ".join(sorted(duplicates)))
+    normalized = normalize_rule_ids(raw_values)
     if not normalized:
         return []
     registry = registry or DEFAULT_GUARD_RULE_REGISTRY

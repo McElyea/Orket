@@ -191,6 +191,20 @@ def test_prompt_resolver_rejects_unknown_runtime_guard_rule_ids() -> None:
         )
 
 
+def test_prompt_resolver_rejects_duplicate_runtime_guard_rule_ids() -> None:
+    with pytest.raises(ValueError, match="Duplicate runtime guard rule_id values"):
+        PromptResolver.resolve(
+            skill=_skill(),
+            dialect=_dialect(),
+            context={
+                "runtime_guard_rule_ids": [
+                    "HALLUCINATION.FILE_NOT_FOUND",
+                    "HALLUCINATION.FILE_NOT_FOUND",
+                ],
+            },
+        )
+
+
 def test_prompt_resolver_rejects_prompt_guard_namespace_conflicts() -> None:
     with pytest.raises(ValueError, match="Prompt rule_ids cannot use runtime guard namespaces"):
         PromptResolver.resolve(

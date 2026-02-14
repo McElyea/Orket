@@ -78,6 +78,13 @@ def test_validate_runtime_guard_rule_ids_rejects_unknown_values():
         validate_runtime_guard_rule_ids(["HALLUCINATION.FILE_NOT_FOUND", "UNKNOWN.RULE"])
 
 
+def test_validate_runtime_guard_rule_ids_rejects_duplicates():
+    with pytest.raises(ValueError, match="Duplicate runtime guard rule_id values"):
+        validate_runtime_guard_rule_ids(
+            ["HALLUCINATION.FILE_NOT_FOUND", "HALLUCINATION.FILE_NOT_FOUND"]
+        )
+
+
 def test_resolve_runtime_guard_rule_ids_returns_defaults_when_unset_or_empty():
     assert resolve_runtime_guard_rule_ids(None) == DEFAULT_GUARD_RULE_IDS
     assert resolve_runtime_guard_rule_ids([]) == DEFAULT_GUARD_RULE_IDS

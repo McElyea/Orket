@@ -249,8 +249,8 @@ class PromptResolver:
     @staticmethod
     def _validate_rule_ownership(*, context: Dict[str, Any]) -> None:
         prompt_rule_ids = PromptResolver._normalize_rule_ids(context.get("prompt_rule_ids"))
-        runtime_guard_rule_ids = PromptResolver._normalize_rule_ids(context.get("runtime_guard_rule_ids"))
-        runtime_guard_rule_ids = validate_runtime_guard_rule_ids(runtime_guard_rule_ids)
+        raw_runtime_guard_rule_ids = context.get("runtime_guard_rule_ids")
+        runtime_guard_rule_ids = validate_runtime_guard_rule_ids(raw_runtime_guard_rule_ids)
         namespace_conflicts = prompt_guard_namespace_conflicts(prompt_rule_ids)
         if namespace_conflicts:
             raise ValueError(
