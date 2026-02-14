@@ -14,3 +14,14 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]
     assert not missing, "quality workflow missing required architecture gates: " + ", ".join(missing)
+
+    # The quick gate job and the full quality job should both run these checks.
+    duplicated_in_both_jobs = [
+        "python scripts/check_dependency_direction.py",
+        "python scripts/check_volatility_boundaries.py",
+    ]
+    missing_dupes = [cmd for cmd in duplicated_in_both_jobs if text.count(cmd) < 2]
+    assert not missing_dupes, (
+        "quality workflow gates must be present in both architecture_gates and quality jobs: "
+        + ", ".join(missing_dupes)
+    )
