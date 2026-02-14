@@ -5,6 +5,7 @@ import pytest
 
 from orket.exceptions import ExecutionFailed
 from orket.runtime.execution_pipeline import ExecutionPipeline
+from orket.schema import CardStatus
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -143,3 +144,45 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
     failed_run = next((r for r in runs if r["id"] == "sess-ledger-failed"), None)
     assert failed_run is not None
     assert failed_run["status"] == "failed"
+
+
+@pytest.mark.asyncio
+async def test_run_ledger_records_terminal_non_success_run(test_root, workspace, db_path, monkeypatch):
+    _write_epic_assets(test_root, "ledger_epic_terminal_non_success")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _blocked_execute_epic(**_kwargs):
+        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.BLOCKED)
+        return None
+
+    async def _fake_export_run(**_kwargs):
+        return {
+            "provider": "gitea",
+            "owner": "local",
+            "repo": "artifacts",
+            "branch": "main",
+            "path": "runs/2026-02-14/sess-ledger-terminal-non-success",
+            "commit": "xyz789",
+            "url": "http://localhost:3000/local/artifacts",
+        }
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _blocked_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
+
+    await pipeline.run_epic(
+        "ledger_epic_terminal_non_success",
+        build_id="build-ledger-epic-terminal-non-success",
+        session_id="sess-ledger-terminal-non-success",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-terminal-non-success")
+    assert ledger is not None
+    assert ledger["status"] == "terminal_non_success"
+    assert ledger["summary_json"]["session_status"] == "terminal_non_success"
+    assert ledger["summary_json"]["status_counts"]["blocked"] == 1
