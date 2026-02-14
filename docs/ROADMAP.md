@@ -34,6 +34,7 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 13. `P-1D` deployment planner stage landed with deterministic deployment baseline assets.
 14. Runtime verifier now emits machine-readable report artifact at `agent_output/verification/runtime_verification.json`.
 15. Runtime verifier now supports policy-driven command matrix execution and optional deployment-file validation hooks.
+16. Live acceptance loop now records and prints explicit `chain_complete` signal per run.
 
 ## Current Status Snapshot
 1. `P-1 Pipeline Stabilizers`: Active, foundational slices (`P-1A` to `P-1D`) landed.

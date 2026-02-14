@@ -287,6 +287,7 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "session_status": session_end.get("status"),
         "metrics": metrics,
         "requirements_response_preview": _first_requirements_response(spec.run_dir),
+        "chain_complete": _chain_complete(db_summary),
     }
 
 
@@ -360,6 +361,7 @@ def _make_skipped_result(spec: RunSpec, reason: str) -> Dict[str, Any]:
         "session_status": reason,
         "metrics": {"skipped": 1},
         "requirements_response_preview": None,
+        "chain_complete": False,
         "model_policy": "skip",
     }
 
@@ -394,6 +396,14 @@ def _role_capability_outcomes(db_summary: Dict[str, Any], metrics: Dict[str, Any
             "turns": int(metrics.get(metric_key, 0)),
         }
     return outcomes
+
+
+def _chain_complete(db_summary: Dict[str, Any]) -> bool:
+    issue_statuses = db_summary.get("issue_statuses", {}) if isinstance(db_summary, dict) else {}
+    required = {"REQ-1", "ARC-1", "COD-1", "REV-1"}
+    if not required.issubset(set(issue_statuses.keys())):
+        return False
+    return all(issue_statuses.get(issue_id) == "done" for issue_id in required)
 
 
 def _init_results_db(db_path: Path) -> sqlite3.Connection:
@@ -434,6 +444,7 @@ def _init_results_db(db_path: Path) -> sqlite3.Connection:
             run_error_log TEXT NOT NULL,
             orket_log TEXT,
             requirements_response_preview TEXT,
+            chain_complete INTEGER NOT NULL DEFAULT 0,
             db_summary_json TEXT NOT NULL,
             metrics_json TEXT NOT NULL,
             command_json TEXT NOT NULL,
@@ -441,6 +452,13 @@ def _init_results_db(db_path: Path) -> sqlite3.Connection:
         )
         """
     )
+    cur.execute("PRAGMA table_info(live_acceptance_runs)")
+    existing_columns = {row[1] for row in cur.fetchall()}
+    if "chain_complete" not in existing_columns:
+        cur.execute(
+            "ALTER TABLE live_acceptance_runs "
+            "ADD COLUMN chain_complete INTEGER NOT NULL DEFAULT 0"
+        )
     cur.execute(
         "CREATE INDEX IF NOT EXISTS idx_live_acceptance_runs_batch_id "
         "ON live_acceptance_runs(batch_id)"
@@ -491,8 +509,8 @@ def _insert_run_result(conn: sqlite3.Connection, batch_id: str, result: Dict[str
         INSERT INTO live_acceptance_runs (
             batch_id, model, iteration, passed, exit_code, started_at, finished_at, duration_s,
             run_id, session_status, run_dir, run_output_log, run_error_log, orket_log,
-            requirements_response_preview, db_summary_json, metrics_json, command_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            requirements_response_preview, chain_complete, db_summary_json, metrics_json, command_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             batch_id,
@@ -510,6 +528,7 @@ def _insert_run_result(conn: sqlite3.Connection, batch_id: str, result: Dict[str
             result.get("run_error_log"),
             result.get("orket_log"),
             result.get("requirements_response_preview"),
+            1 if result.get("chain_complete") else 0,
             json.dumps(result.get("db_summary", {})),
             json.dumps(result.get("metrics", {})),
             json.dumps(result.get("command", [])),
@@ -665,6 +684,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(
                 "  "
                 f"passed={result['passed']} "
+                f"chain_complete={result.get('chain_complete')} "
                 f"run_id={result.get('run_id')} "
                 f"session_status={result.get('session_status')} "
                 f"issues={db_issue_statuses}"
