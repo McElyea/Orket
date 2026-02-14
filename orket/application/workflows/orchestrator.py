@@ -776,10 +776,14 @@ class Orchestrator:
                 or []
             )
             runtime_guard_rule_ids: List[str] = []
+            guard_layers: List[str] = ["hallucination"]
             if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
                 runtime_guard_rule_ids = list(
                     self.org.process_rules.get("runtime_guard_rule_ids", []) or []
                 )
+                configured_layers = self.org.process_rules.get("prompt_guard_layers")
+                if isinstance(configured_layers, list) and configured_layers:
+                    guard_layers = [str(item) for item in configured_layers if str(item).strip()]
             resolution = PromptResolver.resolve(
                 skill=skill,
                 dialect=dialect,
@@ -797,6 +801,7 @@ class Orchestrator:
                     "prompt_rule_ids": role_rule_ids + dialect_rule_ids,
                     "runtime_guard_rule_ids": runtime_guard_rule_ids,
                 },
+                guards=guard_layers,
                 selection_policy=selection_policy,
             )
             system_desc = resolution.system_prompt

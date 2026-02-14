@@ -71,6 +71,7 @@ def test_prompt_resolver_applies_prefix_guards_and_context_overlay() -> None:
     assert resolution.system_prompt.startswith("DIALECT PREFIX")
     assert "PROMPT GUARD OVERLAYS" in resolution.system_prompt
     assert "security" in resolution.system_prompt
+    assert "Do not propose unsafe actions" in resolution.system_prompt
     assert "PROMPT CONTEXT OVERLAYS" in resolution.system_prompt
     assert "required_read_paths" in resolution.system_prompt
 
@@ -176,3 +177,13 @@ def test_prompt_resolver_allows_disjoint_rule_ownership() -> None:
         },
     )
     assert resolution.metadata["prompt_id"] == "role.architect+dialect.qwen"
+
+
+def test_prompt_resolver_injects_canonical_hallucination_overlay() -> None:
+    resolution = PromptResolver.resolve(
+        skill=_skill(),
+        dialect=_dialect(),
+        guards=["hallucination"],
+    )
+    assert "Do not invent facts, APIs, files, or system behavior." in resolution.system_prompt
+    assert "If unsure, ask for clarification instead of guessing." in resolution.system_prompt

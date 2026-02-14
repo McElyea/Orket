@@ -24,6 +24,23 @@ class PromptResolver:
     role/base -> dialect adapter -> guards -> context overlays
     """
     ALLOWED_GUARDS = {"hallucination", "security", "consistency"}
+    GUARD_PROMPT_OVERLAYS = {
+        "hallucination": [
+            "Do not invent facts, APIs, files, or system behavior.",
+            "Do not assume details not explicitly provided.",
+            "If information is missing, state that it is missing.",
+            "If you reference context, cite the exact part you used.",
+            "If unsure, ask for clarification instead of guessing.",
+        ],
+        "security": [
+            "Do not propose unsafe actions, secret exposure, or unapproved data exfiltration.",
+            "Respect workspace and tool authorization boundaries.",
+        ],
+        "consistency": [
+            "Follow required output format and schema contracts exactly.",
+            "Do not contradict provided context or declared constraints.",
+        ],
+    }
 
     @staticmethod
     def resolve(
@@ -122,7 +139,13 @@ class PromptResolver:
             normalized = str(guard).strip()
             if not normalized:
                 continue
-            lines.append(f"- {normalized}")
+            overlays = PromptResolver.GUARD_PROMPT_OVERLAYS.get(normalized.lower(), [])
+            if not overlays:
+                lines.append(f"- [{normalized}]")
+                continue
+            lines.append(f"- [{normalized}]")
+            for instruction in overlays:
+                lines.append(f"  - {instruction}")
         return lines
 
     @staticmethod

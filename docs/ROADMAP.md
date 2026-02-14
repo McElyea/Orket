@@ -57,7 +57,7 @@ Objective: land a minimal, enforceable guard core that prevents retry spirals an
 4. `P0-R3-S4` (completed 2026-02-14): harden Guard Agent as non-generative validator only.
 
 ### P0-R4: Hallucination Guard V1
-1. `P0-R4-S1`: add canonical hallucination guard prompt injection layer.
+1. `P0-R4-S1` (completed 2026-02-14): add canonical hallucination guard prompt injection layer.
 2. `P0-R4-S2`: add explicit verification scope per run:
    - `workspace`, `provided_context`, `declared_interfaces`.
 3. `P0-R4-S3`: implement checks for:
