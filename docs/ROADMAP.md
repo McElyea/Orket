@@ -24,10 +24,14 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 3. Gitea artifact cache/staging moved from `.orket/gitea_artifacts` to `.orket/durable/gitea_artifacts`.
 4. Documentation map file was removed; docs navigation is now direct from `README.md`.
 5. Architecture docs were consolidated to `docs/ARCHITECTURE.md` as canonical authority.
+6. Canonical model asset integrity gate added and passing (`tests/platform/test_model_asset_integrity.py`).
+7. Missing core role/team assets repaired for canonical loader/runtime viability.
+8. Acceptance fixture aligned to architect decision contract JSON schema.
+9. Acceptance loop now suppresses sandbox deploy attempts by default (`ORKET_DISABLE_SANDBOX=1` in loop runner).
 
 ## Current Status Snapshot
 1. `P0 Data-Driven Behavior Recovery Loop`: Active.
-2. `P1 Canonical Assets Runnable`: In progress.
+2. `P1 Canonical Assets Runnable`: Active, major integrity slice completed.
 3. `P2 Acceptance Gate Uses Canonical Assets`: In progress.
 4. `P3 Boundary Enforcement`: Guardrail mode (maintain only).
 5. `P4 Documentation Reset`: Completed for current baseline.
@@ -88,6 +92,21 @@ Verification:
 1. `python -m pytest tests/application/test_orchestrator_epic.py -q`
 2. `python scripts/run_live_acceptance_loop.py --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 3`
 
+### P0-C Evidence Noise Control
+Goal: keep acceptance telemetry focused on role-chain behavior, not sandbox environment failures.
+
+Work:
+1. [x] Add policy/env switch to disable sandbox deployment in acceptance-style runs.
+2. [x] Apply sandbox-disable default in live acceptance loop driver.
+
+Done when:
+1. Acceptance loop logs no longer include irrelevant `sandbox_deploy_failed` noise by default.
+2. Sandbox behavior remains opt-in for workflows that explicitly need it.
+
+Verification:
+1. `python -m pytest tests/application/test_orchestrator_epic.py -q`
+2. `python -m pytest tests/live/test_system_acceptance_pipeline.py::test_system_acceptance_role_pipeline_with_guard -q`
+
 P0 exit criteria:
 1. Baseline models achieve >= 80% full-chain completion for two consecutive batches.
 2. `turn_non_progress` is < 5% overall and < 10% for any single role in baseline set.
@@ -98,10 +117,14 @@ P0 exit criteria:
 Objective: ensure repo-native assets execute without test-only scaffolding.
 
 Work:
-1. Ensure canonical role files exist in `model/core/roles/` for required teams.
-2. Repair team-role references in `model/core/teams/*.json`.
-3. Repair epic-team-seat references in `model/core/epics/*.json`.
-4. Add CI integrity gate for model asset references.
+1. [x] Add CI integrity gate for model asset references.
+   - landed in `tests/platform/test_model_asset_integrity.py`.
+2. [x] Repair hard missing team/role assets that blocked canonical checks.
+   - added missing roles in `model/core/roles/`.
+   - added missing team `model/core/teams/product_owners.json`.
+3. [x] Repair acceptance fixture outputs to satisfy architecture decision contract.
+4. [~] Continue canonical role/team normalization for consistency and deduplication.
+   - current state is executable and integrity-checked; cleanup remains.
 
 Done when:
 1. No missing role/team/seat links in `model/core/**`.
@@ -110,6 +133,18 @@ Done when:
 Verification:
 1. `python -m pytest tests/platform/test_config_loader.py -q`
 2. `python -m pytest tests/platform/test_model_asset_integrity.py -q`
+
+## Code Review Attachment (2026-02-14)
+Findings from `Agents/CodexReview.md` are attached to roadmap sections:
+1. `P0-B`:
+   - maintain strict guard contracts and keep deterministic reprompt paths.
+2. `P1`:
+   - integrity gate added and core asset linkage repaired.
+3. `P2`:
+   - acceptance fixture updated to emit architect decision JSON contract.
+4. Cross-cutting follow-up:
+   - evaluate whether architecture contract should also apply to `lead_architect` seats without destabilizing legacy fixtures.
+   - reduce non-essential sandbox deploy attempts in acceptance flows to lower telemetry noise.
 
 ## P2: Acceptance Gate Uses Canonical Assets
 Objective: stop proving success with synthetic fixtures only.

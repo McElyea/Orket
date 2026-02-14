@@ -56,7 +56,7 @@ class MultiRoleAcceptanceProvider:
 
         if active_seat == "architect" or active_issue_id == "arc-1":
             return ModelResponse(
-                content='```json\n{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "Single class: SummationApp with one run(args) method."}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
+                content='```json\n{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"frontend_framework\\": \\"vue\\", \\"confidence\\": 0.88, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 0, \\"independent_scaling_needs\\": \\"low\\", \\"deployment_complexity\\": \\"low\\", \\"team_parallelism\\": \\"single\\", \\"operational_maturity\\": \\"low\\"}, \\"notes\\": \\"Single class SummationApp with one run(args) method.\\"}"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
                 raw={"model": "dummy", "total_tokens": 90},
             )
 

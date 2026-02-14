@@ -1,0 +1,12 @@
+{
+  "id": "REVIEWER",
+  "summary": "reviewer",
+  "type": "utility",
+  "description": "Code and quality reviewer role with explicit verification focus.",
+  "tools": [
+    "read_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

@@ -202,6 +202,7 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
     env = os.environ.copy()
     env["ORKET_LIVE_ACCEPTANCE"] = "1"
     env["ORKET_LIVE_MODEL"] = spec.model
+    env.setdefault("ORKET_DISABLE_SANDBOX", "1")
 
     cmd = [
         python_exe,

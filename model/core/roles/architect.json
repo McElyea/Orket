@@ -1,0 +1,13 @@
+{
+  "id": "ARCHITECT",
+  "summary": "architect",
+  "type": "utility",
+  "description": "System architect role focusing on design decisions and architecture tradeoffs.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

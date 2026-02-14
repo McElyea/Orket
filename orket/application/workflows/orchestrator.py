@@ -109,6 +109,18 @@ class Orchestrator:
         }
         return aliases.get(normalized, "architect_decides")
 
+    def _is_sandbox_disabled(self) -> bool:
+        env_raw = (os.environ.get("ORKET_DISABLE_SANDBOX") or "").strip().lower()
+        if env_raw in {"1", "true", "yes", "on"}:
+            return True
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = self.org.process_rules.get("disable_sandbox")
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.strip().lower() in {"1", "true", "yes", "on"}
+        return False
+
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
 
@@ -539,7 +551,14 @@ class Orchestrator:
             # Sandbox triggering
             success_actions = self.evaluator_node.success_post_actions(success_eval)
             if self.evaluator_node.should_trigger_sandbox(success_actions):
-                await self._trigger_sandbox(epic, run_id=run_id)
+                if self._is_sandbox_disabled():
+                    log_event(
+                        "sandbox_trigger_skipped_policy",
+                        {"run_id": run_id, "issue_id": issue.id, "seat": seat_name},
+                        self.workspace,
+                    )
+                else:
+                    await self._trigger_sandbox(epic, run_id=run_id)
                 next_status = self.evaluator_node.next_status_after_success(success_actions)
                 if next_status is not None:
                     await self.async_cards.update_status(

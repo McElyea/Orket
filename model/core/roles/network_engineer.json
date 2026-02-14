@@ -1,0 +1,13 @@
+{
+  "id": "NET-ENG",
+  "summary": "network_engineer",
+  "type": "utility",
+  "description": "Handles network and connectivity constraints for distributed systems work.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

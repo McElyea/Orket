@@ -1,0 +1,84 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+def _load_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_core_team_role_links_are_valid() -> None:
+    root = Path("model") / "core"
+    roles_dir = root / "roles"
+    teams_dir = root / "teams"
+
+    role_names = {p.stem for p in roles_dir.glob("*.json")}
+    assert role_names, "No roles found under model/core/roles."
+
+    errors: list[str] = []
+    for team_path in sorted(teams_dir.glob("*.json")):
+        team = _load_json(team_path)
+        team_name = str(team.get("name") or team_path.stem)
+        seats = team.get("seats") or {}
+        if not isinstance(seats, dict):
+            errors.append(f"{team_path}: seats must be an object.")
+            continue
+        for seat_name, seat_cfg in seats.items():
+            roles = (seat_cfg or {}).get("roles") or []
+            if not isinstance(roles, list):
+                errors.append(f"{team_path}: seat '{seat_name}' roles must be a list.")
+                continue
+            for role_name in roles:
+                if str(role_name) not in role_names:
+                    errors.append(
+                        f"{team_path}: team '{team_name}' seat '{seat_name}' references missing role '{role_name}'."
+                    )
+
+    assert not errors, "Invalid team->role links:\n" + "\n".join(errors)
+
+
+def test_core_epic_team_and_seat_links_are_valid() -> None:
+    root = Path("model") / "core"
+    teams_dir = root / "teams"
+    epics_dir = root / "epics"
+
+    team_seats: dict[str, set[str]] = {}
+    for team_path in sorted(teams_dir.glob("*.json")):
+        team = _load_json(team_path)
+        team_name = str(team.get("name") or team_path.stem)
+        seats = team.get("seats") or {}
+        if isinstance(seats, dict):
+            team_seats[team_name] = set(seats.keys())
+
+    assert team_seats, "No teams found under model/core/teams."
+
+    errors: list[str] = []
+    for epic_path in sorted(epics_dir.glob("*.json")):
+        epic = _load_json(epic_path)
+        epic_name = str(epic.get("name") or epic_path.stem)
+        team_name = str(epic.get("team") or "").strip()
+        if not team_name:
+            errors.append(f"{epic_path}: epic '{epic_name}' missing team.")
+            continue
+        if team_name not in team_seats:
+            errors.append(f"{epic_path}: epic '{epic_name}' references missing team '{team_name}'.")
+            continue
+
+        valid_seats = team_seats[team_name]
+        issues = epic.get("issues") or []
+        if not isinstance(issues, list):
+            errors.append(f"{epic_path}: epic '{epic_name}' issues must be a list.")
+            continue
+        for issue in issues:
+            issue_id = str((issue or {}).get("id") or "unknown")
+            seat = str((issue or {}).get("seat") or "").strip()
+            if not seat:
+                errors.append(f"{epic_path}: epic '{epic_name}' issue '{issue_id}' missing seat.")
+                continue
+            if seat not in valid_seats:
+                errors.append(
+                    f"{epic_path}: epic '{epic_name}' issue '{issue_id}' uses seat '{seat}' not in team '{team_name}'."
+                )
+
+    assert not errors, "Invalid epic->team/seat links:\n" + "\n".join(errors)

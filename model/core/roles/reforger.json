@@ -1,0 +1,15 @@
+{
+  "id": "REFORGER",
+  "summary": "reforger",
+  "type": "utility",
+  "description": "Specialist role for refactor and improvement proposals grounded in existing context.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "refinement_proposal",
+    "report_credits",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

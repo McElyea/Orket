@@ -1,0 +1,12 @@
+{
+  "id": "GOV-ETHICS",
+  "summary": "governance_ethics",
+  "type": "utility",
+  "description": "Ensures governance, policy, and ethical constraints are represented in decisions.",
+  "tools": [
+    "read_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

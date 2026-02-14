@@ -1,0 +1,13 @@
+{
+  "id": "WRITER",
+  "summary": "writer",
+  "type": "utility",
+  "description": "Produces clear, concise documentation updates and content rewrites.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

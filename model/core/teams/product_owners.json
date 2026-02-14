@@ -1,0 +1,24 @@
+{
+  "name": "product_owners",
+  "description": "Team focused on requirements refinement and product clarity.",
+  "seats": {
+    "product_owner": {
+      "name": "Product Owner",
+      "roles": [
+        "product_owner"
+      ]
+    },
+    "requirements_specialist": {
+      "name": "Requirements Specialist",
+      "roles": [
+        "requirements_specialist"
+      ]
+    },
+    "writer": {
+      "name": "Writer",
+      "roles": [
+        "writer"
+      ]
+    }
+  }
+}

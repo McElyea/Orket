@@ -6,7 +6,13 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from orket.runtime_paths import resolve_live_acceptance_db_path
+try:
+    from orket.runtime_paths import resolve_live_acceptance_db_path
+except ModuleNotFoundError:
+    import sys
+
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+    from orket.runtime_paths import resolve_live_acceptance_db_path
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(

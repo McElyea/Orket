@@ -1,0 +1,13 @@
+{
+  "id": "PRODUCT-OWNER",
+  "summary": "product_owner",
+  "type": "utility",
+  "description": "Owns product requirements and prioritization clarity.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

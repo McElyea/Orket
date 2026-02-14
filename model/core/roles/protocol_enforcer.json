@@ -1,0 +1,12 @@
+{
+  "id": "PROTO-ENF",
+  "summary": "protocol_enforcer",
+  "type": "utility",
+  "description": "Enforces process contracts and protocol-level correctness.",
+  "tools": [
+    "read_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

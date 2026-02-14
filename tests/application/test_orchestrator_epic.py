@@ -334,6 +334,101 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
 
 
 @pytest.mark.asyncio
+async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrator, monkeypatch):
+    orch, cards, loader = orchestrator
+    issue = IssueConfig(id="I1", seat="dev", summary="Test")
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"dev": SimpleNamespace(roles=["lead_architect"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="dev", description="role", tools=[]),
+            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+        ]
+    )
+
+    class _Memory:
+        async def search(self, _query):
+            return []
+
+        async def remember(self, content, metadata):
+            return None
+
+    class _Provider:
+        async def clear_context(self):
+            return None
+
+    class _ModelClientNode:
+        def create_provider(self, selected_model, env):
+            return _Provider()
+
+        def create_client(self, provider):
+            return SimpleNamespace()
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    class _Evaluator:
+        def evaluate_success(self, **_kwargs):
+            return {}
+
+        def success_post_actions(self, _success_eval):
+            return {"trigger_sandbox": True, "next_status": None}
+
+        def should_trigger_sandbox(self, success_actions):
+            return bool(success_actions.get("trigger_sandbox"))
+
+        def next_status_after_success(self, success_actions):
+            return success_actions.get("next_status")
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    trigger_calls = {"count": 0}
+
+    async def _fake_trigger(*args, **kwargs):
+        trigger_calls["count"] += 1
+        return None
+
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
+    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect: "SYSTEM")
+
+    orch.memory = _Memory()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _fake_trigger
+    orch.model_client_node = _ModelClientNode()
+    orch.evaluator_node = _Evaluator()
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=_Executor(),
+        toolbox=SimpleNamespace(),
+    )
+
+    assert trigger_calls["count"] == 0
+
+
+@pytest.mark.asyncio
 async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch):
     issue_ready = SimpleNamespace(
         id="I1",

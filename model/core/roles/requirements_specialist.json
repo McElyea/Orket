@@ -1,0 +1,13 @@
+{
+  "id": "REQ-SPEC",
+  "summary": "requirements_specialist",
+  "type": "utility",
+  "description": "Refines requirements into unambiguous implementation-ready specs.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

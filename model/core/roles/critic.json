@@ -1,0 +1,12 @@
+{
+  "id": "CRITIC",
+  "summary": "critic",
+  "type": "utility",
+  "description": "Quality critic role validating output against requirements and design intent.",
+  "tools": [
+    "image_analyze",
+    "read_file",
+    "add_issue_comment",
+    "update_issue_status"
+  ]
+}

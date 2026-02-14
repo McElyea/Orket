@@ -1,0 +1,13 @@
+{
+  "id": "DATA-SCI",
+  "summary": "data_scientist",
+  "type": "utility",
+  "description": "Performs analysis-focused tasks and produces data-backed guidance.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ]
+}

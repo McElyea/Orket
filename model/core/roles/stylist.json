@@ -1,0 +1,13 @@
+{
+  "id": "STYLIST",
+  "summary": "stylist",
+  "type": "utility",
+  "description": "Frontend styling role responsible for implementation-level UI polish.",
+  "tools": [
+    "write_file",
+    "read_file",
+    "image_generate",
+    "add_issue_comment",
+    "update_issue_status"
+  ]
+}

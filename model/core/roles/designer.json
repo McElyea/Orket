@@ -1,0 +1,12 @@
+{
+  "id": "DESIGNER",
+  "summary": "designer",
+  "type": "utility",
+  "description": "Visual designer role for interface structure and style direction.",
+  "tools": [
+    "image_analyze",
+    "list_dir",
+    "add_issue_comment",
+    "update_issue_status"
+  ]
+}
