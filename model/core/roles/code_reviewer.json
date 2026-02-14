@@ -1,0 +1,30 @@
+{
+  "id": "CODE_REVIEWER",
+  "summary": "code_reviewer",
+  "type": "utility",
+  "description": "Reviews implementation output against requirements, architecture, and runtime verification evidence.",
+  "tools": [
+    "read_file",
+    "list_directory",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ],
+  "prompt_metadata": {
+    "id": "role.code_reviewer",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  }
+}

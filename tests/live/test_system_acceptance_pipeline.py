@@ -254,6 +254,11 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
     assert (workspace / "agent_output" / "requirements.txt").exists()
     assert (workspace / "agent_output" / "design.txt").exists()
     assert (workspace / "agent_output" / "main.py").exists()
+    runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
+    assert runtime_report.exists(), "runtime verification artifact missing in canonical acceptance run."
+    runtime_payload = json.loads(runtime_report.read_text(encoding="utf-8"))
+    assert isinstance(runtime_payload.get("ok"), bool)
+    assert isinstance(runtime_payload.get("command_results"), list)
     checkpoint_paths = list((workspace / "observability").rglob("checkpoint.json"))
     assert checkpoint_paths, "Expected turn checkpoint artifacts for acceptance run."
     for checkpoint_path in checkpoint_paths:

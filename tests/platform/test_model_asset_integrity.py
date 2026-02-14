@@ -151,3 +151,36 @@ def test_core_dialect_prompt_metadata_contract() -> None:
         errors.extend(_validate_prompt_metadata(metadata, dialect_path))
 
     assert not errors, "Invalid dialect prompt metadata:\n" + "\n".join(errors)
+
+
+def test_core_standard_team_supports_canonical_pipeline_roles_and_seats() -> None:
+    root = Path("model") / "core"
+    roles_dir = root / "roles"
+    standard_team_path = root / "teams" / "standard.json"
+    standard = _load_json(standard_team_path)
+
+    required_roles = {
+        "requirements_analyst",
+        "architect",
+        "coder",
+        "code_reviewer",
+        "integrity_guard",
+    }
+    role_names = {p.stem for p in roles_dir.glob("*.json")}
+    missing_roles = sorted(required_roles - role_names)
+    assert not missing_roles, f"Missing canonical role assets: {missing_roles}"
+
+    seats = standard.get("seats") or {}
+    assert isinstance(seats, dict), "model/core/teams/standard.json: seats must be an object."
+    missing_seats = sorted(required_roles - set(seats.keys()))
+    assert not missing_seats, f"standard team missing canonical seats: {missing_seats}"
+
+    seat_role_errors: list[str] = []
+    for seat in sorted(required_roles):
+        seat_cfg = seats.get(seat) or {}
+        roles = seat_cfg.get("roles") or []
+        if seat not in roles:
+            seat_role_errors.append(
+                f"standard seat '{seat}' must include role '{seat}' (current roles={roles})."
+            )
+    assert not seat_role_errors, "\n".join(seat_role_errors)

@@ -1,0 +1,31 @@
+{
+  "id": "REQUIREMENTS_ANALYST",
+  "summary": "requirements_analyst",
+  "type": "utility",
+  "description": "Analyzes requirements, clarifies constraints, and writes executable requirement specifications.",
+  "tools": [
+    "read_file",
+    "write_file",
+    "list_directory",
+    "add_issue_comment",
+    "get_issue_context",
+    "update_issue_status"
+  ],
+  "prompt_metadata": {
+    "id": "role.requirements_analyst",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "core",
+    "updated_at": "2026-02-14",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-02-14",
+        "notes": "Initial prompt metadata registration."
+      }
+    ]
+  }
+}

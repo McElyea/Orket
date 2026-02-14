@@ -2,6 +2,11 @@
   "name": "standard",
   "description": "Standard EOS-aligned team for core development.",
   "roles": {
+    "requirements_analyst": {
+      "name": "requirements_analyst",
+      "description": "Requirements analysis role for canonical front-of-chain specification.",
+      "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
+    },
     "architect": {
       "name": "architect",
       "description": "System Architect role focusing on high-level design and todo lists.",
@@ -17,6 +22,11 @@
       "description": "QA Reviewer role focusing on code quality and verification.",
       "tools": ["read_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
     },
+    "code_reviewer": {
+      "name": "code_reviewer",
+      "description": "Canonical code reviewer seat role for final code review stage.",
+      "tools": ["read_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"]
+    },
     "reforger": {
       "name": "reforger",
       "description": "Specialized role for system self-optimization and semantic analysis.",
@@ -24,6 +34,26 @@
     }
   },
   "seats": {
+    "requirements_analyst": {
+      "name": "Requirements Analyst",
+      "roles": ["requirements_analyst"]
+    },
+    "architect": {
+      "name": "Architect",
+      "roles": ["architect"]
+    },
+    "coder": {
+      "name": "Coder",
+      "roles": ["coder"]
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer",
+      "roles": ["code_reviewer"]
+    },
+    "integrity_guard": {
+      "name": "Integrity Guard",
+      "roles": ["integrity_guard"]
+    },
     "lead_architect": {
       "name": "Lead Architect",
       "roles": ["architect"]

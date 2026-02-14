@@ -63,8 +63,8 @@ Verification:
 Objective: keep success proof tied to repo-native assets and canonical contracts.
 
 Remaining Slices:
-1. `P2-S1`: finish remaining role/team asset normalization and consistency checks.
-2. `P2-S2`: strengthen canonical acceptance assertions for artifact and stage outcomes.
+1. `P2-S1` (completed): finish remaining role/team asset normalization and consistency checks.
+2. `P2-S2` (completed): strengthen canonical acceptance assertions for artifact and stage outcomes.
 3. `P2-S3`: keep fixture acceptance tests secondary to canonical-asset behavior.
 
 Exit Criteria:
