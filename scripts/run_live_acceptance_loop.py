@@ -92,6 +92,19 @@ def _event_count(events: List[Dict[str, Any]], event_name: str, role: Optional[s
     return count
 
 
+def _event_count_with_flag(events: List[Dict[str, Any]], event_name: str, data_flag: str, expected: Any) -> int:
+    count = 0
+    for event in events:
+        if event.get("event") != event_name:
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        if data.get(data_flag) == expected:
+            count += 1
+    return count
+
+
 def _last_event_data(events: List[Dict[str, Any]], event_name: str) -> Dict[str, Any]:
     for event in reversed(events):
         if event.get("event") == event_name:
@@ -244,6 +257,11 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "tool_call_blocked": _event_count(events, "tool_call_blocked"),
         "dependency_block_propagated": _event_count(events, "dependency_block_propagated"),
         "orchestrator_stalled": _event_count(events, "orchestrator_stalled"),
+        "runtime_verifier_started": _event_count(events, "runtime_verifier_started"),
+        "runtime_verifier_completed": _event_count(events, "runtime_verifier_completed"),
+        "runtime_verifier_failures": _event_count_with_flag(
+            events, "runtime_verifier_completed", "ok", False
+        ),
         "requirements_turn_complete": _event_count(events, "turn_complete", role="requirements_analyst"),
         "architect_turn_complete": _event_count(events, "turn_complete", role="architect"),
         "coder_turn_complete": _event_count(events, "turn_complete", role="coder"),
