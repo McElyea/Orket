@@ -20,6 +20,15 @@ from orket.decision_nodes.contracts import PlanningInput
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
+from orket.application.services.dependency_manager import (
+    DependencyManager,
+    DependencyValidationError,
+)
+from orket.application.services.runtime_verifier import RuntimeVerifier
+from orket.application.services.deployment_planner import (
+    DeploymentPlanner,
+    DeploymentValidationError,
+)
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.core.policies.tool_gate import ToolGate
 from orket.core.contracts.repositories import CardRepository, SnapshotRepository
@@ -129,6 +138,42 @@ class Orchestrator:
             return True
         if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
             value = self.org.process_rules.get("disable_scaffolder")
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.strip().lower() in {"1", "true", "yes", "on"}
+        return False
+
+    def _is_dependency_manager_disabled(self) -> bool:
+        env_raw = (os.environ.get("ORKET_DISABLE_DEPENDENCY_MANAGER") or "").strip().lower()
+        if env_raw in {"1", "true", "yes", "on"}:
+            return True
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = self.org.process_rules.get("disable_dependency_manager")
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.strip().lower() in {"1", "true", "yes", "on"}
+        return False
+
+    def _is_runtime_verifier_disabled(self) -> bool:
+        env_raw = (os.environ.get("ORKET_DISABLE_RUNTIME_VERIFIER") or "").strip().lower()
+        if env_raw in {"1", "true", "yes", "on"}:
+            return True
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = self.org.process_rules.get("disable_runtime_verifier")
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.strip().lower() in {"1", "true", "yes", "on"}
+        return False
+
+    def _is_deployment_planner_disabled(self) -> bool:
+        env_raw = (os.environ.get("ORKET_DISABLE_DEPLOYMENT_PLANNER") or "").strip().lower()
+        if env_raw in {"1", "true", "yes", "on"}:
+            return True
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = self.org.process_rules.get("disable_deployment_planner")
             if isinstance(value, bool):
                 return value
             if isinstance(value, str):
@@ -253,7 +298,63 @@ class Orchestrator:
                 },
                 self.workspace,
             )
-        
+
+        if self._is_dependency_manager_disabled():
+            log_event("dependency_manager_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
+        else:
+            log_event("dependency_manager_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
+            dependency_manager = DependencyManager(
+                workspace_root=self.workspace,
+                file_tools=AsyncFileTools(self.workspace),
+                organization=self.org,
+            )
+            try:
+                dependency_result = await dependency_manager.ensure()
+            except DependencyValidationError as exc:
+                log_event(
+                    "dependency_manager_failed",
+                    {"run_id": run_id, "epic": epic.name, "error": str(exc)},
+                    self.workspace,
+                )
+                raise ExecutionFailed(f"Dependency manager validation failed: {exc}") from exc
+            log_event(
+                "dependency_manager_completed",
+                {
+                    "run_id": run_id,
+                    "epic": epic.name,
+                    "created_files": len(dependency_result.get("created_files", [])),
+                },
+                self.workspace,
+            )
+
+        if self._is_deployment_planner_disabled():
+            log_event("deployment_planner_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
+        else:
+            log_event("deployment_planner_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
+            deployment_planner = DeploymentPlanner(
+                workspace_root=self.workspace,
+                file_tools=AsyncFileTools(self.workspace),
+                organization=self.org,
+            )
+            try:
+                deployment_result = await deployment_planner.ensure()
+            except DeploymentValidationError as exc:
+                log_event(
+                    "deployment_planner_failed",
+                    {"run_id": run_id, "epic": epic.name, "error": str(exc)},
+                    self.workspace,
+                )
+                raise ExecutionFailed(f"Deployment planner validation failed: {exc}") from exc
+            log_event(
+                "deployment_planner_completed",
+                {
+                    "run_id": run_id,
+                    "epic": epic.name,
+                    "created_files": len(deployment_result.get("created_files", [])),
+                },
+                self.workspace,
+            )
+
         # 1. Setup Execution Environment
         settings_path = self.config_root / "user_settings.json"
         if settings_path.exists():
@@ -420,6 +521,44 @@ class Orchestrator:
         issue = IssueConfig.model_validate(issue_data.model_dump())
         is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
         dependency_context = await self._build_dependency_context(issue)
+
+        if is_review_turn and not self._is_runtime_verifier_disabled():
+            log_event(
+                "runtime_verifier_started",
+                {"run_id": run_id, "issue_id": issue.id},
+                self.workspace,
+            )
+            runtime_result = await RuntimeVerifier(self.workspace, organization=self.org).verify()
+            log_event(
+                "runtime_verifier_completed",
+                {
+                    "run_id": run_id,
+                    "issue_id": issue.id,
+                    "ok": runtime_result.ok,
+                    "checked_files": len(runtime_result.checked_files),
+                    "errors": len(runtime_result.errors),
+                },
+                self.workspace,
+            )
+            if not runtime_result.ok:
+                await self.async_cards.update_status(
+                    issue.id,
+                    CardStatus.BLOCKED,
+                    reason="runtime_verification_failed",
+                    metadata={
+                        "run_id": run_id,
+                        "errors": runtime_result.errors[:5],
+                        "checked_files": runtime_result.checked_files,
+                    },
+                )
+                self.notes.add(
+                    Note(
+                        from_role="system",
+                        content="RUNTIME VERIFIER FAILED: " + " | ".join(runtime_result.errors[:2]),
+                        step_index=len(self.transcript),
+                    )
+                )
+                return
         
         # RUN EMPIRICAL VERIFICATION (FIT) for review turns
         if is_review_turn:

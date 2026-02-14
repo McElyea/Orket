@@ -30,7 +30,7 @@ class ToolGate:
         roles: List[str],
     ) -> Optional[str]:
         if tool_name == "write_file":
-            violation = self._validate_file_write(args)
+            violation = self._validate_file_write(args, context, roles)
             if violation:
                 return violation
 
@@ -51,7 +51,14 @@ class ToolGate:
 
         return None
 
-    def _validate_file_write(self, args: Dict[str, Any]) -> Optional[str]:
+    def _validate_file_write(
+        self,
+        args: Dict[str, Any],
+        context: Optional[Dict[str, Any]] = None,
+        roles: Optional[List[str]] = None,
+    ) -> Optional[str]:
+        context = context or {}
+        roles = roles or []
         file_path = args.get("path")
         if not file_path:
             return "write_file requires 'path' argument"
@@ -92,10 +99,66 @@ class ToolGate:
                 if any(str(full_path).endswith(ext) for ext in forbidden):
                     return f"Policy violation: File type not allowed ({file_path})"
 
+            ownership_violation = self._validate_dependency_file_ownership(
+                full_path=full_path,
+                context=context,
+                roles=roles,
+            )
+            if ownership_violation:
+                return ownership_violation
+
         except (OSError, ValueError, TypeError) as e:
             return f"Invalid file path: {e}"
 
         return None
+
+    def _validate_dependency_file_ownership(
+        self,
+        *,
+        full_path: Path,
+        context: Dict[str, Any],
+        roles: List[str],
+    ) -> Optional[str]:
+        if not self.org or not isinstance(getattr(self.org, "process_rules", None), dict):
+            return None
+        process_rules = self.org.process_rules
+
+        enabled = process_rules.get("dependency_file_ownership_enabled", False)
+        if not enabled:
+            return None
+
+        managed_files = process_rules.get(
+            "dependency_managed_files",
+            [
+                "agent_output/dependencies/pyproject.toml",
+                "agent_output/dependencies/requirements.txt",
+                "agent_output/dependencies/package.json",
+            ],
+        )
+        if not isinstance(managed_files, list):
+            return None
+
+        allowed_roles = process_rules.get("dependency_file_owner_roles", ["dependency_manager"])
+        if not isinstance(allowed_roles, list):
+            allowed_roles = ["dependency_manager"]
+        allowed_role_set = {str(role).strip().lower() for role in allowed_roles if str(role).strip()}
+
+        rel_path = str(full_path.resolve().relative_to(self.workspace_root.resolve())).replace("\\", "/")
+        managed_set = {str(path).strip().replace("\\", "/") for path in managed_files if str(path).strip()}
+        if rel_path not in managed_set:
+            return None
+
+        normalized_roles = {str(role).strip().lower() for role in roles if str(role).strip()}
+        seat = str(context.get("role", "")).strip().lower()
+        if seat:
+            normalized_roles.add(seat)
+
+        if normalized_roles & allowed_role_set:
+            return None
+        return (
+            f"Policy violation: dependency manifest '{rel_path}' is owned by roles "
+            f"{sorted(allowed_role_set)}"
+        )
 
     def _validate_state_change(
         self,
@@ -152,4 +215,3 @@ class ToolGate:
         if len(summary) < 5:
             return "Issue summary must be at least 5 characters"
         return None
-

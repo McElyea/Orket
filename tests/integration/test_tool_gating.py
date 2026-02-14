@@ -93,6 +93,65 @@ def test_write_file_missing_path_blocked(tool_gate):
     assert "requires 'path'" in result.lower()
 
 
+def test_dependency_manifest_write_blocked_for_non_owner_role(workspace):
+    org = OrganizationConfig(
+        name="Test Org",
+        vision="Test",
+        ethos="Test",
+        branding={"design_dos": []},
+        architecture={
+            "cicd_rules": [],
+            "preferred_stack": {},
+            "idesign_threshold": 7
+        },
+        departments=["core"],
+        process_rules={
+            "dependency_file_ownership_enabled": True,
+            "dependency_managed_files": ["agent_output/dependencies/requirements.txt"],
+            "dependency_file_owner_roles": ["dependency_manager"],
+        },
+    )
+    gate = ToolGate(organization=org, workspace_root=workspace)
+
+    result = gate.validate(
+        tool_name="write_file",
+        args={"path": "agent_output/dependencies/requirements.txt", "content": "httpx==0.28.1"},
+        context={"role": "coder"},
+        roles=["coder"],
+    )
+    assert result is not None
+    assert "dependency manifest" in result.lower()
+
+
+def test_dependency_manifest_write_allowed_for_owner_role(workspace):
+    org = OrganizationConfig(
+        name="Test Org",
+        vision="Test",
+        ethos="Test",
+        branding={"design_dos": []},
+        architecture={
+            "cicd_rules": [],
+            "preferred_stack": {},
+            "idesign_threshold": 7
+        },
+        departments=["core"],
+        process_rules={
+            "dependency_file_ownership_enabled": True,
+            "dependency_managed_files": ["agent_output/dependencies/requirements.txt"],
+            "dependency_file_owner_roles": ["dependency_manager"],
+        },
+    )
+    gate = ToolGate(organization=org, workspace_root=workspace)
+
+    result = gate.validate(
+        tool_name="write_file",
+        args={"path": "agent_output/dependencies/requirements.txt", "content": "httpx==0.28.1"},
+        context={"role": "dependency_manager"},
+        roles=["dependency_manager"],
+    )
+    assert result is None
+
+
 # ============================================================================
 # State Transition Enforcement
 # ============================================================================
