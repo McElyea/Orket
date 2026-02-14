@@ -30,22 +30,115 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 9. Acceptance loop now suppresses sandbox deploy attempts by default (`ORKET_DISABLE_SANDBOX=1` in loop runner).
 
 ## Current Status Snapshot
-1. `P0 Data-Driven Behavior Recovery Loop`: Active.
-2. `P1 Canonical Assets Runnable`: Active, major integrity slice completed.
-3. `P2 Acceptance Gate Uses Canonical Assets`: In progress.
-4. `P3 Boundary Enforcement`: Guardrail mode (maintain only).
-5. `P4 Documentation Reset`: Completed for current baseline.
+1. `P-1 Pipeline Stabilizers`: Active, highest priority.
+2. `P0 Data-Driven Behavior Recovery Loop`: Active, now downstream of `P-1`.
+3. `P1 Canonical Assets Runnable`: Active, major integrity slice completed.
+4. `P2 Acceptance Gate Uses Canonical Assets`: In progress.
+5. `P3 Boundary Enforcement`: Guardrail mode (maintain only).
+6. `P4 Documentation Reset`: Completed for current baseline.
 
 ## Operating Rules
 1. Simple over clever.
 2. No broad refactors while recovery work is active.
 3. Fix only what blocks the acceptance contract.
 4. Every change must be tied to a failing or missing test.
+5. Implement stabilizers as stage/seat contracts on existing `ISSUE` flow first (no new `CardType` until proven necessary).
+
+## P-1: Pipeline Stabilizers (Highest Priority)
+Objective: harden Orket from prototype behavior into deterministic pipeline behavior by adding four stabilizer stages around the existing chain.
+
+Why this is above P0:
+1. P0 improves behavior quality; P-1 reduces structural churn that keeps reintroducing failures.
+2. Existing seams already support this (`DecisionNode` contracts, `ToolGate`, `TurnExecutor` contracts, state machine enforcement).
+3. This is additive guardrail work, not an orchestrator rewrite.
+
+Implementation policy:
+1. Keep the canonical role chain (`requirements_analyst -> architect -> coder -> code_reviewer -> integrity_guard`) intact.
+2. Add stabilizers as pre/post stages and ownership contracts, not architecture pivots.
+3. Enforce deterministic outputs and file ownership through `ToolGate` and stage contracts.
+4. Ship in small slices with tests for each gate.
+
+### P-1A Scaffolder Stage
+Goal: create deterministic project structure before design/coding work begins.
+
+Work:
+1. Add scaffolding stage contract before analyst/architect execution for build initialization.
+2. Define schema-driven scaffold templates (required dirs/files/placeholders/readme/env/test skeleton).
+3. Add guard checks for required/missing/forbidden paths at scaffold completion.
+4. Ensure stable output: same input template must produce same scaffold tree.
+
+Done when:
+1. Scaffold output is deterministic across reruns.
+2. Missing required scaffold files fail early before coding turns.
+3. Acceptance artifacts include scaffold baseline for reviewer/guard reads.
+
+Verification:
+1. `python -m pytest tests/application/test_orchestrator_epic.py -q`
+2. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
+
+### P-1B Dependency Manager Stage
+Goal: centralize dependency and environment ownership away from coder turns.
+
+Work:
+1. Add dependency-management stage after architecture decisions and before coder execution.
+2. Generate/maintain dependency manifests per stack (`pyproject.toml`, `requirements.txt`, `package.json`, etc.).
+3. Pin and validate dependency versions plus dev tooling dependencies.
+4. Enforce ownership in `ToolGate`: non-dependency stages cannot mutate dependency manifests.
+
+Done when:
+1. Dependency files are only writable by dependency-management stage.
+2. Live runs show reduced dependency-related runtime failures/import misses.
+3. Reviewer turns no longer perform dependency drift cleanup as routine work.
+
+Verification:
+1. `python -m pytest tests/application/test_orchestrator_epic.py -q`
+2. `python scripts/run_live_acceptance_loop.py --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 2`
+
+### P-1C Runtime Verifier Stage
+Goal: fail fast on non-runnable output before review/guard turns.
+
+Work:
+1. Add runtime-verification stage after coder output and before reviewer dispatch.
+2. Execute stack-appropriate checks (compile/build/test/type/lint) with deterministic command policy.
+3. Emit machine-readable pass/fail report artifacts and bind them into turn context.
+4. Gate reviewer dispatch on verifier pass; route failures back to coder with explicit diagnostics.
+
+Done when:
+1. Reviewer does not run when runtime verification fails.
+2. Verifier reports are attached per run and visible in acceptance telemetry.
+3. Broken-build churn shifts from review stage to coder fix loop.
+
+Verification:
+1. `python -m pytest tests/application/test_orchestrator_epic.py -q`
+2. `python -m pytest tests/integration/test_system_acceptance_flow.py -q`
+
+### P-1D Deployment Planner Stage
+Goal: ensure every generated project has a deterministic runnable deployment plan.
+
+Work:
+1. Add deployment-planning stage after architecture/dependency stages.
+2. Generate deployment assets (`Dockerfile`, compose, env schema, run scripts; optional k8s manifests by policy).
+3. Validate deployment assets against architecture and dependency contracts.
+4. Integrate deployment checks with runtime-verification policy.
+
+Done when:
+1. Deployment assets are present and structurally valid for generated projects.
+2. Runtime verification can execute in a consistent local/container execution path.
+3. Sandbox/deployment telemetry shows fewer configuration failures.
+
+Verification:
+1. `python -m pytest tests/adapters/test_sandbox_compose_generation.py -q`
+2. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
+
+P-1 exit criteria:
+1. All four stabilizer stages are contract-enforced and test-covered.
+2. Role-chain completion variance drops across baseline model batches.
+3. No stabilizer requires architecture rewrite or card-model pivot to operate.
 
 ## P0: Data-Driven Behavior Recovery Loop
 Objective: use run evidence to systematically improve weak model behavior and raise canonical completion rate.
 
-Why this is P0:
+Why this remains critical:
 1. Governance substrate is in place.
 2. The primary blocker is repeated non-progress and guard over-blocking.
 3. Telemetry is stable across raw artifacts, run ledger, and aggregate loop DB.

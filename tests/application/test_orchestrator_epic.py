@@ -5,6 +5,7 @@ from orket.exceptions import CatastrophicFailure, ExecutionFailed
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
 from orket.schema import CardStatus, IssueConfig
+from orket.application.services.scaffolder import ScaffoldValidationError
 
 
 class AsyncSpy:
@@ -39,8 +40,11 @@ class FakeSnapshots:
 
 
 class FakeLoader:
-    def __init__(self):
+    def __init__(self, workspace_root):
         self._assets = []
+        self.file_tools = SimpleNamespace(write_file=self._write_file)
+
+        self._workspace_root = workspace_root
 
     def queue_assets(self, assets):
         self._assets = list(assets)
@@ -49,6 +53,12 @@ class FakeLoader:
         if not self._assets:
             raise RuntimeError(f"No queued asset for {category}:{name}")
         return self._assets.pop(0)
+
+    async def _write_file(self, path, content):
+        target = self._workspace_root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+        return str(target)
 
 
 class FakeSandbox:
@@ -60,7 +70,7 @@ class FakeSandbox:
 def orchestrator(tmp_path):
     cards = FakeCards()
     snapshots = FakeSnapshots()
-    loader = FakeLoader()
+    loader = FakeLoader(tmp_path)
     org = SimpleNamespace(process_rules={}, architecture=SimpleNamespace(idesign_threshold=10))
     orch = Orchestrator(
         workspace=tmp_path,
@@ -143,6 +153,68 @@ async def test_execute_epic_propagates_dependency_block_before_stall(orchestrato
     assert child.status == CardStatus.BLOCKED
     assert cards.update_status.calls[0][0] == ("COD-1", CardStatus.BLOCKED)
     assert cards.update_status.calls[0][1]["reason"] == "dependency_blocked"
+
+
+@pytest.mark.asyncio
+async def test_execute_epic_runs_scaffolder_stage(orchestrator, tmp_path, monkeypatch):
+    orch, cards, _loader = orchestrator
+    epic = SimpleNamespace(name="Scaffold Epic", issues=[], references=[])
+    team = SimpleNamespace(seats={})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+    cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
+    cards.get_independent_ready_issues.side_effect = [[]]
+    (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
+
+    hit = {"count": 0}
+
+    class _FakeScaffolder:
+        def __init__(self, workspace_root, file_tools, organization):
+            self.workspace_root = workspace_root
+
+        async def ensure(self):
+            hit["count"] += 1
+            return {"created_directories": [], "created_files": []}
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.Scaffolder", _FakeScaffolder)
+
+    await orch.execute_epic(
+        active_build="build-scaffold",
+        run_id="run-scaffold",
+        epic=epic,
+        team=team,
+        env=env,
+    )
+
+    assert hit["count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_execute_epic_fails_on_scaffolder_validation_error(orchestrator, tmp_path, monkeypatch):
+    orch, cards, _loader = orchestrator
+    epic = SimpleNamespace(name="Scaffold Fail Epic", issues=[], references=[])
+    team = SimpleNamespace(seats={})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+    cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
+    cards.get_independent_ready_issues.side_effect = [[]]
+    (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
+
+    class _BadScaffolder:
+        def __init__(self, workspace_root, file_tools, organization):
+            self.workspace_root = workspace_root
+
+        async def ensure(self):
+            raise ScaffoldValidationError("missing directories: agent_output/src")
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.Scaffolder", _BadScaffolder)
+
+    with pytest.raises(ExecutionFailed, match="Scaffolder validation failed"):
+        await orch.execute_epic(
+            active_build="build-scaffold-fail",
+            run_id="run-scaffold-fail",
+            epic=epic,
+            team=team,
+            env=env,
+        )
 
 
 @pytest.mark.asyncio
@@ -444,7 +516,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
     cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
 
     snapshots = FakeSnapshots()
-    loader = FakeLoader()
+    loader = FakeLoader(tmp_path)
     loader.queue_assets(
         [
             SimpleNamespace(name="lead_architect", description="Role", tools=["custom_noop"]),

@@ -19,6 +19,8 @@ from orket.orchestration.notes import NoteStore, Note
 from orket.decision_nodes.contracts import PlanningInput
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.application.services.prompt_compiler import PromptCompiler
+from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
+from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.core.policies.tool_gate import ToolGate
 from orket.core.contracts.repositories import CardRepository, SnapshotRepository
 from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
@@ -121,6 +123,18 @@ class Orchestrator:
                 return value.strip().lower() in {"1", "true", "yes", "on"}
         return False
 
+    def _is_scaffolder_disabled(self) -> bool:
+        env_raw = (os.environ.get("ORKET_DISABLE_SCAFFOLDER") or "").strip().lower()
+        if env_raw in {"1", "true", "yes", "on"}:
+            return True
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = self.org.process_rules.get("disable_scaffolder")
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.strip().lower() in {"1", "true", "yes", "on"}
+        return False
+
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
 
@@ -210,6 +224,35 @@ class Orchestrator:
         """
         from orket.orchestration.models import ModelSelector
         from orket.settings import load_user_settings
+
+        if self._is_scaffolder_disabled():
+            log_event("scaffolder_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
+        else:
+            log_event("scaffolder_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
+            scaffolder = Scaffolder(
+                workspace_root=self.workspace,
+                file_tools=AsyncFileTools(self.workspace),
+                organization=self.org,
+            )
+            try:
+                scaffold_result = await scaffolder.ensure()
+            except ScaffoldValidationError as exc:
+                log_event(
+                    "scaffolder_failed",
+                    {"run_id": run_id, "epic": epic.name, "error": str(exc)},
+                    self.workspace,
+                )
+                raise ExecutionFailed(f"Scaffolder validation failed: {exc}") from exc
+            log_event(
+                "scaffolder_completed",
+                {
+                    "run_id": run_id,
+                    "epic": epic.name,
+                    "created_directories": len(scaffold_result.get("created_directories", [])),
+                    "created_files": len(scaffold_result.get("created_files", [])),
+                },
+                self.workspace,
+            )
         
         # 1. Setup Execution Environment
         settings_path = self.config_root / "user_settings.json"
