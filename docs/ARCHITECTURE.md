@@ -1,105 +1,60 @@
-# Orket Runtime Architecture
+# Orket Architecture
 
-This document describes the current folder architecture, dependency direction rules, and decision-node override wiring used in the runtime.
+This is the canonical architecture document for Orket.
 
-## 1. Folder Architecture
+## Core Idea
+- Role contracts are stable.
+- Models are unique specialists with different strengths and failure modes.
+- Reliability comes from capability-aware model assignment and mechanical governance.
+- Volatile behavior is isolated behind explicit decision seams.
 
-`orket/` is organized by stable runtime layers plus volatile decision seams:
+## Architectural Model
+Orket applies the same decomposition rule recursively:
+1. Stable structure stays in runtime layers.
+2. Volatile decisions move to Decision Nodes behind contracts.
+3. Decomposition stops when remaining logic is mechanical and low-change.
 
-1. `orket/domain/`
-- Core business vocabulary and mechanical rules.
-- Examples: state transitions, verification behavior, failure reporting.
+This applies both to systems built with Orket and to Orket itself.
 
-2. `orket/infrastructure/`
-- External adapters and persistence mechanisms.
-- Examples: async SQLite repositories, async file I/O.
+## Runtime Layers
+1. `orket/core`: stable domain rules, contracts, and policies.
+2. `orket/application`: orchestration workflows and services.
+3. `orket/adapters`: integration seams (LLM, storage, VCS, tools).
+4. `orket/interfaces`: API/CLI edges.
+5. `orket/decision_nodes`: volatile policy/strategy implementations selected through registry contracts.
 
-3. `orket/services/`
-- Application services that coordinate domain + infrastructure.
-- Examples: `ToolGate`, `PromptCompiler`, sandbox orchestration.
+## Dependency Direction
+Allowed:
+1. `interfaces -> application/core`
+2. `application -> core/adapters/decision_nodes`
+3. `adapters -> core`
+4. `decision_nodes -> contracts + core vocabulary`
 
-4. `orket/orchestration/`
-- Stable orchestration flow and execution lifecycle.
-- Owns loop structure, retries, checkpointing, and session execution.
+Disallowed:
+1. `core -> application/interfaces/adapters`
+2. `adapters -> application/interfaces/decision_nodes`
+3. `decision_nodes -> interfaces`
 
-5. `orket/decision_nodes/`
-- Volatile behavior seams behind contracts.
-- Current built-in node families:
-  - planner
-  - router
-  - prompt strategy
-  - evaluator
-  - tool strategy
+## Decision Node Responsibility
+Decision Nodes own behavior that changes often, including:
+1. planning
+2. routing
+3. prompt/model strategy
+4. evaluation and stage-gate policy
+5. tool strategy
 
-6. `orket/interfaces/`
-- System edges (HTTP/API, CLI).
-- Framework-specific integration only.
+Stable runtime flow remains in orchestrators and services.
 
-7. `orket/tools.py`
-- Tool families (`FileSystemTools`, `CardManagementTools`, etc.).
-- Uses:
-  - stable invocation runtime seam (`ToolRuntimeExecutor`)
-  - volatile mapping seam (`ToolStrategyNode`)
+## Durable vs Volatile Local State
+1. Durable runtime state now defaults under `.orket/durable/`.
+2. Workspace execution artifacts remain under `workspace/` and can be sanitized per epic.
+3. Key durable defaults:
+   - runtime DB: `.orket/durable/db/orket_persistence.db`
+   - webhook DB: `.orket/durable/db/webhook.db`
+   - live-loop DB: `.orket/durable/observability/live_acceptance_loop.db`
+   - user settings: `.orket/durable/config/user_settings.json`
+   - gitea export cache/staging: `.orket/durable/gitea_artifacts/`
 
-## 2. Dependency Direction Rules
-
-Dependencies must point inward to stable contracts.
-
-Allowed direction:
-1. `interfaces -> orchestration/services/decision_nodes`
-2. `orchestration -> domain/services/infrastructure/decision_nodes`
-3. `services -> domain/infrastructure`
-4. `decision_nodes -> decision_nodes.contracts + domain vocabulary`
-5. `infrastructure -> domain vocabulary + standard libs + external libraries`
-
-Disallowed direction:
-1. `domain -> orchestration`
-2. `domain -> interfaces`
-3. `domain -> framework/runtime glue`
-4. `decision_nodes -> interfaces`
-5. `infrastructure -> services/orchestration/interfaces/decision_nodes`
-
-Rule of thumb:
-1. Stable layers own workflow mechanics.
-2. Decision nodes own change-prone choices.
-3. Swapping a decision node must not require changing the orchestration loop shape.
-
-## 3. Decision Node Overrides
-
-Node selection resolves from organization process rules and can be locally overridden by environment variables where implemented.
-
-### Organization process rules example
-
-```json
-{
-  "process_rules": {
-    "planner_node": "default",
-    "router_node": "default",
-    "prompt_strategy_node": "default",
-    "evaluator_node": "default",
-    "tool_strategy_node": "default"
-  }
-}
-```
-
-### Tool strategy environment override
-
-`ToolStrategyNode` can be overridden via:
-
-1. `process_rules.tool_strategy_node`
-2. `ORKET_TOOL_STRATEGY_NODE` (wins over `process_rules`)
-
-Example:
-
-```powershell
-$env:ORKET_TOOL_STRATEGY_NODE="default"
-python -m pytest tests/test_toolbox_refactor.py -q
-```
-
-### Runtime behavior
-
-1. `DecisionNodeRegistry.resolve_tool_strategy()` selects the node.
-2. `ToolBox` composes tool map through the selected node.
-3. `ToolRuntimeExecutor` performs invocation mechanics (sync/async call handling + error normalization).
-
-This keeps orchestration and tool execution stable while allowing targeted volatility in strategy selection.
+## Notes on Gitea Artifact Export
+`.orket/durable/gitea_artifacts/` is local staging/cache for export payloads and a local git mirror used by the exporter.  
+It is not the Gitea server's own storage location.

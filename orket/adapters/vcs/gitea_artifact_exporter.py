@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 from urllib import error, parse, request
+from orket.runtime_paths import resolve_gitea_artifact_cache_root
 
 
 def _env_enabled(name: str, default: str = "0") -> bool:
@@ -117,7 +118,7 @@ class GiteaArtifactExporter:
         run_path = f"{prefix}/{run_day}/{run_slug}"
 
         cache_root_env = os.getenv("ORKET_GITEA_ARTIFACT_CACHE_ROOT", "").strip()
-        export_root = Path(cache_root_env) if cache_root_env else (Path.cwd() / ".orket" / "gitea_artifacts")
+        export_root = resolve_gitea_artifact_cache_root(cache_root_env)
         payload_dir = export_root / "payload" / run_slug
         repo_dir = export_root / "repo_cache" / f"{_safe_slug(owner)}_{_safe_slug(repo_name)}"
 

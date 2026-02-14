@@ -10,6 +10,68 @@ Detailed procedures live in dedicated docs linked below.
 - `GITEA_WEBHOOK_SECRET` and `GITEA_ADMIN_PASSWORD` set for webhook runtime
 - `ORKET_TIMEZONE=MST` (or `America/Denver`) for local-time logs and API timestamps
 
+## First Run Setup
+1. Clone:
+```bash
+git clone https://github.com/McElyea/Orket.git
+cd Orket
+```
+2. Create environment file:
+```bash
+cp .env.example .env
+```
+3. Fill required values in `.env`:
+- `DASHBOARD_PASSWORD`
+- `DASHBOARD_SECRET_KEY`
+- `GITEA_ADMIN_USER`
+- `GITEA_ADMIN_PASSWORD`
+- `GITEA_ADMIN_EMAIL`
+- `POSTGRES_PASSWORD`
+- `MYSQL_PASSWORD`
+- `MONGO_PASSWORD`
+4. Install Python dependencies:
+```bash
+pip install -r requirements.txt
+```
+5. Start Gitea:
+```bash
+cd infrastructure
+docker-compose -f docker-compose.gitea.yml up -d
+```
+6. Complete web setup at `http://localhost:3000`.
+7. Verify baseline:
+```bash
+python -m pytest tests/test_golden_flow.py -v
+```
+
+## Credential Management
+Rule:
+1. All secrets belong in `.env`.
+
+Protected by `.gitignore`:
+1. `.env`
+2. `.orket/durable/config/user_settings.json`
+3. `*.db`
+4. `infrastructure/gitea/`
+5. `infrastructure/mysql/`
+
+Safe to commit:
+1. `config/organization.json`
+2. `config/*_example.json`
+3. `.env.example`
+
+Rotation:
+1. Generate a new value.
+2. Update `.env`.
+3. Restart dependent services.
+4. Verify auth/session-dependent flows.
+
+Leak response:
+1. Rotate leaked credentials immediately.
+2. Remove exposed secrets from git history.
+3. Force-push cleaned history if required.
+4. Notify collaborators to refresh local state.
+
 ## Start Services
 API server:
 ```bash
@@ -40,6 +102,10 @@ Optional DB overrides:
 ```bash
 python scripts/run_migrations.py --runtime-db /data/orket_persistence.db --webhook-db /data/webhook.db
 ```
+
+Default durable DB paths:
+1. `.orket/durable/db/orket_persistence.db`
+2. `.orket/durable/db/webhook.db`
 
 ## Release Gate
 Local smoke:

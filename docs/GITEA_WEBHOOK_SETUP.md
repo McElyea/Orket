@@ -125,14 +125,14 @@ curl -X POST "$GITEA_URL/api/v1/repos/$REPO_OWNER/$REPO_NAME/hooks" \
 1. Create a test PR in Gitea
 2. Add a comment with review (approve or request changes)
 3. Check Orket webhook server logs for activity
-4. Check webhook database: `.orket/webhook.db`
+4. Check webhook database: `.orket/durable/db/webhook.db`
 
 ```bash
 # View webhook events
-sqlite3 .orket/webhook.db "SELECT * FROM webhook_events ORDER BY created_at DESC LIMIT 5;"
+sqlite3 .orket/durable/db/webhook.db "SELECT * FROM webhook_events ORDER BY created_at DESC LIMIT 5;"
 
 # View PR review cycles
-sqlite3 .orket/webhook.db "SELECT * FROM pr_review_cycles;"
+sqlite3 .orket/durable/db/webhook.db "SELECT * FROM pr_review_cycles;"
 ```
 
 ## Webhook Event Handling
@@ -220,10 +220,10 @@ Action: closed (merged=true)
 **Issue**: SQLite errors in webhook handler
 
 **Solutions**:
-1. Check database exists: `.orket/webhook.db`
+1. Check database exists: `.orket/durable/db/webhook.db`
 2. Reset database:
    ```bash
-   rm .orket/webhook.db
+   rm .orket/durable/db/webhook.db
    # Restart webhook server (will recreate schema)
    ```
 
@@ -260,15 +260,15 @@ grep "webhook" workspace/default/orket.log
 
 ```bash
 # Active PRs in review
-sqlite3 .orket/webhook.db \
+sqlite3 .orket/durable/db/webhook.db \
   "SELECT pr_key, cycle_count, status FROM pr_review_cycles WHERE status='active';"
 
 # Recent failures
-sqlite3 .orket/webhook.db \
+sqlite3 .orket/durable/db/webhook.db \
   "SELECT pr_key, cycle_number, reviewer, reason FROM review_failures ORDER BY created_at DESC LIMIT 10;"
 
 # Webhook event history
-sqlite3 .orket/webhook.db \
+sqlite3 .orket/durable/db/webhook.db \
   "SELECT event_type, pr_key, result, created_at FROM webhook_events ORDER BY created_at DESC LIMIT 20;"
 ```
 

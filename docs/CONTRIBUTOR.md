@@ -4,7 +4,7 @@ This guide is human/agent agnostic.
 
 ## Read First
 1. `docs/ROADMAP.md`
-2. `docs/OrketArchitectureModel.md`
+2. `docs/ARCHITECTURE.md`
 3. `docs/TESTING_POLICY.md`
 
 ## Quick Setup

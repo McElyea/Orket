@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from orket.adapters.tools.families.base import BaseTools
+from orket.runtime_paths import resolve_runtime_db_path
 
 if TYPE_CHECKING:
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
@@ -15,14 +16,15 @@ class CardManagementTools(BaseTools):
         self,
         workspace_root: Path,
         references: List[Path],
-        db_path: str = "orket_persistence.db",
+        db_path: Optional[str] = None,
         cards_repo: Optional["AsyncCardRepository"] = None,
         tool_gate: Optional["ToolGate"] = None,
     ):
         super().__init__(workspace_root, references)
         from orket.adapters.storage.async_card_repository import AsyncCardRepository
 
-        self.cards = cards_repo or AsyncCardRepository(db_path)
+        resolved_db_path = resolve_runtime_db_path(db_path)
+        self.cards = cards_repo or AsyncCardRepository(resolved_db_path)
         self.tool_gate = tool_gate
 
     async def create_issue(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:

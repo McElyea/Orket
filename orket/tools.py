@@ -13,6 +13,7 @@ from orket.adapters.tools.families import (
     VisionTools,
 )
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
+from orket.runtime_paths import resolve_runtime_db_path
 
 if TYPE_CHECKING:
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
@@ -26,7 +27,7 @@ class ToolBox:
         policy,
         workspace_root: str,
         references: List[str],
-        db_path: str = "orket_persistence.db",
+        db_path: Optional[str] = None,
         cards_repo: Optional["AsyncCardRepository"] = None,
         tool_gate: Optional["ToolGate"] = None,
         organization: Optional["OrganizationConfig"] = None,
@@ -35,7 +36,7 @@ class ToolBox:
     ):
         self.root = Path(workspace_root)
         self.refs = [Path(r) for r in references]
-        self.db_path = db_path
+        self.db_path = resolve_runtime_db_path(db_path)
         self.organization = organization
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.tool_strategy_node = self.decision_nodes.resolve_tool_strategy(self.organization)

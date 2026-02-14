@@ -6,6 +6,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from orket.runtime_paths import resolve_live_acceptance_db_path
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -13,7 +14,7 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--db",
-        default="workspace/observability/live_acceptance_loop.db",
+        default=resolve_live_acceptance_db_path(),
         help="Path to live acceptance loop SQLite database.",
     )
     parser.add_argument(
@@ -140,7 +141,7 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 def main() -> int:
     args = _parse_args()
-    db_path = Path(args.db)
+    db_path = Path(resolve_live_acceptance_db_path(args.db))
     if not db_path.exists():
         raise SystemExit(f"Database not found: {db_path}")
 

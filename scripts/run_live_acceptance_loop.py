@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from orket.runtime_paths import resolve_live_acceptance_db_path
 
 DEFAULT_TEST = (
     "tests/live/test_system_acceptance_pipeline.py::"
@@ -541,7 +542,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--results-db",
-        default="workspace/observability/live_acceptance_loop.db",
+        default=resolve_live_acceptance_db_path(),
         help="SQLite DB path for persistent loop results.",
     )
     parser.add_argument(
@@ -591,7 +592,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     base_temp_root = Path(args.base_temp_root)
     base_temp_root.mkdir(parents=True, exist_ok=True)
 
-    results_db_path = Path(args.results_db)
+    results_db_path = Path(resolve_live_acceptance_db_path(args.results_db))
     conn = _init_results_db(results_db_path)
     _insert_batch(
         conn,

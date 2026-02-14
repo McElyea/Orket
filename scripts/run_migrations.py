@@ -4,6 +4,7 @@ import argparse
 import sqlite3
 from datetime import datetime, UTC
 from pathlib import Path
+from orket.runtime_paths import resolve_runtime_db_path, resolve_webhook_db_path
 
 
 def _ensure_meta(conn: sqlite3.Connection) -> None:
@@ -63,8 +64,8 @@ def run(db_path: Path, migration_dir: Path, target: str) -> tuple[int, int]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Orket SQLite schema migrations.")
-    parser.add_argument("--runtime-db", default="orket_persistence.db")
-    parser.add_argument("--webhook-db", default=".orket/webhook.db")
+    parser.add_argument("--runtime-db", default=resolve_runtime_db_path())
+    parser.add_argument("--webhook-db", default=str(resolve_webhook_db_path()))
     parser.add_argument("--migration-dir", default="scripts/migrations")
     args = parser.parse_args()
 
@@ -72,8 +73,8 @@ def main() -> None:
     if not migration_dir.exists():
         raise SystemExit(f"Migration directory not found: {migration_dir}")
 
-    runtime_db = Path(args.runtime_db)
-    webhook_db = Path(args.webhook_db)
+    runtime_db = Path(resolve_runtime_db_path(args.runtime_db))
+    webhook_db = resolve_webhook_db_path(args.webhook_db)
 
     run(runtime_db, migration_dir, target="runtime")
     run(webhook_db, migration_dir, target="webhook")

@@ -12,6 +12,12 @@ Ship one canonical, reliable agent pipeline that passes this exact flow:
 
 If this flow is not mechanically proven, we are not done.
 
+## Core Idea
+1. Roles are stable contracts.
+2. Models are unique specialists, not interchangeable workers.
+3. Model assignment is capability-aware by role and stage.
+4. Governance, contracts, and stage gates absorb model variance and enforce deterministic outcomes.
+
 ## Current Status Snapshot
 1. `O1 Guardrail Control Plane`: Completed.
 2. `P0 Data-Driven Behavior Recovery Loop`: Active.
@@ -71,7 +77,7 @@ Why this is now P0:
 3. We now have stable telemetry from three layers:
    - per-run raw artifacts in `.pytest_live_loop/`
    - run/session summaries in `run_ledger`
-   - aggregate trend rows in `workspace/observability/live_acceptance_loop.db`
+   - aggregate trend rows in `.orket/durable/observability/live_acceptance_loop.db`
 
 Inputs this phase will use:
 1. Live loop aggregate rows:
@@ -154,7 +160,7 @@ Goal: keep evidence useful and queryable while retaining raw diagnostics for dee
 Work:
 1. [x] Keep `.pytest_live_loop/` enabled during recovery period.
 2. [x] Keep folder-level ignore rules so diagnostics never pollute git status.
-3. [x] Store aggregate/trend facts in `workspace/observability/live_acceptance_loop.db`.
+3. [x] Store aggregate/trend facts in `.orket/durable/observability/live_acceptance_loop.db`.
 4. [x] Store per-run summary/artifact refs in `run_ledger`.
 5. [x] Export raw evidence to Gitea when enabled; treat export as best-effort, non-blocking.
 6. [x] Add one SQL helper/report script for latest-batch pattern summaries.
@@ -166,7 +172,7 @@ Done when:
 Verification:
 1. `python scripts/run_live_acceptance_loop.py --models qwen2.5-coder:7b --iterations 1`
 2. Query:
-   - `workspace/observability/live_acceptance_loop.db`
+   - `.orket/durable/observability/live_acceptance_loop.db`
    - per-run `acceptance_pipeline_live.db` (`run_ledger`)
 
 P0 Operational cadence:
@@ -279,7 +285,7 @@ Verification:
    - keep `.pytest_live_loop/` for diagnosis.
    - do not track in git (ignored at folder level).
 5. Storage strategy now stable:
-   - aggregate loop results in `workspace/observability/live_acceptance_loop.db`.
+   - aggregate loop results in `.orket/durable/observability/live_acceptance_loop.db`.
    - run-level summary/artifact refs in `run_ledger`.
    - raw artifacts optionally exported to Gitea when configured.
 
@@ -299,7 +305,7 @@ Required weekly proof:
 2. `python scripts/check_dependency_direction.py`
 3. `python scripts/check_volatility_boundaries.py`
 4. `python scripts/run_live_acceptance_loop.py --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 1`
-5. Query latest batch in `workspace/observability/live_acceptance_loop.db` for pass/fail + pattern counts.
+5. Query latest batch in `.orket/durable/observability/live_acceptance_loop.db` for pass/fail + pattern counts.
 
 ## Exit Criteria
 All must be true for two consecutive runs:

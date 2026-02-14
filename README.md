@@ -2,6 +2,12 @@
 
 Orket is a local-first, state-driven execution engine for automated workflows. It uses an asynchronous traction loop to coordinate LLM turns against a structured card system, enforced by a mechanical state machine.
 
+## Core Idea
+- Roles are stable contracts.
+- Models are unique specialists with different strengths and failure modes.
+- Reliability comes from capability-aware model assignment plus mechanical governance.
+- The system absorbs model variance through explicit contracts, stage gates, and deterministic retries.
+
 ## Core Mechanics
 
 ### 1. The Traction Loop
@@ -38,3 +44,9 @@ Create a `.env` file from `.env.example`.
 ```bash
 python server.py
 ```
+
+## Docs Navigation
+- `docs/PROJECT.md` for project framing and operating model.
+- `docs/ARCHITECTURE.md` for architecture and durable/volatile state boundaries.
+- `docs/ROADMAP.md` for current priorities.
+- `docs/RUNBOOK.md` for operations.

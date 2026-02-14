@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from orket.vendors.base import VendorInterface, VendorRock, VendorEpic, VendorCard
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, CardConfig
+from orket.runtime_paths import resolve_runtime_db_path
 
 class LocalVendor(VendorInterface):
     """
@@ -57,7 +58,7 @@ class LocalVendor(VendorInterface):
     async def update_card_status(self, card_id: str, status: str) -> bool:
         from orket.adapters.storage.async_card_repository import AsyncCardRepository
         from orket.schema import CardStatus
-        repo = AsyncCardRepository("orket_persistence.db")
+        repo = AsyncCardRepository(resolve_runtime_db_path())
         await repo.update_status(card_id, CardStatus(status))
         return True
 
@@ -66,7 +67,7 @@ class LocalVendor(VendorInterface):
 
     async def get_card_details(self, card_id: str) -> VendorCard:
         from orket.adapters.storage.async_card_repository import AsyncCardRepository
-        repo = AsyncCardRepository("orket_persistence.db")
+        repo = AsyncCardRepository(resolve_runtime_db_path())
         record = await repo.get_by_id(card_id)
         if record:
             return VendorCard(id=record.id, summary=record.summary or "Local Card", status=record.status.value, priority=record.priority or "Medium")

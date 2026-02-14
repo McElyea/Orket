@@ -2,13 +2,19 @@
 
 This document defines the stable project context for Orket.
 
+## Core Idea
+- Role contracts are fixed and explicit.
+- Models are unique and capability-variable.
+- Routing and policy must select models by demonstrated role capability.
+- Governance must make failure modes deterministic and observable.
+
 ## Organization
 - Name: Vibe Rail
 - Vision: Local-first autonomous market intelligence
 - Ethos: Excellence through iteration, transparency, and sovereignty
 
 ## Operating Model
-- Architectural authority: `docs/OrketArchitectureModel.md`
+- Architectural authority: `docs/ARCHITECTURE.md`
 - Forward work authority: `docs/ROADMAP.md`
 - Version/change history: `CHANGELOG.md`
 

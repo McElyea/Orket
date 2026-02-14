@@ -16,6 +16,7 @@ from orket.adapters.storage.async_repositories import (
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
+from orket.runtime_paths import resolve_runtime_db_path
 from orket.schema import (
     CardStatus,
     EnvironmentConfig,
@@ -37,7 +38,7 @@ class ExecutionPipeline:
         self,
         workspace: Path,
         department: str = "core",
-        db_path: str = "orket_persistence.db",
+        db_path: Optional[str] = None,
         config_root: Optional[Path] = None,
         cards_repo: Optional[AsyncCardRepository] = None,
         sessions_repo: Optional[AsyncSessionRepository] = None,
@@ -53,7 +54,7 @@ class ExecutionPipeline:
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.config_root = config_root or Path(".").resolve()
         self.loader = ConfigLoader(self.config_root, department, decision_nodes=self.decision_nodes)
-        self.db_path = db_path
+        self.db_path = resolve_runtime_db_path(db_path)
 
         self.org = self.loader.load_organization()
         self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)

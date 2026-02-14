@@ -16,6 +16,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, UTC
 
 from orket.logging import log_event
+from orket.runtime_paths import resolve_webhook_db_path
 
 
 class WebhookDatabase:
@@ -28,10 +29,7 @@ class WebhookDatabase:
         """
         Initialize database connection.
         """
-        if db_path is None:
-            db_path = Path.cwd() / ".orket" / "webhook.db"
-
-        self.db_path = db_path
+        self.db_path = resolve_webhook_db_path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialized = False
 

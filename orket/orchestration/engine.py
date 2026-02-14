@@ -8,6 +8,7 @@ from orket.adapters.storage.async_repositories import (
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
+from orket.runtime_paths import resolve_runtime_db_path
 
 class OrchestrationEngine:
     """
@@ -17,7 +18,7 @@ class OrchestrationEngine:
     def __init__(self, 
                  workspace_root: Path, 
                  department: str = "core", 
-                 db_path: str = "orket_persistence.db", 
+                 db_path: Optional[str] = None, 
                  config_root: Optional[Path] = None,
                  cards_repo: Optional[AsyncCardRepository] = None,
                  sessions_repo: Optional[AsyncSessionRepository] = None,
@@ -30,7 +31,7 @@ class OrchestrationEngine:
         self.engine_runtime_node.bootstrap_environment()
         self.workspace_root = workspace_root
         self.department = department
-        self.db_path = db_path
+        self.db_path = resolve_runtime_db_path(db_path)
         self.config_root = self.engine_runtime_node.resolve_config_root(config_root)
         
         # Repositories (Accessors)
