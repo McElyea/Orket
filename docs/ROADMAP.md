@@ -23,89 +23,28 @@ If this flow is not mechanically proven with canonical assets and machine-readab
 5. Guard outcomes must be deterministic, machine-readable, and diagnosable from runtime artifacts.
 
 ## Current Priority Order
-1. `P0 Highest`: Guard System Baseline (contract + loop control + ownership boundaries + hallucination guard).
-2. `P1 High`: Security/consistency guard rollout using the same baseline contract.
-3. `P2 Medium`: Prompt Engine optimization/promotion loop follow-ups.
-4. `P3 Low`: Telemetry and tooling polish outside stabilization goals.
+1. `P3 Highest`: Architecture boundaries and maintenance checks stay green in CI and local proof loops.
+2. `P4 Medium`: Additional acceptance telemetry and tooling polish outside stabilization goals.
 
-## P0: Guard System Baseline (Highest Priority)
-Objective: land a minimal, enforceable guard core that prevents retry spirals and hallucination drift.
+## Completed: P0 Guard System Baseline
+Summary (completed 2026-02-14):
+1. Canonical guard contracts (`GuardContract`, `Violation`, `LoopControl`, `TerminalReason`) are enforced.
+2. Runtime guard loop decisions are deterministic (`pass` / `retry` / `terminal_failure`).
+3. Prompt/runtime rule ownership boundaries are enforced with conflict checks.
+4. Hallucination guard V1 prompt overlays, scope checks, taxonomy, and persistent escalation are landed.
 
-### P0-R1: Canonical Contract Layer
-1. `P0-R1-S1` (completed 2026-02-14): define and enforce canonical `GuardContract` fields:
-   - `result`, `violations`, `severity`, `fix_hint`, `terminal_failure`, `terminal_reason`.
-2. `P0-R1-S2` (completed 2026-02-14): define canonical `Violation` fields:
-   - `rule_id`, `code`, `message`, `location`, `severity`, `evidence`.
-3. `P0-R1-S3` (completed 2026-02-14): define canonical loop-control contracts:
-   - `LoopControl(max_retries, retry_backoff, escalation)`.
-   - `TerminalReason(code, message)`.
-4. `P0-R1-S4` (completed 2026-02-14): enforce severity aggregation rule globally:
-   - `soft < strict`.
-   - contract severity is max violation severity.
-   - no violations => `severity=soft`.
+## Completed: P1 Security and Consistency Guard Rollout
+Summary (completed 2026-02-14):
+1. Security scope checks enforce path hardening.
+2. Consistency scope checks enforce deterministic tool-call formatting.
+3. Guard rule cataloging + ownership conflict checks are centralized.
+4. Guard-domain telemetry and terminal-reason counters are reported in live acceptance patterns.
 
-### P0-R2: Runtime Loop Enforcement
-1. `P0-R2-S1` (completed 2026-02-14): route runtime-verifier guarded-stage validation through Guard Agent return of `GuardContract`.
-2. `P0-R2-S2` (completed 2026-02-14): enforce bounded retries with deterministic escalation on exceed for runtime-verifier guard failures.
-3. `P0-R2-S3` (completed 2026-02-14): emit terminal guard outcomes as `terminal_failure` with structured `terminal_reason`.
-4. `P0-R2-S4` (completed 2026-02-14): persist runtime guard artifacts (`guard_contract`, `guard_decision`) in verification evidence.
-
-### P0-R3: Ownership Boundaries
-1. `P0-R3-S1` (completed 2026-02-14): enforce prompt-level ownership in prompt resolution (`Role + Skill + Dialect` only).
-2. `P0-R3-S2` (completed 2026-02-14): enforce runtime-level guard namespace in prompt overlays (`hallucination`, `security`, `consistency` only).
-3. `P0-R3-S3` (completed 2026-02-14): reject duplicated/conflicting rule ownership at prompt-resolution validation time across prompt and runtime guard rule catalogs.
-4. `P0-R3-S4` (completed 2026-02-14): harden Guard Agent as non-generative validator only.
-
-### P0-R4: Hallucination Guard V1
-1. `P0-R4-S1` (completed 2026-02-14): add canonical hallucination guard prompt injection layer.
-2. `P0-R4-S2` (completed 2026-02-14): add explicit verification scope per run:
-   - `workspace`, `provided_context`, `declared_interfaces`.
-3. `P0-R4-S3` (completed 2026-02-14): implement checks for:
-   - out-of-scope file references.
-   - undeclared API/interface references.
-   - missing context references.
-   - invented details and contradictions.
-4. `P0-R4-S4` (completed 2026-02-14): ship initial violation taxonomy with evidence fields:
-   - `HALLUCINATION.FILE_NOT_FOUND`
-   - `HALLUCINATION.API_NOT_DECLARED`
-   - `HALLUCINATION.CONTEXT_NOT_PROVIDED`
-   - `HALLUCINATION.INVENTED_DETAIL`
-   - `HALLUCINATION.CONTRADICTION`
-5. `P0-R4-S5` (completed 2026-02-14): escalate persistent repeats to `terminal_failure` using `HALLUCINATION_PERSISTENT`.
-
-### P0 Exit Criteria
-1. Guarded stages emit valid `GuardContract` artifacts.
-2. Retry behavior is bounded and deterministic under repeated failures.
-3. Hallucination guard blocks out-of-scope references with explicit evidence.
-4. Canonical acceptance and live-loop reports expose guard-driven `terminal_failure` reasons without manual log archaeology.
-
-### P0 Verification Targets
-1. `python -m pytest tests/application/test_turn_executor_middleware.py -q`
-2. `python -m pytest tests/application/test_orchestrator_epic.py -q`
-3. `python -m pytest tests/application/test_execution_pipeline_session_status.py -q`
-4. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
-
-## P1: Security and Consistency Guard Rollout
-Objective: extend the P0 baseline to the other two guard domains without changing core contracts.
-
-Remaining Slices:
-1. `P1-S1` (completed 2026-02-14): implement Security Guard scope-aware runtime checks (path hardening in turn contract enforcement).
-2. `P1-S2` (completed 2026-02-14): implement Consistency Guard runtime checks for deterministic tool-calls-only output formatting.
-3. `P1-S3` (completed 2026-02-14): add centralized guard rule cataloging and deterministic rule-id ownership conflict checks.
-4. `P1-S4` (completed 2026-02-14): publish guard-specific telemetry counters and terminal-reason distributions in live acceptance reporting.
-
-Exit Criteria:
-1. All three guard domains (`hallucination`, `security`, `consistency`) share one contract path.
-2. No duplicated rule ownership between prompt layers and runtime guard validators.
-3. Runtime telemetry can attribute `terminal_failure` by guard domain and rule id.
-
-## P2: Prompt Engine Optimization Follow-Ups
-Objective: continue prompt optimization safely after guard baseline is stable.
-
-Remaining Slices:
-1. `P2-S1` (completed 2026-02-14): offline optimize workflow writes candidate versions only.
-2. `P2-S2` (completed 2026-02-14): compare candidate vs stable on canonical acceptance and live-loop pattern reports.
-3. `P2-S3` (completed 2026-02-14): gate promotion on explicit evidence thresholds, including guard-failure deltas.
+## Completed: P2 Prompt Engine Optimization Follow-Ups
+Summary (completed 2026-02-14):
+1. Offline candidate prompt generation workflow writes to candidate output only.
+2. Stable vs candidate comparison uses eval and live-pattern deltas.
+3. Promotion gates include guard-failure deltas and guard-domain regression counters.
 
 ## P3: Architecture Boundaries and Maintenance
 Objective: keep dependency direction and volatility boundaries green while guard work lands.
