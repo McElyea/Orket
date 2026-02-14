@@ -796,6 +796,15 @@ class DefaultOrchestrationLoopPolicyNode:
         }
         return status_requirements.get(seat, [])
 
+    def required_read_paths_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+        seat = (seat_name or "").strip().lower()
+        if seat in {"code_reviewer", "reviewer"}:
+            return [
+                "agent_output/requirements.txt",
+                "agent_output/main.py",
+            ]
+        return []
+
     def gate_mode_for_seat(self, seat_name: str, **_kwargs) -> str:
         seat = (seat_name or "").strip().lower()
         if seat == "integrity_guard":

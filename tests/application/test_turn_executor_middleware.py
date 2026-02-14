@@ -420,3 +420,104 @@ async def test_prepare_messages_includes_guard_rejection_contract(tmp_path):
     joined = "\n".join(str(m.get("content", "")) for m in messages)
     assert "Guard Rejection Contract" in joined
     assert "remediation_actions" in joined
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_guard_dependency_block_rejected_when_dependencies_resolved(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}\n'
+            '{"rationale": "Dependency unresolved", "violations": ["dep"], "remediation_actions": ["wait"]}',
+            '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}\n'
+            '{"rationale": "Dependency unresolved", "violations": ["dep"], "remediation_actions": ["wait"]}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="GRD",
+        summary="integrity_guard",
+        description="Final gate",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "integrity_guard"
+    context["roles"] = ["integrity_guard"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["done", "blocked"]
+    context["stage_gate_mode"] = "review_required"
+    context["dependency_context"] = {
+        "depends_on": ["ARC-1"],
+        "dependency_count": 1,
+        "dependency_statuses": {"ARC-1": "done"},
+        "unresolved_dependencies": [],
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "guard rejection payload contract not met" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_prepare_messages_includes_read_path_contract(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    messages = await executor._prepare_messages(
+        _issue(),
+        _role(),
+        {
+            **_context(),
+            "required_action_tools": ["read_file", "update_issue_status"],
+            "required_statuses": ["code_review"],
+            "required_read_paths": ["agent_output/main.py"],
+        },
+        None,
+    )
+    joined = "\n".join(str(m.get("content", "")) for m in messages)
+    assert "Read Path Contract" in joined
+    assert "agent_output/main.py" in joined
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "read_file", "args": {"path": "/path/to/implementation/file"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "read_file", "args": {"path": "agent_output/main.py"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["read_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["read_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["required_read_paths"] = ["agent_output/main.py"]
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 2
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[0][1]["path"] == "agent_output/main.py"

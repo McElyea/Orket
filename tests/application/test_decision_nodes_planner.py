@@ -702,6 +702,11 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.required_statuses_for_seat("code_reviewer") == ["code_review"]
     assert node.required_statuses_for_seat("integrity_guard") == ["done", "blocked"]
     assert node.required_statuses_for_seat("lead_architect") == []
+    assert node.required_read_paths_for_seat("code_reviewer") == [
+        "agent_output/requirements.txt",
+        "agent_output/main.py",
+    ]
+    assert node.required_read_paths_for_seat("coder") == []
     assert node.gate_mode_for_seat("integrity_guard") == "review_required"
     assert node.gate_mode_for_seat("coder") == "auto"
     assert node.approval_required_tools_for_seat("integrity_guard") == []

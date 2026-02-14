@@ -375,6 +375,82 @@ class TurnExecutor:
                         should_retry=False,
                     )
 
+            if not self._meets_read_path_contract(turn, context):
+                retry_messages = copy.deepcopy(messages)
+                retry_messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "Corrective instruction: read_file paths are invalid or incomplete for this review turn. "
+                            "Use read_file only with required workspace-relative paths from Read Path Contract."
+                        ),
+                    }
+                )
+                log_event(
+                    "turn_corrective_reprompt",
+                    {
+                        "issue_id": issue_id,
+                        "role": role_name,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "turn_trace_id": turn_trace_id,
+                        "reason": "read_path_contract_not_met",
+                        "required_read_paths": context.get("required_read_paths", []),
+                    },
+                    self.workspace,
+                )
+                response = await model_client.complete(retry_messages)
+                response, middleware_outcome = self.middleware.apply_after_model(
+                    response,
+                    issue=issue,
+                    role=role,
+                    context=context,
+                )
+                if middleware_outcome and middleware_outcome.short_circuit:
+                    reason = middleware_outcome.reason or "short-circuit after_model"
+                    return TurnResult.failed(reason, should_retry=False)
+
+                turn = self._parse_response(
+                    response=response,
+                    issue_id=issue_id,
+                    role_name=role_name,
+                    context=context,
+                )
+                if not self._meets_progress_contract(turn, role, context):
+                    log_event(
+                        "turn_non_progress",
+                        {
+                            "issue_id": issue_id,
+                            "role": role_name,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "turn_trace_id": turn_trace_id,
+                            "reason": "progress_contract_not_met_after_read_path_reprompt",
+                        },
+                        self.workspace,
+                    )
+                    return TurnResult.failed(
+                        "Deterministic failure: progress contract not met after read path corrective reprompt.",
+                        should_retry=False,
+                    )
+                if not self._meets_read_path_contract(turn, context):
+                    log_event(
+                        "turn_non_progress",
+                        {
+                            "issue_id": issue_id,
+                            "role": role_name,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "turn_trace_id": turn_trace_id,
+                            "reason": "read_path_contract_not_met_after_reprompt",
+                        },
+                        self.workspace,
+                    )
+                    return TurnResult.failed(
+                        "Deterministic failure: read path contract not met after corrective reprompt.",
+                        should_retry=False,
+                    )
+
             self._write_turn_artifact(
                 session_id,
                 issue_id,
@@ -592,6 +668,7 @@ class TurnExecutor:
 
         required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
+        required_read_paths = [str(p).strip() for p in (context.get("required_read_paths") or []) if str(p).strip()]
         if required_action_tools or required_statuses:
             contract_lines = []
             if required_action_tools:
@@ -609,6 +686,19 @@ class TurnExecutor:
                 {
                     "role": "user",
                     "content": "Turn Success Contract:\n" + "\n".join(contract_lines),
+                }
+            )
+
+        if required_read_paths:
+            read_lines = [
+                "- Required read_file paths this turn:",
+                *[f"  - {path}" for path in required_read_paths],
+                "- Do not use placeholder or absolute paths outside the workspace.",
+            ]
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Read Path Contract:\n" + "\n".join(read_lines),
                 }
             )
 
@@ -960,12 +1050,14 @@ class TurnExecutor:
             return True
 
         blocked_status = False
+        blocked_wait_reason = ""
         for call in turn.tool_calls:
             if call.tool != "update_issue_status":
                 continue
             status = str(call.args.get("status", "")).strip().lower()
             if status == "blocked":
                 blocked_status = True
+                blocked_wait_reason = str(call.args.get("wait_reason", "")).strip().lower()
                 break
 
         if not blocked_status:
@@ -978,7 +1070,32 @@ class TurnExecutor:
             for item in (payload.get("remediation_actions", []) or [])
             if str(item).strip()
         ]
+        if blocked_wait_reason == "dependency":
+            dep_context = context.get("dependency_context") or {}
+            if "depends_on" in dep_context:
+                unresolved = dep_context.get("unresolved_dependencies") or []
+                if not unresolved:
+                    return False
         return bool(rationale and actions)
+
+    def _meets_read_path_contract(self, turn: ExecutionTurn, context: Dict[str, Any]) -> bool:
+        required_paths = [
+            str(path).strip()
+            for path in (context.get("required_read_paths") or [])
+            if str(path).strip()
+        ]
+        if not required_paths:
+            return True
+
+        observed_paths = [
+            str(call.args.get("path", "")).strip()
+            for call in turn.tool_calls
+            if call.tool == "read_file"
+        ]
+        if not observed_paths:
+            return False
+        observed_set = {p for p in observed_paths if p}
+        return set(required_paths).issubset(observed_set)
 
     def _extract_guard_review_payload(self, content: str) -> Dict[str, Any]:
         blob = content or ""

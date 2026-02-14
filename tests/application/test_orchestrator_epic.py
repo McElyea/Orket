@@ -446,6 +446,7 @@ def test_build_turn_context_includes_stage_gate_mode(orchestrator):
     )
     assert context["stage_gate_mode"] == "review_required"
     assert context["approval_required_tools"] == []
+    assert context["required_read_paths"] == []
     assert callable(context["create_pending_gate_request"])
 
 
@@ -466,6 +467,9 @@ def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orche
         def approval_required_tools_for_seat(self, seat_name, issue=None, turn_status=None):
             return ["write_file"]
 
+        def required_read_paths_for_seat(self, seat_name, issue=None, turn_status=None):
+            return []
+
     orch.loop_policy_node = _LoopPolicy()
     context = orch._build_turn_context(
         run_id="run-1",
@@ -479,6 +483,25 @@ def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orche
 
     assert context["approval_required_tools"] == ["write_file"]
     assert context["stage_gate_mode"] == "approval_required"
+
+
+def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="REV-1", seat="code_reviewer", summary="Review")
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="code_reviewer",
+        roles_to_load=["code_reviewer"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        dependency_context={"depends_on": ["COD-1"], "dependency_count": 1, "dependency_statuses": {}, "unresolved_dependencies": []},
+        resume_mode=False,
+    )
+    assert context["required_read_paths"] == [
+        "agent_output/requirements.txt",
+        "agent_output/main.py",
+    ]
 
 
 @pytest.mark.asyncio
@@ -590,4 +613,31 @@ async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
     assert call["session_id"] == "run-1"
     assert call["gate_mode"] == "review_required"
     assert call["request_type"] == "guard_rejection_payload"
+
+
+@pytest.mark.asyncio
+async def test_build_dependency_context_resolves_dependency_statuses(orchestrator):
+    orch, cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="COD-1",
+        seat="coder",
+        summary="Implement",
+        depends_on=["ARC-1", "REQ-1", "MISSING-1"],
+    )
+
+    def _get_by_id(card_id):
+        if card_id == "ARC-1":
+            return SimpleNamespace(status=CardStatus.DONE)
+        if card_id == "REQ-1":
+            return SimpleNamespace(status=CardStatus.CODE_REVIEW)
+        return None
+
+    cards.get_by_id.side_effect = _get_by_id
+    context = await orch._build_dependency_context(issue)
+
+    assert context["dependency_count"] == 3
+    assert context["dependency_statuses"]["ARC-1"] == "done"
+    assert context["dependency_statuses"]["REQ-1"] == "code_review"
+    assert context["dependency_statuses"]["MISSING-1"] == "missing"
+    assert set(context["unresolved_dependencies"]) == {"REQ-1", "MISSING-1"}
 

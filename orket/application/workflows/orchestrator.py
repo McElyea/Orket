@@ -331,6 +331,7 @@ class Orchestrator:
         """Executes a single turn for one issue."""
         issue = IssueConfig.model_validate(issue_data.model_dump())
         is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
+        dependency_context = await self._build_dependency_context(issue)
         
         # RUN EMPIRICAL VERIFICATION (FIT) for review turns
         if is_review_turn:
@@ -397,6 +398,7 @@ class Orchestrator:
             roles_to_load=roles_to_load,
             turn_status=turn_status,
             selected_model=selected_model,
+            dependency_context=dependency_context,
             resume_mode=resume_mode,
         )
 
@@ -602,6 +604,7 @@ class Orchestrator:
         roles_to_load: List[str],
         turn_status: CardStatus,
         selected_model: str,
+        dependency_context: Optional[Dict[str, Any]] = None,
         resume_mode: bool = False,
     ) -> Dict[str, Any]:
         required_action_tools = []
@@ -633,6 +636,21 @@ class Orchestrator:
                 )
             except TypeError:
                 required_statuses = list(required_statuses_fn(seat_name) or [])
+
+        required_read_paths = []
+        required_read_paths_fn = getattr(self.loop_policy_node, "required_read_paths_for_seat", None)
+        if callable(required_read_paths_fn):
+            try:
+                required_read_paths = list(
+                    required_read_paths_fn(
+                        seat_name=seat_name,
+                        issue=issue,
+                        turn_status=turn_status,
+                    )
+                    or []
+                )
+            except TypeError:
+                required_read_paths = list(required_read_paths_fn(seat_name) or [])
 
         gate_mode = "auto"
         gate_mode_fn = getattr(self.loop_policy_node, "gate_mode_for_seat", None)
@@ -685,17 +703,50 @@ class Orchestrator:
             "current_status": turn_status.value,
             "selected_model": selected_model,
             "turn_index": len(self.transcript) + 1,
-            "dependency_context": {
+            "dependency_context": dependency_context
+            or {
                 "depends_on": issue.depends_on,
                 "dependency_count": len(issue.depends_on),
+                "dependency_statuses": {},
+                "unresolved_dependencies": [],
             },
             "required_action_tools": required_action_tools,
             "required_statuses": required_statuses,
+            "required_read_paths": required_read_paths,
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
             "create_pending_gate_request": _pending_gate_request_writer,
             "resume_mode": bool(resume_mode),
             "history": self._history_context(),
+        }
+
+    async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:
+        depends_on = list(issue.depends_on or [])
+        dependency_statuses: Dict[str, str] = {}
+        unresolved_dependencies: List[str] = []
+        terminal_ok = {
+            CardStatus.DONE,
+            CardStatus.GUARD_APPROVED,
+            CardStatus.ARCHIVED,
+        }
+
+        for dep_id in depends_on:
+            dep = await self.async_cards.get_by_id(dep_id)
+            if not dep:
+                dependency_statuses[dep_id] = "missing"
+                unresolved_dependencies.append(dep_id)
+                continue
+            status_val = getattr(dep, "status", None)
+            status_text = status_val.value if hasattr(status_val, "value") else str(status_val)
+            dependency_statuses[dep_id] = status_text
+            if status_val not in terminal_ok:
+                unresolved_dependencies.append(dep_id)
+
+        return {
+            "depends_on": depends_on,
+            "dependency_count": len(depends_on),
+            "dependency_statuses": dependency_statuses,
+            "unresolved_dependencies": unresolved_dependencies,
         }
 
     def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
