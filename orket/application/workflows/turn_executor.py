@@ -572,6 +572,16 @@ class TurnExecutor:
                 }
             )
 
+        verification_scope = context.get("verification_scope")
+        if isinstance(verification_scope, dict):
+            scope_render = json.dumps(verification_scope, sort_keys=True)
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Hallucination Verification Scope:\n" + scope_render,
+                }
+            )
+
         if bool(context.get("architecture_decision_required")):
             mode = str(context.get("architecture_mode", "architect_decides"))
             decision_path = str(context.get("architecture_decision_path", "agent_output/design.txt"))
@@ -955,6 +965,16 @@ class TurnExecutor:
                 }
             )
 
+        hallucination_scope_diag = self._hallucination_scope_diagnostics(turn, context)
+        if hallucination_scope_diag.get("violations"):
+            violations.append(
+                {
+                    "reason": "hallucination_scope_contract_not_met",
+                    "scope": hallucination_scope_diag.get("scope", {}),
+                    "violations": hallucination_scope_diag.get("violations", []),
+                }
+            )
+
         return violations
 
     def _build_corrective_instruction(
@@ -1021,6 +1041,14 @@ class TurnExecutor:
                 "rationale (non-empty), violations (non-empty list), remediation_actions (non-empty list)."
             )
 
+        if "hallucination_scope_contract_not_met" in reason_set:
+            lines.append(
+                "- Do not reference files, tools, APIs, or context outside Hallucination Verification Scope."
+            )
+            lines.append(
+                "- If scope data is missing, say it is missing instead of guessing or inventing references."
+            )
+
         required_read_paths = self._required_read_paths(context)
         required_write_paths = self._required_write_paths(context)
         required_statuses = [
@@ -1062,6 +1090,7 @@ class TurnExecutor:
             "read_path_contract_not_met": "Deterministic failure: read path contract not met after corrective reprompt.",
             "write_path_contract_not_met": "Deterministic failure: write path contract not met after corrective reprompt.",
             "architecture_decision_contract_not_met": "Deterministic failure: architecture decision contract not met after corrective reprompt.",
+            "hallucination_scope_contract_not_met": "Deterministic failure: hallucination scope contract not met after corrective reprompt.",
         }
         return mapping.get(
             reason_key,
@@ -1317,6 +1346,70 @@ class TurnExecutor:
             return True
 
         return False
+
+    def _hallucination_scope_diagnostics(self, turn: ExecutionTurn, context: Dict[str, Any]) -> Dict[str, Any]:
+        scope = context.get("verification_scope")
+        if not isinstance(scope, dict):
+            return {"scope": {}, "violations": []}
+
+        workspace_scope = {
+            str(path).strip()
+            for path in (scope.get("workspace") or [])
+            if str(path).strip()
+        }
+        provided_context_scope = {
+            str(item).strip()
+            for item in (scope.get("provided_context") or [])
+            if str(item).strip()
+        }
+        declared_interfaces_scope = {
+            str(item).strip()
+            for item in (scope.get("declared_interfaces") or [])
+            if str(item).strip()
+        }
+
+        violations: List[Dict[str, Any]] = []
+        for call in (turn.tool_calls or []):
+            tool_name = str(call.tool or "").strip()
+            if declared_interfaces_scope and tool_name and tool_name not in declared_interfaces_scope:
+                violations.append(
+                    {
+                        "rule_id": "HALLUCINATION.API_NOT_DECLARED",
+                        "message": f"Tool/API '{tool_name}' not declared in verification scope.",
+                        "evidence": tool_name,
+                    }
+                )
+
+            if tool_name in {"read_file", "write_file"}:
+                path = str(call.args.get("path", "")).strip()
+                if workspace_scope and path and path not in workspace_scope:
+                    violations.append(
+                        {
+                            "rule_id": "HALLUCINATION.FILE_NOT_FOUND",
+                            "message": f"Path '{path}' not present in verification scope.workspace.",
+                            "evidence": path,
+                        }
+                    )
+
+            if tool_name == "get_issue_context":
+                ref = str(call.args.get("section", "")).strip()
+                if provided_context_scope and ref and ref not in provided_context_scope:
+                    violations.append(
+                        {
+                            "rule_id": "HALLUCINATION.CONTEXT_NOT_PROVIDED",
+                            "message": f"Context reference '{ref}' not present in verification scope.provided_context.",
+                            "evidence": ref,
+                        }
+                    )
+
+        return {
+            "scope": {
+                "workspace": sorted(workspace_scope),
+                "provided_context": sorted(provided_context_scope),
+                "declared_interfaces": sorted(declared_interfaces_scope),
+            },
+            "violations": violations,
+        }
 
     def _extract_guard_review_payload(self, content: str) -> Dict[str, Any]:
         blob = content or ""

@@ -1182,6 +1182,29 @@ class Orchestrator:
             "required_statuses": required_statuses,
             "required_read_paths": required_read_paths,
             "required_write_paths": required_write_paths,
+            "verification_scope": {
+                "workspace": sorted(
+                    {
+                        str(path).strip()
+                        for path in (list(required_read_paths) + list(required_write_paths))
+                        if str(path).strip()
+                    }
+                ),
+                "provided_context": sorted(
+                    {
+                        str(path).strip()
+                        for path in (list(required_read_paths) or [])
+                        if str(path).strip()
+                    }
+                ),
+                "declared_interfaces": sorted(
+                    {
+                        str(name).strip()
+                        for name in (list(required_action_tools) + list(approval_required_tools))
+                        if str(name).strip()
+                    }
+                ),
+            },
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
             "runtime_verifier_ok": runtime_verifier_ok,

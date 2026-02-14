@@ -582,6 +582,86 @@ async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path
 
 
 @pytest.mark.asyncio
+async def test_turn_executor_hallucination_scope_contract_recovers_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "read_file", "args": {"path": "agent_output/not_allowed.py"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "read_file", "args": {"path": "agent_output/main.py"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["read_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["read_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": ["agent_output/main.py"],
+        "provided_context": [],
+        "declared_interfaces": ["read_file", "update_issue_status"],
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 2
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "read_file", "args": {"path": "agent_output/not_allowed.py"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "read_file", "args": {"path": "agent_output/not_allowed.py"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["read_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["read_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": ["agent_output/main.py"],
+        "provided_context": [],
+        "declared_interfaces": ["read_file", "update_issue_status"],
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
+
+
+@pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
