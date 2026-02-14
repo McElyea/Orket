@@ -13,11 +13,12 @@ Ship one canonical, reliable agent pipeline that passes this exact flow:
 If this flow is not mechanically proven, we are not done.
 
 ## Current Status Snapshot
-1. `P0 Data-Driven Behavior Recovery Loop`: Active.
-2. `P1 Canonical Assets Runnable`: In progress.
-3. `P2 Acceptance Gate Uses Canonical Assets`: In progress.
-4. `P3 Boundary Enforcement`: Mostly complete, keep as guardrail.
-5. `P4 Documentation Reset`: In progress.
+1. `O1 Guardrail Control Plane`: In progress.
+2. `P0 Data-Driven Behavior Recovery Loop`: Active.
+3. `P1 Canonical Assets Runnable`: In progress.
+4. `P2 Acceptance Gate Uses Canonical Assets`: In progress.
+5. `P3 Boundary Enforcement`: Mostly complete, keep as guardrail.
+6. `P4 Documentation Reset`: In progress.
 
 ## Operating Rules
 1. Simple over clever.
@@ -26,6 +27,38 @@ If this flow is not mechanically proven, we are not done.
 4. Every change must be tied to a failing or missing test.
 
 ## Primary Recovery Plan
+
+### Phase O1: Guardrail Control Plane (Before P0)
+Objective: add deterministic control-plane enforcement so P0 tuning runs on a stable governance substrate.
+Status: In progress.
+
+Scope:
+1. Stage gate policy per seat/stage:
+   - `auto`, `review_required`, `approval_required`.
+2. Strict guard rejection contract:
+   - rejection requires non-empty rationale and remediation actions.
+3. Risk-focused rollout:
+   - apply hard gating to `integrity_guard` first.
+4. Keep behavior mechanical:
+   - invalid guard payloads trigger deterministic retry path, not silent pass/fail.
+
+Work:
+1. [x] Add stage gate mode policy seam in orchestration loop node.
+2. [x] Include stage gate mode in turn execution context for visibility and downstream policy use.
+3. [x] Enforce strict guard rejection payload validation (`rationale` + `remediation_actions`) on guard-rejected outcomes.
+4. [x] Log invalid payload event with machine-readable reason (`guard_payload_invalid`).
+5. [ ] Add persistent `pending_gate_requests` ledger for explicit pause/resume gating.
+6. [ ] Add `approval_required` flow for selected high-impact tools.
+
+Done when:
+1. Guard rejection without rationale/remediation can no longer pass as valid output.
+2. Stage gate mode is available in runtime context for every turn.
+3. Guard payload invalid events are observable and correlate to retry behavior.
+
+Verification:
+1. `python -m pytest tests/application/test_decision_nodes_planner.py -q`
+2. `python -m pytest tests/application/test_orchestrator_epic.py -q`
+3. `python scripts/run_live_acceptance_loop.py --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 1`
 
 ### Phase P0: Data-Driven Behavior Recovery Loop
 Objective: use run evidence to systematically improve weak model behavior and raise canonical completion rate.

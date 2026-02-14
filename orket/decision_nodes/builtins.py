@@ -796,6 +796,29 @@ class DefaultOrchestrationLoopPolicyNode:
         }
         return status_requirements.get(seat, [])
 
+    def gate_mode_for_seat(self, seat_name: str, **_kwargs) -> str:
+        seat = (seat_name or "").strip().lower()
+        if seat == "integrity_guard":
+            return "review_required"
+        return "auto"
+
+    def validate_guard_rejection_payload(self, payload: Any) -> Dict[str, Any]:
+        rationale = str(getattr(payload, "rationale", "") or "").strip()
+        actions = getattr(payload, "remediation_actions", []) or []
+        normalized_actions = [str(item).strip() for item in actions if str(item).strip()]
+
+        if not rationale:
+            return {
+                "valid": False,
+                "reason": "missing_rationale",
+            }
+        if not normalized_actions:
+            return {
+                "valid": False,
+                "reason": "missing_remediation_actions",
+            }
+        return {"valid": True, "reason": None}
+
     def missing_seat_status(self) -> Any:
         return CardStatus.CANCELED
 

@@ -431,3 +431,37 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
 
     assert tool_strategy_hit["used"] is True
 
+
+def test_build_turn_context_includes_stage_gate_mode(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="I1", seat="integrity_guard", summary="Guard Review")
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="integrity_guard",
+        roles_to_load=["integrity_guard"],
+        turn_status=CardStatus.AWAITING_GUARD_REVIEW,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+    assert context["stage_gate_mode"] == "review_required"
+
+
+def test_validate_guard_rejection_payload_default_logic(orchestrator):
+    orch, _cards, _loader = orchestrator
+
+    invalid = orch._validate_guard_rejection_payload(
+        SimpleNamespace(rationale="", remediation_actions=["Do something"])
+    )
+    assert invalid == {"valid": False, "reason": "missing_rationale"}
+
+    invalid_actions = orch._validate_guard_rejection_payload(
+        SimpleNamespace(rationale="Needs remediation.", remediation_actions=[])
+    )
+    assert invalid_actions == {"valid": False, "reason": "missing_remediation_actions"}
+
+    valid = orch._validate_guard_rejection_payload(
+        SimpleNamespace(rationale="Needs remediation.", remediation_actions=["Fix issue"])
+    )
+    assert valid == {"valid": True, "reason": None}
+

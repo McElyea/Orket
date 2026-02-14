@@ -1,7 +1,8 @@
-﻿import asyncio
+import asyncio
 import json
 import uuid
 import re
+from types import SimpleNamespace
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
@@ -418,6 +419,29 @@ class Orchestrator:
             if is_guard_turn:
                 guard_payload = self._extract_guard_review_payload(result.turn.content or "")
                 guard_event = self._resolve_guard_event(updated_issue.status)
+                if guard_event == "guard_rejected":
+                    guard_validation = self._validate_guard_rejection_payload(guard_payload)
+                    if not guard_validation.get("valid", False):
+                        log_event(
+                            "guard_payload_invalid",
+                            {
+                                "run_id": run_id,
+                                "issue_id": issue.id,
+                                "seat": seat_name,
+                                "reason": guard_validation.get("reason"),
+                                "payload": guard_payload.model_dump(),
+                            },
+                            self.workspace,
+                        )
+                        failure_result = SimpleNamespace(
+                            error=(
+                                "Deterministic failure: invalid guard rejection payload "
+                                f"({guard_validation.get('reason')})."
+                            ),
+                            violations=[],
+                        )
+                        await self._handle_failure(issue, failure_result, run_id, roles_to_load)
+                        return
                 if guard_event:
                     log_event(
                         guard_event,
@@ -472,6 +496,22 @@ class Orchestrator:
         else:
             await self._handle_failure(issue, result, run_id, roles_to_load)
 
+    def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> Dict[str, Any]:
+        validate_fn = getattr(self.loop_policy_node, "validate_guard_rejection_payload", None)
+        if callable(validate_fn):
+            try:
+                return dict(validate_fn(payload=payload))
+            except TypeError:
+                return dict(validate_fn(payload))
+
+        rationale = (payload.rationale or "").strip()
+        actions = [item.strip() for item in (payload.remediation_actions or []) if item and item.strip()]
+        if not rationale:
+            return {"valid": False, "reason": "missing_rationale"}
+        if not actions:
+            return {"valid": False, "reason": "missing_remediation_actions"}
+        return {"valid": True, "reason": None}
+
     def _build_turn_context(
         self,
         run_id: str,
@@ -512,6 +552,20 @@ class Orchestrator:
             except TypeError:
                 required_statuses = list(required_statuses_fn(seat_name) or [])
 
+        gate_mode = "auto"
+        gate_mode_fn = getattr(self.loop_policy_node, "gate_mode_for_seat", None)
+        if callable(gate_mode_fn):
+            try:
+                gate_mode = str(
+                    gate_mode_fn(
+                        seat_name=seat_name,
+                        issue=issue,
+                        turn_status=turn_status,
+                    )
+                )
+            except TypeError:
+                gate_mode = str(gate_mode_fn(seat_name))
+
         return {
             "session_id": run_id,
             "issue_id": issue.id,
@@ -527,20 +581,44 @@ class Orchestrator:
             },
             "required_action_tools": required_action_tools,
             "required_statuses": required_statuses,
+            "stage_gate_mode": gate_mode,
             "resume_mode": bool(resume_mode),
             "history": self._history_context(),
         }
 
     def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
         blob = content or ""
-        match = re.search(r"\{[\s\S]*\}", blob)
-        if match:
+        decoder = json.JSONDecoder()
+        candidates: List[Dict[str, Any]] = []
+
+        fenced_matches = re.findall(r"```json\s*([\s\S]*?)```", blob, flags=re.IGNORECASE)
+        for chunk in fenced_matches:
             try:
-                parsed = json.loads(match.group(0))
+                parsed = json.loads(chunk.strip())
                 if isinstance(parsed, dict):
-                    return GuardReviewPayload.model_validate(parsed)
+                    candidates.append(parsed)
             except (json.JSONDecodeError, ValueError, TypeError):
-                pass
+                continue
+
+        start = 0
+        while True:
+            brace_index = blob.find("{", start)
+            if brace_index == -1:
+                break
+            try:
+                parsed, end_pos = decoder.raw_decode(blob[brace_index:])
+                if isinstance(parsed, dict):
+                    candidates.append(parsed)
+                start = brace_index + max(end_pos, 1)
+            except json.JSONDecodeError:
+                start = brace_index + 1
+
+        for parsed in candidates:
+            if {"rationale", "violations", "remediation_actions"} & set(parsed.keys()):
+                try:
+                    return GuardReviewPayload.model_validate(parsed)
+                except (ValueError, TypeError):
+                    continue
         return GuardReviewPayload(
             rationale=(blob.strip()[:500] if blob else "No rationale provided."),
             violations=[],
@@ -685,4 +763,5 @@ class Orchestrator:
                 result.error,
             )
         )
+
 

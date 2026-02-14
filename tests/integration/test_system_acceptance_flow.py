@@ -31,7 +31,7 @@ class AcceptanceProvider:
             system_prompt = messages[0]["content"]
             if "CODE REVIEW" in system_prompt or "integrity_guard" in system_prompt.lower():
                 return ModelResponse(
-                    content='```json\n{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}\n```',
+                    content='{"rationale":"Insufficient acceptance criteria coverage.","violations":["missing acceptance criteria"],"remediation_actions":["Document explicit acceptance criteria before merge."]}\n```json\n{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}\n```',
                     raw={"model": "dummy", "total_tokens": 50},
                 )
             return ModelResponse(
@@ -176,6 +176,7 @@ async def test_system_acceptance_guard_rejects_actions(tmp_path, monkeypatch):
     assert issue.status == CardStatus.BLOCKED
     log_blob = (workspace / "orket.log").read_text(encoding="utf-8")
     assert '"event": "guard_rejected"' in log_blob
+    assert '"event": "guard_payload_invalid"' not in log_blob
 
 
 @pytest.mark.asyncio

@@ -702,6 +702,20 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.required_statuses_for_seat("code_reviewer") == ["code_review"]
     assert node.required_statuses_for_seat("integrity_guard") == ["done", "blocked"]
     assert node.required_statuses_for_seat("lead_architect") == []
+    assert node.gate_mode_for_seat("integrity_guard") == "review_required"
+    assert node.gate_mode_for_seat("coder") == "auto"
+    assert node.validate_guard_rejection_payload(
+        SimpleNamespace(rationale="", remediation_actions=["Fix design drift"])
+    ) == {"valid": False, "reason": "missing_rationale"}
+    assert node.validate_guard_rejection_payload(
+        SimpleNamespace(rationale="Insufficient verification evidence.", remediation_actions=[])
+    ) == {"valid": False, "reason": "missing_remediation_actions"}
+    assert node.validate_guard_rejection_payload(
+        SimpleNamespace(
+            rationale="Insufficient verification evidence.",
+            remediation_actions=["Add verification fixtures"],
+        )
+    ) == {"valid": True, "reason": None}
     assert node.missing_seat_status() == CardStatus.CANCELED
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.DONE)]) == {
         "is_done": True,
