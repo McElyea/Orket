@@ -12,6 +12,10 @@ from orket.schema import CardStatus
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 
 
+def _safe_console(text: str) -> str:
+    return text.encode("ascii", errors="backslashreplace").decode("ascii")
+
+
 class MultiRoleAcceptanceProvider:
     async def complete(self, messages):
         prompt_blob = "\n".join((m.get("content") or "").lower() for m in messages)
@@ -44,7 +48,7 @@ class MultiRoleAcceptanceProvider:
                 raw={"model": "dummy", "total_tokens": 80},
             )
 
-        if active_seat == "developer" or active_issue_id == "dev-1":
+        if active_seat == "coder" or active_issue_id == "cod-1":
             return ModelResponse(
                 content='```json\n{"tool": "write_file", "args": {"path": "agent_output/main.py", "content": "class SummationApp:\\n    def run(self, args):\\n        a = int(args[0]); b = int(args[1])\\n        print(a + b)\\n\\nif __name__ == \\"__main__\\":\\n    import sys\\n    SummationApp().run(sys.argv[1:])\\n"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
                 raw={"model": "dummy", "total_tokens": 140},
@@ -115,7 +119,7 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
                 "You must write agent_output/design.txt and then set status to code_review."
             ),
         },
-        "developer": {
+        "coder": {
             "tools": ["get_issue_context", "add_issue_comment", "read_file", "write_file", "update_issue_status"],
             "description": (
                 "Implement from requirements and design. "
@@ -158,7 +162,7 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
                 "seats": {
                     "requirements_analyst": {"name": "Req", "roles": ["requirements_analyst"]},
                     "architect": {"name": "Arch", "roles": ["architect"]},
-                    "developer": {"name": "Dev", "roles": ["developer"]},
+                    "coder": {"name": "Coder", "roles": ["coder"]},
                     "code_reviewer": {"name": "CR", "roles": ["code_reviewer"]},
                     "integrity_guard": {"name": "Guard", "roles": ["integrity_guard"]},
                 },
@@ -185,7 +189,7 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
                     "model_overrides": {
                         "requirements_analyst": environment_model,
                         "architect": environment_model,
-                        "developer": environment_model,
+                        "coder": environment_model,
                         "code_reviewer": environment_model,
                         "integrity_guard": environment_model,
                     }
@@ -201,9 +205,9 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
                         "depends_on": ["REQ-1"],
                     },
                     {
-                        "id": "DEV-1",
+                        "id": "COD-1",
                         "summary": "Implement based on design",
-                        "seat": "developer",
+                        "seat": "coder",
                         "priority": "High",
                         "depends_on": ["ARC-1"],
                     },
@@ -212,7 +216,7 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
                         "summary": "Review against requirements",
                         "seat": "code_reviewer",
                         "priority": "High",
-                        "depends_on": ["DEV-1"],
+                        "depends_on": ["COD-1"],
                     },
                 ],
             }
@@ -236,7 +240,7 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
     await engine.run_card("acceptance_pipeline")
 
-    for issue_id in ("REQ-1", "ARC-1", "DEV-1", "REV-1"):
+    for issue_id in ("REQ-1", "ARC-1", "COD-1", "REV-1"):
         issue = await engine.cards.get_by_id(issue_id)
         assert issue.status == CardStatus.DONE, f"{issue_id} did not reach DONE"
 
@@ -266,7 +270,7 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path):
 
     req_issue = await engine.cards.get_by_id("REQ-1")
     arc_issue = await engine.cards.get_by_id("ARC-1")
-    dev_issue = await engine.cards.get_by_id("DEV-1")
+    cod_issue = await engine.cards.get_by_id("COD-1")
     rev_issue = await engine.cards.get_by_id("REV-1")
 
     requirements_path = workspace / "agent_output" / "requirements.txt"
@@ -280,23 +284,26 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path):
     print(f"[live] model={model_name}")
     print(f"[live] REQ-1 status={req_issue.status}")
     print(f"[live] ARC-1 status={arc_issue.status}")
-    print(f"[live] DEV-1 status={dev_issue.status}")
+    print(f"[live] COD-1 status={cod_issue.status}")
     print(f"[live] REV-1 status={rev_issue.status}")
     print("[live] requirements.txt")
-    print(requirements_text)
+    print(_safe_console(requirements_text))
     print("[live] design.txt")
-    print(design_text)
+    print(_safe_console(design_text))
     print("[live] main.py")
-    print(code_text)
-
-    assert requirements_path.exists(), "requirements.txt not produced"
-    assert design_path.exists(), "design.txt not produced"
-    assert code_path.exists(), "main.py not produced"
+    print(_safe_console(code_text))
 
     assert req_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
     assert arc_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
-    assert dev_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
+    assert cod_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
     assert rev_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
+
+    if req_issue.status == CardStatus.DONE:
+        assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
+    if arc_issue.status == CardStatus.DONE:
+        assert design_path.exists(), "design.txt not produced for completed ARC-1"
+    if cod_issue.status == CardStatus.DONE:
+        assert code_path.exists(), "main.py not produced for completed COD-1"
 
 
 @pytest.mark.asyncio

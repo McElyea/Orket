@@ -211,6 +211,10 @@ class Orchestrator:
             )
 
             if not candidates:
+                propagated_count = await self._propagate_dependency_blocks(backlog, run_id)
+                if propagated_count:
+                    continue
+
                 # Empty-candidate policy (seam) with backward-compatible fallback.
                 outcome_fn = getattr(self.loop_policy_node, "no_candidate_outcome", None)
                 if callable(outcome_fn):
@@ -223,7 +227,32 @@ class Orchestrator:
                     event_name = outcome.get("event_name")
                     if event_name:
                         log_event(event_name, {"epic": epic.name, "run_id": run_id}, self.workspace)
-                break
+                    break
+
+                backlog_snapshot = [
+                    {
+                        "id": getattr(item, "id", "unknown"),
+                        "status": (
+                            getattr(item.status, "value", str(item.status))
+                            if hasattr(item, "status")
+                            else "unknown"
+                        ),
+                    }
+                    for item in backlog
+                ]
+                reason = outcome.get("reason") or "No executable candidates while backlog incomplete."
+                log_event(
+                    "orchestrator_stalled",
+                    {
+                        "run_id": run_id,
+                        "epic": epic.name,
+                        "iteration": iteration_count,
+                        "reason": reason,
+                        "backlog": backlog_snapshot,
+                    },
+                    self.workspace,
+                )
+                raise ExecutionFailed(reason)
             
             log_event(
                 "orchestrator_tick",
@@ -250,6 +279,38 @@ class Orchestrator:
                 should_raise = not self.loop_policy_node.is_backlog_done(final_backlog)
             if should_raise:
                 raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
+
+    async def _propagate_dependency_blocks(self, backlog: List[Any], run_id: str) -> int:
+        blocker_statuses = {CardStatus.BLOCKED, CardStatus.CANCELED, CardStatus.GUARD_REJECTED}
+        status_by_id = {getattr(issue, "id", ""): getattr(issue, "status", None) for issue in backlog}
+        propagated = []
+
+        for issue in backlog:
+            if getattr(issue, "status", None) != CardStatus.READY:
+                continue
+            depends_on = list(getattr(issue, "depends_on", []) or [])
+            if not depends_on:
+                continue
+            blocked_by = [dep_id for dep_id in depends_on if status_by_id.get(dep_id) in blocker_statuses]
+            if not blocked_by:
+                continue
+
+            await self.async_cards.update_status(
+                issue.id,
+                CardStatus.BLOCKED,
+                reason="dependency_blocked",
+                metadata={"run_id": run_id, "blocked_by": blocked_by},
+            )
+            issue.status = CardStatus.BLOCKED
+            propagated.append({"issue_id": issue.id, "blocked_by": blocked_by})
+
+        if propagated:
+            log_event(
+                "dependency_block_propagated",
+                {"run_id": run_id, "updates": propagated},
+                self.workspace,
+            )
+        return len(propagated)
 
     async def _execute_issue_turn(
         self, 
@@ -421,6 +482,36 @@ class Orchestrator:
         selected_model: str,
         resume_mode: bool = False,
     ) -> Dict[str, Any]:
+        required_action_tools = []
+        required_tools_fn = getattr(self.loop_policy_node, "required_action_tools_for_seat", None)
+        if callable(required_tools_fn):
+            try:
+                required_action_tools = list(
+                    required_tools_fn(
+                        seat_name=seat_name,
+                        issue=issue,
+                        turn_status=turn_status,
+                    )
+                    or []
+                )
+            except TypeError:
+                required_action_tools = list(required_tools_fn(seat_name) or [])
+
+        required_statuses = []
+        required_statuses_fn = getattr(self.loop_policy_node, "required_statuses_for_seat", None)
+        if callable(required_statuses_fn):
+            try:
+                required_statuses = list(
+                    required_statuses_fn(
+                        seat_name=seat_name,
+                        issue=issue,
+                        turn_status=turn_status,
+                    )
+                    or []
+                )
+            except TypeError:
+                required_statuses = list(required_statuses_fn(seat_name) or [])
+
         return {
             "session_id": run_id,
             "issue_id": issue.id,
@@ -434,6 +525,8 @@ class Orchestrator:
                 "depends_on": issue.depends_on,
                 "dependency_count": len(issue.depends_on),
             },
+            "required_action_tools": required_action_tools,
+            "required_statuses": required_statuses,
             "resume_mode": bool(resume_mode),
             "history": self._history_context(),
         }

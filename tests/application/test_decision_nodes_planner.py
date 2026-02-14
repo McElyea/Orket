@@ -692,12 +692,26 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.turn_status_for_issue(False) == CardStatus.IN_PROGRESS
     assert node.role_order_for_turn(["coder"], is_review_turn=False) == ["coder"]
     assert node.role_order_for_turn(["coder"], is_review_turn=True) == ["integrity_guard", "coder"]
+    assert node.required_action_tools_for_seat("requirements_analyst") == ["write_file", "update_issue_status"]
+    assert node.required_action_tools_for_seat("coder") == ["write_file", "update_issue_status"]
+    assert node.required_action_tools_for_seat("code_reviewer") == ["read_file", "update_issue_status"]
+    assert node.required_action_tools_for_seat("integrity_guard") == ["update_issue_status"]
+    assert node.required_action_tools_for_seat("lead_architect") == []
+    assert node.required_statuses_for_seat("requirements_analyst") == ["code_review"]
+    assert node.required_statuses_for_seat("coder") == ["code_review"]
+    assert node.required_statuses_for_seat("code_reviewer") == ["code_review"]
+    assert node.required_statuses_for_seat("integrity_guard") == ["done", "blocked"]
+    assert node.required_statuses_for_seat("lead_architect") == []
     assert node.missing_seat_status() == CardStatus.CANCELED
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.DONE)]) == {
         "is_done": True,
         "event_name": "orchestrator_epic_complete",
     }
     assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.ARCHIVED)]) == {
+        "is_done": True,
+        "event_name": "orchestrator_epic_complete",
+    }
+    assert node.no_candidate_outcome([SimpleNamespace(status=CardStatus.BLOCKED)]) == {
         "is_done": True,
         "event_name": "orchestrator_epic_complete",
     }

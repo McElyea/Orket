@@ -210,14 +210,38 @@ class TurnExecutor:
                 role_name=role_name,
                 context=context,
             )
-            if not self._meets_progress_contract(turn, role):
+            if not self._meets_progress_contract(turn, role, context):
+                required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
+                required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
+                observed_tools = [call.tool for call in turn.tool_calls]
+                missing_required = [tool for tool in required_action_tools if tool not in observed_tools]
+                observed_statuses = [
+                    str(call.args.get("status", "")).strip().lower()
+                    for call in turn.tool_calls
+                    if call.tool == "update_issue_status"
+                ]
+                status_hint = ""
+                if required_statuses:
+                    status_hint = (
+                        f" Required update_issue_status values: {', '.join(required_statuses)}."
+                        f" Observed: {', '.join(observed_statuses) if observed_statuses else 'none'}."
+                    )
+                    if "blocked" in required_statuses:
+                        status_hint += " If status is blocked, include wait_reason: resource|dependency|review|input|system."
+                required_hint = ""
+                if required_action_tools:
+                    required_hint = (
+                        f" Required tools this turn: {', '.join(required_action_tools)}."
+                        f" Missing: {', '.join(missing_required) if missing_required else 'none'}."
+                    )
                 retry_messages = copy.deepcopy(messages)
                 retry_messages.append(
                     {
                         "role": "user",
                         "content": (
                             "Corrective instruction: previous response did not make acceptable progress. "
-                            "You must emit at least one valid tool call from your allowed tool list."
+                            "You must emit required tool-call JSON blocks in this turn and complete the work."
+                            f"{required_hint}{status_hint}"
                         ),
                     }
                 )
@@ -230,6 +254,11 @@ class TurnExecutor:
                         "turn_index": turn_index,
                         "turn_trace_id": turn_trace_id,
                         "reason": "progress_contract_not_met",
+                        "required_action_tools": required_action_tools,
+                        "required_statuses": required_statuses,
+                        "observed_tools": observed_tools,
+                        "missing_required_tools": missing_required,
+                        "observed_statuses": observed_statuses,
                     },
                     self.workspace,
                 )
@@ -250,7 +279,7 @@ class TurnExecutor:
                     role_name=role_name,
                     context=context,
                 )
-                if not self._meets_progress_contract(turn, role):
+                if not self._meets_progress_contract(turn, role, context):
                     log_event(
                         "turn_non_progress",
                         {
@@ -475,11 +504,35 @@ class TurnExecutor:
             "seat": context.get("role", role.name),
             "status": context.get("current_status"),
             "dependency_context": context.get("dependency_context", {}),
+            "required_action_tools": context.get("required_action_tools", []),
+            "required_statuses": context.get("required_statuses", []),
         }
         messages.append({
             "role": "user",
             "content": f"Execution Context JSON:\n{json.dumps(execution_context, sort_keys=True)}"
         })
+
+        required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
+        required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
+        if required_action_tools or required_statuses:
+            contract_lines = []
+            if required_action_tools:
+                contract_lines.append(f"- Required tool calls this turn: {', '.join(required_action_tools)}")
+            if required_statuses:
+                contract_lines.append(
+                    f"- Required update_issue_status.status values: {', '.join(required_statuses)}"
+                )
+                contract_lines.append(
+                    "- If you choose status=blocked, include wait_reason: resource|dependency|review|input|system."
+                )
+            contract_lines.append("- You must include all required tool calls in this same response.")
+            contract_lines.append("- A response containing only get_issue_context/add_issue_comment is invalid.")
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Turn Success Contract:\n" + "\n".join(contract_lines),
+                }
+            )
 
         # Add any history (from context)
         if "history" in context:
@@ -716,15 +769,63 @@ class TurnExecutor:
         if violations:
             raise ToolValidationError(violations)
 
-    def _meets_progress_contract(self, turn: ExecutionTurn, role: RoleConfig) -> bool:
+    def _meets_progress_contract(self, turn: ExecutionTurn, role: RoleConfig, context: Dict[str, Any]) -> bool:
         allowed = set(role.tools or [])
+        called_tools = {call.tool for call in (turn.tool_calls or []) if call.tool}
+        required_tools = {
+            str(tool)
+            for tool in (context.get("required_action_tools") or [])
+            if tool
+        }
+        required_statuses = {
+            str(status).strip().lower()
+            for status in (context.get("required_statuses") or [])
+            if status
+        }
+        observational_tools = {
+            "get_issue_context",
+            "read_file",
+            "list_directory",
+            "list_dir",
+        }
+        blocked_wait_reasons = {"resource", "dependency", "review", "input", "system"}
+
         if allowed:
             if not turn.tool_calls:
                 return False
-            return any(call.tool in allowed for call in turn.tool_calls)
-        if turn.tool_calls:
-            return True
-        return bool((turn.content or "").strip())
+            if not any(call.tool in allowed for call in turn.tool_calls):
+                return False
+        elif turn.tool_calls:
+            pass
+        elif not (turn.content or "").strip():
+            return False
+
+        # Hard minimum progress: avoid turns that only fetch context and never act.
+        if called_tools and called_tools.issubset(observational_tools):
+            return False
+
+        # Optional seat-level contract (if supplied by orchestrator policy).
+        if required_tools and not required_tools.issubset(called_tools):
+            return False
+
+        if required_statuses:
+            status_match = False
+            for call in turn.tool_calls:
+                if call.tool != "update_issue_status":
+                    continue
+                status = str(call.args.get("status", "")).strip().lower()
+                if status not in required_statuses:
+                    continue
+                if status == "blocked":
+                    wait_reason = str(call.args.get("wait_reason", "")).strip().lower()
+                    if wait_reason not in blocked_wait_reasons:
+                        continue
+                status_match = True
+                break
+            if not status_match:
+                return False
+
+        return True
 
     def _message_hash(self, messages: List[Dict[str, str]]) -> str:
         normalized = json.dumps(messages, sort_keys=True, ensure_ascii=False)

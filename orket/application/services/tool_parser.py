@@ -16,6 +16,57 @@ class ToolParser:
         text = text.strip()
         results = []
 
+        def _coerce_args(value: Any) -> Dict[str, Any]:
+            if isinstance(value, dict):
+                return value
+            if isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                    if isinstance(parsed, dict):
+                        return parsed
+                except json.JSONDecodeError:
+                    return {}
+            return {}
+
+        def _extract_tool_calls(payload: Any) -> List[Dict[str, Any]]:
+            extracted: List[Dict[str, Any]] = []
+
+            if isinstance(payload, list):
+                for item in payload:
+                    extracted.extend(_extract_tool_calls(item))
+                return extracted
+
+            if not isinstance(payload, dict):
+                return extracted
+
+            if "tool" in payload:
+                tool_name = payload.get("tool")
+                if isinstance(tool_name, str) and tool_name:
+                    extracted.append({"tool": tool_name, "args": _coerce_args(payload.get("args", {}))})
+                return extracted
+
+            if "name" in payload and "arguments" in payload:
+                tool_name = payload.get("name")
+                if isinstance(tool_name, str) and tool_name:
+                    extracted.append({"tool": tool_name, "args": _coerce_args(payload.get("arguments", {}))})
+                return extracted
+
+            if "function" in payload and isinstance(payload.get("function"), dict):
+                function_payload = payload.get("function", {})
+                tool_name = function_payload.get("name")
+                if isinstance(tool_name, str) and tool_name:
+                    extracted.append({"tool": tool_name, "args": _coerce_args(function_payload.get("arguments", {}))})
+                return extracted
+
+            for key in ("tool_calls", "calls"):
+                nested = payload.get(key)
+                if isinstance(nested, list):
+                    for item in nested:
+                        extracted.extend(_extract_tool_calls(item))
+                    return extracted
+
+            return extracted
+
         def emit(stage: str, data: Dict[str, Any]) -> None:
             if diagnostics:
                 diagnostics(stage, data)
@@ -37,29 +88,18 @@ class ToolParser:
                         candidate = text[start_idx:i+1]
                         try:
                             data = json.loads(candidate)
-                            if isinstance(data, dict):
-                                # Normalize different LLM output formats
-                                if "tool" in data: 
-                                    results.append({"tool": data["tool"], "args": data.get("args", {})})
-                                elif "name" in data and "arguments" in data: 
-                                    # OpenAI style
-                                    args = data["arguments"]
-                                    if isinstance(args, str): args = json.loads(args)
-                                    results.append({"tool": data["name"], "args": args})
-                                elif "function" in data:
-                                    f = data.get("function", {})
-                                    args = f.get("arguments", {})
-                                    if isinstance(args, str): args = json.loads(args)
-                                    results.append({"tool": f.get("name"), "args": args})
-                                else:
-                                    emit(
-                                        "json_candidate_ignored",
-                                        {
-                                            "reason": "missing_tool_keys",
-                                            "keys": sorted(data.keys())[:12],
-                                            "candidate_preview": candidate[:180],
-                                        },
-                                    )
+                            parsed = _extract_tool_calls(data)
+                            if parsed:
+                                results.extend(parsed)
+                            elif isinstance(data, dict):
+                                emit(
+                                    "json_candidate_ignored",
+                                    {
+                                        "reason": "missing_tool_keys",
+                                        "keys": sorted(data.keys())[:12],
+                                        "candidate_preview": candidate[:180],
+                                    },
+                                )
                         except (json.JSONDecodeError, KeyError, TypeError) as e:
                             emit(
                                 "json_candidate_rejected",

@@ -30,7 +30,8 @@ class PromptCompiler:
             prompt += f"- {c}\n"
 
         prompt += "\nCARD SYSTEM PROTOCOL:\n"
-        prompt += "- ALWAYS start by calling 'get_issue_context' to read the comment history and intent.\n"
+        prompt += "- You MAY call 'get_issue_context' to read comment history and intent.\n"
+        prompt += "- A context-only response is invalid: do not stop after get_issue_context/read-only actions.\n"
         prompt += "- Use 'add_issue_comment' to log your progress, reasoning, and final handoff memo.\n"
         prompt += "- The Card System is the Source of Truth for INTENT. Files are the result of EXECUTION.\n"
         prompt += "- DO NOT narrate your plan in prose. Emit executable tool-call JSON blocks only.\n"
@@ -49,8 +50,44 @@ class PromptCompiler:
         prompt += "- read_file args MUST include: path (string)\n"
         prompt += "- add_issue_comment args MUST include: comment (string)\n"
         prompt += "- update_issue_status args MUST include: status (string)\n"
+        prompt += "- If update_issue_status.status is 'blocked', args MUST include wait_reason in: resource|dependency|review|input|system\n"
         prompt += "- get_issue_context args MAY be {}\n"
+        prompt += "- If Execution Context JSON includes required_action_tools, your turn is INVALID unless all listed tools are called.\n"
+        prompt += "- If Execution Context JSON includes required_statuses, your update_issue_status.status MUST be one of them.\n"
         prompt += "- Return ONLY JSON tool blocks. No markdown explanations outside tool blocks.\n"
+
+        role_name = (skill.name or "").strip().lower()
+        if role_name in {"requirements_analyst", "architect", "coder", "developer", "code_reviewer", "integrity_guard"}:
+            prompt += "\nTURN COMPLETION CONTRACT:\n"
+            role_contracts = {
+                "requirements_analyst": [
+                    "You MUST write requirements content using write_file(path='agent_output/requirements.txt', ...).",
+                    "You MUST then call update_issue_status(status='code_review').",
+                ],
+                "architect": [
+                    "You MUST write design content using write_file(path='agent_output/design.txt', ...).",
+                    "You MUST then call update_issue_status(status='code_review').",
+                ],
+                "coder": [
+                    "You MUST write implementation code using write_file(path='agent_output/main.py', ...).",
+                    "You MUST then call update_issue_status(status='code_review').",
+                ],
+                "developer": [
+                    "You MUST write implementation code using write_file(path='agent_output/main.py', ...).",
+                    "You MUST then call update_issue_status(status='code_review').",
+                ],
+                "code_reviewer": [
+                    "You MUST read required implementation artifacts with read_file(...).",
+                    "You MUST then call update_issue_status(status='code_review') for guard handoff.",
+                ],
+                "integrity_guard": [
+                    "You MUST produce a terminal guard decision by calling update_issue_status.",
+                    "Valid terminal outcomes are done or blocked.",
+                    "If you choose blocked, you MUST include wait_reason: resource|dependency|review|input|system.",
+                ],
+            }
+            for line in role_contracts.get(role_name, []):
+                prompt += f"- {line}\n"
 
         prompt += f"\nSYNTAX DIALECT ({dialect.model_family}):\n"
         prompt += f"You MUST use this format for all file operations:\n{dialect.dsl_format}\n"

@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 import json
 
 from orket.adapters.storage.async_repositories import (
-    AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository
+    AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository, AsyncRunLedgerRepository
 )
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.decision_nodes.registry import DecisionNodeRegistry
@@ -23,6 +23,7 @@ class OrchestrationEngine:
                  sessions_repo: Optional[AsyncSessionRepository] = None,
                  snapshots_repo: Optional[AsyncSnapshotRepository] = None,
                  success_repo: Optional[AsyncSuccessRepository] = None,
+                 run_ledger_repo: Optional[AsyncRunLedgerRepository] = None,
                  decision_nodes: Optional[DecisionNodeRegistry] = None):
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.engine_runtime_node = self.decision_nodes.resolve_engine_runtime()
@@ -37,6 +38,7 @@ class OrchestrationEngine:
         self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
+        self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
         
         # Config & Assets
         from orket.orket import ConfigLoader
@@ -56,7 +58,8 @@ class OrchestrationEngine:
             cards_repo=self.cards,
             sessions_repo=self.sessions,
             snapshots_repo=self.snapshots,
-            success_repo=self.success
+            success_repo=self.success,
+            run_ledger_repo=self.run_ledger,
         )
 
 

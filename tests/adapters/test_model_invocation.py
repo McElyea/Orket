@@ -3,6 +3,7 @@ import json
 import pytest
 from orket.orchestration.engine import OrchestrationEngine
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
+from orket.exceptions import ExecutionFailed
 
 
 class DummyProvider(LocalModelProvider):
@@ -63,7 +64,8 @@ async def test_model_invocation(monkeypatch, tmp_path):
     db_path = str(tmp_path / "test.db")
 
     engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("test_epic")
+    with pytest.raises(ExecutionFailed, match="No executable candidates while backlog incomplete"):
+        await engine.run_card("test_epic")
 
     assert len(dummy.prompts) > 0, "Model provider was never invoked"
     # Check if any recorded prompt contains our task summary

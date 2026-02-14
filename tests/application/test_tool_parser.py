@@ -83,3 +83,30 @@ CONTENT: New task"""
     assert results[0]["tool"] == "create_issue"
     assert results[0]["args"]["path"] == "task.txt"
 
+
+def test_parse_tool_calls_envelope():
+    text = """
+    {"thought": "Plan", "tool_calls": [
+        {"tool": "write_file", "args": {"path": "agent_output/requirements.txt", "content": "ok"}},
+        {"tool": "update_issue_status", "args": {"status": "code_review"}}
+    ]}
+    """
+    results = ToolParser.parse(text)
+    assert len(results) == 2
+    assert results[0]["tool"] == "write_file"
+    assert results[1]["tool"] == "update_issue_status"
+
+
+def test_parse_tool_calls_envelope_openai_style():
+    text = """
+    {"tool_calls": [
+        {"name": "write_file", "arguments": "{\\"path\\": \\"agent_output/main.py\\", \\"content\\": \\"print(1)\\"}"},
+        {"name": "update_issue_status", "arguments": {"status": "code_review"}}
+    ]}
+    """
+    results = ToolParser.parse(text)
+    assert len(results) == 2
+    assert results[0]["tool"] == "write_file"
+    assert results[0]["args"]["path"] == "agent_output/main.py"
+    assert results[1]["tool"] == "update_issue_status"
+

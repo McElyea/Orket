@@ -11,7 +11,9 @@ from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
     AsyncSnapshotRepository,
     AsyncSuccessRepository,
+    AsyncRunLedgerRepository,
 )
+from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
 from orket.schema import (
@@ -41,6 +43,7 @@ class ExecutionPipeline:
         sessions_repo: Optional[AsyncSessionRepository] = None,
         snapshots_repo: Optional[AsyncSnapshotRepository] = None,
         success_repo: Optional[AsyncSuccessRepository] = None,
+        run_ledger_repo: Optional[AsyncRunLedgerRepository] = None,
         decision_nodes: Optional[DecisionNodeRegistry] = None,
     ):
         from orket.orchestration.notes import NoteStore
@@ -60,6 +63,8 @@ class ExecutionPipeline:
         self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
+        self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
+        self.artifact_exporter = GiteaArtifactExporter(self.workspace)
 
         self.notes = NoteStore()
         self.transcript = []
@@ -173,46 +178,223 @@ class ExecutionPipeline:
             workspace=self.workspace,
         )
 
-        await self.orchestrator.execute_epic(
-            active_build=active_build,
-            run_id=run_id,
-            epic=epic,
-            team=team,
-            env=env,
-            target_issue_id=target_issue_id,
-            resume_mode=resume_mode,
+        await self.run_ledger.start_run(
+            session_id=run_id,
+            run_type="epic",
+            run_name=epic.name,
+            department=self.department,
+            build_id=active_build,
+            summary={"target_issue_id": target_issue_id, "resume_mode": bool(resume_mode)},
+            artifacts=self._run_artifact_refs(run_id),
         )
 
-        self.transcript = self.orchestrator.transcript
+        workflow_terminal_statuses = {
+            CardStatus.DONE,
+            CardStatus.CANCELED,
+            CardStatus.ARCHIVED,
+            CardStatus.BLOCKED,
+            CardStatus.GUARD_REJECTED,
+            CardStatus.GUARD_APPROVED,
+        }
+        success_statuses = {CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED}
 
-        legacy_transcript = [
-            {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
-            for i, t in enumerate(self.transcript)
-        ]
-        await self.sessions.complete_session(run_id, "done", legacy_transcript)
-        log_event("session_end", {"run_id": run_id}, workspace=self.workspace)
-        await self.snapshots.record(
-            run_id,
-            {"epic": epic.model_dump(), "team": team.model_dump(), "env": env.model_dump(), "build_id": active_build},
-            legacy_transcript,
-        )
+        legacy_transcript: List[Dict[str, Any]] = []
+        backlog: List[Any] = []
+        session_status = "failed"
 
-        backlog = await self.async_cards.get_by_build(active_build)
-        is_truly_done = all(i.status in [CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED] for i in backlog)
-        if is_truly_done:
-            await self.success.record_success(
-                session_id=run_id,
-                success_type="EPIC_COMPLETED",
-                artifact_ref=f"build:{active_build}",
-                human_ack=None,
+        try:
+            await self.orchestrator.execute_epic(
+                active_build=active_build,
+                run_id=run_id,
+                epic=epic,
+                team=team,
+                env=env,
+                target_issue_id=target_issue_id,
+                resume_mode=resume_mode,
             )
-            log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
+
+            self.transcript = self.orchestrator.transcript
+            legacy_transcript = [
+                {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
+                for i, t in enumerate(self.transcript)
+            ]
+            backlog = await self.async_cards.get_by_build(active_build)
+
+            is_workflow_terminal = all(i.status in workflow_terminal_statuses for i in backlog)
+            is_success_terminal = all(i.status in success_statuses for i in backlog)
+            session_status = "done" if is_workflow_terminal else "incomplete"
+
+            await self.sessions.complete_session(run_id, session_status, legacy_transcript)
+            log_event("session_end", {"run_id": run_id, "status": session_status}, workspace=self.workspace)
+            if not is_workflow_terminal:
+                non_terminal = [
+                    {
+                        "id": issue.id,
+                        "status": issue.status.value if hasattr(issue.status, "value") else str(issue.status),
+                    }
+                    for issue in backlog
+                    if issue.status not in workflow_terminal_statuses
+                ]
+                log_event(
+                    "session_incomplete",
+                    {"run_id": run_id, "build_id": active_build, "open_issues": non_terminal},
+                    workspace=self.workspace,
+                )
+            await self.snapshots.record(
+                run_id,
+                {"epic": epic.model_dump(), "team": team.model_dump(), "env": env.model_dump(), "build_id": active_build},
+                legacy_transcript,
+            )
+
+            if is_success_terminal:
+                await self.success.record_success(
+                    session_id=run_id,
+                    success_type="EPIC_COMPLETED",
+                    artifact_ref=f"build:{active_build}",
+                    human_ack=None,
+                )
+                log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
+
+            artifacts = self._run_artifact_refs(run_id)
+            gitea_export = await self._export_run_artifacts(
+                run_id=run_id,
+                run_type="epic",
+                run_name=epic.name,
+                build_id=active_build,
+                session_status=session_status,
+                summary=self._build_run_summary(session_status=session_status, backlog=backlog, transcript=legacy_transcript),
+            )
+            if gitea_export:
+                artifacts["gitea_export"] = gitea_export
+
+            await self.run_ledger.finalize_run(
+                session_id=run_id,
+                status=session_status,
+                summary=self._build_run_summary(session_status=session_status, backlog=backlog, transcript=legacy_transcript),
+                artifacts=artifacts,
+            )
+
+        except Exception as exc:
+            self.transcript = self.orchestrator.transcript
+            legacy_transcript = [
+                {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
+                for i, t in enumerate(self.transcript)
+            ]
+            try:
+                backlog = await self.async_cards.get_by_build(active_build)
+            except Exception:
+                backlog = []
+
+            await self.sessions.complete_session(run_id, "failed", legacy_transcript)
+            log_event(
+                "session_end",
+                {"run_id": run_id, "status": "failed", "failure_class": type(exc).__name__},
+                workspace=self.workspace,
+            )
+            failure_summary = self._build_run_summary(session_status="failed", backlog=backlog, transcript=legacy_transcript)
+            artifacts = self._run_artifact_refs(run_id)
+            gitea_export = await self._export_run_artifacts(
+                run_id=run_id,
+                run_type="epic",
+                run_name=epic.name,
+                build_id=active_build,
+                session_status="failed",
+                summary=failure_summary,
+                failure_class=type(exc).__name__,
+                failure_reason=str(exc)[:2000],
+            )
+            if gitea_export:
+                artifacts["gitea_export"] = gitea_export
+            await self.run_ledger.finalize_run(
+                session_id=run_id,
+                status="failed",
+                failure_class=type(exc).__name__,
+                failure_reason=str(exc)[:2000],
+                summary=failure_summary,
+                artifacts=artifacts,
+            )
+            raise
 
         root_log = Path("workspace/default/orket.log")
         if root_log.exists():
             await self.loader.file_tools.write_file("workspace/default/orket.log", "")
 
         return legacy_transcript
+
+    def _run_artifact_refs(self, run_id: str) -> Dict[str, str]:
+        return {
+            "workspace": str(self.workspace),
+            "orket_log": str(self.workspace / "orket.log"),
+            "observability_root": str(self.workspace / "observability" / sanitize_name(run_id)),
+            "agent_output_root": str(self.workspace / "agent_output"),
+        }
+
+    async def _export_run_artifacts(
+        self,
+        *,
+        run_id: str,
+        run_type: str,
+        run_name: str,
+        build_id: str,
+        session_status: str,
+        summary: Dict[str, Any],
+        failure_class: Optional[str] = None,
+        failure_reason: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        try:
+            exported = await self.artifact_exporter.export_run(
+                run_id=run_id,
+                run_type=run_type,
+                run_name=run_name,
+                build_id=build_id,
+                session_status=session_status,
+                summary=summary,
+                failure_class=failure_class,
+                failure_reason=failure_reason,
+            )
+            if exported:
+                log_event(
+                    "run_artifacts_exported",
+                    {
+                        "run_id": run_id,
+                        "provider": exported.get("provider"),
+                        "repo": f"{exported.get('owner')}/{exported.get('repo')}",
+                        "branch": exported.get("branch"),
+                        "path": exported.get("path"),
+                        "commit": exported.get("commit"),
+                    },
+                    workspace=self.workspace,
+                )
+            return exported
+        except Exception as exc:
+            log_event(
+                "run_artifact_export_failed",
+                {
+                    "run_id": run_id,
+                    "error": str(exc),
+                    "error_type": type(exc).__name__,
+                },
+                workspace=self.workspace,
+            )
+            return None
+
+    def _build_run_summary(
+        self,
+        *,
+        session_status: str,
+        backlog: List[Any],
+        transcript: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        status_counts: Dict[str, int] = {}
+        for issue in backlog:
+            status_key = issue.status.value if hasattr(issue.status, "value") else str(issue.status)
+            status_counts[status_key] = status_counts.get(status_key, 0) + 1
+        return {
+            "session_status": session_status,
+            "issue_count": len(backlog),
+            "transcript_turns": len(transcript),
+            "status_counts": status_counts,
+        }
 
     async def run_rock(
         self,

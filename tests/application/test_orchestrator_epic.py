@@ -99,6 +99,53 @@ async def test_execute_epic_completion(orchestrator, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_execute_epic_raises_when_no_candidates_and_backlog_incomplete(orchestrator, tmp_path):
+    orch, cards, _loader = orchestrator
+    epic = SimpleNamespace(name="Stalled Epic", issues=[], references=[])
+    team = SimpleNamespace(seats={})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.IN_PROGRESS)]]
+    cards.get_independent_ready_issues.side_effect = [[]]
+    (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
+
+    with pytest.raises(ExecutionFailed, match="No executable candidates while backlog incomplete"):
+        await orch.execute_epic(
+            active_build="build-stalled",
+            run_id="run-stalled",
+            epic=epic,
+            team=team,
+            env=env,
+        )
+
+
+@pytest.mark.asyncio
+async def test_execute_epic_propagates_dependency_block_before_stall(orchestrator, tmp_path):
+    orch, cards, _loader = orchestrator
+    parent = SimpleNamespace(id="ARC-1", status=CardStatus.BLOCKED, depends_on=[])
+    child = SimpleNamespace(id="COD-1", status=CardStatus.READY, depends_on=["ARC-1"])
+    epic = SimpleNamespace(name="Dependency Block Epic", issues=[], references=[])
+    team = SimpleNamespace(seats={})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    cards.get_by_build.side_effect = [[parent, child], [parent, child]]
+    cards.get_independent_ready_issues.side_effect = [[], []]
+    (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
+
+    await orch.execute_epic(
+        active_build="build-dependency-block",
+        run_id="run-dependency-block",
+        epic=epic,
+        team=team,
+        env=env,
+    )
+
+    assert child.status == CardStatus.BLOCKED
+    assert cards.update_status.calls[0][0] == ("COD-1", CardStatus.BLOCKED)
+    assert cards.update_status.calls[0][1]["reason"] == "dependency_blocked"
+
+
+@pytest.mark.asyncio
 async def test_handle_failure_retry_limit(orchestrator, monkeypatch):
     orch, cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test", retry_count=3, max_retries=3)

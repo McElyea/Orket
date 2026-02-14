@@ -167,3 +167,99 @@ async def test_turn_executor_non_progress_recovery_after_reprompt(tmp_path):
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_context_only_tool_call_is_non_progress(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "get_issue_context", "args": {}}',
+            '{"tool": "get_issue_context", "args": {}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REQ",
+        summary="requirements_analyst",
+        description="Gather requirements",
+        tools=["get_issue_context", "write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "requirements_analyst"
+    context["roles"] = ["requirements_analyst"]
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert "Deterministic failure" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_enforces_required_status_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}\n{"tool": "update_issue_status", "args": {"status": "in_progress"}}',
+            '{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REQ",
+        summary="requirements_analyst",
+        description="Gather requirements",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "requirements_analyst"
+    context["roles"] = ["requirements_analyst"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 2
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[1][1]["status"] == "code_review"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_blocked_requires_wait_reason(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "blocked"}}',
+            '{"tool": "update_issue_status", "args": {"status": "blocked"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="GRD",
+        summary="integrity_guard",
+        description="Final gate",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "integrity_guard"
+    context["roles"] = ["integrity_guard"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["done", "blocked"]
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "Deterministic failure" in (result.error or "")

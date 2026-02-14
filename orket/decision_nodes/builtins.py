@@ -770,11 +770,45 @@ class DefaultOrchestrationLoopPolicyNode:
             ordered_roles.insert(0, "integrity_guard")
         return ordered_roles
 
+    def required_action_tools_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+        seat = (seat_name or "").strip().lower()
+        seat_requirements = {
+            "requirements_analyst": ["write_file", "update_issue_status"],
+            "architect": ["write_file", "update_issue_status"],
+            "coder": ["write_file", "update_issue_status"],
+            "developer": ["write_file", "update_issue_status"],
+            "code_reviewer": ["read_file", "update_issue_status"],
+            "reviewer": ["read_file", "update_issue_status"],
+            "integrity_guard": ["update_issue_status"],
+        }
+        return seat_requirements.get(seat, [])
+
+    def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+        seat = (seat_name or "").strip().lower()
+        status_requirements = {
+            "requirements_analyst": ["code_review"],
+            "architect": ["code_review"],
+            "coder": ["code_review"],
+            "developer": ["code_review"],
+            "code_reviewer": ["code_review"],
+            "reviewer": ["code_review"],
+            "integrity_guard": ["done", "blocked"],
+        }
+        return status_requirements.get(seat, [])
+
     def missing_seat_status(self) -> Any:
         return CardStatus.CANCELED
 
     def is_backlog_done(self, backlog: List[Any]) -> bool:
-        return all(i.status in [CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED] for i in backlog)
+        terminal_statuses = {
+            CardStatus.DONE,
+            CardStatus.CANCELED,
+            CardStatus.ARCHIVED,
+            CardStatus.BLOCKED,
+            CardStatus.GUARD_REJECTED,
+            CardStatus.GUARD_APPROVED,
+        }
+        return all(i.status in terminal_statuses for i in backlog)
 
     def no_candidate_outcome(self, backlog: List[Any]) -> Dict[str, Any]:
         is_done = self.is_backlog_done(backlog)
