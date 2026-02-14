@@ -133,3 +133,22 @@ def test_prompt_resolver_exact_policy_allows_metadata_only_rollback() -> None:
 
     assert current_resolution.metadata["prompt_version"] == "2.0.0/3.0.1"
     assert rollback_resolution.metadata["prompt_version"] == "1.9.0/3.0.1"
+
+
+def test_prompt_resolver_normalizes_and_deduplicates_guard_layers() -> None:
+    resolution = PromptResolver.resolve(
+        skill=_skill(),
+        dialect=_dialect(),
+        guards=["Hallucination", "security", "hallucination", "consistency"],
+    )
+    assert resolution.layers["guards"] == ["hallucination", "security", "consistency"]
+    assert resolution.metadata["guard_count"] == 3
+
+
+def test_prompt_resolver_rejects_unknown_guard_layers() -> None:
+    with pytest.raises(ValueError, match="Unsupported guard layer"):
+        PromptResolver.resolve(
+            skill=_skill(),
+            dialect=_dialect(),
+            guards=["governance"],
+        )

@@ -23,6 +23,7 @@ class PromptResolver:
     Precedence order:
     role/base -> dialect adapter -> guards -> context overlays
     """
+    ALLOWED_GUARDS = {"hallucination", "security", "consistency"}
 
     @staticmethod
     def resolve(
@@ -37,7 +38,7 @@ class PromptResolver:
         patch: Optional[str] = None,
     ) -> PromptResolution:
         context = context or {}
-        guards = guards or []
+        guards = PromptResolver._normalize_guard_layers(guards or [])
 
         base_prompt = PromptCompiler.compile(
             skill=skill,
@@ -122,6 +123,25 @@ class PromptResolver:
                 continue
             lines.append(f"- {normalized}")
         return lines
+
+    @staticmethod
+    def _normalize_guard_layers(guards: List[str]) -> List[str]:
+        normalized_guards: List[str] = []
+        seen = set()
+        for guard in guards:
+            normalized = str(guard).strip().lower()
+            if not normalized:
+                continue
+            if normalized not in PromptResolver.ALLOWED_GUARDS:
+                raise ValueError(
+                    f"Unsupported guard layer '{normalized}'. "
+                    f"Allowed: {', '.join(sorted(PromptResolver.ALLOWED_GUARDS))}"
+                )
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            normalized_guards.append(normalized)
+        return normalized_guards
 
     @staticmethod
     def _context_overlay_lines(context: Dict[str, Any]) -> List[str]:

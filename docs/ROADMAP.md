@@ -51,10 +51,10 @@ Objective: land a minimal, enforceable guard core that prevents retry spirals an
 4. `P0-R2-S4` (completed 2026-02-14): persist runtime guard artifacts (`guard_contract`, `guard_decision`) in verification evidence.
 
 ### P0-R3: Ownership Boundaries
-1. `P0-R3-S1`: enforce prompt-level ownership in prompt resolution (`Role + Skill + Dialect` only).
-2. `P0-R3-S2`: enforce runtime-level ownership in guards (`hallucination`, `security`, `consistency` only).
-3. `P0-R3-S3`: reject duplicated/conflicting rule ownership at load or validation time.
-4. `P0-R3-S4`: harden Guard Agent as non-generative validator only.
+1. `P0-R3-S1` (completed 2026-02-14): enforce prompt-level ownership in prompt resolution (`Role + Skill + Dialect` only).
+2. `P0-R3-S2` (completed 2026-02-14): enforce runtime-level guard namespace in prompt overlays (`hallucination`, `security`, `consistency` only).
+3. `P0-R3-S3`: reject duplicated/conflicting rule ownership at load or validation time across role/skill/dialect vs runtime guard catalogs.
+4. `P0-R3-S4` (completed 2026-02-14): harden Guard Agent as non-generative validator only.
 
 ### P0-R4: Hallucination Guard V1
 1. `P0-R4-S1`: add canonical hallucination guard prompt injection layer.
