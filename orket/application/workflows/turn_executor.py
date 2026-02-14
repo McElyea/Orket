@@ -975,6 +975,15 @@ class TurnExecutor:
                     "violations": hallucination_scope_diag.get("violations", []),
                 }
             )
+        security_scope_diag = self._security_scope_diagnostics(turn, context)
+        if security_scope_diag.get("violations"):
+            violations.append(
+                {
+                    "reason": "security_scope_contract_not_met",
+                    "scope": security_scope_diag.get("scope", {}),
+                    "violations": security_scope_diag.get("violations", []),
+                }
+            )
 
         return violations
 
@@ -1049,6 +1058,13 @@ class TurnExecutor:
             lines.append(
                 "- If scope data is missing, say it is missing instead of guessing or inventing references."
             )
+        if "security_scope_contract_not_met" in reason_set:
+            lines.append(
+                "- Security guard failed: use only workspace-relative paths and avoid path traversal patterns."
+            )
+            lines.append(
+                "- Do not use absolute paths or '..' segments in tool arguments."
+            )
 
         required_read_paths = self._required_read_paths(context)
         required_write_paths = self._required_write_paths(context)
@@ -1092,6 +1108,7 @@ class TurnExecutor:
             "write_path_contract_not_met": "Deterministic failure: write path contract not met after corrective reprompt.",
             "architecture_decision_contract_not_met": "Deterministic failure: architecture decision contract not met after corrective reprompt.",
             "hallucination_scope_contract_not_met": "Deterministic failure: hallucination scope contract not met after corrective reprompt.",
+            "security_scope_contract_not_met": "Deterministic failure: security scope contract not met after corrective reprompt.",
         }
         return mapping.get(
             reason_key,
@@ -1444,6 +1461,38 @@ class TurnExecutor:
                 "strict_grounding": strict_grounding,
                 "forbidden_phrases": forbidden_phrases,
             },
+            "violations": violations,
+        }
+
+    def _security_scope_diagnostics(self, turn: ExecutionTurn, context: Dict[str, Any]) -> Dict[str, Any]:
+        scope = context.get("verification_scope")
+        if not isinstance(scope, dict):
+            return {"scope": {}, "violations": []}
+
+        enforce_path_hardening = bool(scope.get("enforce_path_hardening", True))
+        violations: List[Dict[str, Any]] = []
+        if enforce_path_hardening:
+            for call in (turn.tool_calls or []):
+                tool_name = str(call.tool or "").strip()
+                if tool_name not in {"read_file", "write_file", "list_directory", "list_dir"}:
+                    continue
+                path = str(call.args.get("path", "")).strip()
+                if not path:
+                    continue
+                normalized = path.replace("\\", "/")
+                has_traversal = ".." in normalized.split("/")
+                is_absolute = normalized.startswith("/") or bool(re.match(r"^[a-zA-Z]:/", normalized))
+                if has_traversal or is_absolute:
+                    violations.append(
+                        {
+                            "rule_id": "SECURITY.PATH_TRAVERSAL",
+                            "message": f"Path '{path}' violates path hardening constraints.",
+                            "evidence": path,
+                        }
+                    )
+
+        return {
+            "scope": {"enforce_path_hardening": enforce_path_hardening},
             "violations": violations,
         }
 

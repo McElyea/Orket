@@ -89,7 +89,7 @@ Objective: land a minimal, enforceable guard core that prevents retry spirals an
 Objective: extend the P0 baseline to the other two guard domains without changing core contracts.
 
 Remaining Slices:
-1. `P1-S1`: implement Security Guard using canonical `GuardContract` and scope-aware checks.
+1. `P1-S1` (completed 2026-02-14): implement Security Guard scope-aware runtime checks (path hardening in turn contract enforcement).
 2. `P1-S2`: implement Consistency Guard using canonical `GuardContract` and schema/style checks.
 3. `P1-S3`: add guard rule cataloging and deterministic rule-id ownership checks.
 4. `P1-S4`: publish guard-specific telemetry counters and failure reason distributions.
