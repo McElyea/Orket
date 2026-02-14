@@ -226,6 +226,7 @@ Done when:
 Verification:
 1. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
 2. `python -m pytest tests/integration/test_system_acceptance_flow.py -q`
+3. `python -m pytest tests/live/test_role_unit_live.py -q` (optional deterministic per-role live checks)
 
 ### Phase P3: Boundary Enforcement That Matches Reality
 Objective: enforce volatility boundaries without loopholes.
