@@ -47,7 +47,7 @@ Work:
 2. [x] Include stage gate mode in turn execution context for visibility and downstream policy use.
 3. [x] Enforce strict guard rejection payload validation (`rationale` + `remediation_actions`) on guard-rejected outcomes.
 4. [x] Log invalid payload event with machine-readable reason (`guard_payload_invalid`).
-5. [ ] Add persistent `pending_gate_requests` ledger for explicit pause/resume gating.
+5. [x] Add persistent `pending_gate_requests` ledger for explicit pause/resume gating.
 6. [ ] Add `approval_required` flow for selected high-impact tools.
 
 Done when:

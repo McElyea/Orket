@@ -465,3 +465,40 @@ def test_validate_guard_rejection_payload_default_logic(orchestrator):
     )
     assert valid == {"valid": True, "reason": None}
 
+
+@pytest.mark.asyncio
+async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
+    orch, _cards, _loader = orchestrator
+
+    class _PendingRepo:
+        def __init__(self):
+            self.calls = []
+
+        async def create_request(self, **kwargs):
+            self.calls.append(kwargs)
+            return "REQ-1234"
+
+    class _LoopPolicy:
+        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
+            return "review_required" if seat_name == "integrity_guard" else "auto"
+
+    orch.pending_gates = _PendingRepo()
+    orch.loop_policy_node = _LoopPolicy()
+
+    request_id = await orch._create_pending_gate_request(
+        run_id="run-1",
+        issue_id="ISSUE-1",
+        seat_name="integrity_guard",
+        reason="missing_rationale",
+        payload={"rationale": "", "remediation_actions": []},
+        issue=IssueConfig(id="ISSUE-1", seat="integrity_guard", summary="Guard Review"),
+        turn_status=CardStatus.AWAITING_GUARD_REVIEW,
+    )
+
+    assert request_id == "REQ-1234"
+    assert len(orch.pending_gates.calls) == 1
+    call = orch.pending_gates.calls[0]
+    assert call["session_id"] == "run-1"
+    assert call["gate_mode"] == "review_required"
+    assert call["request_type"] == "guard_rejection_payload"
+

@@ -20,6 +20,7 @@ from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.core.policies.tool_gate import ToolGate
 from orket.core.contracts.repositories import CardRepository, SnapshotRepository
+from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
 from orket.tools import ToolBox, get_tool_map
 from orket.logging import log_event
 from orket.exceptions import ExecutionFailed
@@ -66,6 +67,7 @@ class Orchestrator:
         self.notes = NoteStore()
         self.transcript = []
         self._sandbox_locks = defaultdict(asyncio.Lock)
+        self.pending_gates = AsyncPendingGateRepository(self.db_path)
         self.decision_nodes = DecisionNodeRegistry()
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
         self.router_node = self.decision_nodes.resolve_router(self.org)
@@ -422,12 +424,33 @@ class Orchestrator:
                 if guard_event == "guard_rejected":
                     guard_validation = self._validate_guard_rejection_payload(guard_payload)
                     if not guard_validation.get("valid", False):
+                        request_id = await self._create_pending_gate_request(
+                            run_id=run_id,
+                            issue_id=issue.id,
+                            seat_name=seat_name,
+                            reason=str(guard_validation.get("reason") or "invalid_guard_payload"),
+                            payload=guard_payload.model_dump(),
+                            issue=issue,
+                            turn_status=turn_status,
+                        )
+                        log_event(
+                            "gate_request_created",
+                            {
+                                "run_id": run_id,
+                                "request_id": request_id,
+                                "issue_id": issue.id,
+                                "seat": seat_name,
+                                "request_type": "guard_rejection_payload",
+                            },
+                            self.workspace,
+                        )
                         log_event(
                             "guard_payload_invalid",
                             {
                                 "run_id": run_id,
                                 "issue_id": issue.id,
                                 "seat": seat_name,
+                                "request_id": request_id,
                                 "reason": guard_validation.get("reason"),
                                 "payload": guard_payload.model_dump(),
                             },
@@ -511,6 +534,41 @@ class Orchestrator:
         if not actions:
             return {"valid": False, "reason": "missing_remediation_actions"}
         return {"valid": True, "reason": None}
+
+    async def _create_pending_gate_request(
+        self,
+        *,
+        run_id: str,
+        issue_id: str,
+        seat_name: str,
+        reason: str,
+        payload: Dict[str, Any],
+        issue: IssueConfig,
+        turn_status: CardStatus,
+    ) -> str:
+        gate_mode = "auto"
+        gate_mode_fn = getattr(self.loop_policy_node, "gate_mode_for_seat", None)
+        if callable(gate_mode_fn):
+            try:
+                gate_mode = str(
+                    gate_mode_fn(
+                        seat_name=seat_name,
+                        issue=issue,
+                        turn_status=turn_status,
+                    )
+                )
+            except TypeError:
+                gate_mode = str(gate_mode_fn(seat_name))
+
+        return await self.pending_gates.create_request(
+            session_id=run_id,
+            issue_id=issue_id,
+            seat_name=seat_name,
+            gate_mode=gate_mode,
+            request_type="guard_rejection_payload",
+            reason=reason,
+            payload=payload,
+        )
 
     def _build_turn_context(
         self,
