@@ -449,6 +449,93 @@ def test_build_turn_context_includes_stage_gate_mode(orchestrator):
     assert callable(context["create_pending_gate_request"])
 
 
+def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="I1", seat="coder", summary="Code Work")
+
+    class _LoopPolicy:
+        def required_action_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["write_file", "update_issue_status"]
+
+        def required_statuses_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["code_review"]
+
+        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
+            return "auto"
+
+        def approval_required_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["write_file"]
+
+    orch.loop_policy_node = _LoopPolicy()
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    assert context["approval_required_tools"] == ["write_file"]
+    assert context["stage_gate_mode"] == "approval_required"
+
+
+@pytest.mark.asyncio
+async def test_build_turn_context_pending_gate_callback_creates_tool_approval_request(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="I1", seat="coder", summary="Code Work")
+
+    class _PendingRepo:
+        def __init__(self):
+            self.calls = []
+
+        async def create_request(self, **kwargs):
+            self.calls.append(kwargs)
+            return "REQ-TOOL-42"
+
+    class _LoopPolicy:
+        def required_action_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["write_file", "update_issue_status"]
+
+        def required_statuses_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["code_review"]
+
+        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
+            return "auto"
+
+        def approval_required_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+            return ["write_file"]
+
+    orch.pending_gates = _PendingRepo()
+    orch.loop_policy_node = _LoopPolicy()
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    request_id = await context["create_pending_gate_request"](
+        tool_name="write_file",
+        tool_args={"path": "out.txt", "content": "ok"},
+    )
+
+    assert request_id == "REQ-TOOL-42"
+    assert len(orch.pending_gates.calls) == 1
+    req = orch.pending_gates.calls[0]
+    assert req["session_id"] == "run-1"
+    assert req["issue_id"] == "I1"
+    assert req["seat_name"] == "coder"
+    assert req["gate_mode"] == "approval_required"
+    assert req["request_type"] == "tool_approval"
+    assert req["reason"] == "approval_required_tool:write_file"
+    assert req["payload"]["tool"] == "write_file"
+
+
 def test_validate_guard_rejection_payload_default_logic(orchestrator):
     orch, _cards, _loader = orchestrator
 

@@ -30,7 +30,7 @@ If this flow is not mechanically proven, we are not done.
 
 ### Phase O1: Guardrail Control Plane (Before P0)
 Objective: add deterministic control-plane enforcement so P0 tuning runs on a stable governance substrate.
-Status: In progress.
+Status: Completed.
 
 Scope:
 1. Stage gate policy per seat/stage:
@@ -54,6 +54,7 @@ Done when:
 1. Guard rejection without rationale/remediation can no longer pass as valid output.
 2. Stage gate mode is available in runtime context for every turn.
 3. Guard payload invalid events are observable and correlate to retry behavior.
+4. Tool-level approval-required gates can create pending requests and block execution.
 
 Verification:
 1. `python -m pytest tests/application/test_decision_nodes_planner.py -q`

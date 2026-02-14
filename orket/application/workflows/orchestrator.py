@@ -663,6 +663,9 @@ class Orchestrator:
             except TypeError:
                 approval_required_tools = list(approval_tools_fn(seat_name) or [])
 
+        if approval_required_tools and gate_mode == "auto":
+            gate_mode = "approval_required"
+
         async def _pending_gate_request_writer(*, tool_name: str, tool_args: Dict[str, Any]) -> str:
             return await self._create_pending_tool_approval_request(
                 run_id=run_id,
