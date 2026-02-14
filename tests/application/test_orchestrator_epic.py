@@ -1094,6 +1094,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
     assert "required_read_paths" in captured["kwargs"]["context"]
     assert "required_write_paths" in captured["kwargs"]["context"]
     assert captured["kwargs"]["guards"] == ["hallucination"]
+    assert "HALLUCINATION.FILE_NOT_FOUND" in captured["kwargs"]["context"]["runtime_guard_rule_ids"]
 
 
 @pytest.mark.asyncio

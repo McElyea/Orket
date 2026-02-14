@@ -40,6 +40,7 @@ from orket.logging import log_event
 from orket.exceptions import ExecutionFailed
 from orket.core.domain.state_machine import StateMachine
 from orket.core.domain.guard_review import GuardReviewPayload
+from orket.core.domain.guard_rule_catalog import DEFAULT_GUARD_RULE_IDS
 from orket.utils import sanitize_name
 
 class Orchestrator:
@@ -775,12 +776,12 @@ class Orchestrator:
                 ).get("owned_rule_ids", [])
                 or []
             )
-            runtime_guard_rule_ids: List[str] = []
+            runtime_guard_rule_ids: List[str] = list(DEFAULT_GUARD_RULE_IDS)
             guard_layers: List[str] = ["hallucination"]
             if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-                runtime_guard_rule_ids = list(
-                    self.org.process_rules.get("runtime_guard_rule_ids", []) or []
-                )
+                configured_rule_ids = self.org.process_rules.get("runtime_guard_rule_ids")
+                if isinstance(configured_rule_ids, list) and configured_rule_ids:
+                    runtime_guard_rule_ids = list(configured_rule_ids)
                 configured_layers = self.org.process_rules.get("prompt_guard_layers")
                 if isinstance(configured_layers, list) and configured_layers:
                     guard_layers = [str(item) for item in configured_layers if str(item).strip()]

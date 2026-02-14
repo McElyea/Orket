@@ -6,6 +6,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from orket.application.services.prompt_compiler import PromptCompiler
+from orket.core.domain.guard_rule_catalog import normalize_rule_ids, ownership_conflicts
 from orket.schema import DialectConfig, SkillConfig
 
 
@@ -236,21 +237,9 @@ class PromptResolver:
 
     @staticmethod
     def _normalize_rule_ids(value: Any) -> List[str]:
-        if value is None:
+        if value is None or not isinstance(value, list):
             return []
-        if not isinstance(value, list):
-            return []
-        normalized: List[str] = []
-        seen = set()
-        for item in value:
-            rule_id = str(item or "").strip()
-            if not rule_id:
-                continue
-            if rule_id in seen:
-                continue
-            seen.add(rule_id)
-            normalized.append(rule_id)
-        return normalized
+        return normalize_rule_ids(value)
 
     @staticmethod
     def _validate_rule_ownership(*, context: Dict[str, Any]) -> None:
@@ -258,7 +247,7 @@ class PromptResolver:
         runtime_guard_rule_ids = PromptResolver._normalize_rule_ids(context.get("runtime_guard_rule_ids"))
         if not prompt_rule_ids or not runtime_guard_rule_ids:
             return
-        overlap = sorted(set(prompt_rule_ids).intersection(runtime_guard_rule_ids))
+        overlap = ownership_conflicts(prompt_rule_ids, runtime_guard_rule_ids)
         if overlap:
             raise ValueError(
                 "Rule ownership conflict between prompt and runtime guard catalogs: "
