@@ -104,3 +104,32 @@ def test_loop_control_contract_model():
     )
     assert control.max_retries == 2
     assert control.escalation.terminal_reason.code == "HALLUCINATION_PERSISTENT"
+
+
+def test_guard_contract_rejects_duplicate_violation_rule_ids():
+    with pytest.raises(ValidationError, match="duplicate violation rule_id"):
+        GuardContract(
+            result="fail",
+            violations=[
+                GuardViolation(
+                    rule_id="DUP.RULE",
+                    code="ONE",
+                    message="first",
+                    location="output",
+                    severity="soft",
+                    evidence=None,
+                ),
+                GuardViolation(
+                    rule_id="DUP.RULE",
+                    code="TWO",
+                    message="second",
+                    location="context",
+                    severity="strict",
+                    evidence=None,
+                ),
+            ],
+            severity="strict",
+            fix_hint="fix",
+            terminal_failure=False,
+            terminal_reason=None,
+        )

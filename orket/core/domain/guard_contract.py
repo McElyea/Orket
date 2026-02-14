@@ -66,6 +66,9 @@ class GuardContract(BaseModel):
 
         if not self.violations:
             raise ValueError("fail result requires at least one violation")
+        rule_ids = [v.rule_id for v in self.violations]
+        if len(rule_ids) != len(set(rule_ids)):
+            raise ValueError("fail result contains duplicate violation rule_id values")
         if self.terminal_failure and self.terminal_reason is None:
             raise ValueError("terminal_failure=true requires terminal_reason")
         if (not self.terminal_failure) and self.terminal_reason is not None:
