@@ -6,7 +6,12 @@ import json
 from typing import Any, Dict, List, Optional
 
 from orket.application.services.prompt_compiler import PromptCompiler
-from orket.core.domain.guard_rule_catalog import normalize_rule_ids, ownership_conflicts
+from orket.core.domain.guard_rule_catalog import (
+    normalize_rule_ids,
+    ownership_conflicts,
+    prompt_guard_namespace_conflicts,
+    validate_runtime_guard_rule_ids,
+)
 from orket.schema import DialectConfig, SkillConfig
 
 
@@ -245,6 +250,13 @@ class PromptResolver:
     def _validate_rule_ownership(*, context: Dict[str, Any]) -> None:
         prompt_rule_ids = PromptResolver._normalize_rule_ids(context.get("prompt_rule_ids"))
         runtime_guard_rule_ids = PromptResolver._normalize_rule_ids(context.get("runtime_guard_rule_ids"))
+        runtime_guard_rule_ids = validate_runtime_guard_rule_ids(runtime_guard_rule_ids)
+        namespace_conflicts = prompt_guard_namespace_conflicts(prompt_rule_ids)
+        if namespace_conflicts:
+            raise ValueError(
+                "Prompt rule_ids cannot use runtime guard namespaces: "
+                + ", ".join(namespace_conflicts)
+            )
         if not prompt_rule_ids or not runtime_guard_rule_ids:
             return
         overlap = ownership_conflicts(prompt_rule_ids, runtime_guard_rule_ids)

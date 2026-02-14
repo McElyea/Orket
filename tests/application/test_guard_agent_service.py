@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from orket.application.services.guard_agent import GuardAgent
+from orket.application.services.guard_agent import GuardAgent, GuardEvaluator, GuardController
 from orket.core.domain.guard_contract import GuardContract, GuardViolation, TerminalReason
 
 
@@ -44,6 +44,8 @@ def test_guard_agent_fail_result_schedules_retry_when_under_limit():
     assert decision.action == "retry"
     assert decision.next_retry_count == 1
     assert decision.terminal_failure is False
+    assert decision.retry_fingerprint
+    assert decision.repeated_fingerprint is False
 
 
 def test_guard_agent_fail_result_becomes_terminal_when_limit_reached():
@@ -100,3 +102,38 @@ def test_guard_agent_uses_hallucination_persistent_on_retry_exceed():
     assert decision.action == "terminal_failure"
     assert decision.terminal_reason is not None
     assert decision.terminal_reason.code == "HALLUCINATION_PERSISTENT"
+
+
+def test_guard_agent_repeated_retry_fingerprint_becomes_model_non_compliant():
+    contract = _failing_contract()
+    agent = GuardAgent()
+    seen = []
+    first = agent.evaluate(
+        contract=contract,
+        retry_count=0,
+        max_retries=2,
+        output_text="same failure output",
+        seen_fingerprints=seen,
+    )
+    second = agent.evaluate(
+        contract=contract,
+        retry_count=1,
+        max_retries=2,
+        output_text="same failure output",
+        seen_fingerprints=seen,
+    )
+
+    assert first.action == "retry"
+    assert second.action == "terminal_failure"
+    assert second.terminal_reason is not None
+    assert second.terminal_reason.code == "MODEL_NON_COMPLIANT"
+    assert second.repeated_fingerprint is True
+
+
+def test_guard_evaluator_and_controller_split_contract_and_policy():
+    contract = _failing_contract()
+    evaluator = GuardEvaluator()
+    controller = GuardController()
+    evaluated = evaluator.evaluate_contract(contract=contract)
+    decision = controller.decide(contract=evaluated, retry_count=0, max_retries=1, output_text="failed")
+    assert decision.action == "retry"

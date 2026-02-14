@@ -5,6 +5,8 @@ from types import SimpleNamespace
 from orket.exceptions import CatastrophicFailure, ExecutionFailed
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
+from orket.application.services.guard_agent import GuardAgent
+from orket.application.services.runtime_verifier import build_runtime_guard_contract
 from orket.schema import CardStatus, IssueConfig
 from orket.application.services.scaffolder import ScaffoldValidationError
 from orket.application.services.dependency_manager import DependencyValidationError
@@ -778,6 +780,84 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
     report_path = orch.workspace / "agent_output" / "verification" / "runtime_verification.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
     assert report.get("guard_decision", {}).get("action") == "terminal_failure"
+
+
+@pytest.mark.asyncio
+async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fingerprint(orchestrator, monkeypatch):
+    orch, cards, _loader = orchestrator
+    seen_fingerprints = []
+    seed_decision = GuardAgent().evaluate(
+        contract=build_runtime_guard_contract(ok=False, errors=["SyntaxError: invalid syntax"]),
+        retry_count=0,
+        max_retries=3,
+        output_text="SyntaxError: invalid syntax",
+        seen_fingerprints=seen_fingerprints,
+    )
+    issue = IssueConfig(
+        id="REV-1",
+        seat="code_reviewer",
+        summary="Review",
+        status=CardStatus.CODE_REVIEW,
+        retry_count=1,
+        max_retries=3,
+        params={"guard_retry_fingerprints": [seed_decision.retry_fingerprint]},
+    )
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"code_reviewer": SimpleNamespace(roles=["code_reviewer"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    class _Executor:
+        def __init__(self):
+            self.calls = 0
+
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            self.calls += 1
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    class _RuntimeVerifier:
+        def __init__(self, workspace_root, organization=None):
+            self.workspace_root = workspace_root
+
+        async def verify(self):
+            return SimpleNamespace(
+                ok=False,
+                checked_files=["agent_output/main.py"],
+                errors=["SyntaxError: invalid syntax"],
+            )
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.RuntimeVerifier", _RuntimeVerifier)
+    executor = _Executor()
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=executor,
+        toolbox=SimpleNamespace(),
+    )
+
+    assert executor.calls == 0
+    saved_issue = cards.save.calls[-1][0][0]
+    assert saved_issue["status"] == CardStatus.BLOCKED
+    report_path = orch.workspace / "agent_output" / "verification" / "runtime_verification.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report.get("guard_decision", {}).get("action") == "terminal_failure"
+    assert report.get("guard_decision", {}).get("terminal_reason", {}).get("code") == "MODEL_NON_COMPLIANT"
 
 
 @pytest.mark.asyncio

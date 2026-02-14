@@ -155,14 +155,14 @@ def test_prompt_resolver_rejects_unknown_guard_layers() -> None:
         )
 
 
-def test_prompt_resolver_rejects_rule_ownership_overlap() -> None:
-    with pytest.raises(ValueError, match="Rule ownership conflict"):
+def test_prompt_resolver_rejects_prompt_rule_overlap_with_runtime_namespace() -> None:
+    with pytest.raises(ValueError, match="Prompt rule_ids cannot use runtime guard namespaces"):
         PromptResolver.resolve(
             skill=_skill(),
             dialect=_dialect(),
             context={
-                "prompt_rule_ids": ["STYLE.001", "FORMAT.001"],
-                "runtime_guard_rule_ids": ["HALLUCINATION.001", "FORMAT.001"],
+                "prompt_rule_ids": ["STYLE.001", "CONSISTENCY.OUTPUT_FORMAT"],
+                "runtime_guard_rule_ids": ["HALLUCINATION.FILE_NOT_FOUND", "CONSISTENCY.OUTPUT_FORMAT"],
             },
         )
 
@@ -173,10 +173,34 @@ def test_prompt_resolver_allows_disjoint_rule_ownership() -> None:
         dialect=_dialect(),
         context={
             "prompt_rule_ids": ["STYLE.001", "FORMAT.001"],
-            "runtime_guard_rule_ids": ["HALLUCINATION.001", "SECURITY.001"],
+            "runtime_guard_rule_ids": ["HALLUCINATION.FILE_NOT_FOUND", "SECURITY.PATH_TRAVERSAL"],
         },
     )
     assert resolution.metadata["prompt_id"] == "role.architect+dialect.qwen"
+
+
+def test_prompt_resolver_rejects_unknown_runtime_guard_rule_ids() -> None:
+    with pytest.raises(ValueError, match="Unknown runtime guard rule_id values"):
+        PromptResolver.resolve(
+            skill=_skill(),
+            dialect=_dialect(),
+            context={
+                "prompt_rule_ids": ["STYLE.001"],
+                "runtime_guard_rule_ids": ["UNKNOWN.RULE"],
+            },
+        )
+
+
+def test_prompt_resolver_rejects_prompt_guard_namespace_conflicts() -> None:
+    with pytest.raises(ValueError, match="Prompt rule_ids cannot use runtime guard namespaces"):
+        PromptResolver.resolve(
+            skill=_skill(),
+            dialect=_dialect(),
+            context={
+                "prompt_rule_ids": ["HALLUCINATION.INVENTED_DETAIL"],
+                "runtime_guard_rule_ids": ["SECURITY.PATH_TRAVERSAL"],
+            },
+        )
 
 
 def test_prompt_resolver_injects_canonical_hallucination_overlay() -> None:

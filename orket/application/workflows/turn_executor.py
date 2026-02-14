@@ -30,6 +30,7 @@ from orket.schema import WaitReason
 from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.logging import log_event
 from orket.core.policies.tool_gate import ToolGate
+from orket.core.domain.verification_scope import parse_verification_scope
 from orket.naming import sanitize_name
 from orket.application.middleware import MiddlewarePipeline
 
@@ -573,7 +574,7 @@ class TurnExecutor:
                 }
             )
 
-        verification_scope = context.get("verification_scope")
+        verification_scope = parse_verification_scope(context.get("verification_scope"))
         if isinstance(verification_scope, dict):
             scope_render = json.dumps(verification_scope, sort_keys=True)
             messages.append(
@@ -1383,7 +1384,7 @@ class TurnExecutor:
         return False
 
     def _hallucination_scope_diagnostics(self, turn: ExecutionTurn, context: Dict[str, Any]) -> Dict[str, Any]:
-        scope = context.get("verification_scope")
+        scope = parse_verification_scope(context.get("verification_scope"))
         if not isinstance(scope, dict):
             return {"scope": {}, "violations": []}
 
@@ -1482,7 +1483,7 @@ class TurnExecutor:
         }
 
     def _security_scope_diagnostics(self, turn: ExecutionTurn, context: Dict[str, Any]) -> Dict[str, Any]:
-        scope = context.get("verification_scope")
+        scope = parse_verification_scope(context.get("verification_scope"))
         if not isinstance(scope, dict):
             return {"scope": {}, "violations": []}
 
@@ -1514,7 +1515,7 @@ class TurnExecutor:
         }
 
     def _consistency_scope_diagnostics(self, turn: ExecutionTurn, context: Dict[str, Any]) -> Dict[str, Any]:
-        scope = context.get("verification_scope")
+        scope = parse_verification_scope(context.get("verification_scope"))
         if not isinstance(scope, dict):
             return {"scope": {}, "violations": []}
 

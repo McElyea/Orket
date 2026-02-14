@@ -40,7 +40,8 @@ from orket.logging import log_event
 from orket.exceptions import ExecutionFailed
 from orket.core.domain.state_machine import StateMachine
 from orket.core.domain.guard_review import GuardReviewPayload
-from orket.core.domain.guard_rule_catalog import DEFAULT_GUARD_RULE_IDS
+from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
+from orket.core.domain.verification_scope import build_verification_scope
 from orket.utils import sanitize_name
 
 class Orchestrator:
@@ -585,11 +586,21 @@ class Orchestrator:
                     ok=bool(getattr(runtime_result, "ok", False)),
                     errors=list(getattr(runtime_result, "errors", []) or []),
                 )
+            existing_fingerprints = []
+            if isinstance(getattr(issue, "params", None), dict):
+                raw = issue.params.get("guard_retry_fingerprints", [])
+                if isinstance(raw, list):
+                    existing_fingerprints = [str(item).strip() for item in raw if str(item).strip()]
             guard_decision = GuardAgent(self.org).evaluate(
                 contract=guard_contract,
                 retry_count=int(getattr(issue, "retry_count", 0) or 0),
                 max_retries=int(getattr(issue, "max_retries", 0) or 0),
+                output_text="\n".join(list(getattr(runtime_result, "errors", []) or [])),
+                seen_fingerprints=existing_fingerprints,
             )
+            if not isinstance(getattr(issue, "params", None), dict):
+                issue.params = {}
+            issue.params["guard_retry_fingerprints"] = existing_fingerprints[-10:]
             runtime_report = {
                 "run_id": run_id,
                 "issue_id": issue.id,
@@ -776,12 +787,12 @@ class Orchestrator:
                 ).get("owned_rule_ids", [])
                 or []
             )
-            runtime_guard_rule_ids: List[str] = list(DEFAULT_GUARD_RULE_IDS)
+            runtime_guard_rule_ids: List[str] = resolve_runtime_guard_rule_ids(None)
             guard_layers: List[str] = ["hallucination"]
             if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
                 configured_rule_ids = self.org.process_rules.get("runtime_guard_rule_ids")
-                if isinstance(configured_rule_ids, list) and configured_rule_ids:
-                    runtime_guard_rule_ids = list(configured_rule_ids)
+                if isinstance(configured_rule_ids, list):
+                    runtime_guard_rule_ids = resolve_runtime_guard_rule_ids(configured_rule_ids)
                 configured_layers = self.org.process_rules.get("prompt_guard_layers")
                 if isinstance(configured_layers, list) and configured_layers:
                     guard_layers = [str(item) for item in configured_layers if str(item).strip()]
@@ -1183,33 +1194,15 @@ class Orchestrator:
             "required_statuses": required_statuses,
             "required_read_paths": required_read_paths,
             "required_write_paths": required_write_paths,
-            "verification_scope": {
-                "workspace": sorted(
-                    {
-                        str(path).strip()
-                        for path in (list(required_read_paths) + list(required_write_paths))
-                        if str(path).strip()
-                    }
-                ),
-                "provided_context": sorted(
-                    {
-                        str(path).strip()
-                        for path in (list(required_read_paths) or [])
-                        if str(path).strip()
-                    }
-                ),
-                "declared_interfaces": sorted(
-                    {
-                        str(name).strip()
-                        for name in (list(required_action_tools) + list(approval_required_tools))
-                        if str(name).strip()
-                    }
-                ),
-                "strict_grounding": True,
-                "forbidden_phrases": [],
-                "enforce_path_hardening": True,
-                "consistency_tool_calls_only": True,
-            },
+            "verification_scope": build_verification_scope(
+                workspace=list(required_read_paths) + list(required_write_paths),
+                provided_context=list(required_read_paths or []),
+                declared_interfaces=list(required_action_tools) + list(approval_required_tools),
+                strict_grounding=True,
+                forbidden_phrases=[],
+                enforce_path_hardening=True,
+                consistency_tool_calls_only=True,
+            ),
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
             "runtime_verifier_ok": runtime_verifier_ok,
