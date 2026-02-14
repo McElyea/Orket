@@ -13,6 +13,13 @@ from orket.schema import DialectConfig, RoleConfig, SkillConfig
 
 
 VALID_STATUSES = {"draft", "candidate", "canary", "stable", "deprecated"}
+ALLOWED_STATUS_TRANSITIONS = {
+    "draft": {"candidate", "canary", "deprecated"},
+    "candidate": {"canary", "stable", "deprecated"},
+    "canary": {"stable", "deprecated"},
+    "stable": {"deprecated"},
+    "deprecated": set(),
+}
 
 
 def _core_root(root: Path) -> Path:
@@ -251,6 +258,21 @@ def _append_changelog(metadata: Dict[str, Any], *, version: str, notes: str) -> 
     )
 
 
+def _assert_status_transition_allowed(*, current_status: str, target_status: str) -> None:
+    current = str(current_status or "").strip()
+    target = str(target_status or "").strip()
+    if not current:
+        return
+    if current == target:
+        return
+    allowed = ALLOWED_STATUS_TRANSITIONS.get(current, set())
+    if target not in allowed:
+        raise ValueError(
+            f"Invalid status transition: {current} -> {target}. "
+            f"Allowed: {sorted(allowed)}"
+        )
+
+
 def update_prompt_metadata(
     root: Path,
     *,
@@ -287,6 +309,10 @@ def update_prompt_metadata(
         target_status = str(status or "stable").strip()
         if target_status not in VALID_STATUSES:
             raise ValueError(f"Invalid status: {target_status}")
+        _assert_status_transition_allowed(
+            current_status=old_status,
+            target_status=target_status,
+        )
         metadata["status"] = target_status
         metadata["updated_at"] = date.today().isoformat()
         _append_changelog(

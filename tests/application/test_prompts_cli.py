@@ -125,6 +125,31 @@ def test_update_prompt_metadata_lifecycle(tmp_path: Path) -> None:
     assert deprecated["after"]["status"] == "deprecated"
 
 
+def test_update_prompt_metadata_rejects_direct_draft_to_stable_promotion(tmp_path: Path) -> None:
+    _seed_assets(tmp_path)
+    update_prompt_metadata(
+        tmp_path,
+        prompt_id="role.architect",
+        mode="new",
+        version="1.1.0",
+        status="draft",
+        notes="new draft",
+        apply_changes=True,
+    )
+    try:
+        update_prompt_metadata(
+            tmp_path,
+            prompt_id="role.architect",
+            mode="promote",
+            status="stable",
+            notes="bad promote",
+            apply_changes=True,
+        )
+        assert False, "Expected ValueError for draft->stable transition"
+    except ValueError as exc:
+        assert "Invalid status transition: draft -> stable" in str(exc)
+
+
 def test_lint_prompt_assets_reports_placeholder_contracts(tmp_path: Path) -> None:
     _seed_assets(tmp_path)
     role_path = tmp_path / "model" / "core" / "roles" / "architect.json"
