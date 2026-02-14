@@ -25,6 +25,10 @@ def test_prompt_promotion_thresholds_file_has_required_guard_keys() -> None:
         "turn_non_progress_hallucination_scope_max_increase",
         "turn_non_progress_security_scope_max_increase",
         "turn_non_progress_consistency_scope_max_increase",
+        "candidate_guard_pass_rate_min",
+        "candidate_guard_terminal_failure_max",
+        "candidate_guard_terminal_reason_hallucination_persistent_max",
+        "candidate_done_chain_mismatch_max",
     }
     missing = sorted(required_keys.difference(payload.keys()))
     assert not missing, "Missing required promotion threshold keys: " + ", ".join(missing)

@@ -35,6 +35,9 @@ def test_compare_candidate_passes_without_regression() -> None:
         }
     }
     candidate_patterns = {
+        "completion_by_model": {
+            "model-a": {"runs": 2, "passed": 2, "failed": 0, "skipped": 0}
+        },
         "pattern_counters": {
             "turn_non_progress": 3,
             "tool_call_blocked": 1,
@@ -53,10 +56,16 @@ def test_compare_candidate_passes_without_regression() -> None:
         candidate_eval=candidate_eval,
         stable_patterns=stable_patterns,
         candidate_patterns=candidate_patterns,
-        thresholds={},
+        thresholds={
+            "candidate_guard_pass_rate_min": 0.95,
+            "candidate_guard_terminal_failure_max": 0,
+            "candidate_guard_terminal_reason_hallucination_persistent_max": 0,
+            "candidate_done_chain_mismatch_max": 0,
+        },
     )
     assert report["pass"] is True
     assert report["gates"]["turn_non_progress_max_increase"] is True
+    assert report["blockers"] == []
 
 
 def test_compare_candidate_fails_on_regression() -> None:
@@ -87,6 +96,9 @@ def test_compare_candidate_fails_on_regression() -> None:
         }
     }
     candidate_patterns = {
+        "completion_by_model": {
+            "model-a": {"runs": 2, "passed": 0, "failed": 2, "skipped": 0}
+        },
         "pattern_counters": {
             "turn_non_progress": 2,
             "tool_call_blocked": 1,
@@ -105,12 +117,20 @@ def test_compare_candidate_fails_on_regression() -> None:
         candidate_eval=candidate_eval,
         stable_patterns=stable_patterns,
         candidate_patterns=candidate_patterns,
-        thresholds={},
+        thresholds={
+            "candidate_guard_pass_rate_min": 0.95,
+            "candidate_guard_terminal_failure_max": 0,
+            "candidate_guard_terminal_reason_hallucination_persistent_max": 0,
+            "candidate_done_chain_mismatch_max": 0,
+        },
     )
     assert report["pass"] is False
     assert report["gates"]["tool_parse_rate_min_delta"] is False
     assert report["gates"]["turn_non_progress_max_increase"] is False
     assert report["gates"]["guard_terminal_failure_max_increase"] is False
+    assert report["criteria"]["candidate_guard_pass_rate_min"] is False
+    assert report["criteria"]["candidate_guard_terminal_failure_max"] is False
+    assert len(report["blockers"]) >= 1
 
 
 def test_compare_candidate_custom_thresholds() -> None:
@@ -164,6 +184,9 @@ def test_compare_candidate_guard_domain_custom_thresholds() -> None:
             }
         },
         candidate_patterns={
+            "completion_by_model": {
+                "model-a": {"runs": 2, "passed": 2, "failed": 0, "skipped": 0}
+            },
             "pattern_counters": {
                 "turn_non_progress": 2,
                 "tool_call_blocked": 0,
@@ -184,9 +207,44 @@ def test_compare_candidate_guard_domain_custom_thresholds() -> None:
             "turn_non_progress_hallucination_scope_max_increase": 1,
             "turn_non_progress_security_scope_max_increase": 1,
             "turn_non_progress_consistency_scope_max_increase": 1,
+            "candidate_guard_pass_rate_min": 0.95,
+            "candidate_guard_terminal_failure_max": 1,
+            "candidate_guard_terminal_reason_hallucination_persistent_max": 1,
+            "candidate_done_chain_mismatch_max": 0,
         },
     )
     assert report["pass"] is True
+
+
+def test_compare_candidate_exposes_machine_readable_blockers() -> None:
+    report = compare_candidate_against_stable(
+        stable_eval={
+            "tool_parse_rate": 0.5,
+            "required_action_completion_rate": 0.5,
+            "status_progression_rate": 0.5,
+            "guard_decision_reach_rate": 0.5,
+        },
+        candidate_eval={
+            "tool_parse_rate": 0.4,
+            "required_action_completion_rate": 0.4,
+            "status_progression_rate": 0.4,
+            "guard_decision_reach_rate": 0.4,
+        },
+        stable_patterns={"pattern_counters": {"guard_terminal_failure": 0}},
+        candidate_patterns={
+            "completion_by_model": {"model-a": {"runs": 1, "passed": 0, "failed": 1, "skipped": 0}},
+            "pattern_counters": {"guard_terminal_failure": 1, "done_chain_mismatch": 1},
+        },
+        thresholds={
+            "tool_parse_rate_min_delta": 0.0,
+            "candidate_guard_pass_rate_min": 0.95,
+            "candidate_guard_terminal_failure_max": 0,
+            "candidate_done_chain_mismatch_max": 0,
+        },
+    )
+    assert report["pass"] is False
+    assert any(item["type"] == "gate" for item in report["blockers"])
+    assert any(item["type"] == "criteria" for item in report["blockers"])
 
 
 def test_compare_candidates_default_thresholds_file_exists() -> None:

@@ -12,5 +12,9 @@
   "guard_terminal_reason_hallucination_persistent_max_increase": 0,
   "turn_non_progress_hallucination_scope_max_increase": 0,
   "turn_non_progress_security_scope_max_increase": 0,
-  "turn_non_progress_consistency_scope_max_increase": 0
+  "turn_non_progress_consistency_scope_max_increase": 0,
+  "candidate_guard_pass_rate_min": 0.95,
+  "candidate_guard_terminal_failure_max": 0,
+  "candidate_guard_terminal_reason_hallucination_persistent_max": 0,
+  "candidate_done_chain_mismatch_max": 0
 }

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 DEFAULT_THRESHOLDS_PATH = Path("benchmarks/results/prompt_promotion_thresholds.json")
 
@@ -54,6 +54,31 @@ def _pattern_delta(stable: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[st
     return delta
 
 
+def _pattern_value(payload: Dict[str, Any], key: str) -> int:
+    patterns = (payload.get("pattern_counters") or {}) if isinstance(payload, dict) else {}
+    value = patterns.get(key, 0)
+    if isinstance(value, (int, float)):
+        return int(value)
+    return 0
+
+
+def _candidate_guard_pass_rate(payload: Dict[str, Any]) -> Optional[float]:
+    completion = payload.get("completion_by_model")
+    if not isinstance(completion, dict) or not completion:
+        return None
+    passed = 0
+    failed = 0
+    for stats in completion.values():
+        if not isinstance(stats, dict):
+            continue
+        passed += int(stats.get("passed", 0) or 0)
+        failed += int(stats.get("failed", 0) or 0)
+    denom = passed + failed
+    if denom <= 0:
+        return None
+    return float(passed) / float(denom)
+
+
 def _threshold_value(thresholds: Dict[str, Any], key: str, default: float) -> float:
     value = thresholds.get(key, default)
     if isinstance(value, (int, float)):
@@ -65,6 +90,7 @@ def evaluate_promotion_gates(
     *,
     eval_delta: Dict[str, float],
     pattern_delta: Dict[str, int],
+    candidate_patterns: Dict[str, Any],
     thresholds: Dict[str, Any],
 ) -> Dict[str, Any]:
     gates = {
@@ -109,9 +135,75 @@ def evaluate_promotion_gates(
         )
         <= int(_threshold_value(thresholds, "turn_non_progress_consistency_scope_max_increase", 0)),
     }
+    candidate_guard_pass_rate = _candidate_guard_pass_rate(candidate_patterns)
+    criteria: Dict[str, Optional[bool]] = {}
+    criteria_values: Dict[str, Any] = {}
+
+    guard_pass_rate_min = thresholds.get("candidate_guard_pass_rate_min")
+    if isinstance(guard_pass_rate_min, (int, float)):
+        if candidate_guard_pass_rate is None:
+            criteria["candidate_guard_pass_rate_min"] = False
+            criteria_values["candidate_guard_pass_rate"] = None
+        else:
+            criteria["candidate_guard_pass_rate_min"] = candidate_guard_pass_rate >= float(guard_pass_rate_min)
+            criteria_values["candidate_guard_pass_rate"] = candidate_guard_pass_rate
+
+    candidate_guard_terminal_failure = _pattern_value(candidate_patterns, "guard_terminal_failure")
+    candidate_terminal_failure_max = thresholds.get("candidate_guard_terminal_failure_max")
+    if isinstance(candidate_terminal_failure_max, (int, float)):
+        criteria["candidate_guard_terminal_failure_max"] = (
+            candidate_guard_terminal_failure <= int(candidate_terminal_failure_max)
+        )
+        criteria_values["candidate_guard_terminal_failure"] = candidate_guard_terminal_failure
+
+    candidate_hallucination_persistent = _pattern_value(
+        candidate_patterns, "guard_terminal_reason_hallucination_persistent"
+    )
+    candidate_hallucination_persistent_max = thresholds.get(
+        "candidate_guard_terminal_reason_hallucination_persistent_max"
+    )
+    if isinstance(candidate_hallucination_persistent_max, (int, float)):
+        criteria["candidate_guard_terminal_reason_hallucination_persistent_max"] = (
+            candidate_hallucination_persistent <= int(candidate_hallucination_persistent_max)
+        )
+        criteria_values[
+            "candidate_guard_terminal_reason_hallucination_persistent"
+        ] = candidate_hallucination_persistent
+
+    candidate_done_chain_mismatch = _pattern_value(candidate_patterns, "done_chain_mismatch")
+    candidate_done_chain_mismatch_max = thresholds.get("candidate_done_chain_mismatch_max")
+    if isinstance(candidate_done_chain_mismatch_max, (int, float)):
+        criteria["candidate_done_chain_mismatch_max"] = (
+            candidate_done_chain_mismatch <= int(candidate_done_chain_mismatch_max)
+        )
+        criteria_values["candidate_done_chain_mismatch"] = candidate_done_chain_mismatch
+
+    blockers: List[Dict[str, Any]] = []
+    for gate_key, passed in gates.items():
+        if not passed:
+            blockers.append(
+                {
+                    "code": f"GATE_{gate_key.upper()}",
+                    "type": "gate",
+                    "message": f"Promotion gate failed: {gate_key}",
+                }
+            )
+    for criteria_key, passed in criteria.items():
+        if passed is False:
+            blockers.append(
+                {
+                    "code": f"CRITERIA_{criteria_key.upper()}",
+                    "type": "criteria",
+                    "message": f"Promotion criteria failed: {criteria_key}",
+                }
+            )
+
     return {
-        "pass": all(gates.values()),
+        "pass": all(gates.values()) and all(value is True for value in criteria.values()),
         "gates": gates,
+        "criteria": criteria,
+        "criteria_values": criteria_values,
+        "blockers": blockers,
     }
 
 
@@ -129,6 +221,7 @@ def compare_candidate_against_stable(
     gate_eval = evaluate_promotion_gates(
         eval_delta=eval_delta,
         pattern_delta=pattern_delta,
+        candidate_patterns=candidate_patterns,
         thresholds=thresholds,
     )
     return {
@@ -137,6 +230,9 @@ def compare_candidate_against_stable(
         "pattern_delta": pattern_delta,
         "thresholds": thresholds,
         "gates": gate_eval["gates"],
+        "criteria": gate_eval["criteria"],
+        "criteria_values": gate_eval["criteria_values"],
+        "blockers": gate_eval["blockers"],
     }
 
 
