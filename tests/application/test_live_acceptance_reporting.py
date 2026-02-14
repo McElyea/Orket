@@ -72,6 +72,11 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "prompt_selection_policy_stable": 4,
                 "prompt_selection_policy_canary": 0,
                 "prompt_selection_policy_exact": 0,
+                "runtime_verifier_failure_python_compile": 1,
+                "runtime_verifier_failure_timeout": 0,
+                "runtime_verifier_failure_command_failed": 0,
+                "runtime_verifier_failure_missing_runtime": 0,
+                "runtime_verifier_failure_deployment_missing": 0,
             },
             "db_summary": {"issue_statuses": {"REQ-1": "done", "ARC-1": "done", "COD-1": "done", "REV-1": "done"}},
             "chain_complete": True,
@@ -88,6 +93,11 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "prompt_selection_policy_stable": 0,
                 "prompt_selection_policy_canary": 1,
                 "prompt_selection_policy_exact": 1,
+                "runtime_verifier_failure_python_compile": 0,
+                "runtime_verifier_failure_timeout": 1,
+                "runtime_verifier_failure_command_failed": 1,
+                "runtime_verifier_failure_missing_runtime": 0,
+                "runtime_verifier_failure_deployment_missing": 1,
             },
             "db_summary": {"issue_statuses": {"REQ-1": "done", "ARC-1": "blocked"}},
             "chain_complete": False,
@@ -102,3 +112,8 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert counters["prompt_selection_policy_stable"] == 4
     assert counters["prompt_selection_policy_canary"] == 1
     assert counters["prompt_selection_policy_exact"] == 1
+    assert counters["runtime_verifier_failure_python_compile"] == 1
+    assert counters["runtime_verifier_failure_timeout"] == 1
+    assert counters["runtime_verifier_failure_command_failed"] == 1
+    assert counters["runtime_verifier_failure_missing_runtime"] == 0
+    assert counters["runtime_verifier_failure_deployment_missing"] == 1

@@ -105,6 +105,23 @@ def _event_count_with_flag(events: List[Dict[str, Any]], event_name: str, data_f
     return count
 
 
+def _runtime_failure_breakdown_count(events: List[Dict[str, Any]], failure_class: str) -> int:
+    total = 0
+    for event in events:
+        if event.get("event") != "runtime_verifier_completed":
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        breakdown = data.get("failure_breakdown")
+        if not isinstance(breakdown, dict):
+            continue
+        value = breakdown.get(failure_class, 0)
+        if isinstance(value, int):
+            total += value
+    return total
+
+
 def _last_event_data(events: List[Dict[str, Any]], event_name: str) -> Dict[str, Any]:
     for event in reversed(events):
         if event.get("event") == event_name:
@@ -294,6 +311,21 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "runtime_verifier_completed": _event_count(events, "runtime_verifier_completed"),
         "runtime_verifier_failures": _event_count_with_flag(
             events, "runtime_verifier_completed", "ok", False
+        ),
+        "runtime_verifier_failure_python_compile": _runtime_failure_breakdown_count(
+            events, "python_compile"
+        ),
+        "runtime_verifier_failure_timeout": _runtime_failure_breakdown_count(
+            events, "timeout"
+        ),
+        "runtime_verifier_failure_command_failed": _runtime_failure_breakdown_count(
+            events, "command_failed"
+        ),
+        "runtime_verifier_failure_missing_runtime": _runtime_failure_breakdown_count(
+            events, "missing_runtime"
+        ),
+        "runtime_verifier_failure_deployment_missing": _runtime_failure_breakdown_count(
+            events, "deployment_missing"
         ),
         "requirements_turn_complete": _event_count(events, "turn_complete", role="requirements_analyst"),
         "architect_turn_complete": _event_count(events, "turn_complete", role="architect"),

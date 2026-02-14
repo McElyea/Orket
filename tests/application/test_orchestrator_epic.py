@@ -705,6 +705,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
     assert report["ok"] is False
     assert report["issue_id"] == "REV-1"
     assert isinstance(report.get("command_results"), list)
+    assert isinstance(report.get("failure_breakdown"), dict)
 
 
 @pytest.mark.asyncio

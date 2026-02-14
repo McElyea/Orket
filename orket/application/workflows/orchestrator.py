@@ -584,6 +584,7 @@ class Orchestrator:
                 "checked_files": list(runtime_result.checked_files),
                 "errors": list(runtime_result.errors),
                 "command_results": list(getattr(runtime_result, "command_results", []) or []),
+                "failure_breakdown": dict(getattr(runtime_result, "failure_breakdown", {}) or {}),
                 "timestamp": datetime.now(UTC).isoformat(),
             }
             await AsyncFileTools(self.workspace).write_file(
@@ -598,6 +599,7 @@ class Orchestrator:
                     "ok": runtime_result.ok,
                     "checked_files": len(runtime_result.checked_files),
                     "errors": len(runtime_result.errors),
+                    "failure_breakdown": dict(getattr(runtime_result, "failure_breakdown", {}) or {}),
                 },
                 self.workspace,
             )
