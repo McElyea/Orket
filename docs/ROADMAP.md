@@ -227,6 +227,9 @@ Verification:
 1. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
 2. `python -m pytest tests/integration/test_system_acceptance_flow.py -q`
 3. `python -m pytest tests/live/test_role_unit_live.py -q` (optional deterministic per-role live checks)
+4. Rapid loop (no guard, per-role):
+   - PowerShell:
+   - `$env:ORKET_LIVE_ROLE_TESTS='1'; foreach ($m in @('qwen2.5-coder:7b','qwen2.5-coder:14b','llama3.1:8b')) { $env:ORKET_LIVE_MODEL=$m; python -m pytest tests/live/test_role_unit_live.py -q -s }`
 
 ### Phase P3: Boundary Enforcement That Matches Reality
 Objective: enforce volatility boundaries without loopholes.
