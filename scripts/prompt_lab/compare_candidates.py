@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict
 
+DEFAULT_THRESHOLDS_PATH = Path("benchmarks/results/prompt_promotion_thresholds.json")
+
 
 def _load_json(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -148,15 +150,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--candidate-patterns", required=True, help="Path to candidate live acceptance report JSON")
     parser.add_argument(
         "--thresholds",
-        default="",
+        default=str(DEFAULT_THRESHOLDS_PATH),
         help="Optional JSON file with promotion gate thresholds.",
     )
     parser.add_argument("--out", default="", help="Optional output report path")
     args = parser.parse_args(argv)
 
     thresholds = {}
-    if args.thresholds:
-        thresholds = _load_json(Path(args.thresholds))
+    threshold_path = str(args.thresholds or "").strip()
+    if threshold_path:
+        candidate = Path(threshold_path)
+        if candidate.exists():
+            thresholds = _load_json(candidate)
 
     report = compare_candidate_against_stable(
         stable_eval=_load_json(Path(args.stable_eval)),

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from scripts.prompt_lab.compare_candidates import compare_candidate_against_stable
+from scripts.prompt_lab.compare_candidates import (
+    DEFAULT_THRESHOLDS_PATH,
+    compare_candidate_against_stable,
+)
+from pathlib import Path
 
 
 def test_compare_candidate_passes_without_regression() -> None:
@@ -183,3 +187,7 @@ def test_compare_candidate_guard_domain_custom_thresholds() -> None:
         },
     )
     assert report["pass"] is True
+
+
+def test_compare_candidates_default_thresholds_file_exists() -> None:
+    assert Path(DEFAULT_THRESHOLDS_PATH).exists()
