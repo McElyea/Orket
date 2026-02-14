@@ -396,7 +396,7 @@ async def test_turn_executor_guard_payload_reprompt_still_enforces_progress_cont
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
-    assert "progress contract not met after guard payload corrective reprompt" in (result.error or "")
+    assert "progress contract not met after corrective reprompt" in (result.error or "")
 
 
 @pytest.mark.asyncio
@@ -485,6 +485,64 @@ async def test_prepare_messages_includes_read_path_contract(tmp_path):
     joined = "\n".join(str(m.get("content", "")) for m in messages)
     assert "Read Path Contract" in joined
     assert "agent_output/main.py" in joined
+
+
+@pytest.mark.asyncio
+async def test_prepare_messages_includes_write_path_contract(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    messages = await executor._prepare_messages(
+        _issue(),
+        _role(),
+        {
+            **_context(),
+            "required_action_tools": ["write_file", "update_issue_status"],
+            "required_statuses": ["code_review"],
+            "required_write_paths": ["agent_output/main.py"],
+        },
+        None,
+    )
+    joined = "\n".join(str(m.get("content", "")) for m in messages)
+    assert "Write Path Contract" in joined
+    assert "agent_output/main.py" in joined
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_write_path_contract_recovers_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/not_main.py", "content": "print(1)"}}'
+            '\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "write_file", "args": {"path": "agent_output/main.py", "content": "print(1)"}}'
+            '\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="COD",
+        summary="coder",
+        description="Implement code",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "coder"
+    context["roles"] = ["coder"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["required_write_paths"] = ["agent_output/main.py"]
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 2
+    assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
 
 
 @pytest.mark.asyncio

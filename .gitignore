@@ -59,7 +59,6 @@ product/**/*.log
 .env
 .claude/
 .gemini/
-C:/Users/jonmc/.gemini/tmp/
 project_dumper_small.py
 project_dump_small.txt
 project_dumper_small.txt
@@ -80,6 +79,8 @@ backups/
 
 # Diagnostics / benchmark artifacts
 .orket/
+.pytest_cache/
 .pytest_live_loop/
 .pytest_live_tmp/
+.ruff_cache/
 benchmarks/results/

@@ -772,6 +772,8 @@ class DefaultOrchestrationLoopPolicyNode:
 
     def required_action_tools_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
         seat = (seat_name or "").strip().lower()
+        issue = _kwargs.get("issue")
+        issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
         seat_requirements = {
             "requirements_analyst": ["write_file", "update_issue_status"],
             "architect": ["write_file", "update_issue_status"],
@@ -781,10 +783,14 @@ class DefaultOrchestrationLoopPolicyNode:
             "reviewer": ["read_file", "update_issue_status"],
             "integrity_guard": ["update_issue_status"],
         }
+        if seat == "integrity_guard" and issue_seat in {"code_reviewer", "reviewer"}:
+            return ["read_file", "update_issue_status"]
         return seat_requirements.get(seat, [])
 
     def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
         seat = (seat_name or "").strip().lower()
+        issue = _kwargs.get("issue")
+        issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
         status_requirements = {
             "requirements_analyst": ["code_review"],
             "architect": ["code_review"],
@@ -794,16 +800,39 @@ class DefaultOrchestrationLoopPolicyNode:
             "reviewer": ["code_review"],
             "integrity_guard": ["done", "blocked"],
         }
+        if seat == "integrity_guard":
+            # Guard can block only on final review issue; upstream handoff guards must resolve done.
+            if issue_seat and issue_seat not in {"code_reviewer", "reviewer"}:
+                return ["done"]
         return status_requirements.get(seat, [])
 
     def required_read_paths_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
         seat = (seat_name or "").strip().lower()
+        issue = _kwargs.get("issue")
+        issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
         if seat in {"code_reviewer", "reviewer"}:
             return [
                 "agent_output/requirements.txt",
                 "agent_output/main.py",
             ]
+        if seat == "integrity_guard" and issue_seat in {"code_reviewer", "reviewer"}:
+            return [
+                "agent_output/requirements.txt",
+                "agent_output/design.txt",
+                "agent_output/main.py",
+                "agent_output/verification/runtime_verification.json",
+            ]
         return []
+
+    def required_write_paths_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+        seat = (seat_name or "").strip().lower()
+        seat_paths = {
+            "requirements_analyst": ["agent_output/requirements.txt"],
+            "architect": ["agent_output/design.txt"],
+            "coder": ["agent_output/main.py"],
+            "developer": ["agent_output/main.py"],
+        }
+        return seat_paths.get(seat, [])
 
     def gate_mode_for_seat(self, seat_name: str, **_kwargs) -> str:
         seat = (seat_name or "").strip().lower()

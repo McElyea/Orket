@@ -269,6 +269,7 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "guard_turn_complete": _event_count(events, "turn_complete", role="integrity_guard"),
     }
 
+    chain_complete = _chain_complete(db_summary)
     return {
         "model": spec.model,
         "iteration": spec.iteration,
@@ -287,7 +288,8 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "session_status": session_end.get("status"),
         "metrics": metrics,
         "requirements_response_preview": _first_requirements_response(spec.run_dir),
-        "chain_complete": _chain_complete(db_summary),
+        "chain_complete": chain_complete,
+        "canonical_success": bool(completed.returncode == 0 and chain_complete),
     }
 
 
@@ -300,9 +302,10 @@ def _aggregate(results: List[Dict[str, Any]]) -> Dict[str, Any]:
             {"runs": 0, "passed": 0, "failed": 0, "skipped": 0, "avg_duration_s": 0.0},
         )
         model_stats["runs"] += 1
+        canonical_success = bool(result.get("passed")) and bool(result.get("chain_complete"))
         if result.get("session_status", "").startswith("skipped_"):
             model_stats["skipped"] += 1
-        elif result.get("passed"):
+        elif canonical_success:
             model_stats["passed"] += 1
         else:
             model_stats["failed"] += 1
@@ -362,6 +365,7 @@ def _make_skipped_result(spec: RunSpec, reason: str) -> Dict[str, Any]:
         "metrics": {"skipped": 1},
         "requirements_response_preview": None,
         "chain_complete": False,
+        "canonical_success": False,
         "model_policy": "skip",
     }
 
@@ -684,6 +688,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(
                 "  "
                 f"passed={result['passed']} "
+                f"canonical_success={result.get('canonical_success')} "
                 f"chain_complete={result.get('chain_complete')} "
                 f"run_id={result.get('run_id')} "
                 f"session_status={result.get('session_status')} "

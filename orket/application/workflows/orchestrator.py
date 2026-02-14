@@ -521,6 +521,7 @@ class Orchestrator:
         issue = IssueConfig.model_validate(issue_data.model_dump())
         is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
         dependency_context = await self._build_dependency_context(issue)
+        runtime_result = None
 
         if is_review_turn and not self._is_runtime_verifier_disabled():
             log_event(
@@ -639,6 +640,7 @@ class Orchestrator:
             turn_status=turn_status,
             selected_model=selected_model,
             dependency_context=dependency_context,
+            runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
             resume_mode=resume_mode,
         )
 
@@ -852,6 +854,7 @@ class Orchestrator:
         turn_status: CardStatus,
         selected_model: str,
         dependency_context: Optional[Dict[str, Any]] = None,
+        runtime_verifier_ok: Optional[bool] = None,
         resume_mode: bool = False,
     ) -> Dict[str, Any]:
         required_action_tools = []
@@ -898,6 +901,21 @@ class Orchestrator:
                 )
             except TypeError:
                 required_read_paths = list(required_read_paths_fn(seat_name) or [])
+
+        required_write_paths = []
+        required_write_paths_fn = getattr(self.loop_policy_node, "required_write_paths_for_seat", None)
+        if callable(required_write_paths_fn):
+            try:
+                required_write_paths = list(
+                    required_write_paths_fn(
+                        seat_name=seat_name,
+                        issue=issue,
+                        turn_status=turn_status,
+                    )
+                    or []
+                )
+            except TypeError:
+                required_write_paths = list(required_write_paths_fn(seat_name) or [])
 
         gate_mode = "auto"
         gate_mode_fn = getattr(self.loop_policy_node, "gate_mode_for_seat", None)
@@ -976,8 +994,10 @@ class Orchestrator:
             "required_action_tools": required_action_tools,
             "required_statuses": required_statuses,
             "required_read_paths": required_read_paths,
+            "required_write_paths": required_write_paths,
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
+            "runtime_verifier_ok": runtime_verifier_ok,
             "architecture_mode": architecture_mode,
             "frontend_framework_mode": frontend_framework_mode,
             "architecture_decision_required": bool(is_architect_seat),

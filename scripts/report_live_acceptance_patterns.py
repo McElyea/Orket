@@ -125,9 +125,10 @@ def _completion_by_model(runs: List[Dict[str, Any]]) -> Dict[str, Dict[str, int]
         )
         stats["runs"] += 1
         status = run.get("session_status", "")
+        canonical_success = bool(run.get("passed")) and run.get("chain_complete") is True
         if str(status).startswith("skipped_"):
             stats["skipped"] += 1
-        elif run.get("passed"):
+        elif canonical_success:
             stats["passed"] += 1
         else:
             stats["failed"] += 1

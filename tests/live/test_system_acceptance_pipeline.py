@@ -34,7 +34,14 @@ class MultiRoleAcceptanceProvider:
                     active_issue_id = None
                 break
 
-        # Guard oversight: issue is finalized once it reaches the integrity_guard seat.
+        # Guard oversight: final review issue requires artifact reads before decision.
+        if active_seat == "integrity_guard" and active_issue_id == "rev-1":
+            return ModelResponse(
+                content='```json\n{"tool": "read_file", "args": {"path": "agent_output/requirements.txt"}}\n```\n```json\n{"tool": "read_file", "args": {"path": "agent_output/design.txt"}}\n```\n```json\n{"tool": "read_file", "args": {"path": "agent_output/main.py"}}\n```\n```json\n{"tool": "read_file", "args": {"path": "agent_output/verification/runtime_verification.json"}}\n```\n```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',
+                raw={"model": "dummy", "total_tokens": 90},
+            )
+
+        # Guard oversight: upstream handoff issues are finalized with a done decision.
         if active_seat == "integrity_guard" or active_issue_id in {"guard-1"} or "integrity_guard" in prompt_blob:
             return ModelResponse(
                 content='```json\n{"tool": "update_issue_status", "args": {"status": "done"}}\n```',

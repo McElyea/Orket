@@ -876,6 +876,63 @@ def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrat
         "agent_output/requirements.txt",
         "agent_output/main.py",
     ]
+    assert context["required_write_paths"] == []
+
+
+def test_build_turn_context_includes_required_write_paths_for_coder(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="COD-1", seat="coder", summary="Implement")
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="coder",
+        roles_to_load=["coder"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+    assert context["required_write_paths"] == ["agent_output/main.py"]
+
+
+def test_build_turn_context_non_final_guard_requires_done_status(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="COD-1", seat="coder", summary="Guard handoff")
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="integrity_guard",
+        roles_to_load=["integrity_guard"],
+        turn_status=CardStatus.AWAITING_GUARD_REVIEW,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+    assert context["required_statuses"] == ["done"]
+    assert context["required_action_tools"] == ["update_issue_status"]
+    assert context["required_read_paths"] == []
+
+
+def test_build_turn_context_final_guard_includes_read_contract(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="REV-1", seat="code_reviewer", summary="Final guard review")
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="integrity_guard",
+        roles_to_load=["integrity_guard"],
+        turn_status=CardStatus.AWAITING_GUARD_REVIEW,
+        selected_model="dummy-model",
+        runtime_verifier_ok=True,
+        resume_mode=False,
+    )
+    assert context["required_statuses"] == ["done", "blocked"]
+    assert context["required_action_tools"] == ["read_file", "update_issue_status"]
+    assert context["required_read_paths"] == [
+        "agent_output/requirements.txt",
+        "agent_output/design.txt",
+        "agent_output/main.py",
+        "agent_output/verification/runtime_verification.json",
+    ]
+    assert context["runtime_verifier_ok"] is True
 
 
 def test_build_turn_context_includes_architecture_contract_for_architect(orchestrator):

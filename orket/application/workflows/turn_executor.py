@@ -211,41 +211,17 @@ class TurnExecutor:
                 role_name=role_name,
                 context=context,
             )
-            if not self._meets_progress_contract(turn, role, context):
-                required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
-                required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
-                observed_tools = [call.tool for call in turn.tool_calls]
-                missing_required = [tool for tool in required_action_tools if tool not in observed_tools]
-                observed_statuses = [
-                    str(call.args.get("status", "")).strip().lower()
-                    for call in turn.tool_calls
-                    if call.tool == "update_issue_status"
+            contract_violations = self._collect_contract_violations(turn, role, context)
+            if contract_violations:
+                corrective_prompt = self._build_corrective_instruction(contract_violations, context)
+                retry_messages = copy.deepcopy(messages)
+                retry_messages.append({"role": "user", "content": corrective_prompt})
+
+                contract_reasons = [
+                    str(item.get("reason", "")).strip()
+                    for item in contract_violations
+                    if str(item.get("reason", "")).strip()
                 ]
-                status_hint = ""
-                if required_statuses:
-                    status_hint = (
-                        f" Required update_issue_status values: {', '.join(required_statuses)}."
-                        f" Observed: {', '.join(observed_statuses) if observed_statuses else 'none'}."
-                    )
-                    if "blocked" in required_statuses:
-                        status_hint += " If status is blocked, include wait_reason: resource|dependency|review|input|system."
-                required_hint = ""
-                if required_action_tools:
-                    required_hint = (
-                        f" Required tools this turn: {', '.join(required_action_tools)}."
-                        f" Missing: {', '.join(missing_required) if missing_required else 'none'}."
-                    )
-                retry_messages = copy.deepcopy(messages)
-                retry_messages.append(
-                    {
-                        "role": "user",
-                        "content": (
-                            "Corrective instruction: previous response did not make acceptable progress. "
-                            "You must emit required tool-call JSON blocks in this turn and complete the work."
-                            f"{required_hint}{status_hint}"
-                        ),
-                    }
-                )
                 log_event(
                     "turn_corrective_reprompt",
                     {
@@ -254,12 +230,9 @@ class TurnExecutor:
                         "session_id": session_id,
                         "turn_index": turn_index,
                         "turn_trace_id": turn_trace_id,
-                        "reason": "progress_contract_not_met",
-                        "required_action_tools": required_action_tools,
-                        "required_statuses": required_statuses,
-                        "observed_tools": observed_tools,
-                        "missing_required_tools": missing_required,
-                        "observed_statuses": observed_statuses,
+                        "reason": contract_reasons[0] if len(contract_reasons) == 1 else "multiple_contracts_not_met",
+                        "contract_reasons": contract_reasons,
+                        "contract_violations": contract_violations,
                     },
                     self.workspace,
                 )
@@ -280,7 +253,14 @@ class TurnExecutor:
                     role_name=role_name,
                     context=context,
                 )
-                if not self._meets_progress_contract(turn, role, context):
+                contract_violations = self._collect_contract_violations(turn, role, context)
+                if contract_violations:
+                    contract_reasons = [
+                        str(item.get("reason", "")).strip()
+                        for item in contract_violations
+                        if str(item.get("reason", "")).strip()
+                    ]
+                    primary_reason = contract_reasons[0] if contract_reasons else "contract_not_met"
                     log_event(
                         "turn_non_progress",
                         {
@@ -289,243 +269,14 @@ class TurnExecutor:
                             "session_id": session_id,
                             "turn_index": turn_index,
                             "turn_trace_id": turn_trace_id,
-                            "reason": "progress_contract_not_met_after_reprompt",
+                            "reason": f"{primary_reason}_after_reprompt",
+                            "contract_reasons": contract_reasons,
+                            "contract_violations": contract_violations,
                         },
                         self.workspace,
                     )
                     return TurnResult.failed(
-                        "Deterministic failure: progress contract not met after corrective reprompt.",
-                        should_retry=False,
-                    )
-
-            if not self._meets_guard_rejection_payload_contract(turn, context):
-                retry_messages = copy.deepcopy(messages)
-                retry_messages.append(
-                    {
-                        "role": "user",
-                        "content": (
-                            "Corrective instruction: integrity guard rejection payload is incomplete. "
-                            "If you set update_issue_status.status=blocked, include a JSON object with "
-                            "keys rationale (non-empty string), violations (list), and remediation_actions "
-                            "(non-empty list of concrete actions)."
-                        ),
-                    }
-                )
-                log_event(
-                    "turn_corrective_reprompt",
-                    {
-                        "issue_id": issue_id,
-                        "role": role_name,
-                        "session_id": session_id,
-                        "turn_index": turn_index,
-                        "turn_trace_id": turn_trace_id,
-                        "reason": "guard_rejection_payload_contract_not_met",
-                    },
-                    self.workspace,
-                )
-                response = await model_client.complete(retry_messages)
-                response, middleware_outcome = self.middleware.apply_after_model(
-                    response,
-                    issue=issue,
-                    role=role,
-                    context=context,
-                )
-                if middleware_outcome and middleware_outcome.short_circuit:
-                    reason = middleware_outcome.reason or "short-circuit after_model"
-                    return TurnResult.failed(reason, should_retry=False)
-
-                turn = self._parse_response(
-                    response=response,
-                    issue_id=issue_id,
-                    role_name=role_name,
-                    context=context,
-                )
-                if not self._meets_progress_contract(turn, role, context):
-                    log_event(
-                        "turn_non_progress",
-                        {
-                            "issue_id": issue_id,
-                            "role": role_name,
-                            "session_id": session_id,
-                            "turn_index": turn_index,
-                            "turn_trace_id": turn_trace_id,
-                            "reason": "progress_contract_not_met_after_guard_payload_reprompt",
-                        },
-                        self.workspace,
-                    )
-                    return TurnResult.failed(
-                        "Deterministic failure: progress contract not met after guard payload corrective reprompt.",
-                        should_retry=False,
-                    )
-                if not self._meets_guard_rejection_payload_contract(turn, context):
-                    log_event(
-                        "turn_non_progress",
-                        {
-                            "issue_id": issue_id,
-                            "role": role_name,
-                            "session_id": session_id,
-                            "turn_index": turn_index,
-                            "turn_trace_id": turn_trace_id,
-                            "reason": "guard_rejection_payload_contract_not_met_after_reprompt",
-                        },
-                        self.workspace,
-                    )
-                    return TurnResult.failed(
-                        "Deterministic failure: guard rejection payload contract not met after corrective reprompt.",
-                        should_retry=False,
-                    )
-
-            if not self._meets_read_path_contract(turn, context):
-                retry_messages = copy.deepcopy(messages)
-                retry_messages.append(
-                    {
-                        "role": "user",
-                        "content": (
-                            "Corrective instruction: read_file paths are invalid or incomplete for this review turn. "
-                            "Use read_file only with required workspace-relative paths from Read Path Contract."
-                        ),
-                    }
-                )
-                log_event(
-                    "turn_corrective_reprompt",
-                    {
-                        "issue_id": issue_id,
-                        "role": role_name,
-                        "session_id": session_id,
-                        "turn_index": turn_index,
-                        "turn_trace_id": turn_trace_id,
-                        "reason": "read_path_contract_not_met",
-                        "required_read_paths": context.get("required_read_paths", []),
-                    },
-                    self.workspace,
-                )
-                response = await model_client.complete(retry_messages)
-                response, middleware_outcome = self.middleware.apply_after_model(
-                    response,
-                    issue=issue,
-                    role=role,
-                    context=context,
-                )
-                if middleware_outcome and middleware_outcome.short_circuit:
-                    reason = middleware_outcome.reason or "short-circuit after_model"
-                    return TurnResult.failed(reason, should_retry=False)
-
-                turn = self._parse_response(
-                    response=response,
-                    issue_id=issue_id,
-                    role_name=role_name,
-                    context=context,
-                )
-                if not self._meets_progress_contract(turn, role, context):
-                    log_event(
-                        "turn_non_progress",
-                        {
-                            "issue_id": issue_id,
-                            "role": role_name,
-                            "session_id": session_id,
-                            "turn_index": turn_index,
-                            "turn_trace_id": turn_trace_id,
-                            "reason": "progress_contract_not_met_after_read_path_reprompt",
-                        },
-                        self.workspace,
-                    )
-                    return TurnResult.failed(
-                        "Deterministic failure: progress contract not met after read path corrective reprompt.",
-                        should_retry=False,
-                    )
-                if not self._meets_read_path_contract(turn, context):
-                    log_event(
-                        "turn_non_progress",
-                        {
-                            "issue_id": issue_id,
-                            "role": role_name,
-                            "session_id": session_id,
-                            "turn_index": turn_index,
-                            "turn_trace_id": turn_trace_id,
-                            "reason": "read_path_contract_not_met_after_reprompt",
-                        },
-                        self.workspace,
-                    )
-                    return TurnResult.failed(
-                        "Deterministic failure: read path contract not met after corrective reprompt.",
-                        should_retry=False,
-                    )
-
-            if not self._meets_architecture_decision_contract(turn, context):
-                retry_messages = copy.deepcopy(messages)
-                retry_messages.append(
-                    {
-                        "role": "user",
-                        "content": (
-                            "Corrective instruction: architecture decision contract not met. "
-                            "Write architecture decision JSON to the required path and include "
-                            "recommendation, confidence (0..1), and evidence fields."
-                        ),
-                    }
-                )
-                log_event(
-                    "turn_corrective_reprompt",
-                    {
-                        "issue_id": issue_id,
-                        "role": role_name,
-                        "session_id": session_id,
-                        "turn_index": turn_index,
-                        "turn_trace_id": turn_trace_id,
-                        "reason": "architecture_decision_contract_not_met",
-                        "architecture_mode": context.get("architecture_mode"),
-                    },
-                    self.workspace,
-                )
-                response = await model_client.complete(retry_messages)
-                response, middleware_outcome = self.middleware.apply_after_model(
-                    response,
-                    issue=issue,
-                    role=role,
-                    context=context,
-                )
-                if middleware_outcome and middleware_outcome.short_circuit:
-                    reason = middleware_outcome.reason or "short-circuit after_model"
-                    return TurnResult.failed(reason, should_retry=False)
-
-                turn = self._parse_response(
-                    response=response,
-                    issue_id=issue_id,
-                    role_name=role_name,
-                    context=context,
-                )
-                if not self._meets_progress_contract(turn, role, context):
-                    log_event(
-                        "turn_non_progress",
-                        {
-                            "issue_id": issue_id,
-                            "role": role_name,
-                            "session_id": session_id,
-                            "turn_index": turn_index,
-                            "turn_trace_id": turn_trace_id,
-                            "reason": "progress_contract_not_met_after_architecture_contract_reprompt",
-                        },
-                        self.workspace,
-                    )
-                    return TurnResult.failed(
-                        "Deterministic failure: progress contract not met after architecture contract corrective reprompt.",
-                        should_retry=False,
-                    )
-                if not self._meets_architecture_decision_contract(turn, context):
-                    log_event(
-                        "turn_non_progress",
-                        {
-                            "issue_id": issue_id,
-                            "role": role_name,
-                            "session_id": session_id,
-                            "turn_index": turn_index,
-                            "turn_trace_id": turn_trace_id,
-                            "reason": "architecture_decision_contract_not_met_after_reprompt",
-                            "architecture_mode": context.get("architecture_mode"),
-                        },
-                        self.workspace,
-                    )
-                    return TurnResult.failed(
-                        "Deterministic failure: architecture decision contract not met after corrective reprompt.",
+                        self._deterministic_failure_message(primary_reason),
                         should_retry=False,
                     )
 
@@ -738,6 +489,10 @@ class TurnExecutor:
             "dependency_context": context.get("dependency_context", {}),
             "required_action_tools": context.get("required_action_tools", []),
             "required_statuses": context.get("required_statuses", []),
+            "required_read_paths": context.get("required_read_paths", []),
+            "required_write_paths": context.get("required_write_paths", []),
+            "stage_gate_mode": context.get("stage_gate_mode"),
+            "runtime_verifier_ok": context.get("runtime_verifier_ok"),
             "architecture_mode": context.get("architecture_mode"),
             "frontend_framework_mode": context.get("frontend_framework_mode"),
             "architecture_decision_required": bool(context.get("architecture_decision_required")),
@@ -753,6 +508,7 @@ class TurnExecutor:
         required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
         required_read_paths = [str(p).strip() for p in (context.get("required_read_paths") or []) if str(p).strip()]
+        required_write_paths = [str(p).strip() for p in (context.get("required_write_paths") or []) if str(p).strip()]
         if required_action_tools or required_statuses:
             contract_lines = []
             if required_action_tools:
@@ -770,6 +526,19 @@ class TurnExecutor:
                 {
                     "role": "user",
                     "content": "Turn Success Contract:\n" + "\n".join(contract_lines),
+                }
+            )
+
+        if required_write_paths:
+            write_lines = [
+                "- Required write_file paths this turn:",
+                *[f"  - {path}" for path in required_write_paths],
+                "- Use workspace-relative paths exactly as listed.",
+            ]
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Write Path Contract:\n" + "\n".join(write_lines),
                 }
             )
 
@@ -821,6 +590,12 @@ class TurnExecutor:
             )
 
         if str(context.get("stage_gate_mode", "")).strip().lower() == "review_required":
+            runtime_ok = context.get("runtime_verifier_ok")
+            runtime_line = "- Runtime verifier result unavailable."
+            if runtime_ok is True:
+                runtime_line = "- Runtime verifier passed for this issue."
+            elif runtime_ok is False:
+                runtime_line = "- Runtime verifier failed for this issue."
             messages.append(
                 {
                     "role": "user",
@@ -829,7 +604,10 @@ class TurnExecutor:
                         "- If you set update_issue_status.status to blocked, include a second JSON object in the same response.\n"
                         '- Required payload schema: {"rationale":"...", "violations":[...], "remediation_actions":[...]}.\n'
                         "- rationale must be non-empty.\n"
+                        "- violations must contain at least one concrete defect.\n"
                         "- remediation_actions must contain at least one concrete action.\n"
+                        f"{runtime_line}\n"
+                        "- If runtime verifier passed and no concrete defect is present, choose status=done."
                     ),
                 }
             )
@@ -1104,6 +882,227 @@ class TurnExecutor:
         if violations:
             raise ToolValidationError(violations)
 
+    def _collect_contract_violations(
+        self,
+        turn: ExecutionTurn,
+        role: RoleConfig,
+        context: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        violations: List[Dict[str, Any]] = []
+
+        progress_diag = self._progress_contract_diagnostics(turn, role, context)
+        if not progress_diag.get("ok", False):
+            violations.append(
+                {
+                    "reason": "progress_contract_not_met",
+                    "required_action_tools": progress_diag.get("required_action_tools", []),
+                    "required_statuses": progress_diag.get("required_statuses", []),
+                    "observed_tools": progress_diag.get("observed_tools", []),
+                    "missing_required_tools": progress_diag.get("missing_required_tools", []),
+                    "observed_statuses": progress_diag.get("observed_statuses", []),
+                }
+            )
+
+        if not self._meets_write_path_contract(turn, context):
+            violations.append(
+                {
+                    "reason": "write_path_contract_not_met",
+                    "required_write_paths": self._required_write_paths(context),
+                    "observed_write_paths": self._observed_write_paths(turn),
+                }
+            )
+
+        if not self._meets_read_path_contract(turn, context):
+            violations.append(
+                {
+                    "reason": "read_path_contract_not_met",
+                    "required_read_paths": self._required_read_paths(context),
+                    "observed_read_paths": self._observed_read_paths(turn),
+                }
+            )
+
+        if not self._meets_architecture_decision_contract(turn, context):
+            violations.append(
+                {
+                    "reason": "architecture_decision_contract_not_met",
+                    "architecture_mode": context.get("architecture_mode"),
+                    "architecture_decision_path": context.get("architecture_decision_path"),
+                }
+            )
+
+        if not self._meets_guard_rejection_payload_contract(turn, context):
+            violations.append(
+                {
+                    "reason": "guard_rejection_payload_contract_not_met",
+                    "stage_gate_mode": context.get("stage_gate_mode"),
+                }
+            )
+
+        return violations
+
+    def _build_corrective_instruction(
+        self,
+        violations: List[Dict[str, Any]],
+        context: Dict[str, Any],
+    ) -> str:
+        lines = [
+            "Corrective instruction: previous response violated deterministic turn contracts.",
+            "Return JSON tool-call blocks only and satisfy all required contracts in this same response.",
+        ]
+
+        reason_set = {
+            str(item.get("reason", "")).strip()
+            for item in violations
+            if str(item.get("reason", "")).strip()
+        }
+
+        if "progress_contract_not_met" in reason_set:
+            required_action_tools = [
+                str(t) for t in (context.get("required_action_tools") or []) if str(t).strip()
+            ]
+            required_statuses = [
+                str(s).strip().lower()
+                for s in (context.get("required_statuses") or [])
+                if str(s).strip()
+            ]
+            if required_action_tools:
+                lines.append(f"- Required tools this turn: {', '.join(required_action_tools)}.")
+            if required_statuses:
+                lines.append(
+                    "- Required update_issue_status values: "
+                    + ", ".join(required_statuses)
+                    + "."
+                )
+                if "blocked" in required_statuses:
+                    lines.append(
+                        "- If status=blocked, include wait_reason in: resource|dependency|review|input|system."
+                    )
+
+        if "write_path_contract_not_met" in reason_set:
+            required_write_paths = self._required_write_paths(context)
+            if required_write_paths:
+                lines.append("- Required write_file paths:")
+                for path in required_write_paths:
+                    lines.append(f"  - {path}")
+
+        if "read_path_contract_not_met" in reason_set:
+            required_read_paths = self._required_read_paths(context)
+            if required_read_paths:
+                lines.append("- Required read_file paths:")
+                for path in required_read_paths:
+                    lines.append(f"  - {path}")
+
+        if "architecture_decision_contract_not_met" in reason_set:
+            lines.append(
+                "- Architecture decision JSON is required at the configured architecture_decision_path "
+                "with recommendation, confidence (0..1), and full evidence keys."
+            )
+
+        if "guard_rejection_payload_contract_not_met" in reason_set:
+            lines.append(
+                "- If update_issue_status.status=blocked, include JSON payload keys: "
+                "rationale (non-empty), violations (non-empty list), remediation_actions (non-empty list)."
+            )
+
+        required_read_paths = self._required_read_paths(context)
+        required_write_paths = self._required_write_paths(context)
+        required_statuses = [
+            str(s).strip().lower()
+            for s in (context.get("required_statuses") or [])
+            if str(s).strip()
+        ]
+        if required_read_paths or required_write_paths or required_statuses:
+            lines.append("- Required-call template (emit blocks like these in this same response):")
+            for path in required_read_paths:
+                lines.append(f'  {{"tool":"read_file","args":{{"path":"{path}"}}}}')
+            for path in required_write_paths:
+                lines.append(
+                    f'  {{"tool":"write_file","args":{{"path":"{path}","content":"<actual content>"}}}}'
+                )
+            if len(required_statuses) == 1:
+                status = required_statuses[0]
+                if status == "blocked":
+                    lines.append(
+                        '  {"tool":"update_issue_status","args":{"status":"blocked","wait_reason":"review"}}'
+                    )
+                else:
+                    lines.append(f'  {{"tool":"update_issue_status","args":{{"status":"{status}"}}}}')
+            elif required_statuses:
+                lines.append(
+                    "  "
+                    + '{"tool":"update_issue_status","args":{"status":"<one of '
+                    + "|".join(required_statuses)
+                    + '>"}}'
+                )
+
+        return "\n".join(lines)
+
+    def _deterministic_failure_message(self, reason: str) -> str:
+        reason_key = str(reason or "").strip().lower()
+        mapping = {
+            "progress_contract_not_met": "Deterministic failure: progress contract not met after corrective reprompt.",
+            "guard_rejection_payload_contract_not_met": "Deterministic failure: guard rejection payload contract not met after corrective reprompt.",
+            "read_path_contract_not_met": "Deterministic failure: read path contract not met after corrective reprompt.",
+            "write_path_contract_not_met": "Deterministic failure: write path contract not met after corrective reprompt.",
+            "architecture_decision_contract_not_met": "Deterministic failure: architecture decision contract not met after corrective reprompt.",
+        }
+        return mapping.get(
+            reason_key,
+            "Deterministic failure: turn contract not met after corrective reprompt.",
+        )
+
+    def _required_read_paths(self, context: Dict[str, Any]) -> List[str]:
+        return [
+            str(path).strip()
+            for path in (context.get("required_read_paths") or [])
+            if str(path).strip()
+        ]
+
+    def _required_write_paths(self, context: Dict[str, Any]) -> List[str]:
+        return [
+            str(path).strip()
+            for path in (context.get("required_write_paths") or [])
+            if str(path).strip()
+        ]
+
+    def _observed_read_paths(self, turn: ExecutionTurn) -> List[str]:
+        return [
+            str(call.args.get("path", "")).strip()
+            for call in turn.tool_calls
+            if call.tool == "read_file"
+        ]
+
+    def _observed_write_paths(self, turn: ExecutionTurn) -> List[str]:
+        return [
+            str(call.args.get("path", "")).strip()
+            for call in turn.tool_calls
+            if call.tool == "write_file"
+        ]
+
+    def _progress_contract_diagnostics(
+        self,
+        turn: ExecutionTurn,
+        role: RoleConfig,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        observed_tools = [call.tool for call in (turn.tool_calls or []) if call.tool]
+        required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
+        required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
+        missing_required = [tool for tool in required_action_tools if tool not in observed_tools]
+        observed_statuses = [
+            str(call.args.get("status", "")).strip().lower()
+            for call in (turn.tool_calls or [])
+            if call.tool == "update_issue_status"
+        ]
+        return {
+            "ok": self._meets_progress_contract(turn, role, context),
+            "required_action_tools": required_action_tools,
+            "required_statuses": required_statuses,
+            "observed_tools": observed_tools,
+            "missing_required_tools": missing_required,
+            "observed_statuses": observed_statuses,
+        }
+
     def _meets_progress_contract(self, turn: ExecutionTurn, role: RoleConfig, context: Dict[str, Any]) -> bool:
         allowed = set(role.tools or [])
         called_tools = {call.tool for call in (turn.tool_calls or []) if call.tool}
@@ -1162,6 +1161,17 @@ class TurnExecutor:
 
         return True
 
+    def _meets_write_path_contract(self, turn: ExecutionTurn, context: Dict[str, Any]) -> bool:
+        required_paths = self._required_write_paths(context)
+        if not required_paths:
+            return True
+
+        observed_paths = self._observed_write_paths(turn)
+        if not observed_paths:
+            return False
+        observed_set = {p for p in observed_paths if p}
+        return set(required_paths).issubset(observed_set)
+
     def _meets_guard_rejection_payload_contract(self, turn: ExecutionTurn, context: Dict[str, Any]) -> bool:
         stage_gate_mode = str(context.get("stage_gate_mode", "")).strip().lower()
         if stage_gate_mode != "review_required":
@@ -1183,6 +1193,11 @@ class TurnExecutor:
 
         payload = self._extract_guard_review_payload(turn.content or "")
         rationale = str(payload.get("rationale", "") or "").strip()
+        violations = [
+            str(item).strip()
+            for item in (payload.get("violations", []) or [])
+            if str(item).strip()
+        ]
         actions = [
             str(item).strip()
             for item in (payload.get("remediation_actions", []) or [])
@@ -1194,22 +1209,14 @@ class TurnExecutor:
                 unresolved = dep_context.get("unresolved_dependencies") or []
                 if not unresolved:
                     return False
-        return bool(rationale and actions)
+        return bool(rationale and violations and actions)
 
     def _meets_read_path_contract(self, turn: ExecutionTurn, context: Dict[str, Any]) -> bool:
-        required_paths = [
-            str(path).strip()
-            for path in (context.get("required_read_paths") or [])
-            if str(path).strip()
-        ]
+        required_paths = self._required_read_paths(context)
         if not required_paths:
             return True
 
-        observed_paths = [
-            str(call.args.get("path", "")).strip()
-            for call in turn.tool_calls
-            if call.tool == "read_file"
-        ]
+        observed_paths = self._observed_read_paths(turn)
         if not observed_paths:
             return False
         observed_set = {p for p in observed_paths if p}
