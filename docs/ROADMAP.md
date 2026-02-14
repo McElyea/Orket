@@ -20,10 +20,10 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 5. Keep governance mechanical and explicit in runtime evidence.
 
 ## Current Priority Order
-1. `P0 Highest`: Prompt Engine program (governable prompt assets and deterministic prompt resolution).
-2. `P1 High`: Stage policy and stabilizer follow-through (`P-1B` to `P-1D` hardening).
-3. `P2 Medium`: Canonical asset alignment and acceptance gate hardening.
-4. `P3 Low`: Architecture boundary enforcement and maintenance checks.
+1. `P1 Highest`: Stage policy and stabilizer follow-through (`P-1B` to `P-1D` hardening).
+2. `P2 High`: Canonical asset alignment and acceptance gate hardening.
+3. `P3 Medium`: Architecture boundary enforcement and maintenance checks.
+4. `P4 Low`: Prompt Engine enhancement follow-ups (only if regressions emerge).
 
 ## P0: Prompt Engine Program (Highest Priority)
 Objective: make prompts first-class, versioned, inspectable assets with deterministic runtime resolution.
@@ -34,18 +34,8 @@ Objective: make prompts first-class, versioned, inspectable assets with determin
 3. `P0-F3`: Runtime policy attribution is landed in artifacts and live-loop reporting.
 4. `P0-R1`: Prompt tooling + CI validation workflow is landed (`orket-prompts` commands + CI validator gate).
 
-### Active Remaining Work
-#### `P0-R2`: Prompt Optimization Loop (Offline)
-Goal: add controlled optimization, not in-run self-rewrite.
-
-Remaining Slices:
-1. `P0-R2-S1`: add offline `optimize` workflow that writes candidate prompt versions only.
-2. `P0-R2-S2`: compare candidate vs stable against canonical acceptance and pattern reports.
-3. `P0-R2-S3`: enforce promotion gates from explicit evidence thresholds.
-
-Exit Criteria:
-1. Optimization can propose prompt upgrades without touching runtime orchestration code.
-2. No runtime self-modifying prompts are required.
+### Status
+`P0` is complete.
 
 ## P1: Stage Policy and Stabilizer Follow-Through
 Objective: complete and harden `P-1` stabilizers as deterministic policy contracts.
