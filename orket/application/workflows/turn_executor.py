@@ -298,6 +298,83 @@ class TurnExecutor:
                         should_retry=False,
                     )
 
+            if not self._meets_guard_rejection_payload_contract(turn, context):
+                retry_messages = copy.deepcopy(messages)
+                retry_messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "Corrective instruction: integrity guard rejection payload is incomplete. "
+                            "If you set update_issue_status.status=blocked, include a JSON object with "
+                            "keys rationale (non-empty string), violations (list), and remediation_actions "
+                            "(non-empty list of concrete actions)."
+                        ),
+                    }
+                )
+                log_event(
+                    "turn_corrective_reprompt",
+                    {
+                        "issue_id": issue_id,
+                        "role": role_name,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "turn_trace_id": turn_trace_id,
+                        "reason": "guard_rejection_payload_contract_not_met",
+                    },
+                    self.workspace,
+                )
+                response = await model_client.complete(retry_messages)
+                response, middleware_outcome = self.middleware.apply_after_model(
+                    response,
+                    issue=issue,
+                    role=role,
+                    context=context,
+                )
+                if middleware_outcome and middleware_outcome.short_circuit:
+                    reason = middleware_outcome.reason or "short-circuit after_model"
+                    return TurnResult.failed(reason, should_retry=False)
+
+                turn = self._parse_response(
+                    response=response,
+                    issue_id=issue_id,
+                    role_name=role_name,
+                    context=context,
+                )
+                if not self._meets_progress_contract(turn, role, context):
+                    log_event(
+                        "turn_non_progress",
+                        {
+                            "issue_id": issue_id,
+                            "role": role_name,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "turn_trace_id": turn_trace_id,
+                            "reason": "progress_contract_not_met_after_guard_payload_reprompt",
+                        },
+                        self.workspace,
+                    )
+                    return TurnResult.failed(
+                        "Deterministic failure: progress contract not met after guard payload corrective reprompt.",
+                        should_retry=False,
+                    )
+                if not self._meets_guard_rejection_payload_contract(turn, context):
+                    log_event(
+                        "turn_non_progress",
+                        {
+                            "issue_id": issue_id,
+                            "role": role_name,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "turn_trace_id": turn_trace_id,
+                            "reason": "guard_rejection_payload_contract_not_met_after_reprompt",
+                        },
+                        self.workspace,
+                    )
+                    return TurnResult.failed(
+                        "Deterministic failure: guard rejection payload contract not met after corrective reprompt.",
+                        should_retry=False,
+                    )
+
             self._write_turn_artifact(
                 session_id,
                 issue_id,
@@ -862,6 +939,65 @@ class TurnExecutor:
                 return False
 
         return True
+
+    def _meets_guard_rejection_payload_contract(self, turn: ExecutionTurn, context: Dict[str, Any]) -> bool:
+        stage_gate_mode = str(context.get("stage_gate_mode", "")).strip().lower()
+        if stage_gate_mode != "review_required":
+            return True
+
+        blocked_status = False
+        for call in turn.tool_calls:
+            if call.tool != "update_issue_status":
+                continue
+            status = str(call.args.get("status", "")).strip().lower()
+            if status == "blocked":
+                blocked_status = True
+                break
+
+        if not blocked_status:
+            return True
+
+        payload = self._extract_guard_review_payload(turn.content or "")
+        rationale = str(payload.get("rationale", "") or "").strip()
+        actions = [
+            str(item).strip()
+            for item in (payload.get("remediation_actions", []) or [])
+            if str(item).strip()
+        ]
+        return bool(rationale and actions)
+
+    def _extract_guard_review_payload(self, content: str) -> Dict[str, Any]:
+        blob = content or ""
+        decoder = json.JSONDecoder()
+        candidates: List[Dict[str, Any]] = []
+
+        import re
+        fenced_matches = re.findall(r"```json\s*([\s\S]*?)```", blob, flags=re.IGNORECASE)
+        for chunk in fenced_matches:
+            try:
+                parsed = json.loads(chunk.strip())
+                if isinstance(parsed, dict):
+                    candidates.append(parsed)
+            except (json.JSONDecodeError, ValueError, TypeError):
+                continue
+
+        start = 0
+        while True:
+            brace_index = blob.find("{", start)
+            if brace_index == -1:
+                break
+            try:
+                parsed, end_pos = decoder.raw_decode(blob[brace_index:])
+                if isinstance(parsed, dict):
+                    candidates.append(parsed)
+                start = brace_index + max(end_pos, 1)
+            except json.JSONDecodeError:
+                start = brace_index + 1
+
+        for parsed in candidates:
+            if {"rationale", "violations", "remediation_actions"} & set(parsed.keys()):
+                return parsed
+        return {}
 
     def _message_hash(self, messages: List[Dict[str, str]]) -> str:
         normalized = json.dumps(messages, sort_keys=True, ensure_ascii=False)

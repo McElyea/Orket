@@ -294,3 +294,106 @@ async def test_turn_executor_blocks_approval_required_tool_and_persists_request(
     assert len(toolbox.calls) == 0
     assert len(request_calls) == 1
     assert request_calls[0]["tool_name"] == "write_file"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_guard_rejection_payload_contract_recovers_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}',
+            '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}\n'
+            '{"rationale": "Missing evidence", "violations": ["No tests"], "remediation_actions": ["Add tests"]}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="GRD",
+        summary="integrity_guard",
+        description="Final gate",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "integrity_guard"
+    context["roles"] = ["integrity_guard"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["done", "blocked"]
+    context["stage_gate_mode"] = "review_required"
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 2
+    assert len(toolbox.calls) == 1
+    assert toolbox.calls[0][1]["status"] == "blocked"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_guard_rejection_payload_contract_fails_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}',
+            '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="GRD",
+        summary="integrity_guard",
+        description="Final gate",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "integrity_guard"
+    context["roles"] = ["integrity_guard"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["done", "blocked"]
+    context["stage_gate_mode"] = "review_required"
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "guard rejection payload contract not met" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_guard_payload_reprompt_still_enforces_progress_contract(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}',
+            '{"tool": "add_issue_comment", "args": {"comment": "Need more detail"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="GRD",
+        summary="integrity_guard",
+        description="Final gate",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "integrity_guard"
+    context["roles"] = ["integrity_guard"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["done", "blocked"]
+    context["stage_gate_mode"] = "review_required"
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "progress contract not met after guard payload corrective reprompt" in (result.error or "")
