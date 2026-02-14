@@ -281,6 +281,7 @@ def update_prompt_metadata(
     version: str = "",
     status: str = "",
     notes: str = "",
+    promotion_report: Optional[Dict[str, Any]] = None,
     apply_changes: bool = False,
 ) -> Dict[str, Any]:
     path = _asset_path_by_id(root, prompt_id)
@@ -309,6 +310,18 @@ def update_prompt_metadata(
         target_status = str(status or "stable").strip()
         if target_status not in VALID_STATUSES:
             raise ValueError(f"Invalid status: {target_status}")
+        if isinstance(promotion_report, dict) and target_status in {"canary", "stable"}:
+            if not bool(promotion_report.get("pass")):
+                blockers = promotion_report.get("blockers", [])
+                blocker_codes: List[str] = []
+                if isinstance(blockers, list):
+                    for item in blockers:
+                        if isinstance(item, dict):
+                            code = str(item.get("code") or "").strip()
+                            if code:
+                                blocker_codes.append(code)
+                suffix = f" blockers={','.join(blocker_codes)}" if blocker_codes else ""
+                raise ValueError(f"Promotion criteria not met for {target_status}.{suffix}")
         _assert_status_transition_allowed(
             current_status=old_status,
             target_status=target_status,
@@ -397,6 +410,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_promote.add_argument("--id", required=True)
     p_promote.add_argument("--status", choices=sorted(VALID_STATUSES), default="stable")
     p_promote.add_argument("--notes", default="")
+    p_promote.add_argument("--promotion-report", default="", help="Optional JSON report with pass/blockers.")
     p_promote.add_argument("--apply", action="store_true")
 
     p_deprecate = sub.add_parser("deprecate", help="Deprecate a prompt.")
@@ -500,6 +514,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     if args.cmd in {"new", "promote", "deprecate"}:
+        promotion_report: Optional[Dict[str, Any]] = None
+        report_path = str(getattr(args, "promotion_report", "") or "").strip()
+        if report_path:
+            promotion_report = _load_json(Path(report_path))
         result = update_prompt_metadata(
             root,
             prompt_id=args.id,
@@ -507,6 +525,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             version=getattr(args, "version", ""),
             status=getattr(args, "status", ""),
             notes=getattr(args, "notes", ""),
+            promotion_report=promotion_report,
             apply_changes=bool(getattr(args, "apply", False)),
         )
         _print_json(result)

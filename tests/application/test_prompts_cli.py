@@ -150,6 +150,60 @@ def test_update_prompt_metadata_rejects_direct_draft_to_stable_promotion(tmp_pat
         assert "Invalid status transition: draft -> stable" in str(exc)
 
 
+def test_update_prompt_metadata_rejects_promotion_when_report_fails(tmp_path: Path) -> None:
+    _seed_assets(tmp_path)
+    update_prompt_metadata(
+        tmp_path,
+        prompt_id="role.architect",
+        mode="new",
+        version="1.1.0",
+        status="candidate",
+        notes="candidate cut",
+        apply_changes=True,
+    )
+
+    try:
+        update_prompt_metadata(
+            tmp_path,
+            prompt_id="role.architect",
+            mode="promote",
+            status="stable",
+            notes="promote stable",
+            promotion_report={
+                "pass": False,
+                "blockers": [{"code": "CRITERIA_CANDIDATE_GUARD_PASS_RATE_MIN"}],
+            },
+            apply_changes=True,
+        )
+        assert False, "Expected ValueError when promotion report fails"
+    except ValueError as exc:
+        assert "Promotion criteria not met for stable." in str(exc)
+        assert "CRITERIA_CANDIDATE_GUARD_PASS_RATE_MIN" in str(exc)
+
+
+def test_update_prompt_metadata_allows_promotion_when_report_passes(tmp_path: Path) -> None:
+    _seed_assets(tmp_path)
+    update_prompt_metadata(
+        tmp_path,
+        prompt_id="role.architect",
+        mode="new",
+        version="1.1.0",
+        status="candidate",
+        notes="candidate cut",
+        apply_changes=True,
+    )
+    promoted = update_prompt_metadata(
+        tmp_path,
+        prompt_id="role.architect",
+        mode="promote",
+        status="stable",
+        notes="promote stable",
+        promotion_report={"pass": True, "blockers": []},
+        apply_changes=True,
+    )
+    assert promoted["after"]["status"] == "stable"
+
+
 def test_lint_prompt_assets_reports_placeholder_contracts(tmp_path: Path) -> None:
     _seed_assets(tmp_path)
     role_path = tmp_path / "model" / "core" / "roles" / "architect.json"
