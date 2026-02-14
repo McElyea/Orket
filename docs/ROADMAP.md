@@ -13,7 +13,7 @@ Ship one canonical, reliable agent pipeline that passes this exact flow:
 If this flow is not mechanically proven, we are not done.
 
 ## Current Status Snapshot
-1. `O1 Guardrail Control Plane`: In progress.
+1. `O1 Guardrail Control Plane`: Completed.
 2. `P0 Data-Driven Behavior Recovery Loop`: Active.
 3. `P1 Canonical Assets Runnable`: In progress.
 4. `P2 Acceptance Gate Uses Canonical Assets`: In progress.
@@ -137,8 +137,8 @@ Goal: remove avoidable failures from routing/install mismatches and weak-model a
 Work:
 1. [x] Preflight installed model inventory before loop execution (`ollama list` integration in loop path).
 2. [x] Fail fast with clear skip classification for uninstalled model tags.
-3. [ ] Maintain a baseline allowlist for canonical flow and a quarantine list for unstable models.
-4. [ ] Log model capability outcomes per role to inform routing defaults.
+3. [x] Maintain a baseline allowlist for canonical flow and a quarantine list for unstable models.
+4. [x] Log model capability outcomes per role to inform routing defaults.
 
 Done when:
 1. `ModelConnectionError` from uninstalled tags is zero in scheduled loop batches.
@@ -216,8 +216,8 @@ Work:
    - guard terminal decision by `integrity_guard`
    - all chain issues must reach `DONE` (not `BLOCKED`) in live acceptance
 4. [~] Rename pipeline test internals from `developer` to `coder` where contract requires it.
-   - Canonical flow paths are now `coder`.
-   - Legacy test fixtures still contain `developer` in non-canonical lanes.
+   - `won't do`: keep `developer` naming in non-canonical legacy fixtures to avoid churn that does not improve guarded-chain reliability.
+   - Canonical flow paths remain `coder`.
 
 Done when:
 1. Acceptance lane fails if `coder` step is missing/replaced.
@@ -238,6 +238,7 @@ Status: Mostly complete (maintain + tighten where needed).
 Work:
 1. [~] Extend boundary checks to detect adapter coupling through root facades (not only direct `orket.adapters.*` imports).
 2. [~] Reduce legacy bridge usage from runtime orchestration paths (`orket.orket` compatibility hops).
+   - `won't do` in recovery window: defer broad bridge cleanup until after guarded-chain + canonical-assets stability goals are complete.
 3. [x] Keep `scripts/check_volatility_boundaries.py` as pre-merge gate.
 
 Done when:

@@ -29,6 +29,21 @@ class RunSpec:
     run_dir: Path
 
 
+ROLE_TO_ISSUE_ID = {
+    "requirements_analyst": "REQ-1",
+    "architect": "ARC-1",
+    "coder": "COD-1",
+    "code_reviewer": "REV-1",
+}
+
+ROLE_TO_TURN_METRIC = {
+    "requirements_analyst": "requirements_turn_complete",
+    "architect": "architect_turn_complete",
+    "coder": "coder_turn_complete",
+    "code_reviewer": "reviewer_turn_complete",
+}
+
+
 def _slug(text: str) -> str:
     return re.sub(r"[^a-zA-Z0-9]+", "_", text).strip("_").lower()
 
@@ -325,7 +340,40 @@ def _make_skipped_result(spec: RunSpec, reason: str) -> Dict[str, Any]:
         "session_status": reason,
         "metrics": {"skipped": 1},
         "requirements_response_preview": None,
+        "model_policy": "skip",
     }
+
+
+def _parse_model_list(raw: str) -> List[str]:
+    if not raw:
+        return []
+    parts = [item.strip() for item in raw.split(",")]
+    return [item for item in parts if item]
+
+
+def _policy_for_model(model: str, baseline_models: set[str], quarantine_models: set[str]) -> str:
+    if model in quarantine_models:
+        return "quarantine"
+    if baseline_models:
+        if model in baseline_models:
+            return "baseline"
+        return "out_of_baseline"
+    return "exploratory"
+
+
+def _role_capability_outcomes(db_summary: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[str, Any]:
+    issue_statuses = db_summary.get("issue_statuses", {}) if isinstance(db_summary, dict) else {}
+    outcomes: Dict[str, Any] = {}
+    for role, issue_id in ROLE_TO_ISSUE_ID.items():
+        status = issue_statuses.get(issue_id)
+        metric_key = ROLE_TO_TURN_METRIC[role]
+        outcomes[role] = {
+            "issue_id": issue_id,
+            "issue_status": status,
+            "done": status == "done",
+            "turns": int(metrics.get(metric_key, 0)),
+        }
+    return outcomes
 
 
 def _init_results_db(db_path: Path) -> sqlite3.Connection:
@@ -520,6 +568,18 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         dest="skip_missing_models",
         help="Disable missing-model preflight skipping.",
     )
+    parser.add_argument(
+        "--baseline-models",
+        nargs="+",
+        default=_parse_model_list(os.getenv("ORKET_BASELINE_MODELS", "")),
+        help="Optional allowlist for canonical flow. If set, non-baseline models are skipped.",
+    )
+    parser.add_argument(
+        "--quarantine-models",
+        nargs="+",
+        default=_parse_model_list(os.getenv("ORKET_QUARANTINE_MODELS", "")),
+        help="Optional denylist for unstable models. Quarantined models are skipped.",
+    )
     return parser.parse_args(argv)
 
 
@@ -548,6 +608,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     total_runs = len(args.models) * args.iterations
     run_no = 0
     installed_models = _list_installed_models() if args.skip_missing_models else set()
+    baseline_models = {m.strip() for m in (args.baseline_models or []) if m and m.strip()}
+    quarantine_models = {m.strip() for m in (args.quarantine_models or []) if m and m.strip()}
 
     for model in args.models:
         model_slug = _slug(model)
@@ -556,11 +618,26 @@ def main(argv: Optional[List[str]] = None) -> int:
             run_dir = base_temp_root / f"{model_slug}_iter{iteration}"
             spec = RunSpec(model=model, iteration=iteration, run_dir=run_dir)
             print(f"[{run_no}/{total_runs}] model={model} iteration={iteration} ...")
-            if args.skip_missing_models and installed_models and model not in installed_models:
+            policy = _policy_for_model(model, baseline_models, quarantine_models)
+            if policy == "quarantine":
+                result = _make_skipped_result(spec, reason="skipped_quarantined_model")
+                result["model_policy"] = policy
+                print(f"  skipped=True reason=quarantined_model model={model}")
+            elif policy == "out_of_baseline":
+                result = _make_skipped_result(spec, reason="skipped_out_of_baseline")
+                result["model_policy"] = policy
+                print(f"  skipped=True reason=out_of_baseline model={model}")
+            elif args.skip_missing_models and installed_models and model not in installed_models:
                 result = _make_skipped_result(spec, reason="skipped_missing_model")
+                result["model_policy"] = policy
                 print(f"  skipped=True reason=missing_model model={model}")
             else:
                 result = _run_once(spec, python_exe=args.python, pytest_target=args.pytest_target)
+                result["model_policy"] = policy
+                result["metrics"]["role_capability_outcomes"] = _role_capability_outcomes(
+                    result.get("db_summary", {}),
+                    result.get("metrics", {}),
+                )
             results.append(result)
             _insert_run_result(conn, batch_id, result)
 
