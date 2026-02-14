@@ -38,6 +38,14 @@ jobs:
         run: |
           python -m orket.interfaces.prompts_cli --root . validate --json
 
+      - name: Smoke resolve canonical prompt
+        run: |
+          python -m orket.interfaces.prompts_cli --root . resolve --role architect --dialect generic --selection-policy stable
+
+      - name: Smoke diff prompt policies
+        run: |
+          python -m orket.interfaces.prompts_cli --root . diff --role architect --dialect generic --left-policy stable --right-policy canary
+
       - name: Enforce line-ending normalization
         run: |
           git add --renormalize .
@@ -91,6 +99,10 @@ jobs:
       - name: Validate prompt assets
         run: |
           python -m orket.interfaces.prompts_cli --root . validate --json
+
+      - name: Smoke resolve canonical prompt
+        run: |
+          python -m orket.interfaces.prompts_cli --root . resolve --role architect --dialect generic --selection-policy stable
 
       - name: Enforce line-ending normalization
         run: |

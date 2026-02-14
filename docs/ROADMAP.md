@@ -94,6 +94,12 @@ Verification:
 ### Status
 `P3` is complete.
 
+## P4: Prompt Engine Enhancement Follow-Ups
+Objective: add low-risk regression guards around prompt-engine behavior.
+
+Remaining Slices:
+1. `P4-S1` (completed): add CI smoke checks for canonical prompt `resolve`/`diff` and canonical resolver test on repo assets.
+
 ## Completed: V1 Model Behavior Stabilization
 Summary:
 1. First-turn contract hardening now enforces deterministic required write paths for key seats.
