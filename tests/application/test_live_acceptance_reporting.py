@@ -68,6 +68,24 @@ def test_runtime_failure_breakdown_count_from_events() -> None:
     assert loop._runtime_failure_breakdown_count(events, "python_compile") == 3
 
 
+def test_guard_terminal_reason_count_from_events() -> None:
+    loop = _load_script_module(
+        "run_live_acceptance_loop_guard_reason",
+        "scripts/run_live_acceptance_loop.py",
+    )
+    events = [
+        {
+            "event": "guard_terminal_failure",
+            "data": {"guard_decision": {"terminal_reason": {"code": "HALLUCINATION_PERSISTENT"}}},
+        },
+        {
+            "event": "guard_terminal_failure",
+            "data": {"guard_decision": {"terminal_reason": {"code": "GUARD_RETRY_EXCEEDED"}}},
+        },
+    ]
+    assert loop._guard_terminal_reason_count(events, "HALLUCINATION_PERSISTENT") == 1
+
+
 def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns",
@@ -92,6 +110,12 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "runtime_verifier_failure_command_failed": 0,
                 "runtime_verifier_failure_missing_runtime": 0,
                 "runtime_verifier_failure_deployment_missing": 0,
+                "guard_retry_scheduled": 0,
+                "guard_terminal_failure": 0,
+                "guard_terminal_reason_hallucination_persistent": 0,
+                "turn_non_progress_hallucination_scope": 0,
+                "turn_non_progress_security_scope": 0,
+                "turn_non_progress_consistency_scope": 0,
             },
             "db_summary": {"issue_statuses": {"REQ-1": "done", "ARC-1": "done", "COD-1": "done", "REV-1": "done"}},
             "chain_complete": True,
@@ -113,6 +137,12 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "runtime_verifier_failure_command_failed": 1,
                 "runtime_verifier_failure_missing_runtime": 0,
                 "runtime_verifier_failure_deployment_missing": 1,
+                "guard_retry_scheduled": 2,
+                "guard_terminal_failure": 1,
+                "guard_terminal_reason_hallucination_persistent": 1,
+                "turn_non_progress_hallucination_scope": 1,
+                "turn_non_progress_security_scope": 2,
+                "turn_non_progress_consistency_scope": 3,
             },
             "db_summary": {"issue_statuses": {"REQ-1": "done", "ARC-1": "blocked"}},
             "chain_complete": False,
@@ -132,3 +162,9 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert counters["runtime_verifier_failure_command_failed"] == 1
     assert counters["runtime_verifier_failure_missing_runtime"] == 0
     assert counters["runtime_verifier_failure_deployment_missing"] == 1
+    assert counters["guard_retry_scheduled"] == 2
+    assert counters["guard_terminal_failure"] == 1
+    assert counters["guard_terminal_reason_hallucination_persistent"] == 1
+    assert counters["turn_non_progress_hallucination_scope"] == 1
+    assert counters["turn_non_progress_security_scope"] == 2
+    assert counters["turn_non_progress_consistency_scope"] == 3

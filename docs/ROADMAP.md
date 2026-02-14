@@ -92,7 +92,7 @@ Remaining Slices:
 1. `P1-S1` (completed 2026-02-14): implement Security Guard scope-aware runtime checks (path hardening in turn contract enforcement).
 2. `P1-S2` (completed 2026-02-14): implement Consistency Guard runtime checks for deterministic tool-calls-only output formatting.
 3. `P1-S3` (completed 2026-02-14): add centralized guard rule cataloging and deterministic rule-id ownership conflict checks.
-4. `P1-S4`: publish guard-specific telemetry counters and failure reason distributions.
+4. `P1-S4` (completed 2026-02-14): publish guard-specific telemetry counters and terminal-reason distributions in live acceptance reporting.
 
 Exit Criteria:
 1. All three guard domains (`hallucination`, `security`, `consistency`) share one contract path.

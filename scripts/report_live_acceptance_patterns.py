@@ -179,6 +179,14 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
             "runtime_verifier_failure_command_failed": _sum_metric(runs, "runtime_verifier_failure_command_failed"),
             "runtime_verifier_failure_missing_runtime": _sum_metric(runs, "runtime_verifier_failure_missing_runtime"),
             "runtime_verifier_failure_deployment_missing": _sum_metric(runs, "runtime_verifier_failure_deployment_missing"),
+            "guard_retry_scheduled": _sum_metric(runs, "guard_retry_scheduled"),
+            "guard_terminal_failure": _sum_metric(runs, "guard_terminal_failure"),
+            "guard_terminal_reason_hallucination_persistent": _sum_metric(
+                runs, "guard_terminal_reason_hallucination_persistent"
+            ),
+            "turn_non_progress_hallucination_scope": _sum_metric(runs, "turn_non_progress_hallucination_scope"),
+            "turn_non_progress_security_scope": _sum_metric(runs, "turn_non_progress_security_scope"),
+            "turn_non_progress_consistency_scope": _sum_metric(runs, "turn_non_progress_consistency_scope"),
             "prompt_turn_start_total": _sum_metric(runs, "prompt_turn_start_total"),
             "prompt_resolver_policy_compiler": _sum_metric(runs, "prompt_resolver_policy_compiler"),
             "prompt_resolver_policy_resolver_v1": _sum_metric(runs, "prompt_resolver_policy_resolver_v1"),

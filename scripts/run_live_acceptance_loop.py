@@ -122,6 +122,45 @@ def _runtime_failure_breakdown_count(events: List[Dict[str, Any]], failure_class
     return total
 
 
+def _event_reason_contains_count(events: List[Dict[str, Any]], event_name: str, needle: str) -> int:
+    target = str(needle or "").strip().lower()
+    if not target:
+        return 0
+    count = 0
+    for event in events:
+        if event.get("event") != event_name:
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        reason = str(data.get("reason", "") or "").strip().lower()
+        if target in reason:
+            count += 1
+    return count
+
+
+def _guard_terminal_reason_count(events: List[Dict[str, Any]], terminal_reason_code: str) -> int:
+    target = str(terminal_reason_code or "").strip().upper()
+    if not target:
+        return 0
+    count = 0
+    for event in events:
+        if event.get("event") != "guard_terminal_failure":
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        guard_decision = data.get("guard_decision")
+        code = ""
+        if isinstance(guard_decision, dict):
+            terminal_reason = guard_decision.get("terminal_reason")
+            if isinstance(terminal_reason, dict):
+                code = str(terminal_reason.get("code", "") or "").strip().upper()
+        if code == target:
+            count += 1
+    return count
+
+
 def _last_event_data(events: List[Dict[str, Any]], event_name: str) -> Dict[str, Any]:
     for event in reversed(events):
         if event.get("event") == event_name:
@@ -326,6 +365,20 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         ),
         "runtime_verifier_failure_deployment_missing": _runtime_failure_breakdown_count(
             events, "deployment_missing"
+        ),
+        "guard_retry_scheduled": _event_count(events, "guard_retry_scheduled"),
+        "guard_terminal_failure": _event_count(events, "guard_terminal_failure"),
+        "guard_terminal_reason_hallucination_persistent": _guard_terminal_reason_count(
+            events, "HALLUCINATION_PERSISTENT"
+        ),
+        "turn_non_progress_hallucination_scope": _event_reason_contains_count(
+            events, "turn_non_progress", "hallucination_scope_contract_not_met"
+        ),
+        "turn_non_progress_security_scope": _event_reason_contains_count(
+            events, "turn_non_progress", "security_scope_contract_not_met"
+        ),
+        "turn_non_progress_consistency_scope": _event_reason_contains_count(
+            events, "turn_non_progress", "consistency_scope_contract_not_met"
         ),
         "requirements_turn_complete": _event_count(events, "turn_complete", role="requirements_analyst"),
         "architect_turn_complete": _event_count(events, "turn_complete", role="architect"),
