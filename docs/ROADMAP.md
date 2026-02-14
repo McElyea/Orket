@@ -20,10 +20,10 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 5. Keep governance mechanical and explicit in runtime evidence.
 
 ## Current Priority Order
-1. `P2 Highest`: Canonical asset alignment and acceptance gate hardening.
-2. `P3 High`: Architecture boundary enforcement and maintenance checks.
-3. `P4 Medium`: Prompt Engine enhancement follow-ups (only if regressions emerge).
-4. `P5 Low`: Stabilizer tuning follow-ups from production telemetry.
+1. `P3 Highest`: Architecture boundary enforcement and maintenance checks.
+2. `P4 High`: Prompt Engine enhancement follow-ups (only if regressions emerge).
+3. `P5 Medium`: Stabilizer tuning follow-ups from production telemetry.
+4. `P6 Low`: Additional acceptance telemetry experiments.
 
 ## P0: Prompt Engine Program (Highest Priority)
 Objective: make prompts first-class, versioned, inspectable assets with deterministic runtime resolution.
@@ -65,11 +65,14 @@ Objective: keep success proof tied to repo-native assets and canonical contracts
 Remaining Slices:
 1. `P2-S1` (completed): finish remaining role/team asset normalization and consistency checks.
 2. `P2-S2` (completed): strengthen canonical acceptance assertions for artifact and stage outcomes.
-3. `P2-S3`: keep fixture acceptance tests secondary to canonical-asset behavior.
+3. `P2-S3` (completed): keep fixture acceptance tests secondary to canonical-asset behavior.
 
 Exit Criteria:
 1. Canonical acceptance fails on chain breakage or asset inconsistency.
 2. No hidden test-only scaffolding is required for canonical flow viability.
+
+### Status
+`P2` is complete.
 
 Verification:
 1. `python -m pytest tests/platform/test_model_asset_integrity.py -q`

@@ -184,3 +184,14 @@ def test_core_standard_team_supports_canonical_pipeline_roles_and_seats() -> Non
                 f"standard seat '{seat}' must include role '{seat}' (current roles={roles})."
             )
     assert not seat_role_errors, "\n".join(seat_role_errors)
+
+
+def test_fixture_acceptance_is_marked_secondary_to_canonical_flow() -> None:
+    live_acceptance = Path("tests") / "live" / "test_system_acceptance_pipeline.py"
+    fixture_acceptance = Path("tests") / "integration" / "test_system_acceptance_flow.py"
+    assert live_acceptance.is_file(), "Canonical acceptance test file missing."
+    assert fixture_acceptance.is_file(), "Fixture acceptance test file missing."
+    text = fixture_acceptance.read_text(encoding="utf-8")
+    assert "FIXTURE_SECONDARY = True" in text, (
+        "Fixture acceptance tests must explicitly declare secondary status to canonical flow."
+    )

@@ -9,6 +9,9 @@ from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelRes
 from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
 
+# Fixture acceptance coverage is intentionally secondary to canonical-asset acceptance flow.
+FIXTURE_SECONDARY = True
+
 
 class AcceptanceProvider:
     def __init__(self, mode: str):
