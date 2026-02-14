@@ -25,7 +25,7 @@ from orket.application.services.dependency_manager import (
     DependencyManager,
     DependencyValidationError,
 )
-from orket.application.services.runtime_verifier import RuntimeVerifier
+from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
 from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
@@ -577,6 +577,12 @@ class Orchestrator:
                 self.workspace,
             )
             runtime_result = await RuntimeVerifier(self.workspace, organization=self.org).verify()
+            guard_contract = getattr(runtime_result, "guard_contract", None)
+            if guard_contract is None:
+                guard_contract = build_runtime_guard_contract(
+                    ok=bool(getattr(runtime_result, "ok", False)),
+                    errors=list(getattr(runtime_result, "errors", []) or []),
+                )
             runtime_report = {
                 "run_id": run_id,
                 "issue_id": issue.id,
@@ -585,6 +591,7 @@ class Orchestrator:
                 "errors": list(runtime_result.errors),
                 "command_results": list(getattr(runtime_result, "command_results", []) or []),
                 "failure_breakdown": dict(getattr(runtime_result, "failure_breakdown", {}) or {}),
+                "guard_contract": guard_contract.model_dump(),
                 "timestamp": datetime.now(UTC).isoformat(),
             }
             await AsyncFileTools(self.workspace).write_file(

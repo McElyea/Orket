@@ -21,6 +21,10 @@ async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
     assert result.errors == []
     assert len(result.command_results) >= 1
     assert result.failure_breakdown == {}
+    assert result.guard_contract.result == "pass"
+    assert result.guard_contract.terminal_failure is False
+    assert result.guard_contract.terminal_reason is None
+    assert result.guard_contract.violations == []
 
 
 @pytest.mark.asyncio
@@ -34,6 +38,12 @@ async def test_runtime_verifier_fails_invalid_python(tmp_path: Path):
     assert result.ok is False
     assert "agent_output/main.py" in result.checked_files
     assert len(result.errors) >= 1
+    assert result.guard_contract.result == "fail"
+    assert result.guard_contract.severity == "strict"
+    assert result.guard_contract.terminal_failure is False
+    assert result.guard_contract.terminal_reason is None
+    assert result.guard_contract.violations[0].rule_id == "RUNTIME_VERIFIER.FAIL"
+    assert result.guard_contract.violations[0].evidence
 
 
 @pytest.mark.asyncio

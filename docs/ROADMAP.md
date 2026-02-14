@@ -3,113 +3,123 @@
 Last updated: 2026-02-14.
 
 ## North Star
-Ship one canonical, reliable pipeline that passes this exact flow:
+Ship one canonical, reliable pipeline that passes this exact flow with deterministic guard governance:
 1. `requirements_analyst`
 2. `architect`
 3. `coder`
 4. `code_reviewer`
 5. `integrity_guard`
 
-If this flow is not mechanically proven with canonical assets, we are not done.
+If this flow is not mechanically proven with canonical assets and machine-readable guard contracts, we are not done.
 
 ## Operating Rules
 1. Keep changes small and reversible.
 2. No architecture pivots while stabilization work is active.
 3. Every change must map to a failing or missing test.
-4. Prefer deterministic contracts and policy assets over implicit prompt behavior.
-5. Keep governance mechanical and explicit in runtime evidence.
+4. Single owner per rule:
+   - `Role + Skill + Dialect` define behavior, style, structure, and intent.
+   - `Guards` enforce runtime correctness constraints.
+   - `Guard Agent` validates only and never generates content.
+5. Guard outcomes must be deterministic, machine-readable, and diagnosable from runtime artifacts.
 
 ## Current Priority Order
-1. `P4 Highest`: Prompt Engine enhancement follow-ups (only if regressions emerge).
-2. `P5 High`: Stabilizer tuning follow-ups from production telemetry.
-3. `P6 Medium`: Additional acceptance telemetry experiments.
-4. `P7 Low`: Nice-to-have tooling polish outside stabilization goals.
+1. `P0 Highest`: Guard System Baseline (contract + loop control + ownership boundaries + hallucination guard).
+2. `P1 High`: Security/consistency guard rollout using the same baseline contract.
+3. `P2 Medium`: Prompt Engine optimization/promotion loop follow-ups.
+4. `P3 Low`: Telemetry and tooling polish outside stabilization goals.
 
-## P0: Prompt Engine Program (Highest Priority)
-Objective: make prompts first-class, versioned, inspectable assets with deterministic runtime resolution.
+## P0: Guard System Baseline (Highest Priority)
+Objective: land a minimal, enforceable guard core that prevents retry spirals and hallucination drift.
 
-### Completed Milestones
-1. `P0-F1`: Prompt resolver foundation is landed and test-covered.
-2. `P0-F2`: Prompt versioning/governance metadata and selection policy are landed.
-3. `P0-F3`: Runtime policy attribution is landed in artifacts and live-loop reporting.
-4. `P0-R1`: Prompt tooling + CI validation workflow is landed (`orket-prompts` commands + CI validator gate).
+### P0-R1: Canonical Contract Layer
+1. `P0-R1-S1` (completed 2026-02-14): define and enforce canonical `GuardContract` fields:
+   - `result`, `violations`, `severity`, `fix_hint`, `terminal_failure`, `terminal_reason`.
+2. `P0-R1-S2` (completed 2026-02-14): define canonical `Violation` fields:
+   - `rule_id`, `code`, `message`, `location`, `severity`, `evidence`.
+3. `P0-R1-S3` (completed 2026-02-14): define canonical loop-control contracts:
+   - `LoopControl(max_retries, retry_backoff, escalation)`.
+   - `TerminalReason(code, message)`.
+4. `P0-R1-S4` (completed 2026-02-14): enforce severity aggregation rule globally:
+   - `soft < strict`.
+   - contract severity is max violation severity.
+   - no violations => `severity=soft`.
 
-### Status
-`P0` is complete.
+### P0-R2: Runtime Loop Enforcement
+1. `P0-R2-S1`: route guarded-stage validation through Guard Agent return of `GuardContract`.
+2. `P0-R2-S2`: enforce bounded retries with deterministic escalation on exceed.
+3. `P0-R2-S3`: emit terminal outcomes as `terminal_failure` with structured `terminal_reason`.
+4. `P0-R2-S4`: persist guard artifacts and evidence for turn/run-level diagnosis.
 
-## P1: Stage Policy and Stabilizer Follow-Through
-Objective: complete and harden `P-1` stabilizers as deterministic policy contracts.
+### P0-R3: Ownership Boundaries
+1. `P0-R3-S1`: enforce prompt-level ownership in prompt resolution (`Role + Skill + Dialect` only).
+2. `P0-R3-S2`: enforce runtime-level ownership in guards (`hallucination`, `security`, `consistency` only).
+3. `P0-R3-S3`: reject duplicated/conflicting rule ownership at load or validation time.
+4. `P0-R3-S4`: harden Guard Agent as non-generative validator only.
+
+### P0-R4: Hallucination Guard V1
+1. `P0-R4-S1`: add canonical hallucination guard prompt injection layer.
+2. `P0-R4-S2`: add explicit verification scope per run:
+   - `workspace`, `provided_context`, `declared_interfaces`.
+3. `P0-R4-S3`: implement checks for:
+   - out-of-scope file references.
+   - undeclared API/interface references.
+   - missing context references.
+   - invented details and contradictions.
+4. `P0-R4-S4`: ship initial violation taxonomy with evidence fields:
+   - `HALLUCINATION.FILE_NOT_FOUND`
+   - `HALLUCINATION.API_NOT_DECLARED`
+   - `HALLUCINATION.CONTEXT_NOT_PROVIDED`
+   - `HALLUCINATION.INVENTED_DETAIL`
+   - `HALLUCINATION.CONTRADICTION`
+5. `P0-R4-S5`: escalate persistent repeats to `terminal_failure` using `HALLUCINATION_PERSISTENT`.
+
+### P0 Exit Criteria
+1. Guarded stages emit valid `GuardContract` artifacts.
+2. Retry behavior is bounded and deterministic under repeated failures.
+3. Hallucination guard blocks out-of-scope references with explicit evidence.
+4. Canonical acceptance and live-loop reports expose guard-driven `terminal_failure` reasons without manual log archaeology.
+
+### P0 Verification Targets
+1. `python -m pytest tests/application/test_turn_executor_middleware.py -q`
+2. `python -m pytest tests/application/test_orchestrator_epic.py -q`
+3. `python -m pytest tests/application/test_execution_pipeline_session_status.py -q`
+4. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
+
+## P1: Security and Consistency Guard Rollout
+Objective: extend the P0 baseline to the other two guard domains without changing core contracts.
 
 Remaining Slices:
-1. `P1-S1` (completed): expand dependency manager to policy-driven pinned/dev dependency sets.
-2. `P1-S2` (completed): expand runtime verifier command policy by stack profile and failure class.
-3. `P1-S3` (completed): integrate deployment planner expectations into verifier policy for all stacks.
-4. `P1-S4` (completed): enforce ownership boundaries for dependency/deployment artifacts when policy-enabled.
+1. `P1-S1`: implement Security Guard using canonical `GuardContract` and scope-aware checks.
+2. `P1-S2`: implement Consistency Guard using canonical `GuardContract` and schema/style checks.
+3. `P1-S3`: add guard rule cataloging and deterministic rule-id ownership checks.
+4. `P1-S4`: publish guard-specific telemetry counters and failure reason distributions.
 
 Exit Criteria:
-1. Stabilizer stages are fully policy-driven and test-covered.
-2. Runtime verifier failures are clearly attributed by stage and command source.
-3. `terminal_failure` runs are diagnosable without manual log archaeology.
+1. All three guard domains (`hallucination`, `security`, `consistency`) share one contract path.
+2. No duplicated rule ownership between prompt layers and runtime guard validators.
+3. Runtime telemetry can attribute `terminal_failure` by guard domain and rule id.
 
-### Status
-`P1` is complete.
-
-Verification:
-1. `python -m pytest tests/application/test_orchestrator_epic.py -q`
-2. `python -m pytest tests/application/test_runtime_verifier_service.py -q`
-3. `python -m pytest tests/adapters/test_sandbox_compose_generation.py -q`
-
-## P2: Canonical Assets and Acceptance Gate
-Objective: keep success proof tied to repo-native assets and canonical contracts.
+## P2: Prompt Engine Optimization Follow-Ups
+Objective: continue prompt optimization safely after guard baseline is stable.
 
 Remaining Slices:
-1. `P2-S1` (completed): finish remaining role/team asset normalization and consistency checks.
-2. `P2-S2` (completed): strengthen canonical acceptance assertions for artifact and stage outcomes.
-3. `P2-S3` (completed): keep fixture acceptance tests secondary to canonical-asset behavior.
-
-Exit Criteria:
-1. Canonical acceptance fails on chain breakage or asset inconsistency.
-2. No hidden test-only scaffolding is required for canonical flow viability.
-
-### Status
-`P2` is complete.
-
-Verification:
-1. `python -m pytest tests/platform/test_model_asset_integrity.py -q`
-2. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
-3. `python -m pytest tests/integration/test_system_acceptance_flow.py -q`
+1. `P2-S1`: offline optimize workflow writes candidate versions only.
+2. `P2-S2`: compare candidate vs stable on canonical acceptance and live-loop pattern reports.
+3. `P2-S3`: gate promotion on explicit evidence thresholds and guard-failure deltas.
 
 ## P3: Architecture Boundaries and Maintenance
-Objective: hold core architectural boundaries while stabilization work continues.
+Objective: keep dependency direction and volatility boundaries green while guard work lands.
 
-Remaining Slices:
-1. `P3-S1` (completed): keep dependency direction and volatility boundary checks green.
-2. `P3-S2` (completed): add focused guards only when new coupling bypasses appear.
-
-Verification:
+Recurring Verification:
 1. `python scripts/check_dependency_direction.py`
 2. `python scripts/check_volatility_boundaries.py`
 3. `python -m pytest tests/platform/test_architecture_volatility_boundaries.py -q`
 
-### Status
-`P3` is complete.
-
-## P4: Prompt Engine Enhancement Follow-Ups
-Objective: add low-risk regression guards around prompt-engine behavior.
-
-Remaining Slices:
-1. `P4-S1` (completed): add CI smoke checks for canonical prompt `resolve`/`diff` and canonical resolver test on repo assets.
-
-## Completed: V1 Model Behavior Stabilization
-Summary:
-1. First-turn contract hardening now enforces deterministic required write paths for key seats.
-2. Turn correction now uses bounded single corrective reprompt with unified diagnostics.
-3. Guard cascade reduction is active with explicit final-review guard behavior.
-4. Live-loop and pattern reports classify completion by canonical `chain_complete`.
-
-Completion Evidence:
-1. Batch `20260214T211238Z-84e26cb2`: 2/2 canonical successes, `turn_non_progress=0`, `done_chain_mismatch=0`.
-2. Batch `20260214T211314Z-618a3380`: 2/2 canonical successes, `turn_non_progress=0`, `done_chain_mismatch=0`.
+## Completed Programs (Archived)
+1. Prompt Engine foundation/versioning/runtime attribution/tooling (`P0-F1` to `P0-R1`) is complete.
+2. Stabilizer policy hardening (`P-1` scaffolder/dependency manager/runtime verifier/deployment planner) is complete.
+3. Canonical asset and acceptance gate hardening (`P2`) is complete.
+4. V1 model behavior stabilization and `terminal_failure` session semantics are complete.
 
 ## Weekly Proof
 1. `python -m pytest tests -q`

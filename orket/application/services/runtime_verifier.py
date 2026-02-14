@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.core.domain.guard_contract import GuardContract, GuardViolation
 
 @dataclass(frozen=True)
 class RuntimeVerificationResult:
@@ -16,6 +17,7 @@ class RuntimeVerificationResult:
     errors: List[str]
     command_results: List[Dict[str, Any]]
     failure_breakdown: Dict[str, int]
+    guard_contract: GuardContract
 
 
 class RuntimeVerifier:
@@ -66,12 +68,14 @@ class RuntimeVerifier:
                 "missing deployment artifacts: " + ", ".join(sorted(deployment_missing))
             )
 
+        guard_contract = build_runtime_guard_contract(ok=not errors, errors=errors)
         return RuntimeVerificationResult(
             ok=not errors,
             checked_files=checked_files,
             errors=errors,
             command_results=command_results,
             failure_breakdown=failure_breakdown,
+            guard_contract=guard_contract,
         )
 
     async def _python_targets(self) -> List[Path]:
@@ -235,3 +239,33 @@ class RuntimeVerifier:
         if returncode in {126, 127}:
             return "missing_runtime"
         return "command_failed"
+
+
+def build_runtime_guard_contract(*, ok: bool, errors: List[str]) -> GuardContract:
+    if ok:
+        return GuardContract(
+            result="pass",
+            violations=[],
+            severity="soft",
+            fix_hint=None,
+            terminal_failure=False,
+            terminal_reason=None,
+        )
+
+    return GuardContract(
+        result="fail",
+        violations=[
+            GuardViolation(
+                rule_id="RUNTIME_VERIFIER.FAIL",
+                code="RUNTIME_VERIFIER_FAILED",
+                message="Runtime verification checks failed.",
+                location="output",
+                severity="strict",
+                evidence=(errors[0][:240] if errors else None),
+            )
+        ],
+        severity="strict",
+        fix_hint="Fix runtime verification failures and rerun.",
+        terminal_failure=False,
+        terminal_reason=None,
+    )
