@@ -152,3 +152,27 @@ def test_prompt_resolver_rejects_unknown_guard_layers() -> None:
             dialect=_dialect(),
             guards=["governance"],
         )
+
+
+def test_prompt_resolver_rejects_rule_ownership_overlap() -> None:
+    with pytest.raises(ValueError, match="Rule ownership conflict"):
+        PromptResolver.resolve(
+            skill=_skill(),
+            dialect=_dialect(),
+            context={
+                "prompt_rule_ids": ["STYLE.001", "FORMAT.001"],
+                "runtime_guard_rule_ids": ["HALLUCINATION.001", "FORMAT.001"],
+            },
+        )
+
+
+def test_prompt_resolver_allows_disjoint_rule_ownership() -> None:
+    resolution = PromptResolver.resolve(
+        skill=_skill(),
+        dialect=_dialect(),
+        context={
+            "prompt_rule_ids": ["STYLE.001", "FORMAT.001"],
+            "runtime_guard_rule_ids": ["HALLUCINATION.001", "SECURITY.001"],
+        },
+    )
+    assert resolution.metadata["prompt_id"] == "role.architect+dialect.qwen"

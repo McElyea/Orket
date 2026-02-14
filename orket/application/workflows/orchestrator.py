@@ -763,6 +763,23 @@ class Orchestrator:
             "context_profile": "default",
         }
         if prompt_mode == "resolver":
+            role_rule_ids = list(
+                (
+                    getattr(role_config, "prompt_metadata", {}) or {}
+                ).get("owned_rule_ids", [])
+                or []
+            )
+            dialect_rule_ids = list(
+                (
+                    getattr(dialect, "prompt_metadata", {}) or {}
+                ).get("owned_rule_ids", [])
+                or []
+            )
+            runtime_guard_rule_ids: List[str] = []
+            if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+                runtime_guard_rule_ids = list(
+                    self.org.process_rules.get("runtime_guard_rule_ids", []) or []
+                )
             resolution = PromptResolver.resolve(
                 skill=skill,
                 dialect=dialect,
@@ -777,6 +794,8 @@ class Orchestrator:
                     "required_statuses": provisional_context.get("required_statuses", []),
                     "required_read_paths": provisional_context.get("required_read_paths", []),
                     "required_write_paths": provisional_context.get("required_write_paths", []),
+                    "prompt_rule_ids": role_rule_ids + dialect_rule_ids,
+                    "runtime_guard_rule_ids": runtime_guard_rule_ids,
                 },
                 selection_policy=selection_policy,
             )

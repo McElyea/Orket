@@ -85,6 +85,7 @@ class PromptResolver:
             dialect_version=dialect_version,
             context=context,
         )
+        PromptResolver._validate_rule_ownership(context=context)
 
         metadata = {
             "prompt_id": f"role.{role_name}+dialect.{dialect_name}",
@@ -209,3 +210,34 @@ class PromptResolver:
         resolved = f"{role_version}/{dialect_version}"
         if strict and exact != resolved:
             raise ValueError(f"Exact policy version mismatch: expected {exact}, resolved {resolved}")
+
+    @staticmethod
+    def _normalize_rule_ids(value: Any) -> List[str]:
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            return []
+        normalized: List[str] = []
+        seen = set()
+        for item in value:
+            rule_id = str(item or "").strip()
+            if not rule_id:
+                continue
+            if rule_id in seen:
+                continue
+            seen.add(rule_id)
+            normalized.append(rule_id)
+        return normalized
+
+    @staticmethod
+    def _validate_rule_ownership(*, context: Dict[str, Any]) -> None:
+        prompt_rule_ids = PromptResolver._normalize_rule_ids(context.get("prompt_rule_ids"))
+        runtime_guard_rule_ids = PromptResolver._normalize_rule_ids(context.get("runtime_guard_rule_ids"))
+        if not prompt_rule_ids or not runtime_guard_rule_ids:
+            return
+        overlap = sorted(set(prompt_rule_ids).intersection(runtime_guard_rule_ids))
+        if overlap:
+            raise ValueError(
+                "Rule ownership conflict between prompt and runtime guard catalogs: "
+                + ", ".join(overlap)
+            )
