@@ -68,6 +68,22 @@ def test_runtime_failure_breakdown_count_from_events() -> None:
     assert loop._runtime_failure_breakdown_count(events, "python_compile") == 3
 
 
+def test_runtime_event_schema_counts_from_events() -> None:
+    loop = _load_script_module(
+        "run_live_acceptance_loop_runtime_event_schema",
+        "scripts/run_live_acceptance_loop.py",
+    )
+    events = [
+        {"event": "turn_start", "data": {"runtime_event": {"schema_version": "v1"}}},
+        {"event": "turn_complete", "data": {"runtime_event": {"schema_version": "v1"}}},
+        {"event": "turn_failed", "data": {"runtime_event": {"schema_version": "v0"}}},
+        {"event": "turn_failed", "data": {}},
+    ]
+    assert loop._runtime_event_presence_count(events) == 3
+    assert loop._runtime_event_schema_version_count(events, "v1") == 2
+    assert loop._runtime_event_schema_version_count(events, "v0") == 1
+
+
 def test_guard_terminal_reason_count_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_guard_reason",
@@ -105,6 +121,8 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "prompt_selection_policy_stable": 4,
                 "prompt_selection_policy_canary": 0,
                 "prompt_selection_policy_exact": 0,
+                "runtime_event_envelope_count": 7,
+                "runtime_event_schema_v1_count": 7,
                 "runtime_verifier_failure_python_compile": 1,
                 "runtime_verifier_failure_timeout": 0,
                 "runtime_verifier_failure_command_failed": 0,
@@ -132,6 +150,8 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "prompt_selection_policy_stable": 0,
                 "prompt_selection_policy_canary": 1,
                 "prompt_selection_policy_exact": 1,
+                "runtime_event_envelope_count": 5,
+                "runtime_event_schema_v1_count": 5,
                 "runtime_verifier_failure_python_compile": 0,
                 "runtime_verifier_failure_timeout": 1,
                 "runtime_verifier_failure_command_failed": 1,
@@ -157,6 +177,8 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert counters["prompt_selection_policy_stable"] == 4
     assert counters["prompt_selection_policy_canary"] == 1
     assert counters["prompt_selection_policy_exact"] == 1
+    assert counters["runtime_event_envelope_count"] == 12
+    assert counters["runtime_event_schema_v1_count"] == 12
     assert counters["runtime_verifier_failure_python_compile"] == 1
     assert counters["runtime_verifier_failure_timeout"] == 1
     assert counters["runtime_verifier_failure_command_failed"] == 1

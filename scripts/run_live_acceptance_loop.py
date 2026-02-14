@@ -161,6 +161,35 @@ def _guard_terminal_reason_count(events: List[Dict[str, Any]], terminal_reason_c
     return count
 
 
+def _runtime_event_presence_count(events: List[Dict[str, Any]]) -> int:
+    count = 0
+    for event in events:
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        runtime_event = data.get("runtime_event")
+        if isinstance(runtime_event, dict):
+            count += 1
+    return count
+
+
+def _runtime_event_schema_version_count(events: List[Dict[str, Any]], schema_version: str) -> int:
+    target = str(schema_version or "").strip()
+    if not target:
+        return 0
+    count = 0
+    for event in events:
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        runtime_event = data.get("runtime_event")
+        if not isinstance(runtime_event, dict):
+            continue
+        if str(runtime_event.get("schema_version") or "").strip() == target:
+            count += 1
+    return count
+
+
 def _last_event_data(events: List[Dict[str, Any]], event_name: str) -> Dict[str, Any]:
     for event in reversed(events):
         if event.get("event") == event_name:
@@ -401,6 +430,8 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "prompt_selection_policy_exact": int(
             prompt_policy.get("selection_policy_counts", {}).get("exact", 0)
         ),
+        "runtime_event_envelope_count": _runtime_event_presence_count(events),
+        "runtime_event_schema_v1_count": _runtime_event_schema_version_count(events, "v1"),
     }
 
     chain_complete = _chain_complete(db_summary)

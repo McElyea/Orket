@@ -254,6 +254,8 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
             "prompt_selection_policy_stable": _sum_metric(runs, "prompt_selection_policy_stable"),
             "prompt_selection_policy_canary": _sum_metric(runs, "prompt_selection_policy_canary"),
             "prompt_selection_policy_exact": _sum_metric(runs, "prompt_selection_policy_exact"),
+            "runtime_event_envelope_count": _sum_metric(runs, "runtime_event_envelope_count"),
+            "runtime_event_schema_v1_count": _sum_metric(runs, "runtime_event_schema_v1_count"),
             "done_chain_mismatch": _chain_mismatch_count(runs),
         },
         "issue_status_totals": _issue_end_states(runs),
