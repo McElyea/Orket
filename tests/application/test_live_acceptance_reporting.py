@@ -190,6 +190,7 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert counters["turn_non_progress_hallucination_scope"] == 1
     assert counters["turn_non_progress_security_scope"] == 2
     assert counters["turn_non_progress_consistency_scope"] == 3
+    assert report["schema_health"]["runtime_event_schema_v1_coverage"] == 1.0
     compliance = report["model_compliance"]
     assert "m1" in compliance
     assert "m2" in compliance
