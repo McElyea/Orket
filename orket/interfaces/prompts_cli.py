@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from orket.application.services.prompt_resolver import PromptResolver
+from orket.application.services.prompt_linter import lint_prompt_file
 from orket.schema import DialectConfig, RoleConfig, SkillConfig
 
 
@@ -135,16 +136,30 @@ def _validate_prompt_metadata(path: Path, payload: Dict[str, Any], kind: str) ->
 
 
 def validate_prompt_assets(root: Path) -> List[str]:
-    errors: List[str] = []
+    lint = lint_prompt_assets(root)
+    return [item["message"] for item in lint["errors"]]
+
+
+def lint_prompt_assets(root: Path) -> Dict[str, Any]:
+    violations: List[Dict[str, Any]] = []
     for kind in ("role", "dialect"):
         for path in _iter_assets(root, kind):
-            try:
-                payload = _load_json(path)
-            except json.JSONDecodeError as exc:
-                errors.append(f"{path}: invalid JSON ({exc}).")
-                continue
-            errors.extend(_validate_prompt_metadata(path, payload, kind))
-    return errors
+            violations.extend(lint_prompt_file(path, kind))
+    errors = [item for item in violations if str(item.get("severity") or "") == "strict"]
+    warnings = [item for item in violations if str(item.get("severity") or "") != "strict"]
+    # Keep CLI-compatible "message" field with file context.
+    for item in violations:
+        file_path = str(item.get("file") or "").strip()
+        message = str(item.get("message") or "").strip()
+        item["message"] = f"{file_path}: [{item.get('rule_id')}] {message}"
+    return {
+        "ok": not errors,
+        "error_count": len(errors),
+        "warning_count": len(warnings),
+        "errors": errors,
+        "warnings": warnings,
+        "violations": violations,
+    }
 
 
 def list_prompts(root: Path, kind: str = "all", status: str = "") -> List[Dict[str, Any]]:
@@ -387,11 +402,17 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     if args.cmd == "validate":
-        errors = validate_prompt_assets(root)
-        payload = {"ok": not errors, "error_count": len(errors), "errors": errors}
-        if args.json or errors:
+        lint = lint_prompt_assets(root)
+        payload = {
+            "ok": lint["ok"],
+            "error_count": lint["error_count"],
+            "warning_count": lint["warning_count"],
+            "errors": [item["message"] for item in lint["errors"]],
+            "warnings": [item["message"] for item in lint["warnings"]],
+        }
+        if args.json or lint["error_count"]:
             _print_json(payload)
-        if errors:
+        if lint["error_count"]:
             return 1
         print("Prompt assets valid.")
         return 0

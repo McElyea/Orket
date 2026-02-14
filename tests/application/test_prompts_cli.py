@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from orket.interfaces.prompts_cli import (
+    lint_prompt_assets,
     list_prompts,
     resolve_prompt,
     update_prompt_metadata,
@@ -122,3 +123,19 @@ def test_update_prompt_metadata_lifecycle(tmp_path: Path) -> None:
         apply_changes=True,
     )
     assert deprecated["after"]["status"] == "deprecated"
+
+
+def test_lint_prompt_assets_reports_placeholder_contracts(tmp_path: Path) -> None:
+    _seed_assets(tmp_path)
+    role_path = tmp_path / "model" / "core" / "roles" / "architect.json"
+    payload = json.loads(role_path.read_text(encoding="utf-8"))
+    payload["description"] = "Implement {{project_name}} and {{missing_placeholder}}."
+    payload["prompt_metadata"]["placeholders"] = ["project_name", "unused_placeholder"]
+    role_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    lint = lint_prompt_assets(tmp_path)
+    codes = {item["code"] for item in lint["violations"]}
+    assert "PLACEHOLDER_UNDECLARED" in codes
+    assert "PLACEHOLDER_UNUSED" in codes
+    assert lint["error_count"] >= 1
+    assert lint["warning_count"] >= 1
