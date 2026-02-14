@@ -26,6 +26,10 @@ jobs:
         run: |
           python scripts/check_dependency_direction.py
 
+      - name: Enforce volatility boundary script
+        run: |
+          python scripts/check_volatility_boundaries.py
+
       - name: Enforce volatility boundary tests
         run: |
           python -m pytest -q tests/platform/test_architecture_volatility_boundaries.py
@@ -91,6 +95,10 @@ jobs:
       - name: Enforce dependency direction rules
         run: |
           python scripts/check_dependency_direction.py
+
+      - name: Enforce volatility boundary script
+        run: |
+          python scripts/check_volatility_boundaries.py
 
       - name: Enforce roadmap pytest metrics
         run: |
