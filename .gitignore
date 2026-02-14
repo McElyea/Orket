@@ -84,4 +84,5 @@ backups/
 .pytest_live_loop/
 .pytest_live_tmp/
 .ruff_cache/
-benchmarks/results/
+benchmarks/results/*
+!benchmarks/results/prompt_promotion_thresholds.json
