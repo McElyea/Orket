@@ -77,3 +77,9 @@ infrastructure/sandboxes/
 
 # Backups (local copies, sync to cloud instead)
 backups/
+
+# Diagnostics / benchmark artifacts
+.orket/
+.pytest_live_loop/
+.pytest_live_tmp/
+benchmarks/results/

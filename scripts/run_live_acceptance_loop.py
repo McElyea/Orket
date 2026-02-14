@@ -261,10 +261,12 @@ def _aggregate(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         model = result["model"]
         model_stats = by_model.setdefault(
             model,
-            {"runs": 0, "passed": 0, "failed": 0, "avg_duration_s": 0.0},
+            {"runs": 0, "passed": 0, "failed": 0, "skipped": 0, "avg_duration_s": 0.0},
         )
         model_stats["runs"] += 1
-        if result.get("passed"):
+        if result.get("session_status", "").startswith("skipped_"):
+            model_stats["skipped"] += 1
+        elif result.get("passed"):
             model_stats["passed"] += 1
         else:
             model_stats["failed"] += 1
@@ -275,6 +277,55 @@ def _aggregate(results: List[Dict[str, Any]]) -> Dict[str, Any]:
             stats["avg_duration_s"] = round(stats["avg_duration_s"] / stats["runs"], 3)
 
     return by_model
+
+
+def _list_installed_models() -> set[str]:
+    proc = subprocess.run(
+        ["ollama", "list"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    if proc.returncode != 0:
+        return set()
+
+    models: set[str] = set()
+    for raw_line in (proc.stdout or "").splitlines():
+        line = raw_line.strip()
+        if not line or line.lower().startswith("name "):
+            continue
+        parts = re.split(r"\s{2,}", line)
+        if not parts:
+            continue
+        model = parts[0].strip()
+        if model:
+            models.add(model)
+    return models
+
+
+def _make_skipped_result(spec: RunSpec, reason: str) -> Dict[str, Any]:
+    now = datetime.now(UTC)
+    return {
+        "model": spec.model,
+        "iteration": spec.iteration,
+        "passed": False,
+        "exit_code": 0,
+        "started_at": now.isoformat(),
+        "finished_at": now.isoformat(),
+        "duration_s": 0.0,
+        "command": [],
+        "run_dir": str(spec.run_dir),
+        "run_output_log": "",
+        "run_error_log": "",
+        "orket_log": None,
+        "db_summary": {"exists": False},
+        "run_id": None,
+        "session_status": reason,
+        "metrics": {"skipped": 1},
+        "requirements_response_preview": None,
+    }
 
 
 def _init_results_db(db_path: Path) -> sqlite3.Connection:
@@ -457,6 +508,18 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         default=sys.executable,
         help="Python executable to use.",
     )
+    parser.add_argument(
+        "--skip-missing-models",
+        action="store_true",
+        default=True,
+        help="Skip models missing from `ollama list` instead of executing failing runs.",
+    )
+    parser.add_argument(
+        "--no-skip-missing-models",
+        action="store_false",
+        dest="skip_missing_models",
+        help="Disable missing-model preflight skipping.",
+    )
     return parser.parse_args(argv)
 
 
@@ -484,6 +547,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     results: List[Dict[str, Any]] = []
     total_runs = len(args.models) * args.iterations
     run_no = 0
+    installed_models = _list_installed_models() if args.skip_missing_models else set()
 
     for model in args.models:
         model_slug = _slug(model)
@@ -492,7 +556,11 @@ def main(argv: Optional[List[str]] = None) -> int:
             run_dir = base_temp_root / f"{model_slug}_iter{iteration}"
             spec = RunSpec(model=model, iteration=iteration, run_dir=run_dir)
             print(f"[{run_no}/{total_runs}] model={model} iteration={iteration} ...")
-            result = _run_once(spec, python_exe=args.python, pytest_target=args.pytest_target)
+            if args.skip_missing_models and installed_models and model not in installed_models:
+                result = _make_skipped_result(spec, reason="skipped_missing_model")
+                print(f"  skipped=True reason=missing_model model={model}")
+            else:
+                result = _run_once(spec, python_exe=args.python, pytest_target=args.pytest_target)
             results.append(result)
             _insert_run_result(conn, batch_id, result)
 
