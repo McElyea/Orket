@@ -53,6 +53,21 @@ def test_prompt_policy_summary_counts_from_turn_start_events() -> None:
     assert summary["dialect_status_counts"]["stable"] == 2
 
 
+def test_runtime_failure_breakdown_count_from_events() -> None:
+    loop = _load_script_module(
+        "run_live_acceptance_loop_breakdown",
+        "scripts/run_live_acceptance_loop.py",
+    )
+    events = [
+        {"event": "runtime_verifier_completed", "data": {"failure_breakdown": {"timeout": 2, "command_failed": 1}}},
+        {"event": "runtime_verifier_completed", "data": {"failure_breakdown": {"timeout": 1}}},
+        {"event": "runtime_verifier_completed", "data": {"failure_breakdown": {"python_compile": 3}}},
+    ]
+    assert loop._runtime_failure_breakdown_count(events, "timeout") == 3
+    assert loop._runtime_failure_breakdown_count(events, "command_failed") == 1
+    assert loop._runtime_failure_breakdown_count(events, "python_compile") == 3
+
+
 def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns",
