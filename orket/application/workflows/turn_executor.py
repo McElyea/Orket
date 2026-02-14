@@ -612,6 +612,20 @@ class TurnExecutor:
                 }
             )
 
+        if str(context.get("stage_gate_mode", "")).strip().lower() == "review_required":
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        "Guard Rejection Contract:\n"
+                        "- If you set update_issue_status.status to blocked, include a second JSON object in the same response.\n"
+                        '- Required payload schema: {"rationale":"...", "violations":[...], "remediation_actions":[...]}.\n'
+                        "- rationale must be non-empty.\n"
+                        "- remediation_actions must contain at least one concrete action.\n"
+                    ),
+                }
+            )
+
         # Add any history (from context)
         if "history" in context:
             messages.extend(context["history"])

@@ -397,3 +397,26 @@ async def test_turn_executor_guard_payload_reprompt_still_enforces_progress_cont
     assert model.calls == 2
     assert len(toolbox.calls) == 0
     assert "progress contract not met after guard payload corrective reprompt" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_prepare_messages_includes_guard_rejection_contract(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    messages = await executor._prepare_messages(
+        _issue(),
+        _role(),
+        {
+            **_context(),
+            "stage_gate_mode": "review_required",
+            "required_action_tools": ["update_issue_status"],
+            "required_statuses": ["done", "blocked"],
+        },
+        None,
+    )
+    joined = "\n".join(str(m.get("content", "")) for m in messages)
+    assert "Guard Rejection Contract" in joined
+    assert "remediation_actions" in joined

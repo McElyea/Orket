@@ -214,6 +214,7 @@ Work:
    - seat/role order
    - expected artifacts
    - guard terminal decision by `integrity_guard`
+   - all chain issues must reach `DONE` (not `BLOCKED`) in live acceptance
 4. [~] Rename pipeline test internals from `developer` to `coder` where contract requires it.
    - Canonical flow paths are now `coder`.
    - Legacy test fixtures still contain `developer` in non-canonical lanes.

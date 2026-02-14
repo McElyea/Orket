@@ -293,17 +293,14 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path):
     print("[live] main.py")
     print(_safe_console(code_text))
 
-    assert req_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
-    assert arc_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
-    assert cod_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
-    assert rev_issue.status in {CardStatus.DONE, CardStatus.BLOCKED}
+    assert req_issue.status == CardStatus.DONE, "REQ-1 must complete DONE in canonical chain"
+    assert arc_issue.status == CardStatus.DONE, "ARC-1 must complete DONE in canonical chain"
+    assert cod_issue.status == CardStatus.DONE, "COD-1 must complete DONE in canonical chain"
+    assert rev_issue.status == CardStatus.DONE, "REV-1 must complete DONE in canonical chain"
 
-    if req_issue.status == CardStatus.DONE:
-        assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
-    if arc_issue.status == CardStatus.DONE:
-        assert design_path.exists(), "design.txt not produced for completed ARC-1"
-    if cod_issue.status == CardStatus.DONE:
-        assert code_path.exists(), "main.py not produced for completed COD-1"
+    assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
+    assert design_path.exists(), "design.txt not produced for completed ARC-1"
+    assert code_path.exists(), "main.py not produced for completed COD-1"
 
 
 @pytest.mark.asyncio
