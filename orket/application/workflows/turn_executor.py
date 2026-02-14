@@ -21,6 +21,7 @@ import json
 import time
 import hashlib
 import copy
+import asyncio
 
 from orket.schema import IssueConfig, CardStatus, RoleConfig
 from orket.core.domain.state_machine import StateMachine, StateMachineError
@@ -628,6 +629,12 @@ class TurnExecutor:
         roles = context.get("roles", [turn.role])
         session_id = context.get("session_id", "unknown-session")
         turn_index = int(context.get("turn_index", 0))
+        approval_required_tools = {
+            str(tool).strip()
+            for tool in (context.get("approval_required_tools") or [])
+            if str(tool).strip()
+        }
+        request_writer = context.get("create_pending_gate_request")
 
         for tool_call in turn.tool_calls:
             try:
@@ -669,6 +676,35 @@ class TurnExecutor:
                         self.workspace,
                     )
                     violations.append(f"Governance Violation: {gate_violation}")
+                    continue
+
+                if tool_call.tool in approval_required_tools:
+                    request_id = None
+                    if callable(request_writer):
+                        maybe_request = request_writer(
+                            tool_name=tool_call.tool,
+                            tool_args=tool_call.args,
+                        )
+                        if asyncio.iscoroutine(maybe_request):
+                            request_id = await maybe_request
+                        else:
+                            request_id = maybe_request
+                    log_event(
+                        "tool_approval_required",
+                        {
+                            "issue_id": turn.issue_id,
+                            "role": turn.role,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "tool": tool_call.tool,
+                            "request_id": request_id,
+                            "stage_gate_mode": context.get("stage_gate_mode"),
+                        },
+                        self.workspace,
+                    )
+                    violations.append(
+                        f"Approval required for tool '{tool_call.tool}' before execution."
+                    )
                     continue
 
                 # Execute tool (toolbox handles path validation)

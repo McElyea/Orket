@@ -48,7 +48,7 @@ Work:
 3. [x] Enforce strict guard rejection payload validation (`rationale` + `remediation_actions`) on guard-rejected outcomes.
 4. [x] Log invalid payload event with machine-readable reason (`guard_payload_invalid`).
 5. [x] Add persistent `pending_gate_requests` ledger for explicit pause/resume gating.
-6. [ ] Add `approval_required` flow for selected high-impact tools.
+6. [x] Add `approval_required` flow for selected high-impact tools.
 
 Done when:
 1. Guard rejection without rationale/remediation can no longer pass as valid output.

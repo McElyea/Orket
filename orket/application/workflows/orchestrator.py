@@ -570,6 +570,30 @@ class Orchestrator:
             payload=payload,
         )
 
+    async def _create_pending_tool_approval_request(
+        self,
+        *,
+        run_id: str,
+        issue: IssueConfig,
+        seat_name: str,
+        gate_mode: str,
+        tool_name: str,
+        tool_args: Dict[str, Any],
+    ) -> str:
+        return await self.pending_gates.create_request(
+            session_id=run_id,
+            issue_id=issue.id,
+            seat_name=seat_name,
+            gate_mode=gate_mode,
+            request_type="tool_approval",
+            reason=f"approval_required_tool:{tool_name}",
+            payload={
+                "tool": tool_name,
+                "args": tool_args,
+                "issue_status": str(issue.status.value if hasattr(issue.status, "value") else issue.status),
+            },
+        )
+
     def _build_turn_context(
         self,
         run_id: str,
@@ -624,6 +648,31 @@ class Orchestrator:
             except TypeError:
                 gate_mode = str(gate_mode_fn(seat_name))
 
+        approval_required_tools = []
+        approval_tools_fn = getattr(self.loop_policy_node, "approval_required_tools_for_seat", None)
+        if callable(approval_tools_fn):
+            try:
+                approval_required_tools = list(
+                    approval_tools_fn(
+                        seat_name=seat_name,
+                        issue=issue,
+                        turn_status=turn_status,
+                    )
+                    or []
+                )
+            except TypeError:
+                approval_required_tools = list(approval_tools_fn(seat_name) or [])
+
+        async def _pending_gate_request_writer(*, tool_name: str, tool_args: Dict[str, Any]) -> str:
+            return await self._create_pending_tool_approval_request(
+                run_id=run_id,
+                issue=issue,
+                seat_name=seat_name,
+                gate_mode=gate_mode,
+                tool_name=tool_name,
+                tool_args=tool_args,
+            )
+
         return {
             "session_id": run_id,
             "issue_id": issue.id,
@@ -640,6 +689,8 @@ class Orchestrator:
             "required_action_tools": required_action_tools,
             "required_statuses": required_statuses,
             "stage_gate_mode": gate_mode,
+            "approval_required_tools": approval_required_tools,
+            "create_pending_gate_request": _pending_gate_request_writer,
             "resume_mode": bool(resume_mode),
             "history": self._history_context(),
         }

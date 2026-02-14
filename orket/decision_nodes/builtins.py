@@ -802,6 +802,11 @@ class DefaultOrchestrationLoopPolicyNode:
             return "review_required"
         return "auto"
 
+    def approval_required_tools_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
+        # Default OFF to preserve current behavior. Enable per seat via custom loop policy node.
+        _ = (seat_name or "").strip().lower()
+        return []
+
     def validate_guard_rejection_payload(self, payload: Any) -> Dict[str, Any]:
         rationale = str(getattr(payload, "rationale", "") or "").strip()
         actions = getattr(payload, "remediation_actions", []) or []

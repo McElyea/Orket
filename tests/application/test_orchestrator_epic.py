@@ -445,6 +445,8 @@ def test_build_turn_context_includes_stage_gate_mode(orchestrator):
         resume_mode=False,
     )
     assert context["stage_gate_mode"] == "review_required"
+    assert context["approval_required_tools"] == []
+    assert callable(context["create_pending_gate_request"])
 
 
 def test_validate_guard_rejection_payload_default_logic(orchestrator):

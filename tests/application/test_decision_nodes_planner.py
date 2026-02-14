@@ -704,6 +704,8 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.required_statuses_for_seat("lead_architect") == []
     assert node.gate_mode_for_seat("integrity_guard") == "review_required"
     assert node.gate_mode_for_seat("coder") == "auto"
+    assert node.approval_required_tools_for_seat("integrity_guard") == []
+    assert node.approval_required_tools_for_seat("coder") == []
     assert node.validate_guard_rejection_payload(
         SimpleNamespace(rationale="", remediation_actions=["Fix design drift"])
     ) == {"valid": False, "reason": "missing_rationale"}

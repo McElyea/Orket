@@ -263,3 +263,34 @@ async def test_turn_executor_blocked_requires_wait_reason(tmp_path):
     assert model.calls == 2
     assert len(toolbox.calls) == 0
     assert "Deterministic failure" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_blocks_approval_required_tool_and_persists_request(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
+    toolbox = _ToolBox()
+
+    request_calls = []
+
+    async def _request_writer(*, tool_name, tool_args):
+        request_calls.append({"tool_name": tool_name, "tool_args": tool_args})
+        return "REQ-TOOL-1"
+
+    context = _context()
+    context["approval_required_tools"] = ["write_file"]
+    context["create_pending_gate_request"] = _request_writer
+    context["stage_gate_mode"] = "approval_required"
+
+    result = await executor.execute_turn(_issue(), _role(), model, toolbox, context)
+
+    assert result.success is False
+    assert result.should_retry is True
+    assert "Approval required for tool 'write_file'" in (result.error or "")
+    assert len(toolbox.calls) == 0
+    assert len(request_calls) == 1
+    assert request_calls[0]["tool_name"] == "write_file"
