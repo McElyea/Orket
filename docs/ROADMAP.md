@@ -28,9 +28,13 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 7. Missing core role/team assets repaired for canonical loader/runtime viability.
 8. Acceptance fixture aligned to architect decision contract JSON schema.
 9. Acceptance loop now suppresses sandbox deploy attempts by default (`ORKET_DISABLE_SANDBOX=1` in loop runner).
+10. `P-1A` scaffolder stage landed and is enforced pre-loop with deterministic structure checks.
+11. `P-1B` dependency manager stage landed with opt-in dependency file ownership gate in `ToolGate`.
+12. `P-1C` runtime verifier stage landed to block review dispatch when generated code fails compile verification.
+13. `P-1D` deployment planner stage landed with deterministic deployment baseline assets.
 
 ## Current Status Snapshot
-1. `P-1 Pipeline Stabilizers`: Active, highest priority.
+1. `P-1 Pipeline Stabilizers`: Active, foundational slices (`P-1A` to `P-1D`) landed.
 2. `P0 Data-Driven Behavior Recovery Loop`: Active, now downstream of `P-1`.
 3. `P1 Canonical Assets Runnable`: Active, major integrity slice completed.
 4. `P2 Acceptance Gate Uses Canonical Assets`: In progress.
@@ -62,10 +66,10 @@ Implementation policy:
 Goal: create deterministic project structure before design/coding work begins.
 
 Work:
-1. Add scaffolding stage contract before analyst/architect execution for build initialization.
-2. Define schema-driven scaffold templates (required dirs/files/placeholders/readme/env/test skeleton).
-3. Add guard checks for required/missing/forbidden paths at scaffold completion.
-4. Ensure stable output: same input template must produce same scaffold tree.
+1. [x] Add scaffolding stage contract before analyst/architect execution for build initialization.
+2. [x] Define schema-driven scaffold templates (required dirs/files/placeholders/readme/env/test skeleton).
+3. [x] Add guard checks for required/missing/forbidden paths at scaffold completion.
+4. [x] Ensure stable output: same input template must produce same scaffold tree.
 
 Done when:
 1. Scaffold output is deterministic across reruns.
@@ -80,10 +84,10 @@ Verification:
 Goal: centralize dependency and environment ownership away from coder turns.
 
 Work:
-1. Add dependency-management stage after architecture decisions and before coder execution.
-2. Generate/maintain dependency manifests per stack (`pyproject.toml`, `requirements.txt`, `package.json`, etc.).
-3. Pin and validate dependency versions plus dev tooling dependencies.
-4. Enforce ownership in `ToolGate`: non-dependency stages cannot mutate dependency manifests.
+1. [x] Add dependency-management stage after architecture decisions and before coder execution.
+2. [x] Generate/maintain dependency manifests per stack (`pyproject.toml`, `requirements.txt`, `package.json`, etc.).
+3. [~] Pin and validate dependency versions plus dev tooling dependencies.
+4. [x] Enforce ownership in `ToolGate`: non-dependency stages cannot mutate dependency manifests.
 
 Done when:
 1. Dependency files are only writable by dependency-management stage.
@@ -98,10 +102,10 @@ Verification:
 Goal: fail fast on non-runnable output before review/guard turns.
 
 Work:
-1. Add runtime-verification stage after coder output and before reviewer dispatch.
-2. Execute stack-appropriate checks (compile/build/test/type/lint) with deterministic command policy.
-3. Emit machine-readable pass/fail report artifacts and bind them into turn context.
-4. Gate reviewer dispatch on verifier pass; route failures back to coder with explicit diagnostics.
+1. [x] Add runtime-verification stage after coder output and before reviewer dispatch.
+2. [~] Execute stack-appropriate checks (compile/build/test/type/lint) with deterministic command policy.
+3. [~] Emit machine-readable pass/fail report artifacts and bind them into turn context.
+4. [x] Gate reviewer dispatch on verifier pass; route failures back to coder with explicit diagnostics.
 
 Done when:
 1. Reviewer does not run when runtime verification fails.
@@ -116,10 +120,10 @@ Verification:
 Goal: ensure every generated project has a deterministic runnable deployment plan.
 
 Work:
-1. Add deployment-planning stage after architecture/dependency stages.
-2. Generate deployment assets (`Dockerfile`, compose, env schema, run scripts; optional k8s manifests by policy).
-3. Validate deployment assets against architecture and dependency contracts.
-4. Integrate deployment checks with runtime-verification policy.
+1. [x] Add deployment-planning stage after architecture/dependency stages.
+2. [x] Generate deployment assets (`Dockerfile`, compose, env schema, run scripts; optional k8s manifests by policy).
+3. [x] Validate deployment assets against architecture and dependency contracts.
+4. [~] Integrate deployment checks with runtime-verification policy.
 
 Done when:
 1. Deployment assets are present and structurally valid for generated projects.
