@@ -1393,9 +1393,19 @@ class TurnExecutor:
             for path in (scope.get("workspace") or [])
             if str(path).strip()
         }
-        provided_context_scope = {
+        active_context_scope = {
             str(item).strip()
-            for item in (scope.get("provided_context") or [])
+            for item in (scope.get("active_context") or [])
+            if str(item).strip()
+        }
+        passive_context_scope = {
+            str(item).strip()
+            for item in (scope.get("passive_context") or [])
+            if str(item).strip()
+        }
+        archived_context_scope = {
+            str(item).strip()
+            for item in (scope.get("archived_context") or [])
             if str(item).strip()
         }
         declared_interfaces_scope = {
@@ -1435,11 +1445,11 @@ class TurnExecutor:
 
             if tool_name == "get_issue_context":
                 ref = str(call.args.get("section", "")).strip()
-                if provided_context_scope and ref and ref not in provided_context_scope:
+                if active_context_scope and ref and ref not in active_context_scope:
                     violations.append(
                         {
                             "rule_id": "HALLUCINATION.CONTEXT_NOT_PROVIDED",
-                            "message": f"Context reference '{ref}' not present in verification scope.provided_context.",
+                            "message": f"Context reference '{ref}' not present in verification scope.active_context.",
                             "evidence": ref,
                         }
                     )
@@ -1474,7 +1484,10 @@ class TurnExecutor:
         return {
             "scope": {
                 "workspace": sorted(workspace_scope),
-                "provided_context": sorted(provided_context_scope),
+                "provided_context": sorted(active_context_scope),
+                "active_context": sorted(active_context_scope),
+                "passive_context": sorted(passive_context_scope),
+                "archived_context": sorted(archived_context_scope),
                 "declared_interfaces": sorted(declared_interfaces_scope),
                 "strict_grounding": strict_grounding,
                 "forbidden_phrases": forbidden_phrases,

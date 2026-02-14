@@ -1196,7 +1196,9 @@ class Orchestrator:
             "required_write_paths": required_write_paths,
             "verification_scope": build_verification_scope(
                 workspace=list(required_read_paths) + list(required_write_paths),
-                provided_context=list(required_read_paths or []),
+                active_context=list(required_read_paths or []),
+                passive_context=[],
+                archived_context=[],
                 declared_interfaces=list(required_action_tools) + list(approval_required_tools),
                 strict_grounding=True,
                 forbidden_phrases=[],

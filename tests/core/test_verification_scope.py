@@ -9,7 +9,9 @@ from orket.core.domain.verification_scope import (
 def test_build_verification_scope_normalizes_and_deduplicates_values():
     scope = build_verification_scope(
         workspace=[" b.py ", "a.py", "a.py", ""],
-        provided_context=["ctx-2", "ctx-1", None],
+        active_context=["ctx-2", "ctx-1", None],
+        passive_context=["passive-2", "passive-1", "passive-1"],
+        archived_context=["arch-1", "arch-1"],
         declared_interfaces=[" write_file ", "read_file", "write_file"],
         strict_grounding=True,
         forbidden_phrases=["foo", " foo "],
@@ -17,7 +19,10 @@ def test_build_verification_scope_normalizes_and_deduplicates_values():
         consistency_tool_calls_only=True,
     )
     assert scope["workspace"] == ["a.py", "b.py"]
+    assert scope["active_context"] == ["ctx-1", "ctx-2"]
     assert scope["provided_context"] == ["ctx-1", "ctx-2"]
+    assert scope["passive_context"] == ["passive-1", "passive-2"]
+    assert scope["archived_context"] == ["arch-1"]
     assert scope["declared_interfaces"] == ["read_file", "write_file"]
     assert scope["forbidden_phrases"] == ["foo"]
     assert scope["strict_grounding"] is True
@@ -35,9 +40,18 @@ def test_parse_verification_scope_applies_defaults_and_normalization():
     assert scope == {
         "workspace": ["x.py"],
         "provided_context": [],
+        "active_context": [],
+        "passive_context": [],
+        "archived_context": [],
         "declared_interfaces": [],
         "strict_grounding": False,
         "forbidden_phrases": [],
         "enforce_path_hardening": True,
         "consistency_tool_calls_only": False,
     }
+
+
+def test_parse_verification_scope_backfills_active_from_provided_context():
+    scope = parse_verification_scope({"provided_context": ["ctx-a", "ctx-b"]})
+    assert scope["active_context"] == ["ctx-a", "ctx-b"]
+    assert scope["provided_context"] == ["ctx-a", "ctx-b"]
