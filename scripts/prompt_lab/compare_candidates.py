@@ -35,6 +35,12 @@ def _pattern_delta(stable: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[st
         "tool_call_blocked",
         "runtime_verifier_failures",
         "done_chain_mismatch",
+        "guard_retry_scheduled",
+        "guard_terminal_failure",
+        "guard_terminal_reason_hallucination_persistent",
+        "turn_non_progress_hallucination_scope",
+        "turn_non_progress_security_scope",
+        "turn_non_progress_consistency_scope",
     ]
     delta: Dict[str, int] = {}
     for key in keys:
@@ -76,6 +82,30 @@ def evaluate_promotion_gates(
         <= int(_threshold_value(thresholds, "runtime_verifier_failures_max_increase", 0)),
         "done_chain_mismatch_max_increase": pattern_delta.get("done_chain_mismatch", 0)
         <= int(_threshold_value(thresholds, "done_chain_mismatch_max_increase", 0)),
+        "guard_retry_scheduled_max_increase": pattern_delta.get("guard_retry_scheduled", 0)
+        <= int(_threshold_value(thresholds, "guard_retry_scheduled_max_increase", 0)),
+        "guard_terminal_failure_max_increase": pattern_delta.get("guard_terminal_failure", 0)
+        <= int(_threshold_value(thresholds, "guard_terminal_failure_max_increase", 0)),
+        "guard_terminal_reason_hallucination_persistent_max_increase": pattern_delta.get(
+            "guard_terminal_reason_hallucination_persistent", 0
+        )
+        <= int(
+            _threshold_value(
+                thresholds, "guard_terminal_reason_hallucination_persistent_max_increase", 0
+            )
+        ),
+        "turn_non_progress_hallucination_scope_max_increase": pattern_delta.get(
+            "turn_non_progress_hallucination_scope", 0
+        )
+        <= int(_threshold_value(thresholds, "turn_non_progress_hallucination_scope_max_increase", 0)),
+        "turn_non_progress_security_scope_max_increase": pattern_delta.get(
+            "turn_non_progress_security_scope", 0
+        )
+        <= int(_threshold_value(thresholds, "turn_non_progress_security_scope_max_increase", 0)),
+        "turn_non_progress_consistency_scope_max_increase": pattern_delta.get(
+            "turn_non_progress_consistency_scope", 0
+        )
+        <= int(_threshold_value(thresholds, "turn_non_progress_consistency_scope_max_increase", 0)),
     }
     return {
         "pass": all(gates.values()),

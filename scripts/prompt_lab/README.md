@@ -49,3 +49,11 @@ python scripts/prompt_lab/compare_candidates.py \
 Exit code:
 - `0` when candidate is non-regressive by configured gates.
 - `1` when regression is detected.
+
+Additional guard-aware pattern gates are supported in threshold JSON:
+- `guard_retry_scheduled_max_increase`
+- `guard_terminal_failure_max_increase`
+- `guard_terminal_reason_hallucination_persistent_max_increase`
+- `turn_non_progress_hallucination_scope_max_increase`
+- `turn_non_progress_security_scope_max_increase`
+- `turn_non_progress_consistency_scope_max_increase`

@@ -103,9 +103,9 @@ Exit Criteria:
 Objective: continue prompt optimization safely after guard baseline is stable.
 
 Remaining Slices:
-1. `P2-S1`: offline optimize workflow writes candidate versions only.
-2. `P2-S2`: compare candidate vs stable on canonical acceptance and live-loop pattern reports.
-3. `P2-S3`: gate promotion on explicit evidence thresholds and guard-failure deltas.
+1. `P2-S1` (completed 2026-02-14): offline optimize workflow writes candidate versions only.
+2. `P2-S2` (completed 2026-02-14): compare candidate vs stable on canonical acceptance and live-loop pattern reports.
+3. `P2-S3` (completed 2026-02-14): gate promotion on explicit evidence thresholds, including guard-failure deltas.
 
 ## P3: Architecture Boundaries and Maintenance
 Objective: keep dependency direction and volatility boundaries green while guard work lands.
