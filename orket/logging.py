@@ -53,6 +53,47 @@ def _log_path(workspace: Path, role: str = None) -> Path:
     return workspace / "orket.log"
 
 
+RUNTIME_EVENT_SCHEMA_VERSION = "v1"
+
+
+def _build_runtime_event(event: str, data: Dict[str, Any], role: str) -> Dict[str, Any]:
+    payload = dict(data or {})
+    return {
+        "schema_version": RUNTIME_EVENT_SCHEMA_VERSION,
+        "event": str(event or "").strip(),
+        "role": str(role or payload.get("role") or "system"),
+        "session_id": str(payload.get("session_id") or ""),
+        "issue_id": str(payload.get("issue_id") or ""),
+        "turn_index": int(payload.get("turn_index") or 0),
+        "turn_trace_id": str(payload.get("turn_trace_id") or ""),
+        "selected_model": str(payload.get("selected_model") or ""),
+        "prompt_id": str(payload.get("prompt_id") or ""),
+        "prompt_version": str(payload.get("prompt_version") or ""),
+        "prompt_checksum": str(payload.get("prompt_checksum") or ""),
+        "resolver_policy": str(payload.get("resolver_policy") or ""),
+        "selection_policy": str(payload.get("selection_policy") or ""),
+        "guard_contract": payload.get("guard_contract"),
+        "guard_decision": payload.get("guard_decision"),
+        "terminal_reason": (
+            (payload.get("guard_decision") or {}).get("terminal_reason")
+            if isinstance(payload.get("guard_decision"), dict)
+            else None
+        ),
+        "duration_ms": int(payload.get("duration_ms") or 0),
+        "tokens": payload.get("tokens"),
+    }
+
+
+def _append_runtime_event_artifact(workspace: Path, runtime_event: Dict[str, Any]) -> None:
+    session_id = str(runtime_event.get("session_id") or "").strip()
+    if not session_id:
+        return
+    path = workspace / "agent_output" / "observability" / "runtime_events.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(runtime_event, ensure_ascii=False, default=str) + "\n")
+
+
 def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path] = None, role: str = None, **kwargs) -> None:
     """
     Unified log router.
@@ -77,10 +118,13 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
     
     # Merge extra kwargs into data for observability
     full_data = {**data, **kwargs}
+    role_name = role or full_data.get("role") or "system"
+    runtime_event = _build_runtime_event(event, full_data, role_name)
+    full_data = {**full_data, "runtime_event": runtime_event}
     
     record = {
         "timestamp": now_local().isoformat(),
-        "role": role or full_data.get("role") or "system", 
+        "role": role_name,
         "event": event,
         "data": full_data,
     }
@@ -90,6 +134,10 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
     
     # 2. Emit JSON record
     _logger.info(json.dumps(record, ensure_ascii=False))
+    try:
+        _append_runtime_event_artifact(workspace, runtime_event)
+    except (RuntimeError, ValueError, TypeError, OSError):
+        pass
 
     # 3. Notify subscribers (for WebSockets)
     for subscriber in _subscribers:
