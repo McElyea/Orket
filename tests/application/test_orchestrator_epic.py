@@ -697,8 +697,9 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
     )
 
     assert executor.calls == 0
-    assert cards.update_status.calls[-1][0][1] == CardStatus.BLOCKED
-    assert cards.update_status.calls[-1][1]["reason"] == "runtime_verification_failed"
+    saved_issue = cards.save.calls[-1][0][0]
+    assert saved_issue["status"] == CardStatus.READY
+    assert saved_issue["retry_count"] == 1
     report_path = orch.workspace / "agent_output" / "verification" / "runtime_verification.json"
     assert report_path.exists()
     report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -707,6 +708,76 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
     assert isinstance(report.get("command_results"), list)
     assert isinstance(report.get("failure_breakdown"), dict)
     assert report.get("guard_contract", {}).get("result") == "fail"
+    assert report.get("guard_decision", {}).get("action") == "retry"
+
+
+@pytest.mark.asyncio
+async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_exhausted(orchestrator, monkeypatch):
+    orch, cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="REV-1",
+        seat="code_reviewer",
+        summary="Review",
+        status=CardStatus.CODE_REVIEW,
+        retry_count=3,
+        max_retries=3,
+    )
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"code_reviewer": SimpleNamespace(roles=["code_reviewer"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    class _Executor:
+        def __init__(self):
+            self.calls = 0
+
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            self.calls += 1
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    class _RuntimeVerifier:
+        def __init__(self, workspace_root, organization=None):
+            self.workspace_root = workspace_root
+
+        async def verify(self):
+            return SimpleNamespace(
+                ok=False,
+                checked_files=["agent_output/main.py"],
+                errors=["SyntaxError: invalid syntax"],
+            )
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.RuntimeVerifier", _RuntimeVerifier)
+    executor = _Executor()
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=executor,
+        toolbox=SimpleNamespace(),
+    )
+
+    assert executor.calls == 0
+    saved_issue = cards.save.calls[-1][0][0]
+    assert saved_issue["status"] == CardStatus.BLOCKED
+    assert saved_issue["retry_count"] == 3
+    report_path = orch.workspace / "agent_output" / "verification" / "runtime_verification.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report.get("guard_decision", {}).get("action") == "terminal_failure"
 
 
 @pytest.mark.asyncio

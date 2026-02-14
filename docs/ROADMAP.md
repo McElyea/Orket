@@ -45,10 +45,10 @@ Objective: land a minimal, enforceable guard core that prevents retry spirals an
    - no violations => `severity=soft`.
 
 ### P0-R2: Runtime Loop Enforcement
-1. `P0-R2-S1`: route guarded-stage validation through Guard Agent return of `GuardContract`.
-2. `P0-R2-S2`: enforce bounded retries with deterministic escalation on exceed.
-3. `P0-R2-S3`: emit terminal outcomes as `terminal_failure` with structured `terminal_reason`.
-4. `P0-R2-S4`: persist guard artifacts and evidence for turn/run-level diagnosis.
+1. `P0-R2-S1` (completed 2026-02-14): route runtime-verifier guarded-stage validation through Guard Agent return of `GuardContract`.
+2. `P0-R2-S2` (completed 2026-02-14): enforce bounded retries with deterministic escalation on exceed for runtime-verifier guard failures.
+3. `P0-R2-S3` (completed 2026-02-14): emit terminal guard outcomes as `terminal_failure` with structured `terminal_reason`.
+4. `P0-R2-S4` (completed 2026-02-14): persist runtime guard artifacts (`guard_contract`, `guard_decision`) in verification evidence.
 
 ### P0-R3: Ownership Boundaries
 1. `P0-R3-S1`: enforce prompt-level ownership in prompt resolution (`Role + Skill + Dialect` only).

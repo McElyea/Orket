@@ -26,6 +26,7 @@ from orket.application.services.dependency_manager import (
     DependencyValidationError,
 )
 from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
+from orket.application.services.guard_agent import GuardAgent
 from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
@@ -583,6 +584,11 @@ class Orchestrator:
                     ok=bool(getattr(runtime_result, "ok", False)),
                     errors=list(getattr(runtime_result, "errors", []) or []),
                 )
+            guard_decision = GuardAgent(self.org).evaluate(
+                contract=guard_contract,
+                retry_count=int(getattr(issue, "retry_count", 0) or 0),
+                max_retries=int(getattr(issue, "max_retries", 0) or 0),
+            )
             runtime_report = {
                 "run_id": run_id,
                 "issue_id": issue.id,
@@ -592,6 +598,7 @@ class Orchestrator:
                 "command_results": list(getattr(runtime_result, "command_results", []) or []),
                 "failure_breakdown": dict(getattr(runtime_result, "failure_breakdown", {}) or {}),
                 "guard_contract": guard_contract.model_dump(),
+                "guard_decision": guard_decision.as_dict(),
                 "timestamp": datetime.now(UTC).isoformat(),
             }
             await AsyncFileTools(self.workspace).write_file(
@@ -611,23 +618,61 @@ class Orchestrator:
                 self.workspace,
             )
             if not runtime_result.ok:
-                await self.async_cards.update_status(
-                    issue.id,
-                    CardStatus.BLOCKED,
-                    reason="runtime_verification_failed",
-                    metadata={
-                        "run_id": run_id,
-                        "errors": runtime_result.errors[:5],
-                        "checked_files": runtime_result.checked_files,
-                    },
-                )
-                self.notes.add(
-                    Note(
-                        from_role="system",
-                        content="RUNTIME VERIFIER FAILED: " + " | ".join(runtime_result.errors[:2]),
-                        step_index=len(self.transcript),
+                if guard_decision.action == "retry":
+                    issue.retry_count = guard_decision.next_retry_count
+                    issue.status = CardStatus.READY
+                    issue.note = (
+                        "runtime_guard_retry_scheduled: "
+                        + " | ".join(runtime_result.errors[:1])
                     )
-                )
+                    await self.async_cards.save(issue.model_dump())
+                    log_event(
+                        "guard_retry_scheduled",
+                        {
+                            "run_id": run_id,
+                            "issue_id": issue.id,
+                            "retry_count": issue.retry_count,
+                            "max_retries": issue.max_retries,
+                            "reason": "runtime_verification_failed",
+                            "guard_contract": guard_contract.model_dump(),
+                            "guard_decision": guard_decision.as_dict(),
+                        },
+                        self.workspace,
+                    )
+                    self.notes.add(
+                        Note(
+                            from_role="system",
+                            content="RUNTIME VERIFIER FAILED (RETRY): " + " | ".join(runtime_result.errors[:2]),
+                            step_index=len(self.transcript),
+                        )
+                    )
+                else:
+                    issue.status = CardStatus.BLOCKED
+                    issue.note = (
+                        "runtime_guard_terminal_failure: "
+                        + (guard_decision.terminal_reason.code if guard_decision.terminal_reason else "unknown")
+                    )
+                    await self.async_cards.save(issue.model_dump())
+                    log_event(
+                        "guard_terminal_failure",
+                        {
+                            "run_id": run_id,
+                            "issue_id": issue.id,
+                            "retry_count": issue.retry_count,
+                            "max_retries": issue.max_retries,
+                            "reason": "runtime_verification_failed",
+                            "guard_contract": guard_contract.model_dump(),
+                            "guard_decision": guard_decision.as_dict(),
+                        },
+                        self.workspace,
+                    )
+                    self.notes.add(
+                        Note(
+                            from_role="system",
+                            content="RUNTIME VERIFIER TERMINAL FAILURE: " + " | ".join(runtime_result.errors[:2]),
+                            step_index=len(self.transcript),
+                        )
+                    )
                 return
         
         # RUN EMPIRICAL VERIFICATION (FIT) for review turns
