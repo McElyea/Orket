@@ -2,6 +2,7 @@ import asyncio
 import json
 import uuid
 import re
+import os
 from types import SimpleNamespace
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -75,6 +76,38 @@ class Orchestrator:
         self.loop_policy_node = self.decision_nodes.resolve_orchestration_loop(self.org)
         self.context_window = self.loop_policy_node.context_window(self.org)
         self.model_client_node = self.decision_nodes.resolve_model_client(self.org)
+
+    def _resolve_architecture_mode(self) -> str:
+        raw = (os.environ.get("ORKET_ARCHITECTURE_MODE") or "").strip()
+        if not raw and self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            raw = str(self.org.process_rules.get("architecture_mode", "")).strip()
+        normalized = raw.lower().replace("-", "_").replace(" ", "_")
+        aliases = {
+            "force_monolith": "force_monolith",
+            "monolith": "force_monolith",
+            "force_microservices": "force_microservices",
+            "microservices": "force_microservices",
+            "architect_decides": "architect_decides",
+            "let_architect_decide": "architect_decides",
+        }
+        return aliases.get(normalized, "architect_decides")
+
+    def _resolve_frontend_framework_mode(self) -> str:
+        raw = (os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE") or "").strip()
+        if not raw and self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            raw = str(self.org.process_rules.get("frontend_framework_mode", "")).strip()
+        normalized = raw.lower().replace("-", "_").replace(" ", "_")
+        aliases = {
+            "force_vue": "force_vue",
+            "vue": "force_vue",
+            "force_react": "force_react",
+            "react": "force_react",
+            "force_angular": "force_angular",
+            "angular": "force_angular",
+            "architect_decides": "architect_decides",
+            "let_architect_decide": "architect_decides",
+        }
+        return aliases.get(normalized, "architect_decides")
 
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
@@ -694,6 +727,22 @@ class Orchestrator:
                 tool_args=tool_args,
             )
 
+        architecture_mode = self._resolve_architecture_mode()
+        frontend_framework_mode = self._resolve_frontend_framework_mode()
+        is_architect_seat = str(seat_name).strip().lower() == "architect"
+        forced_pattern = None
+        if architecture_mode == "force_monolith":
+            forced_pattern = "monolith"
+        elif architecture_mode == "force_microservices":
+            forced_pattern = "microservices"
+        forced_frontend_framework = None
+        if frontend_framework_mode == "force_vue":
+            forced_frontend_framework = "vue"
+        elif frontend_framework_mode == "force_react":
+            forced_frontend_framework = "react"
+        elif frontend_framework_mode == "force_angular":
+            forced_frontend_framework = "angular"
+
         return {
             "session_id": run_id,
             "issue_id": issue.id,
@@ -715,6 +764,14 @@ class Orchestrator:
             "required_read_paths": required_read_paths,
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
+            "architecture_mode": architecture_mode,
+            "frontend_framework_mode": frontend_framework_mode,
+            "architecture_decision_required": bool(is_architect_seat),
+            "architecture_decision_path": "agent_output/design.txt",
+            "architecture_allowed_patterns": ["monolith", "microservices"],
+            "architecture_forced_pattern": forced_pattern,
+            "frontend_framework_allowed": ["vue", "react", "angular"],
+            "frontend_framework_forced": forced_frontend_framework,
             "create_pending_gate_request": _pending_gate_request_writer,
             "resume_mode": bool(resume_mode),
             "history": self._history_context(),

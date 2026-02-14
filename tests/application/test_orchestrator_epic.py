@@ -504,6 +504,35 @@ def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrat
     ]
 
 
+def test_build_turn_context_includes_architecture_contract_for_architect(orchestrator):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(
+        process_rules={
+            "architecture_mode": "force_microservices",
+            "frontend_framework_mode": "force_angular",
+        }
+    )
+    issue = IssueConfig(id="ARC-1", seat="architect", summary="Design architecture")
+    context = orch._build_turn_context(
+        run_id="run-1",
+        issue=issue,
+        seat_name="architect",
+        roles_to_load=["architect"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+    assert context["architecture_mode"] == "force_microservices"
+    assert context["architecture_decision_required"] is True
+    assert context["architecture_decision_path"] == "agent_output/design.txt"
+    assert context["architecture_forced_pattern"] == "microservices"
+    assert context["frontend_framework_mode"] == "force_angular"
+    assert context["frontend_framework_forced"] == "angular"
+    assert "angular" in context["frontend_framework_allowed"]
+    assert "monolith" in context["architecture_allowed_patterns"]
+    assert "microservices" in context["architecture_allowed_patterns"]
+
+
 @pytest.mark.asyncio
 async def test_build_turn_context_pending_gate_callback_creates_tool_approval_request(orchestrator):
     orch, _cards, _loader = orchestrator

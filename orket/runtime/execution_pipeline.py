@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 from datetime import UTC, datetime
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -108,6 +109,35 @@ class ExecutionPipeline:
         )
         return await self.run_epic(parent_ename, target_issue_id=card_id, **kwargs)
 
+    def _resolve_idesign_mode(self) -> str:
+        """
+        Resolve iDesign policy mode from env override, then organization process rules.
+
+        Supported modes:
+        - force_idesign
+        - force_none
+        - architect_decides
+        """
+        raw = ""
+        env_raw = (os.environ.get("ORKET_IDESIGN_MODE") or "").strip()
+        if env_raw:
+            raw = env_raw
+        elif self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            raw = str(self.org.process_rules.get("idesign_mode", "")).strip()
+
+        normalized = raw.lower().replace("-", "_").replace(" ", "_")
+        aliases = {
+            "force_idesign": "force_idesign",
+            "force_i_design": "force_idesign",
+            "force_none": "force_none",
+            "force_nothing": "force_none",
+            "none": "force_none",
+            "architect_decides": "architect_decides",
+            "architect_decide": "architect_decides",
+            "let_architect_decide": "architect_decides",
+        }
+        return aliases.get(normalized, "architect_decides")
+
     async def run_epic(
         self,
         epic_name: str,
@@ -125,10 +155,25 @@ class ExecutionPipeline:
         if self.org and self.org.architecture:
             threshold = self.org.architecture.idesign_threshold
 
-        if len(epic.issues) > threshold and not epic.architecture_governance.idesign:
+        idesign_mode = self._resolve_idesign_mode()
+        issue_count = len(epic.issues)
+
+        if idesign_mode == "force_idesign" and not epic.architecture_governance.idesign:
             raise ComplexityViolation(
-                f"Complexity Gate Violation: Epic '{epic.name}' has {len(epic.issues)} issues "
-                f"which exceeds the threshold of {threshold}. iDesign structure is REQUIRED."
+                f"Complexity Gate Violation: iDesign policy is 'force_idesign' for epic '{epic.name}', "
+                "but epic architecture_governance.idesign is false."
+            )
+
+        if idesign_mode == "architect_decides" and issue_count > threshold and not epic.architecture_governance.idesign:
+            log_event(
+                "idesign_architect_decision_respected",
+                {
+                    "epic": epic.name,
+                    "issue_count": issue_count,
+                    "idesign_threshold": threshold,
+                    "idesign": False,
+                },
+                workspace=self.workspace,
             )
 
         run_id = self.execution_runtime_node.select_run_id(session_id)

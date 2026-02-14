@@ -22,7 +22,7 @@
     "architecture": {
         "idesign_threshold": 7,
         "preferred_stack": {
-            "frontend": "React",
+            "frontend": "Vue",
             "backend": "FastAPI",
             "database": "SQLite/SQLAlchemy"
         },
@@ -39,6 +39,7 @@
     },
     "departments": ["core", "engineering", "marketing", "product", "quality", "training", "uiux"],
     "process_rules": {
+        "frontend_framework_mode": "force_vue",
         "card_flow": ["Ready", "In Progress", "Blocked", "Cancelled", "Waiting_For_Developer", "Ready_For_Testing", "Code_Review", "Done"],
         "final_states": ["Done", "Canceled"]
     }

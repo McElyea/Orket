@@ -451,6 +451,84 @@ class TurnExecutor:
                         should_retry=False,
                     )
 
+            if not self._meets_architecture_decision_contract(turn, context):
+                retry_messages = copy.deepcopy(messages)
+                retry_messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "Corrective instruction: architecture decision contract not met. "
+                            "Write architecture decision JSON to the required path and include "
+                            "recommendation, confidence (0..1), and evidence fields."
+                        ),
+                    }
+                )
+                log_event(
+                    "turn_corrective_reprompt",
+                    {
+                        "issue_id": issue_id,
+                        "role": role_name,
+                        "session_id": session_id,
+                        "turn_index": turn_index,
+                        "turn_trace_id": turn_trace_id,
+                        "reason": "architecture_decision_contract_not_met",
+                        "architecture_mode": context.get("architecture_mode"),
+                    },
+                    self.workspace,
+                )
+                response = await model_client.complete(retry_messages)
+                response, middleware_outcome = self.middleware.apply_after_model(
+                    response,
+                    issue=issue,
+                    role=role,
+                    context=context,
+                )
+                if middleware_outcome and middleware_outcome.short_circuit:
+                    reason = middleware_outcome.reason or "short-circuit after_model"
+                    return TurnResult.failed(reason, should_retry=False)
+
+                turn = self._parse_response(
+                    response=response,
+                    issue_id=issue_id,
+                    role_name=role_name,
+                    context=context,
+                )
+                if not self._meets_progress_contract(turn, role, context):
+                    log_event(
+                        "turn_non_progress",
+                        {
+                            "issue_id": issue_id,
+                            "role": role_name,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "turn_trace_id": turn_trace_id,
+                            "reason": "progress_contract_not_met_after_architecture_contract_reprompt",
+                        },
+                        self.workspace,
+                    )
+                    return TurnResult.failed(
+                        "Deterministic failure: progress contract not met after architecture contract corrective reprompt.",
+                        should_retry=False,
+                    )
+                if not self._meets_architecture_decision_contract(turn, context):
+                    log_event(
+                        "turn_non_progress",
+                        {
+                            "issue_id": issue_id,
+                            "role": role_name,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "turn_trace_id": turn_trace_id,
+                            "reason": "architecture_decision_contract_not_met_after_reprompt",
+                            "architecture_mode": context.get("architecture_mode"),
+                        },
+                        self.workspace,
+                    )
+                    return TurnResult.failed(
+                        "Deterministic failure: architecture decision contract not met after corrective reprompt.",
+                        should_retry=False,
+                    )
+
             self._write_turn_artifact(
                 session_id,
                 issue_id,
@@ -660,6 +738,12 @@ class TurnExecutor:
             "dependency_context": context.get("dependency_context", {}),
             "required_action_tools": context.get("required_action_tools", []),
             "required_statuses": context.get("required_statuses", []),
+            "architecture_mode": context.get("architecture_mode"),
+            "frontend_framework_mode": context.get("frontend_framework_mode"),
+            "architecture_decision_required": bool(context.get("architecture_decision_required")),
+            "architecture_decision_path": context.get("architecture_decision_path"),
+            "architecture_forced_pattern": context.get("architecture_forced_pattern"),
+            "frontend_framework_forced": context.get("frontend_framework_forced"),
         }
         messages.append({
             "role": "user",
@@ -699,6 +783,40 @@ class TurnExecutor:
                 {
                     "role": "user",
                     "content": "Read Path Contract:\n" + "\n".join(read_lines),
+                }
+            )
+
+        if bool(context.get("architecture_decision_required")):
+            mode = str(context.get("architecture_mode", "architect_decides"))
+            decision_path = str(context.get("architecture_decision_path", "agent_output/design.txt"))
+            forced_pattern = str(context.get("architecture_forced_pattern", "") or "").strip().lower()
+            forced_frontend_framework = str(context.get("frontend_framework_forced", "") or "").strip().lower()
+            allowed_frontend_frameworks = [
+                str(v).strip().lower()
+                for v in (context.get("frontend_framework_allowed") or ["vue", "react", "angular"])
+                if str(v).strip()
+            ]
+            allowed_patterns = [
+                str(v).strip().lower()
+                for v in (context.get("architecture_allowed_patterns") or ["monolith", "microservices"])
+                if str(v).strip()
+            ]
+            lines = [
+                f"- Write architecture decision JSON to path: {decision_path}",
+                f"- recommendation must be one of: {', '.join(allowed_patterns)}",
+                "- confidence must be a number between 0 and 1",
+                "- evidence must include keys: estimated_domains, external_integrations, independent_scaling_needs, deployment_complexity, team_parallelism, operational_maturity",
+                f"- active architecture mode: {mode}",
+                f"- frontend_framework should be one of: {', '.join(allowed_frontend_frameworks)}",
+            ]
+            if forced_pattern:
+                lines.append(f"- recommendation MUST equal: {forced_pattern}")
+            if forced_frontend_framework:
+                lines.append(f"- frontend_framework MUST equal: {forced_frontend_framework}")
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Architecture Decision Contract:\n" + "\n".join(lines),
                 }
             )
 
@@ -1096,6 +1214,85 @@ class TurnExecutor:
             return False
         observed_set = {p for p in observed_paths if p}
         return set(required_paths).issubset(observed_set)
+
+    def _meets_architecture_decision_contract(self, turn: ExecutionTurn, context: Dict[str, Any]) -> bool:
+        if not bool(context.get("architecture_decision_required")):
+            return True
+
+        required_path = str(context.get("architecture_decision_path", "agent_output/design.txt")).strip()
+        if not required_path:
+            return False
+
+        allowed_patterns = {
+            str(v).strip().lower()
+            for v in (context.get("architecture_allowed_patterns") or ["monolith", "microservices"])
+            if str(v).strip()
+        }
+        if not allowed_patterns:
+            allowed_patterns = {"monolith", "microservices"}
+
+        forced_pattern = str(context.get("architecture_forced_pattern", "") or "").strip().lower()
+        forced_frontend_framework = str(context.get("frontend_framework_forced", "") or "").strip().lower()
+        allowed_frontend_frameworks = {
+            str(v).strip().lower()
+            for v in (context.get("frontend_framework_allowed") or ["vue", "react", "angular"])
+            if str(v).strip()
+        }
+        required_evidence_keys = {
+            "estimated_domains",
+            "external_integrations",
+            "independent_scaling_needs",
+            "deployment_complexity",
+            "team_parallelism",
+            "operational_maturity",
+        }
+
+        for call in turn.tool_calls:
+            if call.tool != "write_file":
+                continue
+            path = str(call.args.get("path", "")).strip()
+            if path != required_path:
+                continue
+
+            raw_content = call.args.get("content", "")
+            if not isinstance(raw_content, str):
+                return False
+            try:
+                payload = json.loads(raw_content)
+            except json.JSONDecodeError:
+                return False
+            if not isinstance(payload, dict):
+                return False
+
+            recommendation = str(payload.get("recommendation", "")).strip().lower()
+            if recommendation not in allowed_patterns:
+                return False
+            if forced_pattern and recommendation != forced_pattern:
+                return False
+
+            frontend_framework = str(payload.get("frontend_framework", "")).strip().lower()
+            if frontend_framework:
+                if frontend_framework not in allowed_frontend_frameworks:
+                    return False
+            if forced_frontend_framework and frontend_framework != forced_frontend_framework:
+                return False
+
+            confidence = payload.get("confidence")
+            try:
+                confidence_value = float(confidence)
+            except (TypeError, ValueError):
+                return False
+            if confidence_value < 0.0 or confidence_value > 1.0:
+                return False
+
+            evidence = payload.get("evidence")
+            if not isinstance(evidence, dict):
+                return False
+            if not required_evidence_keys.issubset(set(evidence.keys())):
+                return False
+            return True
+
+        return False
 
     def _extract_guard_review_payload(self, content: str) -> Dict[str, Any]:
         blob = content or ""

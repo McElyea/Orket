@@ -107,6 +107,85 @@ Default durable DB paths:
 1. `.orket/durable/db/orket_persistence.db`
 2. `.orket/durable/db/webhook.db`
 
+## Architecture Policy Knobs
+### Architecture Mode
+Controls whether project architecture shape is forced or decided by the architect.
+
+Valid values:
+1. `force_monolith`
+2. `force_microservices`
+3. `architect_decides` (default)
+
+Configuration order (highest wins):
+1. Environment variable `ORKET_ARCHITECTURE_MODE`
+2. `process_rules.architecture_mode` in organization config
+3. Default fallback: `architect_decides`
+
+Examples:
+```bash
+# Force monolith recommendation
+set ORKET_ARCHITECTURE_MODE=force_monolith
+python -m orket.interfaces.cli --epic sanity_test
+```
+
+```bash
+# Force microservices recommendation
+set ORKET_ARCHITECTURE_MODE=force_microservices
+python -m orket.interfaces.cli --epic sanity_test
+```
+
+### Frontend Framework Mode
+Controls frontend framework recommendation policy for architect decisions.
+
+Valid values:
+1. `force_vue`
+2. `force_react`
+3. `force_angular`
+4. `architect_decides` (default)
+
+Configuration order (highest wins):
+1. Environment variable `ORKET_FRONTEND_FRAMEWORK_MODE`
+2. `process_rules.frontend_framework_mode` in organization config
+3. Default fallback: `architect_decides`
+
+Examples:
+```bash
+set ORKET_FRONTEND_FRAMEWORK_MODE=force_angular
+python -m orket.interfaces.cli --epic sanity_test
+```
+
+### iDesign Mode
+Controls whether iDesign is required, disabled, or delegated to the architect.
+
+Valid values:
+1. `force_idesign`
+2. `force_none`
+3. `architect_decides` (default)
+
+Configuration order (highest wins):
+1. Environment variable `ORKET_IDESIGN_MODE`
+2. `process_rules.idesign_mode` in organization config
+3. Default fallback: `architect_decides`
+
+Examples:
+```bash
+# Force iDesign for all epics
+set ORKET_IDESIGN_MODE=force_idesign
+python -m orket.interfaces.cli --epic sanity_test
+```
+
+```bash
+# Force non-iDesign mode for all epics
+set ORKET_IDESIGN_MODE=force_none
+python -m orket.interfaces.cli --epic sanity_test
+```
+
+```bash
+# Let architect governance setting decide (repo default)
+set ORKET_IDESIGN_MODE=architect_decides
+python -m orket.interfaces.cli --epic sanity_test
+```
+
 ## Release Gate
 Local smoke:
 ```bash

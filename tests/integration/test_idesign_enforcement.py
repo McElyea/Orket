@@ -22,7 +22,7 @@ class MockiDesignProvider(LocalModelProvider):
         return ModelResponse(content=content, raw={"model": "dummy", "total_tokens": 10})
 
 @pytest.mark.asyncio
-async def test_complexity_gate_violation(tmp_path):
+async def test_force_idesign_policy_violation(tmp_path):
     root = tmp_path
     (root / "config").mkdir()
     (root / "model" / "core" / "epics").mkdir(parents=True)
@@ -31,7 +31,9 @@ async def test_complexity_gate_violation(tmp_path):
     
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
-        "architecture": {"idesign_threshold": 2}, "departments": ["core"]
+        "architecture": {"idesign_threshold": 2},
+        "process_rules": {"idesign_mode": "force_idesign"},
+        "departments": ["core"]
     }))
     
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
@@ -52,6 +54,70 @@ async def test_complexity_gate_violation(tmp_path):
     with pytest.raises(ExecutionFailed) as exc:
         await engine.run_card("messy_epic")
     assert "Complexity Gate Violation" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_force_none_policy_allows_non_idesign_above_threshold(tmp_path):
+    root = tmp_path
+    (root / "config").mkdir()
+    (root / "model" / "core" / "epics").mkdir(parents=True)
+    (root / "model" / "core" / "teams").mkdir(parents=True)
+    (root / "model" / "core" / "environments").mkdir(parents=True)
+
+    (root / "config" / "organization.json").write_text(json.dumps({
+        "name": "Vibe Rail", "vision": "V", "ethos": "E",
+        "architecture": {"idesign_threshold": 2},
+        "process_rules": {"idesign_mode": "force_none"},
+        "departments": ["core"]
+    }))
+
+    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
+        "name": "standard", "seats": {}
+    }))
+    (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({
+        "name": "standard", "model": "dummy", "temperature": 0.1
+    }))
+    (root / "model" / "core" / "epics" / "messy_epic.json").write_text(json.dumps({
+        "id": "EPIC-M", "name": "Messy", "type": "epic", "team": "standard", "environment": "standard",
+        "architecture_governance": {"idesign": False},
+        "issues": [{"id": "1", "seat": "S", "summary": "S"}, {"id": "2", "seat": "S", "summary": "S"}, {"id": "3", "seat": "S", "summary": "S"}]
+    }))
+
+    engine = OrchestrationEngine(root / "ws", config_root=root)
+    # Should not fail on complexity gate when policy is force_none.
+    await engine.run_card("messy_epic")
+
+
+@pytest.mark.asyncio
+async def test_architect_decides_policy_allows_non_idesign_above_threshold(tmp_path):
+    root = tmp_path
+    (root / "config").mkdir()
+    (root / "model" / "core" / "epics").mkdir(parents=True)
+    (root / "model" / "core" / "teams").mkdir(parents=True)
+    (root / "model" / "core" / "environments").mkdir(parents=True)
+
+    (root / "config" / "organization.json").write_text(json.dumps({
+        "name": "Vibe Rail", "vision": "V", "ethos": "E",
+        "architecture": {"idesign_threshold": 2},
+        "process_rules": {"idesign_mode": "architect_decides"},
+        "departments": ["core"]
+    }))
+
+    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
+        "name": "standard", "seats": {}
+    }))
+    (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({
+        "name": "standard", "model": "dummy", "temperature": 0.1
+    }))
+    (root / "model" / "core" / "epics" / "messy_epic.json").write_text(json.dumps({
+        "id": "EPIC-M", "name": "Messy", "type": "epic", "team": "standard", "environment": "standard",
+        "architecture_governance": {"idesign": False},
+        "issues": [{"id": "1", "seat": "S", "summary": "S"}, {"id": "2", "seat": "S", "summary": "S"}, {"id": "3", "seat": "S", "summary": "S"}]
+    }))
+
+    engine = OrchestrationEngine(root / "ws", config_root=root)
+    # Architect decision should be respected; no complexity gate exception.
+    await engine.run_card("messy_epic")
 
 @pytest.mark.asyncio
 async def test_idesign_structural_violation(tmp_path, monkeypatch):

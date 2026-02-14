@@ -3,7 +3,7 @@
     "architecture": {
         "idesign_threshold": 7,
         "preferred_stack": {
-            "frontend": "React",
+            "frontend": "Vue",
             "backend": "FastAPI",
             "database": "SQLite/SQLAlchemy"
         },
@@ -22,6 +22,9 @@
         "uiux"
     ],
     "process_rules": {
+        "architecture_mode": "architect_decides",
+        "frontend_framework_mode": "force_vue",
+        "idesign_mode": "architect_decides",
         "card_flow": [
             "Ready",
             "In Progress",

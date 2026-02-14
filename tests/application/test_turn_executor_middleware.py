@@ -521,3 +521,120 @@ async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path
     assert model.calls == 2
     assert len(toolbox.calls) == 2
     assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "plain text design"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"microservices\\", \\"confidence\\": 0.82, \\"evidence\\": {\\"estimated_domains\\": 4, \\"external_integrations\\": 3, \\"independent_scaling_needs\\": \\"high\\", \\"deployment_complexity\\": \\"high\\", \\"team_parallelism\\": \\"multi-team\\", \\"operational_maturity\\": \\"med\\"}}"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="ARC",
+        summary="architect",
+        description="Design architecture",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "architect"
+    context["roles"] = ["architect"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["architecture_decision_required"] = True
+    context["architecture_mode"] = "architect_decides"
+    context["architecture_decision_path"] = "agent_output/design.txt"
+    context["architecture_allowed_patterns"] = ["monolith", "microservices"]
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 2
+    assert len(toolbox.calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_architecture_contract_enforces_forced_pattern(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 1, \\"independent_scaling_needs\\": \\"low\\", \\"deployment_complexity\\": \\"low\\", \\"team_parallelism\\": \\"single\\", \\"operational_maturity\\": \\"low\\"}}"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 1, \\"independent_scaling_needs\\": \\"low\\", \\"deployment_complexity\\": \\"low\\", \\"team_parallelism\\": \\"single\\", \\"operational_maturity\\": \\"low\\"}}"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="ARC",
+        summary="architect",
+        description="Design architecture",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "architect"
+    context["roles"] = ["architect"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["architecture_decision_required"] = True
+    context["architecture_mode"] = "force_microservices"
+    context["architecture_decision_path"] = "agent_output/design.txt"
+    context["architecture_allowed_patterns"] = ["monolith", "microservices"]
+    context["architecture_forced_pattern"] = "microservices"
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert "architecture decision contract not met" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_architecture_contract_enforces_forced_frontend_framework(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"microservices\\", \\"frontend_framework\\": \\"react\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 4, \\"external_integrations\\": 3, \\"independent_scaling_needs\\": \\"high\\", \\"deployment_complexity\\": \\"high\\", \\"team_parallelism\\": \\"multi-team\\", \\"operational_maturity\\": \\"med\\"}}"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"microservices\\", \\"frontend_framework\\": \\"react\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 4, \\"external_integrations\\": 3, \\"independent_scaling_needs\\": \\"high\\", \\"deployment_complexity\\": \\"high\\", \\"team_parallelism\\": \\"multi-team\\", \\"operational_maturity\\": \\"med\\"}}"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="ARC",
+        summary="architect",
+        description="Design architecture",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "architect"
+    context["roles"] = ["architect"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["architecture_decision_required"] = True
+    context["architecture_mode"] = "architect_decides"
+    context["architecture_decision_path"] = "agent_output/design.txt"
+    context["architecture_allowed_patterns"] = ["monolith", "microservices"]
+    context["frontend_framework_allowed"] = ["vue", "react", "angular"]
+    context["frontend_framework_forced"] = "angular"
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert "architecture decision contract not met" in (result.error or "")
