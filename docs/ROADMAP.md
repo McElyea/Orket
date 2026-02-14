@@ -28,92 +28,20 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 ## P0: Prompt Engine Program (Highest Priority)
 Objective: make prompts first-class, versioned, inspectable assets with deterministic runtime resolution.
 
-### Phase 1 (Completed): Prompt Resolver Foundation
-Goal: introduce deterministic prompt composition without rewriting orchestration.
+### Completed Milestones
+1. `P0-F1`: Prompt resolver foundation is landed and test-covered.
+2. `P0-F2`: Prompt versioning/governance metadata and selection policy are landed.
+3. `P0-F3`: Runtime policy attribution is landed in artifacts and live-loop reporting.
+4. `P0-R1`: Prompt tooling + CI validation workflow is landed (`orket-prompts` commands + CI validator gate).
 
-Scope:
-1. Add prompt metadata contract for role and dialect assets, compatible with existing `RoleConfig` and `DialectConfig`.
-2. Add a `PromptResolver` service that composes:
-   role prompt + dialect constraints + stage/seat contracts + context profile + guard overlays.
-3. Keep existing `PromptCompiler` behavior as fallback while resolver is introduced behind feature policy.
-4. Emit prompt provenance in turn telemetry/artifacts: `prompt_id`, `prompt_version`, `prompt_checksum`, `resolver_policy`.
-5. Add schema and reference validation for prompt assets in CI.
-
-Completed Slices:
-1. `P0-F1-S1`: Prompt metadata schema fields and validation checks for role/dialect assets.
-2. `P0-F1-S2`: Deterministic resolver API and precedence rules.
-3. `P0-F1-S3`: Resolver integration path with compiler fallback policy.
-4. `P0-F1-S4`: Prompt provenance and prompt-layer observability in turn artifacts/checkpoints.
-5. `P0-F1-S5`: Regression coverage across orchestrator, turn executor, acceptance, and asset integrity tests.
-
-Exit Criteria:
-1. Resolver can deterministically reproduce current canonical prompt behavior for baseline roles.
-2. Prompt provenance is present for every turn in observability artifacts.
-3. Canonical acceptance remains green with resolver enabled.
-4. Validation fails on malformed prompt metadata or broken references.
-
-Verification:
-1. `python -m pytest tests/application/test_turn_executor_middleware.py -q`
-2. `python -m pytest tests/application/test_orchestrator_epic.py -q`
-3. `python -m pytest tests/live/test_system_acceptance_pipeline.py -q`
-4. `python -m pytest tests/platform/test_model_asset_integrity.py -q`
-
-### Phase 2 (Completed): Prompt Versioning and Governance Lifecycle
-Goal: make prompt change control explicit and auditable.
-
-Scope:
-1. Add status lifecycle: `draft`, `candidate`, `canary`, `stable`, `deprecated`.
-2. Add semantic version policy with lineage and changelog metadata.
-3. Add selection policy support: `stable`, `canary`, `exact`.
-4. Add governance checks so production selection resolves only approved versions.
-
-Concrete Slices:
-1. `P0-F2-S1` (completed): add resolver selection policy evaluation (`stable/canary/exact`) with strict enforcement hooks and tests.
-2. `P0-F2-S2` (completed): enforce production default selection policy (`stable`, strict) through orchestrator/runtime process rules.
-3. `P0-F2-S3` (completed): add metadata lineage/changelog fields and validator checks for version progression.
-4. `P0-F2-S4` (completed): add rollback test proving one metadata change can restore prior stable prompt version.
-
-Exit Criteria:
-1. Prompt selection policy is deterministic and test-covered.
-2. Production path resolves approved/stable prompts by default.
-3. Rollback to prior stable prompt is one metadata change.
-
-### Phase 3 (Completed): Runtime Policy Integration
-Goal: move volatile prompt behavior into explicit policy assets.
-
-Scope:
-1. Add context profiles and guard overlays as explicit resolver inputs.
-2. Bind seat/stage contracts to resolver policies (instead of ad-hoc prompt edits).
-3. Integrate resolver policy decisions into run artifacts and live-loop analysis.
-
-Concrete Slices:
-1. `P0-F3-S1` (completed): pass seat/stage contract overlays (`required_action_tools`, `required_statuses`, `required_read_paths`, `required_write_paths`, `stage_gate_mode`) into resolver context.
-2. `P0-F3-S2` (completed): emit resolver selection policy details in run-level reporting and live-loop summaries.
-3. `P0-F3-S3` (completed): add acceptance assertions proving seat/stage policy deltas are attributable to resolver policy metadata.
-
-Exit Criteria:
-1. Prompt behavior shifts are attributable to policy version changes.
-2. Guard/stage behavior changes no longer require direct orchestration rewrites.
-
-### Phase 4: Prompt Tooling (CLI + CI Workflow)
-Goal: make prompt operations contributor-friendly and auditable.
-
-Scope:
-1. Add `orket-prompts` CLI commands: `list`, `show`, `diff`, `validate`, `resolve`, `new`, `promote`, `deprecate`.
-2. Add CI checks for schema validity, reference validity, and placeholder consistency.
-3. Add canary workflow for prompt rollout by model/team/epic.
-
-Exit Criteria:
-1. Prompt review and promotion are executable through CLI + git workflow.
-2. CI blocks invalid prompt definitions before merge.
-
-### Phase 5: Prompt Optimization Loop (Offline)
+### Active Remaining Work
+#### `P0-R2`: Prompt Optimization Loop (Offline)
 Goal: add controlled optimization, not in-run self-rewrite.
 
-Scope:
-1. Add offline `optimize` workflow that writes candidate prompt versions.
-2. Compare candidate vs stable on canonical acceptance metrics and failure-pattern reports.
-3. Require explicit promotion after evidence passes thresholds.
+Remaining Slices:
+1. `P0-R2-S1`: add offline `optimize` workflow that writes candidate prompt versions only.
+2. `P0-R2-S2`: compare candidate vs stable against canonical acceptance and pattern reports.
+3. `P0-R2-S3`: enforce promotion gates from explicit evidence thresholds.
 
 Exit Criteria:
 1. Optimization can propose prompt upgrades without touching runtime orchestration code.
@@ -122,11 +50,11 @@ Exit Criteria:
 ## P1: Stage Policy and Stabilizer Follow-Through
 Objective: complete and harden `P-1` stabilizers as deterministic policy contracts.
 
-Remaining Work:
-1. Expand dependency manager from baseline manifest generation to policy-driven pinned/dev dependency policy.
-2. Expand runtime verifier command policy by stack profile with clear defaults and failure classification.
-3. Integrate deployment planner expectations directly into runtime verification policy for all relevant stacks.
-4. Add stricter ownership enforcement paths for dependency/deployment artifacts where policy is enabled.
+Remaining Slices:
+1. `P1-S1`: expand dependency manager to policy-driven pinned/dev dependency sets.
+2. `P1-S2`: expand runtime verifier command policy by stack profile and failure class.
+3. `P1-S3`: integrate deployment planner expectations into verifier policy for all stacks.
+4. `P1-S4`: enforce ownership boundaries for dependency/deployment artifacts when policy-enabled.
 
 Exit Criteria:
 1. Stabilizer stages are fully policy-driven and test-covered.
@@ -141,10 +69,10 @@ Verification:
 ## P2: Canonical Assets and Acceptance Gate
 Objective: keep success proof tied to repo-native assets and canonical contracts.
 
-Active Work:
-1. Continue role/team asset normalization where inconsistencies remain.
-2. Strengthen canonical acceptance assertions for artifacts and stage outcomes.
-3. Keep fixture acceptance tests secondary to canonical-asset acceptance behavior.
+Remaining Slices:
+1. `P2-S1`: finish remaining role/team asset normalization and consistency checks.
+2. `P2-S2`: strengthen canonical acceptance assertions for artifact and stage outcomes.
+3. `P2-S3`: keep fixture acceptance tests secondary to canonical-asset behavior.
 
 Exit Criteria:
 1. Canonical acceptance fails on chain breakage or asset inconsistency.
@@ -158,9 +86,9 @@ Verification:
 ## P3: Architecture Boundaries and Maintenance
 Objective: hold core architectural boundaries while stabilization work continues.
 
-Active Work:
-1. Keep dependency direction and volatility boundary checks green.
-2. Add only focused guards when new coupling bypasses appear.
+Remaining Slices:
+1. `P3-S1`: keep dependency direction and volatility boundary checks green.
+2. `P3-S2`: add focused guards only when new coupling bypasses appear.
 
 Verification:
 1. `python scripts/check_dependency_direction.py`

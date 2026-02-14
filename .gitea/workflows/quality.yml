@@ -34,6 +34,10 @@ jobs:
         run: |
           python scripts/check_roadmap_metrics.py --quick
 
+      - name: Validate prompt assets
+        run: |
+          python -m orket.interfaces.prompts_cli --root . validate --json
+
       - name: Enforce line-ending normalization
         run: |
           git add --renormalize .
@@ -83,6 +87,10 @@ jobs:
       - name: Enforce roadmap pytest metrics
         run: |
           python scripts/check_roadmap_metrics.py
+
+      - name: Validate prompt assets
+        run: |
+          python -m orket.interfaces.prompts_cli --root . validate --json
 
       - name: Enforce line-ending normalization
         run: |
