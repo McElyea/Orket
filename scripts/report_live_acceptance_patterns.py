@@ -160,12 +160,73 @@ def _issue_end_states(runs: List[Dict[str, Any]]) -> Dict[str, int]:
     return counts
 
 
+def _model_compliance_summary(runs: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    summary: Dict[str, Dict[str, Any]] = {}
+    for run in runs:
+        model = str(run.get("model") or "unknown")
+        metrics = run.get("metrics", {}) if isinstance(run.get("metrics"), dict) else {}
+        item = summary.setdefault(
+            model,
+            {
+                "runs": 0,
+                "hallucination_violation_runs": 0,
+                "security_violation_runs": 0,
+                "consistency_violation_runs": 0,
+                "retries_total": 0,
+                "terminal_failure_runs": 0,
+                "guard_pass_runs": 0,
+            },
+        )
+        item["runs"] += 1
+        if int(metrics.get("turn_non_progress_hallucination_scope", 0) or 0) > 0:
+            item["hallucination_violation_runs"] += 1
+        if int(metrics.get("turn_non_progress_security_scope", 0) or 0) > 0:
+            item["security_violation_runs"] += 1
+        if int(metrics.get("turn_non_progress_consistency_scope", 0) or 0) > 0:
+            item["consistency_violation_runs"] += 1
+        item["retries_total"] += int(metrics.get("guard_retry_scheduled", 0) or 0)
+        if str(run.get("session_status") or "") == "terminal_failure" or int(
+            metrics.get("guard_terminal_failure", 0) or 0
+        ) > 0:
+            item["terminal_failure_runs"] += 1
+        if bool(run.get("passed")) and run.get("chain_complete") is True:
+            item["guard_pass_runs"] += 1
+
+    for model, item in summary.items():
+        n = max(1, int(item["runs"]))
+        hallucination_rate = item["hallucination_violation_runs"] / n
+        security_rate = item["security_violation_runs"] / n
+        consistency_rate = item["consistency_violation_runs"] / n
+        avg_retries = item["retries_total"] / n
+        terminal_failure_rate = item["terminal_failure_runs"] / n
+        guard_pass_rate = item["guard_pass_runs"] / n
+
+        max_retries_cap = 2.0
+        score = 100.0
+        score -= 0.3 * hallucination_rate * 100.0
+        score -= 0.3 * security_rate * 100.0
+        score -= 0.1 * consistency_rate * 100.0
+        score -= 0.1 * min(1.0, avg_retries / max_retries_cap) * 100.0
+        score -= 0.2 * terminal_failure_rate * 100.0
+        score = max(0.0, round(score, 2))
+
+        item["hallucination_rate"] = hallucination_rate
+        item["security_violation_rate"] = security_rate
+        item["consistency_violation_rate"] = consistency_rate
+        item["avg_retries"] = avg_retries
+        item["terminal_failure_rate"] = terminal_failure_rate
+        item["guard_pass_rate"] = guard_pass_rate
+        item["compliance_score"] = score
+    return summary
+
+
 def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "batch_id": batch_id,
         "run_count": len(runs),
         "session_status_counts": _status_counts(runs),
         "completion_by_model": _completion_by_model(runs),
+        "model_compliance": _model_compliance_summary(runs),
         "pattern_counters": {
             "turn_corrective_reprompt": _sum_metric(runs, "turn_corrective_reprompt"),
             "turn_non_progress": _sum_metric(runs, "turn_non_progress"),
