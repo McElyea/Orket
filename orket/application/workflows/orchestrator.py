@@ -1207,6 +1207,7 @@ class Orchestrator:
                 "strict_grounding": True,
                 "forbidden_phrases": [],
                 "enforce_path_hardening": True,
+                "consistency_tool_calls_only": True,
             },
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,

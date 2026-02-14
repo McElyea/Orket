@@ -822,6 +822,84 @@ async def test_turn_executor_security_scope_recovers_after_reprompt(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_turn_executor_consistency_scope_rejects_extra_prose(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            'Here is the result.\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            'Here is the result.\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "provided_context": [],
+        "declared_interfaces": ["update_issue_status"],
+        "consistency_tool_calls_only": True,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "consistency scope contract not met after corrective reprompt" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_consistency_scope_recovers_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            'Done.\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "provided_context": [],
+        "declared_interfaces": ["update_issue_status"],
+        "consistency_tool_calls_only": True,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 2
+    assert len(toolbox.calls) == 1
+    assert toolbox.calls[0][1]["status"] == "code_review"
+
+
+@pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
         StateMachine(),

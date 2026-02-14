@@ -984,6 +984,15 @@ class TurnExecutor:
                     "violations": security_scope_diag.get("violations", []),
                 }
             )
+        consistency_scope_diag = self._consistency_scope_diagnostics(turn, context)
+        if consistency_scope_diag.get("violations"):
+            violations.append(
+                {
+                    "reason": "consistency_scope_contract_not_met",
+                    "scope": consistency_scope_diag.get("scope", {}),
+                    "violations": consistency_scope_diag.get("violations", []),
+                }
+            )
 
         return violations
 
@@ -1065,6 +1074,13 @@ class TurnExecutor:
             lines.append(
                 "- Do not use absolute paths or '..' segments in tool arguments."
             )
+        if "consistency_scope_contract_not_met" in reason_set:
+            lines.append(
+                "- Consistency guard failed: output tool-call JSON only with no extra prose."
+            )
+            lines.append(
+                "- Keep response format deterministic and schema-compliant."
+            )
 
         required_read_paths = self._required_read_paths(context)
         required_write_paths = self._required_write_paths(context)
@@ -1109,6 +1125,7 @@ class TurnExecutor:
             "architecture_decision_contract_not_met": "Deterministic failure: architecture decision contract not met after corrective reprompt.",
             "hallucination_scope_contract_not_met": "Deterministic failure: hallucination scope contract not met after corrective reprompt.",
             "security_scope_contract_not_met": "Deterministic failure: security scope contract not met after corrective reprompt.",
+            "consistency_scope_contract_not_met": "Deterministic failure: consistency scope contract not met after corrective reprompt.",
         }
         return mapping.get(
             reason_key,
@@ -1495,6 +1512,55 @@ class TurnExecutor:
             "scope": {"enforce_path_hardening": enforce_path_hardening},
             "violations": violations,
         }
+
+    def _consistency_scope_diagnostics(self, turn: ExecutionTurn, context: Dict[str, Any]) -> Dict[str, Any]:
+        scope = context.get("verification_scope")
+        if not isinstance(scope, dict):
+            return {"scope": {}, "violations": []}
+
+        tool_calls_only = bool(scope.get("consistency_tool_calls_only", False))
+        if not tool_calls_only:
+            return {"scope": {"consistency_tool_calls_only": False}, "violations": []}
+
+        residue = self._non_json_residue(str(turn.content or ""))
+        if residue:
+            return {
+                "scope": {"consistency_tool_calls_only": True},
+                "violations": [
+                    {
+                        "rule_id": "CONSISTENCY.OUTPUT_FORMAT",
+                        "message": "Output contains non-JSON prose while tool-calls-only format is required.",
+                        "evidence": residue[:120],
+                    }
+                ],
+            }
+        return {"scope": {"consistency_tool_calls_only": True}, "violations": []}
+
+    def _non_json_residue(self, content: str) -> str:
+        blob = content or ""
+        if not blob.strip():
+            return ""
+        decoder = json.JSONDecoder()
+        kept: List[str] = []
+        idx = 0
+        n = len(blob)
+        while idx < n:
+            ch = blob[idx]
+            if ch.isspace():
+                idx += 1
+                continue
+            if ch == "{":
+                try:
+                    _, end_pos = decoder.raw_decode(blob[idx:])
+                    idx += max(end_pos, 1)
+                    continue
+                except json.JSONDecodeError:
+                    kept.append(ch)
+                    idx += 1
+                    continue
+            kept.append(ch)
+            idx += 1
+        return "".join(kept).strip()
 
     def _extract_guard_review_payload(self, content: str) -> Dict[str, Any]:
         blob = content or ""
