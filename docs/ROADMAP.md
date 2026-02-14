@@ -60,12 +60,12 @@ Objective: land a minimal, enforceable guard core that prevents retry spirals an
 1. `P0-R4-S1` (completed 2026-02-14): add canonical hallucination guard prompt injection layer.
 2. `P0-R4-S2` (completed 2026-02-14): add explicit verification scope per run:
    - `workspace`, `provided_context`, `declared_interfaces`.
-3. `P0-R4-S3`: implement checks for:
-   - out-of-scope file references (completed 2026-02-14).
-   - undeclared API/interface references (completed 2026-02-14).
-   - missing context references (completed 2026-02-14).
+3. `P0-R4-S3` (completed 2026-02-14): implement checks for:
+   - out-of-scope file references.
+   - undeclared API/interface references.
+   - missing context references.
    - invented details and contradictions.
-4. `P0-R4-S4`: ship initial violation taxonomy with evidence fields:
+4. `P0-R4-S4` (completed 2026-02-14): ship initial violation taxonomy with evidence fields:
    - `HALLUCINATION.FILE_NOT_FOUND`
    - `HALLUCINATION.API_NOT_DECLARED`
    - `HALLUCINATION.CONTEXT_NOT_PROVIDED`

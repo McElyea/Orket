@@ -22,6 +22,7 @@ import time
 import hashlib
 import copy
 import asyncio
+import re
 
 from orket.schema import IssueConfig, CardStatus, RoleConfig
 from orket.core.domain.state_machine import StateMachine, StateMachineError
@@ -1367,6 +1368,12 @@ class TurnExecutor:
             for item in (scope.get("declared_interfaces") or [])
             if str(item).strip()
         }
+        strict_grounding = bool(scope.get("strict_grounding", False))
+        forbidden_phrases = [
+            str(item).strip()
+            for item in (scope.get("forbidden_phrases") or [])
+            if str(item).strip()
+        ]
 
         violations: List[Dict[str, Any]] = []
         for call in (turn.tool_calls or []):
@@ -1402,11 +1409,40 @@ class TurnExecutor:
                         }
                     )
 
+        content_blob = str(turn.content or "")
+        if strict_grounding and re.search(r"\b(assume|assumed|probably|maybe)\b", content_blob, flags=re.IGNORECASE):
+            marker_match = re.search(
+                r"\b(assume|assumed|probably|maybe)\b",
+                content_blob,
+                flags=re.IGNORECASE,
+            )
+            marker = marker_match.group(0) if marker_match else "assume"
+            violations.append(
+                {
+                    "rule_id": "HALLUCINATION.INVENTED_DETAIL",
+                    "message": "Output includes speculative language under strict grounding scope.",
+                    "evidence": marker,
+                }
+            )
+
+        lowered_content = content_blob.lower()
+        for phrase in forbidden_phrases:
+            if phrase.lower() in lowered_content:
+                violations.append(
+                    {
+                        "rule_id": "HALLUCINATION.CONTRADICTION",
+                        "message": "Output contradicts a forbidden phrase constraint in verification scope.",
+                        "evidence": phrase,
+                    }
+                )
+
         return {
             "scope": {
                 "workspace": sorted(workspace_scope),
                 "provided_context": sorted(provided_context_scope),
                 "declared_interfaces": sorted(declared_interfaces_scope),
+                "strict_grounding": strict_grounding,
+                "forbidden_phrases": forbidden_phrases,
             },
             "violations": violations,
         }

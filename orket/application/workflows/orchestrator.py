@@ -1204,6 +1204,8 @@ class Orchestrator:
                         if str(name).strip()
                     }
                 ),
+                "strict_grounding": True,
+                "forbidden_phrases": [],
             },
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,

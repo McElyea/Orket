@@ -662,6 +662,84 @@ async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(t
 
 
 @pytest.mark.asyncio
+async def test_turn_executor_hallucination_invented_detail_fails_under_strict_grounding(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}\nI assume this should work.',
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}\nI assume this should work.',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "provided_context": [],
+        "declared_interfaces": ["update_issue_status"],
+        "strict_grounding": True,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_hallucination_contradiction_detects_forbidden_phrase(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}\nNo tests were run.',
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}\nNo tests were run.',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "provided_context": [],
+        "declared_interfaces": ["update_issue_status"],
+        "forbidden_phrases": ["no tests were run"],
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
+
+
+@pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
