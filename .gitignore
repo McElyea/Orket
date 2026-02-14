@@ -79,6 +79,7 @@ backups/
 
 # Diagnostics / benchmark artifacts
 .orket/
+.smoke/
 .pytest_cache/
 .pytest_live_loop/
 .pytest_live_tmp/
