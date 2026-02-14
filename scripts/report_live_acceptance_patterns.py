@@ -52,9 +52,13 @@ def _latest_batch_id(conn: sqlite3.Connection) -> Optional[str]:
 
 def _load_runs(conn: sqlite3.Connection, batch_id: str) -> List[Dict[str, Any]]:
     cur = conn.cursor()
+    cur.execute("PRAGMA table_info(live_acceptance_runs)")
+    columns = {row[1] for row in cur.fetchall()}
+    has_chain_complete = "chain_complete" in columns
+    select_chain = ", chain_complete" if has_chain_complete else ""
     cur.execute(
-        """
-        SELECT model, iteration, passed, session_status, metrics_json, db_summary_json
+        f"""
+        SELECT model, iteration, passed, session_status, metrics_json, db_summary_json{select_chain}
         FROM live_acceptance_runs
         WHERE batch_id = ?
         ORDER BY id
@@ -62,7 +66,9 @@ def _load_runs(conn: sqlite3.Connection, batch_id: str) -> List[Dict[str, Any]]:
         (batch_id,),
     )
     runs: List[Dict[str, Any]] = []
-    for model, iteration, passed, session_status, metrics_raw, db_summary_raw in cur.fetchall():
+    for row in cur.fetchall():
+        model, iteration, passed, session_status, metrics_raw, db_summary_raw = row[:6]
+        chain_complete = bool(row[6]) if has_chain_complete and len(row) > 6 else None
         try:
             metrics = json.loads(metrics_raw or "{}")
         except json.JSONDecodeError:
@@ -79,6 +85,7 @@ def _load_runs(conn: sqlite3.Connection, batch_id: str) -> List[Dict[str, Any]]:
                 "session_status": session_status or "",
                 "metrics": metrics if isinstance(metrics, dict) else {},
                 "db_summary": db_summary if isinstance(db_summary, dict) else {},
+                "chain_complete": chain_complete,
             }
         )
     return runs
@@ -105,7 +112,17 @@ def _completion_by_model(runs: List[Dict[str, Any]]) -> Dict[str, Dict[str, int]
     summary: Dict[str, Dict[str, int]] = {}
     for run in runs:
         model = run["model"]
-        stats = summary.setdefault(model, {"runs": 0, "passed": 0, "failed": 0, "skipped": 0})
+        stats = summary.setdefault(
+            model,
+            {
+                "runs": 0,
+                "passed": 0,
+                "failed": 0,
+                "skipped": 0,
+                "chain_complete": 0,
+                "chain_incomplete": 0,
+            },
+        )
         stats["runs"] += 1
         status = run.get("session_status", "")
         if str(status).startswith("skipped_"):
@@ -114,7 +131,20 @@ def _completion_by_model(runs: List[Dict[str, Any]]) -> Dict[str, Dict[str, int]
             stats["passed"] += 1
         else:
             stats["failed"] += 1
+        chain_complete = run.get("chain_complete")
+        if chain_complete is True:
+            stats["chain_complete"] += 1
+        elif chain_complete is False:
+            stats["chain_incomplete"] += 1
     return summary
+
+
+def _chain_mismatch_count(runs: List[Dict[str, Any]]) -> int:
+    mismatches = 0
+    for run in runs:
+        if run.get("session_status") == "done" and run.get("chain_complete") is False:
+            mismatches += 1
+    return mismatches
 
 
 def _issue_end_states(runs: List[Dict[str, Any]]) -> Dict[str, int]:
@@ -140,6 +170,10 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
             "turn_non_progress": _sum_metric(runs, "turn_non_progress"),
             "dependency_block_propagated": _sum_metric(runs, "dependency_block_propagated"),
             "tool_call_blocked": _sum_metric(runs, "tool_call_blocked"),
+            "runtime_verifier_started": _sum_metric(runs, "runtime_verifier_started"),
+            "runtime_verifier_completed": _sum_metric(runs, "runtime_verifier_completed"),
+            "runtime_verifier_failures": _sum_metric(runs, "runtime_verifier_failures"),
+            "done_chain_mismatch": _chain_mismatch_count(runs),
         },
         "issue_status_totals": _issue_end_states(runs),
     }

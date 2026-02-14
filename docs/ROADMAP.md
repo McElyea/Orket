@@ -37,6 +37,7 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 16. Live acceptance loop now records and prints explicit `chain_complete` signal per run.
 17. Live loop evidence now captures `session_status=done` but `chain_complete=false` mismatches for targeted follow-up in `P0`.
 18. Execution pipeline session status now distinguishes `terminal_non_success` from true `done` for blocked/guard-rejected terminal backlogs.
+19. Acceptance pattern report now includes runtime verifier counters plus `done_chain_mismatch` summary.
 
 ## Current Status Snapshot
 1. `P-1 Pipeline Stabilizers`: Active, foundational slices (`P-1A` to `P-1D`) landed.
