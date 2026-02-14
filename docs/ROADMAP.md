@@ -20,10 +20,10 @@ If this flow is not mechanically proven with canonical assets, we are not done.
 5. Keep governance mechanical and explicit in runtime evidence.
 
 ## Current Priority Order
-1. `P3 Highest`: Architecture boundary enforcement and maintenance checks.
-2. `P4 High`: Prompt Engine enhancement follow-ups (only if regressions emerge).
-3. `P5 Medium`: Stabilizer tuning follow-ups from production telemetry.
-4. `P6 Low`: Additional acceptance telemetry experiments.
+1. `P4 Highest`: Prompt Engine enhancement follow-ups (only if regressions emerge).
+2. `P5 High`: Stabilizer tuning follow-ups from production telemetry.
+3. `P6 Medium`: Additional acceptance telemetry experiments.
+4. `P7 Low`: Nice-to-have tooling polish outside stabilization goals.
 
 ## P0: Prompt Engine Program (Highest Priority)
 Objective: make prompts first-class, versioned, inspectable assets with deterministic runtime resolution.
@@ -83,13 +83,16 @@ Verification:
 Objective: hold core architectural boundaries while stabilization work continues.
 
 Remaining Slices:
-1. `P3-S1`: keep dependency direction and volatility boundary checks green.
-2. `P3-S2`: add focused guards only when new coupling bypasses appear.
+1. `P3-S1` (completed): keep dependency direction and volatility boundary checks green.
+2. `P3-S2` (completed): add focused guards only when new coupling bypasses appear.
 
 Verification:
 1. `python scripts/check_dependency_direction.py`
 2. `python scripts/check_volatility_boundaries.py`
 3. `python -m pytest tests/platform/test_architecture_volatility_boundaries.py -q`
+
+### Status
+`P3` is complete.
 
 ## Completed: V1 Model Behavior Stabilization
 Summary:
