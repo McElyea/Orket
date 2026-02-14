@@ -71,7 +71,7 @@ Objective: land a minimal, enforceable guard core that prevents retry spirals an
    - `HALLUCINATION.CONTEXT_NOT_PROVIDED`
    - `HALLUCINATION.INVENTED_DETAIL`
    - `HALLUCINATION.CONTRADICTION`
-5. `P0-R4-S5`: escalate persistent repeats to `terminal_failure` using `HALLUCINATION_PERSISTENT`.
+5. `P0-R4-S5` (completed 2026-02-14): escalate persistent repeats to `terminal_failure` using `HALLUCINATION_PERSISTENT`.
 
 ### P0 Exit Criteria
 1. Guarded stages emit valid `GuardContract` artifacts.

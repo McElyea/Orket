@@ -77,3 +77,26 @@ def test_guard_agent_respects_contract_terminal_failure():
     assert decision.terminal_reason is not None
     assert decision.terminal_reason.code == "HALLUCINATION_PERSISTENT"
 
+
+def test_guard_agent_uses_hallucination_persistent_on_retry_exceed():
+    contract = GuardContract(
+        result="fail",
+        violations=[
+            GuardViolation(
+                rule_id="HALLUCINATION.FILE_NOT_FOUND",
+                code="HALLUCINATION_FILE_NOT_FOUND",
+                message="missing file",
+                location="output",
+                severity="strict",
+                evidence="agent_output/missing.py",
+            )
+        ],
+        severity="strict",
+        fix_hint="scope",
+        terminal_failure=False,
+        terminal_reason=None,
+    )
+    decision = GuardAgent().evaluate(contract=contract, retry_count=2, max_retries=2)
+    assert decision.action == "terminal_failure"
+    assert decision.terminal_reason is not None
+    assert decision.terminal_reason.code == "HALLUCINATION_PERSISTENT"

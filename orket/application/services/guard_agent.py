@@ -76,11 +76,17 @@ class GuardAgent:
                 terminal_reason=None,
             )
 
+        terminal_reason = loop_control.escalation.terminal_reason
+        if self._is_hallucination_contract(contract):
+            terminal_reason = TerminalReason(
+                code="HALLUCINATION_PERSISTENT",
+                message="The model repeatedly invented or referenced out-of-scope details.",
+            )
         return GuardDecision(
             action="terminal_failure",
             next_retry_count=int(retry_count),
             terminal_failure=True,
-            terminal_reason=loop_control.escalation.terminal_reason,
+            terminal_reason=terminal_reason,
         )
 
     def _resolve_loop_control(self, *, max_retries: int) -> LoopControl:
@@ -106,3 +112,12 @@ class GuardAgent:
                 ),
             ),
         )
+
+    @staticmethod
+    def _is_hallucination_contract(contract: GuardContract) -> bool:
+        for violation in contract.violations:
+            rule_id = str(getattr(violation, "rule_id", "") or "").strip().upper()
+            code = str(getattr(violation, "code", "") or "").strip().upper()
+            if rule_id.startswith("HALLUCINATION.") or code.startswith("HALLUCINATION_"):
+                return True
+        return False
