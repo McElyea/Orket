@@ -698,6 +698,9 @@ class Orchestrator:
             "prompt_version": "legacy",
             "prompt_checksum": "",
             "resolver_policy": "compiler",
+            "selection_policy": selection_policy,
+            "role_status": "legacy",
+            "dialect_status": "legacy",
         }
         prompt_layers: Dict[str, Any] = {
             "role_base": {"name": str(skill.name or "").strip().lower(), "version": "legacy"},

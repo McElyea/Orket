@@ -78,7 +78,7 @@ Exit Criteria:
 2. Production path resolves approved/stable prompts by default.
 3. Rollback to prior stable prompt is one metadata change.
 
-### Phase 3: Runtime Policy Integration
+### Phase 3 (Completed): Runtime Policy Integration
 Goal: move volatile prompt behavior into explicit policy assets.
 
 Scope:
@@ -88,8 +88,8 @@ Scope:
 
 Concrete Slices:
 1. `P0-F3-S1` (completed): pass seat/stage contract overlays (`required_action_tools`, `required_statuses`, `required_read_paths`, `required_write_paths`, `stage_gate_mode`) into resolver context.
-2. `P0-F3-S2`: emit resolver selection policy details in run-level reporting and live-loop summaries.
-3. `P0-F3-S3`: add acceptance assertions proving seat/stage policy deltas are attributable to resolver policy metadata.
+2. `P0-F3-S2` (completed): emit resolver selection policy details in run-level reporting and live-loop summaries.
+3. `P0-F3-S3` (completed): add acceptance assertions proving seat/stage policy deltas are attributable to resolver policy metadata.
 
 Exit Criteria:
 1. Prompt behavior shifts are attributable to policy version changes.

@@ -254,6 +254,14 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
     assert (workspace / "agent_output" / "requirements.txt").exists()
     assert (workspace / "agent_output" / "design.txt").exists()
     assert (workspace / "agent_output" / "main.py").exists()
+    checkpoint_paths = list((workspace / "observability").rglob("checkpoint.json"))
+    assert checkpoint_paths, "Expected turn checkpoint artifacts for acceptance run."
+    for checkpoint_path in checkpoint_paths:
+        payload = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+        metadata = payload.get("prompt_metadata", {})
+        assert isinstance(metadata, dict)
+        assert metadata.get("resolver_policy")
+        assert metadata.get("selection_policy")
 
 
 @pytest.mark.asyncio

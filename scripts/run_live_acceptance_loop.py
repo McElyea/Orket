@@ -115,6 +115,38 @@ def _last_event_data(events: List[Dict[str, Any]], event_name: str) -> Dict[str,
     return {}
 
 
+def _prompt_policy_summary(events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    resolver_policy_counts: Dict[str, int] = {}
+    selection_policy_counts: Dict[str, int] = {}
+    role_status_counts: Dict[str, int] = {}
+    dialect_status_counts: Dict[str, int] = {}
+    turn_start_count = 0
+
+    for event in events:
+        if event.get("event") != "turn_start":
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        turn_start_count += 1
+        resolver_policy = str(data.get("resolver_policy") or "unknown").strip() or "unknown"
+        selection_policy = str(data.get("selection_policy") or "unknown").strip() or "unknown"
+        role_status = str(data.get("role_status") or "unknown").strip() or "unknown"
+        dialect_status = str(data.get("dialect_status") or "unknown").strip() or "unknown"
+        resolver_policy_counts[resolver_policy] = resolver_policy_counts.get(resolver_policy, 0) + 1
+        selection_policy_counts[selection_policy] = selection_policy_counts.get(selection_policy, 0) + 1
+        role_status_counts[role_status] = role_status_counts.get(role_status, 0) + 1
+        dialect_status_counts[dialect_status] = dialect_status_counts.get(dialect_status, 0) + 1
+
+    return {
+        "turn_start_count": turn_start_count,
+        "resolver_policy_counts": resolver_policy_counts,
+        "selection_policy_counts": selection_policy_counts,
+        "role_status_counts": role_status_counts,
+        "dialect_status_counts": dialect_status_counts,
+    }
+
+
 def _find_latest(root: Path, filename: str) -> Optional[Path]:
     candidates = list(root.rglob(filename))
     if not candidates:
@@ -248,6 +280,7 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
     db_path = _find_latest(spec.run_dir, "acceptance_pipeline_live.db")
     events = _parse_json_lines(log_path) if log_path else []
     db_summary = _sqlite_summary(db_path)
+    prompt_policy = _prompt_policy_summary(events)
     session_end = _last_event_data(events, "session_end")
     session_start = _last_event_data(events, "session_start")
 
@@ -267,6 +300,22 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "coder_turn_complete": _event_count(events, "turn_complete", role="coder"),
         "reviewer_turn_complete": _event_count(events, "turn_complete", role="code_reviewer"),
         "guard_turn_complete": _event_count(events, "turn_complete", role="integrity_guard"),
+        "prompt_turn_start_total": int(prompt_policy.get("turn_start_count", 0)),
+        "prompt_resolver_policy_compiler": int(
+            prompt_policy.get("resolver_policy_counts", {}).get("compiler", 0)
+        ),
+        "prompt_resolver_policy_resolver_v1": int(
+            prompt_policy.get("resolver_policy_counts", {}).get("resolver_v1", 0)
+        ),
+        "prompt_selection_policy_stable": int(
+            prompt_policy.get("selection_policy_counts", {}).get("stable", 0)
+        ),
+        "prompt_selection_policy_canary": int(
+            prompt_policy.get("selection_policy_counts", {}).get("canary", 0)
+        ),
+        "prompt_selection_policy_exact": int(
+            prompt_policy.get("selection_policy_counts", {}).get("exact", 0)
+        ),
     }
 
     chain_complete = _chain_complete(db_summary)
@@ -287,6 +336,7 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "run_id": session_start.get("run_id"),
         "session_status": session_end.get("status"),
         "metrics": metrics,
+        "prompt_policy_summary": prompt_policy,
         "requirements_response_preview": _first_requirements_response(spec.run_dir),
         "chain_complete": chain_complete,
         "canonical_success": bool(completed.returncode == 0 and chain_complete),
@@ -363,6 +413,13 @@ def _make_skipped_result(spec: RunSpec, reason: str) -> Dict[str, Any]:
         "run_id": None,
         "session_status": reason,
         "metrics": {"skipped": 1},
+        "prompt_policy_summary": {
+            "turn_start_count": 0,
+            "resolver_policy_counts": {},
+            "selection_policy_counts": {},
+            "role_status_counts": {},
+            "dialect_status_counts": {},
+        },
         "requirements_response_preview": None,
         "chain_complete": False,
         "canonical_success": False,
@@ -685,6 +742,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             _insert_run_result(conn, batch_id, result)
 
             db_issue_statuses = result.get("db_summary", {}).get("issue_statuses", {})
+            policy_counts = (result.get("prompt_policy_summary") or {}).get("selection_policy_counts", {})
             print(
                 "  "
                 f"passed={result['passed']} "
@@ -692,6 +750,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 f"chain_complete={result.get('chain_complete')} "
                 f"run_id={result.get('run_id')} "
                 f"session_status={result.get('session_status')} "
+                f"prompt_selection={policy_counts} "
                 f"issues={db_issue_statuses}"
             )
 

@@ -167,6 +167,9 @@ class TurnExecutor:
                     "prompt_version": (context.get("prompt_metadata") or {}).get("prompt_version"),
                     "prompt_checksum": (context.get("prompt_metadata") or {}).get("prompt_checksum"),
                     "resolver_policy": (context.get("prompt_metadata") or {}).get("resolver_policy"),
+                    "selection_policy": (context.get("prompt_metadata") or {}).get("selection_policy"),
+                    "role_status": (context.get("prompt_metadata") or {}).get("role_status"),
+                    "dialect_status": (context.get("prompt_metadata") or {}).get("dialect_status"),
                 },
                 self.workspace
             )
