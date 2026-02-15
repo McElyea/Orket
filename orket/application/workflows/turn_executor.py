@@ -231,6 +231,7 @@ class TurnExecutor:
             contract_violations = self._collect_contract_violations(turn, role, context)
             if contract_violations:
                 corrective_prompt = self._build_corrective_instruction(contract_violations, context)
+                rule_fix_hints = self._rule_specific_fix_hints(contract_violations)
                 retry_messages = copy.deepcopy(messages)
                 retry_messages.append({"role": "user", "content": corrective_prompt})
 
@@ -250,6 +251,7 @@ class TurnExecutor:
                         "reason": contract_reasons[0] if len(contract_reasons) == 1 else "multiple_contracts_not_met",
                         "contract_reasons": contract_reasons,
                         "contract_violations": contract_violations,
+                        "rule_fix_hints": rule_fix_hints,
                     },
                     self.workspace,
                 )
@@ -1082,6 +1084,11 @@ class TurnExecutor:
             lines.append(
                 "- Keep response format deterministic and schema-compliant."
             )
+        rule_hints = self._rule_specific_fix_hints(violations)
+        if rule_hints:
+            lines.append("- Rule-specific fixes:")
+            for hint in rule_hints:
+                lines.append(f"  - {hint}")
 
         required_read_paths = self._required_read_paths(context)
         required_write_paths = self._required_write_paths(context)
@@ -1115,6 +1122,54 @@ class TurnExecutor:
                 )
 
         return "\n".join(lines)
+
+    def _rule_specific_fix_hints(self, violations: List[Dict[str, Any]]) -> List[str]:
+        hints: List[str] = []
+        for item in violations:
+            nested = item.get("violations")
+            if not isinstance(nested, list):
+                continue
+            for violation in nested:
+                if not isinstance(violation, dict):
+                    continue
+                rule_id = str(violation.get("rule_id", "")).strip().upper()
+                evidence = str(violation.get("evidence", "")).strip()
+                if not rule_id:
+                    continue
+                hint = self._hint_for_rule_id(rule_id, evidence)
+                if hint:
+                    hints.append(hint)
+        # Deduplicate while preserving order.
+        deduped: List[str] = []
+        seen = set()
+        for hint in hints:
+            if hint in seen:
+                continue
+            seen.add(hint)
+            deduped.append(hint)
+        return deduped
+
+    def _hint_for_rule_id(self, rule_id: str, evidence: str) -> str:
+        mapping = {
+            "SECURITY.PATH_TRAVERSAL": "SECURITY.PATH_TRAVERSAL: use workspace-relative paths only and remove '..' or absolute prefixes.",
+            "HALLUCINATION.FILE_NOT_FOUND": "HALLUCINATION.FILE_NOT_FOUND: reference only files listed in verification_scope.workspace.",
+            "HALLUCINATION.API_NOT_DECLARED": "HALLUCINATION.API_NOT_DECLARED: call only tools listed in verification_scope.declared_interfaces.",
+            "HALLUCINATION.CONTEXT_NOT_PROVIDED": "HALLUCINATION.CONTEXT_NOT_PROVIDED: reference only verification_scope.active_context entries.",
+            "HALLUCINATION.INVENTED_DETAIL": "HALLUCINATION.INVENTED_DETAIL: remove speculative language and state missing information explicitly.",
+            "HALLUCINATION.CONTRADICTION": "HALLUCINATION.CONTRADICTION: remove statements that match forbidden phrase constraints.",
+            "HALLUCINATION.WORKSPACE_BUDGET_EXCEEDED": "HALLUCINATION.WORKSPACE_BUDGET_EXCEEDED: reduce workspace scope entries to configured budget.",
+            "HALLUCINATION.ACTIVE_CONTEXT_BUDGET_EXCEEDED": "HALLUCINATION.ACTIVE_CONTEXT_BUDGET_EXCEEDED: trim active context to the configured limit.",
+            "HALLUCINATION.PASSIVE_CONTEXT_BUDGET_EXCEEDED": "HALLUCINATION.PASSIVE_CONTEXT_BUDGET_EXCEEDED: trim passive context to the configured limit.",
+            "HALLUCINATION.ARCHIVED_CONTEXT_BUDGET_EXCEEDED": "HALLUCINATION.ARCHIVED_CONTEXT_BUDGET_EXCEEDED: trim archived context to the configured limit.",
+            "HALLUCINATION.TOTAL_CONTEXT_BUDGET_EXCEEDED": "HALLUCINATION.TOTAL_CONTEXT_BUDGET_EXCEEDED: reduce total active+passive+archived context size.",
+            "CONSISTENCY.OUTPUT_FORMAT": "CONSISTENCY.OUTPUT_FORMAT: emit JSON tool-call objects only with no prose residue.",
+        }
+        base = mapping.get(rule_id)
+        if not base:
+            base = f"{rule_id}: address this contract violation deterministically."
+        if evidence:
+            return f"{base} Evidence: {evidence}"
+        return base
 
     def _deterministic_failure_message(self, reason: str) -> str:
         reason_key = str(reason or "").strip().lower()
@@ -1414,6 +1469,11 @@ class TurnExecutor:
             if str(item).strip()
         }
         strict_grounding = bool(scope.get("strict_grounding", False))
+        max_workspace_items = scope.get("max_workspace_items")
+        max_active_context_items = scope.get("max_active_context_items")
+        max_passive_context_items = scope.get("max_passive_context_items")
+        max_archived_context_items = scope.get("max_archived_context_items")
+        max_total_context_items = scope.get("max_total_context_items")
         forbidden_phrases = [
             str(item).strip()
             for item in (scope.get("forbidden_phrases") or [])
@@ -1421,6 +1481,48 @@ class TurnExecutor:
         ]
 
         violations: List[Dict[str, Any]] = []
+        if isinstance(max_workspace_items, int) and len(workspace_scope) > max_workspace_items:
+            violations.append(
+                {
+                    "rule_id": "HALLUCINATION.WORKSPACE_BUDGET_EXCEEDED",
+                    "message": "verification_scope.workspace exceeds configured budget.",
+                    "evidence": f"{len(workspace_scope)}>{max_workspace_items}",
+                }
+            )
+        if isinstance(max_active_context_items, int) and len(active_context_scope) > max_active_context_items:
+            violations.append(
+                {
+                    "rule_id": "HALLUCINATION.ACTIVE_CONTEXT_BUDGET_EXCEEDED",
+                    "message": "verification_scope.active_context exceeds configured budget.",
+                    "evidence": f"{len(active_context_scope)}>{max_active_context_items}",
+                }
+            )
+        if isinstance(max_passive_context_items, int) and len(passive_context_scope) > max_passive_context_items:
+            violations.append(
+                {
+                    "rule_id": "HALLUCINATION.PASSIVE_CONTEXT_BUDGET_EXCEEDED",
+                    "message": "verification_scope.passive_context exceeds configured budget.",
+                    "evidence": f"{len(passive_context_scope)}>{max_passive_context_items}",
+                }
+            )
+        if isinstance(max_archived_context_items, int) and len(archived_context_scope) > max_archived_context_items:
+            violations.append(
+                {
+                    "rule_id": "HALLUCINATION.ARCHIVED_CONTEXT_BUDGET_EXCEEDED",
+                    "message": "verification_scope.archived_context exceeds configured budget.",
+                    "evidence": f"{len(archived_context_scope)}>{max_archived_context_items}",
+                }
+            )
+        total_context_items = len(active_context_scope) + len(passive_context_scope) + len(archived_context_scope)
+        if isinstance(max_total_context_items, int) and total_context_items > max_total_context_items:
+            violations.append(
+                {
+                    "rule_id": "HALLUCINATION.TOTAL_CONTEXT_BUDGET_EXCEEDED",
+                    "message": "verification_scope active+passive+archived exceeds configured total budget.",
+                    "evidence": f"{total_context_items}>{max_total_context_items}",
+                }
+            )
+
         for call in (turn.tool_calls or []):
             tool_name = str(call.tool or "").strip()
             if declared_interfaces_scope and tool_name and tool_name not in declared_interfaces_scope:
@@ -1491,6 +1593,11 @@ class TurnExecutor:
                 "archived_context": sorted(archived_context_scope),
                 "declared_interfaces": sorted(declared_interfaces_scope),
                 "strict_grounding": strict_grounding,
+                "max_workspace_items": max_workspace_items,
+                "max_active_context_items": max_active_context_items,
+                "max_passive_context_items": max_passive_context_items,
+                "max_archived_context_items": max_archived_context_items,
+                "max_total_context_items": max_total_context_items,
                 "forbidden_phrases": forbidden_phrases,
             },
             "violations": violations,

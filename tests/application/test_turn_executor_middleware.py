@@ -822,6 +822,111 @@ async def test_turn_executor_hallucination_context_partition_enforces_active_con
 
 
 @pytest.mark.asyncio
+async def test_turn_executor_hallucination_context_budget_exceeded_fails_after_reprompt(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "active_context": ["ctx-1", "ctx-2", "ctx-3"],
+        "passive_context": [],
+        "archived_context": [],
+        "declared_interfaces": ["update_issue_status"],
+        "max_active_context_items": 2,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_hallucination_context_budget_within_limit_succeeds(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "active_context": ["ctx-1", "ctx-2"],
+        "passive_context": [],
+        "archived_context": [],
+        "declared_interfaces": ["update_issue_status"],
+        "max_active_context_items": 2,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 1
+
+
+def test_build_corrective_instruction_includes_rule_specific_hints(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    instruction = executor._build_corrective_instruction(
+        [
+            {
+                "reason": "security_scope_contract_not_met",
+                "violations": [
+                    {"rule_id": "SECURITY.PATH_TRAVERSAL", "evidence": "../secret.txt"},
+                ],
+            }
+        ],
+        {
+            "required_action_tools": ["update_issue_status"],
+            "required_statuses": ["code_review"],
+        },
+    )
+    assert "Rule-specific fixes:" in instruction
+    assert "SECURITY.PATH_TRAVERSAL" in instruction
+    assert "../secret.txt" in instruction
+
+
+@pytest.mark.asyncio
 async def test_turn_executor_security_scope_rejects_path_traversal(tmp_path):
     executor = TurnExecutor(
         StateMachine(),

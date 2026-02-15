@@ -31,7 +31,21 @@ def build_verification_scope(
     forbidden_phrases: Iterable[object] | None = None,
     enforce_path_hardening: bool = True,
     consistency_tool_calls_only: bool = False,
+    max_workspace_items: int | None = None,
+    max_active_context_items: int | None = None,
+    max_passive_context_items: int | None = None,
+    max_archived_context_items: int | None = None,
+    max_total_context_items: int | None = None,
 ) -> Dict[str, Any]:
+    def _normalize_optional_limit(value: Any) -> int | None:
+        if value is None:
+            return None
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return None
+        return max(0, parsed)
+
     resolved_active = normalize_scope_values(
         active_context if active_context is not None else provided_context
     )
@@ -46,6 +60,11 @@ def build_verification_scope(
         "forbidden_phrases": normalize_scope_values(forbidden_phrases),
         "enforce_path_hardening": bool(enforce_path_hardening),
         "consistency_tool_calls_only": bool(consistency_tool_calls_only),
+        "max_workspace_items": _normalize_optional_limit(max_workspace_items),
+        "max_active_context_items": _normalize_optional_limit(max_active_context_items),
+        "max_passive_context_items": _normalize_optional_limit(max_passive_context_items),
+        "max_archived_context_items": _normalize_optional_limit(max_archived_context_items),
+        "max_total_context_items": _normalize_optional_limit(max_total_context_items),
     }
 
 
@@ -63,4 +82,9 @@ def parse_verification_scope(raw: Any) -> Dict[str, Any] | None:
         forbidden_phrases=raw.get("forbidden_phrases"),
         enforce_path_hardening=bool(raw.get("enforce_path_hardening", True)),
         consistency_tool_calls_only=bool(raw.get("consistency_tool_calls_only", False)),
+        max_workspace_items=raw.get("max_workspace_items"),
+        max_active_context_items=raw.get("max_active_context_items"),
+        max_passive_context_items=raw.get("max_passive_context_items"),
+        max_archived_context_items=raw.get("max_archived_context_items"),
+        max_total_context_items=raw.get("max_total_context_items"),
     )

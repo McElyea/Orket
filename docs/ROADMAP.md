@@ -37,7 +37,7 @@ Objective: reduce drift, false positives, and non-actionable retries.
      - `scripts/regenerate_canonical_roles.py` added for deterministic template regeneration.
      - `PL006` canonical role conformance checks added to prompt linter.
      - CI-facing conformance tests added in `tests/platform/test_canonical_role_conformance.py`.
-2. `A2` Guard overreach control
+2. `A2` Guard overreach control (Complete)
    - Scope: isolate strict rules with false positives and narrow their scope.
    - Trigger: guard false-positive rate > 5% for 2 weekly proof runs.
    - Done when: false-positive regressions are covered by tests and threshold is back under limit.
@@ -47,26 +47,45 @@ Objective: reduce drift, false positives, and non-actionable retries.
    - Progress (Slice 2 complete):
      - Added per-`rule_id` guard non-progress counters to live acceptance metrics collection.
      - Added aggregate `guard_rule_violation_counts` to pattern reports for direct strict-rule isolation.
-3. `A3` Retry hint specificity
+3. `A3` Retry hint specificity (Complete)
    - Scope: tie corrective fix hints to `rule_id` and violation evidence.
    - Trigger: repeated failure fingerprint beyond `max_retries`.
    - Done when: repeated violations reach deterministic terminal paths without retry loops.
-4. `A4` Context budget control
+   - Completed evidence:
+     - Corrective reprompt now emits rule-specific fixes with `rule_id` and evidence.
+     - `turn_corrective_reprompt` events now include `rule_fix_hints` for diagnostics.
+4. `A4` Context budget control (Complete)
    - Scope: enforce active/passive/archived context budgets.
    - Trigger: retries > 1.0 average and prompt size growth > 25% over baseline.
    - Done when: context budget checks and regression tests prevent bloat regressions.
+   - Completed evidence:
+     - Verification scope supports configurable budgets:
+       `max_workspace_items`, `max_active_context_items`, `max_passive_context_items`, `max_archived_context_items`, `max_total_context_items`.
+     - Hallucination scope diagnostics enforce budget violations with explicit rule IDs.
+     - Orchestrator now supports `process_rules.verification_scope_limits`.
 
 ### Phase B: Model and Dialect Reliability
 Objective: keep model portability while reducing parser and compliance failures.
 
-1. `B1` Dialect version contract
+1. `B1` Dialect version contract (Complete)
    - Scope: versioned dialect contract with parser fixtures per model family.
    - Trigger: dialect parse failure rate > 2% in acceptance runs for any model family.
    - Done when: dialect fixtures pass and known-good dialect versions are pinned.
-2. `B2` Compliance-driven model routing
+   - Completed evidence:
+     - Added pinned contract file: `model/core/contracts/dialect_version_contract.json`.
+     - Added platform tests:
+       - `tests/platform/test_dialect_version_contract.py`
+       - validates pinned version alignment and parser fixtures per dialect family.
+2. `B2` Compliance-driven model routing (Complete)
    - Scope: enforce demotion/fallback when model compliance remains poor.
    - Trigger: compliance score < 85 for 3 weekly proof runs.
    - Done when: routing policy demotes non-compliant models automatically with traceable events.
+   - Completed evidence:
+     - `ModelSelector` now supports `model_compliance_policy` with:
+       `min_score`, `fallback_model`, `blocked_models`, `model_scores`, and `score_source`.
+     - Automatic demotion/fallback is enforced in selection path.
+     - Traceable model demotion decisions are emitted via `model_selection_decision` events.
+     - Coverage added in `tests/application/test_model_selector_compliance.py`.
 
 ### Phase C: Governance Throughput and Scope Discipline
 Objective: prevent governance stalls and ownership overlap.

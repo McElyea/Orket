@@ -231,6 +231,31 @@ class Orchestrator:
             return str(self.org.process_rules.get("prompt_version_exact", "")).strip()
         return ""
 
+    def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
+        defaults: Dict[str, int | None] = {
+            "max_workspace_items": None,
+            "max_active_context_items": None,
+            "max_passive_context_items": None,
+            "max_archived_context_items": None,
+            "max_total_context_items": None,
+        }
+        if not (self.org and isinstance(getattr(self.org, "process_rules", None), dict)):
+            return defaults
+        raw = self.org.process_rules.get("verification_scope_limits")
+        if not isinstance(raw, dict):
+            return defaults
+
+        resolved = dict(defaults)
+        for key in list(defaults.keys()):
+            value = raw.get(key)
+            if value is None:
+                continue
+            try:
+                resolved[key] = max(0, int(value))
+            except (TypeError, ValueError):
+                resolved[key] = None
+        return resolved
+
     def _history_context(self) -> List[Dict[str, str]]:
         return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
 
@@ -729,6 +754,22 @@ class Orchestrator:
 
         role_config = self.loader.load_asset("roles", roles_to_load[0], RoleConfig)
         selected_model = prompt_strategy_node.select_model(role=roles_to_load[0], asset_config=epic)
+        model_selection_decision = {}
+        if hasattr(prompt_strategy_node, "model_selector"):
+            selector = getattr(prompt_strategy_node, "model_selector")
+            if hasattr(selector, "get_last_selection_decision"):
+                model_selection_decision = dict(selector.get_last_selection_decision() or {})
+        if model_selection_decision:
+            log_event(
+                "model_selection_decision",
+                {
+                    "run_id": run_id,
+                    "issue_id": issue.id,
+                    "role": roles_to_load[0],
+                    "decision": model_selection_decision,
+                },
+                self.workspace,
+            )
         dialect_name = prompt_strategy_node.select_dialect(selected_model)
         dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
         
@@ -1179,6 +1220,7 @@ class Orchestrator:
             forced_frontend_framework = "react"
         elif frontend_framework_mode == "force_angular":
             forced_frontend_framework = "angular"
+        scope_limits = self._resolve_verification_scope_limits()
 
         return {
             "session_id": run_id,
@@ -1210,6 +1252,11 @@ class Orchestrator:
                 forbidden_phrases=[],
                 enforce_path_hardening=True,
                 consistency_tool_calls_only=True,
+                max_workspace_items=scope_limits.get("max_workspace_items"),
+                max_active_context_items=scope_limits.get("max_active_context_items"),
+                max_passive_context_items=scope_limits.get("max_passive_context_items"),
+                max_archived_context_items=scope_limits.get("max_archived_context_items"),
+                max_total_context_items=scope_limits.get("max_total_context_items"),
             ),
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,

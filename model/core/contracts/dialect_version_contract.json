@@ -1,0 +1,55 @@
+{
+  "contract_version": "1.0.0",
+  "dialects": {
+    "generic": {
+      "version": "1.0.0",
+      "parser_fixtures": [
+        {
+          "input": "{\"tool\": \"write_file\", \"args\": {\"path\": \"agent_output/main.py\", \"content\": \"print(1)\"}}",
+          "expected_tool": "write_file",
+          "expected_arg_keys": ["path", "content"]
+        }
+      ]
+    },
+    "qwen": {
+      "version": "1.0.0",
+      "parser_fixtures": [
+        {
+          "input": "{\"name\": \"update_issue_status\", \"arguments\": {\"status\": \"code_review\"}}",
+          "expected_tool": "update_issue_status",
+          "expected_arg_keys": ["status"]
+        }
+      ]
+    },
+    "llama3": {
+      "version": "1.0.0",
+      "parser_fixtures": [
+        {
+          "input": "{\"function\": {\"name\": \"read_file\", \"arguments\": {\"path\": \"agent_output/main.py\"}}}",
+          "expected_tool": "read_file",
+          "expected_arg_keys": ["path"]
+        }
+      ]
+    },
+    "phi": {
+      "version": "1.0.0",
+      "parser_fixtures": [
+        {
+          "input": "{\"tool_calls\": [{\"tool\": \"list_directory\", \"args\": {\"path\": \"agent_output\"}}]}",
+          "expected_tool": "list_directory",
+          "expected_arg_keys": ["path"]
+        }
+      ]
+    },
+    "deepseek-r1": {
+      "version": "1.0.0",
+      "parser_fixtures": [
+        {
+          "input": "{\"tool\": \"update_issue_status\", \"args\": {\"status\": \"done\"}}",
+          "expected_tool": "update_issue_status",
+          "expected_arg_keys": ["status"]
+        }
+      ]
+    }
+  }
+}
