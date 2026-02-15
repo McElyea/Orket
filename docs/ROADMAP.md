@@ -15,6 +15,8 @@ Objective: add a remote state store + work queue surface via Gitea without chang
 
 ### P1-A. Rollout Strategy
 1. Phase 1: single-runner pilot on `gitea` backend.
+   - Readiness gate command:
+     - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json`
 2. Phase 2: hardening pass with contention/failure injection tests.
 3. Phase 3: multi-runner support (after Phase 2 pass criteria).
 4. Acceptance criteria:
