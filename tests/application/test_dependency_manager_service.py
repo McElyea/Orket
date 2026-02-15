@@ -152,3 +152,17 @@ async def test_dependency_manager_api_vue_profile_adds_vue_defaults(tmp_path: Pa
     package_json = json.loads((tmp_path / "agent_output" / "dependencies" / "package.json").read_text(encoding="utf-8"))
     assert package_json["dependencies"]["vue"] == "3.5.13"
     assert package_json["devDependencies"]["vite"] == "5.4.12"
+
+
+@pytest.mark.asyncio
+async def test_dependency_manager_microservices_pattern_adds_services_manifest(tmp_path: Path):
+    fs = AsyncFileTools(tmp_path)
+    manager = DependencyManager(
+        workspace_root=tmp_path,
+        file_tools=fs,
+        organization=None,
+        architecture_pattern="microservices",
+    )
+
+    result = await manager.ensure()
+    assert "agent_output/dependencies/microservices.json" in result["required_files"]

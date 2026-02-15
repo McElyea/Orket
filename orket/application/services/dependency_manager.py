@@ -44,6 +44,16 @@ class DependencyManager:
             "}\n"
         ),
     }
+    _MICROSERVICES_FILES: Dict[str, str] = {
+        "agent_output/dependencies/microservices.json": (
+            "{\n"
+            "  \"services\": [\n"
+            "    {\"name\": \"api\", \"path\": \"agent_output/services/api\"},\n"
+            "    {\"name\": \"worker\", \"path\": \"agent_output/services/worker\"}\n"
+            "  ]\n"
+            "}\n"
+        )
+    }
 
     def __init__(
         self,
@@ -51,11 +61,13 @@ class DependencyManager:
         file_tools: Any,
         organization: Any = None,
         project_surface_profile: str | None = None,
+        architecture_pattern: str | None = None,
     ):
         self.workspace_root = workspace_root
         self.file_tools = file_tools
         self.organization = organization
         self.project_surface_profile = str(project_surface_profile or "").strip().lower()
+        self.architecture_pattern = str(architecture_pattern or "").strip().lower()
 
     async def ensure(self) -> Dict[str, Any]:
         spec = self._resolve_spec()
@@ -85,6 +97,11 @@ class DependencyManager:
         generated_files = self._build_profile_files(rules, stack_profile, pinned_required)
         if generated_files:
             required_files = generated_files
+        architecture_pattern = self.architecture_pattern or str(
+            rules.get("architecture_forced_pattern", "")
+        ).strip().lower()
+        if architecture_pattern == "microservices":
+            required_files = {**required_files, **self._MICROSERVICES_FILES}
         return DependencySpec(required_files=dict(required_files))
 
     def _build_profile_files(

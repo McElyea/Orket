@@ -194,3 +194,28 @@ async def test_runtime_verifier_backend_profile_requires_backend_deployment_defa
     joined = "\n".join(result.errors)
     assert "agent_output/deployment/Dockerfile" in joined
     assert "docker-compose.yml" not in joined
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_microservices_pattern_requires_microservices_deployment_defaults(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    org = type(
+        "Org",
+        (),
+        {
+            "process_rules": {
+                "runtime_verifier_require_deployment_files": True,
+            }
+        },
+    )
+    result = await RuntimeVerifier(
+        tmp_path,
+        organization=org,
+        architecture_pattern="microservices",
+    ).verify()
+    assert result.ok is False
+    joined = "\n".join(result.errors)
+    assert "Dockerfile.api" in joined
+    assert "Dockerfile.worker" in joined

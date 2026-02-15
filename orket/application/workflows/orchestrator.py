@@ -32,6 +32,7 @@ from orket.application.services.deployment_planner import (
     DeploymentValidationError,
 )
 from orket.application.services.runtime_policy import (
+    allowed_architecture_patterns,
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
     resolve_project_surface_profile,
@@ -116,6 +117,12 @@ class Orchestrator:
             process_raw = str(self.org.process_rules.get("frontend_framework_mode", "")).strip()
         user_raw = str(load_user_settings().get("frontend_framework_mode", "")).strip()
         return resolve_frontend_framework_mode(env_raw, process_raw, user_raw)
+
+    def _resolve_architecture_pattern(self) -> str:
+        mode = self._resolve_architecture_mode()
+        if mode == "force_microservices":
+            return "microservices"
+        return "monolith"
 
     def _resolve_project_surface_profile(self) -> str:
         env_raw = (os.environ.get("ORKET_PROJECT_SURFACE_PROFILE") or "").strip()
@@ -425,12 +432,14 @@ class Orchestrator:
         else:
             log_event("scaffolder_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
             project_surface_profile = self._resolve_project_surface_profile()
+            architecture_pattern = self._resolve_architecture_pattern()
             try:
                 scaffolder = Scaffolder(
                     workspace_root=self.workspace,
                     file_tools=AsyncFileTools(self.workspace),
                     organization=self.org,
                     project_surface_profile=project_surface_profile,
+                    architecture_pattern=architecture_pattern,
                 )
             except TypeError:
                 scaffolder = Scaffolder(
@@ -463,12 +472,14 @@ class Orchestrator:
         else:
             log_event("dependency_manager_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
             project_surface_profile = self._resolve_project_surface_profile()
+            architecture_pattern = self._resolve_architecture_pattern()
             try:
                 dependency_manager = DependencyManager(
                     workspace_root=self.workspace,
                     file_tools=AsyncFileTools(self.workspace),
                     organization=self.org,
                     project_surface_profile=project_surface_profile,
+                    architecture_pattern=architecture_pattern,
                 )
             except TypeError:
                 dependency_manager = DependencyManager(
@@ -500,12 +511,14 @@ class Orchestrator:
         else:
             log_event("deployment_planner_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
             project_surface_profile = self._resolve_project_surface_profile()
+            architecture_pattern = self._resolve_architecture_pattern()
             try:
                 deployment_planner = DeploymentPlanner(
                     workspace_root=self.workspace,
                     file_tools=AsyncFileTools(self.workspace),
                     organization=self.org,
                     project_surface_profile=project_surface_profile,
+                    architecture_pattern=architecture_pattern,
                 )
             except TypeError:
                 deployment_planner = DeploymentPlanner(
@@ -809,6 +822,7 @@ class Orchestrator:
                     self.workspace,
                     organization=self.org,
                     project_surface_profile=self._resolve_project_surface_profile(),
+                    architecture_pattern=self._resolve_architecture_pattern(),
                 )
             except TypeError:
                 runtime_verifier = RuntimeVerifier(
@@ -1433,6 +1447,7 @@ class Orchestrator:
         elif frontend_framework_mode == "force_angular":
             forced_frontend_framework = "angular"
         scope_limits = self._resolve_verification_scope_limits()
+        architecture_patterns = allowed_architecture_patterns()
 
         return {
             "session_id": run_id,
@@ -1481,7 +1496,7 @@ class Orchestrator:
             "small_project_builder_variant": small_project_builder_variant,
             "architecture_decision_required": bool(is_architect_seat),
             "architecture_decision_path": "agent_output/design.txt",
-            "architecture_allowed_patterns": ["monolith", "microservices"],
+            "architecture_allowed_patterns": architecture_patterns,
             "architecture_forced_pattern": forced_pattern,
             "frontend_framework_allowed": ["vue", "react", "angular"],
             "frontend_framework_forced": forced_frontend_framework,

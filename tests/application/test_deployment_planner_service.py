@@ -63,3 +63,20 @@ async def test_deployment_planner_api_vue_profile_includes_frontend_service(tmp_
 
     compose = (tmp_path / "agent_output" / "deployment" / "docker-compose.yml").read_text(encoding="utf-8")
     assert "frontend:" in compose
+
+
+@pytest.mark.asyncio
+async def test_deployment_planner_microservices_pattern_writes_multi_service_artifacts(tmp_path: Path):
+    fs = AsyncFileTools(tmp_path)
+    planner = DeploymentPlanner(
+        workspace_root=tmp_path,
+        file_tools=fs,
+        organization=None,
+        architecture_pattern="microservices",
+    )
+    result = await planner.ensure()
+
+    assert "agent_output/deployment/Dockerfile.api" in result["required_files"]
+    assert "agent_output/deployment/Dockerfile.worker" in result["required_files"]
+    compose = (tmp_path / "agent_output" / "deployment" / "docker-compose.yml").read_text(encoding="utf-8")
+    assert "worker:" in compose

@@ -81,6 +81,36 @@ class DeploymentPlanner:
             "python agent_output/main.py\n"
         ),
     }
+    _MICROSERVICES_FILES: Dict[str, str] = {
+        "agent_output/deployment/Dockerfile.api": (
+            "FROM python:3.11-slim\n"
+            "WORKDIR /app\n"
+            "COPY . /app\n"
+            "CMD [\"python\", \"agent_output/services/api/src/main.py\"]\n"
+        ),
+        "agent_output/deployment/Dockerfile.worker": (
+            "FROM python:3.11-slim\n"
+            "WORKDIR /app\n"
+            "COPY . /app\n"
+            "CMD [\"python\", \"agent_output/services/worker/src/main.py\"]\n"
+        ),
+        "agent_output/deployment/docker-compose.yml": (
+            "services:\n"
+            "  api:\n"
+            "    build:\n"
+            "      context: ../../\n"
+            "      dockerfile: agent_output/deployment/Dockerfile.api\n"
+            "  worker:\n"
+            "    build:\n"
+            "      context: ../../\n"
+            "      dockerfile: agent_output/deployment/Dockerfile.worker\n"
+        ),
+        "agent_output/deployment/run_local.sh": (
+            "#!/usr/bin/env sh\n"
+            "set -e\n"
+            "python agent_output/services/api/src/main.py\n"
+        ),
+    }
 
     def __init__(
         self,
@@ -88,11 +118,13 @@ class DeploymentPlanner:
         file_tools: Any,
         organization: Any = None,
         project_surface_profile: str | None = None,
+        architecture_pattern: str | None = None,
     ):
         self.workspace_root = workspace_root
         self.file_tools = file_tools
         self.organization = organization
         self.project_surface_profile = str(project_surface_profile or "").strip().lower()
+        self.architecture_pattern = str(architecture_pattern or "").strip().lower()
 
     async def ensure(self) -> Dict[str, Any]:
         spec = self._resolve_spec()
@@ -114,7 +146,12 @@ class DeploymentPlanner:
         profile = self.project_surface_profile or str(
             rules.get("project_surface_profile", "unspecified")
         ).strip().lower()
-        if profile in {"backend_only", "cli", "tui"}:
+        architecture_pattern = self.architecture_pattern or str(
+            rules.get("architecture_forced_pattern", "")
+        ).strip().lower()
+        if architecture_pattern == "microservices":
+            required_files = dict(self._MICROSERVICES_FILES)
+        elif profile in {"backend_only", "cli", "tui"}:
             required_files = dict(self._BACKEND_ONLY_FILES)
         elif profile == "api_vue":
             required_files = dict(self._API_VUE_FILES)

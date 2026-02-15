@@ -344,6 +344,7 @@ def test_runtime_policy_options(monkeypatch):
 
 def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
     monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
     monkeypatch.setenv("ORKET_FRONTEND_FRAMEWORK_MODE", "force_angular")
     monkeypatch.setenv("ORKET_PROJECT_SURFACE_PROFILE", "api_vue")
@@ -363,6 +364,18 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
         "project_surface_profile": "api_vue",
         "small_project_builder_variant": "architect",
     }
+
+
+def test_runtime_policy_get_falls_back_to_monolith_when_microservices_locked(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "false")
+    monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["architecture_mode"] == "force_monolith"
 
 
 def test_runtime_policy_update_normalizes_and_saves(monkeypatch):

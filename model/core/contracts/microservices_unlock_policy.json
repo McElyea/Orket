@@ -1,0 +1,23 @@
+{
+  "schema_version": "v1",
+  "criteria": {
+    "monolith_readiness_gate": {
+      "required": true
+    },
+    "matrix_stability": {
+      "required": true,
+      "min_executed_entries": 4,
+      "min_project_surface_profiles": 2,
+      "min_pass_rate": 0.8,
+      "max_runtime_failure_rate": 0.25,
+      "max_reviewer_rejection_rate": 0.4
+    },
+    "governance_stability": {
+      "required": true,
+      "min_runs": 2,
+      "max_terminal_failure_rate": 0.25,
+      "max_guard_retry_rate": 0.75,
+      "max_done_chain_mismatch": 0
+    }
+  }
+}

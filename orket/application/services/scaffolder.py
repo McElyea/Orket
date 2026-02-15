@@ -51,6 +51,16 @@ class Scaffolder:
         ),
         "agent_output/frontend/src/main.js": "console.log('orket frontend bootstrap');\n",
     }
+    _MICROSERVICES_DIRECTORIES: tuple[str, ...] = (
+        "agent_output/services/api/src",
+        "agent_output/services/worker/src",
+        "agent_output/services/shared",
+    )
+    _MICROSERVICES_FILES: Dict[str, str] = {
+        "agent_output/services/api/src/__init__.py": "",
+        "agent_output/services/worker/src/__init__.py": "",
+        "agent_output/services/shared/README.md": "# Shared Contracts\n\nCross-service schemas and interfaces.\n",
+    }
 
     def __init__(
         self,
@@ -58,11 +68,13 @@ class Scaffolder:
         file_tools: Any,
         organization: Any = None,
         project_surface_profile: str | None = None,
+        architecture_pattern: str | None = None,
     ):
         self.workspace_root = workspace_root
         self.file_tools = file_tools
         self.organization = organization
         self.project_surface_profile = str(project_surface_profile or "").strip().lower()
+        self.architecture_pattern = str(architecture_pattern or "").strip().lower()
 
     async def ensure(self) -> Dict[str, Any]:
         spec = self._resolve_spec()
@@ -114,6 +126,12 @@ class Scaffolder:
         if profile == "api_vue":
             required_directories.extend(self._API_VUE_DIRECTORIES)
             required_files = {**required_files, **self._API_VUE_FILES}
+        architecture_pattern = self.architecture_pattern or str(
+            rules.get("architecture_forced_pattern", "")
+        ).strip().lower()
+        if architecture_pattern == "microservices":
+            required_directories.extend(self._MICROSERVICES_DIRECTORIES)
+            required_files = {**required_files, **self._MICROSERVICES_FILES}
 
         return ScaffoldSpec(
             required_directories=tuple(required_directories),

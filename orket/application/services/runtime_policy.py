@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import os
+from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
 
@@ -20,6 +23,7 @@ DEFAULT_ARCHITECTURE_MODE = "force_monolith"
 DEFAULT_FRONTEND_FRAMEWORK_MODE = "force_vue"
 DEFAULT_PROJECT_SURFACE_PROFILE = "unspecified"
 DEFAULT_SMALL_PROJECT_BUILDER_VARIANT = "auto"
+DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/microservices_unlock_check.json"
 
 PROJECT_SURFACE_PROFILE_OPTIONS: List[Dict[str, str]] = [
     {"value": "unspecified", "label": "Unspecified (Legacy Defaults)"},
@@ -47,6 +51,42 @@ def _pick_first_non_empty(values: Iterable[Any]) -> str:
     return ""
 
 
+def _read_unlock_report(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _env_bool(name: str) -> bool | None:
+    raw = (os.environ.get(name) or "").strip().lower()
+    if raw in {"1", "true", "yes", "on"}:
+        return True
+    if raw in {"0", "false", "no", "off"}:
+        return False
+    return None
+
+
+def is_microservices_unlocked() -> bool:
+    env_override = _env_bool("ORKET_ENABLE_MICROSERVICES")
+    if env_override is not None:
+        return bool(env_override)
+    report_path = Path(
+        str(os.environ.get("ORKET_MICROSERVICES_UNLOCK_REPORT") or DEFAULT_MICROSERVICES_UNLOCK_REPORT)
+    )
+    report = _read_unlock_report(report_path)
+    return bool(report.get("unlocked"))
+
+
+def allowed_architecture_patterns() -> List[str]:
+    if is_microservices_unlocked():
+        return ["monolith", "microservices"]
+    return ["monolith"]
+
+
 def resolve_architecture_mode(*values: Any) -> str:
     raw = _pick_first_non_empty(values)
     aliases = {
@@ -58,7 +98,10 @@ def resolve_architecture_mode(*values: Any) -> str:
         "architect_decide": "architect_decides",
         "let_architect_decide": "architect_decides",
     }
-    return aliases.get(raw, DEFAULT_ARCHITECTURE_MODE)
+    resolved = aliases.get(raw, DEFAULT_ARCHITECTURE_MODE)
+    if resolved == "force_microservices" and not is_microservices_unlocked():
+        return DEFAULT_ARCHITECTURE_MODE
+    return resolved
 
 
 def resolve_frontend_framework_mode(*values: Any) -> str:
@@ -77,11 +120,20 @@ def resolve_frontend_framework_mode(*values: Any) -> str:
 
 
 def runtime_policy_options() -> Dict[str, Any]:
+    microservices_unlocked = is_microservices_unlocked()
+    if microservices_unlocked:
+        architecture_mode_options = ARCHITECTURE_MODE_OPTIONS
+    else:
+        architecture_mode_options = [
+            {"value": "force_monolith", "label": "Monolith (Forced)"},
+            {"value": "architect_decides", "label": "Architect Decides (Monolith Only While Locked)"},
+        ]
     return {
         "architecture_mode": {
             "default": DEFAULT_ARCHITECTURE_MODE,
-            "options": ARCHITECTURE_MODE_OPTIONS,
+            "options": architecture_mode_options,
             "input_style": "radio",
+            "microservices_unlocked": microservices_unlocked,
         },
         "frontend_framework_mode": {
             "default": DEFAULT_FRONTEND_FRAMEWORK_MODE,

@@ -86,3 +86,19 @@ async def test_scaffolder_backend_only_profile_skips_frontend_structure(tmp_path
     await scaffolder.ensure()
 
     assert not (tmp_path / "agent_output" / "frontend").exists()
+
+
+@pytest.mark.asyncio
+async def test_scaffolder_microservices_pattern_creates_service_structure(tmp_path: Path):
+    fs = AsyncFileTools(tmp_path)
+    scaffolder = Scaffolder(
+        workspace_root=tmp_path,
+        file_tools=fs,
+        organization=None,
+        architecture_pattern="microservices",
+    )
+
+    await scaffolder.ensure()
+
+    assert (tmp_path / "agent_output" / "services" / "api" / "src" / "__init__.py").is_file()
+    assert (tmp_path / "agent_output" / "services" / "worker" / "src" / "__init__.py").is_file()

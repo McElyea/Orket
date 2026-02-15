@@ -31,10 +31,12 @@ class RuntimeVerifier:
         workspace_root: Path,
         organization: Any = None,
         project_surface_profile: str | None = None,
+        architecture_pattern: str | None = None,
     ):
         self.workspace_root = workspace_root
         self.organization = organization
         self.project_surface_profile = str(project_surface_profile or "").strip().lower()
+        self.architecture_pattern = str(architecture_pattern or "").strip().lower()
 
     async def verify(self) -> RuntimeVerificationResult:
         targets = await self._python_targets()
@@ -194,6 +196,16 @@ class RuntimeVerifier:
             inferred = [str(path).strip() for path in planner_required.keys() if str(path).strip()]
             if inferred:
                 return inferred
+
+        architecture_pattern = self.architecture_pattern or str(
+            process_rules.get("architecture_forced_pattern", "")
+        ).strip().lower()
+        if architecture_pattern == "microservices":
+            return [
+                "agent_output/deployment/Dockerfile.api",
+                "agent_output/deployment/Dockerfile.worker",
+                "agent_output/deployment/docker-compose.yml",
+            ]
 
         stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
         if stack_profile not in {"python", "node", "polyglot"}:

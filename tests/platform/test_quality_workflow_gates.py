@@ -13,6 +13,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python -m pytest -q tests/platform/test_architecture_volatility_boundaries.py",
         "python scripts/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json",
         "python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only",
+        "python scripts/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --out benchmarks/results/microservices_unlock_check.json",
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]
     assert not missing, "quality workflow missing required architecture gates: " + ", ".join(missing)
