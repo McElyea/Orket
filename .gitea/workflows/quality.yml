@@ -133,6 +133,14 @@ jobs:
         run: |
           python scripts/run_architecture_pilot_matrix.py --out benchmarks/results/architecture_pilot_matrix.json
 
+      - name: Run benchmark suite scoring smoke
+        run: |
+          python scripts/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 1 --venue standard --flow default --runner-template 'python scripts/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmark_determinism_report.json --scored-out benchmarks/results/benchmark_scored_report.json
+
+      - name: Enforce benchmark scoring gate
+        run: |
+          python scripts/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmark_scoring_gate.json --require-thresholds
+
       - name: Validate prompt assets
         run: |
           python -m orket.interfaces.prompts_cli --root . validate --json

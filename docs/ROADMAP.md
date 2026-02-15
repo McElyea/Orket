@@ -42,17 +42,6 @@ Objective: continue side-by-side monolith vs microservices evidence while runtim
 ## Priority 3: Benchmark Program (Phased)
 Objective: convert the benchmark ideas into an executable, repeatable program with explicit acceptance gates.
 
-### Phase 3: Tier-Aware Scoring and Policy Gates
-Scope:
-1. Encode the 0-5 rubric as machine-readable policy by tier.
-2. Add scoring outputs per task (score, reason codes, gate status).
-3. Wire score thresholds into CI gating.
-
-Acceptance criteria:
-1. Scoring policy artifacts are committed and versioned.
-2. Every benchmark run emits per-task scores plus aggregate tier scores.
-3. CI fails when scoring metadata is missing or required thresholds are not met.
-
 ### Phase 4: Tier 1-3 Rollout (Core Reliability)
 Scope:
 1. Operationalize tasks `001`-`060` with executable instructions.

@@ -1,0 +1,27 @@
+{
+  "policy_version": "v1",
+  "score_bands": {
+    "excellent_min": 4.5,
+    "good_min": 3.75,
+    "adequate_min": 2.75,
+    "poor_min": 1.75,
+    "failed_min": 0.01
+  },
+  "per_task_min_band_by_tier": {
+    "1": 4,
+    "2": 4,
+    "3": 3,
+    "4": 3,
+    "5": 3,
+    "6": 2
+  },
+  "tier_min_avg_score": {
+    "1": 4.0,
+    "2": 4.0,
+    "3": 3.0,
+    "4": 3.0,
+    "5": 3.0,
+    "6": 2.0
+  },
+  "overall_min_avg_score": 3.2
+}
