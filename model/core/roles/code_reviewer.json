@@ -1,8 +1,18 @@
 {
   "id": "CODE_REVIEWER",
-  "summary": "code_reviewer",
+  "name": "code_reviewer",
   "type": "utility",
   "description": "Reviews implementation output against requirements, architecture, and runtime verification evidence.",
+  "intent": "Verify implementation against requirements, architecture, and runtime evidence.",
+  "responsibilities": [
+    "Read required artifacts and verification outputs before issuing a review decision.",
+    "Record review rationale with concrete findings.",
+    "Call update_issue_status(status='code_review') for integrity-guard handoff."
+  ],
+  "constraints": [
+    "Do not approve based on assumptions without reading required artifacts.",
+    "Keep findings tied to concrete evidence."
+  ],
   "tools": [
     "read_file",
     "list_directory",

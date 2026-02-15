@@ -100,6 +100,19 @@ def _sum_metric(runs: List[Dict[str, Any]], key: str) -> int:
     return total
 
 
+def _sum_dict_metric(runs: List[Dict[str, Any]], key: str) -> Dict[str, int]:
+    total: Dict[str, int] = {}
+    for run in runs:
+        value = run.get("metrics", {}).get(key, {})
+        if not isinstance(value, dict):
+            continue
+        for metric_key, metric_value in value.items():
+            if not isinstance(metric_value, int):
+                continue
+            total[str(metric_key)] = total.get(str(metric_key), 0) + metric_value
+    return dict(sorted(total.items()))
+
+
 def _status_counts(runs: List[Dict[str, Any]]) -> Dict[str, int]:
     counts: Dict[str, int] = {}
     for run in runs:
@@ -265,6 +278,7 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
             "runtime_event_schema_v1_count": runtime_event_schema_v1_count,
             "done_chain_mismatch": _chain_mismatch_count(runs),
         },
+        "guard_rule_violation_counts": _sum_dict_metric(runs, "turn_non_progress_rule_counts"),
         "schema_health": {
             "runtime_event_schema_v1_coverage": runtime_event_schema_v1_coverage,
         },

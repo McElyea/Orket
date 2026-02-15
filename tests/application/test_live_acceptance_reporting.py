@@ -68,6 +68,45 @@ def test_runtime_failure_breakdown_count_from_events() -> None:
     assert loop._runtime_failure_breakdown_count(events, "python_compile") == 3
 
 
+def test_turn_non_progress_rule_counts_from_events() -> None:
+    loop = _load_script_module(
+        "run_live_acceptance_loop_rule_counts",
+        "scripts/run_live_acceptance_loop.py",
+    )
+    events = [
+        {
+            "event": "turn_non_progress",
+            "data": {
+                "contract_violations": [
+                    {
+                        "reason": "security_scope_contract_not_met",
+                        "violations": [
+                            {"rule_id": "SECURITY.PATH_TRAVERSAL"},
+                            {"rule_id": "SECURITY.PATH_TRAVERSAL"},
+                        ],
+                    }
+                ]
+            },
+        },
+        {
+            "event": "turn_non_progress",
+            "data": {
+                "contract_violations": [
+                    {
+                        "reason": "hallucination_scope_contract_not_met",
+                        "violations": [
+                            {"rule_id": "HALLUCINATION.INVENTED_DETAIL"},
+                        ],
+                    }
+                ]
+            },
+        },
+    ]
+    counts = loop._turn_non_progress_rule_counts(events)
+    assert counts["SECURITY.PATH_TRAVERSAL"] == 2
+    assert counts["HALLUCINATION.INVENTED_DETAIL"] == 1
+
+
 def test_runtime_event_schema_counts_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_runtime_event_schema",
@@ -134,6 +173,10 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "turn_non_progress_hallucination_scope": 0,
                 "turn_non_progress_security_scope": 0,
                 "turn_non_progress_consistency_scope": 0,
+                "turn_non_progress_rule_counts": {
+                    "HALLUCINATION.INVENTED_DETAIL": 0,
+                    "SECURITY.PATH_TRAVERSAL": 0,
+                },
             },
             "db_summary": {"issue_statuses": {"REQ-1": "done", "ARC-1": "done", "COD-1": "done", "REV-1": "done"}},
             "chain_complete": True,
@@ -163,6 +206,10 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "turn_non_progress_hallucination_scope": 1,
                 "turn_non_progress_security_scope": 2,
                 "turn_non_progress_consistency_scope": 3,
+                "turn_non_progress_rule_counts": {
+                    "HALLUCINATION.INVENTED_DETAIL": 1,
+                    "SECURITY.PATH_TRAVERSAL": 2,
+                },
             },
             "db_summary": {"issue_statuses": {"REQ-1": "done", "ARC-1": "blocked"}},
             "chain_complete": False,
@@ -190,6 +237,9 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert counters["turn_non_progress_hallucination_scope"] == 1
     assert counters["turn_non_progress_security_scope"] == 2
     assert counters["turn_non_progress_consistency_scope"] == 3
+    rule_counts = report["guard_rule_violation_counts"]
+    assert rule_counts["HALLUCINATION.INVENTED_DETAIL"] == 1
+    assert rule_counts["SECURITY.PATH_TRAVERSAL"] == 2
     assert report["schema_health"]["runtime_event_schema_v1_coverage"] == 1.0
     compliance = report["model_compliance"]
     assert "m1" in compliance

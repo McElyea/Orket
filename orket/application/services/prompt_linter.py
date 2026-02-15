@@ -7,6 +7,10 @@ from typing import Any, Dict, List, Literal
 
 from pydantic import ValidationError
 
+from orket.application.services.canonical_role_templates import (
+    CANONICAL_PIPELINE_ROLES,
+    canonical_role_conformance_violations,
+)
 from orket.schema import DialectConfig, RoleConfig
 
 VALID_STATUSES = {"draft", "candidate", "canary", "stable", "deprecated"}
@@ -236,6 +240,20 @@ def lint_prompt_asset(path: Path, payload: Dict[str, Any], kind: str) -> List[Di
                     location="user",
                     severity="soft",
                     evidence=placeholder,
+                )
+            )
+
+    if kind == "role" and path.stem in CANONICAL_PIPELINE_ROLES:
+        for item in canonical_role_conformance_violations(path.stem, payload):
+            violations.append(
+                _violation(
+                    file=path,
+                    rule_id="PL006",
+                    code=str(item.get("code") or "CANONICAL_ROLE_DRIFT"),
+                    message=str(item.get("message") or "Canonical role structure drift detected."),
+                    location="system",
+                    severity="strict",
+                    evidence=str(item.get("evidence") or "") or None,
                 )
             )
 

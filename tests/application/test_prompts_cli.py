@@ -20,9 +20,18 @@ def _seed_assets(root: Path) -> None:
 
     role_payload = {
         "id": "ARCHITECT",
-        "summary": "architect",
+        "name": "architect",
         "type": "utility",
         "description": "Architect role.",
+        "intent": "Produce architecture decisions and implementation guidance.",
+        "responsibilities": [
+            "Read requirements context and existing artifacts.",
+            "Write design decisions to agent_output/design.txt.",
+            "Set status to code_review after design updates.",
+        ],
+        "constraints": [
+            "Do not skip required design artifact updates.",
+        ],
         "tools": ["write_file", "update_issue_status"],
         "prompt_metadata": {
             "id": "role.architect",

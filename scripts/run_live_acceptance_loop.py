@@ -139,6 +139,33 @@ def _event_reason_contains_count(events: List[Dict[str, Any]], event_name: str, 
     return count
 
 
+def _turn_non_progress_rule_counts(events: List[Dict[str, Any]]) -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    for event in events:
+        if event.get("event") != "turn_non_progress":
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        contract_violations = data.get("contract_violations")
+        if not isinstance(contract_violations, list):
+            continue
+        for contract_violation in contract_violations:
+            if not isinstance(contract_violation, dict):
+                continue
+            violations = contract_violation.get("violations")
+            if not isinstance(violations, list):
+                continue
+            for violation in violations:
+                if not isinstance(violation, dict):
+                    continue
+                rule_id = str(violation.get("rule_id") or "").strip()
+                if not rule_id:
+                    continue
+                counts[rule_id] = counts.get(rule_id, 0) + 1
+    return counts
+
+
 def _guard_terminal_reason_count(events: List[Dict[str, Any]], terminal_reason_code: str) -> int:
     target = str(terminal_reason_code or "").strip().upper()
     if not target:
@@ -409,6 +436,7 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "turn_non_progress_consistency_scope": _event_reason_contains_count(
             events, "turn_non_progress", "consistency_scope_contract_not_met"
         ),
+        "turn_non_progress_rule_counts": _turn_non_progress_rule_counts(events),
         "requirements_turn_complete": _event_count(events, "turn_complete", role="requirements_analyst"),
         "architect_turn_complete": _event_count(events, "turn_complete", role="architect"),
         "coder_turn_complete": _event_count(events, "turn_complete", role="coder"),

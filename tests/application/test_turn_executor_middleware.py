@@ -662,7 +662,7 @@ async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(t
 
 
 @pytest.mark.asyncio
-async def test_turn_executor_hallucination_invented_detail_fails_under_strict_grounding(tmp_path):
+async def test_turn_executor_hallucination_strict_grounding_ignores_non_json_residue(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -694,10 +694,50 @@ async def test_turn_executor_hallucination_invented_detail_fails_under_strict_gr
     }
 
     result = await executor.execute_turn(_issue(), role, model, toolbox, context)
-    assert result.success is False
-    assert model.calls == 2
-    assert len(toolbox.calls) == 0
-    assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_hallucination_strict_grounding_ignores_json_payload_content(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/main.py", "content": "value = \\"maybe\\"\\n"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="COD",
+        summary="coder",
+        description="Write code",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "coder"
+    context["roles"] = ["coder"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["required_write_paths"] = ["agent_output/main.py"]
+    context["verification_scope"] = {
+        "workspace": ["agent_output/main.py"],
+        "provided_context": [],
+        "declared_interfaces": ["write_file", "update_issue_status"],
+        "strict_grounding": True,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[0][0] == "write_file"
+    assert toolbox.calls[1][0] == "update_issue_status"
 
 
 @pytest.mark.asyncio

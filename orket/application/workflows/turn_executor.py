@@ -1455,10 +1455,11 @@ class TurnExecutor:
                     )
 
         content_blob = str(turn.content or "")
-        if strict_grounding and re.search(r"\b(assume|assumed|probably|maybe)\b", content_blob, flags=re.IGNORECASE):
+        grounding_scan_blob = self._non_json_residue(content_blob)
+        if strict_grounding and re.search(r"\b(assume|assumed|probably|maybe)\b", grounding_scan_blob, flags=re.IGNORECASE):
             marker_match = re.search(
                 r"\b(assume|assumed|probably|maybe)\b",
-                content_blob,
+                grounding_scan_blob,
                 flags=re.IGNORECASE,
             )
             marker = marker_match.group(0) if marker_match else "assume"
