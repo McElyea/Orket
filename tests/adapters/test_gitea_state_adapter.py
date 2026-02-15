@@ -406,6 +406,76 @@ async def test_acquire_lease_returns_none_on_etag_conflict(monkeypatch):
     assert lease is None
 
 
+@pytest.mark.asyncio
+async def test_renew_lease_updates_expiry_for_same_owner(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(
+        CardSnapshot(
+            card_id="ISSUE-30",
+            state="in_progress",
+            version=4,
+            lease={
+                "owner_id": "runner-a",
+                "acquired_at": "2026-02-15T10:00:00+00:00",
+                "expires_at": "2026-02-15T10:05:00+00:00",
+                "epoch": 2,
+            },
+        )
+    )
+    captured = {}
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 30, "body": body}, headers={"ETag": '"v4"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        captured["path"] = path
+        captured["payload"] = payload
+        return {"ok": True}
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    renewed = await adapter.renew_lease("30", owner_id="runner-a", lease_seconds=60)
+    assert renewed is not None
+    assert renewed["lease"]["owner_id"] == "runner-a"
+    assert renewed["lease"]["epoch"] == 2
+    assert renewed["version"] == 5
+    assert captured["path"] == "/issues/30"
+
+
+@pytest.mark.asyncio
+async def test_renew_lease_returns_none_for_non_owner(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(
+        CardSnapshot(
+            card_id="ISSUE-31",
+            state="in_progress",
+            version=4,
+            lease={"owner_id": "runner-a", "epoch": 1},
+        )
+    )
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 31, "body": body}, headers={"ETag": '"v4"'})
+
+    async def fail_if_called(*args, **kwargs):
+        raise AssertionError("PATCH should not be attempted for non-owner renew.")
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fail_if_called)
+    renewed = await adapter.renew_lease("31", owner_id="runner-b", lease_seconds=60)
+    assert renewed is None
+
+
 def test_classify_http_error_maps_status_codes():
     err = GiteaStateAdapter._classify_http_error(status_code=429, exc=RuntimeError("x"))
     assert isinstance(err, GiteaAdapterRateLimitError)

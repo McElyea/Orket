@@ -289,6 +289,60 @@ class GiteaStateAdapter(StateBackendContract):
             "version": new_snapshot.version,
         }
 
+    async def renew_lease(
+        self,
+        card_id: str,
+        *,
+        owner_id: str,
+        lease_seconds: int,
+    ) -> Optional[Dict[str, Any]]:
+        issue_number = int(card_id)
+        issue_response = await self._request_response_with_retry("GET", f"/issues/{issue_number}")
+        issue = issue_response.json()
+        if not isinstance(issue, dict):
+            return None
+        try:
+            snapshot = decode_snapshot(str(issue.get("body") or ""))
+        except Exception:
+            return None
+        current_owner = str(snapshot.lease.owner_id or "").strip()
+        if current_owner != owner_id:
+            return None
+        etag = issue_response.headers.get("ETag")
+        now = self._now_utc()
+        renewed_lease = LeaseInfo(
+            owner_id=owner_id,
+            acquired_at=str(snapshot.lease.acquired_at or now.isoformat()),
+            expires_at=(now + timedelta(seconds=max(1, int(lease_seconds)))).isoformat(),
+            epoch=int(snapshot.lease.epoch or 0),
+        )
+        new_snapshot = CardSnapshot(
+            card_id=snapshot.card_id,
+            state=snapshot.state,
+            backend=snapshot.backend,
+            version=int(snapshot.version) + 1,
+            lease=renewed_lease,
+            metadata=dict(snapshot.metadata or {}),
+        )
+        patch_headers: Dict[str, str] = {}
+        if etag:
+            patch_headers["If-Match"] = etag
+        try:
+            await self._request_json(
+                "PATCH",
+                f"/issues/{issue_number}",
+                payload={"body": encode_snapshot(new_snapshot)},
+                extra_headers=patch_headers or None,
+            )
+        except GiteaAdapterConflictError:
+            return None
+        return {
+            "card_id": new_snapshot.card_id,
+            "issue_number": issue_number,
+            "lease": new_snapshot.lease.model_dump(),
+            "version": new_snapshot.version,
+        }
+
     async def append_event(
         self,
         card_id: str,
