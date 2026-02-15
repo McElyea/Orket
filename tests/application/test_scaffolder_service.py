@@ -54,3 +54,35 @@ async def test_scaffolder_raises_on_forbidden_extension(tmp_path: Path):
     with pytest.raises(ScaffoldValidationError, match="Forbidden file types detected"):
         await scaffolder.ensure()
 
+
+@pytest.mark.asyncio
+async def test_scaffolder_api_vue_profile_creates_frontend_structure(tmp_path: Path):
+    fs = AsyncFileTools(tmp_path)
+    org = SimpleNamespace(process_rules={"project_surface_profile": "api_vue"})
+    scaffolder = Scaffolder(
+        workspace_root=tmp_path,
+        file_tools=fs,
+        organization=org,
+        project_surface_profile="api_vue",
+    )
+
+    await scaffolder.ensure()
+
+    assert (tmp_path / "agent_output" / "frontend" / "index.html").is_file()
+    assert (tmp_path / "agent_output" / "frontend" / "src" / "main.js").is_file()
+
+
+@pytest.mark.asyncio
+async def test_scaffolder_backend_only_profile_skips_frontend_structure(tmp_path: Path):
+    fs = AsyncFileTools(tmp_path)
+    org = SimpleNamespace(process_rules={"project_surface_profile": "backend_only"})
+    scaffolder = Scaffolder(
+        workspace_root=tmp_path,
+        file_tools=fs,
+        organization=org,
+        project_surface_profile="backend_only",
+    )
+
+    await scaffolder.ensure()
+
+    assert not (tmp_path / "agent_output" / "frontend").exists()

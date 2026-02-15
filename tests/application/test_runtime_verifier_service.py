@@ -168,3 +168,29 @@ async def test_runtime_verifier_classifies_timeout_failures(tmp_path: Path):
     assert result.ok is False
     assert result.command_results[0]["failure_class"] == "timeout"
     assert result.failure_breakdown.get("timeout", 0) >= 1
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_backend_profile_requires_backend_deployment_defaults(tmp_path: Path):
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    org = type(
+        "Org",
+        (),
+        {
+            "process_rules": {
+                "project_surface_profile": "backend_only",
+                "runtime_verifier_require_deployment_files": True,
+            }
+        },
+    )
+    result = await RuntimeVerifier(
+        tmp_path,
+        organization=org,
+        project_surface_profile="backend_only",
+    ).verify()
+    assert result.ok is False
+    joined = "\n".join(result.errors)
+    assert "agent_output/deployment/Dockerfile" in joined
+    assert "docker-compose.yml" not in joined

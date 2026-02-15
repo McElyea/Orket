@@ -14,6 +14,14 @@ from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.time_utils import now_local
+from orket.settings import load_user_settings, save_user_settings
+from orket.application.services.runtime_policy import (
+    resolve_architecture_mode,
+    resolve_frontend_framework_mode,
+    resolve_project_surface_profile,
+    resolve_small_project_builder_variant,
+    runtime_policy_options,
+)
 
 
 from pydantic import BaseModel
@@ -88,6 +96,13 @@ class ArchiveCardsRequest(BaseModel):
     related_tokens: Optional[list[str]] = None
     reason: Optional[str] = None
     archived_by: Optional[str] = "api"
+
+
+class RuntimePolicyUpdateRequest(BaseModel):
+    architecture_mode: Optional[str] = None
+    frontend_framework_mode: Optional[str] = None
+    project_surface_profile: Optional[str] = None
+    small_project_builder_variant: Optional[str] = None
 
 # Security dependency
 API_KEY_NAME = "X-API-Key"
@@ -248,6 +263,71 @@ async def get_calendar():
         "current_sprint": api_runtime_node.resolve_current_sprint(now),
         "sprint_start": calendar_window["sprint_start"],
         "sprint_end": calendar_window["sprint_end"],
+    }
+
+
+@v1_router.get("/system/runtime-policy/options")
+async def get_runtime_policy_options():
+    return runtime_policy_options()
+
+
+@v1_router.get("/system/runtime-policy")
+async def get_runtime_policy():
+    user_settings = load_user_settings()
+    process_rules = {}
+    if engine.org and isinstance(getattr(engine.org, "process_rules", None), dict):
+        process_rules = dict(engine.org.process_rules)
+
+    architecture_mode = resolve_architecture_mode(
+        os.environ.get("ORKET_ARCHITECTURE_MODE", ""),
+        process_rules.get("architecture_mode"),
+        user_settings.get("architecture_mode"),
+    )
+    frontend_framework_mode = resolve_frontend_framework_mode(
+        os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE", ""),
+        process_rules.get("frontend_framework_mode"),
+        user_settings.get("frontend_framework_mode"),
+    )
+    project_surface_profile = resolve_project_surface_profile(
+        os.environ.get("ORKET_PROJECT_SURFACE_PROFILE", ""),
+        process_rules.get("project_surface_profile"),
+        user_settings.get("project_surface_profile"),
+    )
+    small_project_builder_variant = resolve_small_project_builder_variant(
+        os.environ.get("ORKET_SMALL_PROJECT_BUILDER_VARIANT", ""),
+        process_rules.get("small_project_builder_variant"),
+        user_settings.get("small_project_builder_variant"),
+    )
+    return {
+        "architecture_mode": architecture_mode,
+        "frontend_framework_mode": frontend_framework_mode,
+        "project_surface_profile": project_surface_profile,
+        "small_project_builder_variant": small_project_builder_variant,
+    }
+
+
+@v1_router.post("/system/runtime-policy")
+async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
+    current = load_user_settings().copy()
+    if req.architecture_mode is not None:
+        current["architecture_mode"] = resolve_architecture_mode(req.architecture_mode)
+    if req.frontend_framework_mode is not None:
+        current["frontend_framework_mode"] = resolve_frontend_framework_mode(req.frontend_framework_mode)
+    if req.project_surface_profile is not None:
+        current["project_surface_profile"] = resolve_project_surface_profile(req.project_surface_profile)
+    if req.small_project_builder_variant is not None:
+        current["small_project_builder_variant"] = resolve_small_project_builder_variant(
+            req.small_project_builder_variant
+        )
+    save_user_settings(current)
+    return {
+        "ok": True,
+        "saved": {
+            "architecture_mode": current.get("architecture_mode"),
+            "frontend_framework_mode": current.get("frontend_framework_mode"),
+            "project_surface_profile": current.get("project_surface_profile"),
+            "small_project_builder_variant": current.get("small_project_builder_variant"),
+        },
     }
 
 @v1_router.post("/system/run-active")

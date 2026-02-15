@@ -2,9 +2,8 @@
   "name": "orket-root",
   "private": true,
   "scripts": {
-    "dev:ui": "npm run dev --prefix ui",
     "dev:server": "python server.py",
-    "dev": "npx concurrently \"npm run dev:server\" \"npm run dev:ui\"",
+    "dev": "npm run dev:server",
     "ci:volatility": "python scripts/check_volatility_boundaries.py",
     "ci:unit": "python -m pytest tests/core tests/application tests/adapters tests/interfaces tests/platform -q",
     "ci:integration": "python -m pytest tests/integration -q",

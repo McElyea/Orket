@@ -31,6 +31,12 @@ from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
 )
+from orket.application.services.runtime_policy import (
+    resolve_architecture_mode,
+    resolve_frontend_framework_mode,
+    resolve_project_surface_profile,
+    resolve_small_project_builder_variant,
+)
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.core.policies.tool_gate import ToolGate
 from orket.core.contracts.repositories import CardRepository, SnapshotRepository
@@ -43,6 +49,7 @@ from orket.core.domain.guard_review import GuardReviewPayload
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.verification_scope import build_verification_scope
 from orket.utils import sanitize_name
+from orket.settings import load_user_settings
 
 class Orchestrator:
     """
@@ -84,6 +91,7 @@ class Orchestrator:
         self.transcript = []
         self._sandbox_locks = defaultdict(asyncio.Lock)
         self._sandbox_failed_rocks = set()
+        self._team_replan_counts = defaultdict(int)
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
         self.decision_nodes = DecisionNodeRegistry()
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
@@ -94,36 +102,79 @@ class Orchestrator:
         self.model_client_node = self.decision_nodes.resolve_model_client(self.org)
 
     def _resolve_architecture_mode(self) -> str:
-        raw = (os.environ.get("ORKET_ARCHITECTURE_MODE") or "").strip()
-        if not raw and self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            raw = str(self.org.process_rules.get("architecture_mode", "")).strip()
-        normalized = raw.lower().replace("-", "_").replace(" ", "_")
-        aliases = {
-            "force_monolith": "force_monolith",
-            "monolith": "force_monolith",
-            "force_microservices": "force_microservices",
-            "microservices": "force_microservices",
-            "architect_decides": "architect_decides",
-            "let_architect_decide": "architect_decides",
-        }
-        return aliases.get(normalized, "architect_decides")
+        env_raw = (os.environ.get("ORKET_ARCHITECTURE_MODE") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("architecture_mode", "")).strip()
+        user_raw = str(load_user_settings().get("architecture_mode", "")).strip()
+        return resolve_architecture_mode(env_raw, process_raw, user_raw)
 
     def _resolve_frontend_framework_mode(self) -> str:
-        raw = (os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE") or "").strip()
-        if not raw and self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            raw = str(self.org.process_rules.get("frontend_framework_mode", "")).strip()
-        normalized = raw.lower().replace("-", "_").replace(" ", "_")
-        aliases = {
-            "force_vue": "force_vue",
-            "vue": "force_vue",
-            "force_react": "force_react",
-            "react": "force_react",
-            "force_angular": "force_angular",
-            "angular": "force_angular",
-            "architect_decides": "architect_decides",
-            "let_architect_decide": "architect_decides",
+        env_raw = (os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("frontend_framework_mode", "")).strip()
+        user_raw = str(load_user_settings().get("frontend_framework_mode", "")).strip()
+        return resolve_frontend_framework_mode(env_raw, process_raw, user_raw)
+
+    def _resolve_project_surface_profile(self) -> str:
+        env_raw = (os.environ.get("ORKET_PROJECT_SURFACE_PROFILE") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("project_surface_profile", "")).strip()
+        user_raw = str(load_user_settings().get("project_surface_profile", "")).strip()
+        return resolve_project_surface_profile(env_raw, process_raw, user_raw)
+
+    def _resolve_small_project_builder_variant(self) -> str:
+        env_raw = (os.environ.get("ORKET_SMALL_PROJECT_BUILDER_VARIANT") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("small_project_builder_variant", "")).strip()
+        user_raw = str(load_user_settings().get("small_project_builder_variant", "")).strip()
+        return resolve_small_project_builder_variant(env_raw, process_raw, user_raw)
+
+    def _small_project_issue_threshold(self) -> int:
+        raw = 3
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            raw = self.org.process_rules.get("small_project_issue_threshold", 3)
+        try:
+            return max(1, int(raw))
+        except (TypeError, ValueError):
+            return 3
+
+    def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> Dict[str, Any]:
+        issue_count = len(list(getattr(epic, "issues", []) or []))
+        threshold = self._small_project_issue_threshold()
+        active = 0 < issue_count <= threshold
+        variant = self._resolve_small_project_builder_variant()
+        builder_role = variant if variant in {"coder", "architect"} else "coder"
+
+        reviewer_seat = next(
+            (
+                seat_name
+                for seat_name, seat_obj in (getattr(team, "seats", {}) or {}).items()
+                if "code_reviewer" in list(getattr(seat_obj, "roles", []) or [])
+            ),
+            None,
+        )
+        builder_seat = next(
+            (
+                seat_name
+                for seat_name, seat_obj in (getattr(team, "seats", {}) or {}).items()
+                if builder_role in list(getattr(seat_obj, "roles", []) or [])
+            ),
+            builder_role,
+        )
+
+        return {
+            "active": bool(active),
+            "issue_count": issue_count,
+            "threshold": threshold,
+            "variant": variant,
+            "builder_role": builder_role,
+            "builder_seat": builder_seat,
+            "reviewer_seat": reviewer_seat,
         }
-        return aliases.get(normalized, "architect_decides")
 
     def _is_sandbox_disabled(self) -> bool:
         env_raw = (os.environ.get("ORKET_DISABLE_SANDBOX") or "").strip().lower()
@@ -349,17 +400,44 @@ class Orchestrator:
         Executes independent issues in parallel using a TAG-based DAG.
         """
         from orket.orchestration.models import ModelSelector
-        from orket.settings import load_user_settings
-
+        small_policy = self._resolve_small_project_team_policy(epic, team)
+        if small_policy["active"] and not small_policy["reviewer_seat"]:
+            raise ExecutionFailed(
+                "Small-project team policy requires a code_reviewer seat, but none was found."
+            )
+        log_event(
+            "team_selection_decision",
+            {
+                "run_id": run_id,
+                "epic": epic.name,
+                "active": small_policy["active"],
+                "variant": small_policy["variant"],
+                "builder_role": small_policy["builder_role"],
+                "builder_seat": small_policy["builder_seat"],
+                "reviewer_seat": small_policy["reviewer_seat"],
+                "issue_count": small_policy["issue_count"],
+                "issue_threshold": small_policy["threshold"],
+            },
+            self.workspace,
+        )
         if self._is_scaffolder_disabled():
             log_event("scaffolder_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
         else:
             log_event("scaffolder_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
-            scaffolder = Scaffolder(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-            )
+            project_surface_profile = self._resolve_project_surface_profile()
+            try:
+                scaffolder = Scaffolder(
+                    workspace_root=self.workspace,
+                    file_tools=AsyncFileTools(self.workspace),
+                    organization=self.org,
+                    project_surface_profile=project_surface_profile,
+                )
+            except TypeError:
+                scaffolder = Scaffolder(
+                    workspace_root=self.workspace,
+                    file_tools=AsyncFileTools(self.workspace),
+                    organization=self.org,
+                )
             try:
                 scaffold_result = await scaffolder.ensure()
             except ScaffoldValidationError as exc:
@@ -384,11 +462,20 @@ class Orchestrator:
             log_event("dependency_manager_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
         else:
             log_event("dependency_manager_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
-            dependency_manager = DependencyManager(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-            )
+            project_surface_profile = self._resolve_project_surface_profile()
+            try:
+                dependency_manager = DependencyManager(
+                    workspace_root=self.workspace,
+                    file_tools=AsyncFileTools(self.workspace),
+                    organization=self.org,
+                    project_surface_profile=project_surface_profile,
+                )
+            except TypeError:
+                dependency_manager = DependencyManager(
+                    workspace_root=self.workspace,
+                    file_tools=AsyncFileTools(self.workspace),
+                    organization=self.org,
+                )
             try:
                 dependency_result = await dependency_manager.ensure()
             except DependencyValidationError as exc:
@@ -412,11 +499,20 @@ class Orchestrator:
             log_event("deployment_planner_skipped_policy", {"run_id": run_id, "epic": epic.name}, self.workspace)
         else:
             log_event("deployment_planner_started", {"run_id": run_id, "epic": epic.name}, self.workspace)
-            deployment_planner = DeploymentPlanner(
-                workspace_root=self.workspace,
-                file_tools=AsyncFileTools(self.workspace),
-                organization=self.org,
-            )
+            project_surface_profile = self._resolve_project_surface_profile()
+            try:
+                deployment_planner = DeploymentPlanner(
+                    workspace_root=self.workspace,
+                    file_tools=AsyncFileTools(self.workspace),
+                    organization=self.org,
+                    project_surface_profile=project_surface_profile,
+                )
+            except TypeError:
+                deployment_planner = DeploymentPlanner(
+                    workspace_root=self.workspace,
+                    file_tools=AsyncFileTools(self.workspace),
+                    organization=self.org,
+                )
             try:
                 deployment_result = await deployment_planner.ensure()
             except DeploymentValidationError as exc:
@@ -474,6 +570,8 @@ class Orchestrator:
             iteration_count += 1
             
             backlog = await self.async_cards.get_by_build(active_build)
+            if await self._maybe_schedule_team_replan(backlog, run_id, active_build, team):
+                continue
             independent_ready = await self.async_cards.get_independent_ready_issues(active_build)
             candidates = self.planner_node.plan(
                 PlanningInput(
@@ -585,6 +683,102 @@ class Orchestrator:
             )
         return len(propagated)
 
+    async def _maybe_schedule_team_replan(
+        self,
+        backlog: List[Any],
+        run_id: str,
+        active_build: str,
+        team: Any,
+    ) -> bool:
+        triggering_issues: List[Any] = []
+        for issue in backlog:
+            seat = str(getattr(issue, "seat", "") or "").strip().lower()
+            if seat != "requirements_analyst":
+                continue
+            params = getattr(issue, "params", None)
+            if isinstance(params, dict) and bool(params.get("replan_requested")):
+                triggering_issues.append(issue)
+
+        if not triggering_issues:
+            return False
+
+        current_count = int(self._team_replan_counts.get(run_id, 0))
+        next_count = current_count + 1
+        if next_count > 3:
+            for issue in backlog:
+                issue_id = getattr(issue, "id", None)
+                if not issue_id:
+                    continue
+                try:
+                    await self.async_cards.update_status(
+                        issue_id,
+                        CardStatus.BLOCKED,
+                        reason="team_replan_limit_exceeded",
+                        metadata={"run_id": run_id, "replan_count": current_count},
+                    )
+                except Exception:
+                    continue
+            log_event(
+                "team_replan_terminal_failure",
+                {
+                    "run_id": run_id,
+                    "active_build": active_build,
+                    "replan_count": current_count,
+                    "limit": 3,
+                },
+                self.workspace,
+            )
+            raise ExecutionFailed("TEAM_REPLAN_LIMIT_EXCEEDED: requirements changed too many times (limit=3).")
+
+        self._team_replan_counts[run_id] = next_count
+        run_prefix = sanitize_name(str(run_id or "run"))[:6].upper() or "RUN"
+        replan_issue_id = f"REPLAN-{run_prefix}-{next_count}"
+        small_policy = self._resolve_small_project_team_policy(
+            SimpleNamespace(issues=backlog),
+            team,
+        )
+        replan_seat = str(small_policy.get("builder_seat") or "architect")
+        await self.async_cards.save(
+            {
+                "id": replan_issue_id,
+                "summary": "Re-evaluate team composition after requirement change",
+                "seat": replan_seat,
+                "type": "issue",
+                "status": CardStatus.READY,
+                "priority": 3.0,
+                "build_id": active_build,
+                "session_id": run_id,
+                "params": {
+                    "card_kind": "team_replan",
+                    "replan_count": next_count,
+                },
+            }
+        )
+        for issue in triggering_issues:
+            params = getattr(issue, "params", None)
+            if isinstance(params, dict):
+                params["replan_requested"] = False
+            try:
+                if hasattr(issue, "model_dump"):
+                    await self.async_cards.save(issue.model_dump())
+                else:
+                    await self.async_cards.save(dict(issue.__dict__))
+            except Exception:
+                continue
+        log_event(
+            "team_replan_scheduled",
+            {
+                "run_id": run_id,
+                "active_build": active_build,
+                "replan_issue_id": replan_issue_id,
+                "replan_count": next_count,
+                "seat": replan_seat,
+                "trigger_issue_ids": [getattr(item, "id", "") for item in triggering_issues],
+            },
+            self.workspace,
+        )
+        return True
+
     async def _execute_issue_turn(
         self, 
         issue_data: Any, 
@@ -610,7 +804,18 @@ class Orchestrator:
                 {"run_id": run_id, "issue_id": issue.id},
                 self.workspace,
             )
-            runtime_result = await RuntimeVerifier(self.workspace, organization=self.org).verify()
+            try:
+                runtime_verifier = RuntimeVerifier(
+                    self.workspace,
+                    organization=self.org,
+                    project_surface_profile=self._resolve_project_surface_profile(),
+                )
+            except TypeError:
+                runtime_verifier = RuntimeVerifier(
+                    self.workspace,
+                    organization=self.org,
+                )
+            runtime_result = await runtime_verifier.verify()
             guard_contract = getattr(runtime_result, "guard_contract", None)
             if guard_contract is None:
                 guard_contract = build_runtime_guard_contract(
@@ -726,6 +931,11 @@ class Orchestrator:
 
         # Select Seat via router decision node
         seat_name = self.router_node.route(issue, team, is_review_turn)
+        small_policy = self._resolve_small_project_team_policy(epic, team)
+        if small_policy["active"] and not is_review_turn:
+            normalized_seat = str(seat_name or "").strip().lower()
+            if normalized_seat not in {"code_reviewer", "reviewer", "integrity_guard"}:
+                seat_name = str(small_policy["builder_seat"])
 
         seat_obj = team.seats.get(sanitize_name(seat_name))
         if not seat_obj:
@@ -1207,6 +1417,8 @@ class Orchestrator:
 
         architecture_mode = self._resolve_architecture_mode()
         frontend_framework_mode = self._resolve_frontend_framework_mode()
+        project_surface_profile = self._resolve_project_surface_profile()
+        small_project_builder_variant = self._resolve_small_project_builder_variant()
         is_architect_seat = str(seat_name).strip().lower() == "architect"
         forced_pattern = None
         if architecture_mode == "force_monolith":
@@ -1265,6 +1477,8 @@ class Orchestrator:
             "prompt_layers": prompt_layers or {},
             "architecture_mode": architecture_mode,
             "frontend_framework_mode": frontend_framework_mode,
+            "project_surface_profile": project_surface_profile,
+            "small_project_builder_variant": small_project_builder_variant,
             "architecture_decision_required": bool(is_architect_seat),
             "architecture_decision_path": "agent_output/design.txt",
             "architecture_allowed_patterns": ["monolith", "microservices"],

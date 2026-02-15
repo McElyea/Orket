@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 import sys
 
@@ -247,3 +248,25 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert compliance["m1"]["guard_pass_rate"] == 1.0
     assert compliance["m2"]["terminal_failure_rate"] == 1.0
     assert compliance["m2"]["compliance_score"] < compliance["m1"]["compliance_score"]
+
+
+def test_report_live_acceptance_patterns_loads_monolith_matrix_summary(tmp_path: Path) -> None:
+    reporter = _load_script_module(
+        "report_live_acceptance_patterns_matrix",
+        "scripts/report_live_acceptance_patterns.py",
+    )
+    matrix_path = tmp_path / "matrix.json"
+    matrix_path.write_text(
+        json.dumps(
+            {
+                "execute_mode": True,
+                "recommended_default_builder_variant": "architect",
+                "entries": [{"builder_variant": "architect"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    summary = reporter._load_matrix_summary(matrix_path)
+    assert summary["execute_mode"] is True
+    assert summary["recommended_default_builder_variant"] == "architect"
+    assert summary["entry_count"] == 1

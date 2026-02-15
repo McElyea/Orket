@@ -326,6 +326,69 @@ def test_calendar_uses_runtime_current_sprint_policy(monkeypatch):
     assert response.status_code == 200
     assert response.json()["current_sprint"] == "QX SY"
 
+
+def test_runtime_policy_options(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.get("/v1/system/runtime-policy/options", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["architecture_mode"]["input_style"] == "radio"
+    assert data["frontend_framework_mode"]["input_style"] == "radio"
+    assert data["project_surface_profile"]["input_style"] == "radio"
+    assert data["small_project_builder_variant"]["input_style"] == "radio"
+    assert data["architecture_mode"]["default"] == "force_monolith"
+    assert data["frontend_framework_mode"]["default"] == "force_vue"
+    assert data["project_surface_profile"]["default"] == "unspecified"
+    assert data["small_project_builder_variant"]["default"] == "auto"
+
+
+def test_runtime_policy_get_uses_precedence(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
+    monkeypatch.setenv("ORKET_FRONTEND_FRAMEWORK_MODE", "force_angular")
+    monkeypatch.setenv("ORKET_PROJECT_SURFACE_PROFILE", "api_vue")
+    monkeypatch.setenv("ORKET_SMALL_PROJECT_BUILDER_VARIANT", "architect")
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
+    monkeypatch.setattr(
+        api_module.engine,
+        "org",
+        type("Org", (), {"process_rules": {"architecture_mode": "force_monolith", "frontend_framework_mode": "force_vue"}})(),
+    )
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json() == {
+        "architecture_mode": "force_microservices",
+        "frontend_framework_mode": "force_angular",
+        "project_surface_profile": "api_vue",
+        "small_project_builder_variant": "architect",
+    }
+
+
+def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": True})
+    monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
+
+    response = client.post(
+        "/v1/system/runtime-policy",
+        json={
+            "architecture_mode": "monolith",
+            "frontend_framework_mode": "vue",
+            "project_surface_profile": "backend",
+            "small_project_builder_variant": "architect",
+        },
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert captured["settings"]["architecture_mode"] == "force_monolith"
+    assert captured["settings"]["frontend_framework_mode"] == "force_vue"
+    assert captured["settings"]["project_surface_profile"] == "backend_only"
+    assert captured["settings"]["small_project_builder_variant"] == "architect"
+
 def test_metrics():
     headers = {"X-API-Key": os.getenv("ORKET_API_KEY", "")}
     response = client.get("/v1/system/metrics", headers=headers)

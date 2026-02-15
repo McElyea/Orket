@@ -33,6 +33,11 @@ def _parse_args() -> argparse.Namespace:
         default="",
         help="Optional JSON output path.",
     )
+    parser.add_argument(
+        "--matrix",
+        default="benchmarks/results/monolith_variant_matrix.json",
+        help="Optional monolith variant matrix artifact path to merge into report.",
+    )
     return parser.parse_args()
 
 
@@ -286,6 +291,27 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def _load_matrix_summary(matrix_path: Path) -> Dict[str, Any]:
+    if not matrix_path.exists():
+        return {}
+    try:
+        payload = json.loads(matrix_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    entries = payload.get("entries", [])
+    if not isinstance(entries, list):
+        entries = []
+    return {
+        "source": str(matrix_path),
+        "execute_mode": bool(payload.get("execute_mode")),
+        "recommended_default_builder_variant": payload.get("recommended_default_builder_variant"),
+        "entry_count": len(entries),
+        "entries": entries,
+    }
+
+
 def main() -> int:
     args = _parse_args()
     db_path = Path(resolve_live_acceptance_db_path(args.db))
@@ -302,6 +328,9 @@ def main() -> int:
         conn.close()
 
     report = _build_report(batch_id, runs)
+    matrix_summary = _load_matrix_summary(Path(args.matrix))
+    if matrix_summary:
+        report["monolith_variant_matrix"] = matrix_summary
     pretty = json.dumps(report, indent=2)
     print(pretty)
 

@@ -26,9 +26,15 @@ class RuntimeVerifier:
     for generated files in agent_output/.
     """
 
-    def __init__(self, workspace_root: Path, organization: Any = None):
+    def __init__(
+        self,
+        workspace_root: Path,
+        organization: Any = None,
+        project_surface_profile: str | None = None,
+    ):
         self.workspace_root = workspace_root
         self.organization = organization
+        self.project_surface_profile = str(project_surface_profile or "").strip().lower()
 
     async def verify(self) -> RuntimeVerificationResult:
         targets = await self._python_targets()
@@ -94,7 +100,13 @@ class RuntimeVerifier:
 
         stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
         if stack_profile not in {"python", "node", "polyglot"}:
-            stack_profile = await self._infer_stack_profile()
+            profile_stack = self._stack_profile_from_surface(
+                self.project_surface_profile or str(process_rules.get("project_surface_profile", "unspecified"))
+            )
+            if profile_stack:
+                stack_profile = profile_stack
+            else:
+                stack_profile = await self._infer_stack_profile()
 
         by_profile = process_rules.get("runtime_verifier_commands_by_profile")
         if isinstance(by_profile, dict):
@@ -165,6 +177,11 @@ class RuntimeVerifier:
         stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
         if stack_profile in {"python", "node", "polyglot"}:
             return stack_profile
+        profile_stack = self._stack_profile_from_surface(
+            self.project_surface_profile or str(process_rules.get("project_surface_profile", "unspecified"))
+        )
+        if profile_stack:
+            return profile_stack
         return await self._infer_stack_profile()
 
     def _resolve_expected_deployment_files(self, process_rules: Dict[str, Any]) -> List[str]:
@@ -178,11 +195,14 @@ class RuntimeVerifier:
             if inferred:
                 return inferred
 
-        stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "python")).strip().lower()
+        stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
+        if stack_profile not in {"python", "node", "polyglot"}:
+            stack_profile = self._stack_profile_from_surface(
+                self.project_surface_profile or str(process_rules.get("project_surface_profile", "unspecified"))
+            ) or "python"
         defaults = {
             "python": [
                 "agent_output/deployment/Dockerfile",
-                "agent_output/deployment/docker-compose.yml",
             ],
             "node": [
                 "agent_output/deployment/Dockerfile",
@@ -194,6 +214,15 @@ class RuntimeVerifier:
             ],
         }
         return list(defaults.get(stack_profile, defaults["python"]))
+
+    @staticmethod
+    def _stack_profile_from_surface(project_surface_profile: str) -> str:
+        profile = str(project_surface_profile or "").strip().lower()
+        if profile in {"backend_only", "cli", "tui"}:
+            return "python"
+        if profile == "api_vue":
+            return "polyglot"
+        return ""
 
     def _run_command(self, command: Any, timeout_sec: int, policy_source: str) -> Dict[str, Any]:
         if isinstance(command, list):

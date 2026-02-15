@@ -40,11 +40,29 @@ class Scaffolder:
     }
     _DEFAULT_FORBIDDEN_EXTENSIONS: tuple[str, ...] = (".exe", ".dll", ".so", ".dylib")
     _DEFAULT_SCAN_ROOTS: tuple[str, ...] = ("agent_output",)
+    _API_VUE_DIRECTORIES: tuple[str, ...] = (
+        "agent_output/frontend/src",
+    )
+    _API_VUE_FILES: Dict[str, str] = {
+        "agent_output/frontend/index.html": (
+            "<!doctype html>\n"
+            "<html><head><meta charset=\"UTF-8\"><title>Orket Frontend</title></head>"
+            "<body><div id=\"app\"></div><script type=\"module\" src=\"./src/main.js\"></script></body></html>\n"
+        ),
+        "agent_output/frontend/src/main.js": "console.log('orket frontend bootstrap');\n",
+    }
 
-    def __init__(self, workspace_root: Path, file_tools: Any, organization: Any = None):
+    def __init__(
+        self,
+        workspace_root: Path,
+        file_tools: Any,
+        organization: Any = None,
+        project_surface_profile: str | None = None,
+    ):
         self.workspace_root = workspace_root
         self.file_tools = file_tools
         self.organization = organization
+        self.project_surface_profile = str(project_surface_profile or "").strip().lower()
 
     async def ensure(self) -> Dict[str, Any]:
         spec = self._resolve_spec()
@@ -90,6 +108,12 @@ class Scaffolder:
             rules.get("scaffolder_scan_roots"),
             self._DEFAULT_SCAN_ROOTS,
         )
+        profile = self.project_surface_profile or str(
+            rules.get("project_surface_profile", "unspecified")
+        ).strip().lower()
+        if profile == "api_vue":
+            required_directories.extend(self._API_VUE_DIRECTORIES)
+            required_files = {**required_files, **self._API_VUE_FILES}
 
         return ScaffoldSpec(
             required_directories=tuple(required_directories),

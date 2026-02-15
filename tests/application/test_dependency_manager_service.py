@@ -118,3 +118,37 @@ async def test_dependency_manager_node_profile_policy_driven_sets(tmp_path: Path
     package_json = json.loads((tmp_path / "agent_output" / "dependencies" / "package.json").read_text(encoding="utf-8"))
     assert package_json["dependencies"]["react"] == "18.3.1"
     assert package_json["devDependencies"]["eslint"] == "9.10.0"
+
+
+@pytest.mark.asyncio
+async def test_dependency_manager_backend_profile_defaults_to_python(tmp_path: Path):
+    fs = AsyncFileTools(tmp_path)
+    org = type("Org", (), {"process_rules": {"project_surface_profile": "backend_only"}})()
+    manager = DependencyManager(
+        workspace_root=tmp_path,
+        file_tools=fs,
+        organization=org,
+        project_surface_profile="backend_only",
+    )
+
+    result = await manager.ensure()
+    assert "agent_output/dependencies/pyproject.toml" in result["required_files"]
+    assert "agent_output/dependencies/package.json" not in result["required_files"]
+
+
+@pytest.mark.asyncio
+async def test_dependency_manager_api_vue_profile_adds_vue_defaults(tmp_path: Path):
+    fs = AsyncFileTools(tmp_path)
+    org = type("Org", (), {"process_rules": {"project_surface_profile": "api_vue"}})()
+    manager = DependencyManager(
+        workspace_root=tmp_path,
+        file_tools=fs,
+        organization=org,
+        project_surface_profile="api_vue",
+    )
+
+    result = await manager.ensure()
+    assert "agent_output/dependencies/package.json" in result["required_files"]
+    package_json = json.loads((tmp_path / "agent_output" / "dependencies" / "package.json").read_text(encoding="utf-8"))
+    assert package_json["dependencies"]["vue"] == "3.5.13"
+    assert package_json["devDependencies"]["vite"] == "5.4.12"

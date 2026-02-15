@@ -431,7 +431,12 @@ async def test_execute_epic_honors_custom_loop_policy(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
     issue = SimpleNamespace(id="I1", status=CardStatus.READY, seat="dev")
     epic = SimpleNamespace(name="Policy Epic", issues=[issue], references=[])
-    team = SimpleNamespace(seats={"dev": SimpleNamespace(roles=["dev"])})
+    team = SimpleNamespace(
+        seats={
+            "dev": SimpleNamespace(roles=["dev"]),
+            "code_reviewer": SimpleNamespace(roles=["code_reviewer"]),
+        }
+    )
     env = SimpleNamespace(temperature=0.1, timeout=30)
 
     cards.get_by_build.side_effect = [[issue], [issue]]
@@ -1432,6 +1437,223 @@ def test_build_turn_context_includes_architecture_contract_for_architect(orchest
     assert "angular" in context["frontend_framework_allowed"]
     assert "monolith" in context["architecture_allowed_patterns"]
     assert "microservices" in context["architecture_allowed_patterns"]
+
+
+def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={})
+    issue = IssueConfig(id="ARC-2", seat="architect", summary="Design architecture")
+    context = orch._build_turn_context(
+        run_id="run-2",
+        issue=issue,
+        seat_name="architect",
+        roles_to_load=["architect"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+    assert context["architecture_mode"] == "force_monolith"
+    assert context["architecture_forced_pattern"] == "monolith"
+    assert context["frontend_framework_mode"] == "force_vue"
+    assert context["frontend_framework_forced"] == "vue"
+    assert context["project_surface_profile"] == "unspecified"
+
+
+def test_resolve_runtime_modes_honor_user_settings_when_process_rules_unset(orchestrator, monkeypatch):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={})
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.load_user_settings",
+        lambda: {
+            "architecture_mode": "force_microservices",
+            "frontend_framework_mode": "force_angular",
+            "project_surface_profile": "api_vue",
+        },
+    )
+    assert orch._resolve_architecture_mode() == "force_microservices"
+    assert orch._resolve_frontend_framework_mode() == "force_angular"
+    assert orch._resolve_project_surface_profile() == "api_vue"
+
+
+def test_resolve_small_project_builder_variant_from_user_settings(orchestrator, monkeypatch):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={})
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.load_user_settings",
+        lambda: {"small_project_builder_variant": "architect"},
+    )
+    assert orch._resolve_small_project_builder_variant() == "architect"
+
+
+@pytest.mark.asyncio
+async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tmp_path):
+    orch, cards, _loader = orchestrator
+    issue = SimpleNamespace(id="I1", status=CardStatus.READY, seat="coder")
+    epic = SimpleNamespace(name="No Reviewer Epic", issues=[issue], references=[])
+    team = SimpleNamespace(seats={"coder": SimpleNamespace(roles=["coder"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+    cards.get_by_build.side_effect = [[issue]]
+    cards.get_independent_ready_issues.side_effect = [[issue]]
+    (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
+
+    with pytest.raises(ExecutionFailed, match="requires a code_reviewer seat"):
+        await orch.execute_epic(
+            active_build="build-no-reviewer",
+            run_id="run-no-reviewer",
+            epic=epic,
+            team=team,
+            env=env,
+        )
+
+
+@pytest.mark.asyncio
+async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(orchestrator, monkeypatch):
+    orch, cards, loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={"small_project_builder_variant": "architect"})
+    issue = IssueConfig(id="I1", seat="coder", summary="Implement", status=CardStatus.READY)
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1", issues=[issue])
+    team = SimpleNamespace(
+        seats={
+            "architect": SimpleNamespace(roles=["architect"]),
+            "coder": SimpleNamespace(roles=["coder"]),
+            "code_reviewer": SimpleNamespace(roles=["code_reviewer"]),
+        }
+    )
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="architect", description="Role", tools=[]),
+            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+        ]
+    )
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            assert role == "architect"
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    class _Provider:
+        async def clear_context(self):
+            return None
+
+    class _ModelClient:
+        def create_provider(self, selected_model, env):
+            return _Provider()
+
+        def create_client(self, provider):
+            return SimpleNamespace()
+
+    class _Memory:
+        async def search(self, _query):
+            return []
+
+        async def remember(self, content, metadata):
+            return None
+
+    captured = {}
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            captured["role"] = context["role"]
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect: "SYSTEM")
+
+    orch.memory = _Memory()
+    orch.model_client_node = _ModelClient()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _noop
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    await orch._execute_issue_turn(
+        issue_data=issue_data,
+        epic=epic,
+        team=team,
+        env=env,
+        run_id="run-1",
+        active_build="build-1",
+        prompt_strategy_node=_PromptStrategy(),
+        executor=_Executor(),
+        toolbox=SimpleNamespace(),
+    )
+
+    assert captured["role"] == "architect"
+
+
+@pytest.mark.asyncio
+async def test_team_replan_schedules_card_when_requirements_request_replan(orchestrator):
+    orch, cards, _loader = orchestrator
+    backlog = [
+        SimpleNamespace(
+            id="REQ-1",
+            seat="requirements_analyst",
+            params={"replan_requested": True},
+            model_dump=lambda: {
+                "id": "REQ-1",
+                "seat": "requirements_analyst",
+                "params": {"replan_requested": False},
+                "status": CardStatus.READY,
+            },
+        )
+    ]
+    team = SimpleNamespace(
+        seats={
+            "architect": SimpleNamespace(roles=["architect"]),
+            "code_reviewer": SimpleNamespace(roles=["code_reviewer"]),
+        }
+    )
+
+    triggered = await orch._maybe_schedule_team_replan(
+        backlog=backlog,
+        run_id="run-abc1",
+        active_build="build-1",
+        team=team,
+    )
+
+    assert triggered is True
+    assert orch._team_replan_counts["run-abc1"] == 1
+    saved_payloads = [call[0][0] for call in cards.save.calls]
+    assert any(payload.get("id") == "REPLAN-RUN-AB-1" for payload in saved_payloads)
+
+
+@pytest.mark.asyncio
+async def test_team_replan_limit_exceeded_raises_terminal_failure(orchestrator):
+    orch, cards, _loader = orchestrator
+    orch._team_replan_counts["run-limit"] = 3
+    backlog = [
+        SimpleNamespace(
+            id="REQ-1",
+            seat="requirements_analyst",
+            params={"replan_requested": True},
+            status=CardStatus.READY,
+        )
+    ]
+    team = SimpleNamespace(
+        seats={
+            "architect": SimpleNamespace(roles=["architect"]),
+            "code_reviewer": SimpleNamespace(roles=["code_reviewer"]),
+        }
+    )
+
+    with pytest.raises(ExecutionFailed, match="TEAM_REPLAN_LIMIT_EXCEEDED"):
+        await orch._maybe_schedule_team_replan(
+            backlog=backlog,
+            run_id="run-limit",
+            active_build="build-1",
+            team=team,
+        )
+    assert cards.update_status.calls[-1][0][1] == CardStatus.BLOCKED
 
 
 @pytest.mark.asyncio

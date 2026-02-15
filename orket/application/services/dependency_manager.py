@@ -45,10 +45,17 @@ class DependencyManager:
         ),
     }
 
-    def __init__(self, workspace_root: Path, file_tools: Any, organization: Any = None):
+    def __init__(
+        self,
+        workspace_root: Path,
+        file_tools: Any,
+        organization: Any = None,
+        project_surface_profile: str | None = None,
+    ):
         self.workspace_root = workspace_root
         self.file_tools = file_tools
         self.organization = organization
+        self.project_surface_profile = str(project_surface_profile or "").strip().lower()
 
     async def ensure(self) -> Dict[str, Any]:
         spec = self._resolve_spec()
@@ -67,7 +74,13 @@ class DependencyManager:
             rules.get("dependency_manager_required_files"),
             self._DEFAULT_FILES,
         )
-        stack_profile = str(rules.get("dependency_manager_stack_profile", "polyglot")).strip().lower()
+        stack_profile = str(rules.get("dependency_manager_stack_profile", "")).strip().lower()
+        if not stack_profile:
+            stack_profile = self._stack_profile_from_surface(
+                self.project_surface_profile or str(rules.get("project_surface_profile", "unspecified")).strip().lower()
+            )
+        if not stack_profile:
+            stack_profile = "polyglot"
         pinned_required = bool(rules.get("dependency_manager_require_pinned_versions", True))
         generated_files = self._build_profile_files(rules, stack_profile, pinned_required)
         if generated_files:
@@ -108,6 +121,18 @@ class DependencyManager:
         if stack_profile in {"node", "polyglot"}:
             node_deps = self._string_map(rules.get("dependency_manager_node_dependencies"))
             node_dev_deps = self._string_map(rules.get("dependency_manager_node_dev_dependencies"))
+            profile = self.project_surface_profile or str(
+                rules.get("project_surface_profile", "unspecified")
+            ).strip().lower()
+            if profile == "api_vue":
+                node_deps = {
+                    **{"vue": "3.5.13"},
+                    **node_deps,
+                }
+                node_dev_deps = {
+                    **{"vite": "5.4.12"},
+                    **node_dev_deps,
+                }
             if pinned_required:
                 self._validate_pinned_node(node_deps)
                 self._validate_pinned_node(node_dev_deps)
@@ -120,6 +145,15 @@ class DependencyManager:
                 dev_dependencies=node_dev_deps,
             )
         return files
+
+    @staticmethod
+    def _stack_profile_from_surface(project_surface_profile: str) -> str:
+        profile = str(project_surface_profile or "").strip().lower()
+        if profile in {"backend_only", "cli", "tui"}:
+            return "python"
+        if profile == "api_vue":
+            return "polyglot"
+        return ""
 
     async def _ensure_files(self, required_files: Mapping[str, str]) -> List[str]:
         created: List[str] = []
