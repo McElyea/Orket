@@ -1,10 +1,10 @@
 # Orket Roadmap
 
-Last updated: 2026-02-15.
+Last updated: 2026-02-14.
 
 ## Operating Constraints (Current)
 1. Execution priority is Local-First Orket packaging (Phase 1).
-2. New project architecture is monolith-only for now; microservices stay locked for now.
+2. Monolith remains the default architecture; microservices are unlocked for controlled pilots behind explicit enablement.
 3. Frontend policy is Vue-only when a frontend is required.
 4. iDesign is backburnered and not a gating requirement for current roadmap execution.
 5. Small-task minimum team is one builder (`coder` or `architect` variant) plus one mandatory `code_reviewer` (never self-review).
@@ -90,27 +90,30 @@ Objective: continue architecture expansion only after Priority A is shipped and 
 3. If unlock passes, enable microservices explicitly via `ORKET_ENABLE_MICROSERVICES=true` for controlled pilots.
 4. Keep monolith as default until pilot metrics are stable.
 
-### B1. Latest Decision (2026-02-15)
-1. `microservices_pilot_decision.json` result: `enable_microservices=false`.
-2. Active recommendation remains `ORKET_ENABLE_MICROSERVICES=false`.
-3. Unlock is blocked by low pass rate and readiness/matrix threshold failures.
+### B1. Latest Decision (2026-02-14)
+1. `microservices_pilot_decision.json` result: `enable_microservices=true`.
+2. Active recommendation is now `ORKET_ENABLE_MICROSERVICES=true` for controlled pilots.
+3. Unlock criteria currently pass with `pass_rate=0.875`, `runtime_failure_rate=0.0`, `reviewer_rejection_rate=0.0`.
+4. Governance stability criteria currently pass (`terminal_failure_rate=0.0`, `guard_retry_rate=0.0`, `done_chain_mismatch=0`).
 
 ## Backburner (Not Active)
 1. iDesign-first enforcement or iDesign-specific mandatory flows.
 2. Additional frontend frameworks beyond Vue.
-3. Broad architecture expansion before Priority A and microservices unlock criteria pass.
+3. Broad architecture expansion beyond controlled microservices pilots.
 
 ## Execution Plan (Remaining)
-1. Improve monolith acceptance quality until unlock thresholds are met, then rerun:
-   - `python scripts/run_microservices_unlock_evidence.py --require-unlocked`
+1. Start controlled microservices pilot runs with explicit enablement:
+   - set `ORKET_ENABLE_MICROSERVICES=true` for pilot sessions only.
+2. Add pilot evidence slices comparing monolith vs microservices on the same project set.
+3. Keep monolith default until pilot metrics match/exceed monolith stability for two consecutive batches.
 
 ## Weekly Proof (Required)
 1. `python -m pytest tests -q`
 2. `python scripts/check_dependency_direction.py`
 3. `python scripts/check_volatility_boundaries.py`
-4. `python scripts/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json`
+4. `python scripts/run_monolith_variant_matrix.py --execute --out benchmarks/results/monolith_variant_matrix.json`
 5. `python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only`
-6. `python scripts/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --out benchmarks/results/microservices_unlock_check.json`
+6. `python scripts/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --live-report benchmarks/results/live_acceptance_patterns.json --out benchmarks/results/microservices_unlock_check.json`
 7. `python scripts/decide_microservices_pilot.py --unlock-report benchmarks/results/microservices_unlock_check.json --out benchmarks/results/microservices_pilot_decision.json`
 8. `python -m scripts.run_live_acceptance_loop --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 1`
 9. `python -m scripts.report_live_acceptance_patterns --matrix benchmarks/results/monolith_variant_matrix.json`

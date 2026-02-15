@@ -13,7 +13,7 @@ class ToolParser:
         text: str,
         diagnostics: Optional[Callable[[str, Dict[str, Any]], None]] = None,
     ) -> List[Dict[str, Any]]:
-        text = text.strip()
+        text = ToolParser.normalize_json_stringify(text or "").strip()
         results = []
 
         def _coerce_args(value: Any) -> Dict[str, Any]:
@@ -134,3 +134,65 @@ class ToolParser:
         else:
             emit("parse_empty", {"reason": "no_parseable_tool_calls"})
         return results
+
+    @staticmethod
+    def normalize_json_stringify(text: str) -> str:
+        """
+        Convert JavaScript-style JSON.stringify(payload) expressions into JSON strings.
+        This keeps tool-call extraction deterministic when models emit JS-flavored wrappers.
+        """
+        blob = text or ""
+        marker = "JSON.stringify("
+        if marker not in blob:
+            return blob
+
+        out: List[str] = []
+        idx = 0
+        while idx < len(blob):
+            marker_idx = blob.find(marker, idx)
+            if marker_idx == -1:
+                out.append(blob[idx:])
+                break
+
+            out.append(blob[idx:marker_idx])
+            expr_start = marker_idx + len(marker)
+
+            depth = 1
+            pos = expr_start
+            in_string = False
+            escaped = False
+            while pos < len(blob):
+                ch = blob[pos]
+                if in_string:
+                    if escaped:
+                        escaped = False
+                    elif ch == "\\":
+                        escaped = True
+                    elif ch == '"':
+                        in_string = False
+                else:
+                    if ch == '"':
+                        in_string = True
+                    elif ch == "(":
+                        depth += 1
+                    elif ch == ")":
+                        depth -= 1
+                        if depth == 0:
+                            break
+                pos += 1
+
+            if depth != 0:
+                out.append(blob[marker_idx:])
+                break
+
+            inner = blob[expr_start:pos].strip()
+            try:
+                parsed_inner = json.loads(inner)
+                normalized_inner = json.dumps(parsed_inner, ensure_ascii=False, separators=(",", ":"))
+            except json.JSONDecodeError:
+                normalized_inner = inner
+
+            out.append(json.dumps(normalized_inner, ensure_ascii=False))
+            idx = pos + 1
+
+        return "".join(out)

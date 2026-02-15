@@ -67,11 +67,22 @@ def aggregate_metrics(entries: List[Dict[str, Any]]) -> Dict[str, float]:
     pass_rate = 0.0
     runtime_failure_rate = 0.0
     reviewer_rejection_rate = 0.0
+    def _safe_float(summary: Dict[str, Any], key: str, default: float) -> float:
+        value = summary.get(key, default)
+        if value is None:
+            return float(default)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return float(default)
+
     for entry in entries:
         summary = entry.get("summary", {})
-        pass_rate += float(summary.get("pass_rate", 0.0) or 0.0)
-        runtime_failure_rate += float(summary.get("runtime_failure_rate", 1.0) or 1.0)
-        reviewer_rejection_rate += float(summary.get("reviewer_rejection_rate", 1.0) or 1.0)
+        if not isinstance(summary, dict):
+            summary = {}
+        pass_rate += _safe_float(summary, "pass_rate", 0.0)
+        runtime_failure_rate += _safe_float(summary, "runtime_failure_rate", 1.0)
+        reviewer_rejection_rate += _safe_float(summary, "reviewer_rejection_rate", 1.0)
 
     n = float(len(entries))
     return {

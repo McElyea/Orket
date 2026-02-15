@@ -110,3 +110,31 @@ def test_parse_tool_calls_envelope_openai_style():
     assert results[0]["args"]["path"] == "agent_output/main.py"
     assert results[1]["tool"] == "update_issue_status"
 
+
+def test_parse_json_stringify_arguments_normalized():
+    text = """
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "agent_output/design.txt",
+        "content": JSON.stringify({
+          "recommendation": "monolith",
+          "confidence": 0.9,
+          "evidence": {
+            "estimated_domains": 1,
+            "external_integrations": 0,
+            "independent_scaling_needs": false,
+            "deployment_complexity": "low",
+            "team_parallelism": "low",
+            "operational_maturity": "high"
+          }
+        })
+      }
+    }
+    """
+    results = ToolParser.parse(text)
+    assert len(results) == 1
+    assert results[0]["tool"] == "write_file"
+    assert results[0]["args"]["path"] == "agent_output/design.txt"
+    assert "\"recommendation\":\"monolith\"" in results[0]["args"]["content"]
+

@@ -1125,6 +1125,83 @@ async def test_turn_executor_consistency_scope_allows_markdown_json_fences(tmp_p
 
 
 @pytest.mark.asyncio
+async def test_turn_executor_consistency_scope_allows_json_array_envelope(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '[{"tool": "update_issue_status", "args": {"status": "code_review"}}]',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "provided_context": [],
+        "declared_interfaces": ["update_issue_status"],
+        "consistency_tool_calls_only": True,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 1
+    assert toolbox.calls[0][1]["status"] == "code_review"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_consistency_scope_allows_comma_separated_objects(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/review.md", "content": "ok"}},'
+            '\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["verification_scope"] = {
+        "workspace": [],
+        "provided_context": [],
+        "declared_interfaces": ["write_file", "update_issue_status"],
+        "consistency_tool_calls_only": True,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[1][1]["status"] == "code_review"
+
+
+@pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
@@ -1239,3 +1316,134 @@ async def test_turn_executor_architecture_contract_enforces_forced_frontend_fram
     assert result.success is False
     assert model.calls == 2
     assert "architecture decision contract not met" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_architecture_contract_allows_relaxed_json_like_content(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 0, \\"independent_scaling_needs\\": false, \\"deployment_complexity\\": low, \\"team_parallelism\\": high, \\"operational_maturity\\": high}, \\"frontend_framework\\": \\"vue\\"}"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="ARC",
+        summary="architect",
+        description="Design architecture",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "architect"
+    context["roles"] = ["architect"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["architecture_decision_required"] = True
+    context["architecture_mode"] = "force_monolith"
+    context["architecture_decision_path"] = "agent_output/design.txt"
+    context["architecture_allowed_patterns"] = ["monolith", "microservices"]
+    context["architecture_forced_pattern"] = "monolith"
+    context["frontend_framework_allowed"] = ["vue"]
+    context["frontend_framework_forced"] = "vue"
+    context["verification_scope"] = {
+        "workspace": [],
+        "provided_context": [],
+        "declared_interfaces": ["write_file", "update_issue_status"],
+        "consistency_tool_calls_only": True,
+    }
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[0][0] == "write_file"
+    assert toolbox.calls[1][1]["status"] == "code_review"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_autofills_required_status_tool_call(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 0, \\"independent_scaling_needs\\": false, \\"deployment_complexity\\": \\"low\\", \\"team_parallelism\\": \\"low\\", \\"operational_maturity\\": \\"high\\"}, \\"frontend_framework\\": \\"vue\\"}"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="ARC",
+        summary="architect",
+        description="Design architecture",
+        tools=["write_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "architect"
+    context["roles"] = ["architect"]
+    context["required_action_tools"] = ["write_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["architecture_decision_required"] = True
+    context["architecture_mode"] = "force_monolith"
+    context["architecture_decision_path"] = "agent_output/design.txt"
+    context["architecture_allowed_patterns"] = ["monolith", "microservices"]
+    context["architecture_forced_pattern"] = "monolith"
+    context["frontend_framework_allowed"] = ["vue"]
+    context["frontend_framework_forced"] = "vue"
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[0][0] == "write_file"
+    assert toolbox.calls[1][0] == "update_issue_status"
+    assert toolbox.calls[1][1]["status"] == "code_review"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_autofills_integrity_guard_done_when_runtime_passed(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "read_file", "args": {"path": "agent_output/requirements.txt"}}\n'
+            '{"tool": "read_file", "args": {"path": "agent_output/design.txt"}}\n'
+            '{"tool": "read_file", "args": {"path": "agent_output/main.py"}}\n'
+            '{"tool": "read_file", "args": {"path": "agent_output/verification/runtime_verification.json"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="GRD",
+        summary="integrity_guard",
+        description="Final gate",
+        tools=["read_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "integrity_guard"
+    context["roles"] = ["integrity_guard"]
+    context["required_action_tools"] = ["read_file", "update_issue_status"]
+    context["required_statuses"] = ["done", "blocked"]
+    context["required_read_paths"] = [
+        "agent_output/requirements.txt",
+        "agent_output/design.txt",
+        "agent_output/main.py",
+        "agent_output/verification/runtime_verification.json",
+    ]
+    context["runtime_verifier_ok"] = True
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 5
+    assert toolbox.calls[-1][0] == "update_issue_status"
+    assert toolbox.calls[-1][1]["status"] == "done"

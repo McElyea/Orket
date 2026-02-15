@@ -69,6 +69,17 @@ def test_aggregate_metrics_average_values():
     assert metrics["reviewer_rejection_rate"] == pytest.approx(0.3)
 
 
+def test_aggregate_metrics_preserves_zero_values():
+    entries = [
+        {"executed": True, "summary": {"pass_rate": 0.5, "runtime_failure_rate": 0.0, "reviewer_rejection_rate": 0.0}},
+        {"executed": True, "summary": {"pass_rate": 0.5, "runtime_failure_rate": 0.0, "reviewer_rejection_rate": 0.0}},
+    ]
+    metrics = aggregate_metrics(entries)
+    assert metrics["pass_rate"] == pytest.approx(0.5)
+    assert metrics["runtime_failure_rate"] == pytest.approx(0.0)
+    assert metrics["reviewer_rejection_rate"] == pytest.approx(0.0)
+
+
 def test_missing_required_combinations_detected():
     entries = [{"builder_variant": "coder", "project_surface_profile": "backend_only"}]
     policy = {
