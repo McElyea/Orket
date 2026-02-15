@@ -19,6 +19,11 @@ from orket.application.services.gitea_state_pilot import (
     collect_gitea_state_pilot_inputs,
     evaluate_gitea_state_pilot_readiness,
 )
+from orket.application.services.runtime_policy import (
+    resolve_gitea_worker_max_duration_seconds,
+    resolve_gitea_worker_max_idle_streak,
+    resolve_gitea_worker_max_iterations,
+)
 from orket.application.services.gitea_state_worker import GiteaStateWorker
 from orket.application.services.gitea_state_worker_coordinator import GiteaStateWorkerCoordinator
 
@@ -36,12 +41,12 @@ def _parse_args() -> argparse.Namespace:
         default=5.0,
         help="Lease renew heartbeat interval in seconds.",
     )
-    parser.add_argument("--max-iterations", type=int, default=100, help="Maximum coordinator iterations.")
-    parser.add_argument("--max-idle-streak", type=int, default=10, help="Maximum consecutive idle iterations.")
+    parser.add_argument("--max-iterations", type=int, default=None, help="Maximum coordinator iterations.")
+    parser.add_argument("--max-idle-streak", type=int, default=None, help="Maximum consecutive idle iterations.")
     parser.add_argument(
         "--max-duration-seconds",
         type=float,
-        default=60.0,
+        default=None,
         help="Maximum coordinator runtime in seconds.",
     )
     parser.add_argument(
@@ -83,6 +88,19 @@ async def _run_loop(args: argparse.Namespace) -> Dict[str, Any]:
         failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
         raise RuntimeError(f"gitea state pilot readiness failed: {failures}")
 
+    max_iterations = resolve_gitea_worker_max_iterations(
+        args.max_iterations,
+        os.environ.get("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
+    )
+    max_idle_streak = resolve_gitea_worker_max_idle_streak(
+        args.max_idle_streak,
+        os.environ.get("ORKET_GITEA_WORKER_MAX_IDLE_STREAK"),
+    )
+    max_duration_seconds = resolve_gitea_worker_max_duration_seconds(
+        args.max_duration_seconds,
+        os.environ.get("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS"),
+    )
+
     adapter = GiteaStateAdapter(
         base_url=_required_env("ORKET_GITEA_URL"),
         token=_required_env("ORKET_GITEA_TOKEN"),
@@ -99,9 +117,9 @@ async def _run_loop(args: argparse.Namespace) -> Dict[str, Any]:
     coordinator = GiteaStateWorkerCoordinator(
         worker=worker,
         fetch_limit=args.fetch_limit,
-        max_iterations=args.max_iterations,
-        max_idle_streak=args.max_idle_streak,
-        max_duration_seconds=args.max_duration_seconds,
+        max_iterations=max_iterations,
+        max_idle_streak=max_idle_streak,
+        max_duration_seconds=max_duration_seconds,
         idle_sleep_seconds=args.idle_sleep_seconds,
     )
 
@@ -113,6 +131,9 @@ async def _run_loop(args: argparse.Namespace) -> Dict[str, Any]:
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "worker_id": worker_id,
         "fetch_limit": max(1, int(args.fetch_limit)),
+        "max_iterations": max_iterations,
+        "max_idle_streak": max_idle_streak,
+        "max_duration_seconds": max_duration_seconds,
         "summary": summary,
     }
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 
 from scripts import run_gitea_state_worker_coordinator as script
@@ -50,3 +51,48 @@ def test_main_returns_failure_on_loop_exception(monkeypatch) -> None:
 
     monkeypatch.setattr(script, "_run_loop", _boom)
     assert script.main() == 1
+
+
+def test_run_loop_uses_policy_env_defaults_for_bounds(monkeypatch) -> None:
+    args = _args(
+        allow_mutate=True,
+        max_iterations=None,
+        max_idle_streak=None,
+        max_duration_seconds=None,
+    )
+    monkeypatch.setenv("ORKET_GITEA_WORKER_MAX_ITERATIONS", "33")
+    monkeypatch.setenv("ORKET_GITEA_WORKER_MAX_IDLE_STREAK", "4")
+    monkeypatch.setenv("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS", "90")
+    monkeypatch.setattr(script, "collect_gitea_state_pilot_inputs", lambda: {})
+    monkeypatch.setattr(script, "evaluate_gitea_state_pilot_readiness", lambda _inputs: {"ready": True})
+    monkeypatch.setattr(script, "_required_env", lambda _name: "x")
+    monkeypatch.setattr(script, "_resolve_worker_id", lambda _raw: "worker-1")
+
+    seen = {}
+
+    class _FakeAdapter:
+        def __init__(self, **_kwargs):
+            pass
+
+    class _FakeWorker:
+        def __init__(self, **_kwargs):
+            pass
+
+    class _FakeCoordinator:
+        def __init__(self, **kwargs):
+            seen.update(kwargs)
+
+        async def run(self, *, work_fn):
+            return {"iterations": 0, "consumed_count": 0, "idle_count": 0, "stop_reason": "max_idle_streak", "elapsed_ms": 0}
+
+    monkeypatch.setattr(script, "GiteaStateAdapter", _FakeAdapter)
+    monkeypatch.setattr(script, "GiteaStateWorker", _FakeWorker)
+    monkeypatch.setattr(script, "GiteaStateWorkerCoordinator", _FakeCoordinator)
+
+    payload = asyncio.run(script._run_loop(args))
+    assert payload["max_iterations"] == 33
+    assert payload["max_idle_streak"] == 4
+    assert payload["max_duration_seconds"] == 90.0
+    assert seen["max_iterations"] == 33
+    assert seen["max_idle_streak"] == 4
+    assert seen["max_duration_seconds"] == 90.0

@@ -27,6 +27,9 @@ DEFAULT_STATE_BACKEND_MODE = "local"
 DEFAULT_GITEA_STATE_PILOT_ENABLED = False
 DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/microservices_unlock_check.json"
 DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/microservices_pilot_stability_check.json"
+DEFAULT_GITEA_WORKER_MAX_ITERATIONS = 100
+DEFAULT_GITEA_WORKER_MAX_IDLE_STREAK = 10
+DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS = 60.0
 
 PROJECT_SURFACE_PROFILE_OPTIONS: List[Dict[str, str]] = [
     {"value": "unspecified", "label": "Unspecified (Legacy Defaults)"},
@@ -235,3 +238,42 @@ def resolve_gitea_state_pilot_enabled(*values: Any) -> bool:
         if raw in {"0", "false", "no", "off", "disabled"}:
             return False
     return DEFAULT_GITEA_STATE_PILOT_ENABLED
+
+
+def resolve_gitea_worker_max_iterations(*values: Any) -> int:
+    for value in values:
+        raw = str(value or "").strip()
+        if not raw:
+            continue
+        try:
+            parsed = int(raw)
+        except ValueError:
+            continue
+        return max(1, parsed)
+    return DEFAULT_GITEA_WORKER_MAX_ITERATIONS
+
+
+def resolve_gitea_worker_max_idle_streak(*values: Any) -> int:
+    for value in values:
+        raw = str(value or "").strip()
+        if not raw:
+            continue
+        try:
+            parsed = int(raw)
+        except ValueError:
+            continue
+        return max(1, parsed)
+    return DEFAULT_GITEA_WORKER_MAX_IDLE_STREAK
+
+
+def resolve_gitea_worker_max_duration_seconds(*values: Any) -> float:
+    for value in values:
+        raw = str(value or "").strip()
+        if not raw:
+            continue
+        try:
+            parsed = float(raw)
+        except ValueError:
+            continue
+        return max(0.0, parsed)
+    return DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS

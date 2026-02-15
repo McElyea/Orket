@@ -1,6 +1,9 @@
 import pytest
 
 from orket.application.services.runtime_policy import (
+    resolve_gitea_worker_max_duration_seconds,
+    resolve_gitea_worker_max_idle_streak,
+    resolve_gitea_worker_max_iterations,
     resolve_gitea_state_pilot_enabled,
     resolve_state_backend_mode,
     runtime_policy_options,
@@ -27,6 +30,20 @@ def test_resolve_gitea_state_pilot_enabled_aliases():
     assert resolve_gitea_state_pilot_enabled("true") is True
     assert resolve_gitea_state_pilot_enabled("disabled") is False
     assert resolve_gitea_state_pilot_enabled("false") is False
+
+
+def test_resolve_gitea_worker_bounds():
+    assert resolve_gitea_worker_max_iterations("25") == 25
+    assert resolve_gitea_worker_max_iterations("-1") == 1
+    assert resolve_gitea_worker_max_iterations("bad", None) == 100
+
+    assert resolve_gitea_worker_max_idle_streak("3") == 3
+    assert resolve_gitea_worker_max_idle_streak("0") == 1
+    assert resolve_gitea_worker_max_idle_streak("bad", "") == 10
+
+    assert resolve_gitea_worker_max_duration_seconds("12.5") == 12.5
+    assert resolve_gitea_worker_max_duration_seconds("-1") == 0.0
+    assert resolve_gitea_worker_max_duration_seconds("bad", None) == 60.0
 
 
 def test_engine_rejects_gitea_state_backend_without_pilot_enablement(monkeypatch, tmp_path):

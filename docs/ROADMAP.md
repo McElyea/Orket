@@ -17,7 +17,6 @@ Objective: add a remote state store + work queue surface via Gitea without chang
 1. Phase 3: multi-runner support.
    - Remaining implementation:
      - integrate coordinator execution path into runtime flow for `state_backend_mode=gitea` (behind pilot gating)
-     - define and enforce bounded stop policy defaults for production runs (`max_iterations`, `max_idle_streak`, `max_duration_seconds`)
      - add operational docs for lease expiry/duplicate-pickup behavior and recovery expectations
    - Required gate commands (must remain green):
      - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready`
