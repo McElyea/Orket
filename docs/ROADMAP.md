@@ -22,6 +22,8 @@ Objective: add a remote state store + work queue surface via Gitea without chang
      - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready`
      - `python scripts/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea_state_hardening_check.json --require-ready`
      - `python scripts/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea_state_hardening_check.json --out benchmarks/results/gitea_state_phase3_readiness.json --require-ready`
+     - Preferred bundled gate:
+       - `python scripts/run_gitea_state_rollout_gates.py --out benchmarks/results/gitea_state_rollout_gates.json --require-ready`
    - Startup validation must block `state_backend_mode=gitea` unless pilot enablement and readiness are satisfied.
 4. Acceptance criteria:
    - `local` remains default and stable.
