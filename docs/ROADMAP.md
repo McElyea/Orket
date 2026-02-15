@@ -13,38 +13,7 @@ Last updated: 2026-02-15.
 ## Priority 1: Gitea-Backed State Adapter (Top Priority)
 Objective: add a remote state store + work queue surface via Gitea without changing the Orket runtime loop.
 
-### P1-A. GiteaStateAdapter v1 (Single-Runner Safe)
-1. Implement `GiteaStateAdapter` for issues labeled `status/ready`.
-2. Implement optimistic concurrency for updates (ETag/version compare-and-swap).
-3. Implement lease contract in issue snapshot:
-   - `lease.owner_id`
-   - `lease.acquired_at`
-   - `lease.expires_at`
-   - `lease.epoch`
-4. Tolerate duplicate pickup attempts with idempotent acquire/write behavior.
-5. Acceptance criteria:
-   - Two acquire attempts on the same issue do not produce dual ownership.
-   - Stale writer is rejected by CAS.
-   - Repeated transition/event writes are idempotent.
-   - Duplicate delivery of the same acquire/write request is a no-op after first success.
-
-### P1-B. State Model in Gitea
-1. Issue body stores compact snapshot only:
-   - card identity/metadata
-   - current state
-   - lease block
-   - minimal execution fields
-2. Issue comments are append-only event log:
-   - guard failures
-   - retries
-   - fix hints
-   - transitions
-   - errors
-3. Acceptance criteria:
-   - Snapshot remains compact and parseable.
-   - Full timeline is reconstructable from comments + snapshot head.
-
-### P1-C. Concurrency + Transition Safety
+### P1-A. Concurrency + Transition Safety
 1. Add explicit state transition preconditions (allowed `from -> to` map).
 2. Apply CAS + transition validation in every state mutation.
 3. Add lease expiration + takeover rules keyed by `lease.epoch`.
@@ -53,7 +22,7 @@ Objective: add a remote state store + work queue surface via Gitea without chang
    - Expired leases can be reclaimed without split-brain updates.
    - Allowed `from -> to` transitions are sourced from the existing Orket state machine contract.
 
-### P1-D. Failure Semantics + Resilience
+### P1-B. Failure Semantics + Resilience
 1. Classify and handle adapter failure classes:
    - rate limit
    - stale ETag/version conflict
@@ -66,7 +35,7 @@ Objective: add a remote state store + work queue surface via Gitea without chang
    - Non-retryable failures surface clear terminal reasons.
    - Adapter emits structured logs for all failure classes including `backend`, `card_id`, and `operation`.
 
-### P1-E. Rollout Strategy
+### P1-C. Rollout Strategy
 1. Phase 1: single-runner pilot on `gitea` backend.
 2. Phase 2: hardening pass with contention/failure injection tests.
 3. Phase 3: multi-runner support (after Phase 2 pass criteria).

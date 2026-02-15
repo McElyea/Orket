@@ -232,7 +232,46 @@ class GiteaStateAdapter(StateBackendContract):
         reason: Optional[str] = None,
     ) -> None:
         self._validate_transition(from_state=from_state, to_state=to_state)
-        raise NotImplementedError("transition_state persistence is planned in next gitea adapter slice.")
+        issue_number = int(card_id)
+        issue_response = await self._request_response("GET", f"/issues/{issue_number}")
+        issue = issue_response.json()
+        if not isinstance(issue, dict):
+            raise ValueError(f"Issue {issue_number} payload missing for transition.")
+        snapshot = decode_snapshot(str(issue.get("body") or ""))
+        if str(snapshot.state) != str(from_state):
+            # Idempotent duplicate write: transition already applied.
+            if str(snapshot.state) == str(to_state):
+                return
+            raise ValueError(
+                f"Stale transition rejected for {card_id}: expected from_state={snapshot.state}, got {from_state}."
+            )
+        etag = issue_response.headers.get("ETag")
+        new_snapshot = CardSnapshot(
+            card_id=snapshot.card_id,
+            state=str(to_state),
+            backend=snapshot.backend,
+            version=int(snapshot.version) + 1,
+            lease=snapshot.lease,
+            metadata=dict(snapshot.metadata or {}),
+        )
+        if reason:
+            new_snapshot.metadata["transition_reason"] = reason
+        patch_headers: Dict[str, str] = {}
+        if etag:
+            patch_headers["If-Match"] = etag
+        try:
+            await self._request_json(
+                "PATCH",
+                f"/issues/{issue_number}",
+                payload={"body": encode_snapshot(new_snapshot)},
+                extra_headers=patch_headers or None,
+            )
+        except httpx.HTTPStatusError as exc:
+            if exc.response is not None and exc.response.status_code in {409, 412}:
+                raise ValueError(
+                    f"Stale transition rejected for {card_id}: compare-and-swap conflict."
+                ) from exc
+            raise
 
     async def release_or_fail(
         self,

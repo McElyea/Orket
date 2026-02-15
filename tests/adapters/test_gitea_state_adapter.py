@@ -120,8 +120,6 @@ async def test_unimplemented_mutating_operations_are_explicit():
         token="secret",
     )
     with pytest.raises(NotImplementedError):
-        await adapter.transition_state("1", from_state="ready", to_state="in_progress")
-    with pytest.raises(NotImplementedError):
         await adapter.release_or_fail("1", final_state="failed", error="boom")
 
 
@@ -135,6 +133,103 @@ async def test_transition_state_uses_canonical_state_machine_validation():
     )
     with pytest.raises(ValueError, match="Invalid state transition"):
         await adapter.transition_state("1", from_state="done", to_state="in_progress")
+
+
+@pytest.mark.asyncio
+async def test_transition_state_persists_with_if_match(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-10", state="ready", version=1))
+    captured = {}
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        assert method == "GET"
+        assert path == "/issues/10"
+        return _FakeResponse({"number": 10, "body": body}, headers={"ETag": '"v1"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        captured["method"] = method
+        captured["path"] = path
+        captured["payload"] = payload
+        captured["headers"] = extra_headers
+        return {"ok": True}
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    await adapter.transition_state("10", from_state="ready", to_state="in_progress", reason="start work")
+
+    assert captured["method"] == "PATCH"
+    assert captured["path"] == "/issues/10"
+    assert captured["headers"] == {"If-Match": '"v1"'}
+    assert '"state":"in_progress"' in captured["payload"]["body"]
+    assert '"transition_reason":"start work"' in captured["payload"]["body"]
+
+
+@pytest.mark.asyncio
+async def test_transition_state_rejects_stale_from_state(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-11", state="code_review", version=4))
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 11, "body": body}, headers={"ETag": '"v4"'})
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    with pytest.raises(ValueError, match="Stale transition rejected"):
+        await adapter.transition_state("11", from_state="ready", to_state="in_progress")
+
+
+@pytest.mark.asyncio
+async def test_transition_state_is_idempotent_when_target_state_already_applied(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-11A", state="in_progress", version=5))
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 111, "body": body}, headers={"ETag": '"v5"'})
+
+    async def fail_if_called(*args, **kwargs):
+        raise AssertionError("PATCH should not happen for idempotent duplicate transition.")
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fail_if_called)
+    await adapter.transition_state("111", from_state="ready", to_state="in_progress")
+
+
+@pytest.mark.asyncio
+async def test_transition_state_rejects_etag_conflict(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-12", state="ready", version=5))
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 12, "body": body}, headers={"ETag": '"v5"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        request = httpx.Request("PATCH", "https://gitea.local/api/v1/repos/acme/orket/issues/12")
+        response = httpx.Response(409, request=request)
+        raise httpx.HTTPStatusError("conflict", request=request, response=response)
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    with pytest.raises(ValueError, match="compare-and-swap conflict"):
+        await adapter.transition_state("12", from_state="ready", to_state="in_progress")
 
 
 class _FakeResponse:
