@@ -71,3 +71,15 @@ async def test_unimplemented_mutating_operations_are_explicit():
         await adapter.transition_state("1", from_state="ready", to_state="in_progress")
     with pytest.raises(NotImplementedError):
         await adapter.release_or_fail("1", final_state="failed", error="boom")
+
+
+@pytest.mark.asyncio
+async def test_transition_state_uses_canonical_state_machine_validation():
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    with pytest.raises(ValueError, match="Invalid state transition"):
+        await adapter.transition_state("1", from_state="done", to_state="in_progress")

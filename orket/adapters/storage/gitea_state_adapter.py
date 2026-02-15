@@ -6,6 +6,8 @@ import httpx
 
 from orket.adapters.storage.gitea_state_models import build_event_comment, decode_snapshot
 from orket.core.contracts.state_backend import StateBackendContract
+from orket.core.domain.state_machine import StateMachine, StateMachineError
+from orket.schema import CardStatus, CardType
 
 
 class GiteaStateAdapter(StateBackendContract):
@@ -129,7 +131,8 @@ class GiteaStateAdapter(StateBackendContract):
         to_state: str,
         reason: Optional[str] = None,
     ) -> None:
-        raise NotImplementedError("transition_state is planned in next gitea adapter slice.")
+        self._validate_transition(from_state=from_state, to_state=to_state)
+        raise NotImplementedError("transition_state persistence is planned in next gitea adapter slice.")
 
     async def release_or_fail(
         self,
@@ -139,3 +142,24 @@ class GiteaStateAdapter(StateBackendContract):
         error: Optional[str] = None,
     ) -> None:
         raise NotImplementedError("release_or_fail is planned in next gitea adapter slice.")
+
+    @staticmethod
+    def _validate_transition(*, from_state: str, to_state: str) -> None:
+        """
+        Transition rules are derived from the canonical Orket state machine.
+        """
+        try:
+            current = CardStatus(str(from_state))
+            requested = CardStatus(str(to_state))
+        except ValueError as exc:
+            raise ValueError(f"Unknown card status transition: {from_state} -> {to_state}") from exc
+        try:
+            # Adapter precondition check only; persistence semantics come in later slices.
+            StateMachine.validate_transition(
+                CardType.ISSUE,
+                current,
+                requested,
+                roles=["system", "integrity_guard"],
+            )
+        except StateMachineError as exc:
+            raise ValueError(f"Invalid state transition: {from_state} -> {to_state}") from exc
