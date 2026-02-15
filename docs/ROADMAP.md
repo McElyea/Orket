@@ -18,6 +18,7 @@ Objective: add a remote state store + work queue surface via Gitea without chang
    - Current groundwork in place:
      - lease acquire/reclaim/renew semantics with CAS + epoch
      - idempotent event and transition writes
+     - worker loop service (`claim -> in_progress -> renew heartbeat -> finalize`)
    - Required gate commands (must remain green while building Phase 3):
      - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready`
      - `python scripts/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea_state_hardening_check.json --require-ready`
