@@ -7,6 +7,7 @@ import pytest
 
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
+from orket.application.services.gitea_state_worker import GiteaStateWorker
 
 
 class _SimResponse:
@@ -57,6 +58,8 @@ def _wire(adapter: GiteaStateAdapter, store: _Store):
         raise AssertionError(f"unexpected request_response: {method} {path}")
 
     async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        if method == "GET" and path == "/issues":
+            return [{"number": store.issue_number, "body": encode_snapshot(store.snapshot)}]
         if method == "PATCH" and path == f"/issues/{store.issue_number}":
             try:
                 return store.patch_issue(payload, (extra_headers or {}).get("If-Match")).json()
@@ -112,3 +115,36 @@ async def test_multi_runner_lease_lifecycle_with_renew_and_takeover(monkeypatch)
     assert takeover_b is not None
     assert takeover_b["lease"]["owner_id"] == "runner-b"
     assert takeover_b["lease"]["epoch"] >= 2
+
+
+@pytest.mark.asyncio
+async def test_worker_takeover_after_expired_foreign_lease(monkeypatch):
+    store = _Store()
+    adapter_a = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    adapter_b = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    _wire(adapter_a, store)
+    _wire(adapter_b, store)
+
+    worker_b = GiteaStateWorker(
+        adapter=adapter_b,
+        worker_id="runner-b",
+        lease_seconds=5,
+        renew_interval_seconds=0.1,
+    )
+
+    # Runner A claims lease and then disappears without processing.
+    lease_a = await adapter_a.acquire_lease(str(store.issue_number), owner_id="runner-a", lease_seconds=5)
+    assert lease_a is not None
+    blocked = await worker_b.run_once(work_fn=lambda _c: _noop_result())
+    assert blocked is False
+
+    # Force lease expiry; worker B should now be able to process.
+    store.snapshot.lease.expires_at = "2024-01-01T00:00:00+00:00"
+    processed = await worker_b.run_once(work_fn=lambda _c: _noop_result())
+    assert processed is True
+    assert str(store.snapshot.lease.owner_id or "") == ""
+    assert store.snapshot.state == "code_review"
+
+
+async def _noop_result():
+    return {"ok": True}
