@@ -23,6 +23,7 @@ DEFAULT_ARCHITECTURE_MODE = "force_monolith"
 DEFAULT_FRONTEND_FRAMEWORK_MODE = "force_vue"
 DEFAULT_PROJECT_SURFACE_PROFILE = "unspecified"
 DEFAULT_SMALL_PROJECT_BUILDER_VARIANT = "auto"
+DEFAULT_STATE_BACKEND_MODE = "local"
 DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/microservices_unlock_check.json"
 DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/microservices_pilot_stability_check.json"
 
@@ -37,6 +38,10 @@ SMALL_PROJECT_BUILDER_VARIANT_OPTIONS: List[Dict[str, str]] = [
     {"value": "auto", "label": "Auto"},
     {"value": "coder", "label": "Coder Builder"},
     {"value": "architect", "label": "Architect Builder"},
+]
+STATE_BACKEND_MODE_OPTIONS: List[Dict[str, str]] = [
+    {"value": "local", "label": "Local DB (Default)"},
+    {"value": "gitea", "label": "Gitea (Experimental)"},
 ]
 
 
@@ -164,6 +169,11 @@ def runtime_policy_options() -> Dict[str, Any]:
             "options": SMALL_PROJECT_BUILDER_VARIANT_OPTIONS,
             "input_style": "radio",
         },
+        "state_backend_mode": {
+            "default": DEFAULT_STATE_BACKEND_MODE,
+            "options": STATE_BACKEND_MODE_OPTIONS,
+            "input_style": "radio",
+        },
     }
 
 
@@ -192,3 +202,14 @@ def resolve_small_project_builder_variant(*values: Any) -> str:
         "architect": "architect",
     }
     return aliases.get(raw, DEFAULT_SMALL_PROJECT_BUILDER_VARIANT)
+
+
+def resolve_state_backend_mode(*values: Any) -> str:
+    raw = _pick_first_non_empty(values)
+    aliases = {
+        "local": "local",
+        "sqlite": "local",
+        "db": "local",
+        "gitea": "gitea",
+    }
+    return aliases.get(raw, DEFAULT_STATE_BACKEND_MODE)

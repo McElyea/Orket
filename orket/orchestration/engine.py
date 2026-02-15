@@ -1,14 +1,17 @@
-﻿from pathlib import Path
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
+import os
 
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository, AsyncRunLedgerRepository
 )
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
+from orket.application.services.runtime_policy import resolve_state_backend_mode
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 from orket.runtime_paths import resolve_runtime_db_path
+from orket.settings import load_user_settings
 
 class OrchestrationEngine:
     """
@@ -33,20 +36,22 @@ class OrchestrationEngine:
         self.department = department
         self.db_path = resolve_runtime_db_path(db_path)
         self.config_root = self.engine_runtime_node.resolve_config_root(config_root)
-        
-        # Repositories (Accessors)
-        self.cards = cards_repo or AsyncCardRepository(self.db_path)
-        self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
-        self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
-        self.success = success_repo or AsyncSuccessRepository(self.db_path)
-        self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
-        
+
         # Config & Assets
         from orket.orket import ConfigLoader
         self.loader = ConfigLoader(self.config_root, self.department)
         
         # Load Organization (Global Policy)
         self.org = self.loader.load_organization()
+        self.state_backend_mode = self._resolve_state_backend_mode()
+        self._validate_state_backend_mode()
+
+        # Repositories (Accessors)
+        self.cards = cards_repo or AsyncCardRepository(self.db_path)
+        self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
+        self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
+        self.success = success_repo or AsyncSuccessRepository(self.db_path)
+        self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
 
         
         # PERSISTENT PIEPELINE (Avoid rebuilds)
@@ -61,6 +66,22 @@ class OrchestrationEngine:
             snapshots_repo=self.snapshots,
             success_repo=self.success,
             run_ledger_repo=self.run_ledger,
+        )
+
+    def _resolve_state_backend_mode(self) -> str:
+        env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("state_backend_mode", "")).strip()
+        user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
+        return resolve_state_backend_mode(env_raw, process_raw, user_raw)
+
+    def _validate_state_backend_mode(self) -> None:
+        if self.state_backend_mode != "gitea":
+            return
+        raise NotImplementedError(
+            "State backend mode 'gitea' is experimental and not wired yet. "
+            "No local database fallback is used when gitea mode is selected."
         )
 
 
@@ -188,4 +209,5 @@ class OrchestrationEngine:
             "model_response": model_path.read_text(encoding="utf-8") if model_path.exists() else None,
             "parsed_tool_calls": _read_json(parsed_tools_path),
         }
+
 

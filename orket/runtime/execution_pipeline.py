@@ -15,6 +15,7 @@ from orket.adapters.storage.async_repositories import (
     AsyncRunLedgerRepository,
 )
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
+from orket.application.services.runtime_policy import resolve_state_backend_mode
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
 from orket.runtime_paths import resolve_runtime_db_path
@@ -27,6 +28,7 @@ from orket.schema import (
     TeamConfig,
 )
 from orket.utils import get_eos_sprint, sanitize_name
+from orket.settings import load_user_settings
 
 
 class ExecutionPipeline:
@@ -58,6 +60,8 @@ class ExecutionPipeline:
         self.db_path = resolve_runtime_db_path(db_path)
 
         self.org = self.loader.load_organization()
+        self.state_backend_mode = self._resolve_state_backend_mode()
+        self._validate_state_backend_mode()
         self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
         self.pipeline_wiring_node = self.decision_nodes.resolve_pipeline_wiring(self.org)
 
@@ -88,6 +92,22 @@ class ExecutionPipeline:
             db_path=self.db_path,
             loader=self.loader,
             sandbox_orchestrator=self.sandbox_orchestrator,
+        )
+
+    def _resolve_state_backend_mode(self) -> str:
+        env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("state_backend_mode", "")).strip()
+        user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
+        return resolve_state_backend_mode(env_raw, process_raw, user_raw)
+
+    def _validate_state_backend_mode(self) -> None:
+        if self.state_backend_mode != "gitea":
+            return
+        raise NotImplementedError(
+            "State backend mode 'gitea' is experimental and not wired yet. "
+            "No local database fallback is used when gitea mode is selected."
         )
 
     async def run_card(self, card_id: str, **kwargs) -> Any:

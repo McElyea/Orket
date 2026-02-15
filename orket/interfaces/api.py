@@ -23,6 +23,7 @@ from orket.application.services.runtime_policy import (
     resolve_frontend_framework_mode,
     resolve_project_surface_profile,
     resolve_small_project_builder_variant,
+    resolve_state_backend_mode,
     runtime_policy_options,
 )
 
@@ -106,6 +107,7 @@ class RuntimePolicyUpdateRequest(BaseModel):
     frontend_framework_mode: Optional[str] = None
     project_surface_profile: Optional[str] = None
     small_project_builder_variant: Optional[str] = None
+    state_backend_mode: Optional[str] = None
 
 # Security dependency
 API_KEY_NAME = "X-API-Key"
@@ -301,11 +303,17 @@ async def get_runtime_policy():
         process_rules.get("small_project_builder_variant"),
         user_settings.get("small_project_builder_variant"),
     )
+    state_backend_mode = resolve_state_backend_mode(
+        os.environ.get("ORKET_STATE_BACKEND_MODE", ""),
+        process_rules.get("state_backend_mode"),
+        user_settings.get("state_backend_mode"),
+    )
     return {
         "architecture_mode": architecture_mode,
         "frontend_framework_mode": frontend_framework_mode,
         "project_surface_profile": project_surface_profile,
         "small_project_builder_variant": small_project_builder_variant,
+        "state_backend_mode": state_backend_mode,
         "default_architecture_mode": "force_monolith",
         "allowed_architecture_patterns": allowed_architecture_patterns(),
         "microservices_unlocked": is_microservices_unlocked(),
@@ -326,6 +334,8 @@ async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
         current["small_project_builder_variant"] = resolve_small_project_builder_variant(
             req.small_project_builder_variant
         )
+    if req.state_backend_mode is not None:
+        current["state_backend_mode"] = resolve_state_backend_mode(req.state_backend_mode)
     save_user_settings(current)
     return {
         "ok": True,
@@ -334,6 +344,7 @@ async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
             "frontend_framework_mode": current.get("frontend_framework_mode"),
             "project_surface_profile": current.get("project_surface_profile"),
             "small_project_builder_variant": current.get("small_project_builder_variant"),
+            "state_backend_mode": current.get("state_backend_mode"),
         },
     }
 

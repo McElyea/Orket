@@ -25,6 +25,7 @@ wheels/
 orket_persistence.db
 workspace/runs/
 workspace/default/*.log
+workspace/default/*.log*
 workspace/default/*.txt
 workspace/default/agents/
 logs/
