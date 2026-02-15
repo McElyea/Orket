@@ -54,6 +54,16 @@ def _log_path(workspace: Path, role: str = None) -> Path:
 
 
 RUNTIME_EVENT_SCHEMA_VERSION = "v1"
+RUNTIME_EVENT_ARTIFACT_EVENTS = {
+    "session_start",
+    "session_end",
+    "turn_start",
+    "turn_complete",
+    "turn_failed",
+    "runtime_verifier_completed",
+    "guard_retry_scheduled",
+    "guard_terminal_failure",
+}
 
 
 def _build_runtime_event(event: str, data: Dict[str, Any], role: str) -> Dict[str, Any]:
@@ -87,6 +97,9 @@ def _build_runtime_event(event: str, data: Dict[str, Any], role: str) -> Dict[st
 def _append_runtime_event_artifact(workspace: Path, runtime_event: Dict[str, Any]) -> None:
     session_id = str(runtime_event.get("session_id") or "").strip()
     if not session_id:
+        return
+    event_name = str(runtime_event.get("event") or "").strip()
+    if event_name not in RUNTIME_EVENT_ARTIFACT_EVENTS:
         return
     path = workspace / "agent_output" / "observability" / "runtime_events.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)

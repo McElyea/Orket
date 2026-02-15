@@ -83,6 +83,7 @@ class Orchestrator:
         self.notes = NoteStore()
         self.transcript = []
         self._sandbox_locks = defaultdict(asyncio.Lock)
+        self._sandbox_failed_rocks = set()
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
         self.decision_nodes = DecisionNodeRegistry()
         self.planner_node = self.decision_nodes.resolve_planner(self.org)
@@ -279,8 +280,12 @@ class Orchestrator:
         """Helper to trigger sandbox deployment with per-epic locking."""
         from orket.domain.sandbox import TechStack, SandboxStatus
         rock_id = epic.parent_id or epic.id
+        if rock_id in self._sandbox_failed_rocks:
+            return
         
         async with self._sandbox_locks[rock_id]:
+            if rock_id in self._sandbox_failed_rocks:
+                return
             # Double-check if already running under the lock
             existing = self.sandbox_orchestrator.registry.get(f"sandbox-{rock_id}")
             if existing and existing.status == SandboxStatus.RUNNING:
@@ -298,6 +303,7 @@ class Orchestrator:
                     workspace_path=str(self.workspace)
                 )
             except (RuntimeError, ValueError, OSError) as e:
+                self._sandbox_failed_rocks.add(rock_id)
                 deploy_failed = {"rock_id": rock_id, "error": str(e)}
                 if run_id:
                     deploy_failed["run_id"] = run_id

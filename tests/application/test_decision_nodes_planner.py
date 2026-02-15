@@ -241,6 +241,20 @@ def test_default_evaluator_failure_governance_violation():
     assert evaluator.governance_violation_message("blocked") == "iDesign Violation: blocked"
 
 
+def test_default_evaluator_failure_deterministic_security_is_governance_violation():
+    evaluator = DefaultEvaluatorNode()
+    issue = SimpleNamespace(retry_count=1, max_retries=3)
+    result = SimpleNamespace(
+        violations=[],
+        error="Deterministic failure: security scope contract not met after corrective reprompt.",
+    )
+
+    decision = evaluator.evaluate_failure(issue, result)
+
+    assert decision["action"] == "governance_violation"
+    assert decision["next_retry_count"] == 1
+
+
 def test_default_evaluator_failure_retry():
     evaluator = DefaultEvaluatorNode()
     issue = SimpleNamespace(retry_count=1, max_retries=3)

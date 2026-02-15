@@ -126,5 +126,5 @@ async def test_path_traversal_blocked(setup_env, monkeypatch):
     
     report = json.loads(report_path.read_text())
     assert report["violation_type"] == "governance"
-    assert "Security violation" in report["detail"]
+    assert "security scope contract not met" in report["detail"].lower()
 

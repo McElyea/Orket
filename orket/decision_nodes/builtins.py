@@ -97,7 +97,7 @@ class DefaultEvaluatorNode:
         }
 
     def evaluate_failure(self, issue: Any, result: Any) -> Dict[str, Any]:
-        if result.violations:
+        if result.violations or self._is_governance_deterministic_failure(result):
             return {"action": "governance_violation", "next_retry_count": issue.retry_count}
 
         next_retry_count = issue.retry_count + 1
@@ -105,6 +105,21 @@ class DefaultEvaluatorNode:
             return {"action": "catastrophic", "next_retry_count": next_retry_count}
 
         return {"action": "retry", "next_retry_count": next_retry_count}
+
+    def _is_governance_deterministic_failure(self, result: Any) -> bool:
+        error_text = str(getattr(result, "error", "") or "").strip().lower()
+        if not error_text.startswith("deterministic failure:"):
+            return False
+        governance_markers = (
+            "security scope contract not met",
+            "hallucination scope contract not met",
+            "consistency scope contract not met",
+            "guard rejection payload contract not met",
+            "read path contract not met",
+            "write path contract not met",
+            "architecture decision contract not met",
+        )
+        return any(marker in error_text for marker in governance_markers)
 
     def success_post_actions(self, success_eval: Dict[str, Any]) -> Dict[str, Any]:
         trigger_sandbox = bool(success_eval.get("trigger_sandbox"))

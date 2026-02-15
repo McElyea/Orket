@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import py_compile
 import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
@@ -41,8 +39,8 @@ class RuntimeVerifier:
         for target in targets:
             checked_files.append(str(target.relative_to(self.workspace_root)).replace("\\", "/"))
             try:
-                await asyncio.to_thread(py_compile.compile, str(target), doraise=True)
-            except py_compile.PyCompileError as exc:
+                await asyncio.to_thread(self._check_python_syntax, target)
+            except (SyntaxError, ValueError, OSError) as exc:
                 failure_breakdown["python_compile"] = failure_breakdown.get("python_compile", 0) + 1
                 errors.append(str(exc))
 
@@ -125,8 +123,13 @@ class RuntimeVerifier:
     @staticmethod
     def _default_commands_for_profile(stack_profile: str) -> List[Any]:
         if stack_profile in {"python", "polyglot"}:
-            return [[sys.executable, "-m", "compileall", "-q", "agent_output"]]
+            return []
         return []
+
+    @staticmethod
+    def _check_python_syntax(path: Path) -> None:
+        source = path.read_text(encoding="utf-8")
+        compile(source, str(path), "exec")
 
     def _resolve_runtime_timeout_seconds(self) -> int:
         process_rules = {}

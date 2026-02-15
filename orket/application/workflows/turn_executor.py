@@ -1552,6 +1552,8 @@ class TurnExecutor:
 
     def _non_json_residue(self, content: str) -> str:
         blob = content or ""
+        # Models frequently wrap tool-call JSON in markdown fences; treat fence tokens as formatting noise.
+        blob = re.sub(r"```(?:json)?", " ", blob, flags=re.IGNORECASE)
         if not blob.strip():
             return ""
         decoder = json.JSONDecoder()

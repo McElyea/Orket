@@ -19,7 +19,7 @@ async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
     assert result.ok is True
     assert "agent_output/main.py" in result.checked_files
     assert result.errors == []
-    assert len(result.command_results) >= 1
+    assert result.command_results == []
     assert result.failure_breakdown == {}
     assert result.guard_contract.result == "pass"
     assert result.guard_contract.terminal_failure is False
