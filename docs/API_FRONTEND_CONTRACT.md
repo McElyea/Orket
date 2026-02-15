@@ -7,7 +7,9 @@ Canonical API contract for dashboard/front-end workflows.
 
 ## Authentication
 1. `/v1/*` requires `X-API-Key`.
-2. Live stream endpoint is `/ws/events`.
+2. Live stream endpoint is `/ws/events` and requires API key via:
+   - `X-API-Key` header, or
+   - `api_key` query parameter.
 
 ## Core Workflows
 
@@ -63,7 +65,16 @@ Canonical API contract for dashboard/front-end workflows.
    - Returns sandbox log text for service-level views.
 2. `GET /v1/system/metrics`
    - Returns host metrics for live monitoring cards.
-3. `WS /ws/events`
+3. `GET /v1/logs`
+   - Query params:
+     - `session_id` (optional)
+     - `event` (optional)
+     - `role` (optional)
+     - `start_time` (optional ISO datetime)
+     - `end_time` (optional ISO datetime)
+     - `limit` (default `200`, max `2000`)
+     - `offset` (default `0`)
+4. `WS /ws/events`
    - Pushes runtime event/log records in real time.
 
 ### 4. Cards
@@ -109,7 +120,6 @@ Canonical API contract for dashboard/front-end workflows.
 
 ## Planned Expansions
 1. Dedicated settings endpoint family (`/v1/settings`).
-2. Dedicated historical log query endpoints (`/v1/logs`).
 
 ## Orchestration Controls
 1. `POST /v1/sessions/{session_id}/halt`

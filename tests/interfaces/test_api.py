@@ -1347,6 +1347,70 @@ def test_run_detail_and_replay_404_paths(monkeypatch):
     assert replay.status_code == 404
 
 
+def test_logs_endpoint_filters_and_paginates(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+
+    default_workspace = Path(tmp_path) / "workspace" / "default"
+    default_workspace.mkdir(parents=True, exist_ok=True)
+    log_path = default_workspace / "orket.log"
+    lines = [
+        {
+            "timestamp": "2026-02-15T12:00:00+00:00",
+            "role": "coder",
+            "event": "turn_start",
+            "data": {"runtime_event": {"session_id": "S-1"}},
+        },
+        {
+            "timestamp": "2026-02-15T12:05:00+00:00",
+            "role": "code_reviewer",
+            "event": "turn_complete",
+            "data": {"runtime_event": {"session_id": "S-1"}},
+        },
+        {
+            "timestamp": "2026-02-15T12:10:00+00:00",
+            "role": "coder",
+            "event": "turn_start",
+            "data": {"runtime_event": {"session_id": "S-2"}},
+        },
+    ]
+    log_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+
+    response = client.get(
+        "/v1/logs?session_id=S-1&role=code_reviewer&limit=10&offset=0",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 1
+    assert payload["count"] == 1
+    assert payload["items"][0]["event"] == "turn_complete"
+    assert payload["filters"]["session_id"] == "S-1"
+
+
+def test_logs_endpoint_validates_datetime(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.get(
+        "/v1/logs?start_time=not-a-date",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 400
+    assert "Invalid datetime" in response.json()["detail"]
+
+
+def test_websocket_events_requires_api_key(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    with pytest.raises(Exception):
+        with client.websocket_connect("/ws/events"):
+            pass
+
+
+def test_websocket_events_accepts_valid_api_key(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    with client.websocket_connect("/ws/events?api_key=test-key") as ws:
+        ws.send_text("ping")
+
+
 def test_runs_sessions_use_runtime_invocation_policies(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 

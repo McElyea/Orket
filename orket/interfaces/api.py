@@ -1,6 +1,8 @@
 import asyncio
+import json
 from pathlib import Path
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query
@@ -546,6 +548,105 @@ async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
     return {"logs": logs}
 
 
+def _coerce_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'")
+
+
+def _read_log_records(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    records: list[dict] = []
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            parsed = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            records.append(parsed)
+    return records
+
+
+@v1_router.get("/logs")
+async def list_logs(
+    session_id: Optional[str] = None,
+    event: Optional[str] = None,
+    role: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    limit: int = Query(default=200, ge=1, le=2000),
+    offset: int = Query(default=0, ge=0),
+):
+    start_dt = _coerce_datetime(start_time)
+    end_dt = _coerce_datetime(end_time)
+
+    candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
+    if session_id:
+        candidate_files.append(PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log")
+
+    records: list[dict] = []
+    for path in candidate_files:
+        records.extend(_read_log_records(path))
+
+    def _record_session_id(record: dict) -> str:
+        data = record.get("data", {})
+        if isinstance(data, dict):
+            runtime_event = data.get("runtime_event", {})
+            if isinstance(runtime_event, dict):
+                return str(runtime_event.get("session_id") or "")
+            return str(data.get("session_id") or "")
+        return ""
+
+    filtered: list[dict] = []
+    for record in records:
+        rec_event = str(record.get("event") or "")
+        rec_role = str(record.get("role") or "")
+        rec_timestamp = str(record.get("timestamp") or "")
+        rec_session_id = _record_session_id(record)
+
+        if session_id and rec_session_id != session_id:
+            continue
+        if event and rec_event != event:
+            continue
+        if role and rec_role != role:
+            continue
+
+        try:
+            ts_dt = datetime.fromisoformat(rec_timestamp)
+        except ValueError:
+            ts_dt = None
+        if start_dt and (ts_dt is None or ts_dt < start_dt):
+            continue
+        if end_dt and (ts_dt is None or ts_dt > end_dt):
+            continue
+
+        filtered.append(record)
+
+    filtered.sort(key=lambda item: str(item.get("timestamp") or ""), reverse=True)
+    page = filtered[offset : offset + limit]
+    return {
+        "items": page,
+        "count": len(page),
+        "total": len(filtered),
+        "limit": limit,
+        "offset": offset,
+        "filters": {
+            "session_id": session_id,
+            "event": event,
+            "role": role,
+            "start_time": start_time,
+            "end_time": end_time,
+        },
+    }
+
+
 @v1_router.get("/cards")
 async def list_cards(
     build_id: Optional[str] = None,
@@ -666,6 +767,13 @@ async def event_broadcaster():
 
 @app.websocket("/ws/events")
 async def websocket_endpoint(websocket: WebSocket):
+    expected_key = os.getenv("ORKET_API_KEY")
+    header_key = websocket.headers.get(API_KEY_NAME) or websocket.headers.get(API_KEY_NAME.lower())
+    query_key = websocket.query_params.get("api_key")
+    supplied_key = header_key or query_key
+    if not api_runtime_node.is_api_key_valid(expected_key, supplied_key):
+        await websocket.close(code=4403)
+        return
     await websocket.accept()
     await runtime_state.add_websocket(websocket)
     try:
