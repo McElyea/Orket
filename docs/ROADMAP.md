@@ -16,7 +16,6 @@ Objective: add a remote state store + work queue surface via Gitea without chang
 ### P1-A. Rollout Strategy
 1. Phase 3: multi-runner support.
    - Remaining implementation:
-     - wire a thin long-running coordinator entrypoint around `GiteaStateWorker.run_once()` and persist run summary artifacts per run
      - integrate coordinator execution path into runtime flow for `state_backend_mode=gitea` (behind pilot gating)
      - define and enforce bounded stop policy defaults for production runs (`max_iterations`, `max_idle_streak`, `max_duration_seconds`)
      - add operational docs for lease expiry/duplicate-pickup behavior and recovery expectations

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 import pytest
 
@@ -12,10 +13,12 @@ class _FakeWorker:
         self._outcomes = list(outcomes)
         self.calls = 0
         self.work_fns = []
+        self.fetch_limits = []
 
-    async def run_once(self, *, work_fn):
+    async def run_once(self, *, work_fn, fetch_limit: int = 1):
         self.calls += 1
         self.work_fns.append(work_fn)
+        self.fetch_limits.append(fetch_limit)
         if self._outcomes:
             return self._outcomes.pop(0)
         return False
@@ -86,6 +89,7 @@ async def test_run_passes_work_fn_to_worker_each_iteration():
     worker = _FakeWorker([True, False])
     coordinator = GiteaStateWorkerCoordinator(
         worker=worker,
+        fetch_limit=7,
         max_iterations=2,
         max_idle_streak=10,
         max_duration_seconds=60.0,
@@ -98,3 +102,24 @@ async def test_run_passes_work_fn_to_worker_each_iteration():
     await coordinator.run(work_fn=_work)
     assert worker.calls == 2
     assert worker.work_fns == [_work, _work]
+    assert worker.fetch_limits == [7, 7]
+
+
+@pytest.mark.asyncio
+async def test_run_writes_summary_artifact_when_path_provided(tmp_path):
+    worker = _FakeWorker([False, False])
+    coordinator = GiteaStateWorkerCoordinator(
+        worker=worker,
+        max_iterations=10,
+        max_idle_streak=2,
+        max_duration_seconds=60.0,
+    )
+    out_path = tmp_path / "benchmarks" / "results" / "gitea_state_worker_run.json"
+
+    async def _work(_card):
+        return {"ok": True}
+
+    summary = await coordinator.run(work_fn=_work, summary_out=out_path)
+    assert out_path.exists()
+    payload = json.loads(out_path.read_text(encoding="utf-8"))
+    assert payload == summary
