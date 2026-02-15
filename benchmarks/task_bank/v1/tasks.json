@@ -1,0 +1,1802 @@
+[
+  {
+    "id": "001",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #001.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "002",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #002.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "003",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #003.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "004",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #004.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "005",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #005.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "006",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #006.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "007",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #007.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "008",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #008.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "009",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #009.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "010",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #010.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "011",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #011.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "012",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #012.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "013",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #013.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "014",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #014.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "015",
+    "tier": 1,
+    "description": "Deterministic single-file logic task #015.",
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "016",
+    "tier": 2,
+    "description": "Multi-file component task #016.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "017",
+    "tier": 2,
+    "description": "Multi-file component task #017.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "018",
+    "tier": 2,
+    "description": "Multi-file component task #018.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "019",
+    "tier": 2,
+    "description": "Multi-file component task #019.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "020",
+    "tier": 2,
+    "description": "Multi-file component task #020.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "021",
+    "tier": 2,
+    "description": "Multi-file component task #021.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "022",
+    "tier": 2,
+    "description": "Multi-file component task #022.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "023",
+    "tier": 2,
+    "description": "Multi-file component task #023.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "024",
+    "tier": 2,
+    "description": "Multi-file component task #024.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "025",
+    "tier": 2,
+    "description": "Multi-file component task #025.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "026",
+    "tier": 2,
+    "description": "Multi-file component task #026.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "027",
+    "tier": 2,
+    "description": "Multi-file component task #027.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "028",
+    "tier": 2,
+    "description": "Multi-file component task #028.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "029",
+    "tier": 2,
+    "description": "Multi-file component task #029.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "030",
+    "tier": 2,
+    "description": "Multi-file component task #030.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "031",
+    "tier": 2,
+    "description": "Multi-file component task #031.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "032",
+    "tier": 2,
+    "description": "Multi-file component task #032.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "033",
+    "tier": 2,
+    "description": "Multi-file component task #033.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "034",
+    "tier": 2,
+    "description": "Multi-file component task #034.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "035",
+    "tier": 2,
+    "description": "Multi-file component task #035.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict"
+    }
+  },
+  {
+    "id": "036",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #036.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "037",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #037.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "038",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #038.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "039",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #039.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "040",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #040.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "041",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #041.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "042",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #042.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "043",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #043.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "044",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #044.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "045",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #045.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "046",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #046.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "047",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #047.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "048",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #048.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "049",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #049.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "050",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #050.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "051",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #051.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "052",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #052.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "053",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #053.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "054",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #054.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "055",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #055.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "056",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #056.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "057",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #057.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "058",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #058.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "059",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #059.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "060",
+    "tier": 3,
+    "description": "Stateful crash-recovery task #060.",
+    "acceptance_contract": {
+      "mode": "module",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "061",
+    "tier": 4,
+    "description": "Ambiguous architecture task #061.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "062",
+    "tier": 4,
+    "description": "Ambiguous architecture task #062.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "063",
+    "tier": 4,
+    "description": "Ambiguous architecture task #063.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "064",
+    "tier": 4,
+    "description": "Ambiguous architecture task #064.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "065",
+    "tier": 4,
+    "description": "Ambiguous architecture task #065.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "066",
+    "tier": 4,
+    "description": "Ambiguous architecture task #066.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "067",
+    "tier": 4,
+    "description": "Ambiguous architecture task #067.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "068",
+    "tier": 4,
+    "description": "Ambiguous architecture task #068.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "069",
+    "tier": 4,
+    "description": "Ambiguous architecture task #069.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "070",
+    "tier": 4,
+    "description": "Ambiguous architecture task #070.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "071",
+    "tier": 4,
+    "description": "Ambiguous architecture task #071.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "072",
+    "tier": 4,
+    "description": "Ambiguous architecture task #072.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "073",
+    "tier": 4,
+    "description": "Ambiguous architecture task #073.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "074",
+    "tier": 4,
+    "description": "Ambiguous architecture task #074.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "075",
+    "tier": 4,
+    "description": "Ambiguous architecture task #075.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "bounded"
+    }
+  },
+  {
+    "id": "076",
+    "tier": 5,
+    "description": "Full-system multi-directory task #076.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "077",
+    "tier": 5,
+    "description": "Full-system multi-directory task #077.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "078",
+    "tier": 5,
+    "description": "Full-system multi-directory task #078.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "079",
+    "tier": 5,
+    "description": "Full-system multi-directory task #079.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "080",
+    "tier": 5,
+    "description": "Full-system multi-directory task #080.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "081",
+    "tier": 5,
+    "description": "Full-system multi-directory task #081.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "082",
+    "tier": 5,
+    "description": "Full-system multi-directory task #082.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "083",
+    "tier": 5,
+    "description": "Full-system multi-directory task #083.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "084",
+    "tier": 5,
+    "description": "Full-system multi-directory task #084.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "085",
+    "tier": 5,
+    "description": "Full-system multi-directory task #085.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "086",
+    "tier": 5,
+    "description": "Full-system multi-directory task #086.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "087",
+    "tier": 5,
+    "description": "Full-system multi-directory task #087.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "088",
+    "tier": 5,
+    "description": "Full-system multi-directory task #088.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "089",
+    "tier": 5,
+    "description": "Full-system multi-directory task #089.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "090",
+    "tier": 5,
+    "description": "Full-system multi-directory task #090.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "091",
+    "tier": 5,
+    "description": "Full-system multi-directory task #091.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "092",
+    "tier": 5,
+    "description": "Full-system multi-directory task #092.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "093",
+    "tier": 5,
+    "description": "Full-system multi-directory task #093.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "094",
+    "tier": 5,
+    "description": "Full-system multi-directory task #094.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "095",
+    "tier": 5,
+    "description": "Full-system multi-directory task #095.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "096",
+    "tier": 6,
+    "description": "Orchestration stress and convergence task #096.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "097",
+    "tier": 6,
+    "description": "Orchestration stress and convergence task #097.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "098",
+    "tier": 6,
+    "description": "Orchestration stress and convergence task #098.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "099",
+    "tier": 6,
+    "description": "Orchestration stress and convergence task #099.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  },
+  {
+    "id": "100",
+    "tier": 6,
+    "description": "Orchestration stress and convergence task #100.",
+    "acceptance_contract": {
+      "mode": "system",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Implementation completes without crash",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "convergence"
+    }
+  }
+]
