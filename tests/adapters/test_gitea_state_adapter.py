@@ -1,7 +1,11 @@
 import pytest
-import httpx
 
-from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
+from orket.adapters.storage.gitea_state_adapter import (
+    GiteaAdapterAuthError,
+    GiteaAdapterConflictError,
+    GiteaAdapterRateLimitError,
+    GiteaStateAdapter,
+)
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
 
 
@@ -222,9 +226,7 @@ async def test_transition_state_rejects_etag_conflict(monkeypatch):
         return _FakeResponse({"number": 12, "body": body}, headers={"ETag": '"v5"'})
 
     async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
-        request = httpx.Request("PATCH", "https://gitea.local/api/v1/repos/acme/orket/issues/12")
-        response = httpx.Response(409, request=request)
-        raise httpx.HTTPStatusError("conflict", request=request, response=response)
+        raise GiteaAdapterConflictError("conflict")
 
     monkeypatch.setattr(adapter, "_request_response", fake_request_response)
     monkeypatch.setattr(adapter, "_request_json", fake_request_json)
@@ -348,11 +350,18 @@ async def test_acquire_lease_returns_none_on_etag_conflict(monkeypatch):
         return _FakeResponse({"number": 8, "body": body}, headers={"ETag": '"v1"'})
 
     async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
-        request = httpx.Request("PATCH", "https://gitea.local/api/v1/repos/acme/orket/issues/8")
-        response = httpx.Response(412, request=request)
-        raise httpx.HTTPStatusError("precondition failed", request=request, response=response)
+        raise GiteaAdapterConflictError("precondition failed")
 
     monkeypatch.setattr(adapter, "_request_response", fake_request_response)
     monkeypatch.setattr(adapter, "_request_json", fake_request_json)
     lease = await adapter.acquire_lease("8", owner_id="runner-a", lease_seconds=30)
     assert lease is None
+
+
+def test_classify_http_error_maps_status_codes():
+    err = GiteaStateAdapter._classify_http_error(status_code=429, exc=RuntimeError("x"))
+    assert isinstance(err, GiteaAdapterRateLimitError)
+    err = GiteaStateAdapter._classify_http_error(status_code=403, exc=RuntimeError("x"))
+    assert isinstance(err, GiteaAdapterAuthError)
+    err = GiteaStateAdapter._classify_http_error(status_code=412, exc=RuntimeError("x"))
+    assert isinstance(err, GiteaAdapterConflictError)

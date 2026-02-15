@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import json
+import logging
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -16,6 +18,33 @@ from orket.adapters.storage.gitea_state_models import (
 from orket.core.contracts.state_backend import StateBackendContract
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType
+
+
+logger = logging.getLogger("orket.gitea_state_adapter")
+
+
+class GiteaAdapterError(RuntimeError):
+    pass
+
+
+class GiteaAdapterRateLimitError(GiteaAdapterError):
+    pass
+
+
+class GiteaAdapterAuthError(GiteaAdapterError):
+    pass
+
+
+class GiteaAdapterConflictError(GiteaAdapterError):
+    pass
+
+
+class GiteaAdapterTimeoutError(GiteaAdapterError):
+    pass
+
+
+class GiteaAdapterNetworkError(GiteaAdapterError):
+    pass
 
 
 class GiteaStateAdapter(StateBackendContract):
@@ -64,16 +93,41 @@ class GiteaStateAdapter(StateBackendContract):
         headers = dict(self.headers)
         if extra_headers:
             headers.update(extra_headers)
-        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
-            response = await client.request(
-                method,
-                url,
-                headers=headers,
-                params=params,
-                json=payload,
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                response = await client.request(
+                    method,
+                    url,
+                    headers=headers,
+                    params=params,
+                    json=payload,
+                )
+                response.raise_for_status()
+                return response
+        except httpx.TimeoutException as exc:
+            self._log_failure(
+                "timeout",
+                operation=f"{method} {path}",
+                error=str(exc),
             )
-            response.raise_for_status()
-            return response
+            raise GiteaAdapterTimeoutError(str(exc)) from exc
+        except httpx.HTTPStatusError as exc:
+            status_code = exc.response.status_code if exc.response is not None else None
+            err = self._classify_http_error(status_code=status_code, exc=exc)
+            self._log_failure(
+                "http_status",
+                operation=f"{method} {path}",
+                status_code=status_code,
+                error=str(exc),
+            )
+            raise err from exc
+        except httpx.RequestError as exc:
+            self._log_failure(
+                "network",
+                operation=f"{method} {path}",
+                error=str(exc),
+            )
+            raise GiteaAdapterNetworkError(str(exc)) from exc
 
     async def _request_json(
         self,
@@ -189,10 +243,8 @@ class GiteaStateAdapter(StateBackendContract):
                 payload={"body": encode_snapshot(new_snapshot)},
                 extra_headers=patch_headers or None,
             )
-        except httpx.HTTPStatusError as exc:
-            if exc.response is not None and exc.response.status_code in {409, 412}:
-                return None
-            raise
+        except GiteaAdapterConflictError:
+            return None
 
         return {
             "card_id": new_snapshot.card_id,
@@ -266,12 +318,10 @@ class GiteaStateAdapter(StateBackendContract):
                 payload={"body": encode_snapshot(new_snapshot)},
                 extra_headers=patch_headers or None,
             )
-        except httpx.HTTPStatusError as exc:
-            if exc.response is not None and exc.response.status_code in {409, 412}:
-                raise ValueError(
-                    f"Stale transition rejected for {card_id}: compare-and-swap conflict."
-                ) from exc
-            raise
+        except GiteaAdapterConflictError as exc:
+            raise ValueError(
+                f"Stale transition rejected for {card_id}: compare-and-swap conflict."
+            ) from exc
 
     async def release_or_fail(
         self,
@@ -333,3 +383,22 @@ class GiteaStateAdapter(StateBackendContract):
             if str(event.idempotency_key or "").strip() == idempotency_key:
                 return True
         return False
+
+    @staticmethod
+    def _classify_http_error(*, status_code: Optional[int], exc: Exception) -> GiteaAdapterError:
+        if status_code == 429:
+            return GiteaAdapterRateLimitError(str(exc))
+        if status_code in {401, 403}:
+            return GiteaAdapterAuthError(str(exc))
+        if status_code in {409, 412}:
+            return GiteaAdapterConflictError(str(exc))
+        return GiteaAdapterError(str(exc))
+
+    def _log_failure(self, failure_class: str, **fields: Any) -> None:
+        record = {
+            "event": "gitea_state_adapter_failure",
+            "backend": "gitea",
+            "failure_class": failure_class,
+            **fields,
+        }
+        logger.warning(json.dumps(record, ensure_ascii=False))
