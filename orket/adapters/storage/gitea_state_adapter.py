@@ -17,7 +17,7 @@ from orket.adapters.storage.gitea_state_models import (
 )
 from orket.core.contracts.state_backend import StateBackendContract
 from orket.core.domain.state_machine import StateMachine, StateMachineError
-from orket.schema import CardStatus, CardType
+from orket.schema import CardStatus, CardType, WaitReason
 
 
 logger = logging.getLogger("orket.gitea_state_adapter")
@@ -53,7 +53,7 @@ class GiteaStateAdapter(StateBackendContract):
 
     P1 slices:
     - Implemented: fetch_ready_cards, append_event, acquire_lease (CAS + lease epoch)
-    - Pending: transitions persistence, release/fail semantics
+    - Pending: retry/backoff policy and multi-runner hardening flows
     """
 
     def __init__(
@@ -330,7 +330,65 @@ class GiteaStateAdapter(StateBackendContract):
         final_state: str,
         error: Optional[str] = None,
     ) -> None:
-        raise NotImplementedError("release_or_fail is planned in next gitea adapter slice.")
+        issue_number = int(card_id)
+        issue_response = await self._request_response("GET", f"/issues/{issue_number}")
+        issue = issue_response.json()
+        if not isinstance(issue, dict):
+            raise ValueError(f"Issue {issue_number} payload missing for release/fail.")
+        snapshot = decode_snapshot(str(issue.get("body") or ""))
+        target_state = str(final_state)
+
+        # Idempotent duplicate write: already finalized and lease is released.
+        if (
+            str(snapshot.state) == target_state
+            and not str(snapshot.lease.owner_id or "").strip()
+            and not str(snapshot.lease.expires_at or "").strip()
+        ):
+            return
+
+        self._validate_transition(from_state=str(snapshot.state), to_state=target_state)
+
+        etag = issue_response.headers.get("ETag")
+        released_lease = LeaseInfo(
+            owner_id=None,
+            acquired_at=None,
+            expires_at=None,
+            epoch=int(snapshot.lease.epoch or 0),
+        )
+        new_snapshot = CardSnapshot(
+            card_id=snapshot.card_id,
+            state=target_state,
+            backend=snapshot.backend,
+            version=int(snapshot.version) + 1,
+            lease=released_lease,
+            metadata=dict(snapshot.metadata or {}),
+        )
+        if error:
+            new_snapshot.metadata["terminal_error"] = error
+        patch_headers: Dict[str, str] = {}
+        if etag:
+            patch_headers["If-Match"] = etag
+        try:
+            await self._request_json(
+                "PATCH",
+                f"/issues/{issue_number}",
+                payload={"body": encode_snapshot(new_snapshot)},
+                extra_headers=patch_headers or None,
+            )
+        except GiteaAdapterConflictError as exc:
+            raise ValueError(
+                f"Stale release/fail rejected for {card_id}: compare-and-swap conflict."
+            ) from exc
+
+        event_payload = {"final_state": target_state}
+        if error:
+            event_payload["error"] = error
+        event_payload["idempotency_key"] = f"release:{new_snapshot.version}:{target_state}"
+        await self.append_event(
+            str(issue_number),
+            event_type="release_or_fail",
+            payload=event_payload,
+        )
 
     @staticmethod
     def _validate_transition(*, from_state: str, to_state: str) -> None:
@@ -344,11 +402,15 @@ class GiteaStateAdapter(StateBackendContract):
             raise ValueError(f"Unknown card status transition: {from_state} -> {to_state}") from exc
         try:
             # Adapter precondition check only; persistence semantics come in later slices.
+            wait_reason = None
+            if requested in {CardStatus.BLOCKED, CardStatus.WAITING_FOR_DEVELOPER}:
+                wait_reason = WaitReason.SYSTEM
             StateMachine.validate_transition(
                 CardType.ISSUE,
                 current,
                 requested,
                 roles=["system", "integrity_guard"],
+                wait_reason=wait_reason,
             )
         except StateMachineError as exc:
             raise ValueError(f"Invalid state transition: {from_state} -> {to_state}") from exc

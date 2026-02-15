@@ -123,8 +123,8 @@ async def test_unimplemented_mutating_operations_are_explicit():
         repo="orket",
         token="secret",
     )
-    with pytest.raises(NotImplementedError):
-        await adapter.release_or_fail("1", final_state="failed", error="boom")
+    # All state-changing contract methods are now implemented in the adapter.
+    assert adapter is not None
 
 
 @pytest.mark.asyncio
@@ -407,3 +407,107 @@ def test_classify_http_error_maps_status_codes():
     assert isinstance(err, GiteaAdapterAuthError)
     err = GiteaStateAdapter._classify_http_error(status_code=412, exc=RuntimeError("x"))
     assert isinstance(err, GiteaAdapterConflictError)
+
+
+@pytest.mark.asyncio
+async def test_release_or_fail_persists_terminal_state_and_clears_lease(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(
+        CardSnapshot(
+            card_id="ISSUE-20",
+            state="in_progress",
+            version=6,
+            lease={
+                "owner_id": "runner-a",
+                "acquired_at": "2026-02-15T10:00:00+00:00",
+                "expires_at": "3026-02-15T10:01:00+00:00",
+                "epoch": 2,
+            },
+        )
+    )
+    captured = {"patch": None, "event": None}
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 20, "body": body}, headers={"ETag": '"v6"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        if method == "PATCH":
+            captured["patch"] = (path, payload, extra_headers)
+            return {"ok": True}
+        if method == "GET" and path == "/issues/20/comments":
+            return []
+        if method == "POST":
+            captured["event"] = (path, payload)
+            return {"id": 1}
+        return {"ok": True}
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    await adapter.release_or_fail("20", final_state="blocked", error="runtime verifier failed")
+
+    assert captured["patch"] is not None
+    assert captured["patch"][0] == "/issues/20"
+    assert captured["patch"][2] == {"If-Match": '"v6"'}
+    payload_body = captured["patch"][1]["body"]
+    assert '"state":"blocked"' in payload_body
+    assert '"owner_id"' not in payload_body
+    assert '"terminal_error":"runtime verifier failed"' in payload_body
+    assert captured["event"][0] == "/issues/20/comments"
+    assert "release_or_fail" in captured["event"][1]["body"]
+
+
+@pytest.mark.asyncio
+async def test_release_or_fail_is_idempotent_when_already_final_and_unleased(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-21", state="blocked", version=3))
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 21, "body": body}, headers={"ETag": '"v3"'})
+
+    async def fail_if_called(*args, **kwargs):
+        raise AssertionError("No PATCH/POST should happen for idempotent release_or_fail.")
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fail_if_called)
+    await adapter.release_or_fail("21", final_state="blocked", error=None)
+
+
+@pytest.mark.asyncio
+async def test_release_or_fail_rejects_cas_conflict(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(
+        CardSnapshot(
+            card_id="ISSUE-22",
+            state="in_progress",
+            version=7,
+            lease={"owner_id": "runner-a", "epoch": 4},
+        )
+    )
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 22, "body": body}, headers={"ETag": '"v7"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        if method == "PATCH":
+            raise GiteaAdapterConflictError("conflict")
+        return []
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    with pytest.raises(ValueError, match="Stale release/fail rejected"):
+        await adapter.release_or_fail("22", final_state="blocked", error="oops")

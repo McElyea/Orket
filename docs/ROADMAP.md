@@ -13,16 +13,7 @@ Last updated: 2026-02-15.
 ## Priority 1: Gitea-Backed State Adapter (Top Priority)
 Objective: add a remote state store + work queue surface via Gitea without changing the Orket runtime loop.
 
-### P1-A. Concurrency + Transition Safety
-1. Add explicit state transition preconditions (allowed `from -> to` map).
-2. Apply CAS + transition validation in every state mutation.
-3. Add lease expiration + takeover rules keyed by `lease.epoch`.
-4. Acceptance criteria:
-   - Invalid transitions fail deterministically.
-   - Expired leases can be reclaimed without split-brain updates.
-   - Allowed `from -> to` transitions are sourced from the existing Orket state machine contract.
-
-### P1-B. Failure Semantics + Resilience
+### P1-A. Failure Semantics + Resilience
 1. Classify and handle adapter failure classes:
    - rate limit
    - stale ETag/version conflict
@@ -35,7 +26,7 @@ Objective: add a remote state store + work queue surface via Gitea without chang
    - Non-retryable failures surface clear terminal reasons.
    - Adapter emits structured logs for all failure classes including `backend`, `card_id`, and `operation`.
 
-### P1-C. Rollout Strategy
+### P1-B. Rollout Strategy
 1. Phase 1: single-runner pilot on `gitea` backend.
 2. Phase 2: hardening pass with contention/failure injection tests.
 3. Phase 3: multi-runner support (after Phase 2 pass criteria).
