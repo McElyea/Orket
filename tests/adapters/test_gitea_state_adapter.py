@@ -1,4 +1,5 @@
 import pytest
+import httpx
 
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
@@ -58,6 +59,59 @@ async def test_append_event_posts_orket_comment(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_append_event_with_idempotency_key_skips_duplicate(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    captured = {"calls": []}
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        captured["calls"].append((method, path, payload))
+        if method == "GET":
+            return [{"body": '[ORKET_EVENT_V1] {"created_at":"2026-02-15T10:00:00+00:00","event_type":"guard_failure","idempotency_key":"evt-1","payload":{"idempotency_key":"evt-1"}}'}]
+        raise AssertionError("POST should not happen when idempotency key already exists.")
+
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    await adapter.append_event(
+        "7",
+        event_type="guard_failure",
+        payload={"code": "HALLUCINATION", "idempotency_key": "evt-1"},
+    )
+    assert captured["calls"] == [("GET", "/issues/7/comments", None)]
+
+
+@pytest.mark.asyncio
+async def test_append_event_with_idempotency_key_posts_when_missing(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    captured = {"calls": []}
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        captured["calls"].append((method, path, payload))
+        if method == "GET":
+            return []
+        return {"id": 1}
+
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    await adapter.append_event(
+        "9",
+        event_type="guard_failure",
+        payload={"code": "HALLUCINATION", "idempotency_key": "evt-2"},
+    )
+    assert captured["calls"][0] == ("GET", "/issues/9/comments", None)
+    assert captured["calls"][1][0] == "POST"
+    assert captured["calls"][1][1] == "/issues/9/comments"
+    assert "evt-2" in captured["calls"][1][2]["body"]
+
+
+@pytest.mark.asyncio
 async def test_unimplemented_mutating_operations_are_explicit():
     adapter = GiteaStateAdapter(
         base_url="https://gitea.local",
@@ -65,8 +119,6 @@ async def test_unimplemented_mutating_operations_are_explicit():
         repo="orket",
         token="secret",
     )
-    with pytest.raises(NotImplementedError):
-        await adapter.acquire_lease("1", owner_id="runner-a", lease_seconds=30)
     with pytest.raises(NotImplementedError):
         await adapter.transition_state("1", from_state="ready", to_state="in_progress")
     with pytest.raises(NotImplementedError):
@@ -83,3 +135,129 @@ async def test_transition_state_uses_canonical_state_machine_validation():
     )
     with pytest.raises(ValueError, match="Invalid state transition"):
         await adapter.transition_state("1", from_state="done", to_state="in_progress")
+
+
+class _FakeResponse:
+    def __init__(self, payload, headers=None):
+        self._payload = payload
+        self.headers = headers or {}
+
+    def json(self):
+        return self._payload
+
+
+@pytest.mark.asyncio
+async def test_acquire_lease_claims_unowned_card_with_epoch_increment(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-5", state="ready", version=3))
+    captured = {}
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        assert method == "GET"
+        assert path == "/issues/5"
+        return _FakeResponse({"number": 5, "body": body}, headers={"ETag": '"v3"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        captured["method"] = method
+        captured["path"] = path
+        captured["payload"] = payload
+        captured["headers"] = extra_headers
+        return {"ok": True}
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    lease = await adapter.acquire_lease("5", owner_id="runner-a", lease_seconds=30)
+
+    assert lease is not None
+    assert lease["card_id"] == "ISSUE-5"
+    assert lease["version"] == 4
+    assert lease["lease"]["owner_id"] == "runner-a"
+    assert lease["lease"]["epoch"] == 1
+    assert captured["method"] == "PATCH"
+    assert captured["path"] == "/issues/5"
+    assert captured["headers"] == {"If-Match": '"v3"'}
+
+
+@pytest.mark.asyncio
+async def test_acquire_lease_returns_none_when_another_owner_has_active_lease(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(
+        CardSnapshot(
+            card_id="ISSUE-6",
+            state="ready",
+            version=2,
+            lease={"owner_id": "runner-b", "acquired_at": "2026-02-15T10:00:00+00:00", "expires_at": "3026-02-15T10:00:00+00:00", "epoch": 9},
+        )
+    )
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 6, "body": body}, headers={"ETag": '"v2"'})
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    lease = await adapter.acquire_lease("6", owner_id="runner-a", lease_seconds=30)
+    assert lease is None
+
+
+@pytest.mark.asyncio
+async def test_acquire_lease_is_idempotent_for_same_owner(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(
+        CardSnapshot(
+            card_id="ISSUE-7",
+            state="ready",
+            version=8,
+            lease={"owner_id": "runner-a", "acquired_at": "2026-02-15T10:00:00+00:00", "expires_at": "3026-02-15T10:00:00+00:00", "epoch": 3},
+        )
+    )
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 7, "body": body}, headers={"ETag": '"v8"'})
+
+    async def fail_if_called(*args, **kwargs):
+        raise AssertionError("PATCH should not be called for idempotent same-owner lease acquire.")
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fail_if_called)
+    lease = await adapter.acquire_lease("7", owner_id="runner-a", lease_seconds=30)
+    assert lease is not None
+    assert lease["version"] == 8
+    assert lease["lease"]["epoch"] == 3
+
+
+@pytest.mark.asyncio
+async def test_acquire_lease_returns_none_on_etag_conflict(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(CardSnapshot(card_id="ISSUE-8", state="ready", version=1))
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 8, "body": body}, headers={"ETag": '"v1"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        request = httpx.Request("PATCH", "https://gitea.local/api/v1/repos/acme/orket/issues/8")
+        response = httpx.Response(412, request=request)
+        raise httpx.HTTPStatusError("precondition failed", request=request, response=response)
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    lease = await adapter.acquire_lease("8", owner_id="runner-a", lease_seconds=30)
+    assert lease is None
