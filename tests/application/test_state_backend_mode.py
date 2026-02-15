@@ -29,7 +29,30 @@ def test_resolve_gitea_state_pilot_enabled_aliases():
     assert resolve_gitea_state_pilot_enabled("false") is False
 
 
-def test_engine_rejects_gitea_state_backend_until_adapter_lands(monkeypatch, tmp_path):
+def test_engine_rejects_gitea_state_backend_without_pilot_enablement(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
-    with pytest.raises(NotImplementedError, match="State backend mode 'gitea' is experimental"):
+    monkeypatch.delenv("ORKET_ENABLE_GITEA_STATE_PILOT", raising=False)
+    with pytest.raises(NotImplementedError, match="requires pilot enablement"):
+        OrchestrationEngine(tmp_path, config_root=tmp_path)
+
+
+def test_engine_rejects_gitea_state_backend_when_readiness_is_incomplete(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
+    monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
+    monkeypatch.delenv("ORKET_GITEA_URL", raising=False)
+    monkeypatch.delenv("ORKET_GITEA_TOKEN", raising=False)
+    monkeypatch.delenv("ORKET_GITEA_OWNER", raising=False)
+    monkeypatch.delenv("ORKET_GITEA_REPO", raising=False)
+    with pytest.raises(NotImplementedError, match="pilot readiness failed"):
+        OrchestrationEngine(tmp_path, config_root=tmp_path)
+
+
+def test_engine_rejects_gitea_state_backend_after_pilot_gate_passes(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
+    monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
+    monkeypatch.setenv("ORKET_GITEA_URL", "https://gitea.local")
+    monkeypatch.setenv("ORKET_GITEA_TOKEN", "secret")
+    monkeypatch.setenv("ORKET_GITEA_OWNER", "acme")
+    monkeypatch.setenv("ORKET_GITEA_REPO", "orket")
+    with pytest.raises(NotImplementedError, match="pilot gate passed, but runtime integration is still in progress"):
         OrchestrationEngine(tmp_path, config_root=tmp_path)

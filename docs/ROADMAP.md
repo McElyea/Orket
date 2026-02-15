@@ -14,11 +14,11 @@ Last updated: 2026-02-15.
 Objective: add a remote state store + work queue surface via Gitea without changing the Orket runtime loop.
 
 ### P1-A. Rollout Strategy
-1. Phase 1: single-runner pilot on `gitea` backend.
-   - Readiness gate command:
-     - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json`
-2. Phase 2: hardening pass with contention/failure injection tests.
-3. Phase 3: multi-runner support (after Phase 2 pass criteria).
+1. Phase 2: hardening pass with contention/failure injection tests.
+   - Required gate command:
+     - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready`
+   - Startup validation must block `state_backend_mode=gitea` unless pilot enablement and readiness are satisfied.
+2. Phase 3: multi-runner support (after Phase 2 pass criteria).
 4. Acceptance criteria:
    - `local` remains default and stable.
    - `gitea` remains explicitly marked experimental until contention suite is green.
