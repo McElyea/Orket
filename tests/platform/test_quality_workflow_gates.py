@@ -14,6 +14,9 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json",
         "python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only",
         "python scripts/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --live-report benchmarks/results/live_acceptance_patterns.json --out benchmarks/results/microservices_unlock_check.json",
+        "python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready",
+        "python scripts/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea_state_hardening_check.json --require-ready",
+        "python scripts/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea_state_hardening_check.json --out benchmarks/results/gitea_state_phase3_readiness.json --require-ready",
         "python scripts/run_architecture_pilot_matrix.py --out benchmarks/results/architecture_pilot_matrix.json",
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]

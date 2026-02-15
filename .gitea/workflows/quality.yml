@@ -116,6 +116,19 @@ jobs:
         run: |
           python scripts/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --live-report benchmarks/results/live_acceptance_patterns.json --out benchmarks/results/microservices_unlock_check.json
 
+      - name: Evaluate gitea state pilot readiness
+        run: |
+          ORKET_STATE_BACKEND_MODE=gitea ORKET_ENABLE_GITEA_STATE_PILOT=true ORKET_GITEA_URL=https://gitea.example.local ORKET_GITEA_TOKEN=ci-token ORKET_GITEA_OWNER=orket ORKET_GITEA_REPO=orket \
+          python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready
+
+      - name: Evaluate gitea state hardening gate
+        run: |
+          python scripts/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea_state_hardening_check.json --require-ready
+
+      - name: Evaluate gitea phase3 readiness
+        run: |
+          python scripts/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea_state_hardening_check.json --out benchmarks/results/gitea_state_phase3_readiness.json --require-ready
+
       - name: Build architecture pilot matrix plan
         run: |
           python scripts/run_architecture_pilot_matrix.py --out benchmarks/results/architecture_pilot_matrix.json
