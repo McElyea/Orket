@@ -1,0 +1,31 @@
+{
+  "contract_version": "1.0.0",
+  "schema_version": "orket.io/v1",
+  "required_top_level_sections": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "model",
+    "agents",
+    "guards",
+    "stateMachine",
+    "persistence",
+    "permissions"
+  ],
+  "required_metadata_fields": [
+    "name",
+    "version",
+    "engineVersion"
+  ],
+  "guard_enum_values": [
+    "hallucination",
+    "structure",
+    "safety",
+    "security",
+    "consistency"
+  ],
+  "notes": [
+    "This contract is enforced by orket.core.domain.orket_manifest.OrketManifest.",
+    "engineVersion must be parseable as a version specifier."
+  ]
+}

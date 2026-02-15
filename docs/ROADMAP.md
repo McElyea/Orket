@@ -3,38 +3,98 @@
 Last updated: 2026-02-15.
 
 ## Operating Constraints (Current)
-1. Execution priority is monolith delivery reliability.
-2. New project architecture is monolith-only for now; microservices stay locked.
+1. Execution priority is Local-First Orket packaging (Phase 1).
+2. New project architecture is monolith-only for now; microservices stay locked for now.
 3. Frontend policy is Vue-only when a frontend is required.
 4. iDesign is backburnered and not a gating requirement for current roadmap execution.
-5. Small-task minimum team is:
-   - one builder (`coder` or `architect` variant)
-   - one `code_reviewer` (mandatory, never self-review)
-6. Replan limit is terminal:
-   - `replan_count > 3` halts with terminal failure/rejection semantics.
+5. Small-task minimum team is one builder (`coder` or `architect` variant) plus one mandatory `code_reviewer` (never self-review).
+6. Replan limit is terminal: `replan_count > 3` halts with terminal failure/rejection semantics.
 
-## Priority B: Microservices Unlock (Locked Until A Complete)
-Objective: expand architecture options only after monolith reliability is proven.
+## Priority A: Local-First Orket Packaging (Phase 1)
+Objective: ship a deterministic, local-first deployable Orket format and runtime entrypoints using the existing engine/state machine.
+
+### A1. `orket.yaml` Manifest Contract v1
+1. Define a schema-backed manifest contract with required sections:
+   - `metadata` (name, version, engine compatibility)
+   - `model` (preferred/minimum/fallback/override policy)
+   - `agents`
+   - `guards`
+   - `stateMachine`
+   - `persistence`
+   - `permissions`
+2. Add canonical fixtures: one valid manifest and multiple invalid manifests.
+3. Acceptance criteria:
+   - Missing required sections fail validation.
+   - Unknown/invalid enum values fail validation.
+   - Engine compatibility field is mandatory and parseable.
+
+### A2. `orket validate` CLI
+1. Implement `orket validate` for manifest + bundle directory checks.
+2. Validate cross-file references (state machine file, prompts/agents/guards references).
+3. Validate permission block shape (filesystem/network/tools).
+4. Acceptance criteria:
+   - Valid fixture passes with exit code `0`.
+   - Invalid fixtures fail with deterministic error codes/messages.
+
+### A3. `orket pack` and `orket inspect` CLI
+1. Implement `orket pack` to build a `.orket` archive from a source directory.
+2. Implement `orket inspect` to print metadata, compatibility, and permission summary.
+3. Acceptance criteria:
+   - `pack` output contains manifest plus expected assets.
+   - `inspect` works both from directory and `.orket` archive.
+   - Invalid bundle returns non-zero with clear reason.
+
+### A4. Deterministic Bundle Layout
+1. Standardize canonical archive layout:
+   - `orket.yaml`
+   - `state_machine.json`
+   - `prompts/`
+   - `agents/`
+   - `guards/`
+   - optional `models/`
+   - optional `assets/`
+2. Enforce deterministic packaging behavior:
+   - stable file ordering
+   - normalized paths
+   - no path traversal entries
+3. Acceptance criteria:
+   - Packing same source twice yields identical archive hash.
+   - Unsafe paths are rejected.
+
+### A5. Compatibility and Model Negotiation Checks
+1. Enforce `engineVersion` compatibility at validate/run time.
+2. Enforce model policy:
+   - `preferred`
+   - `minimum`
+   - ordered `fallback`
+   - `allowOverride`
+3. Acceptance criteria:
+   - Incompatible engine range fails fast.
+   - Missing model candidates produce deterministic failure.
+   - Override behavior matches manifest policy.
+
+## Not In Scope For Phase 1
+1. Registry/publish/pull workflow.
+2. Bundle signatures/trust chain.
+3. Bundled large model weights distribution.
+4. Desktop app wrapper UX.
+
+## Priority B: Microservices Unlock
+Objective: continue architecture expansion only after Priority A is shipped and stable.
 
 ### B1. Unlock Criteria
-1. Phase A readiness gate must pass.
-2. Benchmark matrix must show stable orchestration behavior across project types.
-3. Replan/rejection governance must remain stable in production-like runs.
-
-### B2. Controlled Microservices Introduction
-1. Add microservices-specific scaffolding/dependency/deployment/runtime verification profiles.
-2. Keep monolith default until microservices benchmarks meet quality thresholds.
-
-## Backburner (Not Active)
-1. iDesign-first enforcement or iDesign-specific mandatory flows.
-2. Additional frontend frameworks beyond Vue.
-3. Broad architecture expansion before microservices unlock criteria pass.
-
-## Execution Plan (Remaining)
 1. Run unlock evidence pipeline and enforce unlock criteria:
    - `python scripts/run_microservices_unlock_evidence.py --require-unlocked`
 2. If unlock passes, enable microservices explicitly via `ORKET_ENABLE_MICROSERVICES=true` for controlled pilots.
 3. Keep monolith as default until pilot metrics are stable.
+
+## Backburner (Not Active)
+1. iDesign-first enforcement or iDesign-specific mandatory flows.
+2. Additional frontend frameworks beyond Vue.
+3. Broad architecture expansion before Priority A and microservices unlock criteria pass.
+
+## Execution Plan (Remaining)
+1. `Pass B1-R1`: rerun unlock evidence and decide pilot enablement.
 
 ## Weekly Proof (Required)
 1. `python -m pytest tests -q`

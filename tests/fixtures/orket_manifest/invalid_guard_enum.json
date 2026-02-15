@@ -1,0 +1,51 @@
+{
+  "apiVersion": "orket.io/v1",
+  "kind": "Orket",
+  "metadata": {
+    "name": "orket-summarizer",
+    "version": "0.1.0",
+    "engineVersion": ">=0.3.0,<0.6.0"
+  },
+  "model": {
+    "preferred": "qwen2.5-coder:7b",
+    "minimum": "qwen2.5-coder:3b",
+    "fallback": [],
+    "allowOverride": true
+  },
+  "agents": [
+    {
+      "name": "reader",
+      "role": "Reads and chunks input documents."
+    }
+  ],
+  "guards": [
+    "hallucination",
+    "telepathy"
+  ],
+  "stateMachine": {
+    "file": "state_machine.json"
+  },
+  "persistence": {
+    "enabled": true,
+    "storageDir": ".orket/state",
+    "retainHistory": true
+  },
+  "permissions": {
+    "filesystem": {
+      "read": [
+        "./input"
+      ],
+      "write": [
+        "./output"
+      ]
+    },
+    "network": {
+      "allowed": false
+    },
+    "tools": {
+      "allowed": [
+        "shell:read-only"
+      ]
+    }
+  }
+}
