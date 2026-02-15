@@ -306,6 +306,48 @@ async def test_acquire_lease_returns_none_when_another_owner_has_active_lease(mo
 
 
 @pytest.mark.asyncio
+async def test_acquire_lease_reclaims_expired_lease_and_increments_epoch(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+    body = encode_snapshot(
+        CardSnapshot(
+            card_id="ISSUE-6A",
+            state="ready",
+            version=10,
+            lease={
+                "owner_id": "runner-b",
+                "acquired_at": "2024-02-15T10:00:00+00:00",
+                "expires_at": "2024-02-15T10:01:00+00:00",
+                "epoch": 4,
+            },
+        )
+    )
+    captured = {}
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        return _FakeResponse({"number": 61, "body": body}, headers={"ETag": '"v10"'})
+
+    async def fake_request_json(method, path, *, params=None, payload=None, extra_headers=None):
+        captured["method"] = method
+        captured["path"] = path
+        captured["payload"] = payload
+        return {"ok": True}
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    monkeypatch.setattr(adapter, "_request_json", fake_request_json)
+    lease = await adapter.acquire_lease("61", owner_id="runner-a", lease_seconds=30)
+    assert lease is not None
+    assert lease["lease"]["owner_id"] == "runner-a"
+    assert lease["lease"]["epoch"] == 5
+    assert lease["version"] == 11
+    assert captured["method"] == "PATCH"
+
+
+@pytest.mark.asyncio
 async def test_acquire_lease_is_idempotent_for_same_owner(monkeypatch):
     adapter = GiteaStateAdapter(
         base_url="https://gitea.local",
