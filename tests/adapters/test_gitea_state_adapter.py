@@ -3,6 +3,7 @@ import pytest
 from orket.adapters.storage.gitea_state_adapter import (
     GiteaAdapterAuthError,
     GiteaAdapterConflictError,
+    GiteaAdapterNetworkError,
     GiteaAdapterRateLimitError,
     GiteaStateAdapter,
 )
@@ -407,6 +408,54 @@ def test_classify_http_error_maps_status_codes():
     assert isinstance(err, GiteaAdapterAuthError)
     err = GiteaStateAdapter._classify_http_error(status_code=412, exc=RuntimeError("x"))
     assert isinstance(err, GiteaAdapterConflictError)
+
+
+@pytest.mark.asyncio
+async def test_request_response_with_retry_recovers_from_transient_error(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+        max_retries=2,
+        backoff_base_seconds=0.0,
+        backoff_max_seconds=0.0,
+    )
+    attempts = {"count": 0}
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        attempts["count"] += 1
+        if attempts["count"] == 1:
+            raise GiteaAdapterNetworkError("temporary network issue")
+        return _FakeResponse({"ok": True}, headers={})
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    response = await adapter._request_response_with_retry("GET", "/issues/1")
+    assert response.json() == {"ok": True}
+    assert attempts["count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_request_response_with_retry_exhausts_and_raises(monkeypatch):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+        max_retries=1,
+        backoff_base_seconds=0.0,
+        backoff_max_seconds=0.0,
+    )
+    attempts = {"count": 0}
+
+    async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
+        attempts["count"] += 1
+        raise GiteaAdapterRateLimitError("rate limited")
+
+    monkeypatch.setattr(adapter, "_request_response", fake_request_response)
+    with pytest.raises(GiteaAdapterRateLimitError):
+        await adapter._request_response_with_retry("GET", "/issues/2")
+    assert attempts["count"] == 2
 
 
 @pytest.mark.asyncio

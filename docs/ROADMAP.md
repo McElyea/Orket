@@ -13,20 +13,7 @@ Last updated: 2026-02-15.
 ## Priority 1: Gitea-Backed State Adapter (Top Priority)
 Objective: add a remote state store + work queue surface via Gitea without changing the Orket runtime loop.
 
-### P1-A. Failure Semantics + Resilience
-1. Classify and handle adapter failure classes:
-   - rate limit
-   - stale ETag/version conflict
-   - network partition/timeout
-   - auth/permission errors
-2. Add retry with bounded backoff for transient adapter failures.
-3. Mark non-retryable adapter failures as terminal for the affected card transition.
-4. Acceptance criteria:
-   - Transient failures recover without corrupting card state.
-   - Non-retryable failures surface clear terminal reasons.
-   - Adapter emits structured logs for all failure classes including `backend`, `card_id`, and `operation`.
-
-### P1-B. Rollout Strategy
+### P1-A. Rollout Strategy
 1. Phase 1: single-runner pilot on `gitea` backend.
 2. Phase 2: hardening pass with contention/failure injection tests.
 3. Phase 3: multi-runner support (after Phase 2 pass criteria).

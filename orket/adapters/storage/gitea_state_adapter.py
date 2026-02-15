@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 import json
 import logging
@@ -65,12 +66,18 @@ class GiteaStateAdapter(StateBackendContract):
         token: str,
         ready_label: str = "status/ready",
         timeout_seconds: float = 20.0,
+        max_retries: int = 2,
+        backoff_base_seconds: float = 0.1,
+        backoff_max_seconds: float = 1.0,
     ):
         self.base_url = base_url.rstrip("/")
         self.owner = owner
         self.repo = repo
         self.ready_label = ready_label
         self.timeout_seconds = timeout_seconds
+        self.max_retries = max(0, int(max_retries))
+        self.backoff_base_seconds = max(0.0, float(backoff_base_seconds))
+        self.backoff_max_seconds = max(self.backoff_base_seconds, float(backoff_max_seconds))
         self.headers = {
             "Authorization": f"token {token}",
             "Accept": "application/json",
@@ -138,7 +145,7 @@ class GiteaStateAdapter(StateBackendContract):
         payload: Optional[Dict[str, Any]] = None,
         extra_headers: Optional[Dict[str, str]] = None,
     ) -> Any:
-        response = await self._request_response(
+        response = await self._request_response_with_retry(
             method,
             path,
             params=params,
@@ -148,6 +155,32 @@ class GiteaStateAdapter(StateBackendContract):
         if not response.text.strip():
             return None
         return response.json()
+
+    async def _request_response_with_retry(
+        self,
+        method: str,
+        path: str,
+        *,
+        params: Optional[Dict[str, Any]] = None,
+        payload: Optional[Dict[str, Any]] = None,
+        extra_headers: Optional[Dict[str, str]] = None,
+    ) -> httpx.Response:
+        attempts = 0
+        while True:
+            try:
+                return await self._request_response(
+                    method,
+                    path,
+                    params=params,
+                    payload=payload,
+                    extra_headers=extra_headers,
+                )
+            except (GiteaAdapterTimeoutError, GiteaAdapterNetworkError, GiteaAdapterRateLimitError):
+                if attempts >= self.max_retries:
+                    raise
+                delay = min(self.backoff_max_seconds, self.backoff_base_seconds * (2**attempts))
+                await asyncio.sleep(delay)
+                attempts += 1
 
     async def fetch_ready_cards(self, *, limit: int = 1) -> List[Dict[str, Any]]:
         payload = await self._request_json(
@@ -191,7 +224,7 @@ class GiteaStateAdapter(StateBackendContract):
         lease_seconds: int,
     ) -> Optional[Dict[str, Any]]:
         issue_number = int(card_id)
-        issue_response = await self._request_response("GET", f"/issues/{issue_number}")
+        issue_response = await self._request_response_with_retry("GET", f"/issues/{issue_number}")
         issue = issue_response.json()
         if not isinstance(issue, dict):
             return None
@@ -285,7 +318,7 @@ class GiteaStateAdapter(StateBackendContract):
     ) -> None:
         self._validate_transition(from_state=from_state, to_state=to_state)
         issue_number = int(card_id)
-        issue_response = await self._request_response("GET", f"/issues/{issue_number}")
+        issue_response = await self._request_response_with_retry("GET", f"/issues/{issue_number}")
         issue = issue_response.json()
         if not isinstance(issue, dict):
             raise ValueError(f"Issue {issue_number} payload missing for transition.")
@@ -331,7 +364,7 @@ class GiteaStateAdapter(StateBackendContract):
         error: Optional[str] = None,
     ) -> None:
         issue_number = int(card_id)
-        issue_response = await self._request_response("GET", f"/issues/{issue_number}")
+        issue_response = await self._request_response_with_retry("GET", f"/issues/{issue_number}")
         issue = issue_response.json()
         if not isinstance(issue, dict):
             raise ValueError(f"Issue {issue_number} payload missing for release/fail.")
