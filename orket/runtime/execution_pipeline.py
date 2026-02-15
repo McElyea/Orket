@@ -15,11 +15,17 @@ from orket.adapters.storage.async_repositories import (
     AsyncRunLedgerRepository,
 )
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
+from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.application.services.gitea_state_pilot import (
     collect_gitea_state_pilot_inputs,
     evaluate_gitea_state_pilot_readiness,
 )
+from orket.application.services.gitea_state_worker import GiteaStateWorker
+from orket.application.services.gitea_state_worker_coordinator import GiteaStateWorkerCoordinator
 from orket.application.services.runtime_policy import (
+    resolve_gitea_worker_max_duration_seconds,
+    resolve_gitea_worker_max_idle_streak,
+    resolve_gitea_worker_max_iterations,
     resolve_gitea_state_pilot_enabled,
     resolve_state_backend_mode,
 )
@@ -124,10 +130,6 @@ class ExecutionPipeline:
             raise NotImplementedError(
                 f"State backend mode 'gitea' pilot readiness failed: {failures}"
             )
-        raise NotImplementedError(
-            "State backend mode 'gitea' pilot gate passed, but runtime integration is still in progress. "
-            "No local database fallback is used when gitea mode is selected."
-        )
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
         env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
@@ -155,6 +157,86 @@ class ExecutionPipeline:
             workspace=self.workspace,
         )
         return await self.run_epic(parent_ename, target_issue_id=card_id, **kwargs)
+
+    async def run_gitea_state_loop(
+        self,
+        *,
+        worker_id: str,
+        fetch_limit: int = 5,
+        lease_seconds: int = 30,
+        renew_interval_seconds: float = 5.0,
+        max_iterations: int | None = None,
+        max_idle_streak: int | None = None,
+        max_duration_seconds: float | None = None,
+        idle_sleep_seconds: float = 0.0,
+        summary_out: str | Path | None = None,
+    ) -> Dict[str, Any]:
+        if self.state_backend_mode != "gitea":
+            raise ValueError("run_gitea_state_loop requires state_backend_mode='gitea'")
+        readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs())
+        if not bool(readiness.get("ready")):
+            failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
+            raise RuntimeError(f"State backend mode 'gitea' pilot readiness failed: {failures}")
+
+        process_rules = getattr(self.org, "process_rules", {}) if self.org else {}
+        user_settings = load_user_settings()
+        effective_max_iterations = resolve_gitea_worker_max_iterations(
+            max_iterations,
+            os.environ.get("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
+            process_rules.get("gitea_worker_max_iterations"),
+            user_settings.get("gitea_worker_max_iterations"),
+        )
+        effective_max_idle_streak = resolve_gitea_worker_max_idle_streak(
+            max_idle_streak,
+            os.environ.get("ORKET_GITEA_WORKER_MAX_IDLE_STREAK"),
+            process_rules.get("gitea_worker_max_idle_streak"),
+            user_settings.get("gitea_worker_max_idle_streak"),
+        )
+        effective_max_duration_seconds = resolve_gitea_worker_max_duration_seconds(
+            max_duration_seconds,
+            os.environ.get("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS"),
+            process_rules.get("gitea_worker_max_duration_seconds"),
+            user_settings.get("gitea_worker_max_duration_seconds"),
+        )
+
+        inputs = collect_gitea_state_pilot_inputs()
+        adapter = GiteaStateAdapter(
+            base_url=str(inputs.get("gitea_url") or ""),
+            token=str(inputs.get("gitea_token") or ""),
+            owner=str(inputs.get("gitea_owner") or ""),
+            repo=str(inputs.get("gitea_repo") or ""),
+        )
+        worker = GiteaStateWorker(
+            adapter=adapter,
+            worker_id=str(worker_id),
+            lease_seconds=lease_seconds,
+            renew_interval_seconds=renew_interval_seconds,
+        )
+        coordinator = GiteaStateWorkerCoordinator(
+            worker=worker,
+            fetch_limit=fetch_limit,
+            max_iterations=effective_max_iterations,
+            max_idle_streak=effective_max_idle_streak,
+            max_duration_seconds=effective_max_duration_seconds,
+            idle_sleep_seconds=idle_sleep_seconds,
+        )
+
+        async def _work_fn(card: Dict[str, Any]) -> Dict[str, Any]:
+            target = str(card.get("card_id") or "").strip()
+            if not target:
+                raise ValueError("missing card_id in gitea snapshot payload")
+            await self.run_card(target)
+            return {"card_id": target, "result": "ok"}
+
+        summary = await coordinator.run(work_fn=_work_fn, summary_out=summary_out)
+        return {
+            "worker_id": str(worker_id),
+            "fetch_limit": max(1, int(fetch_limit)),
+            "max_iterations": int(effective_max_iterations),
+            "max_idle_streak": int(effective_max_idle_streak),
+            "max_duration_seconds": float(effective_max_duration_seconds),
+            "summary": summary,
+        }
 
     def _resolve_idesign_mode(self) -> str:
         """

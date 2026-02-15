@@ -10,39 +10,20 @@ Last updated: 2026-02-15.
 5. Small-task minimum team is one builder (`coder` or `architect`) plus one mandatory `code_reviewer`.
 6. Replan limit is terminal: `replan_count > 3` halts with rejection semantics.
 
-## Priority 1: Gitea-Backed State Adapter (Top Priority)
-Objective: add a remote state store + work queue surface via Gitea without changing the Orket runtime loop.
-
-### P1-A. Rollout Strategy
-1. Phase 3: multi-runner support.
-   - Remaining implementation:
-     - integrate coordinator execution path into runtime flow for `state_backend_mode=gitea` (behind pilot gating)
-     - add operational docs for lease expiry/duplicate-pickup behavior and recovery expectations
-   - Required gate commands (must remain green):
-     - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready`
-     - `python scripts/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea_state_hardening_check.json --require-ready`
-     - `python scripts/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea_state_hardening_check.json --out benchmarks/results/gitea_state_phase3_readiness.json --require-ready`
-     - Preferred bundled gate:
-       - `python scripts/run_gitea_state_rollout_gates.py --out benchmarks/results/gitea_state_rollout_gates.json --require-ready`
-   - Startup validation must block `state_backend_mode=gitea` unless pilot enablement and readiness are satisfied.
-4. Acceptance criteria:
-   - `local` remains default and stable.
-   - `gitea` remains explicitly marked experimental until contention suite is green.
-   - No features depend exclusively on gitea backend semantics until Phase 3 is complete.
-
-## Priority 2: Determinism Maintenance (Recurring)
-Objective: keep current quality gates green while Priority 1 lands.
+## Priority 1: Determinism Maintenance (Recurring)
+Objective: keep quality and policy gates green while architecture/state work continues.
 
 1. Keep these commands green:
    - `python -m pytest tests -q`
    - `python scripts/check_dependency_direction.py`
    - `python scripts/check_volatility_boundaries.py`
+   - `python scripts/run_gitea_state_rollout_gates.py --out benchmarks/results/gitea_state_rollout_gates.json --require-ready`
 2. Keep readiness artifacts fresh:
    - `python scripts/run_monolith_variant_matrix.py --execute --out benchmarks/results/monolith_variant_matrix.json`
    - `python -m scripts.report_live_acceptance_patterns --matrix benchmarks/results/monolith_variant_matrix.json`
    - `python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only`
 
-## Priority 3: Architecture Pilot Monitoring (Recurring)
+## Priority 2: Architecture Pilot Monitoring (Recurring)
 Objective: continue side-by-side monolith vs microservices evidence while runtime/storage work advances.
 
 1. Refresh pilot matrix:

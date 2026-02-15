@@ -98,10 +98,6 @@ class OrchestrationEngine:
             raise NotImplementedError(
                 f"State backend mode 'gitea' pilot readiness failed: {failures}"
             )
-        raise NotImplementedError(
-            "State backend mode 'gitea' pilot gate passed, but runtime integration is still in progress. "
-            "No local database fallback is used when gitea mode is selected."
-        )
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
         env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
@@ -150,6 +146,31 @@ class OrchestrationEngine:
             build_id=build_id,
             session_id=session_id,
             driver_steered=driver_steered
+        )
+
+    async def run_gitea_state_loop(
+        self,
+        *,
+        worker_id: str,
+        fetch_limit: int = 5,
+        lease_seconds: int = 30,
+        renew_interval_seconds: float = 5.0,
+        max_iterations: int | None = None,
+        max_idle_streak: int | None = None,
+        max_duration_seconds: float | None = None,
+        idle_sleep_seconds: float = 0.0,
+        summary_out: str | Path | None = None,
+    ) -> Dict[str, Any]:
+        return await self._pipeline.run_gitea_state_loop(
+            worker_id=worker_id,
+            fetch_limit=fetch_limit,
+            lease_seconds=lease_seconds,
+            renew_interval_seconds=renew_interval_seconds,
+            max_iterations=max_iterations,
+            max_idle_streak=max_idle_streak,
+            max_duration_seconds=max_duration_seconds,
+            idle_sleep_seconds=idle_sleep_seconds,
+            summary_out=summary_out,
         )
 
 
