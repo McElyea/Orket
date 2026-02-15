@@ -13,6 +13,7 @@ PHASE3_TEST_TARGETS: List[str] = [
     "tests/adapters/test_gitea_state_adapter_contention.py",
     "tests/adapters/test_gitea_state_multi_runner_simulation.py",
     "tests/application/test_gitea_state_worker.py",
+    "tests/application/test_gitea_state_worker_coordinator.py",
 ]
 
 

@@ -15,12 +15,12 @@ Objective: add a remote state store + work queue surface via Gitea without chang
 
 ### P1-A. Rollout Strategy
 1. Phase 3: multi-runner support.
-   - Current groundwork in place:
-     - lease acquire/reclaim/renew semantics with CAS + epoch
-     - idempotent event and transition writes
-     - worker loop service (`claim -> in_progress -> renew heartbeat -> finalize`)
-     - multi-runner lifecycle simulation (`tests/adapters/test_gitea_state_multi_runner_simulation.py`)
-   - Required gate commands (must remain green while building Phase 3):
+   - Remaining implementation:
+     - wire a thin long-running coordinator entrypoint around `GiteaStateWorker.run_once()` and persist run summary artifacts per run
+     - integrate coordinator execution path into runtime flow for `state_backend_mode=gitea` (behind pilot gating)
+     - define and enforce bounded stop policy defaults for production runs (`max_iterations`, `max_idle_streak`, `max_duration_seconds`)
+     - add operational docs for lease expiry/duplicate-pickup behavior and recovery expectations
+   - Required gate commands (must remain green):
      - `python scripts/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready`
      - `python scripts/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea_state_hardening_check.json --require-ready`
      - `python scripts/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea_state_hardening_check.json --out benchmarks/results/gitea_state_phase3_readiness.json --require-ready`

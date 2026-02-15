@@ -11,6 +11,8 @@ def test_phase3_readiness_passes_when_gates_and_targets_are_green() -> None:
             "tests/adapters/test_gitea_state_adapter.py": 0,
             "tests/adapters/test_gitea_state_adapter_contention.py": 0,
             "tests/adapters/test_gitea_state_multi_runner_simulation.py": 0,
+            "tests/application/test_gitea_state_worker.py": 0,
+            "tests/application/test_gitea_state_worker_coordinator.py": 0,
         },
     )
     assert result["ready"] is True
@@ -25,6 +27,8 @@ def test_phase3_readiness_fails_when_gate_or_target_fails() -> None:
             "tests/adapters/test_gitea_state_adapter.py": 0,
             "tests/adapters/test_gitea_state_adapter_contention.py": 1,
             "tests/adapters/test_gitea_state_multi_runner_simulation.py": 0,
+            "tests/application/test_gitea_state_worker.py": 0,
+            "tests/application/test_gitea_state_worker_coordinator.py": 0,
         },
     )
     assert result["ready"] is False
