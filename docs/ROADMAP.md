@@ -20,6 +20,8 @@ Objective: run controlled microservices pilots with measurable side-by-side evid
 3. Acceptance criteria:
    - Gate decision is mechanical and artifact-backed.
    - Decision is reproducible from saved artifacts.
+4. Gate command:
+   - `python scripts/check_microservices_pilot_stability.py --artifacts <older.json> <newer.json> --required-consecutive 2 --out benchmarks/results/microservices_pilot_stability_check.json`
 
 ### P1.2 Runtime Policy Alignment
 1. Ensure runtime policy surfaces pilot state clearly:
@@ -46,6 +48,7 @@ Objective: maintain deterministic local-first packaging quality while pilot work
    - `python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only`
    - `python scripts/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --live-report benchmarks/results/live_acceptance_patterns.json --out benchmarks/results/microservices_unlock_check.json`
    - `python scripts/decide_microservices_pilot.py --unlock-report benchmarks/results/microservices_unlock_check.json --out benchmarks/results/microservices_pilot_decision.json`
+   - `python scripts/check_microservices_pilot_stability.py --artifacts benchmarks/results/architecture_pilot_matrix_prev.json benchmarks/results/architecture_pilot_matrix.json --required-consecutive 2 --out benchmarks/results/microservices_pilot_stability_check.json`
 
 ## Backburner (Not Active)
 1. Additional frontend frameworks beyond Vue.
