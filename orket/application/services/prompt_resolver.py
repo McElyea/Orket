@@ -61,6 +61,7 @@ class PromptResolver:
         patch: Optional[str] = None,
     ) -> PromptResolution:
         context = context or {}
+        resolver_stages = ["resolve", "validate", "select", "render"]
         guards = PromptResolver._normalize_guard_layers(guards or [])
 
         base_prompt = PromptCompiler.compile(
@@ -135,6 +136,7 @@ class PromptResolver:
             },
             "guards": guards,
             "context_profile": str(context.get("prompt_context_profile") or "default"),
+            "resolver_stages": resolver_stages,
         }
         return PromptResolution(system_prompt=final_prompt, metadata=metadata, layers=layers)
 

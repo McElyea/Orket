@@ -76,6 +76,23 @@ def test_prompt_resolver_applies_prefix_guards_and_context_overlay() -> None:
     assert "required_read_paths" in resolution.system_prompt
 
 
+def test_prompt_resolver_stage_contract_and_render_order() -> None:
+    resolution = PromptResolver.resolve(
+        skill=_skill(),
+        dialect=_dialect(),
+        context={"prompt_context_profile": "default", "required_statuses": ["code_review"]},
+        guards=["hallucination"],
+    )
+    assert resolution.layers["resolver_stages"] == ["resolve", "validate", "select", "render"]
+    prompt = resolution.system_prompt
+    idx_prefix = prompt.find("DIALECT PREFIX")
+    idx_guard = prompt.find("PROMPT GUARD OVERLAYS")
+    idx_context = prompt.find("PROMPT CONTEXT OVERLAYS")
+    assert idx_prefix >= 0
+    assert idx_guard > idx_prefix
+    assert idx_context > idx_guard
+
+
 def test_prompt_resolver_stable_policy_strict_rejects_non_stable_assets() -> None:
     skill = _skill().model_copy(update={"prompt_metadata": {"id": "role.architect", "version": "1.2.0", "status": "draft"}})
     dialect = _dialect()

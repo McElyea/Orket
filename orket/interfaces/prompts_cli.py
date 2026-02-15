@@ -46,6 +46,16 @@ def _save_json(path: Path, payload: Dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def _parse_iso_date(value: str) -> date | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        return None
+
+
 def _kind_and_name_from_id(prompt_id: str) -> Tuple[str, str]:
     raw = str(prompt_id or "").strip()
     if raw.startswith("role."):
@@ -190,6 +200,111 @@ def list_prompts(root: Path, kind: str = "all", status: str = "") -> List[Dict[s
                 continue
             rows.append(row)
     return rows
+
+
+def find_stale_candidate_prompts(
+    root: Path,
+    *,
+    max_candidate_age_days: int = 14,
+    as_of: date | None = None,
+) -> List[Dict[str, Any]]:
+    anchor = as_of or date.today()
+    stale_rows: List[Dict[str, Any]] = []
+    for row in list_prompts(root, kind="all", status="candidate"):
+        updated_at = _parse_iso_date(str(row.get("updated_at") or ""))
+        if updated_at is None:
+            stale_rows.append(
+                {
+                    **row,
+                    "age_days": None,
+                    "stale": True,
+                    "reason": "updated_at_missing_or_invalid",
+                }
+            )
+            continue
+        age_days = (anchor - updated_at).days
+        is_stale = age_days > int(max_candidate_age_days)
+        stale_rows.append(
+            {
+                **row,
+                "age_days": age_days,
+                "stale": is_stale,
+                "reason": "candidate_age_exceeded" if is_stale else "within_sla",
+            }
+        )
+    return [row for row in stale_rows if bool(row.get("stale"))]
+
+
+def enforce_candidate_prompt_sla(
+    root: Path,
+    *,
+    max_candidate_age_days: int = 14,
+    renew_ids: Optional[List[str]] = None,
+    as_of: date | None = None,
+    apply_changes: bool = False,
+) -> Dict[str, Any]:
+    anchor = as_of or date.today()
+    renew = {str(item).strip() for item in (renew_ids or []) if str(item).strip()}
+    stale = find_stale_candidate_prompts(
+        root,
+        max_candidate_age_days=max_candidate_age_days,
+        as_of=anchor,
+    )
+    actions: List[Dict[str, Any]] = []
+    for row in stale:
+        prompt_id = str(row.get("id") or "").strip()
+        if not prompt_id:
+            continue
+        if prompt_id in renew:
+            result = update_prompt_metadata(
+                root,
+                prompt_id=prompt_id,
+                mode="promote",
+                status="candidate",
+                notes=f"SLA renewal at {anchor.isoformat()}.",
+                apply_changes=apply_changes,
+            )
+            actions.append(
+                {
+                    "id": prompt_id,
+                    "action": "renewed_candidate",
+                    "age_days": row.get("age_days"),
+                    "applied": bool(apply_changes),
+                    "result": result,
+                }
+            )
+            continue
+
+        result = update_prompt_metadata(
+            root,
+            prompt_id=prompt_id,
+            mode="deprecate",
+            notes=(
+                f"SLA auto-deprecate at {anchor.isoformat()}: "
+                f"candidate age exceeded {max_candidate_age_days} days."
+            ),
+            apply_changes=apply_changes,
+        )
+        actions.append(
+            {
+                "id": prompt_id,
+                "action": "auto_deprecated",
+                "age_days": row.get("age_days"),
+                "applied": bool(apply_changes),
+                "result": result,
+            }
+        )
+
+    stale_without_renewal = [row for row in stale if str(row.get("id") or "").strip() not in renew]
+    return {
+        "ok": len(stale_without_renewal) == 0 or bool(apply_changes),
+        "as_of": anchor.isoformat(),
+        "max_candidate_age_days": int(max_candidate_age_days),
+        "stale_count": len(stale),
+        "renew_count": len([a for a in actions if a["action"] == "renewed_candidate"]),
+        "deprecate_count": len([a for a in actions if a["action"] == "auto_deprecated"]),
+        "actions": actions,
+    }
 
 
 def show_prompt(root: Path, prompt_id: str) -> Dict[str, Any]:
@@ -417,6 +532,12 @@ def _build_parser() -> argparse.ArgumentParser:
     p_deprecate.add_argument("--id", required=True)
     p_deprecate.add_argument("--notes", default="")
     p_deprecate.add_argument("--apply", action="store_true")
+
+    p_sla = sub.add_parser("enforce-sla", help="Enforce candidate prompt SLA by renewing or auto-deprecating stale candidates.")
+    p_sla.add_argument("--max-candidate-age-days", type=int, default=14)
+    p_sla.add_argument("--renew", action="append", default=[], help="Prompt id to keep in candidate via explicit renewal.")
+    p_sla.add_argument("--as-of", default="", help="Optional YYYY-MM-DD anchor date.")
+    p_sla.add_argument("--apply", action="store_true")
     return parser
 
 
@@ -529,6 +650,20 @@ def main(argv: Optional[List[str]] = None) -> int:
             apply_changes=bool(getattr(args, "apply", False)),
         )
         _print_json(result)
+        return 0
+
+    if args.cmd == "enforce-sla":
+        as_of = _parse_iso_date(str(args.as_of or "").strip()) if str(args.as_of or "").strip() else None
+        result = enforce_candidate_prompt_sla(
+            root,
+            max_candidate_age_days=int(args.max_candidate_age_days),
+            renew_ids=list(args.renew or []),
+            as_of=as_of,
+            apply_changes=bool(args.apply),
+        )
+        _print_json(result)
+        if not result.get("ok", False):
+            return 1
         return 0
 
     parser.error(f"Unknown command: {args.cmd}")

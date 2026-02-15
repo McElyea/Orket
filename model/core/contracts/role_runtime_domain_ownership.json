@@ -1,0 +1,10 @@
+{
+  "contract_version": "1.0.0",
+  "domains": {
+    "requirements_specification": ["requirements_analyst"],
+    "architecture_decision": ["architect"],
+    "implementation_execution": ["coder"],
+    "review_handoff": ["code_reviewer"],
+    "integrity_gate_terminal": ["integrity_guard"]
+  }
+}

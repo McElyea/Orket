@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 from orket.interfaces.prompts_cli import (
+    enforce_candidate_prompt_sla,
+    find_stale_candidate_prompts,
     lint_prompt_assets,
     list_prompts,
     resolve_prompt,
+    show_prompt,
     update_prompt_metadata,
     validate_prompt_assets,
 )
@@ -227,3 +231,71 @@ def test_lint_prompt_assets_reports_placeholder_contracts(tmp_path: Path) -> Non
     assert "PLACEHOLDER_UNUSED" in codes
     assert lint["error_count"] >= 1
     assert lint["warning_count"] >= 1
+
+
+def test_find_stale_candidate_prompts_detects_age_threshold(tmp_path: Path) -> None:
+    _seed_assets(tmp_path)
+    update_prompt_metadata(
+        tmp_path,
+        prompt_id="role.architect",
+        mode="new",
+        version="1.1.0",
+        status="candidate",
+        notes="candidate cut",
+        apply_changes=True,
+    )
+    rows = find_stale_candidate_prompts(
+        tmp_path,
+        max_candidate_age_days=14,
+        as_of=date.fromisoformat("2026-03-10"),
+    )
+    assert len(rows) == 1
+    assert rows[0]["id"] == "role.architect"
+    assert rows[0]["stale"] is True
+
+
+def test_enforce_candidate_prompt_sla_auto_deprecates_stale_candidates(tmp_path: Path) -> None:
+    _seed_assets(tmp_path)
+    update_prompt_metadata(
+        tmp_path,
+        prompt_id="role.architect",
+        mode="new",
+        version="1.1.0",
+        status="candidate",
+        notes="candidate cut",
+        apply_changes=True,
+    )
+    result = enforce_candidate_prompt_sla(
+        tmp_path,
+        max_candidate_age_days=14,
+        as_of=date.fromisoformat("2026-03-10"),
+        apply_changes=True,
+    )
+    assert result["ok"] is True
+    assert result["deprecate_count"] == 1
+    role_payload = show_prompt(tmp_path, "role.architect")["payload"]
+    assert role_payload["prompt_metadata"]["status"] == "deprecated"
+
+
+def test_enforce_candidate_prompt_sla_renews_explicit_prompt_ids(tmp_path: Path) -> None:
+    _seed_assets(tmp_path)
+    update_prompt_metadata(
+        tmp_path,
+        prompt_id="role.architect",
+        mode="new",
+        version="1.1.0",
+        status="candidate",
+        notes="candidate cut",
+        apply_changes=True,
+    )
+    result = enforce_candidate_prompt_sla(
+        tmp_path,
+        max_candidate_age_days=14,
+        renew_ids=["role.architect"],
+        as_of=date.fromisoformat("2026-03-10"),
+        apply_changes=True,
+    )
+    assert result["ok"] is True
+    assert result["renew_count"] == 1
+    role_payload = show_prompt(tmp_path, "role.architect")["payload"]
+    assert role_payload["prompt_metadata"]["status"] == "candidate"

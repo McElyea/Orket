@@ -3,7 +3,8 @@
 Last updated: 2026-02-14.
 
 ## Current State
-Core stabilization (`P0` through `P4`) is complete. This roadmap defines the next priority path.
+Core stabilization (`P0` through `P4`) is complete.
+Phase A, Phase B, and Phase C implementation items are complete.
 
 Locked foundations:
 1. Guard contract formalization.
@@ -90,22 +91,36 @@ Objective: keep model portability while reducing parser and compliance failures.
 ### Phase C: Governance Throughput and Scope Discipline
 Objective: prevent governance stalls and ownership overlap.
 
-1. `C1` Promotion flow SLA
+1. `C1` Promotion flow SLA (Complete)
    - Scope: force candidate prompt resolution (promote/deprecate/renew) within SLA.
    - Trigger: candidate prompts older than 14 days without a decision.
    - Done when: stale candidate prompts are auto-resolved or explicitly renewed.
-2. `C2` Role boundary audit
+   - Completed evidence:
+     - Added CLI enforcement path: `python -m orket.interfaces.prompts_cli --root . enforce-sla`.
+     - Stale candidate prompts now auto-deprecate unless explicitly renewed via `--renew <prompt_id>`.
+     - Coverage added in `tests/application/test_prompts_cli.py`.
+2. `C2` Role boundary audit (Complete)
    - Scope: detect and resolve overlapping role ownership in runtime rule domains.
    - Trigger: more than 2 roles own the same runtime rule domain.
    - Done when: ownership map is singular per domain and validated by policy checks.
-3. `C3` Prompt engine modular boundary checks
+   - Completed evidence:
+     - Added explicit ownership contract: `model/core/contracts/role_runtime_domain_ownership.json`.
+     - Added CI-facing validation: `tests/platform/test_role_runtime_domain_ownership.py`.
+3. `C3` Prompt engine modular boundary checks (Complete)
    - Scope: enforce ordered stages (`resolve -> validate -> select -> render`) with contract tests.
    - Trigger: resolver changes touch more than 3 independent resolution steps.
    - Done when: stage contracts are tested and resolver churn is isolated by module.
-4. `C4` Over-formalization brake
+   - Completed evidence:
+     - Added explicit resolver stage contract metadata (`resolver_stages`) in prompt layers.
+     - Added stage-order test coverage in `tests/application/test_prompt_resolver.py`.
+4. `C4` Over-formalization brake (Complete)
    - Scope: release-level check that policy churn must produce measurable reliability gains.
    - Trigger: 2 consecutive releases with policy churn but no reliability gain.
    - Done when: release gate blocks additional formalization without impact evidence.
+   - Completed evidence:
+     - Added release gate script: `scripts/check_policy_release_gate.py`.
+     - Gate compares previous/current reliability snapshots and fails on policy churn with no measurable gain.
+     - Coverage added in `tests/application/test_policy_release_gate.py`.
 
 ## Hybrid Pruning Policy (Required)
 Objective: prevent stale projects from bypassing pruning and avoid rule inflation.
