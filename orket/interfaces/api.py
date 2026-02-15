@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 import os
@@ -112,6 +112,78 @@ class RuntimePolicyUpdateRequest(BaseModel):
     small_project_builder_variant: Optional[str] = None
     state_backend_mode: Optional[str] = None
     gitea_state_pilot_enabled: Optional[bool] = None
+
+
+SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
+    "architecture_mode": {
+        "env_var": "ORKET_ARCHITECTURE_MODE",
+        "aliases": {
+            "force_monolith": "force_monolith",
+            "monolith": "force_monolith",
+            "force_microservices": "force_microservices",
+            "microservices": "force_microservices",
+            "architect_decides": "architect_decides",
+            "architect_decide": "architect_decides",
+            "let_architect_decide": "architect_decides",
+        },
+        "type": "string",
+    },
+    "frontend_framework_mode": {
+        "env_var": "ORKET_FRONTEND_FRAMEWORK_MODE",
+        "aliases": {
+            "force_vue": "force_vue",
+            "vue": "force_vue",
+            "force_react": "force_react",
+            "react": "force_react",
+            "force_angular": "force_angular",
+            "angular": "force_angular",
+            "architect_decides": "architect_decides",
+            "let_architect_decide": "architect_decides",
+        },
+        "type": "string",
+    },
+    "project_surface_profile": {
+        "env_var": "ORKET_PROJECT_SURFACE_PROFILE",
+        "aliases": {
+            "unspecified": "unspecified",
+            "legacy": "unspecified",
+            "backend_only": "backend_only",
+            "backend": "backend_only",
+            "api_only": "backend_only",
+            "cli": "cli",
+            "api_vue": "api_vue",
+            "api+vue": "api_vue",
+            "vue_api": "api_vue",
+            "tui": "tui",
+        },
+        "type": "string",
+    },
+    "small_project_builder_variant": {
+        "env_var": "ORKET_SMALL_PROJECT_BUILDER_VARIANT",
+        "aliases": {
+            "auto": "auto",
+            "coder": "coder",
+            "architect": "architect",
+        },
+        "type": "string",
+    },
+    "state_backend_mode": {
+        "env_var": "ORKET_STATE_BACKEND_MODE",
+        "aliases": {
+            "local": "local",
+            "sqlite": "local",
+            "db": "local",
+            "gitea": "gitea",
+        },
+        "type": "string",
+    },
+    "gitea_state_pilot_enabled": {
+        "env_var": "ORKET_ENABLE_GITEA_STATE_PILOT",
+        "type": "boolean",
+    },
+}
+
+SETTINGS_ORDER = tuple(SETTINGS_SCHEMA.keys())
 
 # Security dependency
 API_KEY_NAME = "X-API-Key"
@@ -280,12 +352,176 @@ async def get_runtime_policy_options():
     return runtime_policy_options()
 
 
+def _normalize_setting_token(value: Any) -> str:
+    return str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def _parse_setting_value(field: str, value: Any) -> Any | None:
+    schema = SETTINGS_SCHEMA[field]
+    if schema["type"] == "boolean":
+        if isinstance(value, bool):
+            return value
+        token = _normalize_setting_token(value)
+        if token in {"1", "true", "yes", "on", "enabled"}:
+            return True
+        if token in {"0", "false", "no", "off", "disabled"}:
+            return False
+        return None
+    token = _normalize_setting_token(value)
+    aliases = schema.get("aliases", {})
+    return aliases.get(token)
+
+
+def _runtime_policy_process_rules() -> dict[str, Any]:
+    if engine.org and isinstance(getattr(engine.org, "process_rules", None), dict):
+        return dict(engine.org.process_rules)
+    return {}
+
+
+def _resolve_runtime_setting_value(field: str, env_value: Any, process_value: Any, user_value: Any) -> Any:
+    if field == "architecture_mode":
+        return resolve_architecture_mode(env_value, process_value, user_value)
+    if field == "frontend_framework_mode":
+        return resolve_frontend_framework_mode(env_value, process_value, user_value)
+    if field == "project_surface_profile":
+        return resolve_project_surface_profile(env_value, process_value, user_value)
+    if field == "small_project_builder_variant":
+        return resolve_small_project_builder_variant(env_value, process_value, user_value)
+    if field == "state_backend_mode":
+        return resolve_state_backend_mode(env_value, process_value, user_value)
+    if field == "gitea_state_pilot_enabled":
+        return bool(resolve_gitea_state_pilot_enabled(env_value, process_value, user_value))
+    raise KeyError(f"Unsupported runtime setting '{field}'")
+
+
+def _resolve_settings_snapshot(user_settings: dict[str, Any], process_rules: dict[str, Any]) -> dict[str, Any]:
+    options = runtime_policy_options()
+    snapshot: dict[str, Any] = {}
+    microservices_unlocked = is_microservices_unlocked()
+    for field in SETTINGS_ORDER:
+        schema = SETTINGS_SCHEMA[field]
+        env_value = os.environ.get(schema["env_var"], "")
+        process_value = process_rules.get(field)
+        user_value = user_settings.get(field)
+        effective = _resolve_runtime_setting_value(field, env_value, process_value, user_value)
+
+        source = "default"
+        if _parse_setting_value(field, env_value) is not None:
+            source = "env"
+        elif _parse_setting_value(field, process_value) is not None:
+            source = "process_rules"
+        elif _parse_setting_value(field, user_value) is not None:
+            source = "user"
+
+        metadata = options[field]
+        entry = {
+            "value": effective,
+            "source": source,
+            "default": metadata.get("default"),
+            "type": schema["type"],
+            "input_style": metadata.get("input_style"),
+            "allowed_values": [item.get("value") for item in metadata.get("options", []) if isinstance(item, dict)],
+        }
+        if field == "architecture_mode":
+            requested = _parse_setting_value(field, env_value)
+            if requested is None:
+                requested = _parse_setting_value(field, process_value)
+            if requested is None:
+                requested = _parse_setting_value(field, user_value)
+            if requested == "force_microservices" and not microservices_unlocked:
+                entry["policy_guard"] = "microservices_locked"
+        snapshot[field] = entry
+    return snapshot
+
+
+def _settings_validation_error(errors: list[dict[str, Any]]) -> HTTPException:
+    return HTTPException(
+        status_code=422,
+        detail={
+            "message": "Invalid settings update",
+            "errors": errors,
+        },
+    )
+
+
+@v1_router.get("/settings")
+async def get_settings():
+    user_settings = load_user_settings()
+    process_rules = _runtime_policy_process_rules()
+    return {"settings": _resolve_settings_snapshot(user_settings, process_rules)}
+
+
+@v1_router.patch("/settings")
+async def update_settings(payload: dict[str, Any] = Body(...)):
+    editable = {key: payload[key] for key in SETTINGS_ORDER if key in payload}
+    errors: list[dict[str, Any]] = []
+    for key in payload.keys():
+        if key not in SETTINGS_SCHEMA:
+            errors.append(
+                {
+                    "field": key,
+                    "code": "unknown_setting",
+                    "message": "Setting is not user-editable.",
+                }
+            )
+    if not editable and not errors:
+        raise HTTPException(status_code=400, detail="No editable settings provided.")
+
+    options = runtime_policy_options()
+    normalized: dict[str, Any] = {}
+    for field, raw_value in editable.items():
+        parsed = _parse_setting_value(field, raw_value)
+        if parsed is None:
+            errors.append(
+                {
+                    "field": field,
+                    "code": "invalid_value",
+                    "provided": raw_value,
+                    "allowed_values": [item.get("value") for item in options[field].get("options", []) if isinstance(item, dict)],
+                }
+            )
+            continue
+        if field == "architecture_mode" and parsed == "force_microservices" and not is_microservices_unlocked():
+            errors.append(
+                {
+                    "field": field,
+                    "code": "policy_guard",
+                    "message": "force_microservices is locked until microservices readiness gates are satisfied.",
+                }
+            )
+            continue
+        normalized[field] = parsed
+
+    user_settings = load_user_settings().copy()
+    process_rules = _runtime_policy_process_rules()
+    candidate = user_settings.copy()
+    candidate.update(normalized)
+    snapshot = _resolve_settings_snapshot(candidate, process_rules)
+    if snapshot["state_backend_mode"]["value"] == "gitea" and not snapshot["gitea_state_pilot_enabled"]["value"]:
+        errors.append(
+            {
+                "field": "state_backend_mode",
+                "code": "policy_guard",
+                "message": "state_backend_mode='gitea' requires gitea_state_pilot_enabled=true.",
+            }
+        )
+
+    if errors:
+        raise _settings_validation_error(errors)
+
+    user_settings.update(normalized)
+    save_user_settings(user_settings)
+    return {
+        "ok": True,
+        "saved": normalized,
+        "settings": _resolve_settings_snapshot(user_settings, process_rules),
+    }
+
+
 @v1_router.get("/system/runtime-policy")
 async def get_runtime_policy():
     user_settings = load_user_settings()
-    process_rules = {}
-    if engine.org and isinstance(getattr(engine.org, "process_rules", None), dict):
-        process_rules = dict(engine.org.process_rules)
+    process_rules = _runtime_policy_process_rules()
 
     architecture_mode = resolve_architecture_mode(
         os.environ.get("ORKET_ARCHITECTURE_MODE", ""),

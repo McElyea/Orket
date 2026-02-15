@@ -106,20 +106,21 @@ Canonical API contract for dashboard/front-end workflows.
 4. `GET /v1/cards/{card_id}/comments`
    - Returns persisted card comments.
 
-### 5. Runtime Policy and Settings (Current Surface)
+### 5. Runtime Policy and Settings
 1. `GET /v1/system/runtime-policy/options`
 2. `GET /v1/system/runtime-policy`
 3. `POST /v1/system/runtime-policy`
-   - Current editable settings:
-     - `architecture_mode`
-     - `frontend_framework_mode`
-     - `project_surface_profile`
-     - `small_project_builder_variant`
-     - `state_backend_mode`
-     - `gitea_state_pilot_enabled`
-
-## Planned Expansions
-1. Dedicated settings endpoint family (`/v1/settings`).
+4. `GET /v1/settings`
+   - Returns all user-editable settings with:
+     - effective `value`
+     - effective `source` (`env`, `process_rules`, `user`, `default`)
+     - `default`
+     - `type`
+     - `input_style`
+     - `allowed_values`
+5. `PATCH /v1/settings`
+   - Updates user-editable runtime settings with validation.
+   - Invalid payload returns structured errors in `detail.errors[]`.
 
 ## Orchestration Controls
 1. `POST /v1/sessions/{session_id}/halt`

@@ -439,6 +439,108 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
     assert captured["settings"]["state_backend_mode"] == "gitea"
     assert captured["settings"]["gitea_state_pilot_enabled"] is True
 
+
+def test_settings_get_returns_metadata_and_sources(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    monkeypatch.setenv("ORKET_ARCHITECTURE_MODE", "force_microservices")
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"frontend_framework_mode": "force_react"})
+    monkeypatch.setattr(
+        api_module.engine,
+        "org",
+        type("Org", (), {"process_rules": {"project_surface_profile": "backend_only"}})(),
+    )
+
+    response = client.get("/v1/settings", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    settings = response.json()["settings"]
+    assert settings["architecture_mode"]["value"] == "force_microservices"
+    assert settings["architecture_mode"]["source"] == "env"
+    assert settings["frontend_framework_mode"]["source"] == "user"
+    assert settings["project_surface_profile"]["source"] == "process_rules"
+    assert settings["state_backend_mode"]["source"] == "default"
+    assert "force_monolith" in settings["architecture_mode"]["allowed_values"]
+    assert settings["gitea_state_pilot_enabled"]["type"] == "boolean"
+
+
+def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+    captured = {}
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"existing": "x"})
+    monkeypatch.setattr(api_module, "save_user_settings", lambda settings: captured.update({"settings": settings}))
+
+    response = client.patch(
+        "/v1/settings",
+        json={
+            "architecture_mode": "microservices",
+            "frontend_framework_mode": "react",
+            "project_surface_profile": "backend",
+            "small_project_builder_variant": "architect",
+            "state_backend_mode": "local",
+            "gitea_state_pilot_enabled": "enabled",
+        },
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert captured["settings"]["architecture_mode"] == "force_microservices"
+    assert captured["settings"]["frontend_framework_mode"] == "force_react"
+    assert captured["settings"]["project_surface_profile"] == "backend_only"
+    assert captured["settings"]["small_project_builder_variant"] == "architect"
+    assert captured["settings"]["state_backend_mode"] == "local"
+    assert captured["settings"]["gitea_state_pilot_enabled"] is True
+
+
+def test_settings_patch_rejects_invalid_values_structured(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.patch(
+        "/v1/settings",
+        json={"frontend_framework_mode": "svelte", "unknown_field": "x"},
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert detail["message"] == "Invalid settings update"
+    assert any(err["field"] == "frontend_framework_mode" and err["code"] == "invalid_value" for err in detail["errors"])
+    assert any(err["field"] == "unknown_field" and err["code"] == "unknown_setting" for err in detail["errors"])
+
+
+def test_settings_patch_enforces_policy_guards(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "false")
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.patch(
+        "/v1/settings",
+        json={"architecture_mode": "force_microservices"},
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 422
+    errors = response.json()["detail"]["errors"]
+    assert any(err["field"] == "architecture_mode" and err["code"] == "policy_guard" for err in errors)
+
+
+def test_settings_patch_rejects_gitea_without_pilot(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.delenv("ORKET_ENABLE_GITEA_STATE_PILOT", raising=False)
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.patch(
+        "/v1/settings",
+        json={"state_backend_mode": "gitea", "gitea_state_pilot_enabled": False},
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 422
+    errors = response.json()["detail"]["errors"]
+    assert any(err["field"] == "state_backend_mode" and err["code"] == "policy_guard" for err in errors)
+
 def test_metrics():
     headers = {"X-API-Key": os.getenv("ORKET_API_KEY", "")}
     response = client.get("/v1/system/metrics", headers=headers)
