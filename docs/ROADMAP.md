@@ -13,27 +13,6 @@ Last updated: 2026-02-14.
 6. Replan limit is terminal:
    - `replan_count > 3` halts with terminal failure/rejection semantics.
 
-## Priority A: Monolith Project Factory
-Objective: finish production hardening for benchmarking and release gating.
-
-### A5. Variant Benchmarking and Acceptance Matrix
-1. Run benchmark matrix in proof cadence using the matrix runner:
-   - builder variant (`coder` vs `architect`)
-   - surface profile (`backend_only`, `api_vue`, optional `tui`)
-2. Integrate matrix summaries into acceptance reporting with comparable trend output.
-
-Done when:
-1. Weekly proof can execute the matrix and produce comparable outputs.
-2. A default builder variant is selected from measured quality outcomes.
-
-### A6. Monolith Readiness Gate
-1. Enforce monolith readiness gate in CI/quality workflow.
-2. Require stable pass-rate thresholds across representative small projects.
-
-Done when:
-1. Gate criteria are codified and enforced automatically.
-2. Monolith project creation is production-ready for small projects.
-
 ## Priority B: Microservices Unlock (Locked Until A Complete)
 Objective: expand architecture options only after monolith reliability is proven.
 
@@ -53,13 +32,15 @@ Objective: expand architecture options only after monolith reliability is proven
 3. Broad architecture expansion before microservices unlock criteria pass.
 
 ## Execution Plan (Remaining)
-1. `Pass A5-R2`: integrate matrix summaries into acceptance reporting and weekly proof output.
-2. `Pass A6-R2`: wire readiness gate into quality CI with threshold policy.
-3. `Pass B1-R1`: codify unlock checklist as mechanical checks before enabling microservices.
+1. `Pass B1-R1`: codify unlock checklist as mechanical checks before enabling microservices.
+2. `Pass B2-R1`: introduce microservices mode contracts behind explicit unlock flag/policy.
+3. `Pass B2-R2`: add microservices scaffolder/dependency/deployment/runtime verifier profile tests.
 
 ## Weekly Proof (Required)
 1. `python -m pytest tests -q`
 2. `python scripts/check_dependency_direction.py`
 3. `python scripts/check_volatility_boundaries.py`
-4. `python -m scripts.run_live_acceptance_loop --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 1`
-5. `python -m scripts.report_live_acceptance_patterns`
+4. `python scripts/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json`
+5. `python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only`
+6. `python -m scripts.run_live_acceptance_loop --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 1`
+7. `python -m scripts.report_live_acceptance_patterns --matrix benchmarks/results/monolith_variant_matrix.json`

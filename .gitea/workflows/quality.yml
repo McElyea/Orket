@@ -104,6 +104,14 @@ jobs:
         run: |
           python scripts/check_roadmap_metrics.py
 
+      - name: Build monolith variant matrix plan
+        run: |
+          python scripts/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json
+
+      - name: Enforce monolith readiness gate policy
+        run: |
+          python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only
+
       - name: Validate prompt assets
         run: |
           python -m orket.interfaces.prompts_cli --root . validate --json

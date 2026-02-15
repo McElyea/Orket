@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "thresholds": {
+    "min_pass_rate": 0.85,
+    "max_runtime_failure_rate": 0.2,
+    "max_reviewer_rejection_rate": 0.4,
+    "min_executed_entries": 2
+  },
+  "required_combinations": [
+    {
+      "builder_variant": "coder",
+      "project_surface_profile": "backend_only"
+    },
+    {
+      "builder_variant": "coder",
+      "project_surface_profile": "api_vue"
+    },
+    {
+      "builder_variant": "architect",
+      "project_surface_profile": "backend_only"
+    },
+    {
+      "builder_variant": "architect",
+      "project_surface_profile": "api_vue"
+    }
+  ]
+}

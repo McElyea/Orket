@@ -303,12 +303,58 @@ def _load_matrix_summary(matrix_path: Path) -> Dict[str, Any]:
     entries = payload.get("entries", [])
     if not isinstance(entries, list):
         entries = []
+    trends = _matrix_trends(entries)
     return {
         "source": str(matrix_path),
         "execute_mode": bool(payload.get("execute_mode")),
         "recommended_default_builder_variant": payload.get("recommended_default_builder_variant"),
         "entry_count": len(entries),
         "entries": entries,
+        "trends": trends,
+    }
+
+
+def _matrix_trends(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    if not entries:
+        return {}
+    by_builder: Dict[str, Dict[str, float]] = {}
+    by_profile: Dict[str, Dict[str, float]] = {}
+
+    def _accumulate(bucket: Dict[str, Dict[str, float]], key: str, summary: Dict[str, Any]) -> None:
+        item = bucket.setdefault(
+            key,
+            {"count": 0.0, "pass_rate": 0.0, "runtime_failure_rate": 0.0, "reviewer_rejection_rate": 0.0},
+        )
+        item["count"] += 1.0
+        item["pass_rate"] += float(summary.get("pass_rate", 0.0) or 0.0)
+        item["runtime_failure_rate"] += float(summary.get("runtime_failure_rate", 0.0) or 0.0)
+        item["reviewer_rejection_rate"] += float(summary.get("reviewer_rejection_rate", 0.0) or 0.0)
+
+    for entry in entries:
+        summary = entry.get("summary", {})
+        if not isinstance(summary, dict):
+            continue
+        builder = str(entry.get("builder_variant") or "").strip()
+        profile = str(entry.get("project_surface_profile") or "").strip()
+        if builder:
+            _accumulate(by_builder, builder, summary)
+        if profile:
+            _accumulate(by_profile, profile, summary)
+
+    def _normalize(bucket: Dict[str, Dict[str, float]]) -> Dict[str, Dict[str, float]]:
+        out: Dict[str, Dict[str, float]] = {}
+        for key, value in bucket.items():
+            count = max(1.0, float(value.get("count", 1.0)))
+            out[key] = {
+                "pass_rate": value["pass_rate"] / count,
+                "runtime_failure_rate": value["runtime_failure_rate"] / count,
+                "reviewer_rejection_rate": value["reviewer_rejection_rate"] / count,
+            }
+        return out
+
+    return {
+        "by_builder_variant": _normalize(by_builder),
+        "by_project_surface_profile": _normalize(by_profile),
     }
 
 

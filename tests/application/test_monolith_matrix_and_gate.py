@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from scripts.run_monolith_variant_matrix import build_combos, choose_default_variant, summarize_report
-from scripts.check_monolith_readiness_gate import aggregate_metrics
+from scripts.check_monolith_readiness_gate import aggregate_metrics, _missing_required_combinations, _resolve_thresholds
 
 
 def test_build_combos_cartesian_product():
@@ -67,3 +67,39 @@ def test_aggregate_metrics_average_values():
     assert metrics["pass_rate"] == pytest.approx(0.7)
     assert metrics["runtime_failure_rate"] == pytest.approx(0.15)
     assert metrics["reviewer_rejection_rate"] == pytest.approx(0.3)
+
+
+def test_missing_required_combinations_detected():
+    entries = [{"builder_variant": "coder", "project_surface_profile": "backend_only"}]
+    policy = {
+        "required_combinations": [
+            {"builder_variant": "coder", "project_surface_profile": "backend_only"},
+            {"builder_variant": "architect", "project_surface_profile": "api_vue"},
+        ]
+    }
+    missing = _missing_required_combinations(entries, policy)
+    assert ("architect", "api_vue") in missing
+
+
+def test_policy_thresholds_override_args():
+    class _Args:
+        min_pass_rate = 0.1
+        max_runtime_failure_rate = 0.9
+        max_reviewer_rejection_rate = 0.9
+        min_executed_entries = 1
+
+    thresholds = _resolve_thresholds(
+        _Args(),
+        {
+            "thresholds": {
+                "min_pass_rate": 0.8,
+                "max_runtime_failure_rate": 0.3,
+                "max_reviewer_rejection_rate": 0.4,
+                "min_executed_entries": 2,
+            }
+        },
+    )
+    assert thresholds["min_pass_rate"] == 0.8
+    assert thresholds["max_runtime_failure_rate"] == 0.3
+    assert thresholds["max_reviewer_rejection_rate"] == 0.4
+    assert thresholds["min_executed_entries"] == 2

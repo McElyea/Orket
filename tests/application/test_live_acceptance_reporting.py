@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+import pytest
 
 
 def _load_script_module(name: str, relative_path: str):
@@ -270,3 +271,28 @@ def test_report_live_acceptance_patterns_loads_monolith_matrix_summary(tmp_path:
     assert summary["execute_mode"] is True
     assert summary["recommended_default_builder_variant"] == "architect"
     assert summary["entry_count"] == 1
+    assert "trends" in summary
+
+
+def test_matrix_trends_group_by_builder_and_profile() -> None:
+    reporter = _load_script_module(
+        "report_live_acceptance_patterns_trends",
+        "scripts/report_live_acceptance_patterns.py",
+    )
+    trends = reporter._matrix_trends(
+        [
+            {
+                "builder_variant": "coder",
+                "project_surface_profile": "backend_only",
+                "summary": {"pass_rate": 0.8, "runtime_failure_rate": 0.2, "reviewer_rejection_rate": 0.3},
+            },
+            {
+                "builder_variant": "architect",
+                "project_surface_profile": "backend_only",
+                "summary": {"pass_rate": 0.9, "runtime_failure_rate": 0.1, "reviewer_rejection_rate": 0.2},
+            },
+        ]
+    )
+    assert "coder" in trends["by_builder_variant"]
+    assert "architect" in trends["by_builder_variant"]
+    assert trends["by_project_surface_profile"]["backend_only"]["pass_rate"] == pytest.approx(0.85)
