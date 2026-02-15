@@ -10,6 +10,38 @@ Last updated: 2026-02-15.
 5. Small-task minimum team is one builder (`coder` or `architect`) plus one mandatory `code_reviewer`.
 6. Replan limit is terminal: `replan_count > 3` halts with rejection semantics.
 
+## Priority 0: API/UI Surface Completion (Immediate)
+Objective: expose complete, stable frontend-facing APIs for logs, cards, run inspection, orchestration loop control, and user-controllable settings.
+
+### Phase D: Logs and Real-Time Stream Hardening
+Scope:
+1. Add historical log retrieval endpoints by session/run scope.
+2. Keep websocket stream support for live events and align auth posture.
+3. Add filtering parameters for level/source/time window.
+
+Acceptance criteria:
+1. `GET /v1/logs` (and scoped variants) return paginated historical records.
+2. `/ws/events` auth posture is explicitly defined and tested to match security policy.
+3. UI can render live + historical logs without filesystem reads.
+
+### Phase E: User Settings API (All User-Controllable Settings)
+Scope:
+1. Define a single source of truth for user-editable runtime settings.
+2. Add endpoint(s) to list all editable settings with metadata (type, allowed values, defaults, source).
+3. Add endpoint(s) to update settings with validation, persistence, and auditability.
+
+Acceptance criteria:
+1. `GET /v1/settings` returns all user-controllable settings, including:
+   - `architecture_mode`
+   - `frontend_framework_mode`
+   - `project_surface_profile`
+   - `small_project_builder_variant`
+   - `state_backend_mode`
+   - `gitea_state_pilot_enabled`
+2. Settings payload includes per-field constraints and effective value source (env/process_rules/user).
+3. `PATCH /v1/settings` validates and persists updates; invalid changes return structured errors.
+4. API tests verify round-trip save/load and policy guard behavior for restricted values.
+
 ## Priority 1: Determinism Maintenance (Recurring)
 Objective: keep quality and policy gates green while architecture/state work continues.
 

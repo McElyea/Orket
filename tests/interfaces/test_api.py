@@ -1,8 +1,12 @@
-﻿import pytest
+﻿import asyncio
+import json
+import pytest
 from datetime import datetime
+from pathlib import Path
 from fastapi.testclient import TestClient
 from orket.interfaces.api import app
 import orket.interfaces.api as api_module
+from orket.schema import CardStatus
 import os
 
 client = TestClient(app)
@@ -1043,6 +1047,306 @@ def test_runs_and_backlog_delegation(monkeypatch):
     assert backlog_response.json() == [{"id": "I1", "session_id": "S1"}]
 
 
+@pytest.mark.asyncio
+async def test_runs_backlog_real_runtime_repository_success(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    await real_engine.sessions.start_session(
+        "REAL-1",
+        {"type": "issue", "name": "real", "department": "core", "task_input": "test"},
+    )
+    await real_engine.cards.save(
+        {
+            "id": "ISSUE-REAL-1",
+            "session_id": "REAL-1",
+            "build_id": "BUILD-REAL",
+            "seat": "COD-1",
+            "summary": "Real backlog item",
+            "priority": 2.0,
+        }
+    )
+
+    response = client.get("/v1/runs/REAL-1/backlog", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert isinstance(payload, list)
+    assert payload[0]["id"] == "ISSUE-REAL-1"
+    assert payload[0]["session_id"] == "REAL-1"
+
+
+@pytest.mark.asyncio
+async def test_runs_backlog_real_runtime_repository_empty(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    await real_engine.sessions.start_session(
+        "REAL-EMPTY",
+        {"type": "issue", "name": "real-empty", "department": "core", "task_input": "test"},
+    )
+
+    response = client.get("/v1/runs/REAL-EMPTY/backlog", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.asyncio
+async def test_cards_endpoints_real_runtime_filters_and_pagination(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    await real_engine.cards.save(
+        {
+            "id": "CARD-A",
+            "session_id": "S-A",
+            "build_id": "B-1",
+            "seat": "COD-1",
+            "summary": "Alpha",
+            "priority": 2.0,
+        }
+    )
+    await real_engine.cards.save(
+        {
+            "id": "CARD-B",
+            "session_id": "S-B",
+            "build_id": "B-2",
+            "seat": "COD-1",
+            "summary": "Beta",
+            "priority": 2.0,
+        }
+    )
+    await real_engine.cards.update_status("CARD-B", CardStatus.DONE)
+
+    response = client.get(
+        "/v1/cards?build_id=B-2&status=done&limit=1&offset=0",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["count"] == 1
+    assert payload["limit"] == 1
+    assert payload["offset"] == 0
+    assert payload["filters"]["build_id"] == "B-2"
+    assert payload["filters"]["status"] == "done"
+    assert payload["items"][0]["id"] == "CARD-B"
+    assert "created_at" in payload["items"][0]
+
+
+@pytest.mark.asyncio
+async def test_cards_detail_history_comments_real_runtime(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    await real_engine.cards.save(
+        {
+            "id": "CARD-HIST",
+            "session_id": "S-H",
+            "build_id": "B-H",
+            "seat": "REV-1",
+            "summary": "History card",
+            "priority": 2.0,
+        }
+    )
+    await real_engine.cards.update_status("CARD-HIST", CardStatus.IN_PROGRESS, assignee="tester")
+    await real_engine.cards.add_comment("CARD-HIST", "tester", "first comment")
+
+    detail_response = client.get("/v1/cards/CARD-HIST", headers={"X-API-Key": "test-key"})
+    history_response = client.get("/v1/cards/CARD-HIST/history", headers={"X-API-Key": "test-key"})
+    comments_response = client.get("/v1/cards/CARD-HIST/comments", headers={"X-API-Key": "test-key"})
+
+    assert detail_response.status_code == 200
+    assert detail_response.json()["id"] == "CARD-HIST"
+
+    assert history_response.status_code == 200
+    assert history_response.json()["card_id"] == "CARD-HIST"
+    assert len(history_response.json()["history"]) >= 1
+
+    assert comments_response.status_code == 200
+    assert comments_response.json()["card_id"] == "CARD-HIST"
+    assert comments_response.json()["comments"][0]["content"] == "first comment"
+
+
+def test_cards_detail_history_comments_missing_card(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    detail_response = client.get("/v1/cards/DOES-NOT-EXIST", headers={"X-API-Key": "test-key"})
+    history_response = client.get("/v1/cards/DOES-NOT-EXIST/history", headers={"X-API-Key": "test-key"})
+    comments_response = client.get("/v1/cards/DOES-NOT-EXIST/comments", headers={"X-API-Key": "test-key"})
+
+    assert detail_response.status_code == 404
+    assert history_response.status_code == 404
+    assert comments_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_run_detail_and_session_status_real_runtime(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    session_id = "RUN-REAL-1"
+    await real_engine.sessions.start_session(
+        session_id,
+        {"type": "epic", "name": "real-run", "department": "core", "task_input": "demo"},
+    )
+    await real_engine.cards.save(
+        {
+            "id": "ISSUE-RUN-1",
+            "session_id": session_id,
+            "build_id": "BUILD-RUN",
+            "seat": "COD-1",
+            "summary": "Run issue",
+            "priority": 2.0,
+        }
+    )
+    await real_engine.run_ledger.start_run(
+        session_id=session_id,
+        run_type="epic",
+        run_name="real-run",
+        department="core",
+        build_id="BUILD-RUN",
+        summary={"phase": "execute"},
+        artifacts={"report_path": "runs/report.json"},
+    )
+    await real_engine.run_ledger.finalize_run(
+        session_id=session_id,
+        status="done",
+        summary={"result": "ok"},
+        artifacts={"bundle": "artifact.zip"},
+    )
+
+    detail_response = client.get(f"/v1/runs/{session_id}", headers={"X-API-Key": "test-key"})
+    status_response = client.get(f"/v1/sessions/{session_id}/status", headers={"X-API-Key": "test-key"})
+
+    assert detail_response.status_code == 200
+    detail_payload = detail_response.json()
+    assert detail_payload["session_id"] == session_id
+    assert detail_payload["status"] == "done"
+    assert detail_payload["summary"]["result"] == "ok"
+    assert detail_payload["artifacts"]["bundle"] == "artifact.zip"
+    assert detail_payload["issue_count"] >= 1
+
+    assert status_response.status_code == 200
+    status_payload = status_response.json()
+    assert status_payload["session_id"] == session_id
+    assert status_payload["status"] == "done"
+    assert status_payload["backlog"]["count"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+    from orket.state import runtime_state
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    async def _sleepy():
+        await asyncio.sleep(30)
+
+    task = asyncio.create_task(_sleepy())
+    session_id = "HALT-REAL-1"
+    await runtime_state.add_task(session_id, task)
+
+    response = client.post(f"/v1/sessions/{session_id}/halt", headers={"X-API-Key": "test-key"})
+    await asyncio.sleep(0)
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["session_id"] == session_id
+    assert task.cancelled() or task.done()
+
+    await runtime_state.remove_task(session_id)
+
+
+@pytest.mark.asyncio
+async def test_session_replay_endpoint_real_runtime(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    run_root = workspace_root / "observability" / "RUN-REPLAY-1" / "ISSUE-REPLAY-1" / "001_developer"
+    run_root.mkdir(parents=True, exist_ok=True)
+    (run_root / "checkpoint.json").write_text(json.dumps({"run_id": "RUN-REPLAY-1"}), encoding="utf-8")
+    (run_root / "messages.json").write_text(json.dumps([{"role": "system", "content": "x"}]), encoding="utf-8")
+    (run_root / "model_response.txt").write_text("ok", encoding="utf-8")
+    (run_root / "parsed_tool_calls.json").write_text(json.dumps([{"tool": "write_file"}]), encoding="utf-8")
+
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    response = client.get(
+        "/v1/sessions/RUN-REPLAY-1/replay?issue_id=ISSUE-REPLAY-1&turn_index=1&role=developer",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["checkpoint"]["run_id"] == "RUN-REPLAY-1"
+    assert payload["messages"][0]["role"] == "system"
+    assert payload["model_response"] == "ok"
+    assert payload["parsed_tool_calls"][0]["tool"] == "write_file"
+
+
+def test_run_detail_and_replay_404_paths(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    run_detail = client.get("/v1/runs/NOPE-RUN", headers={"X-API-Key": "test-key"})
+    replay = client.get(
+        "/v1/sessions/NOPE/replay?issue_id=ISSUE-1&turn_index=1&role=developer",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert run_detail.status_code == 404
+    assert replay.status_code == 404
+
+
 def test_runs_sessions_use_runtime_invocation_policies(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
@@ -1254,4 +1558,5 @@ def test_cards_archive_uses_runtime_response_normalization(monkeypatch):
         "missing_ids": ["Z"],
         "policy": "custom",
     }
+
 

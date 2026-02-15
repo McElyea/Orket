@@ -68,6 +68,48 @@ class AsyncSessionRepository(SessionRepository):
                 rows = await cursor.fetchall()
                 return [dict(r) for r in rows]
 
+    async def get_session_issues(self, session_id: str) -> List[Dict[str, Any]]:
+        """
+        Return issue rows for a session from the shared runtime DB.
+
+        This intentionally mirrors legacy repository behavior used by `/v1/runs/{session_id}/backlog`.
+        """
+        async with self._lock:
+            async with aiosqlite.connect(self.db_path) as conn:
+                conn.row_factory = aiosqlite.Row
+                await self._ensure_initialized(conn)
+
+                table_cursor = await conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'issues' LIMIT 1"
+                )
+                has_issues_table = await table_cursor.fetchone()
+                if not has_issues_table:
+                    return []
+
+                cursor = await conn.execute(
+                    "SELECT * FROM issues WHERE session_id = ? ORDER BY created_at ASC",
+                    (session_id,),
+                )
+                rows = await cursor.fetchall()
+                issues: List[Dict[str, Any]] = []
+                for row in rows:
+                    data = dict(row)
+                    for source_field, target_field, default in (
+                        ("verification_json", "verification", {}),
+                        ("metrics_json", "metrics", {}),
+                        ("depends_on_json", "depends_on", []),
+                    ):
+                        raw = data.get(source_field)
+                        if raw:
+                            try:
+                                data[target_field] = json.loads(raw)
+                            except json.JSONDecodeError:
+                                data[target_field] = default
+                        else:
+                            data[target_field] = default
+                    issues.append(data)
+                return issues
+
     async def complete_session(self, session_id: str, status: str, transcript: List[Dict]):
         async with self._lock:
             async with aiosqlite.connect(self.db_path) as conn:

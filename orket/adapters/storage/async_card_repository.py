@@ -109,6 +109,45 @@ class AsyncCardRepository(CardRepository):
                 rows = await cursor.fetchall()
                 return [IssueRecord.model_validate(self._deserialize_row(dict(row))) for row in rows]
 
+    async def list_cards(
+        self,
+        *,
+        build_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
+        where_clauses: List[str] = []
+        params: List[Any] = []
+
+        if build_id:
+            where_clauses.append("build_id = ?")
+            params.append(build_id)
+        if session_id:
+            where_clauses.append("session_id = ?")
+            params.append(session_id)
+        if status:
+            where_clauses.append("LOWER(status) = ?")
+            params.append(str(status).lower())
+
+        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        query = (
+            "SELECT * FROM issues "
+            f"{where_sql} "
+            "ORDER BY datetime(created_at) DESC, id DESC "
+            "LIMIT ? OFFSET ?"
+        )
+        params.extend([max(1, int(limit)), max(0, int(offset))])
+
+        async with self._lock:
+            async with aiosqlite.connect(self.db_path) as conn:
+                conn.row_factory = aiosqlite.Row
+                await self._ensure_initialized(conn)
+                cursor = await conn.execute(query, tuple(params))
+                rows = await cursor.fetchall()
+                return [self._deserialize_row(dict(row)) for row in rows]
+
     async def save(self, record: IssueRecord | Dict[str, Any]) -> None:
         if isinstance(record, dict):
             record = IssueRecord.model_validate(record)

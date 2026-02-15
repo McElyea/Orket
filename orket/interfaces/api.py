@@ -3,7 +3,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 import os
@@ -398,6 +398,37 @@ async def list_runs():
     invocation = api_runtime_node.resolve_runs_invocation()
     return await _invoke_async_method(engine.sessions, invocation, "runs")
 
+
+@v1_router.get("/runs/{session_id}")
+async def get_run_detail(session_id: str):
+    run_record = await engine.run_ledger.get_run(session_id)
+    session = await engine.sessions.get_session(session_id)
+
+    if run_record is None and session is None:
+        raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
+
+    backlog = await engine.sessions.get_session_issues(session_id)
+    summary = {}
+    artifacts = {}
+    status = None
+    if isinstance(run_record, dict):
+        summary = dict(run_record.get("summary_json") or {})
+        artifacts = dict(run_record.get("artifact_json") or {})
+        status = run_record.get("status")
+    if status is None and isinstance(session, dict):
+        status = session.get("status")
+
+    return {
+        "session_id": session_id,
+        "status": status,
+        "summary": summary,
+        "artifacts": artifacts,
+        "issue_count": len(backlog),
+        "session": session,
+        "run_ledger": run_record,
+    }
+
+
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
     log_event("api_run_metrics", {"session_id": session_id}, PROJECT_ROOT)
@@ -419,6 +450,71 @@ async def get_session_detail(session_id: str):
     if not session:
         raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
     return session
+
+
+@v1_router.get("/sessions/{session_id}/status")
+async def get_session_status(session_id: str):
+    session = await engine.sessions.get_session(session_id)
+    if not session:
+        raise HTTPException(**api_runtime_node.session_detail_not_found_error(session_id))
+
+    run_record = await engine.run_ledger.get_run(session_id)
+    backlog = await engine.sessions.get_session_issues(session_id)
+    task = await runtime_state.get_task(session_id)
+    is_active = bool(task and not task.done())
+
+    backlog_counts: dict[str, int] = {}
+    for issue in backlog:
+        issue_status = str(issue.get("status") or "unknown")
+        backlog_counts[issue_status] = backlog_counts.get(issue_status, 0) + 1
+
+    return {
+        "session_id": session_id,
+        "active": is_active,
+        "status": (run_record or {}).get("status", session.get("status")),
+        "task_state": (
+            "running"
+            if is_active
+            else ("completed" if task and task.done() and not task.cancelled() else ("canceled" if task and task.cancelled() else "idle"))
+        ),
+        "backlog": {
+            "count": len(backlog),
+            "by_status": backlog_counts,
+        },
+        "summary": dict((run_record or {}).get("summary_json") or {}),
+        "artifacts": dict((run_record or {}).get("artifact_json") or {}),
+    }
+
+
+@v1_router.post("/sessions/{session_id}/halt")
+async def halt_session(session_id: str):
+    await engine.halt_session(session_id)
+    task = await runtime_state.get_task(session_id)
+    return {
+        "ok": True,
+        "session_id": session_id,
+        "active": bool(task and not task.done()),
+    }
+
+
+@v1_router.get("/sessions/{session_id}/replay")
+async def replay_session_turn(
+    session_id: str,
+    issue_id: str,
+    turn_index: int = Query(ge=1),
+    role: Optional[str] = None,
+):
+    try:
+        replay = engine.replay_turn(
+            session_id=session_id,
+            issue_id=issue_id,
+            turn_index=turn_index,
+            role=role,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return replay
+
 
 @v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str):
@@ -448,6 +544,63 @@ async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
     invocation = api_runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
     logs = _invoke_sync_method(pipeline.sandbox_orchestrator, invocation, "sandbox logs")
     return {"logs": logs}
+
+
+@v1_router.get("/cards")
+async def list_cards(
+    build_id: Optional[str] = None,
+    session_id: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    cards = await engine.cards.list_cards(
+        build_id=build_id,
+        session_id=session_id,
+        status=status,
+        limit=limit,
+        offset=offset,
+    )
+    return {
+        "items": cards,
+        "limit": limit,
+        "offset": offset,
+        "count": len(cards),
+        "filters": {
+            "build_id": build_id,
+            "session_id": session_id,
+            "status": status,
+        },
+    }
+
+
+@v1_router.get("/cards/{card_id}")
+async def get_card_detail(card_id: str):
+    card = await engine.cards.get_by_id(card_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail=f"Card '{card_id}' not found")
+    if hasattr(card, "model_dump"):
+        return card.model_dump()
+    return card
+
+
+@v1_router.get("/cards/{card_id}/history")
+async def get_card_history(card_id: str):
+    card = await engine.cards.get_by_id(card_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail=f"Card '{card_id}' not found")
+    history = await engine.cards.get_card_history(card_id)
+    return {"card_id": card_id, "history": history}
+
+
+@v1_router.get("/cards/{card_id}/comments")
+async def get_card_comments(card_id: str):
+    card = await engine.cards.get_by_id(card_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail=f"Card '{card_id}' not found")
+    comments = await engine.cards.get_comments(card_id)
+    return {"card_id": card_id, "comments": comments}
+
 
 @v1_router.get("/system/board")
 async def get_system_board(dept: str = "core"):
