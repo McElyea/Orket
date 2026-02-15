@@ -22,16 +22,7 @@ Objective: run controlled microservices pilots with measurable side-by-side evid
    - Decision is reproducible from saved artifacts.
 4. Gate command:
    - `python scripts/check_microservices_pilot_stability.py --artifacts <older.json> <newer.json> --required-consecutive 2 --out benchmarks/results/microservices_pilot_stability_check.json`
-
-### P1.2 Runtime Policy Alignment
-1. Ensure runtime policy surfaces pilot state clearly:
-   - unlocked state
-   - default mode
-   - selected mode
-2. Ensure UI/API controls map directly to enforced runtime behavior.
-3. Acceptance criteria:
-   - policy endpoint and orchestrator behavior are consistent under env + settings combinations.
-4. Baseline evidence artifact available:
+5. Baseline evidence artifact:
    - `benchmarks/results/architecture_pilot_matrix.json`
 
 ## Priority 2: Packaging Readiness Follow-Through

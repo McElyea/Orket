@@ -16,6 +16,9 @@ from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.time_utils import now_local
 from orket.settings import load_user_settings, save_user_settings
 from orket.application.services.runtime_policy import (
+    allowed_architecture_patterns,
+    is_microservices_pilot_stable,
+    is_microservices_unlocked,
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
     resolve_project_surface_profile,
@@ -303,6 +306,10 @@ async def get_runtime_policy():
         "frontend_framework_mode": frontend_framework_mode,
         "project_surface_profile": project_surface_profile,
         "small_project_builder_variant": small_project_builder_variant,
+        "default_architecture_mode": "force_monolith",
+        "allowed_architecture_patterns": allowed_architecture_patterns(),
+        "microservices_unlocked": is_microservices_unlocked(),
+        "microservices_pilot_stable": is_microservices_pilot_stable(),
     }
 
 

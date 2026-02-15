@@ -24,6 +24,7 @@ DEFAULT_FRONTEND_FRAMEWORK_MODE = "force_vue"
 DEFAULT_PROJECT_SURFACE_PROFILE = "unspecified"
 DEFAULT_SMALL_PROJECT_BUILDER_VARIANT = "auto"
 DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/microservices_unlock_check.json"
+DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/microservices_pilot_stability_check.json"
 
 PROJECT_SURFACE_PROFILE_OPTIONS: List[Dict[str, str]] = [
     {"value": "unspecified", "label": "Unspecified (Legacy Defaults)"},
@@ -81,6 +82,17 @@ def is_microservices_unlocked() -> bool:
     return bool(report.get("unlocked"))
 
 
+def is_microservices_pilot_stable() -> bool:
+    report_path = Path(
+        str(
+            os.environ.get("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT")
+            or DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT
+        )
+    )
+    report = _read_unlock_report(report_path)
+    return bool(report.get("stable"))
+
+
 def allowed_architecture_patterns() -> List[str]:
     if is_microservices_unlocked():
         return ["monolith", "microservices"]
@@ -121,6 +133,7 @@ def resolve_frontend_framework_mode(*values: Any) -> str:
 
 def runtime_policy_options() -> Dict[str, Any]:
     microservices_unlocked = is_microservices_unlocked()
+    microservices_pilot_stable = is_microservices_pilot_stable()
     if microservices_unlocked:
         architecture_mode_options = ARCHITECTURE_MODE_OPTIONS
     else:
@@ -134,6 +147,7 @@ def runtime_policy_options() -> Dict[str, Any]:
             "options": architecture_mode_options,
             "input_style": "radio",
             "microservices_unlocked": microservices_unlocked,
+            "microservices_pilot_stable": microservices_pilot_stable,
         },
         "frontend_framework_mode": {
             "default": DEFAULT_FRONTEND_FRAMEWORK_MODE,

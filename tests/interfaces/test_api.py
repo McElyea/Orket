@@ -337,6 +337,7 @@ def test_runtime_policy_options(monkeypatch):
     assert data["project_surface_profile"]["input_style"] == "radio"
     assert data["small_project_builder_variant"]["input_style"] == "radio"
     assert data["architecture_mode"]["default"] == "force_monolith"
+    assert "microservices_pilot_stable" in data["architecture_mode"]
     assert data["frontend_framework_mode"]["default"] == "force_vue"
     assert data["project_surface_profile"]["default"] == "unspecified"
     assert data["small_project_builder_variant"]["default"] == "auto"
@@ -349,6 +350,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_FRONTEND_FRAMEWORK_MODE", "force_angular")
     monkeypatch.setenv("ORKET_PROJECT_SURFACE_PROFILE", "api_vue")
     monkeypatch.setenv("ORKET_SMALL_PROJECT_BUILDER_VARIANT", "architect")
+    monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/nonexistent_pilot_stability.json")
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
     monkeypatch.setattr(
         api_module.engine,
@@ -363,6 +365,10 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
         "frontend_framework_mode": "force_angular",
         "project_surface_profile": "api_vue",
         "small_project_builder_variant": "architect",
+        "default_architecture_mode": "force_monolith",
+        "allowed_architecture_patterns": ["monolith", "microservices"],
+        "microservices_unlocked": True,
+        "microservices_pilot_stable": False,
     }
 
 
@@ -376,6 +382,21 @@ def test_runtime_policy_get_falls_back_to_monolith_when_microservices_locked(mon
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
     assert response.json()["architecture_mode"] == "force_monolith"
+    assert response.json()["microservices_unlocked"] is False
+
+
+def test_runtime_policy_reports_pilot_stability(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    report_path = tmp_path / "pilot_stability.json"
+    report_path.write_text('{"stable": true}', encoding="utf-8")
+    monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", str(report_path))
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "org", type("Org", (), {"process_rules": {}})())
+
+    response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    assert response.json()["microservices_pilot_stable"] is True
 
 
 def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
