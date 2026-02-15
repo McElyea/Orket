@@ -31,7 +31,8 @@ Objective: expand architecture options only after monolith reliability is proven
 3. Broad architecture expansion before microservices unlock criteria pass.
 
 ## Execution Plan (Remaining)
-1. Run executed matrix and live acceptance report artifacts (not plan-only) and re-run unlock checker with `--require-unlocked`.
+1. Run unlock evidence pipeline and enforce unlock criteria:
+   - `python scripts/run_microservices_unlock_evidence.py --require-unlocked`
 2. If unlock passes, enable microservices explicitly via `ORKET_ENABLE_MICROSERVICES=true` for controlled pilots.
 3. Keep monolith as default until pilot metrics are stable.
 
