@@ -85,8 +85,15 @@ Objective: continue architecture expansion only after Priority A is shipped and 
 ### B1. Unlock Criteria
 1. Run unlock evidence pipeline and enforce unlock criteria:
    - `python scripts/run_microservices_unlock_evidence.py --require-unlocked`
-2. If unlock passes, enable microservices explicitly via `ORKET_ENABLE_MICROSERVICES=true` for controlled pilots.
-3. Keep monolith as default until pilot metrics are stable.
+2. Record pilot decision artifact from unlock output:
+   - `python scripts/decide_microservices_pilot.py --unlock-report benchmarks/results/microservices_unlock_check.json --out benchmarks/results/microservices_pilot_decision.json`
+3. If unlock passes, enable microservices explicitly via `ORKET_ENABLE_MICROSERVICES=true` for controlled pilots.
+4. Keep monolith as default until pilot metrics are stable.
+
+### B1. Latest Decision (2026-02-15)
+1. `microservices_pilot_decision.json` result: `enable_microservices=false`.
+2. Active recommendation remains `ORKET_ENABLE_MICROSERVICES=false`.
+3. Unlock is blocked by low pass rate and readiness/matrix threshold failures.
 
 ## Backburner (Not Active)
 1. iDesign-first enforcement or iDesign-specific mandatory flows.
@@ -94,7 +101,8 @@ Objective: continue architecture expansion only after Priority A is shipped and 
 3. Broad architecture expansion before Priority A and microservices unlock criteria pass.
 
 ## Execution Plan (Remaining)
-1. `Pass B1-R1`: rerun unlock evidence and decide pilot enablement.
+1. Improve monolith acceptance quality until unlock thresholds are met, then rerun:
+   - `python scripts/run_microservices_unlock_evidence.py --require-unlocked`
 
 ## Weekly Proof (Required)
 1. `python -m pytest tests -q`
@@ -103,5 +111,6 @@ Objective: continue architecture expansion only after Priority A is shipped and 
 4. `python scripts/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json`
 5. `python scripts/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only`
 6. `python scripts/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --out benchmarks/results/microservices_unlock_check.json`
-7. `python -m scripts.run_live_acceptance_loop --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 1`
-8. `python -m scripts.report_live_acceptance_patterns --matrix benchmarks/results/monolith_variant_matrix.json`
+7. `python scripts/decide_microservices_pilot.py --unlock-report benchmarks/results/microservices_unlock_check.json --out benchmarks/results/microservices_pilot_decision.json`
+8. `python -m scripts.run_live_acceptance_loop --models qwen2.5-coder:7b qwen2.5-coder:14b --iterations 1`
+9. `python -m scripts.report_live_acceptance_patterns --matrix benchmarks/results/monolith_variant_matrix.json`

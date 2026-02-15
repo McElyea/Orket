@@ -30,6 +30,10 @@ def _parse_args() -> argparse.Namespace:
         default="benchmarks/results/microservices_unlock_check.json",
     )
     parser.add_argument(
+        "--decision-out",
+        default="benchmarks/results/microservices_pilot_decision.json",
+    )
+    parser.add_argument(
         "--require-unlocked",
         action="store_true",
         help="Fail if unlock criteria are not met.",
@@ -87,7 +91,15 @@ def build_command_plan(args: argparse.Namespace) -> List[List[str]]:
     ]
     if bool(args.require_unlocked):
         unlock_cmd.append("--require-unlocked")
-    return [matrix_cmd, live_loop_cmd, report_cmd, unlock_cmd]
+    decision_cmd = [
+        "python",
+        "scripts/decide_microservices_pilot.py",
+        "--unlock-report",
+        str(args.unlock_out),
+        "--out",
+        str(args.decision_out),
+    ]
+    return [matrix_cmd, live_loop_cmd, report_cmd, unlock_cmd, decision_cmd]
 
 
 def _run(cmd: List[str]) -> int:
