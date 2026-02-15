@@ -1534,6 +1534,24 @@ def test_resolve_small_project_builder_variant_from_user_settings(orchestrator, 
     assert orch._resolve_small_project_builder_variant() == "architect"
 
 
+def test_resolve_small_project_policy_maps_architect_to_lead_architect(orchestrator):
+    orch, _cards, _loader = orchestrator
+    epic = SimpleNamespace(issues=[SimpleNamespace(id="I1")])
+    team = SimpleNamespace(
+        seats={
+            "lead_architect": SimpleNamespace(roles=["lead_architect"]),
+            "reviewer": SimpleNamespace(roles=["code_reviewer"]),
+        }
+    )
+    orch.org = SimpleNamespace(process_rules={"small_project_builder_variant": "architect"})
+
+    policy = orch._resolve_small_project_team_policy(epic, team)
+
+    assert policy["active"] is True
+    assert policy["builder_role"] == "architect"
+    assert policy["builder_seat"] == "lead_architect"
+
+
 @pytest.mark.asyncio
 async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator

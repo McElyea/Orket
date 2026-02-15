@@ -55,6 +55,7 @@ async def test_golden_flow(tmp_path, monkeypatch):
         "ethos": "Test",
         "branding": {"design_dos": []},
         "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 7},
+        "process_rules": {"small_project_builder_variant": "architect"},
         "departments": ["core"]
     }))
 
@@ -83,11 +84,20 @@ async def test_golden_flow(tmp_path, monkeypatch):
         "prompt": "Test Verifier Prompt",
         "tools": ["update_issue_status", "read_file"]
     }))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({
+        "id": "REV",
+        "summary": "code_reviewer",
+        "type": "utility",
+        "description": "Test Reviewer",
+        "prompt": "Test Reviewer Prompt",
+        "tools": ["update_issue_status", "read_file"]
+    }))
 
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
         "name": "standard",
         "seats": {
             "lead_architect": {"name": "lead_architect", "roles": ["lead_architect"]},
+            "reviewer_seat": {"name": "reviewer_seat", "roles": ["code_reviewer"]},
             "verifier_seat": {"name": "verifier_seat", "roles": ["integrity_guard"]}
         }
     }))
@@ -155,7 +165,9 @@ async def test_session_resumption(tmp_path, monkeypatch):
 
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E", "branding": {"design_dos": []},
-        "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 7}, "departments": ["core"]
+        "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 7},
+        "process_rules": {"small_project_builder_variant": "architect"},
+        "departments": ["core"]
     }))
     
     # Create required dialects
@@ -170,7 +182,16 @@ async def test_session_resumption(tmp_path, monkeypatch):
     (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({
         "id": "VERI", "summary": "integrity_guard", "type": "utility", "description": "Test Verifier", "tools": ["update_issue_status", "read_file"]
     }))
-    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({"name": "standard", "seats": {"lead_architect": {"name": "L", "roles": ["lead_architect"]}}}))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({
+        "id": "REV", "summary": "code_reviewer", "type": "utility", "description": "Reviewer", "tools": ["update_issue_status", "read_file"]
+    }))
+    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
+        "name": "standard",
+        "seats": {
+            "lead_architect": {"name": "L", "roles": ["lead_architect"]},
+            "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
+        },
+    }))
         
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}))
 

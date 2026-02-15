@@ -164,11 +164,16 @@ class Orchestrator:
             ),
             None,
         )
+        builder_role_aliases = {builder_role}
+        if builder_role == "architect":
+            builder_role_aliases.add("lead_architect")
         builder_seat = next(
             (
                 seat_name
                 for seat_name, seat_obj in (getattr(team, "seats", {}) or {}).items()
-                if builder_role in list(getattr(seat_obj, "roles", []) or [])
+                if builder_role_aliases.intersection(
+                    {str(role).strip() for role in list(getattr(seat_obj, "roles", []) or []) if str(role).strip()}
+                )
             ),
             builder_role,
         )

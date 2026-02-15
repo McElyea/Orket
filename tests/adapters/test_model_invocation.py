@@ -31,7 +31,9 @@ async def test_model_invocation(monkeypatch, tmp_path):
     
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Test Rail", "vision": "T", "ethos": "T", "branding": {"design_dos": []},
-        "architecture": {"cicd_rules": [], "preferred_stack": {}}, "departments": ["core"]
+        "architecture": {"cicd_rules": [], "preferred_stack": {}},
+        "process_rules": {"small_project_builder_variant": "architect"},
+        "departments": ["core"]
     }))
     for d in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
         (root / "model" / "core" / "dialects" / f"{d}.json").write_text(json.dumps({
@@ -40,8 +42,15 @@ async def test_model_invocation(monkeypatch, tmp_path):
     (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({
         "id": "ARCH", "summary": "lead_architect", "type": "utility", "description": "D", "prompt": "P", "tools": []
     }))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({
+        "id": "REV", "summary": "code_reviewer", "type": "utility", "description": "R", "prompt": "R", "tools": ["update_issue_status"]
+    }))
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
-        "name": "standard", "seats": {"lead_architect": {"name": "L", "roles": ["lead_architect"]}}
+        "name": "standard",
+        "seats": {
+            "lead_architect": {"name": "L", "roles": ["lead_architect"]},
+            "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
+        },
     }))
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({
         "name": "S", "model": "dummy", "temperature": 0.1

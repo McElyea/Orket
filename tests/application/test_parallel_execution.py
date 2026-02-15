@@ -61,7 +61,9 @@ async def test_parallel_execution_throughput(tmp_path, monkeypatch):
     # Mock Assets
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Parallel Corp", "vision": "V", "ethos": "E", "branding": {"design_dos": []},
-        "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 10}, "departments": ["core"]
+        "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 10},
+        "process_rules": {"small_project_builder_variant": "architect"},
+        "departments": ["core"]
     }))
     
     # Create an empty user_settings to avoid loading from host machine
@@ -78,11 +80,15 @@ async def test_parallel_execution_throughput(tmp_path, monkeypatch):
     (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({
         "id": "R2", "summary": "integrity_guard", "type": "utility", "description": "V", "tools": ["update_issue_status"]
     }))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({
+        "id": "R3", "summary": "code_reviewer", "type": "utility", "description": "R", "tools": ["update_issue_status"]
+    }))
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
         "name": "standard", 
         "seats": {
             "lead_architect": {"name": "L", "roles": ["lead_architect"]},
-            "verifier_seat": {"name": "V", "roles": ["integrity_guard"]}
+            "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
+            "verifier_seat": {"name": "V", "roles": ["integrity_guard"]},
         }
     }))
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({
@@ -156,7 +162,9 @@ async def test_dependency_chain_serial(tmp_path, monkeypatch):
     # Mock Assets (minimal)
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Serial Corp", "vision": "V", "ethos": "E", "branding": {"design_dos": []},
-        "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 10}, "departments": ["core"]
+        "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 10},
+        "process_rules": {"small_project_builder_variant": "architect"},
+        "departments": ["core"]
     }))
     
     # Create an empty user_settings to avoid loading from host machine
@@ -173,8 +181,16 @@ async def test_dependency_chain_serial(tmp_path, monkeypatch):
     (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({
         "id": "R2", "summary": "integrity_guard", "type": "utility", "description": "V", "tools": ["update_issue_status"]
     }))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({
+        "id": "R3", "summary": "code_reviewer", "type": "utility", "description": "R", "tools": ["update_issue_status"]
+    }))
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
-        "name": "standard", "seats": {"lead_architect": {"name": "L", "roles": ["lead_architect"]}, "verifier_seat": {"name": "V", "roles": ["integrity_guard"]}}
+        "name": "standard",
+        "seats": {
+            "lead_architect": {"name": "L", "roles": ["lead_architect"]},
+            "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
+            "verifier_seat": {"name": "V", "roles": ["integrity_guard"]},
+        },
     }))
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}))
 

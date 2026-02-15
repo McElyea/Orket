@@ -32,7 +32,11 @@ async def test_force_idesign_policy_violation(tmp_path):
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
         "architecture": {"idesign_threshold": 2},
-        "process_rules": {"idesign_mode": "force_idesign"},
+        "process_rules": {
+            "idesign_mode": "force_idesign",
+            "small_project_issue_threshold": 2,
+            "small_project_builder_variant": "architect",
+        },
         "departments": ["core"]
     }))
     
@@ -67,7 +71,11 @@ async def test_force_none_policy_allows_non_idesign_above_threshold(tmp_path):
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
         "architecture": {"idesign_threshold": 2},
-        "process_rules": {"idesign_mode": "force_none"},
+        "process_rules": {
+            "idesign_mode": "force_none",
+            "small_project_issue_threshold": 2,
+            "small_project_builder_variant": "architect",
+        },
         "departments": ["core"]
     }))
 
@@ -99,7 +107,11 @@ async def test_architect_decides_policy_allows_non_idesign_above_threshold(tmp_p
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
         "architecture": {"idesign_threshold": 2},
-        "process_rules": {"idesign_mode": "architect_decides"},
+        "process_rules": {
+            "idesign_mode": "architect_decides",
+            "small_project_issue_threshold": 2,
+            "small_project_builder_variant": "architect",
+        },
         "departments": ["core"]
     }))
 
@@ -133,7 +145,9 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
 
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
-        "architecture": {"idesign_threshold": 10, "cicd_rules": []}, "departments": ["core"]
+        "architecture": {"idesign_threshold": 10, "cicd_rules": []},
+        "process_rules": {"small_project_builder_variant": "architect"},
+        "departments": ["core"]
     }))
     
     # Create required dialects
@@ -148,7 +162,14 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
         "issues": [{"id": "ISSUE-1", "seat": "lead_architect", "summary": "Task"}]
     }))
     (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({"id": "R", "summary": "lead_architect", "description": "D", "tools": ["write_file", "update_issue_status"]}))
-    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({"name": "standard", "seats": {"lead_architect": {"name": "L", "roles": ["lead_architect"]}}}))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({"id": "REV", "summary": "code_reviewer", "description": "R", "tools": ["update_issue_status", "read_file"]}))
+    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
+        "name": "standard",
+        "seats": {
+            "lead_architect": {"name": "L", "roles": ["lead_architect"]},
+            "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
+        },
+    }))
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}))
 
     bad_provider = MockiDesignProvider(bad_path=True)

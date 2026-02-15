@@ -33,16 +33,20 @@ async def test_empirical_verification_pass(tmp_path, monkeypatch):
     # 2. Create assets
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
-        "architecture": {"idesign_threshold": 7, "cicd_rules": []}, "departments": ["core"]
+        "architecture": {"idesign_threshold": 7, "cicd_rules": []},
+        "process_rules": {"small_project_builder_variant": "architect"},
+        "departments": ["core"]
     }))
     for d in ["qwen", "llama3", "deepseek-r1", "phi", "generic"]:
         (root / "model" / "core" / "dialects" / f"{d}.json").write_text(json.dumps({"model_family": d, "dsl_format": "J", "constraints": [], "hallucination_guard": "N"}))
     (root / "model" / "core" / "roles" / "lead_architect.json").write_text(json.dumps({"id": "R", "summary": "lead_architect", "description": "D", "tools": ["update_issue_status", "write_file"]}))
     (root / "model" / "core" / "roles" / "integrity_guard.json").write_text(json.dumps({"id": "V", "summary": "integrity_guard", "description": "V", "tools": ["update_issue_status"]}))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({"id": "C", "summary": "code_reviewer", "description": "R", "tools": ["update_issue_status"]}))
     (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
         "name": "standard", 
         "seats": {
             "lead_architect": {"name": "L", "roles": ["lead_architect"]},
+            "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
             "verifier": {"name": "V", "roles": ["integrity_guard"]}
         }
     }))

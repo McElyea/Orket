@@ -62,6 +62,7 @@ def _build_assets(root, *, with_guard: bool, epic_id: str):
                 "ethos": "Test",
                 "branding": {"design_dos": []},
                 "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 7},
+                "process_rules": {"small_project_builder_variant": "architect"},
                 "departments": ["core"],
             }
         ),
@@ -98,8 +99,21 @@ def _build_assets(root, *, with_guard: bool, epic_id: str):
         ),
         encoding="utf-8",
     )
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(
+        json.dumps(
+            {
+                "id": "REV",
+                "summary": "code_reviewer",
+                "type": "utility",
+                "description": "Reviewer",
+                "tools": ["update_issue_status", "read_file"],
+            }
+        ),
+        encoding="utf-8",
+    )
 
     seats = {"lead_architect": {"name": "Lead", "roles": ["lead_architect"]}}
+    seats["reviewer_seat"] = {"name": "Reviewer", "roles": ["code_reviewer"]}
     if with_guard:
         seats["verifier_seat"] = {"name": "Verifier", "roles": ["integrity_guard"]}
     (root / "model" / "core" / "teams" / "standard.json").write_text(

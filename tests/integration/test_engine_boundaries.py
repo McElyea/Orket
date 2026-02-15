@@ -50,6 +50,7 @@ def setup_env(tmp_path):
     (root / "config" / "organization.json").write_text(json.dumps({
         "name": "Vibe Rail", "vision": "V", "ethos": "E",
         "architecture": {"cicd_rules": [], "preferred_stack": {}, "idesign_threshold": 7},
+        "process_rules": {"small_project_builder_variant": "architect"},
         "departments": ["core"]
     }))
 
@@ -62,7 +63,16 @@ def setup_env(tmp_path):
         "id": "R", "summary": "lead_architect", "type": "utility", "description": "D", 
         "tools": ["update_issue_status", "write_file"], "capabilities": {"issue_types": ["issue", "story"]}
     }))
-    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({"name": "standard", "seats": {"lead_architect": {"name": "L", "roles": ["lead_architect"]}}}))
+    (root / "model" / "core" / "roles" / "code_reviewer.json").write_text(json.dumps({
+        "id": "REV", "summary": "code_reviewer", "type": "utility", "description": "R", "tools": ["update_issue_status", "read_file"]
+    }))
+    (root / "model" / "core" / "teams" / "standard.json").write_text(json.dumps({
+        "name": "standard",
+        "seats": {
+            "lead_architect": {"name": "L", "roles": ["lead_architect"]},
+            "reviewer_seat": {"name": "R", "roles": ["code_reviewer"]},
+        },
+    }))
     (root / "model" / "core" / "environments" / "standard.json").write_text(json.dumps({"name": "standard", "model": "dummy", "temperature": 0.1}))
 
     (root / "model" / "core" / "epics" / "boundary_epic.json").write_text(json.dumps({
