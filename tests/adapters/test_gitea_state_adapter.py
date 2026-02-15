@@ -1,8 +1,13 @@
 import pytest
+import json
+import logging
+
+import httpx
 
 from orket.adapters.storage.gitea_state_adapter import (
     GiteaAdapterAuthError,
     GiteaAdapterConflictError,
+    GiteaAdapterTimeoutError,
     GiteaAdapterNetworkError,
     GiteaAdapterRateLimitError,
     GiteaStateAdapter,
@@ -408,6 +413,38 @@ def test_classify_http_error_maps_status_codes():
     assert isinstance(err, GiteaAdapterAuthError)
     err = GiteaStateAdapter._classify_http_error(status_code=412, exc=RuntimeError("x"))
     assert isinstance(err, GiteaAdapterConflictError)
+
+
+def test_extract_card_id_from_issue_paths():
+    assert GiteaStateAdapter._extract_card_id("/issues/123") == "123"
+    assert GiteaStateAdapter._extract_card_id("/issues/456/comments") == "456"
+    assert GiteaStateAdapter._extract_card_id("/repos/acme") == ""
+
+
+@pytest.mark.asyncio
+async def test_request_response_logs_structured_failure_with_card_id(monkeypatch, caplog):
+    adapter = GiteaStateAdapter(
+        base_url="https://gitea.local",
+        owner="acme",
+        repo="orket",
+        token="secret",
+    )
+
+    async def fake_request(self, method, url, headers=None, params=None, json=None):
+        raise httpx.TimeoutException("simulated timeout")
+
+    monkeypatch.setattr("httpx.AsyncClient.request", fake_request)
+    caplog.set_level(logging.WARNING, logger="orket.gitea_state_adapter")
+
+    with pytest.raises(GiteaAdapterTimeoutError):
+        await adapter._request_response("GET", "/issues/77")
+
+    entries = [rec.getMessage() for rec in caplog.records if "gitea_state_adapter_failure" in rec.getMessage()]
+    assert entries, "Expected structured failure log entry."
+    payload = json.loads(entries[-1])
+    assert payload["backend"] == "gitea"
+    assert payload["card_id"] == "77"
+    assert payload["operation"] == "GET /issues/77"
 
 
 @pytest.mark.asyncio

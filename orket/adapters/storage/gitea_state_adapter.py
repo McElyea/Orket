@@ -115,6 +115,7 @@ class GiteaStateAdapter(StateBackendContract):
             self._log_failure(
                 "timeout",
                 operation=f"{method} {path}",
+                card_id=self._extract_card_id(path),
                 error=str(exc),
             )
             raise GiteaAdapterTimeoutError(str(exc)) from exc
@@ -124,6 +125,7 @@ class GiteaStateAdapter(StateBackendContract):
             self._log_failure(
                 "http_status",
                 operation=f"{method} {path}",
+                card_id=self._extract_card_id(path),
                 status_code=status_code,
                 error=str(exc),
             )
@@ -132,6 +134,7 @@ class GiteaStateAdapter(StateBackendContract):
             self._log_failure(
                 "network",
                 operation=f"{method} {path}",
+                card_id=self._extract_card_id(path),
                 error=str(exc),
             )
             raise GiteaAdapterNetworkError(str(exc)) from exc
@@ -497,3 +500,10 @@ class GiteaStateAdapter(StateBackendContract):
             **fields,
         }
         logger.warning(json.dumps(record, ensure_ascii=False))
+
+    @staticmethod
+    def _extract_card_id(path: str) -> str:
+        parts = [segment for segment in str(path or "").split("/") if segment]
+        if len(parts) >= 2 and parts[0] == "issues":
+            return str(parts[1])
+        return ""
