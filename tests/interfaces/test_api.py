@@ -337,12 +337,14 @@ def test_runtime_policy_options(monkeypatch):
     assert data["project_surface_profile"]["input_style"] == "radio"
     assert data["small_project_builder_variant"]["input_style"] == "radio"
     assert data["state_backend_mode"]["input_style"] == "radio"
+    assert data["gitea_state_pilot_enabled"]["input_style"] == "radio"
     assert data["architecture_mode"]["default"] == "force_monolith"
     assert "microservices_pilot_stable" in data["architecture_mode"]
     assert data["frontend_framework_mode"]["default"] == "force_vue"
     assert data["project_surface_profile"]["default"] == "unspecified"
     assert data["small_project_builder_variant"]["default"] == "auto"
     assert data["state_backend_mode"]["default"] == "local"
+    assert data["gitea_state_pilot_enabled"]["default"] is False
 
 
 def test_runtime_policy_get_uses_precedence(monkeypatch):
@@ -353,6 +355,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_PROJECT_SURFACE_PROFILE", "api_vue")
     monkeypatch.setenv("ORKET_SMALL_PROJECT_BUILDER_VARIANT", "architect")
     monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
+    monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/nonexistent_pilot_stability.json")
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
     monkeypatch.setattr(
@@ -369,6 +372,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
         "project_surface_profile": "api_vue",
         "small_project_builder_variant": "architect",
         "state_backend_mode": "gitea",
+        "gitea_state_pilot_enabled": True,
         "default_architecture_mode": "force_monolith",
         "allowed_architecture_patterns": ["monolith", "microservices"],
         "microservices_unlocked": True,
@@ -418,6 +422,7 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
             "project_surface_profile": "backend",
             "small_project_builder_variant": "architect",
             "state_backend_mode": "gitea",
+            "gitea_state_pilot_enabled": True,
         },
         headers={"X-API-Key": "test-key"},
     )
@@ -428,6 +433,7 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
     assert captured["settings"]["project_surface_profile"] == "backend_only"
     assert captured["settings"]["small_project_builder_variant"] == "architect"
     assert captured["settings"]["state_backend_mode"] == "gitea"
+    assert captured["settings"]["gitea_state_pilot_enabled"] is True
 
 def test_metrics():
     headers = {"X-API-Key": os.getenv("ORKET_API_KEY", "")}

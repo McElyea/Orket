@@ -24,6 +24,7 @@ DEFAULT_FRONTEND_FRAMEWORK_MODE = "force_vue"
 DEFAULT_PROJECT_SURFACE_PROFILE = "unspecified"
 DEFAULT_SMALL_PROJECT_BUILDER_VARIANT = "auto"
 DEFAULT_STATE_BACKEND_MODE = "local"
+DEFAULT_GITEA_STATE_PILOT_ENABLED = False
 DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/microservices_unlock_check.json"
 DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/microservices_pilot_stability_check.json"
 
@@ -42,6 +43,10 @@ SMALL_PROJECT_BUILDER_VARIANT_OPTIONS: List[Dict[str, str]] = [
 STATE_BACKEND_MODE_OPTIONS: List[Dict[str, str]] = [
     {"value": "local", "label": "Local DB (Default)"},
     {"value": "gitea", "label": "Gitea (Experimental)"},
+]
+GITEA_STATE_PILOT_ENABLED_OPTIONS: List[Dict[str, str]] = [
+    {"value": "enabled", "label": "Enabled"},
+    {"value": "disabled", "label": "Disabled"},
 ]
 
 
@@ -174,6 +179,11 @@ def runtime_policy_options() -> Dict[str, Any]:
             "options": STATE_BACKEND_MODE_OPTIONS,
             "input_style": "radio",
         },
+        "gitea_state_pilot_enabled": {
+            "default": DEFAULT_GITEA_STATE_PILOT_ENABLED,
+            "options": GITEA_STATE_PILOT_ENABLED_OPTIONS,
+            "input_style": "radio",
+        },
     }
 
 
@@ -213,3 +223,15 @@ def resolve_state_backend_mode(*values: Any) -> str:
         "gitea": "gitea",
     }
     return aliases.get(raw, DEFAULT_STATE_BACKEND_MODE)
+
+
+def resolve_gitea_state_pilot_enabled(*values: Any) -> bool:
+    for value in values:
+        raw = _normalize(value)
+        if not raw:
+            continue
+        if raw in {"1", "true", "yes", "on", "enabled"}:
+            return True
+        if raw in {"0", "false", "no", "off", "disabled"}:
+            return False
+    return DEFAULT_GITEA_STATE_PILOT_ENABLED

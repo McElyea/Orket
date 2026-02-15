@@ -21,6 +21,7 @@ from orket.application.services.runtime_policy import (
     is_microservices_unlocked,
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
+    resolve_gitea_state_pilot_enabled,
     resolve_project_surface_profile,
     resolve_small_project_builder_variant,
     resolve_state_backend_mode,
@@ -108,6 +109,7 @@ class RuntimePolicyUpdateRequest(BaseModel):
     project_surface_profile: Optional[str] = None
     small_project_builder_variant: Optional[str] = None
     state_backend_mode: Optional[str] = None
+    gitea_state_pilot_enabled: Optional[bool] = None
 
 # Security dependency
 API_KEY_NAME = "X-API-Key"
@@ -308,12 +310,18 @@ async def get_runtime_policy():
         process_rules.get("state_backend_mode"),
         user_settings.get("state_backend_mode"),
     )
+    gitea_state_pilot_enabled = resolve_gitea_state_pilot_enabled(
+        os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT", ""),
+        process_rules.get("gitea_state_pilot_enabled"),
+        user_settings.get("gitea_state_pilot_enabled"),
+    )
     return {
         "architecture_mode": architecture_mode,
         "frontend_framework_mode": frontend_framework_mode,
         "project_surface_profile": project_surface_profile,
         "small_project_builder_variant": small_project_builder_variant,
         "state_backend_mode": state_backend_mode,
+        "gitea_state_pilot_enabled": gitea_state_pilot_enabled,
         "default_architecture_mode": "force_monolith",
         "allowed_architecture_patterns": allowed_architecture_patterns(),
         "microservices_unlocked": is_microservices_unlocked(),
@@ -336,6 +344,10 @@ async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
         )
     if req.state_backend_mode is not None:
         current["state_backend_mode"] = resolve_state_backend_mode(req.state_backend_mode)
+    if req.gitea_state_pilot_enabled is not None:
+        current["gitea_state_pilot_enabled"] = bool(
+            resolve_gitea_state_pilot_enabled(req.gitea_state_pilot_enabled)
+        )
     save_user_settings(current)
     return {
         "ok": True,
@@ -345,6 +357,7 @@ async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
             "project_surface_profile": current.get("project_surface_profile"),
             "small_project_builder_variant": current.get("small_project_builder_variant"),
             "state_backend_mode": current.get("state_backend_mode"),
+            "gitea_state_pilot_enabled": current.get("gitea_state_pilot_enabled"),
         },
     }
 
