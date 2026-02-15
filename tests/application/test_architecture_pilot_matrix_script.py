@@ -6,6 +6,7 @@ from scripts.run_architecture_pilot_matrix import (
     _build_comparison,
     _build_env,
     build_combos,
+    rotate_previous_artifact,
 )
 
 
@@ -83,3 +84,23 @@ def test_aggregate_and_comparison_metrics() -> None:
     assert comparison["available"] is True
     assert comparison["pass_rate_delta_microservices_minus_monolith"] == -0.5
     assert comparison["reviewer_rejection_rate_delta_microservices_minus_monolith"] == 0.25
+
+
+def test_rotate_previous_artifact_copies_existing_output(tmp_path) -> None:
+    current = tmp_path / "current.json"
+    previous = tmp_path / "history" / "previous.json"
+    current.write_text('{"ok": true}', encoding="utf-8")
+
+    rotate_previous_artifact(current, previous)
+
+    assert previous.exists()
+    assert previous.read_text(encoding="utf-8") == '{"ok": true}'
+
+
+def test_rotate_previous_artifact_noop_when_missing_current(tmp_path) -> None:
+    current = tmp_path / "missing.json"
+    previous = tmp_path / "previous.json"
+
+    rotate_previous_artifact(current, previous)
+
+    assert not previous.exists()

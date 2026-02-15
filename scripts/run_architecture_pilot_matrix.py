@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import tempfile
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
@@ -63,6 +64,11 @@ def _parse_args() -> argparse.Namespace:
         "--out",
         default="benchmarks/results/architecture_pilot_matrix.json",
         help="Output artifact path.",
+    )
+    parser.add_argument(
+        "--rotate-prev-out",
+        default="benchmarks/results/architecture_pilot_matrix_prev.json",
+        help="Optional path to copy existing --out artifact before overwrite.",
     )
     return parser.parse_args()
 
@@ -214,6 +220,15 @@ def _build_comparison(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def rotate_previous_artifact(current_out: Path, previous_out: Path | None) -> None:
+    if previous_out is None:
+        return
+    if not current_out.exists():
+        return
+    previous_out.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(current_out, previous_out)
+
+
 def main() -> int:
     args = _parse_args()
     combos = build_combos(args.architecture_modes, args.builder_variants, args.profiles)
@@ -230,6 +245,8 @@ def main() -> int:
     }
 
     out_path = Path(args.out)
+    rotate_prev_path = Path(str(args.rotate_prev_out or "").strip()) if str(args.rotate_prev_out or "").strip() else None
+    rotate_previous_artifact(out_path, rotate_prev_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
     print(json.dumps(artifact, indent=2))

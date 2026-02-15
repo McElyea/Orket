@@ -24,6 +24,8 @@ Objective: run controlled microservices pilots with measurable side-by-side evid
    - `python scripts/check_microservices_pilot_stability.py --artifacts <older.json> <newer.json> --required-consecutive 2 --out benchmarks/results/microservices_pilot_stability_check.json`
 5. Baseline evidence artifact:
    - `benchmarks/results/architecture_pilot_matrix.json`
+6. Recommended pilot run command (auto-rotates previous artifact):
+   - `python scripts/run_architecture_pilot_matrix.py --execute --out benchmarks/results/architecture_pilot_matrix.json --rotate-prev-out benchmarks/results/architecture_pilot_matrix_prev.json`
 
 ## Priority 2: Packaging Readiness Follow-Through
 Objective: maintain deterministic local-first packaging quality while pilot work proceeds.
