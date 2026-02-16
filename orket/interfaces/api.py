@@ -764,6 +764,23 @@ async def get_backlog(session_id: str):
     invocation = api_runtime_node.resolve_backlog_invocation(session_id)
     return await _invoke_async_method(engine.sessions, invocation, "backlog")
 
+
+@v1_router.get("/runs/{session_id}/execution-graph")
+async def get_execution_graph(session_id: str):
+    run_record = await engine.run_ledger.get_run(session_id)
+    session = await engine.sessions.get_session(session_id)
+    if run_record is None and session is None:
+        raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
+
+    backlog = await engine.sessions.get_session_issues(session_id)
+    graph = _build_execution_graph(backlog)
+    return {
+        "session_id": session_id,
+        "node_count": len(graph["nodes"]),
+        "edge_count": len(graph["edges"]),
+        **graph,
+    }
+
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
     log_event("api_session_detail", {"session_id": session_id}, PROJECT_ROOT)
@@ -875,6 +892,99 @@ def _coerce_datetime(value: Optional[str]) -> Optional[datetime]:
         return datetime.fromisoformat(value)
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'")
+
+
+def _build_execution_graph(backlog: list[dict[str, Any]]) -> dict[str, Any]:
+    items = [item for item in backlog if isinstance(item, dict)]
+    index_by_id: dict[str, int] = {}
+    status_by_id: dict[str, str] = {}
+    for index, item in enumerate(items):
+        issue_id = str(item.get("id") or "").strip()
+        if not issue_id or issue_id in index_by_id:
+            continue
+        index_by_id[issue_id] = index
+        status_by_id[issue_id] = str(item.get("status") or "unknown").strip().lower()
+
+    edges: list[dict[str, str]] = []
+    adjacency: dict[str, list[str]] = {issue_id: [] for issue_id in index_by_id}
+    in_degree: dict[str, int] = {issue_id: 0 for issue_id in index_by_id}
+    dependency_satisfied_statuses = {"done", "guard_approved", "archived"}
+
+    for item in items:
+        issue_id = str(item.get("id") or "").strip()
+        if issue_id not in index_by_id:
+            continue
+        for raw_dep in list(item.get("depends_on") or []):
+            dep_id = str(raw_dep or "").strip()
+            if not dep_id or dep_id not in index_by_id:
+                continue
+            edges.append({"source": dep_id, "target": issue_id})
+            adjacency[dep_id].append(issue_id)
+            in_degree[issue_id] += 1
+
+    topo_queue = sorted(
+        [issue_id for issue_id, degree in in_degree.items() if degree == 0],
+        key=lambda issue_id: index_by_id[issue_id],
+    )
+    topo_in_degree = dict(in_degree)
+    execution_order: list[str] = []
+    while topo_queue:
+        current = topo_queue.pop(0)
+        execution_order.append(current)
+        for neighbor in sorted(adjacency.get(current, []), key=lambda issue_id: index_by_id[issue_id]):
+            topo_in_degree[neighbor] -= 1
+            if topo_in_degree[neighbor] == 0:
+                topo_queue.append(neighbor)
+        topo_queue.sort(key=lambda issue_id: index_by_id[issue_id])
+
+    has_cycle = len(execution_order) != len(index_by_id)
+    cycle_nodes: list[str] = []
+    if has_cycle:
+        cycle_nodes = sorted(
+            [issue_id for issue_id, degree in topo_in_degree.items() if degree > 0],
+            key=lambda issue_id: index_by_id[issue_id],
+        )
+
+    nodes: list[dict[str, Any]] = []
+    for item in items:
+        issue_id = str(item.get("id") or "").strip()
+        if issue_id not in index_by_id:
+            continue
+        depends_on = [str(dep).strip() for dep in list(item.get("depends_on") or []) if str(dep).strip()]
+        unresolved_dependencies = [dep for dep in depends_on if dep not in index_by_id]
+        dependency_statuses: dict[str, str] = {}
+        blocked_by: list[str] = []
+        for dep in depends_on:
+            dep_status = status_by_id.get(dep, "missing")
+            dependency_statuses[dep] = dep_status
+            if dep_status not in dependency_satisfied_statuses:
+                blocked_by.append(dep)
+        status = str(item.get("status") or "unknown").strip().lower()
+        blocked = bool(blocked_by) and status not in {"done", "archived", "guard_approved"}
+        nodes.append(
+            {
+                "id": issue_id,
+                "summary": item.get("summary"),
+                "seat": item.get("seat"),
+                "status": status,
+                "depends_on": depends_on,
+                "dependency_count": len(depends_on),
+                "dependency_statuses": dependency_statuses,
+                "blocked": blocked,
+                "blocked_by": blocked_by,
+                "unresolved_dependencies": unresolved_dependencies,
+                "in_degree": in_degree[issue_id],
+                "order_index": index_by_id[issue_id],
+            }
+        )
+
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "execution_order": execution_order,
+        "has_cycle": has_cycle,
+        "cycle_nodes": cycle_nodes,
+    }
 
 
 def _read_log_records(path: Path) -> list[dict]:

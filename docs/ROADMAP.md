@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-02-15.
+Last updated: 2026-02-16.
 
 ## Operating Constraints (Current)
 1. Orket engine loop remains the runtime; storage backend is pluggable.
@@ -94,6 +94,9 @@ Scope:
 1. Add `GET /v1/runs/{session_id}/execution-graph`.
 2. Return graph nodes/edges plus blocked/unblocked state derived from dependencies.
 3. Include stable ordering metadata for DAG rendering.
+
+Implementation update (2026-02-16):
+1. `GET /v1/runs/{session_id}/execution-graph` is implemented with deterministic node/edge ordering, blocked-state metadata, and cycle detection.
 
 Acceptance criteria:
 1. Endpoint returns a valid acyclic graph for existing run backlog data.

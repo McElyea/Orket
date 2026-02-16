@@ -1533,6 +1533,102 @@ def test_run_detail_and_replay_404_paths(monkeypatch):
     assert replay.status_code == 404
 
 
+@pytest.mark.asyncio
+async def test_execution_graph_endpoint_real_runtime(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    session_id = "GRAPH-REAL-1"
+    await real_engine.sessions.start_session(
+        session_id,
+        {"type": "epic", "name": "graph-run", "department": "core", "task_input": "demo"},
+    )
+    await real_engine.cards.save(
+        {
+            "id": "A",
+            "session_id": session_id,
+            "build_id": "B-GRAPH",
+            "seat": "COD-1",
+            "summary": "Root",
+            "priority": 2.0,
+            "depends_on": [],
+        }
+    )
+    await real_engine.cards.save(
+        {
+            "id": "B",
+            "session_id": session_id,
+            "build_id": "B-GRAPH",
+            "seat": "COD-1",
+            "summary": "Depends on A",
+            "priority": 2.0,
+            "depends_on": ["A"],
+        }
+    )
+    await real_engine.cards.save(
+        {
+            "id": "C",
+            "session_id": session_id,
+            "build_id": "B-GRAPH",
+            "seat": "REV-1",
+            "summary": "Depends on B",
+            "priority": 2.0,
+            "depends_on": ["B"],
+        }
+    )
+    await real_engine.cards.save(
+        {
+            "id": "D",
+            "session_id": session_id,
+            "build_id": "B-GRAPH",
+            "seat": "REV-1",
+            "summary": "Depends on missing",
+            "priority": 2.0,
+            "depends_on": ["X-MISSING"],
+        }
+    )
+    await real_engine.cards.update_status("A", CardStatus.DONE)
+
+    response = client.get(f"/v1/runs/{session_id}/execution-graph", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["session_id"] == session_id
+    assert payload["node_count"] == 4
+    assert payload["edge_count"] == 2
+    assert payload["has_cycle"] is False
+    assert payload["cycle_nodes"] == []
+    assert payload["execution_order"] == ["A", "B", "C", "D"]
+
+    edges = {(edge["source"], edge["target"]) for edge in payload["edges"]}
+    assert ("A", "B") in edges
+    assert ("B", "C") in edges
+
+    nodes = {node["id"]: node for node in payload["nodes"]}
+    assert nodes["A"]["blocked"] is False
+    assert nodes["B"]["blocked"] is False
+    assert nodes["C"]["blocked"] is True
+    assert nodes["C"]["blocked_by"] == ["B"]
+    assert nodes["D"]["blocked"] is True
+    assert nodes["D"]["unresolved_dependencies"] == ["X-MISSING"]
+    assert nodes["D"]["blocked_by"] == ["X-MISSING"]
+
+
+def test_execution_graph_endpoint_404_when_run_missing(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.get("/v1/runs/NOPE-RUN/execution-graph", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
+
+
 def test_logs_endpoint_filters_and_paginates(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))

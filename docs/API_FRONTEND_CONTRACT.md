@@ -1,6 +1,6 @@
 # Frontend API Contract
 
-Last updated: 2026-02-15.
+Last updated: 2026-02-16.
 
 ## Purpose
 Canonical API contract for dashboard/front-end workflows.
@@ -41,7 +41,16 @@ Canonical API contract for dashboard/front-end workflows.
    - Returns per-member metrics for a run.
 3. `GET /v1/runs/{session_id}/backlog`
    - Returns issue/card rows linked to `session_id`.
-4. `GET /v1/runs/{session_id}`
+4. `GET /v1/runs/{session_id}/execution-graph`
+   - Returns dependency graph payload for pipeline DAG rendering:
+     - `nodes[]` with status, dependency state, and blocked metadata
+     - `edges[]` with `{source, target}`
+     - `execution_order[]` topological order when acyclic
+     - `has_cycle` + `cycle_nodes[]` when cycles are detected
+   - Response includes summary fields:
+     - `node_count`
+     - `edge_count`
+5. `GET /v1/runs/{session_id}`
    - Returns run detail with:
      - `status`
      - `summary`
@@ -49,11 +58,11 @@ Canonical API contract for dashboard/front-end workflows.
      - `issue_count`
      - `session`
      - `run_ledger`
-5. `GET /v1/sessions/{session_id}`
+6. `GET /v1/sessions/{session_id}`
    - Returns session details (status, transcript, timestamps).
-6. `GET /v1/sessions/{session_id}/snapshot`
+7. `GET /v1/sessions/{session_id}/snapshot`
    - Returns stored snapshot payload for a session.
-7. `GET /v1/sessions/{session_id}/status`
+8. `GET /v1/sessions/{session_id}/status`
    - Pollable status payload including:
      - `active`
      - `task_state`
