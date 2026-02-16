@@ -351,6 +351,90 @@ def test_runtime_policy_options(monkeypatch):
     assert data["gitea_state_pilot_enabled"]["default"] is False
 
 
+def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder", "reviewer"])
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"preferred_coder": "qwen2.5-coder:14b"})
+
+    class FakeSelector:
+        def __init__(self, organization=None, user_settings=None):
+            self._role = None
+
+        def select(self, role, department="core", override=None, asset_config=None):
+            self._role = role
+            if role == "coder":
+                return "qwen2.5-coder:14b"
+            return "llama3.1:8b"
+
+        def get_last_selection_decision(self):
+            if self._role == "coder":
+                return {
+                    "selected_model": "qwen2.5-coder:14b",
+                    "final_model": "qwen2.5-coder:14b",
+                    "demoted": False,
+                    "reason": "score_ok",
+                }
+            return {
+                "selected_model": "llama3.1:8b",
+                "final_model": "llama3.1:8b",
+                "demoted": False,
+                "reason": "fallback",
+            }
+
+        def get_dialect_name(self, model):
+            return "qwen" if "qwen" in model else "llama3"
+
+    monkeypatch.setattr(api_module, "ModelSelector", FakeSelector)
+
+    response = client.get("/v1/system/model-assignments", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["count"] == 2
+    assert payload["filters"]["roles"] is None
+    assert payload["items"][0]["role"] == "coder"
+    assert payload["items"][0]["selected_model"] == "qwen2.5-coder:14b"
+    assert payload["items"][0]["final_model"] == "qwen2.5-coder:14b"
+    assert payload["items"][0]["reason"] == "score_ok"
+    assert payload["items"][1]["role"] == "reviewer"
+    assert "generated_at" in payload
+
+
+def test_model_assignments_endpoint_respects_role_filter(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+
+    class FakeSelector:
+        def __init__(self, organization=None, user_settings=None):
+            self._role = None
+
+        def select(self, role, department="core", override=None, asset_config=None):
+            self._role = role
+            return "llama3.1:8b"
+
+        def get_last_selection_decision(self):
+            return {
+                "selected_model": "llama3.1:8b",
+                "final_model": "llama3.1:8b",
+                "demoted": False,
+                "reason": "fallback",
+            }
+
+        def get_dialect_name(self, model):
+            return "llama3"
+
+    monkeypatch.setattr(api_module, "ModelSelector", FakeSelector)
+
+    response = client.get(
+        "/v1/system/model-assignments?roles= coder, reviewer ,coder",
+        headers={"X-API-Key": "test-key"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["count"] == 2
+    assert payload["filters"]["roles"] == ["coder", "reviewer"]
+    assert [item["role"] for item in payload["items"]] == ["coder", "reviewer"]
+
+
 def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")

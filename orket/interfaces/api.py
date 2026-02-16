@@ -17,6 +17,7 @@ from orket.hardware import get_metrics_snapshot
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.time_utils import now_local
 from orket.settings import load_user_settings, save_user_settings
+from orket.orchestration.models import ModelSelector
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -185,6 +186,60 @@ SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
 
 SETTINGS_ORDER = tuple(SETTINGS_SCHEMA.keys())
 
+
+def _normalize_role_name(value: Any) -> str:
+    return str(value or "").strip().lower().replace(" ", "_")
+
+
+def _parse_roles_filter(roles: Optional[str]) -> list[str]:
+    if not roles:
+        return []
+    parsed: list[str] = []
+    for token in roles.split(","):
+        role = _normalize_role_name(token)
+        if role and role not in parsed:
+            parsed.append(role)
+    return parsed
+
+
+def _discover_active_roles(model_root: Path) -> list[str]:
+    team_roles: set[str] = set()
+    for team_file in sorted(model_root.glob("*/teams/*.json")):
+        try:
+            payload = json.loads(team_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+
+        declared_roles = payload.get("roles")
+        if isinstance(declared_roles, dict):
+            for role_name in declared_roles.keys():
+                role = _normalize_role_name(role_name)
+                if role:
+                    team_roles.add(role)
+
+        seats = payload.get("seats")
+        if not isinstance(seats, dict):
+            continue
+        for seat in seats.values():
+            if not isinstance(seat, dict):
+                continue
+            for role_name in seat.get("roles", []) or []:
+                role = _normalize_role_name(role_name)
+                if role:
+                    team_roles.add(role)
+
+    if team_roles:
+        return sorted(team_roles)
+
+    fallback_roles: list[str] = []
+    for role_file in sorted((model_root / "core" / "roles").glob("*.json")):
+        role = _normalize_role_name(role_file.stem)
+        if role:
+            fallback_roles.append(role)
+    return fallback_roles
+
 # Security dependency
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
@@ -350,6 +405,35 @@ async def get_calendar():
 @v1_router.get("/system/runtime-policy/options")
 async def get_runtime_policy_options():
     return runtime_policy_options()
+
+
+@v1_router.get("/system/model-assignments")
+async def get_model_assignments(roles: Optional[str] = None):
+    role_filter = _parse_roles_filter(roles)
+    active_roles = role_filter or _discover_active_roles(PROJECT_ROOT / "model")
+    selector = ModelSelector(organization=engine.org, user_settings=load_user_settings())
+
+    items: list[dict[str, Any]] = []
+    for role in active_roles:
+        selected_model = selector.select(role=role)
+        decision = selector.get_last_selection_decision()
+        final_model = str(decision.get("final_model") or selected_model)
+        items.append(
+            {
+                "role": role,
+                "selected_model": str(decision.get("selected_model") or selected_model),
+                "final_model": final_model,
+                "demoted": bool(decision.get("demoted", False)),
+                "reason": str(decision.get("reason") or "unknown"),
+                "dialect": selector.get_dialect_name(final_model),
+            }
+        )
+    return {
+        "items": items,
+        "count": len(items),
+        "generated_at": now_local().isoformat(),
+        "filters": {"roles": role_filter or None},
+    }
 
 
 def _normalize_setting_token(value: Any) -> str:

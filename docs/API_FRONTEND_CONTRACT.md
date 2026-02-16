@@ -110,7 +110,31 @@ Canonical API contract for dashboard/front-end workflows.
 1. `GET /v1/system/runtime-policy/options`
 2. `GET /v1/system/runtime-policy`
 3. `POST /v1/system/runtime-policy`
-4. `GET /v1/settings`
+4. `GET /v1/system/model-assignments?roles=<optional,csv>`
+   - Returns deterministic model assignment rows for active roles.
+   - Response:
+   ```json
+   {
+     "items": [
+       {
+         "role": "coder",
+         "selected_model": "qwen2.5-coder:7b",
+         "final_model": "qwen2.5-coder:14b",
+         "demoted": true,
+         "reason": "blocked_model",
+         "dialect": "qwen"
+       }
+     ],
+     "count": 1,
+     "generated_at": "2026-02-16T13:00:00+00:00",
+     "filters": {
+       "roles": ["coder"]
+     }
+   }
+   ```
+   - `roles` query param is optional and accepts comma-separated role names.
+   - If `roles` is omitted, active roles are discovered from team configurations.
+5. `GET /v1/settings`
    - Returns all user-editable settings with:
      - effective `value`
      - effective `source` (`env`, `process_rules`, `user`, `default`)
@@ -118,7 +142,7 @@ Canonical API contract for dashboard/front-end workflows.
      - `type`
      - `input_style`
      - `allowed_values`
-5. `PATCH /v1/settings`
+6. `PATCH /v1/settings`
    - Updates user-editable runtime settings with validation.
    - Invalid payload returns structured errors in `detail.errors[]`.
 

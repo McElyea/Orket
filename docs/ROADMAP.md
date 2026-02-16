@@ -74,3 +74,50 @@ Acceptance criteria:
 1. A nightly GitHub Actions workflow runs benchmark suites and stores artifacts.
 2. Trend reports show determinism, score, latency, and cost over time.
 3. Leaderboard compares runs only within the same benchmark version and policy revision.
+
+## Priority 4: OrketUI API Expansion (Phased)
+Objective: expose the minimum backend surfaces required for reliable Model, Pipeline, and Guard views in OrketUI.
+
+### Phase 1: Model Assignment Visibility
+Scope:
+1. Add `GET /v1/system/model-assignments`.
+2. Resolve model selection for active roles using existing selector precedence (override -> asset -> user -> org -> fallback).
+3. Return per-role decision metadata needed by the UI (`selected_model`, `final_model`, `demoted`, `reason`).
+
+Acceptance criteria:
+1. Endpoint returns deterministic role-to-model mapping for discoverable active roles.
+2. Response includes source-of-truth selection metadata per role.
+3. API and interface tests cover happy path and auth behavior.
+
+### Phase 2: Execution Graph and Dependency Visibility
+Scope:
+1. Add `GET /v1/runs/{session_id}/execution-graph`.
+2. Return graph nodes/edges plus blocked/unblocked state derived from dependencies.
+3. Include stable ordering metadata for DAG rendering.
+
+Acceptance criteria:
+1. Endpoint returns a valid acyclic graph for existing run backlog data.
+2. UI can render dependency edges without client-side reconstruction from raw cards.
+3. Contract docs specify graph node/edge payload fields.
+
+### Phase 3: Token and Cost Aggregation
+Scope:
+1. Add `GET /v1/runs/{session_id}/token-summary`.
+2. Aggregate by role, model, and turn using existing turn metrics artifacts.
+3. Include totals and per-role splits ready for charting.
+
+Acceptance criteria:
+1. Endpoint returns consistent totals across repeated reads for the same run.
+2. Missing metrics artifacts degrade gracefully with explicit empty/default payloads.
+3. Tests validate aggregation and edge cases (missing/partial data).
+
+### Phase 4: Guard Review and Team Surfaces
+Scope:
+1. Add `GET /v1/cards/{card_id}/guard-history`.
+2. Add `GET /v1/system/teams`.
+3. Surface guard violations/retry history and team-seat-role topology for UI panels.
+
+Acceptance criteria:
+1. Guard history endpoint exposes decisions, violations, retries, and terminal outcomes when available.
+2. Teams endpoint returns department/team/seat/role topology in a single payload.
+3. Access patterns are documented and covered by tests.
