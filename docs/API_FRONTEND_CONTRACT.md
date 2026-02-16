@@ -120,7 +120,12 @@ Canonical API contract for dashboard/front-end workflows.
    - Returns card detail payload from persistence.
 3. `GET /v1/cards/{card_id}/history`
    - Returns transaction timeline entries.
-4. `GET /v1/cards/{card_id}/comments`
+4. `GET /v1/cards/{card_id}/guard-history`
+   - Returns guard-review timeline derived from card transaction history.
+   - Includes:
+     - `items[]` with `guard_status`, `terminal_failure`, `actor`, `timestamp`, `action`
+     - `summary` counters (`awaiting_guard_review`, `guard_approved`, `guard_rejected`, `guard_requested_changes`, `retry_count`, `terminal_failures`)
+5. `GET /v1/cards/{card_id}/comments`
    - Returns persisted card comments.
 
 ### 5. Runtime Policy and Settings
@@ -151,7 +156,15 @@ Canonical API contract for dashboard/front-end workflows.
    ```
    - `roles` query param is optional and accepts comma-separated role names.
    - If `roles` is omitted, active roles are discovered from team configurations.
-5. `GET /v1/settings`
+5. `GET /v1/system/teams?department=<optional>`
+   - Returns organization topology for UI team/role views.
+   - Includes per-team:
+     - `department`
+     - `team_id`
+     - `name`
+     - `seats[]` (`seat_id`, `name`, `roles[]`)
+     - `roles[]` (`role`, `name`, `description`, `tools[]`, `source`)
+6. `GET /v1/settings`
    - Returns all user-editable settings with:
      - effective `value`
      - effective `source` (`env`, `process_rules`, `user`, `default`)
@@ -159,7 +172,7 @@ Canonical API contract for dashboard/front-end workflows.
      - `type`
      - `input_style`
      - `allowed_values`
-6. `PATCH /v1/settings`
+7. `PATCH /v1/settings`
    - Updates user-editable runtime settings with validation.
    - Invalid payload returns structured errors in `detail.errors[]`.
 

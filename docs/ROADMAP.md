@@ -59,6 +59,10 @@ Scope:
 2. Add `GET /v1/system/teams`.
 3. Surface guard violations/retry history and team-seat-role topology for UI panels.
 
+Implementation update (2026-02-16):
+1. `GET /v1/cards/{card_id}/guard-history` is implemented with guard-status extraction from card transaction history and summary counters.
+2. `GET /v1/system/teams` is implemented with department/team/seat/role topology discovery from model team and role catalogs.
+
 Acceptance criteria:
 1. Guard history endpoint exposes decisions, violations, retries, and terminal outcomes when available.
 2. Teams endpoint returns department/team/seat/role topology in a single payload.
