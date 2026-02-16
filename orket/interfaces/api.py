@@ -240,6 +240,91 @@ def _discover_active_roles(model_root: Path) -> list[str]:
             fallback_roles.append(role)
     return fallback_roles
 
+
+def _load_role_catalog(model_root: Path) -> dict[str, dict[str, Any]]:
+    catalog: dict[str, dict[str, Any]] = {}
+    for role_file in sorted(model_root.glob("*/roles/*.json")):
+        try:
+            payload = json.loads(role_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        role_name = _normalize_role_name(payload.get("name") or role_file.stem)
+        if not role_name:
+            continue
+        catalog[role_name] = {
+            "name": str(payload.get("name") or role_name),
+            "description": payload.get("description"),
+            "tools": list(payload.get("tools") or []),
+        }
+    return catalog
+
+
+def _discover_team_topology(model_root: Path) -> list[dict[str, Any]]:
+    role_catalog = _load_role_catalog(model_root)
+    teams: list[dict[str, Any]] = []
+    for team_file in sorted(model_root.glob("*/teams/*.json")):
+        department = team_file.parent.parent.name
+        team_id = team_file.stem
+        try:
+            payload = json.loads(team_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+
+        seats_payload = payload.get("seats")
+        seats: list[dict[str, Any]] = []
+        referenced_roles: set[str] = set()
+        if isinstance(seats_payload, dict):
+            for seat_id, seat_value in seats_payload.items():
+                seat = seat_value if isinstance(seat_value, dict) else {}
+                raw_roles = list(seat.get("roles") or [])
+                normalized_roles = [_normalize_role_name(role) for role in raw_roles if _normalize_role_name(role)]
+                for role in normalized_roles:
+                    referenced_roles.add(role)
+                seats.append(
+                    {
+                        "seat_id": str(seat_id),
+                        "name": seat.get("name"),
+                        "roles": normalized_roles,
+                    }
+                )
+
+        declared_roles: dict[str, Any] = payload.get("roles") if isinstance(payload.get("roles"), dict) else {}
+        role_items: list[dict[str, Any]] = []
+        all_roles = sorted(set(referenced_roles) | {_normalize_role_name(role) for role in declared_roles.keys() if _normalize_role_name(role)})
+        for role_name in all_roles:
+            declared = declared_roles.get(role_name)
+            declared = declared if isinstance(declared, dict) else {}
+            catalog_entry = role_catalog.get(role_name, {})
+            role_items.append(
+                {
+                    "role": role_name,
+                    "name": declared.get("name") or catalog_entry.get("name") or role_name,
+                    "description": declared.get("description") or catalog_entry.get("description"),
+                    "tools": list(declared.get("tools") or catalog_entry.get("tools") or []),
+                    "source": (
+                        "team"
+                        if bool(declared)
+                        else ("catalog" if bool(catalog_entry) else "seat_reference")
+                    ),
+                }
+            )
+
+        teams.append(
+            {
+                "department": department,
+                "team_id": team_id,
+                "name": payload.get("name") or team_id,
+                "description": payload.get("description"),
+                "seats": sorted(seats, key=lambda item: item["seat_id"]),
+                "roles": role_items,
+            }
+        )
+    return teams
+
 # Security dependency
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
@@ -433,6 +518,19 @@ async def get_model_assignments(roles: Optional[str] = None):
         "count": len(items),
         "generated_at": now_local().isoformat(),
         "filters": {"roles": role_filter or None},
+    }
+
+
+@v1_router.get("/system/teams")
+async def get_system_teams(department: Optional[str] = None):
+    topology = _discover_team_topology(PROJECT_ROOT / "model")
+    if department:
+        dept = str(department).strip().lower()
+        topology = [item for item in topology if str(item.get("department") or "").strip().lower() == dept]
+    return {
+        "items": topology,
+        "count": len(topology),
+        "filters": {"department": department or None},
     }
 
 
@@ -1124,6 +1222,28 @@ def _extract_total_tokens(value: Any) -> int:
     return parsed if parsed > 0 else 0
 
 
+def _parse_guard_status_from_action(action: str) -> Optional[str]:
+    action_text = str(action or "")
+    marker = "Set Status to '"
+    start = action_text.find(marker)
+    if start < 0:
+        return None
+    start += len(marker)
+    end = action_text.find("'", start)
+    if end < 0:
+        return None
+    status = action_text[start:end].strip().lower()
+    guard_statuses = {
+        "awaiting_guard_review",
+        "guard_approved",
+        "guard_rejected",
+        "guard_requested_changes",
+    }
+    if status in guard_statuses:
+        return status
+    return None
+
+
 def _read_log_records(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -1259,6 +1379,63 @@ async def get_card_history(card_id: str):
         raise HTTPException(status_code=404, detail=f"Card '{card_id}' not found")
     history = await engine.cards.get_card_history(card_id)
     return {"card_id": card_id, "history": history}
+
+
+@v1_router.get("/cards/{card_id}/guard-history")
+async def get_card_guard_history(card_id: str):
+    card = await engine.cards.get_by_id(card_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail=f"Card '{card_id}' not found")
+    history = await engine.cards.get_card_history(card_id)
+
+    items: list[dict[str, Any]] = []
+    summary = {
+        "awaiting_guard_review": 0,
+        "guard_approved": 0,
+        "guard_rejected": 0,
+        "guard_requested_changes": 0,
+        "retry_count": 0,
+        "terminal_failures": 0,
+    }
+
+    for entry in history:
+        text = str(entry or "")
+        guard_status = _parse_guard_status_from_action(text)
+        if not guard_status and "terminal_failure" not in text.lower():
+            continue
+
+        timestamp = None
+        actor = None
+        action = text
+        if ": " in text and " -> " in text:
+            timestamp, remainder = text.split(": ", 1)
+            if " -> " in remainder:
+                actor, action = remainder.split(" -> ", 1)
+
+        terminal = "terminal_failure" in text.lower()
+        if guard_status:
+            summary[guard_status] += 1
+            if guard_status in {"guard_rejected", "guard_requested_changes"}:
+                summary["retry_count"] += 1
+        if terminal:
+            summary["terminal_failures"] += 1
+
+        items.append(
+            {
+                "timestamp": timestamp,
+                "actor": actor,
+                "action": action,
+                "guard_status": guard_status,
+                "terminal_failure": terminal,
+            }
+        )
+
+    return {
+        "card_id": card_id,
+        "count": len(items),
+        "items": items,
+        "summary": summary,
+    }
 
 
 @v1_router.get("/cards/{card_id}/comments")
