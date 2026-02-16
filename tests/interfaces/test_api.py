@@ -1629,6 +1629,128 @@ def test_execution_graph_endpoint_404_when_run_missing(monkeypatch):
     assert "not found" in response.json()["detail"].lower()
 
 
+@pytest.mark.asyncio
+async def test_run_token_summary_aggregates_by_role_model_and_turn(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+
+    async def fake_get_run(session_id):
+        return {"session_id": session_id}
+
+    async def fake_get_session(session_id):
+        return {"id": session_id}
+
+    monkeypatch.setattr(api_module.engine.run_ledger, "get_run", fake_get_run)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+
+    default_workspace = Path(tmp_path) / "workspace" / "default"
+    default_workspace.mkdir(parents=True, exist_ok=True)
+    log_path = default_workspace / "orket.log"
+    lines = [
+        {
+            "timestamp": "2026-02-16T12:00:00+00:00",
+            "role": "coder",
+            "event": "turn_start",
+            "data": {
+                "runtime_event": {
+                    "session_id": "TOK-1",
+                    "issue_id": "ISS-1",
+                    "turn_index": 1,
+                    "turn_trace_id": "TOK-1:ISS-1:coder:1",
+                    "selected_model": "qwen2.5-coder:14b",
+                }
+            },
+        },
+        {
+            "timestamp": "2026-02-16T12:00:01+00:00",
+            "role": "coder",
+            "event": "turn_complete",
+            "data": {
+                "runtime_event": {
+                    "session_id": "TOK-1",
+                    "issue_id": "ISS-1",
+                    "turn_index": 1,
+                    "turn_trace_id": "TOK-1:ISS-1:coder:1",
+                    "tokens": {"total_tokens": 25},
+                }
+            },
+        },
+        {
+            "timestamp": "2026-02-16T12:00:02+00:00",
+            "role": "reviewer",
+            "event": "turn_start",
+            "data": {
+                "runtime_event": {
+                    "session_id": "TOK-1",
+                    "issue_id": "ISS-1",
+                    "turn_index": 2,
+                    "turn_trace_id": "TOK-1:ISS-1:reviewer:2",
+                    "selected_model": "llama3.1:8b",
+                }
+            },
+        },
+        {
+            "timestamp": "2026-02-16T12:00:03+00:00",
+            "role": "reviewer",
+            "event": "turn_complete",
+            "data": {
+                "runtime_event": {
+                    "session_id": "TOK-1",
+                    "issue_id": "ISS-1",
+                    "turn_index": 2,
+                    "turn_trace_id": "TOK-1:ISS-1:reviewer:2",
+                },
+                "tokens": 10,
+            },
+        },
+        {
+            "timestamp": "2026-02-16T12:00:04+00:00",
+            "role": "coder",
+            "event": "turn_complete",
+            "data": {
+                "runtime_event": {
+                    "session_id": "TOK-2",
+                    "issue_id": "ISS-X",
+                    "turn_index": 1,
+                    "turn_trace_id": "TOK-2:ISS-X:coder:1",
+                    "tokens": {"total_tokens": 999},
+                }
+            },
+        },
+    ]
+    log_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+
+    response = client.get("/v1/runs/TOK-1/token-summary", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["session_id"] == "TOK-1"
+    assert payload["total_tokens"] == 35
+    assert payload["turn_count"] == 2
+    assert payload["turns"][0]["role"] == "coder"
+    assert payload["turns"][0]["model"] == "qwen2.5-coder:14b"
+    assert payload["turns"][0]["tokens_total"] == 25
+    assert payload["turns"][1]["role"] == "reviewer"
+    assert payload["turns"][1]["model"] == "llama3.1:8b"
+    assert payload["turns"][1]["tokens_total"] == 10
+
+    by_role = {item["role"]: item["tokens_total"] for item in payload["by_role"]}
+    by_model = {item["model"]: item["tokens_total"] for item in payload["by_model"]}
+    by_role_model = {(item["role"], item["model"]): item["tokens_total"] for item in payload["by_role_model"]}
+    assert by_role["coder"] == 25
+    assert by_role["reviewer"] == 10
+    assert by_model["qwen2.5-coder:14b"] == 25
+    assert by_model["llama3.1:8b"] == 10
+    assert by_role_model[("coder", "qwen2.5-coder:14b")] == 25
+    assert by_role_model[("reviewer", "llama3.1:8b")] == 10
+
+
+def test_run_token_summary_404_when_run_missing(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.get("/v1/runs/NOPE-RUN/token-summary", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 404
+
+
 def test_logs_endpoint_filters_and_paginates(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))

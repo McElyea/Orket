@@ -50,7 +50,15 @@ Canonical API contract for dashboard/front-end workflows.
    - Response includes summary fields:
      - `node_count`
      - `edge_count`
-5. `GET /v1/runs/{session_id}`
+5. `GET /v1/runs/{session_id}/token-summary`
+   - Returns aggregated token totals for the run:
+     - `total_tokens`
+     - `turn_count`
+     - `by_role[]`
+     - `by_model[]`
+     - `by_role_model[]`
+     - `turns[]` (per-turn role/model/token rows)
+6. `GET /v1/runs/{session_id}`
    - Returns run detail with:
      - `status`
      - `summary`
@@ -58,11 +66,11 @@ Canonical API contract for dashboard/front-end workflows.
      - `issue_count`
      - `session`
      - `run_ledger`
-6. `GET /v1/sessions/{session_id}`
+7. `GET /v1/sessions/{session_id}`
    - Returns session details (status, transcript, timestamps).
-7. `GET /v1/sessions/{session_id}/snapshot`
+8. `GET /v1/sessions/{session_id}/snapshot`
    - Returns stored snapshot payload for a session.
-8. `GET /v1/sessions/{session_id}/status`
+9. `GET /v1/sessions/{session_id}/status`
    - Pollable status payload including:
      - `active`
      - `task_state`

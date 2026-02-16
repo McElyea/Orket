@@ -758,6 +758,121 @@ async def get_run_metrics(session_id: str):
     metrics_reader = api_runtime_node.create_member_metrics_reader()
     return metrics_reader(workspace)
 
+
+@v1_router.get("/runs/{session_id}/token-summary")
+async def get_run_token_summary(session_id: str):
+    run_record = await engine.run_ledger.get_run(session_id)
+    session = await engine.sessions.get_session(session_id)
+    if run_record is None and session is None:
+        raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
+
+    candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
+    candidate_files.append(PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log")
+
+    records: list[dict[str, Any]] = []
+    seen: set[tuple[Any, ...]] = set()
+    for path in candidate_files:
+        for record in _read_log_records(path):
+            signature = (
+                record.get("timestamp"),
+                record.get("event"),
+                str((record.get("data") or {}).get("turn_trace_id") or ""),
+                str(record.get("role") or ""),
+                str((record.get("data") or {}).get("issue_id") or ""),
+            )
+            if signature in seen:
+                continue
+            seen.add(signature)
+            records.append(record)
+
+    model_by_turn_trace: dict[str, str] = {}
+    turns: list[dict[str, Any]] = []
+    role_totals: dict[str, int] = {}
+    model_totals: dict[str, int] = {}
+    role_model_totals: dict[str, int] = {}
+    total_tokens = 0
+
+    for record in records:
+        if _record_session_id(record) != session_id:
+            continue
+        event = str(record.get("event") or "")
+        data = record.get("data", {})
+        if not isinstance(data, dict):
+            continue
+        runtime_event = data.get("runtime_event", {})
+        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
+        turn_trace_id = str(
+            runtime_event.get("turn_trace_id")
+            or data.get("turn_trace_id")
+            or ""
+        ).strip()
+
+        if event == "turn_start":
+            selected_model = str(
+                runtime_event.get("selected_model")
+                or data.get("selected_model")
+                or ""
+            ).strip()
+            if turn_trace_id and selected_model:
+                model_by_turn_trace[turn_trace_id] = selected_model
+            continue
+
+        if event != "turn_complete":
+            continue
+
+        role = str(record.get("role") or runtime_event.get("role") or data.get("role") or "unknown").strip().lower()
+        model = str(
+            model_by_turn_trace.get(turn_trace_id)
+            or runtime_event.get("selected_model")
+            or data.get("selected_model")
+            or "unknown"
+        ).strip().lower()
+        issue_id = str(runtime_event.get("issue_id") or data.get("issue_id") or "").strip()
+        turn_index_raw = runtime_event.get("turn_index") or data.get("turn_index") or 0
+        try:
+            turn_index = int(turn_index_raw)
+        except (TypeError, ValueError):
+            turn_index = 0
+        tokens_total = _extract_total_tokens(runtime_event.get("tokens"))
+        if not tokens_total:
+            tokens_total = _extract_total_tokens(data.get("tokens"))
+        if not tokens_total:
+            tokens_total = _extract_total_tokens(data.get("total_tokens"))
+
+        turn_row = {
+            "turn_trace_id": turn_trace_id or None,
+            "issue_id": issue_id or None,
+            "turn_index": turn_index,
+            "role": role,
+            "model": model,
+            "tokens_total": tokens_total,
+        }
+        turns.append(turn_row)
+        total_tokens += tokens_total
+        role_totals[role] = role_totals.get(role, 0) + tokens_total
+        model_totals[model] = model_totals.get(model, 0) + tokens_total
+        role_model_key = f"{role}:{model}"
+        role_model_totals[role_model_key] = role_model_totals.get(role_model_key, 0) + tokens_total
+
+    turns.sort(key=lambda item: (item["turn_index"], str(item["issue_id"] or ""), str(item["role"])))
+    by_role = [{"role": role, "tokens_total": value} for role, value in sorted(role_totals.items(), key=lambda item: item[0])]
+    by_model = [{"model": model, "tokens_total": value} for model, value in sorted(model_totals.items(), key=lambda item: item[0])]
+
+    by_role_model: list[dict[str, Any]] = []
+    for key, value in sorted(role_model_totals.items(), key=lambda item: item[0]):
+        role, model = key.split(":", 1)
+        by_role_model.append({"role": role, "model": model, "tokens_total": value})
+
+    return {
+        "session_id": session_id,
+        "total_tokens": total_tokens,
+        "turn_count": len(turns),
+        "by_role": by_role,
+        "by_model": by_model,
+        "by_role_model": by_role_model,
+        "turns": turns,
+    }
+
 @v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str):
     log_event("api_backlog", {"session_id": session_id}, PROJECT_ROOT)
@@ -985,6 +1100,28 @@ def _build_execution_graph(backlog: list[dict[str, Any]]) -> dict[str, Any]:
         "has_cycle": has_cycle,
         "cycle_nodes": cycle_nodes,
     }
+
+
+def _record_session_id(record: dict[str, Any]) -> str:
+    data = record.get("data", {})
+    if isinstance(data, dict):
+        runtime_event = data.get("runtime_event", {})
+        if isinstance(runtime_event, dict):
+            return str(runtime_event.get("session_id") or "")
+        return str(data.get("session_id") or "")
+    return ""
+
+
+def _extract_total_tokens(value: Any) -> int:
+    if isinstance(value, dict):
+        raw = value.get("total_tokens")
+    else:
+        raw = value
+    try:
+        parsed = int(raw or 0)
+    except (TypeError, ValueError):
+        parsed = 0
+    return parsed if parsed > 0 else 0
 
 
 def _read_log_records(path: Path) -> list[dict]:

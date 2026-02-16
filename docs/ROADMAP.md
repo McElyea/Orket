@@ -109,6 +109,10 @@ Scope:
 2. Aggregate by role, model, and turn using existing turn metrics artifacts.
 3. Include totals and per-role splits ready for charting.
 
+Implementation update (2026-02-16):
+1. `GET /v1/runs/{session_id}/token-summary` is implemented by correlating `turn_start` model selection with `turn_complete` token usage via `turn_trace_id`.
+2. Response now includes `total_tokens`, `turn_count`, `by_role`, `by_model`, `by_role_model`, and per-turn rows.
+
 Acceptance criteria:
 1. Endpoint returns consistent totals across repeated reads for the same run.
 2. Missing metrics artifacts degrade gracefully with explicit empty/default payloads.
