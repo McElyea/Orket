@@ -1,0 +1,11 @@
+{
+  "ollama": "model='qwen2.5-coder:14b' created_at='2026-02-18T01:52:34.1600691Z' done=True done_reason='stop' total_duration=1655626800 load_duration=97605600 prompt_eval_count=1201 prompt_eval_duration=127819000 eval_count=114 eval_duration=1364110600 message=Message(role='assistant', content='```json\\n{\\n  \"tool\": \"write_file\",\\n  \"args\": {\\n    \"path\": \"agent_output/main.py\",\\n    \"content\": \"def deterministic_function(input_value):\\\\n    # First meaningful statement: perform a computation using the input parameter\\\\n    result = input_value * 2 + 3\\\\n    \\\\n    # Second meaningful statement: return the computed result\\\\n    return result\"\\n  }\\n},\\n{\\n  \"tool\": \"update_issue_status\",\\n  \"args\": {\\n    \"status\": \"code_review\"\\n  }\\n}\\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None",
+  "input_tokens": 1201,
+  "output_tokens": 114,
+  "total_tokens": 1315,
+  "provider": "ollama-async",
+  "model": "qwen2.5-coder:14b",
+  "retries": 0,
+  "latency_ms": 1661,
+  "response_chars": 436
+}

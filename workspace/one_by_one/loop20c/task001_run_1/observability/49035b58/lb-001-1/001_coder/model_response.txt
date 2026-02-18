@@ -1,0 +1,15 @@
+```json
+{
+  "tool": "write_file",
+  "args": {
+    "path": "agent_output/main.py",
+    "content": "def deterministic_function(input_value):\n    intermediate_value = input_value * 2\n    result = intermediate_value + 5\n    return result"
+  }
+},
+{
+  "tool": "update_issue_status",
+  "args": {
+    "status": "code_review"
+  }
+}
+```

@@ -1,0 +1,6 @@
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: agent_output/deployment/Dockerfile
+    command: python agent_output/main.py

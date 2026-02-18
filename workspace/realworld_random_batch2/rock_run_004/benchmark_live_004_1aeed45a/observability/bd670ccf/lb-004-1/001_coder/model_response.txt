@@ -1,0 +1,18 @@
+```json
+{
+  "tool": "write_file",
+  "args": {
+    "path": "agent_output/main.py",
+    "content": "def reverse_string(s):\n    reversed_s = s[::-1]\n    return reversed_s"
+  }
+}
+```
+
+```json
+{
+  "tool": "update_issue_status",
+  "args": {
+    "status": "code_review"
+  }
+}
+```

@@ -1,0 +1,71 @@
+{
+  "id": "016",
+  "description": "Roman numeral to integer.",
+  "problem": "Convert a Roman numeral string into an integer.",
+  "function_signature": "def roman_to_int(s):",
+  "constraints": [
+    "Support standard subtractive notation"
+  ],
+  "io_examples": [
+    {
+      "input": [
+        "III"
+      ],
+      "output": 3
+    },
+    {
+      "input": [
+        "MCMXCIV"
+      ],
+      "output": 1994
+    }
+  ],
+  "instruction": "Implement roman_to_int(s).",
+  "evaluation": {
+    "type": "function_examples",
+    "function_name": "roman_to_int",
+    "examples": [
+      {
+        "args": [
+          "III"
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          "LVIII"
+        ],
+        "expected": 58
+      },
+      {
+        "args": [
+          "MCMXCIV"
+        ],
+        "expected": 1994
+      }
+    ]
+  },
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def roman_to_int(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  }
+}

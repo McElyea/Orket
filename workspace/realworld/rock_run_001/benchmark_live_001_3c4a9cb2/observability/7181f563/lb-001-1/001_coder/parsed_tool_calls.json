@@ -1,0 +1,15 @@
+[
+  {
+    "tool": "write_file",
+    "args": {
+      "path": "agent_output/main.py",
+      "content": "def add(a, b):\n    intermediate_sum = a + b\n    return intermediate_sum"
+    }
+  },
+  {
+    "tool": "update_issue_status",
+    "args": {
+      "status": "code_review"
+    }
+  }
+]

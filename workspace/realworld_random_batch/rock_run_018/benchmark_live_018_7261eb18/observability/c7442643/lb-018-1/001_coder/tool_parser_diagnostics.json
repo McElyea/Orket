@@ -1,0 +1,15 @@
+[
+  {
+    "stage": "parse_start",
+    "data": {
+      "text_length": 563
+    }
+  },
+  {
+    "stage": "parse_success",
+    "data": {
+      "strategy": "stack_json",
+      "count": 2
+    }
+  }
+]

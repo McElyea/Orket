@@ -1,0 +1,37 @@
+{
+  "run_id": "f9e3c07b",
+  "issue_id": "LB-016-1",
+  "turn_index": 1,
+  "role": "coder",
+  "prompt_hash": "2ac29543e5e315c6",
+  "model": "qwen2.5-coder:14b",
+  "tool_calls": [
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "agent_output/main.py",
+        "content": "def roman_to_int(s):\n    roman_values = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}\n    total = 0\n    prev_value = 0\n    for char in reversed(s):\n        value = roman_values[char]\n        if value < prev_value:\n            total -= value\n        else:\n            total += value\n        prev_value = value\n    return total"
+      }
+    },
+    {
+      "tool": "update_issue_status",
+      "args": {
+        "status": "code_review"
+      }
+    }
+  ],
+  "state_delta": {
+    "from": "in_progress",
+    "to": "code_review"
+  },
+  "prompt_metadata": {
+    "prompt_id": "legacy.prompt_compiler",
+    "prompt_version": "legacy",
+    "prompt_checksum": "a4a92e5640482621",
+    "resolver_policy": "compiler",
+    "selection_policy": "stable",
+    "role_status": "legacy",
+    "dialect_status": "legacy"
+  },
+  "captured_at": "2026-02-18T03:00:53.146472+00:00"
+}

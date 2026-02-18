@@ -1,0 +1,77 @@
+{
+  "id": "002",
+  "description": "Concatenate two strings.",
+  "problem": "Create a function that takes two strings and returns their concatenation.",
+  "function_signature": "def concat_strings(a, b):",
+  "constraints": [
+    "Do not print",
+    "Preserve exact character order"
+  ],
+  "io_examples": [
+    {
+      "input": [
+        "foo",
+        "bar"
+      ],
+      "output": "foobar"
+    },
+    {
+      "input": [
+        "",
+        "x"
+      ],
+      "output": "x"
+    }
+  ],
+  "instruction": "Implement concat_strings(a, b) and return a+b.",
+  "evaluation": {
+    "type": "function_examples",
+    "function_name": "concat_strings",
+    "examples": [
+      {
+        "args": [
+          "foo",
+          "bar"
+        ],
+        "expected": "foobar"
+      },
+      {
+        "args": [
+          "",
+          "x"
+        ],
+        "expected": "x"
+      },
+      {
+        "args": [
+          "A",
+          ""
+        ],
+        "expected": "A"
+      }
+    ]
+  },
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def concat_strings(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  }
+}

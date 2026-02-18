@@ -1,0 +1,28 @@
+{
+  "id": "007",
+  "description": "Check palindrome.",
+  "instruction": "Implement is_palindrome(s).",
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def is_palindrome(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  }
+}

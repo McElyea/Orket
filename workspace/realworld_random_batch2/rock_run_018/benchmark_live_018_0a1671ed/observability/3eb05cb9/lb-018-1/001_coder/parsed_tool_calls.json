@@ -1,0 +1,15 @@
+[
+  {
+    "tool": "write_file",
+    "args": {
+      "path": "agent_output/main.py",
+      "content": "def is_balanced(s):\n    stack = []\n    matching_bracket = {')': '(', '}': '{', ']': '['}\n    for char in s:\n        if char in matching_bracket.values():\n            stack.append(char)\n        elif char in matching_bracket.keys():\n            if stack == [] or matching_bracket[char] != stack.pop():\n                return False\n        else:\n            continue\n    return stack == []"
+    }
+  },
+  {
+    "tool": "update_issue_status",
+    "args": {
+      "status": "code_review"
+    }
+  }
+]

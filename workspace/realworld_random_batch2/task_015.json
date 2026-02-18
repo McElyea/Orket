@@ -1,0 +1,71 @@
+﻿{
+    "id":  "015",
+    "tier":  2,
+    "description":  "Anagram check.",
+    "problem":  "Return True if two strings are anagrams, ignoring spaces and case.",
+    "function_signature":  "def are_anagrams(a, b):",
+    "instruction":  "Implement are_anagrams(a, b).",
+    "constraints":  [
+                        "Ignore spaces",
+                        "Case-insensitive"
+                    ],
+    "io_examples":  [
+                        {
+                            "input":  [
+                                          "Listen",
+                                          "Silent"
+                                      ],
+                            "output":  true
+                        }
+                    ],
+    "acceptance_contract":  {
+                                "mode":  "function",
+                                "required_artifacts":  [
+                                                           "run.log",
+                                                           "report.json"
+                                                       ],
+                                "pass_conditions":  [
+                                                        "Function returns expected values for examples",
+                                                        "Required artifacts are produced",
+                                                        "Task-level checks pass"
+                                                    ],
+                                "determinism_profile":  "strict",
+                                "quality_required_keywords":  [
+                                                                  "def are_anagrams(",
+                                                                  "return"
+                                                              ],
+                                "quality_forbidden_keywords":  [
+                                                                   "__main__",
+                                                                   "print(",
+                                                                   "run_cli",
+                                                                   "log_crash"
+                                                               ]
+                            },
+    "evaluation":  {
+                       "type":  "function_examples",
+                       "function_name":  "are_anagrams",
+                       "examples":  [
+                                        {
+                                            "args":  [
+                                                         "Listen",
+                                                         "Silent"
+                                                     ],
+                                            "expected":  true
+                                        },
+                                        {
+                                            "args":  [
+                                                         "a gentleman",
+                                                         "elegant man"
+                                                     ],
+                                            "expected":  true
+                                        },
+                                        {
+                                            "args":  [
+                                                         "foo",
+                                                         "bar"
+                                                     ],
+                                            "expected":  false
+                                        }
+                                    ]
+                   }
+}

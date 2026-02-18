@@ -1,0 +1,37 @@
+{
+  "run_id": "e9b46fd7",
+  "issue_id": "LB-008-1",
+  "turn_index": 1,
+  "role": "coder",
+  "prompt_hash": "0e7e72d4e8aa0786",
+  "model": "qwen2.5-coder:14b",
+  "tool_calls": [
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "agent_output/main.py",
+        "content": "def factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    result = 1\n    for i in range(2, n + 1):\n        result *= i\n    return result"
+      }
+    },
+    {
+      "tool": "update_issue_status",
+      "args": {
+        "status": "code_review"
+      }
+    }
+  ],
+  "state_delta": {
+    "from": "in_progress",
+    "to": "code_review"
+  },
+  "prompt_metadata": {
+    "prompt_id": "legacy.prompt_compiler",
+    "prompt_version": "legacy",
+    "prompt_checksum": "a4a92e5640482621",
+    "resolver_policy": "compiler",
+    "selection_policy": "stable",
+    "role_status": "legacy",
+    "dialect_status": "legacy"
+  },
+  "captured_at": "2026-02-18T03:04:48.880378+00:00"
+}

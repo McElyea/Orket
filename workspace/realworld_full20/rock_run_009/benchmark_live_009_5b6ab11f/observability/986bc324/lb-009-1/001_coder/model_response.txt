@@ -1,0 +1,15 @@
+```json
+{
+  "tool": "write_file",
+  "args": {
+    "path": "agent_output/main.py",
+    "content": "def sum_even(values):\n    even_sum = 0\n    for value in values:\n        if value % 2 == 0:\n            even_sum += value\n    return even_sum"
+  }
+},
+{
+  "tool": "update_issue_status",
+  "args": {
+    "status": "code_review"
+  }
+}
+```

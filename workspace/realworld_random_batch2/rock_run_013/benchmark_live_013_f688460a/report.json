@@ -1,0 +1,93 @@
+{
+  "acceptance_contract": {
+    "determinism_profile": "strict",
+    "mode": "function",
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ],
+    "quality_required_keywords": [
+      "def rotate_right(",
+      "return"
+    ],
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ]
+  },
+  "artifacts": {
+    "benchmark_output": "benchmark_task_013_output.md",
+    "main_py": "agent_output/main.py",
+    "report_json": "report.json",
+    "run_log": "run.log"
+  },
+  "duration_ms": 4638,
+  "generated_at_utc": "2026-02-18T03:01:03.825273Z",
+  "main_sha256": "c2fca8c24ef407d60ff773df301d47690a0d7d8abf02c34eb6158e0a14599af4",
+  "process_exit_code": 0,
+  "quality_checks": {
+    "checks": [
+      {
+        "detail": "main.py is non-empty",
+        "name": "non_empty_main",
+        "passed": true
+      },
+      {
+        "detail": "main.py parsed successfully",
+        "name": "python_parseable",
+        "passed": true
+      },
+      {
+        "detail": "all required keywords present",
+        "name": "required_keywords_present",
+        "passed": true
+      },
+      {
+        "detail": "no forbidden keywords detected",
+        "name": "forbidden_keywords_absent",
+        "passed": true
+      },
+      {
+        "detail": "found function definitions",
+        "name": "has_function_definition",
+        "passed": true
+      },
+      {
+        "detail": "at least one function has >=2 meaningful statements",
+        "name": "non_trivial_function_body",
+        "passed": true
+      },
+      {
+        "detail": "at least one function uses its parameters",
+        "name": "uses_function_parameters",
+        "passed": true
+      },
+      {
+        "detail": "returns are not constant-only stubs",
+        "name": "not_constant_return_stub",
+        "passed": true
+      },
+      {
+        "detail": "at least one function both uses parameters and has >=2 meaningful statements",
+        "name": "has_parameterized_non_trivial_function",
+        "passed": true
+      },
+      {
+        "detail": "{\"ok\": true, \"count\": 2}",
+        "name": "example_cases_pass",
+        "passed": true
+      }
+    ],
+    "mode": "function",
+    "passed": true,
+    "reason": "ok"
+  },
+  "task_id": "013"
+}

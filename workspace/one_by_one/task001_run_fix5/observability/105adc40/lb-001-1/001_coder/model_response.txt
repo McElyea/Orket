@@ -1,0 +1,15 @@
+```json
+{
+  "tool": "write_file",
+  "args": {
+    "path": "agent_output/main.py",
+    "content": "def deterministic_function(input_value):\n    # Non-trivial computation using input parameters\n    intermediate_result = input_value * 2\n    final_result = intermediate_result + 10\n    return final_result"
+  }
+},
+{
+  "tool": "update_issue_status",
+  "args": {
+    "status": "code_review"
+  }
+}
+```

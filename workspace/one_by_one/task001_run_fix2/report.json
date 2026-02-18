@@ -1,0 +1,63 @@
+{
+  "acceptance_contract": {
+    "determinism_profile": "strict",
+    "mode": "function",
+    "pass_conditions": [
+      "Implementation completes without crash",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ]
+  },
+  "artifacts": {
+    "benchmark_output": "benchmark_task_001_output.md",
+    "main_py": "agent_output/main.py",
+    "report_json": "report.json",
+    "run_log": "run.log"
+  },
+  "duration_ms": 8933,
+  "generated_at_utc": "2026-02-18T01:51:54.296596Z",
+  "main_sha256": "ee3b36a723cdbb20458c368145503f937c8a0656e2ebe9dedc07320129f5c6d3",
+  "process_exit_code": 0,
+  "quality_checks": {
+    "checks": [
+      {
+        "detail": "main.py is non-empty",
+        "name": "non_empty_main",
+        "passed": true
+      },
+      {
+        "detail": "main.py parsed successfully",
+        "name": "python_parseable",
+        "passed": true
+      },
+      {
+        "detail": "found function definitions",
+        "name": "has_function_definition",
+        "passed": true
+      },
+      {
+        "detail": "all functions are trivial (single/pass/docstring-only)",
+        "name": "non_trivial_function_body",
+        "passed": false
+      },
+      {
+        "detail": "function output appears independent of input parameters",
+        "name": "uses_function_parameters",
+        "passed": false
+      },
+      {
+        "detail": "all return statements are constant literals",
+        "name": "not_constant_return_stub",
+        "passed": false
+      }
+    ],
+    "mode": "function",
+    "passed": false,
+    "reason": "non_trivial_function_body; uses_function_parameters; not_constant_return_stub"
+  },
+  "task_id": "001"
+}

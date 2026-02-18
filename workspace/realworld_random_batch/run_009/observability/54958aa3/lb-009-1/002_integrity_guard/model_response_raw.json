@@ -1,0 +1,11 @@
+{
+  "ollama": "model='llama3.1:8b' created_at='2026-02-18T02:49:42.8351599Z' done=True done_reason='stop' total_duration=203159400 load_duration=120638200 prompt_eval_count=1323 prompt_eval_duration=77650700 eval_count=1 eval_duration=None message=Message(role='assistant', content='', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None",
+  "input_tokens": 1323,
+  "output_tokens": 1,
+  "total_tokens": 1324,
+  "provider": "ollama-async",
+  "model": "llama3.1:8b",
+  "retries": 0,
+  "latency_ms": 205,
+  "response_chars": 0
+}

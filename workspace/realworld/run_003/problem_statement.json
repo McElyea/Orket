@@ -1,0 +1,28 @@
+{
+  "id": "003",
+  "description": "First n Fibonacci numbers.",
+  "instruction": "Implement fibonacci_sequence(n) where n>=0.",
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def fibonacci_sequence(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  }
+}

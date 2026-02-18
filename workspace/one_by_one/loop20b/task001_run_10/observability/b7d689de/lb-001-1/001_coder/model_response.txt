@@ -1,0 +1,18 @@
+```json
+{
+  "tool": "write_file",
+  "args": {
+    "path": "agent_output/main.py",
+    "content": "def compute_sum(a, b):\n    return a + b\n\ndef main():\n    result = compute_sum(3, 4)\n    print(result)\n"
+  }
+}
+```
+
+```json
+{
+  "tool": "update_issue_status",
+  "args": {
+    "status": "code_review"
+  }
+}
+```

@@ -1,0 +1,11 @@
+{
+  "ollama": "model='qwen2.5-coder:14b' created_at='2026-02-18T03:02:53.5250097Z' done=True done_reason='stop' total_duration=1825124200 load_duration=101761000 prompt_eval_count=1373 prompt_eval_duration=353342600 eval_count=82 eval_duration=1311066800 message=Message(role='assistant', content='```json\\n{\\n  \"tool\": \"write_file\",\\n  \"args\": {\\n    \"path\": \"agent_output/main.py\",\\n    \"content\": \"def concat_strings(a, b):\\\\n    intermediate = a + b\\\\n    return intermediate\"\\n  }\\n},\\n{\\n  \"tool\": \"update_issue_status\",\\n  \"args\": {\\n    \"status\": \"code_review\"\\n  }\\n}\\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None",
+  "input_tokens": 1373,
+  "output_tokens": 82,
+  "total_tokens": 1455,
+  "provider": "ollama-async",
+  "model": "qwen2.5-coder:14b",
+  "retries": 0,
+  "latency_ms": 1830,
+  "response_chars": 267
+}

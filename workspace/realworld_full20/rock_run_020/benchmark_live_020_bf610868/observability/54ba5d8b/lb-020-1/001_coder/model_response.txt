@@ -1,0 +1,18 @@
+```json
+{
+  "tool": "write_file",
+  "args": {
+    "path": "agent_output/main.py",
+    "content": "def group_anagrams(values):\n    from collections import defaultdict\n    anagrams = defaultdict(list)\n    for word in values:\n        sorted_word = ''.join(sorted(word))\n        anagrams[sorted_word].append(word)\n    return sorted([sorted(group) for group in anagrams.values()])"
+  }
+}
+```
+
+```json
+{
+  "tool": "update_issue_status",
+  "args": {
+    "status": "code_review"
+  }
+}
+```

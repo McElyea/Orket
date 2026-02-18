@@ -1,0 +1,72 @@
+﻿{
+    "id":  "019",
+    "tier":  3,
+    "description":  "Run-length encoding.",
+    "problem":  "Encode a string with run-length encoding, e.g. aaabb -\u003e a3b2.",
+    "function_signature":  "def rle_encode(s):",
+    "instruction":  "Implement rle_encode(s).",
+    "constraints":  [
+                        "Return empty for empty input"
+                    ],
+    "io_examples":  [
+                        {
+                            "input":  [
+                                          "aaabb"
+                                      ],
+                            "output":  "a3b2"
+                        },
+                        {
+                            "input":  [
+                                          "abcd"
+                                      ],
+                            "output":  "a1b1c1d1"
+                        }
+                    ],
+    "acceptance_contract":  {
+                                "mode":  "function",
+                                "required_artifacts":  [
+                                                           "run.log",
+                                                           "report.json"
+                                                       ],
+                                "pass_conditions":  [
+                                                        "Function returns expected values for examples",
+                                                        "Required artifacts are produced",
+                                                        "Task-level checks pass"
+                                                    ],
+                                "determinism_profile":  "strict",
+                                "quality_required_keywords":  [
+                                                                  "def rle_encode(",
+                                                                  "return"
+                                                              ],
+                                "quality_forbidden_keywords":  [
+                                                                   "__main__",
+                                                                   "print(",
+                                                                   "run_cli",
+                                                                   "log_crash"
+                                                               ]
+                            },
+    "evaluation":  {
+                       "type":  "function_examples",
+                       "function_name":  "rle_encode",
+                       "examples":  [
+                                        {
+                                            "args":  [
+                                                         "aaabb"
+                                                     ],
+                                            "expected":  "a3b2"
+                                        },
+                                        {
+                                            "args":  [
+                                                         "abcd"
+                                                     ],
+                                            "expected":  "a1b1c1d1"
+                                        },
+                                        {
+                                            "args":  [
+                                                         ""
+                                                     ],
+                                            "expected":  ""
+                                        }
+                                    ]
+                   }
+}

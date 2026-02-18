@@ -1,0 +1,11 @@
+{
+  "ollama": "model='qwen2.5-coder:14b' created_at='2026-02-18T02:57:03.8162327Z' done=True done_reason='stop' total_duration=2475584500 load_duration=100715300 prompt_eval_count=1264 prompt_eval_duration=274365500 eval_count=124 eval_duration=2019721200 message=Message(role='assistant', content='```json\\n{\\n  \"tool\": \"write_file\",\\n  \"args\": {\\n    \"path\": \"agent_output/main.py\",\\n    \"content\": \"def factorial(n):\\\\n    if n < 0:\\\\n        raise ValueError(\\'Input must be a non-negative integer\\')\\\\n    result = 1\\\\n    for i in range(2, n + 1):\\\\n        result *= i\\\\n    return result\"\\n  }\\n}\\n```\\n\\n```json\\n{\\n  \"tool\": \"update_issue_status\",\\n  \"args\": {\\n    \"status\": \"code_review\"\\n  }\\n}\\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None",
+  "input_tokens": 1264,
+  "output_tokens": 124,
+  "total_tokens": 1388,
+  "provider": "ollama-async",
+  "model": "qwen2.5-coder:14b",
+  "retries": 0,
+  "latency_ms": 2481,
+  "response_chars": 388
+}

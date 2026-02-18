@@ -1,0 +1,37 @@
+{
+  "run_id": "105adc40",
+  "issue_id": "LB-001-1",
+  "turn_index": 1,
+  "role": "coder",
+  "prompt_hash": "fdc81eaa48528295",
+  "model": "qwen2.5-coder:14b",
+  "tool_calls": [
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "agent_output/main.py",
+        "content": "def deterministic_function(input_value):\n    # Non-trivial computation using input parameters\n    intermediate_result = input_value * 2\n    final_result = intermediate_result + 10\n    return final_result"
+      }
+    },
+    {
+      "tool": "update_issue_status",
+      "args": {
+        "status": "code_review"
+      }
+    }
+  ],
+  "state_delta": {
+    "from": "in_progress",
+    "to": "code_review"
+  },
+  "prompt_metadata": {
+    "prompt_id": "legacy.prompt_compiler",
+    "prompt_version": "legacy",
+    "prompt_checksum": "a4a92e5640482621",
+    "resolver_policy": "compiler",
+    "selection_policy": "stable",
+    "role_status": "legacy",
+    "dialect_status": "legacy"
+  },
+  "captured_at": "2026-02-18T01:55:49.642209+00:00"
+}

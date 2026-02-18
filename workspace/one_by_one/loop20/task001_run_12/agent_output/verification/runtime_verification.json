@@ -1,0 +1,29 @@
+{
+  "run_id": "df447e8b",
+  "issue_id": "LB-001-1",
+  "ok": true,
+  "checked_files": [
+    "agent_output/main.py",
+    "agent_output/src/__init__.py"
+  ],
+  "errors": [],
+  "command_results": [],
+  "failure_breakdown": {},
+  "guard_contract": {
+    "result": "pass",
+    "violations": [],
+    "severity": "soft",
+    "fix_hint": null,
+    "terminal_failure": false,
+    "terminal_reason": null
+  },
+  "guard_decision": {
+    "action": "pass",
+    "next_retry_count": 0,
+    "terminal_failure": false,
+    "retry_fingerprint": null,
+    "repeated_fingerprint": false,
+    "terminal_reason": null
+  },
+  "timestamp": "2026-02-18T01:59:46.744373+00:00"
+}

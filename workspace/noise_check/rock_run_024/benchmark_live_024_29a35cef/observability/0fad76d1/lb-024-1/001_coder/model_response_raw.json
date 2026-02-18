@@ -1,0 +1,11 @@
+{
+  "ollama": "model='qwen2.5-coder:14b' created_at='2026-02-18T03:39:23.9477122Z' done=True done_reason='stop' total_duration=2816114300 load_duration=103477000 prompt_eval_count=1446 prompt_eval_duration=405432300 eval_count=176 eval_duration=2210889600 message=Message(role='assistant', content='```json\\n{\\n  \"tool\": \"write_file\",\\n  \"args\": {\\n    \"path\": \"agent_output/main.py\",\\n    \"content\": \"def merge_intervals(intervals):\\\\n    if not intervals:\\\\n        return []\\\\n\\\\n    intervals.sort(key=lambda x: x[0])\\\\n\\\\n    merged = [intervals[0]]\\\\n\\\\n    for current in intervals[1:]:\\\\n        last_merged = merged[-1]\\\\n        if current[0] <= last_merged[1]:\\\\n            last_merged[1] = max(last_merged[1], current[1])\\\\n        else:\\\\n            merged.append(current)\\\\n\\\\n    return merged\"\\n  }\\n},\\n{\\n  \"tool\": \"update_issue_status\",\\n  \"args\": {\\n    \"status\": \"code_review\"\\n  }\\n}\\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None",
+  "input_tokens": 1446,
+  "output_tokens": 176,
+  "total_tokens": 1622,
+  "provider": "ollama-async",
+  "model": "qwen2.5-coder:14b",
+  "retries": 0,
+  "latency_ms": 2821,
+  "response_chars": 584
+}

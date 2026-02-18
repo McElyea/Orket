@@ -1,0 +1,37 @@
+{
+  "run_id": "36b28a28",
+  "issue_id": "LB-009-1",
+  "turn_index": 1,
+  "role": "coder",
+  "prompt_hash": "6392d3c66a90e430",
+  "model": "qwen2.5-coder:14b",
+  "tool_calls": [
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "agent_output/main.py",
+        "content": "def sum_even(values):\n    even_sum = 0\n    for value in values:\n        if value % 2 == 0:\n            even_sum += value\n    return even_sum"
+      }
+    },
+    {
+      "tool": "update_issue_status",
+      "args": {
+        "status": "code_review"
+      }
+    }
+  ],
+  "state_delta": {
+    "from": "in_progress",
+    "to": "code_review"
+  },
+  "prompt_metadata": {
+    "prompt_id": "legacy.prompt_compiler",
+    "prompt_version": "legacy",
+    "prompt_checksum": "a4a92e5640482621",
+    "resolver_policy": "compiler",
+    "selection_policy": "stable",
+    "role_status": "legacy",
+    "dialect_status": "legacy"
+  },
+  "captured_at": "2026-02-18T03:04:20.970958+00:00"
+}

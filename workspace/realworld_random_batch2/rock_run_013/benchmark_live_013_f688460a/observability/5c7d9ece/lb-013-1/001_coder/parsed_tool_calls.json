@@ -1,0 +1,15 @@
+[
+  {
+    "tool": "write_file",
+    "args": {
+      "path": "agent_output/main.py",
+      "content": "def rotate_right(values, k):\n    n = len(values)\n    if n == 0:\n        return values\n    k = k % n\n    return values[-k:] + values[:-k]"
+    }
+  },
+  {
+    "tool": "update_issue_status",
+    "args": {
+      "status": "code_review"
+    }
+  }
+]

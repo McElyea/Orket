@@ -1,0 +1,11 @@
+{
+  "ollama": "model='qwen2.5-coder:14b' created_at='2026-02-18T03:00:03.7594445Z' done=True done_reason='stop' total_duration=2153809000 load_duration=101444100 prompt_eval_count=1281 prompt_eval_duration=269890600 eval_count=108 eval_duration=1711966300 message=Message(role='assistant', content='```json\\n{\\n  \"tool\": \"write_file\",\\n  \"args\": {\\n    \"path\": \"agent_output/main.py\",\\n    \"content\": \"def are_anagrams(a, b):\\\\n    a = a.replace(\\' \\', \\'\\').lower()\\\\n    b = b.replace(\\' \\', \\'\\').lower()\\\\n    return sorted(a) == sorted(b)\"\\n  }\\n}\\n```\\n\\n```json\\n{\\n  \"tool\": \"update_issue_status\",\\n  \"args\": {\\n    \"status\": \"code_review\"\\n  }\\n}\\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None",
+  "input_tokens": 1281,
+  "output_tokens": 108,
+  "total_tokens": 1389,
+  "provider": "ollama-async",
+  "model": "qwen2.5-coder:14b",
+  "retries": 0,
+  "latency_ms": 2159,
+  "response_chars": 333
+}

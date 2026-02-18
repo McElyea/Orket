@@ -1,0 +1,135 @@
+{
+  "id": "024",
+  "tier": 4,
+  "description": "Merge overlapping intervals.",
+  "problem": "Given a list of [start, end] intervals, merge overlaps and return sorted non-overlapping intervals.",
+  "function_signature": "def merge_intervals(intervals):",
+  "instruction": "Implement merge_intervals(intervals).",
+  "constraints": [
+    "Sort by start before merge",
+    "Return deterministic interval order"
+  ],
+  "io_examples": [
+    {
+      "input": [
+        [
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            6
+          ],
+          [
+            8,
+            10
+          ],
+          [
+            15,
+            18
+          ]
+        ]
+      ],
+      "output": [
+        [
+          1,
+          6
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          15,
+          18
+        ]
+      ]
+    }
+  ],
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def merge_intervals(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  },
+  "evaluation": {
+    "type": "function_examples",
+    "function_name": "merge_intervals",
+    "examples": [
+      {
+        "args": [
+          [
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              8,
+              10
+            ],
+            [
+              15,
+              18
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            1,
+            6
+          ],
+          [
+            8,
+            10
+          ],
+          [
+            15,
+            18
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              4
+            ],
+            [
+              4,
+              5
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            1,
+            5
+          ]
+        ]
+      }
+    ]
+  }
+}

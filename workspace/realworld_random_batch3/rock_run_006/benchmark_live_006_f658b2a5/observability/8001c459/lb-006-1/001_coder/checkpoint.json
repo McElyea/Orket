@@ -1,0 +1,37 @@
+{
+  "run_id": "8001c459",
+  "issue_id": "LB-006-1",
+  "turn_index": 1,
+  "role": "coder",
+  "prompt_hash": "e101f0866d0c105f",
+  "model": "qwen2.5-coder:14b",
+  "tool_calls": [
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "agent_output/main.py",
+        "content": "def max_in_list(values):\n    current_max = values[0]\n    for value in values:\n        if value > current_max:\n            current_max = value\n    return current_max"
+      }
+    },
+    {
+      "tool": "update_issue_status",
+      "args": {
+        "status": "code_review"
+      }
+    }
+  ],
+  "state_delta": {
+    "from": "in_progress",
+    "to": "code_review"
+  },
+  "prompt_metadata": {
+    "prompt_id": "legacy.prompt_compiler",
+    "prompt_version": "legacy",
+    "prompt_checksum": "a4a92e5640482621",
+    "resolver_policy": "compiler",
+    "selection_policy": "stable",
+    "role_status": "legacy",
+    "dialect_status": "legacy"
+  },
+  "captured_at": "2026-02-18T03:03:49.938995+00:00"
+}

@@ -1,0 +1,94 @@
+{
+  "id": "020",
+  "description": "Group anagrams.",
+  "problem": "Group words that are anagrams and return sorted groups for determinism.",
+  "function_signature": "def group_anagrams(values):",
+  "constraints": [
+    "Deterministic output ordering",
+    "Sort each group and the outer list"
+  ],
+  "io_examples": [
+    {
+      "input": [
+        [
+          "eat",
+          "tea",
+          "tan",
+          "ate",
+          "nat",
+          "bat"
+        ]
+      ],
+      "output": [
+        [
+          "ate",
+          "eat",
+          "tea"
+        ],
+        [
+          "bat"
+        ],
+        [
+          "nat",
+          "tan"
+        ]
+      ]
+    }
+  ],
+  "instruction": "Implement group_anagrams(values).",
+  "evaluation": {
+    "type": "function_examples",
+    "function_name": "group_anagrams",
+    "examples": [
+      {
+        "args": [
+          [
+            "eat",
+            "tea",
+            "tan",
+            "ate",
+            "nat",
+            "bat"
+          ]
+        ],
+        "expected": [
+          [
+            "ate",
+            "eat",
+            "tea"
+          ],
+          [
+            "bat"
+          ],
+          [
+            "nat",
+            "tan"
+          ]
+        ]
+      }
+    ]
+  },
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def group_anagrams(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "id": "001",
+  "description": "Add two numbers.",
+  "problem": "Create a sum function that takes two numbers and returns their sum.",
+  "function_signature": "def add(a, b):",
+  "constraints": [
+    "Do not print",
+    "Return numeric result"
+  ],
+  "io_examples": [
+    {
+      "input": [
+        2,
+        3
+      ],
+      "output": 5
+    },
+    {
+      "input": [
+        -1,
+        4
+      ],
+      "output": 3
+    }
+  ],
+  "instruction": "Implement add(a, b) and return a + b.",
+  "evaluation": {
+    "type": "function_examples",
+    "function_name": "add",
+    "examples": [
+      {
+        "args": [
+          2,
+          3
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          -1,
+          4
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          0,
+          0
+        ],
+        "expected": 0
+      }
+    ]
+  },
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def add(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "tool": "write_file",
+    "args": {
+      "path": "agent_output/main.py",
+      "content": "def merge_intervals(intervals):\n    if not intervals:\n        return []\n\n    intervals.sort(key=lambda x: x[0])\n\n    merged = [intervals[0]]\n\n    for current in intervals[1:]:\n        last_merged = merged[-1]\n        if current[0] <= last_merged[1]:\n            last_merged[1] = max(last_merged[1], current[1])\n        else:\n            merged.append(current)\n\n    return merged"
+    }
+  },
+  {
+    "tool": "update_issue_status",
+    "args": {
+      "status": "code_review"
+    }
+  }
+]

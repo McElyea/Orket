@@ -1,0 +1,73 @@
+{
+  "id": "004",
+  "tier": 1,
+  "description": "Reverse a string.",
+  "problem": "Create a function that returns the reversed input string.",
+  "function_signature": "def reverse_string(s):",
+  "instruction": "Implement reverse_string(s).",
+  "constraints": [
+    "Input is a string",
+    "Return string"
+  ],
+  "io_examples": [
+    {
+      "input": [
+        "abc"
+      ],
+      "output": "cba"
+    },
+    {
+      "input": [
+        ""
+      ],
+      "output": ""
+    }
+  ],
+  "acceptance_contract": {
+    "mode": "function",
+    "required_artifacts": [
+      "run.log",
+      "report.json"
+    ],
+    "pass_conditions": [
+      "Function returns expected values for examples",
+      "Required artifacts are produced",
+      "Task-level checks pass"
+    ],
+    "determinism_profile": "strict",
+    "quality_required_keywords": [
+      "def reverse_string(",
+      "return"
+    ],
+    "quality_forbidden_keywords": [
+      "__main__",
+      "print(",
+      "run_cli",
+      "log_crash"
+    ]
+  },
+  "evaluation": {
+    "type": "function_examples",
+    "function_name": "reverse_string",
+    "examples": [
+      {
+        "args": [
+          "abc"
+        ],
+        "expected": "cba"
+      },
+      {
+        "args": [
+          ""
+        ],
+        "expected": ""
+      },
+      {
+        "args": [
+          "racecar"
+        ],
+        "expected": "racecar"
+      }
+    ]
+  }
+}

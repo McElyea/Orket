@@ -1,0 +1,11 @@
+{
+  "ollama": "model='qwen2.5-coder:14b' created_at='2026-02-18T03:03:49.9331212Z' done=True done_reason='stop' total_duration=2071672600 load_duration=101160700 prompt_eval_count=1391 prompt_eval_duration=185214700 eval_count=105 eval_duration=1717324300 message=Message(role='assistant', content='```json\\n{\\n  \"tool\": \"write_file\",\\n  \"args\": {\\n    \"path\": \"agent_output/main.py\",\\n    \"content\": \"def max_in_list(values):\\\\n    current_max = values[0]\\\\n    for value in values:\\\\n        if value > current_max:\\\\n            current_max = value\\\\n    return current_max\"\\n  }\\n},\\n{\\n  \"tool\": \"update_issue_status\",\\n  \"args\": {\\n    \"status\": \"code_review\"\\n  }\\n}\\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None",
+  "input_tokens": 1391,
+  "output_tokens": 105,
+  "total_tokens": 1496,
+  "provider": "ollama-async",
+  "model": "qwen2.5-coder:14b",
+  "retries": 0,
+  "latency_ms": 2078,
+  "response_chars": 360
+}
