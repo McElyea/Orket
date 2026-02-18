@@ -1,8 +1,0 @@
-[
-  {
-    "tool": "update_issue_status",
-    "args": {
-      "status": "done"
-    }
-  }
-]
