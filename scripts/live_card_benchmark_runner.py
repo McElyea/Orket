@@ -355,6 +355,13 @@ def _evaluate_quality(task: dict[str, Any], main_text: str) -> dict[str, Any]:
                 if not returns:
                     has_constant_only_return = False
                 else:
+                    # Boolean-return predicates are valid for many benchmark tasks.
+                    if all(
+                        (ret.value is not None and isinstance(ret.value, ast.Constant) and isinstance(ret.value.value, bool))
+                        for ret in returns
+                    ):
+                        has_constant_only_return = False
+                        continue
                     if not all(
                         (ret.value is not None and isinstance(ret.value, ast.Constant))
                         for ret in returns

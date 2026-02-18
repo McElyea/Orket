@@ -72,3 +72,15 @@ python scripts/run_live_rock_benchmark_suite.py ^
   --raw-out benchmarks/results/live_rock_v2_041_060_determinism_report.json ^
   --scored-out benchmarks/results/live_rock_v2_041_060_scored_report.json
 ```
+
+## Expert Phase (Tasks 061-080)
+
+```powershell
+python scripts/run_live_rock_benchmark_suite.py ^
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json ^
+  --runs 1 ^
+  --task-id-min 61 ^
+  --task-id-max 80 ^
+  --raw-out benchmarks/results/live_rock_v2_061_080_determinism_report.json ^
+  --scored-out benchmarks/results/live_rock_v2_061_080_scored_report.json
+```

@@ -6242,5 +6242,2083 @@
         }
       ]
     }
+  },
+  {
+    "id": "061",
+    "tier": 6,
+    "description": "Decode ways count.",
+    "problem": "Given digit string s where 1->A ... 26->Z, return number of valid decodings.",
+    "function_signature": "def decode_ways_count(s):",
+    "instruction": "Implement decode_ways_count(s).",
+    "constraints": [
+      "Return 0 for invalid encodings",
+      "Use deterministic DP"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          "12"
+        ],
+        "output": 2
+      },
+      {
+        "input": [
+          "226"
+        ],
+        "output": 3
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def decode_ways_count(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "decode_ways_count",
+      "examples": [
+        {
+          "args": [
+            "12"
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            "226"
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            "06"
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "062",
+    "tier": 6,
+    "description": "Generate valid parentheses.",
+    "problem": "Return all valid parentheses combinations for n pairs, sorted lexicographically.",
+    "function_signature": "def generate_parentheses(n):",
+    "instruction": "Implement generate_parentheses(n).",
+    "constraints": [
+      "Deterministic lexicographic ordering required"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          3
+        ],
+        "output": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def generate_parentheses(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "generate_parentheses",
+      "examples": [
+        {
+          "args": [
+            1
+          ],
+          "expected": [
+            "()"
+          ]
+        },
+        {
+          "args": [
+            3
+          ],
+          "expected": [
+            "((()))",
+            "(()())",
+            "(())()",
+            "()(())",
+            "()()()"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "063",
+    "tier": 6,
+    "description": "Combination sum unique combinations.",
+    "problem": "Return all unique combinations where candidates can be reused and sum equals target. Sort each combo and outer list lexicographically.",
+    "function_signature": "def combination_sum(candidates, target):",
+    "instruction": "Implement combination_sum(candidates, target).",
+    "constraints": [
+      "No duplicate combinations",
+      "Deterministic sorted output"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            2,
+            3,
+            6,
+            7
+          ],
+          7
+        ],
+        "output": [
+          [
+            2,
+            2,
+            3
+          ],
+          [
+            7
+          ]
+        ]
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def combination_sum(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "combination_sum",
+      "examples": [
+        {
+          "args": [
+            [
+              2,
+              3,
+              6,
+              7
+            ],
+            7
+          ],
+          "expected": [
+            [
+              2,
+              2,
+              3
+            ],
+            [
+              7
+            ]
+          ]
+        },
+        {
+          "args": [
+            [
+              2,
+              3,
+              5
+            ],
+            8
+          ],
+          "expected": [
+            [
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              3,
+              3
+            ],
+            [
+              3,
+              5
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "064",
+    "tier": 6,
+    "description": "Longest consecutive sequence length.",
+    "problem": "Return the length of the longest run of consecutive integers in values.",
+    "function_signature": "def longest_consecutive_length(values):",
+    "instruction": "Implement longest_consecutive_length(values).",
+    "constraints": [
+      "Order of input does not matter",
+      "Return integer length"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            100,
+            4,
+            200,
+            1,
+            3,
+            2
+          ]
+        ],
+        "output": 4
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def longest_consecutive_length(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "longest_consecutive_length",
+      "examples": [
+        {
+          "args": [
+            [
+              100,
+              4,
+              200,
+              1,
+              3,
+              2
+            ]
+          ],
+          "expected": 4
+        },
+        {
+          "args": [
+            [
+              0,
+              3,
+              7,
+              2,
+              5,
+              8,
+              4,
+              6,
+              0,
+              1
+            ]
+          ],
+          "expected": 9
+        },
+        {
+          "args": [
+            []
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "065",
+    "tier": 6,
+    "description": "Gas station circuit start index.",
+    "problem": "Given gas and cost arrays, return start index to complete circuit once, or -1 if impossible.",
+    "function_signature": "def gas_station_start(gas, cost):",
+    "instruction": "Implement gas_station_start(gas, cost).",
+    "constraints": [
+      "If solution exists, return its index",
+      "Return -1 when impossible"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          [
+            3,
+            4,
+            5,
+            1,
+            2
+          ]
+        ],
+        "output": 3
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def gas_station_start(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "gas_station_start",
+      "examples": [
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            [
+              3,
+              4,
+              5,
+              1,
+              2
+            ]
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            [
+              2,
+              3,
+              4
+            ],
+            [
+              3,
+              4,
+              3
+            ]
+          ],
+          "expected": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "066",
+    "tier": 6,
+    "description": "Search 2D matrix.",
+    "problem": "Given row-wise sorted matrix with first element of each row greater than last of previous row, return True if target exists.",
+    "function_signature": "def search_matrix(matrix, target):",
+    "instruction": "Implement search_matrix(matrix, target).",
+    "constraints": [
+      "Return boolean"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              1,
+              3,
+              5,
+              7
+            ],
+            [
+              10,
+              11,
+              16,
+              20
+            ],
+            [
+              23,
+              30,
+              34,
+              60
+            ]
+          ],
+          3
+        ],
+        "output": true
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def search_matrix(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "search_matrix",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                1,
+                3,
+                5,
+                7
+              ],
+              [
+                10,
+                11,
+                16,
+                20
+              ],
+              [
+                23,
+                30,
+                34,
+                60
+              ]
+            ],
+            3
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                3,
+                5,
+                7
+              ],
+              [
+                10,
+                11,
+                16,
+                20
+              ],
+              [
+                23,
+                30,
+                34,
+                60
+              ]
+            ],
+            13
+          ],
+          "expected": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "067",
+    "tier": 6,
+    "description": "Kth largest element.",
+    "problem": "Return the kth largest element in an integer list.",
+    "function_signature": "def kth_largest(values, k):",
+    "instruction": "Implement kth_largest(values, k).",
+    "constraints": [
+      "1 <= k <= len(values)"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            3,
+            2,
+            1,
+            5,
+            6,
+            4
+          ],
+          2
+        ],
+        "output": 5
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def kth_largest(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "kth_largest",
+      "examples": [
+        {
+          "args": [
+            [
+              3,
+              2,
+              1,
+              5,
+              6,
+              4
+            ],
+            2
+          ],
+          "expected": 5
+        },
+        {
+          "args": [
+            [
+              3,
+              2,
+              3,
+              1,
+              2,
+              4,
+              5,
+              5,
+              6
+            ],
+            4
+          ],
+          "expected": 4
+        }
+      ]
+    }
+  },
+  {
+    "id": "068",
+    "tier": 6,
+    "description": "Validate stack push/pop sequences.",
+    "problem": "Return True if popped could be a valid pop sequence for pushed stack operations.",
+    "function_signature": "def validate_stack_sequences(pushed, popped):",
+    "instruction": "Implement validate_stack_sequences(pushed, popped).",
+    "constraints": [
+      "Return boolean"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          [
+            4,
+            5,
+            3,
+            2,
+            1
+          ]
+        ],
+        "output": true
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def validate_stack_sequences(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "validate_stack_sequences",
+      "examples": [
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            [
+              4,
+              5,
+              3,
+              2,
+              1
+            ]
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            [
+              4,
+              3,
+              5,
+              1,
+              2
+            ]
+          ],
+          "expected": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "069",
+    "tier": 6,
+    "description": "Minimum arrows for balloons.",
+    "problem": "Given intervals for balloons, return minimum arrows to burst all balloons.",
+    "function_signature": "def min_arrows(points):",
+    "instruction": "Implement min_arrows(points).",
+    "constraints": [
+      "Each point is [start,end]"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              10,
+              16
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              7,
+              12
+            ]
+          ]
+        ],
+        "output": 2
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def min_arrows(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "min_arrows",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                10,
+                16
+              ],
+              [
+                2,
+                8
+              ],
+              [
+                1,
+                6
+              ],
+              [
+                7,
+                12
+              ]
+            ]
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                5,
+                6
+              ],
+              [
+                7,
+                8
+              ]
+            ]
+          ],
+          "expected": 4
+        }
+      ]
+    }
+  },
+  {
+    "id": "070",
+    "tier": 6,
+    "description": "Can attend all meetings.",
+    "problem": "Given meeting intervals [start,end], return True if one person can attend all meetings with no overlap.",
+    "function_signature": "def can_attend_all_meetings(intervals):",
+    "instruction": "Implement can_attend_all_meetings(intervals).",
+    "constraints": [
+      "Return boolean",
+      "Intervals that touch at end/start are non-overlapping"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              0,
+              30
+            ],
+            [
+              5,
+              10
+            ],
+            [
+              15,
+              20
+            ]
+          ]
+        ],
+        "output": false
+      },
+      {
+        "input": [
+          [
+            [
+              7,
+              10
+            ],
+            [
+              2,
+              4
+            ]
+          ]
+        ],
+        "output": true
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def can_attend_all_meetings(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "can_attend_all_meetings",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                0,
+                30
+              ],
+              [
+                5,
+                10
+              ],
+              [
+                15,
+                20
+              ]
+            ]
+          ],
+          "expected": false
+        },
+        {
+          "args": [
+            [
+              [
+                7,
+                10
+              ],
+              [
+                2,
+                4
+              ]
+            ]
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ]
+          ],
+          "expected": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "071",
+    "tier": 6,
+    "description": "Network delay time.",
+    "problem": "Given directed weighted times [u,v,w], return time for all nodes to receive signal from k, or -1 if unreachable.",
+    "function_signature": "def network_delay_time(times, n, k):",
+    "instruction": "Implement network_delay_time(times, n, k).",
+    "constraints": [
+      "Nodes are labeled 1..n"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              2,
+              1,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ],
+            [
+              3,
+              4,
+              1
+            ]
+          ],
+          4,
+          2
+        ],
+        "output": 2
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def network_delay_time(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "network_delay_time",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                2,
+                1,
+                1
+              ],
+              [
+                2,
+                3,
+                1
+              ],
+              [
+                3,
+                4,
+                1
+              ]
+            ],
+            4,
+            2
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2,
+                1
+              ]
+            ],
+            2,
+            1
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2,
+                1
+              ]
+            ],
+            2,
+            2
+          ],
+          "expected": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "072",
+    "tier": 6,
+    "description": "Minimum path sum in grid.",
+    "problem": "Return minimum sum path from top-left to bottom-right moving only right or down.",
+    "function_signature": "def min_path_sum(grid):",
+    "instruction": "Implement min_path_sum(grid).",
+    "constraints": [
+      "Grid contains non-negative integers"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              1,
+              5,
+              1
+            ],
+            [
+              4,
+              2,
+              1
+            ]
+          ]
+        ],
+        "output": 7
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def min_path_sum(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "min_path_sum",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                1,
+                3,
+                1
+              ],
+              [
+                1,
+                5,
+                1
+              ],
+              [
+                4,
+                2,
+                1
+              ]
+            ]
+          ],
+          "expected": 7
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6
+              ]
+            ]
+          ],
+          "expected": 12
+        },
+        {
+          "args": [
+            [
+              [
+                5
+              ]
+            ]
+          ],
+          "expected": 5
+        }
+      ]
+    }
+  },
+  {
+    "id": "073",
+    "tier": 6,
+    "description": "Reconstruct itinerary.",
+    "problem": "Given flight tickets [from,to], reconstruct itinerary starting at JFK using all tickets exactly once. If multiple, return lexicographically smallest itinerary.",
+    "function_signature": "def reconstruct_itinerary(tickets):",
+    "instruction": "Implement reconstruct_itinerary(tickets).",
+    "constraints": [
+      "Use all tickets once",
+      "Deterministic lexicographic result"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              "MUC",
+              "LHR"
+            ],
+            [
+              "JFK",
+              "MUC"
+            ],
+            [
+              "SFO",
+              "SJC"
+            ],
+            [
+              "LHR",
+              "SFO"
+            ]
+          ]
+        ],
+        "output": [
+          "JFK",
+          "MUC",
+          "LHR",
+          "SFO",
+          "SJC"
+        ]
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def reconstruct_itinerary(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "reconstruct_itinerary",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                "MUC",
+                "LHR"
+              ],
+              [
+                "JFK",
+                "MUC"
+              ],
+              [
+                "SFO",
+                "SJC"
+              ],
+              [
+                "LHR",
+                "SFO"
+              ]
+            ]
+          ],
+          "expected": [
+            "JFK",
+            "MUC",
+            "LHR",
+            "SFO",
+            "SJC"
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                "JFK",
+                "KUL"
+              ],
+              [
+                "JFK",
+                "NRT"
+              ],
+              [
+                "NRT",
+                "JFK"
+              ]
+            ]
+          ],
+          "expected": [
+            "JFK",
+            "NRT",
+            "JFK",
+            "KUL"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "074",
+    "tier": 6,
+    "description": "Minimum genetic mutation steps.",
+    "problem": "Return minimum mutations to change start to end using bank, changing one character each step.",
+    "function_signature": "def min_genetic_mutation(start, end, bank):",
+    "instruction": "Implement min_genetic_mutation(start, end, bank).",
+    "constraints": [
+      "Return -1 if impossible"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          "AACCGGTT",
+          "AACCGGTA",
+          [
+            "AACCGGTA"
+          ]
+        ],
+        "output": 1
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def min_genetic_mutation(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "min_genetic_mutation",
+      "examples": [
+        {
+          "args": [
+            "AACCGGTT",
+            "AACCGGTA",
+            [
+              "AACCGGTA"
+            ]
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            "AACCGGTT",
+            "AAACGGTA",
+            [
+              "AACCGGTA",
+              "AACCGCTA",
+              "AAACGGTA"
+            ]
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            "AAAAACCC",
+            "AACCCCCC",
+            [
+              "AAAACCCC",
+              "AAACCCCC",
+              "AACCCCCC"
+            ]
+          ],
+          "expected": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": "075",
+    "tier": 6,
+    "description": "Open lock minimum turns.",
+    "problem": "Return minimum turns to open lock from 0000 to target avoiding deadends.",
+    "function_signature": "def open_lock_min_turns(deadends, target):",
+    "instruction": "Implement open_lock_min_turns(deadends, target). If \"0000\" is in deadends, immediately return -1.",
+    "constraints": [
+      "Return -1 if unreachable",
+      "Handle deadend at start state"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            "0201",
+            "0101",
+            "0102",
+            "1212",
+            "2002"
+          ],
+          "0202"
+        ],
+        "output": 6
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def open_lock_min_turns(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "open_lock_min_turns",
+      "examples": [
+        {
+          "args": [
+            [
+              "0201",
+              "0101",
+              "0102",
+              "1212",
+              "2002"
+            ],
+            "0202"
+          ],
+          "expected": 6
+        },
+        {
+          "args": [
+            [
+              "8888"
+            ],
+            "0009"
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            [
+              "0000"
+            ],
+            "8888"
+          ],
+          "expected": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "076",
+    "tier": 6,
+    "description": "Word search in grid.",
+    "problem": "Return True if word exists in grid by adjacent horizontal/vertical moves without reusing a cell.",
+    "function_signature": "def word_exists(board, word):",
+    "instruction": "Implement word_exists(board, word).",
+    "constraints": [
+      "Do not reuse same cell in one path"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              "A",
+              "B",
+              "C",
+              "E"
+            ],
+            [
+              "S",
+              "F",
+              "C",
+              "S"
+            ],
+            [
+              "A",
+              "D",
+              "E",
+              "E"
+            ]
+          ],
+          "ABCCED"
+        ],
+        "output": true
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def word_exists(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "word_exists",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                "A",
+                "B",
+                "C",
+                "E"
+              ],
+              [
+                "S",
+                "F",
+                "C",
+                "S"
+              ],
+              [
+                "A",
+                "D",
+                "E",
+                "E"
+              ]
+            ],
+            "ABCCED"
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            [
+              [
+                "A",
+                "B",
+                "C",
+                "E"
+              ],
+              [
+                "S",
+                "F",
+                "C",
+                "S"
+              ],
+              [
+                "A",
+                "D",
+                "E",
+                "E"
+              ]
+            ],
+            "SEE"
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            [
+              [
+                "A",
+                "B",
+                "C",
+                "E"
+              ],
+              [
+                "S",
+                "F",
+                "C",
+                "S"
+              ],
+              [
+                "A",
+                "D",
+                "E",
+                "E"
+              ]
+            ],
+            "ABCB"
+          ],
+          "expected": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "077",
+    "tier": 6,
+    "description": "Container with most water area.",
+    "problem": "Given heights, return maximum area formed by two lines and x-axis.",
+    "function_signature": "def max_container_area(heights):",
+    "instruction": "Implement max_container_area(heights).",
+    "constraints": [
+      "Return integer area",
+      "Use deterministic logic"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            1,
+            8,
+            6,
+            2,
+            5,
+            4,
+            8,
+            3,
+            7
+          ]
+        ],
+        "output": 49
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def max_container_area(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "max_container_area",
+      "examples": [
+        {
+          "args": [
+            [
+              1,
+              8,
+              6,
+              2,
+              5,
+              4,
+              8,
+              3,
+              7
+            ]
+          ],
+          "expected": 49
+        },
+        {
+          "args": [
+            [
+              1,
+              1
+            ]
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            [
+              4,
+              3,
+              2,
+              1,
+              4
+            ]
+          ],
+          "expected": 16
+        }
+      ]
+    }
+  },
+  {
+    "id": "078",
+    "tier": 6,
+    "description": "Maximal square area.",
+    "problem": "Given binary matrix of 0/1 strings, return area of largest square containing only 1s.",
+    "function_signature": "def maximal_square_area(matrix):",
+    "instruction": "Implement maximal_square_area(matrix).",
+    "constraints": [
+      "Return area not side length"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              "1",
+              "0",
+              "1",
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "0",
+              "1",
+              "1",
+              "1"
+            ],
+            [
+              "1",
+              "1",
+              "1",
+              "1",
+              "1"
+            ],
+            [
+              "1",
+              "0",
+              "0",
+              "1",
+              "0"
+            ]
+          ]
+        ],
+        "output": 4
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def maximal_square_area(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "maximal_square_area",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                "1",
+                "0",
+                "1",
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "0",
+                "1",
+                "1",
+                "1"
+              ],
+              [
+                "1",
+                "1",
+                "1",
+                "1",
+                "1"
+              ],
+              [
+                "1",
+                "0",
+                "0",
+                "1",
+                "0"
+              ]
+            ]
+          ],
+          "expected": 4
+        },
+        {
+          "args": [
+            [
+              [
+                "0",
+                "1"
+              ],
+              [
+                "1",
+                "0"
+              ]
+            ]
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            [
+              [
+                "0"
+              ]
+            ]
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "079",
+    "tier": 6,
+    "description": "Maximum product subarray.",
+    "problem": "Return the maximum product of any contiguous subarray.",
+    "function_signature": "def max_product_subarray(values):",
+    "instruction": "Implement max_product_subarray(values).",
+    "constraints": [
+      "Input non-empty",
+      "Values may be negative or zero"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            2,
+            3,
+            -2,
+            4
+          ]
+        ],
+        "output": 6
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def max_product_subarray(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "max_product_subarray",
+      "examples": [
+        {
+          "args": [
+            [
+              2,
+              3,
+              -2,
+              4
+            ]
+          ],
+          "expected": 6
+        },
+        {
+          "args": [
+            [
+              -2,
+              0,
+              -1
+            ]
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            [
+              -2,
+              3,
+              -4
+            ]
+          ],
+          "expected": 24
+        }
+      ]
+    }
+  },
+  {
+    "id": "080",
+    "tier": 6,
+    "description": "Find duplicate number in array.",
+    "problem": "Given array values containing n+1 integers where each integer is in [1,n], return the duplicate number.",
+    "function_signature": "def find_duplicate_number(values):",
+    "instruction": "Implement find_duplicate_number(values).",
+    "constraints": [
+      "Exactly one duplicated value exists (may repeat more than twice)",
+      "Return duplicated integer"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            1,
+            3,
+            4,
+            2,
+            2
+          ]
+        ],
+        "output": 2
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def find_duplicate_number(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "find_duplicate_number",
+      "examples": [
+        {
+          "args": [
+            [
+              1,
+              3,
+              4,
+              2,
+              2
+            ]
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            [
+              3,
+              1,
+              3,
+              4,
+              2
+            ]
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          ],
+          "expected": 2
+        }
+      ]
+    }
   }
 ]
