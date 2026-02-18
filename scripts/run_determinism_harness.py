@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -95,6 +96,7 @@ def _run_once(
         )
 
         env = os.environ.copy()
+        started = time.perf_counter()
         result = subprocess.run(
             command,
             shell=True,
@@ -104,6 +106,7 @@ def _run_once(
             env=env,
             check=False,
         )
+        elapsed_ms = round((time.perf_counter() - started) * 1000.0, 3)
         raw_output = (result.stdout or "") + "\n" + (result.stderr or "")
 
         artifact_payload = []
@@ -132,6 +135,8 @@ def _run_once(
             "run_index": run_index,
             "exit_code": int(result.returncode),
             "hash": digest,
+            "duration_ms": elapsed_ms,
+            "cost_usd": 0.0,
             "normalized_output_preview": normalized[:300],
         }
 
@@ -149,6 +154,8 @@ def main() -> int:
 
     details: dict[str, Any] = {}
     deterministic_count = 0
+    latency_samples: list[float] = []
+    cost_samples: list[float] = []
     for task in tasks:
         task_id = str(task.get("id", "unknown"))
         runs = [
@@ -163,6 +170,10 @@ def main() -> int:
             for index in range(int(args.runs))
         ]
         hashes = [entry["hash"] for entry in runs]
+        run_latencies = [float(entry.get("duration_ms", 0.0) or 0.0) for entry in runs]
+        run_costs = [float(entry.get("cost_usd", 0.0) or 0.0) for entry in runs]
+        latency_samples.extend(run_latencies)
+        cost_samples.extend(run_costs)
         unique_hashes = sorted(set(hashes))
         is_deterministic = len(unique_hashes) == 1
         if is_deterministic:
@@ -172,6 +183,8 @@ def main() -> int:
             "tier": task.get("tier"),
             "unique_hashes": len(unique_hashes),
             "deterministic": is_deterministic,
+            "avg_latency_ms": round(sum(run_latencies) / len(run_latencies), 3) if run_latencies else 0.0,
+            "avg_cost_usd": round(sum(run_costs) / len(run_costs), 6) if run_costs else 0.0,
             "hashes": hashes,
             "runs": runs,
         }
@@ -190,6 +203,8 @@ def main() -> int:
         "total_tasks": total_tasks,
         "deterministic_tasks": deterministic_count,
         "determinism_rate": (deterministic_count / total_tasks) if total_tasks else 0.0,
+        "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3) if latency_samples else 0.0,
+        "avg_cost_usd": round(sum(cost_samples) / len(cost_samples), 6) if cost_samples else 0.0,
         "details": details,
     }
 

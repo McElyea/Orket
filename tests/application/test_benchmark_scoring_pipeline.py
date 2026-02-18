@@ -25,13 +25,14 @@ def _fake_report_for_tiers() -> dict[str, Any]:
             "tier": tier,
             "unique_hashes": 1,
             "deterministic": True,
-            "runs": [{"run_index": 1, "exit_code": 0, "hash": f"h{tier}"}],
+            "runs": [{"run_index": 1, "exit_code": 0, "hash": f"h{tier}", "duration_ms": 12.5, "cost_usd": 0.001}],
         }
     return {
         "task_bank": "benchmarks/task_bank/v1/tasks.json",
         "venue": "standard",
         "flow": "default",
         "runs_per_task": 1,
+        "determinism_rate": 1.0,
         "details": details,
     }
 
@@ -49,6 +50,9 @@ def test_score_report_emits_per_task_and_tier_aggregates() -> None:
     assert isinstance(scored["aggregate_tier_scores"], dict)
     assert set(scored["aggregate_tier_scores"].keys()) == {"1", "2", "3", "4", "5", "6"}
     assert scored["failing_tasks"] == []
+    assert scored["determinism_rate"] == 1.0
+    assert scored["avg_latency_ms"] == 12.5
+    assert scored["avg_cost_usd"] == 0.001
 
 
 def test_scoring_gate_fails_when_metadata_missing() -> None:

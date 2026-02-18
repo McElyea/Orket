@@ -84,6 +84,8 @@ def score_report(
     tier_scores: dict[int, list[float]] = defaultdict(list)
     tier_bands: dict[int, list[int]] = defaultdict(list)
     failing_tasks: list[str] = []
+    latency_samples: list[float] = []
+    cost_samples: list[float] = []
 
     for task_id, task_detail in details.items():
         if not isinstance(task_detail, dict):
@@ -95,6 +97,10 @@ def score_report(
         run_count = len(runs)
         success_count = sum(1 for run in runs if int(run.get("exit_code", 1)) == 0 and isinstance(run, dict))
         success_rate = (success_count / run_count) if run_count else 0.0
+        run_latencies = [float(run.get("duration_ms", 0.0) or 0.0) for run in runs if isinstance(run, dict)]
+        run_costs = [float(run.get("cost_usd", 0.0) or 0.0) for run in runs if isinstance(run, dict)]
+        latency_samples.extend(run_latencies)
+        cost_samples.extend(run_costs)
 
         deterministic = bool(task_detail.get("deterministic"))
         unique_hashes = int(task_detail.get("unique_hashes", max(1, run_count)) or max(1, run_count))
@@ -115,6 +121,8 @@ def score_report(
             "success_rate": round(success_rate, 3),
             "unique_hashes": unique_hashes,
             "deterministic": deterministic,
+            "avg_latency_ms": round(sum(run_latencies) / len(run_latencies), 3) if run_latencies else 0.0,
+            "avg_cost_usd": round(sum(run_costs) / len(run_costs), 6) if run_costs else 0.0,
             "score": numeric_score,
             "band": band,
             "min_required_band": min_band,
@@ -147,6 +155,9 @@ def score_report(
         "venue": report_payload.get("venue"),
         "flow": report_payload.get("flow"),
         "runs_per_task": report_payload.get("runs_per_task"),
+        "determinism_rate": report_payload.get("determinism_rate"),
+        "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3) if latency_samples else 0.0,
+        "avg_cost_usd": round(sum(cost_samples) / len(cost_samples), 6) if cost_samples else 0.0,
         "overall_avg_score": overall_avg_score,
         "per_task_scores": per_task_scores,
         "aggregate_tier_scores": aggregate_tier_scores,
