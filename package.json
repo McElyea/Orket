@@ -9,6 +9,7 @@
     "ci:integration": "python -m pytest tests/integration -q",
     "ci:acceptance": "python -m pytest tests/integration/test_system_acceptance_flow.py tests/live/test_system_acceptance_pipeline.py -q",
     "ci:live": "python -m pytest tests/live -q",
+    "ci:live:benchmark100": "set ORKET_RUN_BENCHMARK_LIVE_100=1 && python -m pytest tests/live/test_benchmark_task_bank_live.py -q",
     "report:failures": "python scripts/report_failure_modes.py",
     "prompt:eval": "python scripts/prompt_lab/eval_harness.py"
   }
