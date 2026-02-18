@@ -67,8 +67,30 @@
               "bounded",
               "convergence"
             ]
+          },
+          "convergence_metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "attempts_to_pass": {
+                "type": "string",
+                "minLength": 1
+              },
+              "drift_rate": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "attempts_to_pass",
+              "drift_rate"
+            ]
           }
         }
+      },
+      "instruction": {
+        "type": "string",
+        "minLength": 1
       }
     }
   }

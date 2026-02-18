@@ -1082,7 +1082,7 @@
   {
     "id": "061",
     "tier": 4,
-    "description": "Ambiguous architecture task #061.",
+    "description": "Ambiguous architecture task #061: Basic app scalability decision.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1095,12 +1095,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Build a todo app with users and items. Clarify the ambiguous parts, choose monolith or microservices with evidence, document tradeoffs, and scaffold one endpoint proving the architecture works."
   },
   {
     "id": "062",
     "tier": 4,
-    "description": "Ambiguous architecture task #062.",
+    "description": "Ambiguous architecture task #062: Fault tolerance vs simplicity.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1113,12 +1114,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a payment processing service from an ambiguous spec. Clarify failure scenarios, choose sync or async processing, document transaction isolation strategy, and scaffold one complete transaction path."
   },
   {
     "id": "063",
     "tier": 4,
-    "description": "Ambiguous architecture task #063.",
+    "description": "Ambiguous architecture task #063: Client-side vs server-side logic.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1131,12 +1133,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a mobile backend where some computation could run on client or server. Compare both models, choose with evidence, and scaffold one endpoint showing the selected model."
   },
   {
     "id": "064",
     "tier": 4,
-    "description": "Ambiguous architecture task #064.",
+    "description": "Ambiguous architecture task #064: Real-time vs batch processing.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1149,12 +1152,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design an analytics pipeline from an ambiguous latency target. Clarify consistency and cost constraints, choose stream or batch, and scaffold one metrics flow in the selected mode."
   },
   {
     "id": "065",
     "tier": 4,
-    "description": "Ambiguous architecture task #065.",
+    "description": "Ambiguous architecture task #065: Centralized vs distributed resources.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1167,12 +1171,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a social feed backend. Evaluate single database vs partitioned data model using growth assumptions, then scaffold schema and one read/write flow."
   },
   {
     "id": "066",
     "tier": 4,
-    "description": "Ambiguous architecture task #066.",
+    "description": "Ambiguous architecture task #066: Storage architecture choice.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1185,12 +1190,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a document system with unclear storage constraints. Compare object storage, database, and filesystem options, select one with rationale, and scaffold storage interface plus one implementation."
   },
   {
     "id": "067",
     "tier": 4,
-    "description": "Ambiguous architecture task #067.",
+    "description": "Ambiguous architecture task #067: Consistency model trade-off.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1203,12 +1209,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a collaborative editing backend. Compare strong consistency and eventual consistency conflict resolution, select one, and scaffold conflict detection or merge logic."
   },
   {
     "id": "068",
     "tier": 4,
-    "description": "Ambiguous architecture task #068.",
+    "description": "Ambiguous architecture task #068: Vertical vs horizontal decomposition.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1221,12 +1228,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design an e-learning platform with ambiguous service boundaries. Propose decomposition options, choose with team and scaling evidence, and scaffold API contracts."
   },
   {
     "id": "069",
     "tier": 4,
-    "description": "Ambiguous architecture task #069.",
+    "description": "Ambiguous architecture task #069: Centralized vs edge processing.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1239,12 +1247,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design an IoT pipeline with unclear placement of anomaly detection. Analyze bandwidth and latency constraints, choose cloud or edge processing, and scaffold one sensor data path."
   },
   {
     "id": "070",
     "tier": 4,
-    "description": "Ambiguous architecture task #070.",
+    "description": "Ambiguous architecture task #070: Centralized gateway vs federated APIs.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1257,12 +1266,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design an API marketplace. Decide between a central gateway and federated model, document security and routing tradeoffs, and scaffold auth plus routing for one provider."
   },
   {
     "id": "071",
     "tier": 4,
-    "description": "Ambiguous architecture task #071.",
+    "description": "Ambiguous architecture task #071: Batch vs online learning.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1275,12 +1285,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a recommendation system with unclear model refresh strategy. Evaluate batch retraining vs online updates, choose one, and scaffold data ingestion and serving interface."
   },
   {
     "id": "072",
     "tier": 4,
-    "description": "Ambiguous architecture task #072.",
+    "description": "Ambiguous architecture task #072: Streaming vs batch log ingestion.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1293,12 +1304,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a log aggregation platform with ambiguous query latency requirements. Choose streaming or batch ingestion with retention/indexing strategy and scaffold one source plus query path."
   },
   {
     "id": "073",
     "tier": 4,
-    "description": "Ambiguous architecture task #073.",
+    "description": "Ambiguous architecture task #073: Content distribution strategy.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1311,12 +1323,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design global media delivery from an ambiguous scale target. Choose centralized, regional, or CDN strategy, define invalidation/failover approach, and scaffold one routing flow."
   },
   {
     "id": "074",
     "tier": 4,
-    "description": "Ambiguous architecture task #074.",
+    "description": "Ambiguous architecture task #074: Synchronous vs asynchronous processing.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1329,12 +1342,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design a video transcoding service with unclear SLA. Choose blocking or queued processing, define worker scaling, and scaffold upload plus status tracking."
   },
   {
     "id": "075",
     "tier": 4,
-    "description": "Ambiguous architecture task #075.",
+    "description": "Ambiguous architecture task #075: RPC vs pub-sub messaging.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1347,12 +1361,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "bounded"
-    }
+    },
+    "instruction": "Design asynchronous service communication. Choose RPC-style or pub-sub with ordering and failure handling guarantees, then scaffold one producer-consumer path."
   },
   {
     "id": "076",
     "tier": 5,
-    "description": "Full-system multi-directory task #076.",
+    "description": "Full-system multi-directory task #076: Microservices with shared database.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1365,12 +1380,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement microservices with shared database across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "077",
     "tier": 5,
-    "description": "Full-system multi-directory task #077.",
+    "description": "Full-system multi-directory task #077: API gateway and service mesh.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1383,12 +1399,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement api gateway and service mesh across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "078",
     "tier": 5,
-    "description": "Full-system multi-directory task #078.",
+    "description": "Full-system multi-directory task #078: Event-driven architecture with sagas.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1401,12 +1418,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement event-driven architecture with sagas across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "079",
     "tier": 5,
-    "description": "Full-system multi-directory task #079.",
+    "description": "Full-system multi-directory task #079: CQRS and eventual consistency.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1419,12 +1437,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement cqrs and eventual consistency across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "080",
     "tier": 5,
-    "description": "Full-system multi-directory task #080.",
+    "description": "Full-system multi-directory task #080: Multi-tenant SaaS backend.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1437,12 +1456,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement multi-tenant saas backend across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "081",
     "tier": 5,
-    "description": "Full-system multi-directory task #081.",
+    "description": "Full-system multi-directory task #081: Search service and indexing pipeline.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1455,12 +1475,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement search service and indexing pipeline across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "082",
     "tier": 5,
-    "description": "Full-system multi-directory task #082.",
+    "description": "Full-system multi-directory task #082: Notification system with multiple channels.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1473,12 +1494,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement notification system with multiple channels across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "083",
     "tier": 5,
-    "description": "Full-system multi-directory task #083.",
+    "description": "Full-system multi-directory task #083: GraphQL gateway with federated services.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1491,12 +1513,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement graphql gateway with federated services across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "084",
     "tier": 5,
-    "description": "Full-system multi-directory task #084.",
+    "description": "Full-system multi-directory task #084: OAuth2 authorization for multiple clients.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1509,12 +1532,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement oauth2 authorization for multiple clients across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "085",
     "tier": 5,
-    "description": "Full-system multi-directory task #085.",
+    "description": "Full-system multi-directory task #085: Time-series metrics ingestion and rollups.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1527,12 +1551,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement time-series metrics ingestion and rollups across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "086",
     "tier": 5,
-    "description": "Full-system multi-directory task #086.",
+    "description": "Full-system multi-directory task #086: File lifecycle with hot and cold storage.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1545,12 +1570,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement file lifecycle with hot and cold storage across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "087",
     "tier": 5,
-    "description": "Full-system multi-directory task #087.",
+    "description": "Full-system multi-directory task #087: Load balancing with health checks.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1563,12 +1589,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement load balancing with health checks across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "088",
     "tier": 5,
-    "description": "Full-system multi-directory task #088.",
+    "description": "Full-system multi-directory task #088: Workflow orchestration with retries.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1581,12 +1608,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement workflow orchestration with retries across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "089",
     "tier": 5,
-    "description": "Full-system multi-directory task #089.",
+    "description": "Full-system multi-directory task #089: Idempotent request deduplication.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1599,12 +1627,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement idempotent request deduplication across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "090",
     "tier": 5,
-    "description": "Full-system multi-directory task #090.",
+    "description": "Full-system multi-directory task #090: Cache and database consistency modes.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1617,12 +1646,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement cache and database consistency modes across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "091",
     "tier": 5,
-    "description": "Full-system multi-directory task #091.",
+    "description": "Full-system multi-directory task #091: Distributed rate limiting with quotas.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1635,12 +1665,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement distributed rate limiting with quotas across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "092",
     "tier": 5,
-    "description": "Full-system multi-directory task #092.",
+    "description": "Full-system multi-directory task #092: Distributed tracing and correlation IDs.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1653,12 +1684,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement distributed tracing and correlation ids across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "093",
     "tier": 5,
-    "description": "Full-system multi-directory task #093.",
+    "description": "Full-system multi-directory task #093: Feature flags and canary rollout.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1671,12 +1703,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement feature flags and canary rollout across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "094",
     "tier": 5,
-    "description": "Full-system multi-directory task #094.",
+    "description": "Full-system multi-directory task #094: Schema versioning and migration.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1689,12 +1722,13 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement schema versioning and migration across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "095",
     "tier": 5,
-    "description": "Full-system multi-directory task #095.",
+    "description": "Full-system multi-directory task #095: Bulk processing with checkpoint recovery.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
@@ -1707,96 +1741,132 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "convergence"
-    }
+    },
+    "instruction": "Implement bulk processing with checkpoint recovery across multiple services and directories. Clarify assumptions before coding, define architecture boundaries, scaffold the core components, implement one end-to-end flow, and include integration tests with explicit pass/fail evidence."
   },
   {
     "id": "096",
     "tier": 6,
-    "description": "Orchestration stress and convergence task #096.",
+    "description": "Orchestration stress and convergence task #096: Microservices under cascading failures.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
         "run.log",
-        "report.json"
+        "report.json",
+        "convergence_metrics.json"
       ],
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "System recovers from injected cascading failures within configured SLA",
+        "No cascading failure propagation observed across repeated chaos runs"
       ],
-      "determinism_profile": "convergence"
-    }
+      "determinism_profile": "convergence",
+      "convergence_metrics": {
+        "attempts_to_pass": "Number of tuning iterations until cascading-failure test suite passes.",
+        "drift_rate": "Latency variance across recovery runs under comparable fault load."
+      }
+    },
+    "instruction": "Design and implement microservices under cascading failures. Run repeated failure-injection or stress iterations, refine architecture/mechanics between runs, and publish convergence evidence in artifacts."
   },
   {
     "id": "097",
     "tier": 6,
-    "description": "Orchestration stress and convergence task #097.",
+    "description": "Orchestration stress and convergence task #097: Distributed consensus under network partition.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
         "run.log",
-        "report.json"
+        "report.json",
+        "convergence_metrics.json"
       ],
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Leader election completes within target timeout during partition tests",
+        "Replicas converge to a consistent committed state across repeated runs"
       ],
-      "determinism_profile": "convergence"
-    }
+      "determinism_profile": "convergence",
+      "convergence_metrics": {
+        "attempts_to_pass": "Number of iterations required for deterministic consensus outcomes.",
+        "drift_rate": "Maximum divergence in replicated state before convergence in each run."
+      }
+    },
+    "instruction": "Design and implement distributed consensus under network partition. Run repeated failure-injection or stress iterations, refine architecture/mechanics between runs, and publish convergence evidence in artifacts."
   },
   {
     "id": "098",
     "tier": 6,
-    "description": "Orchestration stress and convergence task #098.",
+    "description": "Orchestration stress and convergence task #098: Under-resourced multi-tenant workload fairness.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
         "run.log",
-        "report.json"
+        "report.json",
+        "convergence_metrics.json"
       ],
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "No tenant starvation observed under stress profile",
+        "Resource limits remain within configured budget during repeated runs"
       ],
-      "determinism_profile": "convergence"
-    }
+      "determinism_profile": "convergence",
+      "convergence_metrics": {
+        "attempts_to_pass": "Number of scheduler refinements until fairness checks pass.",
+        "drift_rate": "Per-tenant response-time variance across equivalent load runs."
+      }
+    },
+    "instruction": "Design and implement under-resourced multi-tenant workload fairness. Run repeated failure-injection or stress iterations, refine architecture/mechanics between runs, and publish convergence evidence in artifacts."
   },
   {
     "id": "099",
     "tier": 6,
-    "description": "Orchestration stress and convergence task #099.",
+    "description": "Orchestration stress and convergence task #099: Eventual consistency under high membership churn.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
         "run.log",
-        "report.json"
+        "report.json",
+        "convergence_metrics.json"
       ],
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Replicas converge within allowed consistency window",
+        "Convergence behavior remains stable across repeated churn runs"
       ],
-      "determinism_profile": "convergence"
-    }
+      "determinism_profile": "convergence",
+      "convergence_metrics": {
+        "attempts_to_pass": "Number of anti-entropy tuning iterations until convergence passes.",
+        "drift_rate": "Maximum state-drift observed between replicas during churn."
+      }
+    },
+    "instruction": "Design and implement eventual consistency under high membership churn. Run repeated failure-injection or stress iterations, refine architecture/mechanics between runs, and publish convergence evidence in artifacts."
   },
   {
     "id": "100",
     "tier": 6,
-    "description": "Orchestration stress and convergence task #100.",
+    "description": "Orchestration stress and convergence task #100: Deadlock avoidance under high contention.",
     "acceptance_contract": {
       "mode": "system",
       "required_artifacts": [
         "run.log",
-        "report.json"
+        "report.json",
+        "convergence_metrics.json"
       ],
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "No deadlocks detected in concurrent contention scenarios",
+        "Data integrity preserved with no lost updates after recovery"
       ],
-      "determinism_profile": "convergence"
-    }
+      "determinism_profile": "convergence",
+      "convergence_metrics": {
+        "attempts_to_pass": "Number of lock strategy refinements until deadlock tests pass.",
+        "drift_rate": "Latency variance for transaction completion under contention."
+      }
+    },
+    "instruction": "Design and implement deadlock avoidance under high contention. Run repeated failure-injection or stress iterations, refine architecture/mechanics between runs, and publish convergence evidence in artifacts."
   }
 ]

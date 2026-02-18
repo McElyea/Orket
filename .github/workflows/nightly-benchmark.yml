@@ -1,0 +1,56 @@
+name: Nightly Benchmark
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Phase 5 Benchmark Suite
+        run: >
+          python scripts/run_benchmark_suite.py
+          --task-bank benchmarks/task_bank/v1/tasks.json
+          --policy model/core/contracts/benchmark_scoring_policy.json
+          --runs 1
+          --venue standard
+          --flow default
+          --runner-template "python scripts/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}"
+          --task-id-min 61
+          --task-id-max 100
+          --raw-out benchmarks/results/nightly_phase5_determinism_report.json
+          --scored-out benchmarks/results/nightly_phase5_scored_report.json
+
+      - name: Build Trend Report
+        run: >
+          python scripts/report_benchmark_trends.py
+          --inputs benchmarks/results/nightly_phase5_scored_report.json
+          --out benchmarks/results/nightly_benchmark_trends.json
+
+      - name: Build Leaderboard
+        run: >
+          python scripts/build_benchmark_leaderboard.py
+          --inputs benchmarks/results/nightly_phase5_scored_report.json
+          --out benchmarks/results/nightly_benchmark_leaderboard.json
+
+      - name: Upload Benchmark Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-benchmark-artifacts
+          path: benchmarks/results/nightly_*.json

@@ -36,6 +36,18 @@ def _parse_args() -> argparse.Namespace:
         default=0,
         help="Optional max number of tasks to run (0 means all).",
     )
+    parser.add_argument(
+        "--task-id-min",
+        type=int,
+        default=0,
+        help="Optional inclusive lower bound for numeric task ID filtering.",
+    )
+    parser.add_argument(
+        "--task-id-max",
+        type=int,
+        default=0,
+        help="Optional inclusive upper bound for numeric task ID filtering.",
+    )
     return parser.parse_args()
 
 
@@ -128,6 +140,10 @@ def main() -> int:
     args = _parse_args()
     task_bank_path = Path(args.task_bank)
     tasks = _load_tasks(task_bank_path)
+    if args.task_id_min > 0:
+        tasks = [task for task in tasks if int(task.get("id", 0)) >= int(args.task_id_min)]
+    if args.task_id_max > 0:
+        tasks = [task for task in tasks if int(task.get("id", 0)) <= int(args.task_id_max)]
     if args.task_limit > 0:
         tasks = tasks[: args.task_limit]
 
@@ -169,6 +185,8 @@ def main() -> int:
         "runs_per_task": int(args.runs),
         "runner_template": str(args.runner_template),
         "artifact_globs": list(args.artifact_glob),
+        "task_id_min": int(args.task_id_min),
+        "task_id_max": int(args.task_id_max),
         "total_tasks": total_tasks,
         "deterministic_tasks": deterministic_count,
         "determinism_rate": (deterministic_count / total_tasks) if total_tasks else 0.0,

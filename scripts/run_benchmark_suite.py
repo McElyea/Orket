@@ -14,6 +14,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--flow", default="default")
     parser.add_argument("--runner-template", required=True)
     parser.add_argument("--task-limit", type=int, default=0)
+    parser.add_argument("--task-id-min", type=int, default=0)
+    parser.add_argument("--task-id-max", type=int, default=0)
     parser.add_argument("--raw-out", default="benchmarks/results/benchmark_determinism_report.json")
     parser.add_argument("--scored-out", default="benchmarks/results/benchmark_scored_report.json")
     return parser.parse_args()
@@ -52,6 +54,10 @@ def main() -> int:
     ]
     if args.task_limit > 0:
         harness_cmd.extend(["--task-limit", str(args.task_limit)])
+    if args.task_id_min > 0:
+        harness_cmd.extend(["--task-id-min", str(args.task_id_min)])
+    if args.task_id_max > 0:
+        harness_cmd.extend(["--task-id-max", str(args.task_id_max)])
     _run(harness_cmd)
 
     score_cmd = [

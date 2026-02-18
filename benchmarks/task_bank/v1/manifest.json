@@ -1,11 +1,11 @@
 {
   "benchmark_version": "v1",
-  "created_on": "2026-02-15",
+  "created_on": "2026-02-17",
   "task_bank_path": "benchmarks/task_bank/v1/tasks.json",
   "schema_path": "benchmarks/task_bank/v1/schema.json",
   "task_count": 100,
-  "task_bank_sha256": "a63788836ad5adaf039560e68c0864bc8bc16fb5a806d58342e46ce82af3742e",
-  "schema_sha256": "9c750baaab58fc2c9a4a5c79ebdf2dfb754ba808dabdeefd89d2ff15936388df",
+  "task_bank_sha256": "c6a9295a0fdc69a0f0d54cb3f5c36622adb2240e92e4c63b0768e2e7ba799bdd",
+  "schema_sha256": "1b0e0a57157353b84d3040833db8c2a79e4dfcffce6bcbead84990d614fb6112",
   "id_range": [
     "001",
     "100"

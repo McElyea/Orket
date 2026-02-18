@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-02-16.
+Last updated: 2026-02-17.
 
 ## Operating Constraints (Current)
 1. Orket engine loop remains the runtime; storage backend is pluggable.
@@ -64,6 +64,12 @@ Acceptance criteria:
 2. Tier-6 tasks emit convergence metrics (`attempts_to_pass`, `drift_rate`).
 3. Reviewer and architecture compliance checks are represented in run artifacts.
 
+Current status:
+1. Tasks `061`-`100` now include explicit `instruction` specifications.
+2. Tier-6 tasks `096`-`100` now include required `convergence_metrics.json` artifacts and structured convergence metrics.
+3. Tasks `061`-`100` now run through one benchmark entrypoint via `scripts/run_benchmark_suite.py` with task-id range filters and `scripts/orchestration_runner.py`.
+4. Reviewer and architecture compliance checks are now emitted in run artifacts (`report.json`).
+
 ### Phase 6: Automation, Reporting, and Leaderboard
 Scope:
 1. Add scheduled benchmark execution in CI.
@@ -74,3 +80,8 @@ Acceptance criteria:
 1. A nightly GitHub Actions workflow runs benchmark suites and stores artifacts.
 2. Trend reports show determinism, score, latency, and cost over time.
 3. Leaderboard compares runs only within the same benchmark version and policy revision.
+
+Current status:
+1. Nightly CI workflow added at `.github/workflows/nightly-benchmark.yml` with artifact upload.
+2. Trend reporting script added: `scripts/report_benchmark_trends.py`.
+3. Leaderboard generation script added: `scripts/build_benchmark_leaderboard.py`.
