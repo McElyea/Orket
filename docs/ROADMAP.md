@@ -76,8 +76,8 @@ Execution phases:
 20. Phase 20: `096`-`100`
 
 Execution progress:
-1. Completed: Phase 01-04 (`001`-`020`) on local hardware via live card runner.
-2. Next: Phase 05-08 (`021`-`040`).
+1. Completed: Phase 01-08 (`001`-`040`) on local hardware via live card runner.
+2. Next: Phase 09-12 (`041`-`060`).
 
 Acceptance criteria:
 1. All 20 phases produce determinism and scored artifacts.
