@@ -1,0 +1,586 @@
+[
+  {
+    "id": "001",
+    "tier": 1,
+    "description": "Add two numbers.",
+    "problem": "Create a sum function that takes two numbers and returns their sum.",
+    "function_signature": "def add(a, b):",
+    "instruction": "Implement add(a, b) and return a + b.",
+    "constraints": ["Do not print", "Return numeric result"],
+    "io_examples": [
+      {"input": [2, 3], "output": 5},
+      {"input": [-1, 4], "output": 3}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def add(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "add",
+      "examples": [
+        {"args": [2, 3], "expected": 5},
+        {"args": [-1, 4], "expected": 3},
+        {"args": [0, 0], "expected": 0}
+      ]
+    }
+  },
+  {
+    "id": "002",
+    "tier": 1,
+    "description": "Concatenate two strings.",
+    "problem": "Create a function that takes two strings and returns their concatenation.",
+    "function_signature": "def concat_strings(a, b):",
+    "instruction": "Implement concat_strings(a, b) and return a+b.",
+    "constraints": ["Do not print", "Preserve exact character order"],
+    "io_examples": [
+      {"input": ["foo", "bar"], "output": "foobar"},
+      {"input": ["", "x"], "output": "x"}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def concat_strings(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "concat_strings",
+      "examples": [
+        {"args": ["foo", "bar"], "expected": "foobar"},
+        {"args": ["", "x"], "expected": "x"},
+        {"args": ["A", ""], "expected": "A"}
+      ]
+    }
+  },
+  {
+    "id": "003",
+    "tier": 1,
+    "description": "First n Fibonacci numbers.",
+    "problem": "For input n, return the first n Fibonacci sequence numbers as a list.",
+    "function_signature": "def fibonacci_sequence(n):",
+    "instruction": "Implement fibonacci_sequence(n) where n>=0.",
+    "constraints": ["n is an integer", "Return list of length n"],
+    "io_examples": [
+      {"input": [0], "output": []},
+      {"input": [5], "output": [0, 1, 1, 2, 3]}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def fibonacci_sequence(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "fibonacci_sequence",
+      "examples": [
+        {"args": [0], "expected": []},
+        {"args": [1], "expected": [0]},
+        {"args": [5], "expected": [0, 1, 1, 2, 3]},
+        {"args": [7], "expected": [0, 1, 1, 2, 3, 5, 8]}
+      ]
+    }
+  },
+  {
+    "id": "004",
+    "tier": 1,
+    "description": "Reverse a string.",
+    "problem": "Create a function that returns the reversed input string.",
+    "function_signature": "def reverse_string(s):",
+    "instruction": "Implement reverse_string(s).",
+    "constraints": ["Input is a string", "Return string"],
+    "io_examples": [
+      {"input": ["abc"], "output": "cba"},
+      {"input": [""], "output": ""}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def reverse_string(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "reverse_string",
+      "examples": [
+        {"args": ["abc"], "expected": "cba"},
+        {"args": [""], "expected": ""},
+        {"args": ["racecar"], "expected": "racecar"}
+      ]
+    }
+  },
+  {
+    "id": "005",
+    "tier": 1,
+    "description": "Count vowels in a string.",
+    "problem": "Return the number of vowels (a,e,i,o,u, case-insensitive) in a string.",
+    "function_signature": "def count_vowels(s):",
+    "instruction": "Implement count_vowels(s).",
+    "constraints": ["Case-insensitive", "Only a,e,i,o,u are vowels"],
+    "io_examples": [
+      {"input": ["hello"], "output": 2},
+      {"input": ["XYZ"], "output": 0}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def count_vowels(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "count_vowels",
+      "examples": [
+        {"args": ["hello"], "expected": 2},
+        {"args": ["XYZ"], "expected": 0},
+        {"args": ["AEIOU"], "expected": 5}
+      ]
+    }
+  },
+  {
+    "id": "006",
+    "tier": 1,
+    "description": "Find maximum in list.",
+    "problem": "Return the maximum value in a non-empty integer list.",
+    "function_signature": "def max_in_list(values):",
+    "instruction": "Implement max_in_list(values).",
+    "constraints": ["values is non-empty", "Return integer"],
+    "io_examples": [
+      {"input": [[1, 3, 2]], "output": 3},
+      {"input": [[-5, -2, -9]], "output": -2}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def max_in_list(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "max_in_list",
+      "examples": [
+        {"args": [[1, 3, 2]], "expected": 3},
+        {"args": [[-5, -2, -9]], "expected": -2}
+      ]
+    }
+  },
+  {
+    "id": "007",
+    "tier": 1,
+    "description": "Check palindrome.",
+    "problem": "Return True if the string is a palindrome, else False.",
+    "function_signature": "def is_palindrome(s):",
+    "instruction": "Implement is_palindrome(s).",
+    "constraints": ["Case-sensitive exact match"],
+    "io_examples": [
+      {"input": ["racecar"], "output": true},
+      {"input": ["hello"], "output": false}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def is_palindrome(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "is_palindrome",
+      "examples": [
+        {"args": ["racecar"], "expected": true},
+        {"args": ["hello"], "expected": false},
+        {"args": [""], "expected": true}
+      ]
+    }
+  },
+  {
+    "id": "008",
+    "tier": 1,
+    "description": "Factorial.",
+    "problem": "Compute n! for non-negative integer n.",
+    "function_signature": "def factorial(n):",
+    "instruction": "Implement factorial(n).",
+    "constraints": ["n >= 0", "0! = 1"],
+    "io_examples": [
+      {"input": [0], "output": 1},
+      {"input": [5], "output": 120}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def factorial(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "factorial",
+      "examples": [
+        {"args": [0], "expected": 1},
+        {"args": [1], "expected": 1},
+        {"args": [5], "expected": 120}
+      ]
+    }
+  },
+  {
+    "id": "009",
+    "tier": 1,
+    "description": "Sum of even numbers in list.",
+    "problem": "Return the sum of all even integers in a list.",
+    "function_signature": "def sum_even(values):",
+    "instruction": "Implement sum_even(values).",
+    "constraints": ["Return 0 if no evens"],
+    "io_examples": [
+      {"input": [[1, 2, 3, 4]], "output": 6},
+      {"input": [[1, 3, 5]], "output": 0}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def sum_even(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "sum_even",
+      "examples": [
+        {"args": [[1, 2, 3, 4]], "expected": 6},
+        {"args": [[1, 3, 5]], "expected": 0}
+      ]
+    }
+  },
+  {
+    "id": "010",
+    "tier": 1,
+    "description": "Unique values preserving order.",
+    "problem": "Return a list of unique items in first-seen order.",
+    "function_signature": "def unique_preserve_order(values):",
+    "instruction": "Implement unique_preserve_order(values).",
+    "constraints": ["Preserve first appearance order"],
+    "io_examples": [
+      {"input": [[1, 2, 1, 3, 2]], "output": [1, 2, 3]}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def unique_preserve_order(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "unique_preserve_order",
+      "examples": [
+        {"args": [[1, 2, 1, 3, 2]], "expected": [1, 2, 3]},
+        {"args": [[4, 4, 4]], "expected": [4]}
+      ]
+    }
+  },
+  {
+    "id": "011",
+    "tier": 2,
+    "description": "Word frequency map.",
+    "problem": "Given a sentence, return a dictionary of lowercase word counts split on whitespace.",
+    "function_signature": "def word_frequency(text):",
+    "instruction": "Implement word_frequency(text).",
+    "constraints": ["Lowercase keys", "Whitespace split only"],
+    "io_examples": [
+      {"input": ["One two two"], "output": {"one": 1, "two": 2}}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def word_frequency(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "word_frequency",
+      "examples": [
+        {"args": ["One two two"], "expected": {"one": 1, "two": 2}},
+        {"args": [""], "expected": {}}
+      ]
+    }
+  },
+  {
+    "id": "012",
+    "tier": 2,
+    "description": "Merge sorted lists.",
+    "problem": "Merge two sorted integer lists into a single sorted list.",
+    "function_signature": "def merge_sorted(a, b):",
+    "instruction": "Implement merge_sorted(a, b).",
+    "constraints": ["Input lists already sorted ascending"],
+    "io_examples": [
+      {"input": [[1, 3, 5], [2, 4]], "output": [1, 2, 3, 4, 5]}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def merge_sorted(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "merge_sorted",
+      "examples": [
+        {"args": [[1, 3, 5], [2, 4]], "expected": [1, 2, 3, 4, 5]},
+        {"args": [[], [1, 2]], "expected": [1, 2]}
+      ]
+    }
+  },
+  {
+    "id": "013",
+    "tier": 2,
+    "description": "Rotate list right.",
+    "problem": "Rotate a list to the right by k steps.",
+    "function_signature": "def rotate_right(values, k):",
+    "instruction": "Implement rotate_right(values, k).",
+    "constraints": ["k may be >= len(values)", "Return new list"],
+    "io_examples": [
+      {"input": [[1, 2, 3, 4], 1], "output": [4, 1, 2, 3]}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def rotate_right(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "rotate_right",
+      "examples": [
+        {"args": [[1, 2, 3, 4], 1], "expected": [4, 1, 2, 3]},
+        {"args": [[1, 2, 3], 4], "expected": [3, 1, 2]}
+      ]
+    }
+  },
+  {
+    "id": "014",
+    "tier": 2,
+    "description": "Second largest distinct number.",
+    "problem": "Return the second largest distinct integer in a list.",
+    "function_signature": "def second_largest(values):",
+    "instruction": "Implement second_largest(values).",
+    "constraints": ["At least 2 distinct values exist"],
+    "io_examples": [
+      {"input": [[5, 1, 5, 3]], "output": 3}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def second_largest(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "second_largest",
+      "examples": [
+        {"args": [[5, 1, 5, 3]], "expected": 3},
+        {"args": [[10, 8, 9]], "expected": 9}
+      ]
+    }
+  },
+  {
+    "id": "015",
+    "tier": 2,
+    "description": "Anagram check.",
+    "problem": "Return True if two strings are anagrams, ignoring spaces and case.",
+    "function_signature": "def are_anagrams(a, b):",
+    "instruction": "Implement are_anagrams(a, b).",
+    "constraints": ["Ignore spaces", "Case-insensitive"],
+    "io_examples": [
+      {"input": ["Listen", "Silent"], "output": true}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def are_anagrams(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "are_anagrams",
+      "examples": [
+        {"args": ["Listen", "Silent"], "expected": true},
+        {"args": ["a gentleman", "elegant man"], "expected": true},
+        {"args": ["foo", "bar"], "expected": false}
+      ]
+    }
+  },
+  {
+    "id": "016",
+    "tier": 3,
+    "description": "Roman numeral to integer.",
+    "problem": "Convert a Roman numeral string into an integer.",
+    "function_signature": "def roman_to_int(s):",
+    "instruction": "Implement roman_to_int(s).",
+    "constraints": ["Support standard subtractive notation"],
+    "io_examples": [
+      {"input": ["III"], "output": 3},
+      {"input": ["MCMXCIV"], "output": 1994}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def roman_to_int(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "roman_to_int",
+      "examples": [
+        {"args": ["III"], "expected": 3},
+        {"args": ["LVIII"], "expected": 58},
+        {"args": ["MCMXCIV"], "expected": 1994}
+      ]
+    }
+  },
+  {
+    "id": "017",
+    "tier": 3,
+    "description": "Longest common prefix.",
+    "problem": "Return the longest common prefix string amongst a list of strings.",
+    "function_signature": "def longest_common_prefix(values):",
+    "instruction": "Implement longest_common_prefix(values).",
+    "constraints": ["Return empty string if none"],
+    "io_examples": [
+      {"input": [["flower", "flow", "flight"]], "output": "fl"},
+      {"input": [["dog", "racecar", "car"]], "output": ""}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def longest_common_prefix(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "longest_common_prefix",
+      "examples": [
+        {"args": [["flower", "flow", "flight"]], "expected": "fl"},
+        {"args": [["dog", "racecar", "car"]], "expected": ""}
+      ]
+    }
+  },
+  {
+    "id": "018",
+    "tier": 3,
+    "description": "Balanced parentheses.",
+    "problem": "Return True if string containing ()[]{} is balanced.",
+    "function_signature": "def is_balanced(s):",
+    "instruction": "Implement is_balanced(s).",
+    "constraints": ["Only brackets are relevant"],
+    "io_examples": [
+      {"input": ["([]){}"], "output": true},
+      {"input": ["([)]"], "output": false}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def is_balanced(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "is_balanced",
+      "examples": [
+        {"args": ["([]){}"], "expected": true},
+        {"args": ["([)]"], "expected": false},
+        {"args": [""], "expected": true}
+      ]
+    }
+  },
+  {
+    "id": "019",
+    "tier": 3,
+    "description": "Run-length encoding.",
+    "problem": "Encode a string with run-length encoding, e.g. aaabb -> a3b2.",
+    "function_signature": "def rle_encode(s):",
+    "instruction": "Implement rle_encode(s).",
+    "constraints": ["Return empty for empty input"],
+    "io_examples": [
+      {"input": ["aaabb"], "output": "a3b2"},
+      {"input": ["abcd"], "output": "a1b1c1d1"}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def rle_encode(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "rle_encode",
+      "examples": [
+        {"args": ["aaabb"], "expected": "a3b2"},
+        {"args": ["abcd"], "expected": "a1b1c1d1"},
+        {"args": [""], "expected": ""}
+      ]
+    }
+  },
+  {
+    "id": "020",
+    "tier": 3,
+    "description": "Group anagrams.",
+    "problem": "Group words that are anagrams and return sorted groups for determinism.",
+    "function_signature": "def group_anagrams(values):",
+    "instruction": "Implement group_anagrams(values).",
+    "constraints": ["Deterministic output ordering", "Sort each group and the outer list"],
+    "io_examples": [
+      {"input": [["eat", "tea", "tan", "ate", "nat", "bat"]], "output": [["ate", "eat", "tea"], ["bat"], ["nat", "tan"]]}
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": ["run.log", "report.json"],
+      "pass_conditions": ["Function returns expected values for examples", "Required artifacts are produced", "Task-level checks pass"],
+      "determinism_profile": "strict",
+      "quality_required_keywords": ["def group_anagrams(", "return"],
+      "quality_forbidden_keywords": ["__main__", "print(", "run_cli", "log_crash"]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "group_anagrams",
+      "examples": [
+        {"args": [["eat", "tea", "tan", "ate", "nat", "bat"]], "expected": [["ate", "eat", "tea"], ["bat"], ["nat", "tan"]]}
+      ]
+    }
+  }
+]

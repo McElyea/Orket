@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Orket Real-World Benchmark Task Bank",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "tier",
+      "description",
+      "problem",
+      "function_signature",
+      "instruction",
+      "acceptance_contract",
+      "evaluation"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "id": { "type": "string", "pattern": "^[0-9]{3}$" },
+      "tier": { "type": "integer", "minimum": 1, "maximum": 6 },
+      "description": { "type": "string", "minLength": 8 },
+      "problem": { "type": "string", "minLength": 8 },
+      "function_signature": { "type": "string", "minLength": 5 },
+      "instruction": { "type": "string", "minLength": 8 },
+      "constraints": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 }
+      },
+      "io_examples": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["input", "output"],
+          "additionalProperties": false,
+          "properties": {
+            "input": {},
+            "output": {}
+          }
+        }
+      },
+      "acceptance_contract": {
+        "type": "object",
+        "required": ["mode", "required_artifacts", "pass_conditions", "determinism_profile"],
+        "additionalProperties": true,
+        "properties": {
+          "mode": { "type": "string", "enum": ["function"] },
+          "required_artifacts": { "type": "array", "items": { "type": "string" } },
+          "pass_conditions": { "type": "array", "items": { "type": "string" } },
+          "determinism_profile": { "type": "string", "enum": ["strict", "bounded", "convergence"] }
+        }
+      },
+      "evaluation": {
+        "type": "object",
+        "required": ["type", "function_name", "examples"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string", "enum": ["function_examples"] },
+          "function_name": { "type": "string", "minLength": 1 },
+          "examples": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["args", "expected"],
+              "additionalProperties": false,
+              "properties": {
+                "args": { "type": "array" },
+                "kwargs": { "type": "object" },
+                "expected": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
