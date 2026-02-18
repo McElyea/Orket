@@ -37,6 +37,49 @@ def test_trend_report_includes_required_fields(tmp_path: Path) -> None:
     assert "determinism_rate" in row
     assert "avg_latency_ms" in row
     assert "avg_cost_usd" in row
+    assert "delta_overall_avg_score" in row
+    assert row["delta_overall_avg_score"] is None
+
+
+def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
+    mod = _load_script_module("report_benchmark_trends_delta_test", "scripts/report_benchmark_trends.py")
+    first = tmp_path / "a.json"
+    second = tmp_path / "b.json"
+    first.write_text(
+        """{
+  "schema_version": "v1",
+  "policy_version": "v1",
+  "venue": "standard",
+  "flow": "default",
+  "overall_avg_score": 4.5,
+  "determinism_rate": 0.9,
+  "avg_latency_ms": 40.0,
+  "avg_cost_usd": 0.2
+}
+""",
+        encoding="utf-8",
+    )
+    second.write_text(
+        """{
+  "schema_version": "v1",
+  "policy_version": "v1",
+  "venue": "standard",
+  "flow": "default",
+  "overall_avg_score": 4.8,
+  "determinism_rate": 1.0,
+  "avg_latency_ms": 38.0,
+  "avg_cost_usd": 0.1
+}
+""",
+        encoding="utf-8",
+    )
+
+    report = mod.build_trend_report([first, second])
+    second_row = report["rows"][1]
+    assert second_row["delta_overall_avg_score"] == 0.3
+    assert second_row["delta_determinism_rate"] == 0.1
+    assert second_row["delta_avg_latency_ms"] == -2.0
+    assert second_row["delta_avg_cost_usd"] == -0.1
 
 
 def test_leaderboard_groups_by_schema_and_policy(tmp_path: Path) -> None:

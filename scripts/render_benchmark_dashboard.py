@@ -30,20 +30,24 @@ def build_dashboard_markdown(trends: dict[str, Any], leaderboard: dict[str, Any]
     lines.append("## Trends")
     rows = trends.get("rows", [])
     if isinstance(rows, list) and rows:
-        lines.append("| Source | Venue | Flow | Score | Determinism | Avg Latency (ms) | Avg Cost (USD) |")
-        lines.append("| --- | --- | --- | ---: | ---: | ---: | ---: |")
+        lines.append("| Source | Venue | Flow | Score | Delta Score | Determinism | Delta Det | Avg Latency (ms) | Delta Latency | Avg Cost (USD) | Delta Cost |")
+        lines.append("| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
         for row in rows:
             if not isinstance(row, dict):
                 continue
             lines.append(
-                "| {source} | {venue} | {flow} | {score} | {det} | {lat} | {cost} |".format(
+                "| {source} | {venue} | {flow} | {score} | {dscore} | {det} | {ddet} | {lat} | {dlat} | {cost} | {dcost} |".format(
                     source=row.get("source", ""),
                     venue=row.get("venue", ""),
                     flow=row.get("flow", ""),
                     score=row.get("overall_avg_score", 0.0),
+                    dscore=row.get("delta_overall_avg_score", ""),
                     det=row.get("determinism_rate", 0.0),
+                    ddet=row.get("delta_determinism_rate", ""),
                     lat=row.get("avg_latency_ms", 0.0),
+                    dlat=row.get("delta_avg_latency_ms", ""),
                     cost=row.get("avg_cost_usd", 0.0),
+                    dcost=row.get("delta_avg_cost_usd", ""),
                 )
             )
     else:

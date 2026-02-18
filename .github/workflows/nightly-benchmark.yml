@@ -40,7 +40,7 @@ jobs:
       - name: Build Trend Report
         run: >
           python scripts/report_benchmark_trends.py
-          --inputs benchmarks/results/nightly_phase5_scored_report.json
+          --input-glob "benchmarks/results/nightly_phase5_scored*.json"
           --out benchmarks/results/nightly_benchmark_trends.json
 
       - name: Build Leaderboard
