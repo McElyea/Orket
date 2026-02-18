@@ -39,9 +39,53 @@ Objective: continue side-by-side monolith vs microservices evidence while runtim
 2. iDesign-first enforcement.
 3. Architecture expansion beyond controlled microservices policy/pilot monitoring.
 
-## Completed Work (2026-02-17)
-1. Priority 3 Benchmark Program (Phase 4-6) is complete.
-2. Tier 1-3 tasks (`001`-`060`) have explicit instructions; tier-3 tasks include required fault-injection scenarios.
-3. Tier 4-6 tasks (`061`-`100`) run through a single benchmark entrypoint and emit reviewer/architecture compliance artifacts.
-4. Nightly benchmark CI, trend reporting, leaderboard generation, and markdown dashboard rendering are implemented.
-5. Determinism profile expectations and allowed exceptions are documented in `docs/BENCHMARK_DETERMINISM.md`.
+## Priority 3: Live Benchmark Execution (Active)
+Objective: execute the full benchmark task bank (`001`-`100`) through the real Orket card system in repeatable, auditable phases.
+
+Run policy:
+1. Execute in 5-task groups to isolate failures and simplify reruns.
+2. Use live card runner only (no synthetic pass runner).
+3. Keep one scored artifact per phase plus one merged report set.
+
+Live phase command template:
+`python scripts/run_determinism_harness.py --task-bank benchmarks/task_bank/v1/tasks.json --runs 1 --venue local-hardware --flow live-card --runner-template "python scripts/live_card_benchmark_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}" --artifact-glob live_runner_output.log --task-id-min <MIN> --task-id-max <MAX> --output benchmarks/results/live_card_phase_<MIN>_<MAX>_determinism.json`
+
+Score command template:
+`python scripts/score_benchmark_run.py --report benchmarks/results/live_card_phase_<MIN>_<MAX>_determinism.json --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/live_card_phase_<MIN>_<MAX>_scored.json`
+
+Execution phases:
+1. Phase 01: `001`-`005`
+2. Phase 02: `006`-`010`
+3. Phase 03: `011`-`015`
+4. Phase 04: `016`-`020`
+5. Phase 05: `021`-`025`
+6. Phase 06: `026`-`030`
+7. Phase 07: `031`-`035`
+8. Phase 08: `036`-`040`
+9. Phase 09: `041`-`045`
+10. Phase 10: `046`-`050`
+11. Phase 11: `051`-`055`
+12. Phase 12: `056`-`060`
+13. Phase 13: `061`-`065`
+14. Phase 14: `066`-`070`
+15. Phase 15: `071`-`075`
+16. Phase 16: `076`-`080`
+17. Phase 17: `081`-`085`
+18. Phase 18: `086`-`090`
+19. Phase 19: `091`-`095`
+20. Phase 20: `096`-`100`
+
+Execution progress:
+1. Completed: Phase 01-04 (`001`-`020`) on local hardware via live card runner.
+2. Next: Phase 05-08 (`021`-`040`).
+
+Acceptance criteria:
+1. All 20 phases produce determinism and scored artifacts.
+2. Every task exits through live card execution path.
+3. Final merged score report has zero failing tasks.
+
+Closeout commands:
+1. Full live suite (single-shot):
+   - `python scripts/run_live_card_benchmark_suite.py --runs 1 --raw-out benchmarks/results/live_card_100_determinism_report.json --scored-out benchmarks/results/live_card_100_scored_report.json`
+2. Live pytest gate:
+   - `set ORKET_RUN_BENCHMARK_LIVE_100=1 && python -m pytest tests/live/test_benchmark_task_bank_live.py -q`
