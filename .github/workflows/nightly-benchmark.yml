@@ -49,8 +49,17 @@ jobs:
           --inputs benchmarks/results/nightly_phase5_scored_report.json
           --out benchmarks/results/nightly_benchmark_leaderboard.json
 
+      - name: Render Dashboard
+        run: >
+          python scripts/render_benchmark_dashboard.py
+          --trends benchmarks/results/nightly_benchmark_trends.json
+          --leaderboard benchmarks/results/nightly_benchmark_leaderboard.json
+          --out benchmarks/results/nightly_benchmark_dashboard.md
+
       - name: Upload Benchmark Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: nightly-benchmark-artifacts
-          path: benchmarks/results/nightly_*.json
+          path: |
+            benchmarks/results/nightly_*.json
+            benchmarks/results/nightly_*.md
