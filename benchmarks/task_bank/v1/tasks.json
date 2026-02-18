@@ -15,7 +15,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "002",
@@ -33,7 +34,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "003",
@@ -51,7 +53,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "004",
@@ -69,7 +72,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "005",
@@ -87,7 +91,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "006",
@@ -105,7 +110,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "007",
@@ -123,7 +129,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "008",
@@ -141,7 +148,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "009",
@@ -159,7 +167,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "010",
@@ -177,7 +186,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "011",
@@ -195,7 +205,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "012",
@@ -213,7 +224,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "013",
@@ -231,7 +243,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "014",
@@ -249,7 +262,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "015",
@@ -267,7 +281,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic single-file function that satisfies the acceptance contract. Use stable ordering, fixed formatting, and deterministic output serialization."
   },
   {
     "id": "016",
@@ -285,7 +300,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "017",
@@ -303,7 +319,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "018",
@@ -321,7 +338,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "019",
@@ -339,7 +357,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "020",
@@ -357,7 +376,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "021",
@@ -375,7 +395,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "022",
@@ -393,7 +414,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "023",
@@ -411,7 +433,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "024",
@@ -429,7 +452,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "025",
@@ -447,7 +471,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "026",
@@ -465,7 +490,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "027",
@@ -483,7 +509,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "028",
@@ -501,7 +528,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "029",
@@ -519,7 +547,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "030",
@@ -537,7 +566,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "031",
@@ -555,7 +585,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "032",
@@ -573,7 +604,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "033",
@@ -591,7 +623,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "034",
@@ -609,7 +642,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "035",
@@ -627,7 +661,8 @@
         "Task-level checks pass"
       ],
       "determinism_profile": "strict"
-    }
+    },
+    "instruction": "Implement a deterministic multi-file component with clear module boundaries. Ensure interfaces remain stable and output is deterministic across reruns."
   },
   {
     "id": "036",
@@ -642,10 +677,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "037",
@@ -660,10 +704,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "038",
@@ -678,10 +731,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "039",
@@ -696,10 +758,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "040",
@@ -714,10 +785,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "041",
@@ -732,10 +812,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "042",
@@ -750,10 +839,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "043",
@@ -768,10 +866,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "044",
@@ -786,10 +893,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "045",
@@ -804,10 +920,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "046",
@@ -822,10 +947,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "047",
@@ -840,10 +974,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "048",
@@ -858,10 +1001,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "049",
@@ -876,10 +1028,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "050",
@@ -894,10 +1055,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "051",
@@ -912,10 +1082,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "052",
@@ -930,10 +1109,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "053",
@@ -948,10 +1136,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "054",
@@ -966,10 +1163,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "055",
@@ -984,10 +1190,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "056",
@@ -1002,10 +1217,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "057",
@@ -1020,10 +1244,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "058",
@@ -1038,10 +1271,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "059",
@@ -1056,10 +1298,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "060",
@@ -1074,10 +1325,19 @@
       "pass_conditions": [
         "Implementation completes without crash",
         "Required artifacts are produced",
-        "Task-level checks pass"
+        "Task-level checks pass",
+        "Fault injection scenarios are executed and recovered without crash"
       ],
-      "determinism_profile": "bounded"
-    }
+      "determinism_profile": "bounded",
+      "fault_injection_scenarios": [
+        "timeout",
+        "partial_write",
+        "malformed_input",
+        "interrupted_run",
+        "retry_path"
+      ]
+    },
+    "instruction": "Implement stateful crash-recovery behavior with bounded determinism. Handle restart/retry paths safely and emit reproducible artifacts under fault scenarios."
   },
   {
     "id": "061",

@@ -85,6 +85,14 @@
               "attempts_to_pass",
               "drift_rate"
             ]
+          },
+          "fault_injection_scenarios": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
           }
         }
       },

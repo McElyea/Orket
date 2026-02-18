@@ -4,8 +4,8 @@
   "task_bank_path": "benchmarks/task_bank/v1/tasks.json",
   "schema_path": "benchmarks/task_bank/v1/schema.json",
   "task_count": 100,
-  "task_bank_sha256": "c6a9295a0fdc69a0f0d54cb3f5c36622adb2240e92e4c63b0768e2e7ba799bdd",
-  "schema_sha256": "1b0e0a57157353b84d3040833db8c2a79e4dfcffce6bcbead84990d614fb6112",
+  "task_bank_sha256": "bc361f2dc91d4e28a7e68fc04532f1847930c39411d7142c3d61d57043527e66",
+  "schema_sha256": "70130800fe28141e97087e59760339c463b123e2eaa8bd8e537129b7ea4d0b65",
   "id_range": [
     "001",
     "100"

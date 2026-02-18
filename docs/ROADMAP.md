@@ -39,50 +39,9 @@ Objective: continue side-by-side monolith vs microservices evidence while runtim
 2. iDesign-first enforcement.
 3. Architecture expansion beyond controlled microservices policy/pilot monitoring.
 
-## Priority 3: Benchmark Program (Phased)
-Objective: convert the benchmark ideas into an executable, repeatable program with explicit acceptance gates.
-
-### Phase 4: Tier 1-3 Rollout (Core Reliability)
-Scope:
-1. Operationalize tasks `001`-`060` with executable instructions.
-2. Add failure-injection scenarios for crash-sensitive tier-3 tasks.
-3. Document expected deterministic behavior and allowed exceptions.
-
-Acceptance criteria:
-1. One command executes tasks `001`-`060` and produces a report artifact.
-2. At least 5 fault-injection cases are implemented for tier-3 (timeout, partial write, malformed input, interrupted run, retry path).
-3. Tier-1 deterministic tasks show zero hash drift across configured reruns.
-
-### Phase 5: Tier 4-6 Rollout (Architecture and Stress)
-Scope:
-1. Operationalize tasks `061`-`100` with explicit acceptance contracts.
-2. Add spec-clarification checkpoints for ambiguous tier-4 tasks.
-3. Add multi-step convergence checks for tier-6 stress tasks.
-
-Acceptance criteria:
-1. Tasks `061`-`100` are runnable through the same benchmark entrypoint.
-2. Tier-6 tasks emit convergence metrics (`attempts_to_pass`, `drift_rate`).
-3. Reviewer and architecture compliance checks are represented in run artifacts.
-
-Current status:
-1. Tasks `061`-`100` now include explicit `instruction` specifications.
-2. Tier-6 tasks `096`-`100` now include required `convergence_metrics.json` artifacts and structured convergence metrics.
-3. Tasks `061`-`100` now run through one benchmark entrypoint via `scripts/run_benchmark_suite.py` with task-id range filters and `scripts/orchestration_runner.py`.
-4. Reviewer and architecture compliance checks are now emitted in run artifacts (`report.json`).
-
-### Phase 6: Automation, Reporting, and Leaderboard
-Scope:
-1. Add scheduled benchmark execution in CI.
-2. Build a report visualizer for trend analysis.
-3. Publish a leaderboard by model mix and venue.
-
-Acceptance criteria:
-1. A nightly GitHub Actions workflow runs benchmark suites and stores artifacts.
-2. Trend reports show determinism, score, latency, and cost over time.
-3. Leaderboard compares runs only within the same benchmark version and policy revision.
-
-Current status:
-1. Nightly CI workflow added at `.github/workflows/nightly-benchmark.yml` with artifact upload.
-2. Trend reporting script added: `scripts/report_benchmark_trends.py`.
-3. Leaderboard generation script added: `scripts/build_benchmark_leaderboard.py`.
-4. Scored benchmark reports now populate `determinism_rate`, `avg_latency_ms`, and `avg_cost_usd` for trend aggregation.
+## Completed Work (2026-02-17)
+1. Priority 3 Benchmark Program (Phase 4-6) is complete.
+2. Tier 1-3 tasks (`001`-`060`) have explicit instructions; tier-3 tasks include required fault-injection scenarios.
+3. Tier 4-6 tasks (`061`-`100`) run through a single benchmark entrypoint and emit reviewer/architecture compliance artifacts.
+4. Nightly benchmark CI, trend reporting, leaderboard generation, and markdown dashboard rendering are implemented.
+5. Determinism profile expectations and allowed exceptions are documented in `docs/BENCHMARK_DETERMINISM.md`.
