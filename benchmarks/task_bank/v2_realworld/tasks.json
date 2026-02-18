@@ -2,77 +2,85 @@
   {
     "id": "001",
     "tier": 1,
-    "description": "Add two numbers.",
-    "problem": "Create a sum function that takes two numbers and returns their sum.",
-    "function_signature": "def add(a, b):",
-    "instruction": "Implement add(a, b) and return a + b.",
+    "description": "Deterministic sum CLI program.",
+    "problem": "Build a runnable Python program that sums two numbers passed via command-line arguments.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates input and prints the sum.",
     "constraints": [
-      "Do not print",
-      "Return numeric result"
+      "Use Python standard library only",
+      "Deterministic output and error formatting",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          2,
-          3
-        ],
-        "output": 5
+        "input": "python agent_output/main.py 2 3",
+        "output": "5\\n"
       },
       {
-        "input": [
-          -1,
-          4
-        ],
-        "output": 3
+        "input": "python agent_output/main.py -1 4",
+        "output": "3\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def add(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "add",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
-            2,
-            3
+            "2",
+            "3"
           ],
-          "expected": 5
+          "expected_stdout": "5\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            -1,
-            4
+            "-1",
+            "4"
           ],
-          "expected": 3
+          "expected_stdout": "3\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            0,
-            0
+            "0",
+            "0"
           ],
-          "expected": 0
+          "expected_stdout": "0\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
+        },
+        {
+          "args": [
+            "2",
+            "x"
+          ],
+          "expected_stdout": "",
+          "expected_stderr": "error: arguments must be numeric\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -80,77 +88,75 @@
   {
     "id": "002",
     "tier": 1,
-    "description": "Concatenate two strings.",
-    "problem": "Create a function that takes two strings and returns their concatenation.",
-    "function_signature": "def concat_strings(a, b):",
-    "instruction": "Implement concat_strings(a, b) and return a+b.",
+    "description": "Deterministic concatenate-strings CLI program.",
+    "problem": "Build a runnable Python program that concatenates exactly two input strings from CLI arguments.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints concatenated output.",
     "constraints": [
-      "Do not print",
-      "Preserve exact character order"
+      "Use Python standard library only",
+      "Deterministic output and error formatting",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          "foo",
-          "bar"
-        ],
-        "output": "foobar"
+        "input": "python agent_output/main.py foo bar",
+        "output": "foobar\\n"
       },
       {
-        "input": [
-          "",
-          "x"
-        ],
-        "output": "x"
+        "input": "python agent_output/main.py \"\" x",
+        "output": "x\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def concat_strings(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "concat_strings",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
             "foo",
             "bar"
           ],
-          "expected": "foobar"
+          "expected_stdout": "foobar\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             "",
             "x"
           ],
-          "expected": "x"
+          "expected_stdout": "x\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            "A",
-            ""
+            "onlyone"
           ],
-          "expected": "A"
+          "expected_stdout": "",
+          "expected_stderr": "error: expected exactly 2 arguments\\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -158,100 +164,74 @@
   {
     "id": "003",
     "tier": 1,
-    "description": "First n Fibonacci numbers.",
-    "problem": "For input n, return the first n Fibonacci sequence numbers as a list.",
-    "function_signature": "def fibonacci_sequence(n):",
-    "instruction": "Implement fibonacci_sequence(n) where n>=0.",
+    "description": "Deterministic Fibonacci CLI program.",
+    "problem": "Build a runnable Python program that outputs the first n Fibonacci numbers as a JSON list.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that parses n, validates it, and prints the sequence.",
     "constraints": [
-      "n is an integer",
-      "Return list of length n"
+      "Use Python standard library only",
+      "Output JSON list exactly, followed by newline",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          0
-        ],
-        "output": []
+        "input": "python agent_output/main.py 0",
+        "output": "[]\\n"
       },
       {
-        "input": [
-          5
-        ],
-        "output": [
-          0,
-          1,
-          1,
-          2,
-          3
-        ]
+        "input": "python agent_output/main.py 5",
+        "output": "[0, 1, 1, 2, 3]\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def fibonacci_sequence(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse",
+        "json"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "fibonacci_sequence",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
-            0
+            "0"
           ],
-          "expected": []
+          "expected_stdout": "[]\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            1
+            "5"
           ],
-          "expected": [
-            0
-          ]
+          "expected_stdout": "[0, 1, 1, 2, 3]\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            5
+            "-1"
           ],
-          "expected": [
-            0,
-            1,
-            1,
-            2,
-            3
-          ]
-        },
-        {
-          "args": [
-            7
-          ],
-          "expected": [
-            0,
-            1,
-            1,
-            2,
-            3,
-            5,
-            8
-          ]
+          "expected_stdout": "",
+          "expected_stderr": "error: n must be a non-negative integer\\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -259,72 +239,71 @@
   {
     "id": "004",
     "tier": 1,
-    "description": "Reverse a string.",
-    "problem": "Create a function that returns the reversed input string.",
-    "function_signature": "def reverse_string(s):",
-    "instruction": "Implement reverse_string(s).",
+    "description": "Deterministic reverse-string CLI program.",
+    "problem": "Build a runnable Python program that reverses one input string from CLI arguments.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints reversed text.",
     "constraints": [
-      "Input is a string",
-      "Return string"
+      "Use Python standard library only",
+      "Deterministic output and error formatting",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          "abc"
-        ],
-        "output": "cba"
+        "input": "python agent_output/main.py abc",
+        "output": "cba\\n"
       },
       {
-        "input": [
-          ""
-        ],
-        "output": ""
+        "input": "python agent_output/main.py racecar",
+        "output": "racecar\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def reverse_string(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "reverse_string",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
             "abc"
           ],
-          "expected": "cba"
+          "expected_stdout": "cba\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             ""
           ],
-          "expected": ""
+          "expected_stdout": "\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
-          "args": [
-            "racecar"
-          ],
-          "expected": "racecar"
+          "args": [],
+          "expected_stdout": "",
+          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -332,72 +311,74 @@
   {
     "id": "005",
     "tier": 1,
-    "description": "Count vowels in a string.",
-    "problem": "Return the number of vowels (a,e,i,o,u, case-insensitive) in a string.",
-    "function_signature": "def count_vowels(s):",
-    "instruction": "Implement count_vowels(s).",
+    "description": "Deterministic vowel-count CLI program.",
+    "problem": "Build a runnable Python program that counts vowels in one input string and prints the count.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints the vowel count.",
     "constraints": [
-      "Case-insensitive",
-      "Only a,e,i,o,u are vowels"
+      "Use Python standard library only",
+      "Vowels are a,e,i,o,u (case-insensitive)",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          "hello"
-        ],
-        "output": 2
+        "input": "python agent_output/main.py hello",
+        "output": "2\\n"
       },
       {
-        "input": [
-          "XYZ"
-        ],
-        "output": 0
+        "input": "python agent_output/main.py XYZ",
+        "output": "0\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def count_vowels(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "count_vowels",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
             "hello"
           ],
-          "expected": 2
-        },
-        {
-          "args": [
-            "XYZ"
-          ],
-          "expected": 0
+          "expected_stdout": "2\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             "AEIOU"
           ],
-          "expected": 5
+          "expected_stdout": "5\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
+        },
+        {
+          "args": [
+            "a",
+            "b"
+          ],
+          "expected_stdout": "",
+          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_exit_code": 2
         }
       ]
     }

@@ -4,10 +4,13 @@ This task bank is designed to test concrete coding behavior, not template compli
 
 Each task includes:
 - `problem`: plain-language requirement
-- `function_signature`: required function name/signature
 - `constraints`: behavioral constraints
 - `io_examples`: human-readable examples
 - `evaluation`: executable examples used by the runner
+
+Mode-specific fields:
+- `function` mode: includes `function_signature` + `evaluation.type=function_examples`
+- `module`/`service`/`system` mode: uses runnable program checks via `evaluation.type=cli_examples`
 
 ## Run a Single Task
 

@@ -81,6 +81,27 @@ def _build_epic(task: dict, task_context_file: str, output_file: str) -> dict:
                 f"{summary_suffix} "
                 f"Evaluation examples (must match exactly): {json.dumps(eval_examples, ensure_ascii=False)}."
             )
+    elif mode in {"module", "service", "system"}:
+        summary_suffix = (
+            f"{summary_suffix} "
+            "Build a runnable Python program, not a single-function snippet. "
+            "Use a small multi-file structure with clear separation of concerns "
+            "(entrypoint, domain logic, and validation/error handling)."
+        )
+        summary_suffix = (
+            f"{summary_suffix} "
+            "Program contract: provide deterministic behavior across repeated runs, "
+            "stable output formatting, and user-facing errors for invalid inputs."
+        )
+        if problem:
+            summary_suffix = f"{summary_suffix} Problem: {problem}."
+        if constraints:
+            summary_suffix = f"{summary_suffix} Constraints: {'; '.join(constraints)}."
+        if io_examples:
+            summary_suffix = (
+                f"{summary_suffix} "
+                f"I/O examples: {json.dumps(io_examples, ensure_ascii=False)}."
+            )
     return {
         "name": "",
         "description": f"Live benchmark task {task_id}",
@@ -237,7 +258,7 @@ def _count_meaningful_statements(func: ast.FunctionDef) -> int:
     return count
 
 
-def _evaluate_quality(task: dict[str, Any], main_text: str) -> dict[str, Any]:
+def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None = None) -> dict[str, Any]:
     acceptance = task.get("acceptance_contract") or {}
     mode = str(acceptance.get("mode", "")).strip().lower()
     checks: list[dict[str, Any]] = []
@@ -247,21 +268,48 @@ def _evaluate_quality(task: dict[str, Any], main_text: str) -> dict[str, Any]:
         for item in (acceptance.get("quality_required_keywords") or [])
         if str(item).strip()
     ]
+    default_forbidden_keywords_by_mode = {
+        "function": [
+            "orket.interfaces.cli",
+            "run_cli",
+            "log_crash",
+            "[CRITICAL ERROR]",
+            "asyncio.run(run_cli())",
+            "__main__",
+            "def main(",
+            "print(",
+        ],
+        "module": [
+            "orket.interfaces.cli",
+            "run_cli",
+            "log_crash",
+            "[CRITICAL ERROR]",
+            "asyncio.run(run_cli())",
+        ],
+        "service": [
+            "orket.interfaces.cli",
+            "run_cli",
+            "log_crash",
+            "[CRITICAL ERROR]",
+            "asyncio.run(run_cli())",
+        ],
+        "system": [
+            "orket.interfaces.cli",
+            "run_cli",
+            "log_crash",
+            "[CRITICAL ERROR]",
+            "asyncio.run(run_cli())",
+        ],
+    }
+    forbidden_source = acceptance.get("quality_forbidden_keywords")
+    if forbidden_source is None:
+        forbidden_source = default_forbidden_keywords_by_mode.get(
+            mode,
+            default_forbidden_keywords_by_mode["function"],
+        )
     forbidden_keywords = [
         str(item).strip()
-        for item in (
-            acceptance.get("quality_forbidden_keywords")
-            or [
-                "orket.interfaces.cli",
-                "run_cli",
-                "log_crash",
-                "[CRITICAL ERROR]",
-                "asyncio.run(run_cli())",
-                "__main__",
-                "def main(",
-                "print(",
-            ]
-        )
+        for item in forbidden_source
         if str(item).strip()
     ]
 
@@ -485,6 +533,114 @@ def _evaluate_quality(task: dict[str, Any], main_text: str) -> dict[str, Any]:
                             "detail": detail,
                         }
                     )
+    elif eval_type == "cli_examples":
+        entrypoint = str(evaluation.get("entrypoint", "agent_output/main.py")).strip() or "agent_output/main.py"
+        examples = evaluation.get("examples") or []
+        if run_dir is None:
+            checks.append(
+                {
+                    "name": "cli_example_cases_pass",
+                    "passed": False,
+                    "detail": "run_dir missing for cli_examples evaluation",
+                }
+            )
+        elif not isinstance(examples, list) or not examples:
+            checks.append(
+                {
+                    "name": "cli_example_cases_pass",
+                    "passed": False,
+                    "detail": "evaluation.examples missing",
+                }
+            )
+        else:
+            target = run_dir / entrypoint
+            if not target.exists():
+                checks.append(
+                    {
+                        "name": "cli_example_cases_pass",
+                        "passed": False,
+                        "detail": f"missing entrypoint: {entrypoint}",
+                    }
+                )
+            else:
+                mismatch: str = ""
+                deterministic_ok = True
+                for idx, case in enumerate(examples):
+                    if not isinstance(case, dict):
+                        mismatch = f"invalid case format at index {idx}"
+                        break
+                    raw_args = case.get("args", [])
+                    if not isinstance(raw_args, list):
+                        mismatch = f"args must be a list at index {idx}"
+                        break
+                    cmd = ["python", str(target)] + [str(arg) for arg in raw_args]
+                    expected_exit = int(case.get("expected_exit_code", 0))
+                    expected_stdout = str(case.get("expected_stdout", ""))
+                    expected_stderr = str(case.get("expected_stderr", ""))
+                    try:
+                        first = subprocess.run(
+                            cmd,
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                            timeout=5,
+                            cwd=str(run_dir),
+                        )
+                        second = subprocess.run(
+                            cmd,
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                            timeout=5,
+                            cwd=str(run_dir),
+                        )
+                    except subprocess.TimeoutExpired:
+                        mismatch = f"cli example timed out at index {idx}"
+                        deterministic_ok = False
+                        break
+                    if first.returncode != expected_exit:
+                        mismatch = (
+                            f"exit mismatch at index {idx}: "
+                            f"expected={expected_exit} actual={first.returncode}"
+                        )
+                        break
+                    if first.stdout != expected_stdout:
+                        mismatch = (
+                            f"stdout mismatch at index {idx}: "
+                            f"expected={expected_stdout!r} actual={first.stdout!r}"
+                        )
+                        break
+                    if first.stderr != expected_stderr:
+                        mismatch = (
+                            f"stderr mismatch at index {idx}: "
+                            f"expected={expected_stderr!r} actual={first.stderr!r}"
+                        )
+                        break
+                    if (
+                        first.returncode != second.returncode
+                        or first.stdout != second.stdout
+                        or first.stderr != second.stderr
+                    ):
+                        deterministic_ok = False
+                        mismatch = f"non-deterministic cli output at index {idx}"
+                        break
+
+                checks.append(
+                    {
+                        "name": "cli_example_cases_pass",
+                        "passed": not bool(mismatch),
+                        "detail": "all cli examples passed" if not mismatch else mismatch,
+                    }
+                )
+                checks.append(
+                    {
+                        "name": "cli_examples_deterministic_replay",
+                        "passed": deterministic_ok and not bool(mismatch),
+                        "detail": "cli outputs are deterministic across repeated runs"
+                        if deterministic_ok and not mismatch
+                        else "cli output determinism check failed",
+                    }
+                )
 
     passed = all(bool(check.get("passed")) for check in checks)
     failed_names = [str(check.get("name")) for check in checks if not bool(check.get("passed"))]
@@ -513,7 +669,7 @@ def _materialize_required_artifacts(
     main_text = main_path.read_text(encoding="utf-8", errors="replace") if main_path.exists() else ""
     main_sha = hashlib.sha256(main_text.encode("utf-8")).hexdigest() if main_text else ""
     duration_ms = int((ended_at - started_at).total_seconds() * 1000.0)
-    quality_checks = _evaluate_quality(task=task, main_text=main_text)
+    quality_checks = _evaluate_quality(task=task, main_text=main_text, run_dir=run_dir)
 
     output_md_path = run_dir / output_file
     if not output_md_path.exists():

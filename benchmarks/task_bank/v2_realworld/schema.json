@@ -10,7 +10,6 @@
       "tier",
       "description",
       "problem",
-      "function_signature",
       "instruction",
       "acceptance_contract",
       "evaluation"
@@ -44,7 +43,7 @@
         "required": ["mode", "required_artifacts", "pass_conditions", "determinism_profile"],
         "additionalProperties": true,
         "properties": {
-          "mode": { "type": "string", "enum": ["function"] },
+          "mode": { "type": "string", "enum": ["function", "module", "service", "system"] },
           "required_artifacts": { "type": "array", "items": { "type": "string" } },
           "pass_conditions": { "type": "array", "items": { "type": "string" } },
           "determinism_profile": { "type": "string", "enum": ["strict", "bounded", "convergence"] }
@@ -52,27 +51,76 @@
       },
       "evaluation": {
         "type": "object",
-        "required": ["type", "function_name", "examples"],
-        "additionalProperties": false,
+        "required": ["type", "examples"],
+        "additionalProperties": true,
         "properties": {
-          "type": { "type": "string", "enum": ["function_examples"] },
+          "type": { "type": "string", "enum": ["function_examples", "cli_examples"] },
           "function_name": { "type": "string", "minLength": 1 },
+          "entrypoint": { "type": "string", "minLength": 1 },
           "examples": {
             "type": "array",
             "minItems": 1,
             "items": {
               "type": "object",
-              "required": ["args", "expected"],
-              "additionalProperties": false,
+              "required": ["args"],
+              "additionalProperties": true,
               "properties": {
                 "args": { "type": "array" },
                 "kwargs": { "type": "object" },
-                "expected": {}
+                "expected": {},
+                "expected_stdout": { "type": "string" },
+                "expected_stderr": { "type": "string" },
+                "expected_exit_code": { "type": "integer" }
               }
             }
           }
         }
       }
-    }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "acceptance_contract": {
+              "properties": {
+                "mode": { "const": "function" }
+              }
+            }
+          }
+        },
+        "then": {
+          "required": ["function_signature"],
+          "properties": {
+            "evaluation": {
+              "properties": {
+                "type": { "const": "function_examples" }
+              },
+              "required": ["type", "function_name", "examples"]
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "acceptance_contract": {
+              "properties": {
+                "mode": { "enum": ["module", "service", "system"] }
+              }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "evaluation": {
+              "properties": {
+                "type": { "const": "cli_examples" }
+              },
+              "required": ["type", "entrypoint", "examples"]
+            }
+          }
+        }
+      }
+    ]
   }
 }
