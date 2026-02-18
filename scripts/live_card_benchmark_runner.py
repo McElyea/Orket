@@ -36,6 +36,7 @@ def _build_epic(task: dict, task_context_file: str, output_file: str) -> dict:
     function_signature = str(task.get("function_signature", "")).strip()
     constraints = [str(item).strip() for item in (task.get("constraints") or []) if str(item).strip()]
     io_examples = task.get("io_examples") or []
+    evaluation = task.get("evaluation") or {}
 
     # Include task instruction directly in summary because the default prompt includes
     # issue summary but may omit "note" details in some configurations.
@@ -54,6 +55,17 @@ def _build_epic(task: dict, task_context_file: str, output_file: str) -> dict:
         )
         summary_suffix = (
             f"{summary_suffix} "
+            "Output contract: return exact required values with no extra characters, separators, or whitespace changes. "
+            "When returning collections, apply stable deterministic ordering for all levels so repeated runs are identical "
+            "and ordering-sensitive checks pass."
+        )
+        summary_suffix = (
+            f"{summary_suffix} "
+            "For nested list/group outputs, sort each inner group deterministically and then sort the outer list "
+            "by a stable key (for example first element, then length) before returning."
+        )
+        summary_suffix = (
+            f"{summary_suffix} "
             f"Implement exactly one top-level function matching signature {preferred_signature} "
             "that performs deterministic computation using at least one intermediate variable assignment "
             "before returning a computed value."
@@ -62,6 +74,12 @@ def _build_epic(task: dict, task_context_file: str, output_file: str) -> dict:
             summary_suffix = f"{summary_suffix} Required function signature: {function_signature}."
         if problem:
             summary_suffix = f"{summary_suffix} Problem: {problem}."
+        eval_examples = evaluation.get("examples") if isinstance(evaluation, dict) else None
+        if isinstance(eval_examples, list) and eval_examples:
+            summary_suffix = (
+                f"{summary_suffix} "
+                f"Evaluation examples (must match exactly): {json.dumps(eval_examples, ensure_ascii=False)}."
+            )
     return {
         "name": "",
         "description": f"Live benchmark task {task_id}",
@@ -82,6 +100,8 @@ def _build_epic(task: dict, task_context_file: str, output_file: str) -> dict:
                     "Main code style requirements: concise and task-focused; avoid comments unless strictly necessary; "
                     "no __main__ entrypoint unless the task explicitly requires runtime CLI behavior; "
                     "for function-mode tasks avoid print statements and follow the required function signature. "
+                    "For function-mode tasks, return exact expected output format with no additional characters; "
+                    "if returning list/dict/set-derived data, normalize to deterministic ordering before return. "
                     f"Description: {description} "
                     f"Instruction: {instruction or 'No explicit instruction provided; use description and acceptance contract.'} "
                     f"Pass conditions: {pass_text} "
@@ -193,11 +213,24 @@ def _validate_task_outputs(run_dir: Path, task: dict[str, Any], output_file: str
 
 
 def _count_meaningful_statements(func: ast.FunctionDef) -> int:
+    def _is_docstring_expr(node: ast.stmt) -> bool:
+        return (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        )
+
     count = 0
-    for stmt in func.body:
-        if isinstance(stmt, ast.Pass):
+    for node in ast.walk(func):
+        if not isinstance(node, ast.stmt):
             continue
-        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant) and isinstance(stmt.value.value, str):
+        if node is func:
+            continue
+        if isinstance(node, ast.FunctionDef):
+            continue
+        if isinstance(node, ast.Pass):
+            continue
+        if _is_docstring_expr(node):
             continue
         count += 1
     return count
