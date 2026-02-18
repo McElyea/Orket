@@ -22,7 +22,7 @@ python -c "import json,pathlib; t=json.loads(pathlib.Path('benchmarks/task_bank/
 python scripts/live_card_benchmark_runner.py --task workspace/realworld/task001.json --run-dir workspace/realworld/task001_run
 ```
 
-## Run a Batch
+## Run a Batch (Card Path)
 
 ```powershell
 python scripts/run_determinism_harness.py ^
@@ -35,4 +35,28 @@ python scripts/run_determinism_harness.py ^
   --task-id-min 1 ^
   --task-id-max 20 ^
   --output benchmarks/results/live_card_v2_realworld_001_020_determinism.json
+```
+
+## Run a Batch (Rock Path, One Command)
+
+```powershell
+python scripts/run_live_rock_benchmark_suite.py ^
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json ^
+  --runs 1 ^
+  --task-id-min 1 ^
+  --task-id-max 20 ^
+  --raw-out benchmarks/results/live_rock_v2_001_020_determinism_report.json ^
+  --scored-out benchmarks/results/live_rock_v2_001_020_scored_report.json
+```
+
+## Harder Phase (Tasks 021-040)
+
+```powershell
+python scripts/run_live_rock_benchmark_suite.py ^
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json ^
+  --runs 1 ^
+  --task-id-min 21 ^
+  --task-id-max 40 ^
+  --raw-out benchmarks/results/live_rock_v2_021_040_determinism_report.json ^
+  --scored-out benchmarks/results/live_rock_v2_021_040_scored_report.json
 ```
