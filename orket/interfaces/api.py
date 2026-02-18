@@ -986,13 +986,15 @@ async def get_execution_graph(session_id: str):
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
     backlog = await engine.sessions.get_session_issues(session_id)
-    graph = _build_execution_graph(backlog)
-    return {
+    graph = _build_execution_graph(backlog, session_id)
+    payload = {
         "session_id": session_id,
         "node_count": len(graph["nodes"]),
         "edge_count": len(graph["edges"]),
         **graph,
     }
+    _persist_execution_graph_snapshot(session_id, payload)
+    return payload
 
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
@@ -1107,7 +1109,7 @@ def _coerce_datetime(value: Optional[str]) -> Optional[datetime]:
         raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'")
 
 
-def _build_execution_graph(backlog: list[dict[str, Any]]) -> dict[str, Any]:
+def _build_execution_graph(backlog: list[dict[str, Any]], session_id: str) -> dict[str, Any]:
     items = [item for item in backlog if isinstance(item, dict)]
     index_by_id: dict[str, int] = {}
     status_by_id: dict[str, str] = {}
@@ -1118,7 +1120,7 @@ def _build_execution_graph(backlog: list[dict[str, Any]]) -> dict[str, Any]:
         index_by_id[issue_id] = index
         status_by_id[issue_id] = str(item.get("status") or "unknown").strip().lower()
 
-    edges: list[dict[str, str]] = []
+    edges: list[dict[str, Any]] = []
     adjacency: dict[str, list[str]] = {issue_id: [] for issue_id in index_by_id}
     in_degree: dict[str, int] = {issue_id: 0 for issue_id in index_by_id}
     dependency_satisfied_statuses = {"done", "guard_approved", "archived"}
@@ -1131,9 +1133,30 @@ def _build_execution_graph(backlog: list[dict[str, Any]]) -> dict[str, Any]:
             dep_id = str(raw_dep or "").strip()
             if not dep_id or dep_id not in index_by_id:
                 continue
-            edges.append({"source": dep_id, "target": issue_id})
+            edges.append({"source": dep_id, "target": issue_id, "kind": "depends_on"})
             adjacency[dep_id].append(issue_id)
             in_degree[issue_id] += 1
+
+    edge_keys = {(edge["source"], edge["target"], str(edge.get("kind") or "depends_on")) for edge in edges}
+
+    # Parent-child relationships (when present) are modeled as spawn edges.
+    for item in items:
+        issue_id = str(item.get("id") or "").strip()
+        parent_id = str(item.get("parent_id") or "").strip()
+        if issue_id not in index_by_id or parent_id not in index_by_id or parent_id == issue_id:
+            continue
+        key = (parent_id, issue_id, "spawn")
+        if key in edge_keys:
+            continue
+        edge_keys.add(key)
+        edges.append({"source": parent_id, "target": issue_id, "kind": "spawn"})
+
+    for handoff in _derive_handoff_edges(session_id, index_by_id):
+        key = (handoff["source"], handoff["target"], "handoff")
+        if key in edge_keys:
+            continue
+        edge_keys.add(key)
+        edges.append(handoff)
 
     topo_queue = sorted(
         [issue_id for issue_id, degree in in_degree.items() if degree == 0],
@@ -1198,6 +1221,69 @@ def _build_execution_graph(backlog: list[dict[str, Any]]) -> dict[str, Any]:
         "has_cycle": has_cycle,
         "cycle_nodes": cycle_nodes,
     }
+
+
+def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    run_log = PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log"
+    default_log = PROJECT_ROOT / "workspace" / "default" / "orket.log"
+
+    for path in [run_log, default_log]:
+        records.extend(_read_log_records(path))
+
+    turns: list[tuple[int, str, str]] = []
+    for record in records:
+        if _record_session_id(record) != session_id:
+            continue
+        if str(record.get("event") or "").strip() != "turn_complete":
+            continue
+
+        data = record.get("data", {})
+        data = data if isinstance(data, dict) else {}
+        runtime_event = data.get("runtime_event", {})
+        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
+
+        issue_id = str(runtime_event.get("issue_id") or data.get("issue_id") or "").strip()
+        if not issue_id or issue_id not in index_by_id:
+            continue
+
+        try:
+            turn_index = int(runtime_event.get("turn_index") or data.get("turn_index") or 0)
+        except (TypeError, ValueError):
+            turn_index = 0
+
+        timestamp = str(record.get("timestamp") or "")
+        turns.append((turn_index, timestamp, issue_id))
+
+    turns.sort(key=lambda row: (row[0], row[1]))
+
+    handoff_edges: list[dict[str, Any]] = []
+    previous_issue: Optional[str] = None
+    for turn_index, timestamp, issue_id in turns:
+        if previous_issue and previous_issue != issue_id:
+            handoff_edges.append(
+                {
+                    "source": previous_issue,
+                    "target": issue_id,
+                    "kind": "handoff",
+                    "source_event": "turn_complete",
+                    "timestamp": timestamp,
+                    "turn_index": turn_index,
+                }
+            )
+        previous_issue = issue_id
+
+    return handoff_edges
+
+
+def _persist_execution_graph_snapshot(session_id: str, payload: dict[str, Any]) -> None:
+    try:
+        path = PROJECT_ROOT / "workspace" / "runs" / session_id / "agent_output" / "observability" / "execution_graph_snapshot.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    except (OSError, TypeError, ValueError):
+        # Snapshot persistence should never fail the API response path.
+        return
 
 
 def _record_session_id(record: dict[str, Any]) -> str:
