@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import uuid
 from datetime import UTC, datetime
@@ -174,8 +175,10 @@ def main() -> int:
         str(run_dir),
     ]
 
+    env = dict(os.environ)
+    env.setdefault("ORKET_DISABLE_SANDBOX", "1")
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False, env=env)
     finally:
         try:
             epic_path.unlink(missing_ok=True)

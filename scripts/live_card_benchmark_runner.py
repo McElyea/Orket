@@ -4,6 +4,7 @@ import argparse
 import ast
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -653,8 +654,10 @@ def main() -> int:
         },
     )
 
+    env = dict(os.environ)
+    env.setdefault("ORKET_DISABLE_SANDBOX", "1")
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False, env=env)
     finally:
         try:
             epic_path.unlink(missing_ok=True)
