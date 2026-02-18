@@ -85,3 +85,4 @@ Current status:
 1. Nightly CI workflow added at `.github/workflows/nightly-benchmark.yml` with artifact upload.
 2. Trend reporting script added: `scripts/report_benchmark_trends.py`.
 3. Leaderboard generation script added: `scripts/build_benchmark_leaderboard.py`.
+4. Scored benchmark reports now populate `determinism_rate`, `avg_latency_ms`, and `avg_cost_usd` for trend aggregation.
