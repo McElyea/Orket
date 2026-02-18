@@ -23,11 +23,8 @@ wheels/
 
 # Orket Specific
 orket_persistence.db
-workspace/runs/
-workspace/default/*.log
-workspace/default/*.log*
-workspace/default/*.txt
-workspace/default/agents/
+workspace/**
+tmp/
 logs/
 *.log
 server.out
