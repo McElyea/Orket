@@ -60,3 +60,15 @@ python scripts/run_live_rock_benchmark_suite.py ^
   --raw-out benchmarks/results/live_rock_v2_021_040_determinism_report.json ^
   --scored-out benchmarks/results/live_rock_v2_021_040_scored_report.json
 ```
+
+## Advanced Phase (Tasks 041-060)
+
+```powershell
+python scripts/run_live_rock_benchmark_suite.py ^
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json ^
+  --runs 1 ^
+  --task-id-min 41 ^
+  --task-id-max 60 ^
+  --raw-out benchmarks/results/live_rock_v2_041_060_determinism_report.json ^
+  --scored-out benchmarks/results/live_rock_v2_041_060_scored_report.json
+```

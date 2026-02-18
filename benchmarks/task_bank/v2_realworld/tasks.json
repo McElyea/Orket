@@ -4079,5 +4079,2168 @@
         }
       ]
     }
+  },
+  {
+    "id": "041",
+    "tier": 6,
+    "description": "Find first substring occurrence using exact match.",
+    "problem": "Return the first index where pattern appears in text, or -1 if absent.",
+    "function_signature": "def first_substring_index(text, pattern):",
+    "instruction": "Implement first_substring_index(text, pattern).",
+    "constraints": [
+      "Case-sensitive",
+      "Return 0 when pattern is empty"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          "hello",
+          "ll"
+        ],
+        "output": 2
+      },
+      {
+        "input": [
+          "aaaaa",
+          "bba"
+        ],
+        "output": -1
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def first_substring_index(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "first_substring_index",
+      "examples": [
+        {
+          "args": [
+            "hello",
+            "ll"
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            "aaaaa",
+            "bba"
+          ],
+          "expected": -1
+        },
+        {
+          "args": [
+            "abc",
+            ""
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "042",
+    "tier": 6,
+    "description": "Levenshtein edit distance.",
+    "problem": "Return minimum number of insertions, deletions, and substitutions to convert a into b.",
+    "function_signature": "def edit_distance(a, b):",
+    "instruction": "Implement edit_distance(a, b).",
+    "constraints": [
+      "Return integer distance",
+      "Allow empty strings"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          "kitten",
+          "sitting"
+        ],
+        "output": 3
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def edit_distance(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "edit_distance",
+      "examples": [
+        {
+          "args": [
+            "kitten",
+            "sitting"
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            "",
+            "abc"
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            "abc",
+            "abc"
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "043",
+    "tier": 6,
+    "description": "Largest rectangle in histogram.",
+    "problem": "Given bar heights, return the largest rectangular area in the histogram.",
+    "function_signature": "def largest_histogram_area(heights):",
+    "instruction": "Implement largest_histogram_area(heights).",
+    "constraints": [
+      "Heights are non-negative integers"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            2,
+            1,
+            5,
+            6,
+            2,
+            3
+          ]
+        ],
+        "output": 10
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def largest_histogram_area(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "largest_histogram_area",
+      "examples": [
+        {
+          "args": [
+            [
+              2,
+              1,
+              5,
+              6,
+              2,
+              3
+            ]
+          ],
+          "expected": 10
+        },
+        {
+          "args": [
+            [
+              2,
+              4
+            ]
+          ],
+          "expected": 4
+        },
+        {
+          "args": [
+            []
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "044",
+    "tier": 6,
+    "description": "Trap rain water.",
+    "problem": "Given elevation map heights, return total trapped rain water.",
+    "function_signature": "def trap_rain_water(heights):",
+    "instruction": "Implement trap_rain_water(heights).",
+    "constraints": [
+      "Heights are non-negative integers"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            0,
+            1,
+            0,
+            2,
+            1,
+            0,
+            1,
+            3,
+            2,
+            1,
+            2,
+            1
+          ]
+        ],
+        "output": 6
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def trap_rain_water(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "trap_rain_water",
+      "examples": [
+        {
+          "args": [
+            [
+              0,
+              1,
+              0,
+              2,
+              1,
+              0,
+              1,
+              3,
+              2,
+              1,
+              2,
+              1
+            ]
+          ],
+          "expected": 6
+        },
+        {
+          "args": [
+            [
+              4,
+              2,
+              0,
+              3,
+              2,
+              5
+            ]
+          ],
+          "expected": 9
+        },
+        {
+          "args": [
+            []
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "045",
+    "tier": 6,
+    "description": "Course schedule feasibility.",
+    "problem": "Given prerequisites [a,b] meaning b before a, return True if all courses can be finished.",
+    "function_signature": "def can_finish_courses(num_courses, prerequisites):",
+    "instruction": "Implement can_finish_courses(num_courses, prerequisites).",
+    "constraints": [
+      "Detect cycles in directed graph"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          2,
+          [
+            [
+              1,
+              0
+            ]
+          ]
+        ],
+        "output": true
+      },
+      {
+        "input": [
+          2,
+          [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        ],
+        "output": false
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def can_finish_courses(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "can_finish_courses",
+      "examples": [
+        {
+          "args": [
+            2,
+            [
+              [
+                1,
+                0
+              ]
+            ]
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            2,
+            [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ]
+            ]
+          ],
+          "expected": false
+        },
+        {
+          "args": [
+            3,
+            []
+          ],
+          "expected": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "046",
+    "tier": 6,
+    "description": "Topological order with deterministic tie-break.",
+    "problem": "Return a valid topological ordering for courses. If multiple nodes are available, pick the smallest index first. Return [] if cycle exists.",
+    "function_signature": "def course_order(num_courses, prerequisites):",
+    "instruction": "Implement course_order(num_courses, prerequisites) using Kahn's algorithm. Always choose the smallest available course index first to guarantee deterministic output.",
+    "constraints": [
+      "Deterministic ordering required",
+      "Use smallest-index tie-break when multiple nodes have indegree 0",
+      "Return empty list on cycle"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          4,
+          [
+            [
+              1,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ]
+          ]
+        ],
+        "output": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def course_order(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "course_order",
+      "examples": [
+        {
+          "args": [
+            4,
+            [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                2
+              ]
+            ]
+          ],
+          "expected": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "args": [
+            6,
+            [
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                2
+              ],
+              [
+                4,
+                3
+              ],
+              [
+                5,
+                4
+              ]
+            ]
+          ],
+          "expected": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "args": [
+            2,
+            [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ]
+            ]
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            3,
+            []
+          ],
+          "expected": [
+            0,
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "047",
+    "tier": 6,
+    "description": "Word break feasibility.",
+    "problem": "Return True if s can be segmented into one or more dictionary words.",
+    "function_signature": "def word_break_possible(s, word_dict):",
+    "instruction": "Implement word_break_possible(s, word_dict).",
+    "constraints": [
+      "word_dict is list of strings"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          "leetcode",
+          [
+            "leet",
+            "code"
+          ]
+        ],
+        "output": true
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def word_break_possible(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "word_break_possible",
+      "examples": [
+        {
+          "args": [
+            "leetcode",
+            [
+              "leet",
+              "code"
+            ]
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            "applepenapple",
+            [
+              "apple",
+              "pen"
+            ]
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            "catsandog",
+            [
+              "cats",
+              "dog",
+              "sand",
+              "and",
+              "cat"
+            ]
+          ],
+          "expected": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "048",
+    "tier": 6,
+    "description": "Insert and merge interval.",
+    "problem": "Insert new interval into sorted non-overlapping intervals and merge if needed.",
+    "function_signature": "def insert_interval(intervals, new_interval):",
+    "instruction": "Implement insert_interval(intervals, new_interval).",
+    "constraints": [
+      "Return intervals sorted by start"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              1,
+              3
+            ],
+            [
+              6,
+              9
+            ]
+          ],
+          [
+            2,
+            5
+          ]
+        ],
+        "output": [
+          [
+            1,
+            5
+          ],
+          [
+            6,
+            9
+          ]
+        ]
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def insert_interval(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "insert_interval",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                1,
+                3
+              ],
+              [
+                6,
+                9
+              ]
+            ],
+            [
+              2,
+              5
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              5
+            ],
+            [
+              6,
+              9
+            ]
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2
+              ],
+              [
+                3,
+                5
+              ],
+              [
+                6,
+                7
+              ],
+              [
+                8,
+                10
+              ],
+              [
+                12,
+                16
+              ]
+            ],
+            [
+              4,
+              8
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              10
+            ],
+            [
+              12,
+              16
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "049",
+    "tier": 6,
+    "description": "Median of two sorted arrays.",
+    "problem": "Return median value of two sorted arrays as float when needed.",
+    "function_signature": "def median_two_sorted_arrays(a, b):",
+    "instruction": "Implement median_two_sorted_arrays(a, b).",
+    "constraints": [
+      "Arrays are sorted ascending",
+      "Total length >= 1"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            1,
+            3
+          ],
+          [
+            2
+          ]
+        ],
+        "output": 2.0
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def median_two_sorted_arrays(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "median_two_sorted_arrays",
+      "examples": [
+        {
+          "args": [
+            [
+              1,
+              3
+            ],
+            [
+              2
+            ]
+          ],
+          "expected": 2.0
+        },
+        {
+          "args": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "expected": 2.5
+        },
+        {
+          "args": [
+            [],
+            [
+              1
+            ]
+          ],
+          "expected": 1.0
+        }
+      ]
+    }
+  },
+  {
+    "id": "050",
+    "tier": 5,
+    "description": "Spiral matrix order.",
+    "problem": "Return all matrix elements in spiral order.",
+    "function_signature": "def spiral_order(matrix):",
+    "instruction": "Implement spiral_order(matrix).",
+    "constraints": [
+      "Return list",
+      "Handle empty matrix"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              4,
+              5,
+              6
+            ],
+            [
+              7,
+              8,
+              9
+            ]
+          ]
+        ],
+        "output": [
+          1,
+          2,
+          3,
+          6,
+          9,
+          8,
+          7,
+          4,
+          5
+        ]
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def spiral_order(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "spiral_order",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6
+              ],
+              [
+                7,
+                8,
+                9
+              ]
+            ]
+          ],
+          "expected": [
+            1,
+            2,
+            3,
+            6,
+            9,
+            8,
+            7,
+            4,
+            5
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2,
+                3,
+                4
+              ],
+              [
+                5,
+                6,
+                7,
+                8
+              ],
+              [
+                9,
+                10,
+                11,
+                12
+              ]
+            ]
+          ],
+          "expected": [
+            1,
+            2,
+            3,
+            4,
+            8,
+            12,
+            11,
+            10,
+            9,
+            5,
+            6,
+            7
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "051",
+    "tier": 5,
+    "description": "Longest increasing subsequence length.",
+    "problem": "Return the length of the longest strictly increasing subsequence.",
+    "function_signature": "def lis_length(values):",
+    "instruction": "Implement lis_length(values).",
+    "constraints": [
+      "Return integer length"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            10,
+            9,
+            2,
+            5,
+            3,
+            7,
+            101,
+            18
+          ]
+        ],
+        "output": 4
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def lis_length(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "lis_length",
+      "examples": [
+        {
+          "args": [
+            [
+              10,
+              9,
+              2,
+              5,
+              3,
+              7,
+              101,
+              18
+            ]
+          ],
+          "expected": 4
+        },
+        {
+          "args": [
+            [
+              0,
+              1,
+              0,
+              3,
+              2,
+              3
+            ]
+          ],
+          "expected": 4
+        },
+        {
+          "args": [
+            [
+              7,
+              7,
+              7,
+              7
+            ]
+          ],
+          "expected": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "052",
+    "tier": 5,
+    "description": "Maximum subarray sum.",
+    "problem": "Return maximum possible sum of a contiguous subarray.",
+    "function_signature": "def max_subarray_sum(values):",
+    "instruction": "Implement max_subarray_sum(values).",
+    "constraints": [
+      "Input non-empty"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            -2,
+            1,
+            -3,
+            4,
+            -1,
+            2,
+            1,
+            -5,
+            4
+          ]
+        ],
+        "output": 6
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def max_subarray_sum(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "max_subarray_sum",
+      "examples": [
+        {
+          "args": [
+            [
+              -2,
+              1,
+              -3,
+              4,
+              -1,
+              2,
+              1,
+              -5,
+              4
+            ]
+          ],
+          "expected": 6
+        },
+        {
+          "args": [
+            [
+              1
+            ]
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            [
+              -1,
+              -2,
+              -3
+            ]
+          ],
+          "expected": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "053",
+    "tier": 5,
+    "description": "Connected components count in undirected graph.",
+    "problem": "Given n nodes and undirected edges, return number of connected components.",
+    "function_signature": "def connected_components_count(n, edges):",
+    "instruction": "Implement connected_components_count(n, edges).",
+    "constraints": [
+      "Nodes are 0..n-1"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          5,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "output": 2
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def connected_components_count(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "connected_components_count",
+      "examples": [
+        {
+          "args": [
+            5,
+            [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                3,
+                4
+              ]
+            ]
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            5,
+            [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ]
+          ],
+          "expected": 1
+        },
+        {
+          "args": [
+            4,
+            []
+          ],
+          "expected": 4
+        }
+      ]
+    }
+  },
+  {
+    "id": "054",
+    "tier": 5,
+    "description": "Count islands in grid.",
+    "problem": "Return number of islands in binary grid where 1 is land and 0 is water (4-direction connectivity).",
+    "function_signature": "def count_islands(grid):",
+    "instruction": "Implement count_islands(grid).",
+    "constraints": [
+      "Do not mutate caller-visible structure unexpectedly"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              "1",
+              "1",
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "1",
+              "0",
+              "0"
+            ],
+            [
+              "0",
+              "0",
+              "1",
+              "0"
+            ],
+            [
+              "0",
+              "0",
+              "0",
+              "1"
+            ]
+          ]
+        ],
+        "output": 3
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def count_islands(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "count_islands",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                "1",
+                "1",
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "1",
+                "0",
+                "0"
+              ],
+              [
+                "0",
+                "0",
+                "1",
+                "0"
+              ],
+              [
+                "0",
+                "0",
+                "0",
+                "1"
+              ]
+            ]
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            [
+              [
+                "1",
+                "1",
+                "1"
+              ],
+              [
+                "0",
+                "1",
+                "0"
+              ],
+              [
+                "1",
+                "1",
+                "1"
+              ]
+            ]
+          ],
+          "expected": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "055",
+    "tier": 6,
+    "description": "Shortest path in weighted DAG.",
+    "problem": "Given a DAG with weighted directed edges [u,v,w], return shortest path cost from start to end or -1 if unreachable.",
+    "function_signature": "def dag_shortest_path(n, edges, start, end):",
+    "instruction": "Implement dag_shortest_path(n, edges, start, end).",
+    "constraints": [
+      "Graph is acyclic",
+      "Weights may be negative or positive"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          6,
+          [
+            [
+              0,
+              1,
+              5
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              1,
+              3,
+              6
+            ],
+            [
+              1,
+              2,
+              2
+            ],
+            [
+              2,
+              4,
+              4
+            ],
+            [
+              2,
+              5,
+              2
+            ],
+            [
+              2,
+              3,
+              7
+            ],
+            [
+              3,
+              4,
+              -1
+            ],
+            [
+              4,
+              5,
+              -2
+            ]
+          ],
+          1,
+          5
+        ],
+        "output": 3
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def dag_shortest_path(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "dag_shortest_path",
+      "examples": [
+        {
+          "args": [
+            6,
+            [
+              [
+                0,
+                1,
+                5
+              ],
+              [
+                0,
+                2,
+                3
+              ],
+              [
+                1,
+                3,
+                6
+              ],
+              [
+                1,
+                2,
+                2
+              ],
+              [
+                2,
+                4,
+                4
+              ],
+              [
+                2,
+                5,
+                2
+              ],
+              [
+                2,
+                3,
+                7
+              ],
+              [
+                3,
+                4,
+                -1
+              ],
+              [
+                4,
+                5,
+                -2
+              ]
+            ],
+            1,
+            5
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            3,
+            [
+              [
+                0,
+                1,
+                1
+              ]
+            ],
+            0,
+            2
+          ],
+          "expected": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "056",
+    "tier": 6,
+    "description": "0/1 knapsack max value.",
+    "problem": "Given weights, values, and capacity, return maximum obtainable value.",
+    "function_signature": "def knapsack_01(weights, values, capacity):",
+    "instruction": "Implement knapsack_01(weights, values, capacity).",
+    "constraints": [
+      "Each item can be used at most once"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            1,
+            3,
+            4,
+            5
+          ],
+          [
+            1,
+            4,
+            5,
+            7
+          ],
+          7
+        ],
+        "output": 9
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def knapsack_01(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "knapsack_01",
+      "examples": [
+        {
+          "args": [
+            [
+              1,
+              3,
+              4,
+              5
+            ],
+            [
+              1,
+              4,
+              5,
+              7
+            ],
+            7
+          ],
+          "expected": 9
+        },
+        {
+          "args": [
+            [
+              2,
+              3,
+              4
+            ],
+            [
+              4,
+              5,
+              6
+            ],
+            5
+          ],
+          "expected": 9
+        },
+        {
+          "args": [
+            [],
+            [],
+            10
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "057",
+    "tier": 6,
+    "description": "Longest common subsequence length.",
+    "problem": "Return length of the longest common subsequence between two strings.",
+    "function_signature": "def lcs_length(a, b):",
+    "instruction": "Implement lcs_length(a, b).",
+    "constraints": [
+      "Return integer length"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          "abcde",
+          "ace"
+        ],
+        "output": 3
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def lcs_length(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "lcs_length",
+      "examples": [
+        {
+          "args": [
+            "abcde",
+            "ace"
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            "abc",
+            "abc"
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            "abc",
+            "def"
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "058",
+    "tier": 6,
+    "description": "Find redundant connection in undirected graph.",
+    "problem": "Given edges for a tree plus one extra edge, return the redundant edge that creates a cycle. If multiple, return the last one in input that forms cycle.",
+    "function_signature": "def redundant_connection(edges):",
+    "instruction": "Implement redundant_connection(edges).",
+    "constraints": [
+      "Edges are [u,v] with 1-based node labels"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              3
+            ]
+          ]
+        ],
+        "output": [
+          2,
+          3
+        ]
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def redundant_connection(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "redundant_connection",
+      "examples": [
+        {
+          "args": [
+            [
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ]
+          ],
+          "expected": [
+            2,
+            3
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                1,
+                5
+              ]
+            ]
+          ],
+          "expected": [
+            1,
+            4
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "059",
+    "tier": 6,
+    "description": "Count subarrays with sum k.",
+    "problem": "Return the number of contiguous subarrays whose sum equals k.",
+    "function_signature": "def count_subarrays_sum_k(values, k):",
+    "instruction": "Implement count_subarrays_sum_k(values, k) using deterministic logic.",
+    "constraints": [
+      "Values may include negatives",
+      "Return integer count"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            1,
+            1,
+            1
+          ],
+          2
+        ],
+        "output": 2
+      },
+      {
+        "input": [
+          [
+            1,
+            2,
+            3
+          ],
+          3
+        ],
+        "output": 2
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def count_subarrays_sum_k(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "count_subarrays_sum_k",
+      "examples": [
+        {
+          "args": [
+            [
+              1,
+              1,
+              1
+            ],
+            2
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            [
+              1,
+              2,
+              3
+            ],
+            3
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            [
+              1,
+              -1,
+              0
+            ],
+            0
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            [],
+            0
+          ],
+          "expected": 0
+        }
+      ]
+    }
+  },
+  {
+    "id": "060",
+    "tier": 6,
+    "description": "Asteroid collision simulation.",
+    "problem": "Given integers representing moving asteroids, return state after all collisions. Positive moves right, negative moves left. Colliding asteroids destroy smaller absolute value; equal destroys both.",
+    "function_signature": "def asteroid_collision(values):",
+    "instruction": "Implement asteroid_collision(values) using stack-based deterministic logic.",
+    "constraints": [
+      "Return remaining asteroids in original relative order after collisions"
+    ],
+    "io_examples": [
+      {
+        "input": [
+          [
+            5,
+            10,
+            -5
+          ]
+        ],
+        "output": [
+          5,
+          10
+        ]
+      },
+      {
+        "input": [
+          [
+            8,
+            -8
+          ]
+        ],
+        "output": []
+      }
+    ],
+    "acceptance_contract": {
+      "mode": "function",
+      "required_artifacts": [
+        "run.log",
+        "report.json"
+      ],
+      "pass_conditions": [
+        "Function returns expected values for examples",
+        "Required artifacts are produced",
+        "Task-level checks pass"
+      ],
+      "determinism_profile": "strict",
+      "quality_required_keywords": [
+        "def asteroid_collision(",
+        "return"
+      ],
+      "quality_forbidden_keywords": [
+        "__main__",
+        "print(",
+        "run_cli",
+        "log_crash"
+      ]
+    },
+    "evaluation": {
+      "type": "function_examples",
+      "function_name": "asteroid_collision",
+      "examples": [
+        {
+          "args": [
+            [
+              5,
+              10,
+              -5
+            ]
+          ],
+          "expected": [
+            5,
+            10
+          ]
+        },
+        {
+          "args": [
+            [
+              8,
+              -8
+            ]
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            [
+              10,
+              2,
+              -5
+            ]
+          ],
+          "expected": [
+            10
+          ]
+        },
+        {
+          "args": [
+            [
+              -2,
+              -1,
+              1,
+              2
+            ]
+          ],
+          "expected": [
+            -2,
+            -1,
+            1,
+            2
+          ]
+        }
+      ]
+    }
   }
 ]

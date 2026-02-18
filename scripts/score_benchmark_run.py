@@ -111,7 +111,7 @@ def score_report(
         task_meta = tasks_by_id.get(task_id, {})
         tier = int(task_detail.get("tier") or task_meta.get("tier") or 0)
         min_band = int(per_task_min_band_by_tier.get(str(tier), 0) or 0)
-        passed = band >= min_band
+        passed = (band >= min_band) and (success_rate >= 1.0)
         if not passed:
             failing_tasks.append(task_id)
 
