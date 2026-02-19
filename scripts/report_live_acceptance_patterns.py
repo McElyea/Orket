@@ -257,6 +257,12 @@ def _build_report(batch_id: str, runs: List[Dict[str, Any]]) -> Dict[str, Any]:
             "turn_non_progress": _sum_metric(runs, "turn_non_progress"),
             "dependency_block_propagated": _sum_metric(runs, "dependency_block_propagated"),
             "tool_call_blocked": _sum_metric(runs, "tool_call_blocked"),
+            "preflight_missing_read_paths": _sum_metric(runs, "preflight_missing_read_paths"),
+            "preflight_missing_read_paths_total": _sum_metric(runs, "preflight_missing_read_paths_total"),
+            "team_policy_preflight_failed": _sum_metric(runs, "team_policy_preflight_failed"),
+            "team_policy_auto_injected_code_reviewer": _sum_metric(
+                runs, "team_policy_auto_injected_code_reviewer"
+            ),
             "runtime_verifier_started": _sum_metric(runs, "runtime_verifier_started"),
             "runtime_verifier_completed": _sum_metric(runs, "runtime_verifier_completed"),
             "runtime_verifier_failures": _sum_metric(runs, "runtime_verifier_failures"),

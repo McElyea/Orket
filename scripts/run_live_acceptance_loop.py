@@ -105,6 +105,20 @@ def _event_count_with_flag(events: List[Dict[str, Any]], event_name: str, data_f
     return count
 
 
+def _event_data_int_sum(events: List[Dict[str, Any]], event_name: str, data_key: str) -> int:
+    total = 0
+    for event in events:
+        if event.get("event") != event_name:
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        value = data.get(data_key, 0)
+        if isinstance(value, int):
+            total += value
+    return total
+
+
 def _runtime_failure_breakdown_count(events: List[Dict[str, Any]], failure_class: str) -> int:
     total = 0
     for event in events:
@@ -402,6 +416,14 @@ def _run_once(spec: RunSpec, python_exe: str, pytest_target: str) -> Dict[str, A
         "tool_call_blocked": _event_count(events, "tool_call_blocked"),
         "dependency_block_propagated": _event_count(events, "dependency_block_propagated"),
         "orchestrator_stalled": _event_count(events, "orchestrator_stalled"),
+        "preflight_missing_read_paths": _event_count(events, "preflight_missing_read_paths"),
+        "preflight_missing_read_paths_total": _event_data_int_sum(
+            events, "preflight_missing_read_paths", "missing_required_read_paths_count"
+        ),
+        "team_policy_preflight_failed": _event_count(events, "team_policy_preflight_failed"),
+        "team_policy_auto_injected_code_reviewer": _event_count(
+            events, "team_policy_auto_injected_code_reviewer"
+        ),
         "runtime_verifier_started": _event_count(events, "runtime_verifier_started"),
         "runtime_verifier_completed": _event_count(events, "runtime_verifier_completed"),
         "runtime_verifier_failures": _event_count_with_flag(

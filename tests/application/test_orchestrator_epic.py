@@ -7,7 +7,7 @@ from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
 from orket.application.services.guard_agent import GuardAgent
 from orket.application.services.runtime_verifier import build_runtime_guard_contract
-from orket.schema import CardStatus, IssueConfig
+from orket.schema import CardStatus, IssueConfig, TeamConfig, SeatConfig
 from orket.application.services.scaffolder import ScaffoldValidationError
 from orket.application.services.dependency_manager import DependencyValidationError
 from orket.application.services.deployment_planner import DeploymentValidationError
@@ -471,6 +471,70 @@ async def test_handle_failure_uses_evaluator_exception_policy(orchestrator):
 
     with pytest.raises(RuntimeError, match="CUSTOM RETRY I1 1/3: Fixable error"):
         await orch._handle_failure(issue, result, "run-1", ["dev"])
+
+
+@pytest.mark.asyncio
+async def test_handle_failure_normalizes_idesign_violation_message_when_disabled(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(id="I1", seat="dev", summary="Test", retry_count=0, max_retries=3)
+    result = SimpleNamespace(error="raw", violations=["Tool write_file failed: Permission denied"])
+
+    class CustomEvaluator:
+        def evaluate_failure(self, issue, result):
+            return {"action": "governance_violation", "next_retry_count": issue.retry_count}
+
+        def failure_exception_class(self, action):
+            return ExecutionFailed
+
+        def status_for_failure_action(self, action):
+            return CardStatus.BLOCKED
+
+        def governance_violation_message(self, error):
+            return "iDesign Violation: Governance violations: ['Tool write_file failed: Permission denied']"
+
+    orch.evaluator_node = CustomEvaluator()
+
+    with pytest.raises(ExecutionFailed) as exc:
+        await orch._handle_failure(issue, result, "run-1", ["dev"])
+
+    message = str(exc.value)
+    assert "Governance Violation:" in message
+    assert "iDesign Violation:" not in message
+
+
+@pytest.mark.asyncio
+async def test_handle_failure_keeps_idesign_violation_message_when_enabled(orchestrator):
+    orch, _cards, _loader = orchestrator
+    issue = IssueConfig(
+        id="I1",
+        seat="dev",
+        summary="Test",
+        retry_count=0,
+        max_retries=3,
+        params={"idesign_enabled": True},
+    )
+    result = SimpleNamespace(error="raw", violations=["Tool write_file failed: Permission denied"])
+
+    class CustomEvaluator:
+        def evaluate_failure(self, issue, result):
+            return {"action": "governance_violation", "next_retry_count": issue.retry_count}
+
+        def failure_exception_class(self, action):
+            return ExecutionFailed
+
+        def status_for_failure_action(self, action):
+            return CardStatus.BLOCKED
+
+        def governance_violation_message(self, error):
+            return "iDesign Violation: Governance violations: ['Tool write_file failed: Permission denied']"
+
+    orch.evaluator_node = CustomEvaluator()
+
+    with pytest.raises(ExecutionFailed) as exc:
+        await orch._handle_failure(issue, result, "run-1", ["dev"])
+
+    message = str(exc.value)
+    assert "iDesign Violation:" in message
 
 
 @pytest.mark.asyncio
@@ -1552,6 +1616,27 @@ def test_resolve_small_project_policy_maps_architect_to_lead_architect(orchestra
     assert policy["builder_seat"] == "lead_architect"
 
 
+def test_auto_inject_small_project_reviewer_from_process_rules(orchestrator):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(
+        process_rules={
+            "small_project_auto_inject_code_reviewer": True,
+            "small_project_auto_inject_reviewer_seat_name": "reviewer_auto",
+        }
+    )
+    team = TeamConfig(name="standard", seats={"coder": SeatConfig(name="Coder", roles=["coder"])})
+    epic = SimpleNamespace(issues=[SimpleNamespace(id="I1")])
+
+    assert orch._should_auto_inject_small_project_reviewer() is True
+    seat_name = orch._auto_inject_small_project_reviewer_seat(team)
+    policy = orch._resolve_small_project_team_policy(epic, team)
+
+    assert seat_name == "reviewer_auto"
+    assert "reviewer_auto" in team.seats
+    assert "code_reviewer" in team.seats["reviewer_auto"].roles
+    assert policy["reviewer_seat"] == "reviewer_auto"
+
+
 @pytest.mark.asyncio
 async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
@@ -1563,7 +1648,7 @@ async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tm
     cards.get_independent_ready_issues.side_effect = [[issue]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
 
-    with pytest.raises(ExecutionFailed, match="requires a code_reviewer seat"):
+    with pytest.raises(ExecutionFailed, match="missing code_reviewer seat"):
         await orch.execute_epic(
             active_build="build-no-reviewer",
             run_id="run-no-reviewer",
@@ -1859,5 +1944,3 @@ async def test_build_dependency_context_resolves_dependency_statuses(orchestrato
     assert context["dependency_statuses"]["REQ-1"] == "code_review"
     assert context["dependency_statuses"]["MISSING-1"] == "missing"
     assert set(context["unresolved_dependencies"]) == {"REQ-1", "MISSING-1"}
-
-

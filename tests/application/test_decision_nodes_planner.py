@@ -238,7 +238,7 @@ def test_default_evaluator_failure_governance_violation():
     assert evaluator.status_for_failure_action(decision["action"]) == CardStatus.BLOCKED
     assert evaluator.should_cancel_session(decision["action"]) is False
     assert evaluator.failure_event_name(decision["action"]) is None
-    assert evaluator.governance_violation_message("blocked") == "iDesign Violation: blocked"
+    assert evaluator.governance_violation_message("blocked") == "Governance Violation: blocked"
 
 
 def test_default_evaluator_failure_deterministic_security_is_governance_violation():
@@ -253,6 +253,48 @@ def test_default_evaluator_failure_deterministic_security_is_governance_violatio
 
     assert decision["action"] == "governance_violation"
     assert decision["next_retry_count"] == 1
+
+
+def test_default_evaluator_missing_read_file_is_retry():
+    evaluator = DefaultEvaluatorNode()
+    issue = SimpleNamespace(retry_count=0, max_retries=3)
+    result = SimpleNamespace(
+        violations=["Tool read_file failed: File not found"],
+        error="Governance violations: ['Tool read_file failed: File not found']",
+    )
+
+    decision = evaluator.evaluate_failure(issue, result)
+
+    assert decision["action"] == "retry"
+    assert decision["next_retry_count"] == 1
+
+
+def test_default_evaluator_missing_read_file_error_only_is_retry():
+    evaluator = DefaultEvaluatorNode()
+    issue = SimpleNamespace(retry_count=0, max_retries=3)
+    result = SimpleNamespace(
+        violations=[],
+        error="Governance violations: ['Tool read_file failed: File not found']",
+    )
+
+    decision = evaluator.evaluate_failure(issue, result)
+
+    assert decision["action"] == "retry"
+    assert decision["next_retry_count"] == 1
+
+
+def test_default_evaluator_non_readfile_violation_remains_governance():
+    evaluator = DefaultEvaluatorNode()
+    issue = SimpleNamespace(retry_count=0, max_retries=3)
+    result = SimpleNamespace(
+        violations=["Tool write_file failed: Permission denied"],
+        error="Governance violations: ['Tool write_file failed: Permission denied']",
+    )
+
+    decision = evaluator.evaluate_failure(issue, result)
+
+    assert decision["action"] == "governance_violation"
+    assert decision["next_retry_count"] == 0
 
 
 def test_default_evaluator_failure_retry():

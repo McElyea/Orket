@@ -70,6 +70,19 @@ def test_runtime_failure_breakdown_count_from_events() -> None:
     assert loop._runtime_failure_breakdown_count(events, "python_compile") == 3
 
 
+def test_event_data_int_sum_from_events() -> None:
+    loop = _load_script_module(
+        "run_live_acceptance_loop_data_sum",
+        "scripts/run_live_acceptance_loop.py",
+    )
+    events = [
+        {"event": "preflight_missing_read_paths", "data": {"missing_required_read_paths_count": 2}},
+        {"event": "preflight_missing_read_paths", "data": {"missing_required_read_paths_count": 3}},
+        {"event": "preflight_missing_read_paths", "data": {"missing_required_read_paths_count": "x"}},
+    ]
+    assert loop._event_data_int_sum(events, "preflight_missing_read_paths", "missing_required_read_paths_count") == 5
+
+
 def test_turn_non_progress_rule_counts_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_rule_counts",
@@ -164,6 +177,10 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "prompt_selection_policy_exact": 0,
                 "runtime_event_envelope_count": 7,
                 "runtime_event_schema_v1_count": 7,
+                "preflight_missing_read_paths": 1,
+                "preflight_missing_read_paths_total": 2,
+                "team_policy_preflight_failed": 0,
+                "team_policy_auto_injected_code_reviewer": 1,
                 "runtime_verifier_failure_python_compile": 1,
                 "runtime_verifier_failure_timeout": 0,
                 "runtime_verifier_failure_command_failed": 0,
@@ -197,6 +214,10 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
                 "prompt_selection_policy_exact": 1,
                 "runtime_event_envelope_count": 5,
                 "runtime_event_schema_v1_count": 5,
+                "preflight_missing_read_paths": 2,
+                "preflight_missing_read_paths_total": 3,
+                "team_policy_preflight_failed": 1,
+                "team_policy_auto_injected_code_reviewer": 0,
                 "runtime_verifier_failure_python_compile": 0,
                 "runtime_verifier_failure_timeout": 1,
                 "runtime_verifier_failure_command_failed": 1,
@@ -228,6 +249,10 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
     assert counters["prompt_selection_policy_exact"] == 1
     assert counters["runtime_event_envelope_count"] == 12
     assert counters["runtime_event_schema_v1_count"] == 12
+    assert counters["preflight_missing_read_paths"] == 3
+    assert counters["preflight_missing_read_paths_total"] == 5
+    assert counters["team_policy_preflight_failed"] == 1
+    assert counters["team_policy_auto_injected_code_reviewer"] == 1
     assert counters["runtime_verifier_failure_python_compile"] == 1
     assert counters["runtime_verifier_failure_timeout"] == 1
     assert counters["runtime_verifier_failure_command_failed"] == 1

@@ -471,6 +471,8 @@ async def test_prepare_messages_includes_read_path_contract(tmp_path):
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
     )
+    (Path(tmp_path) / "agent_output").mkdir(parents=True, exist_ok=True)
+    (Path(tmp_path) / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
     messages = await executor._prepare_messages(
         _issue(),
         _role(),
@@ -552,6 +554,8 @@ async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
     )
+    (Path(tmp_path) / "agent_output").mkdir(parents=True, exist_ok=True)
+    (Path(tmp_path) / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
     model = _Model(
         [
             '{"tool": "read_file", "args": {"path": "/path/to/implementation/file"}}\n'
@@ -579,6 +583,41 @@ async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path
     assert model.calls == 2
     assert len(toolbox.calls) == 2
     assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_missing_required_read_paths_are_preflighted(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    model = _Model(
+        [
+            '{"tool": "read_file", "args": {"path": "agent_output/requirements.txt"}}\n'
+            '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
+        ]
+    )
+    toolbox = _ToolBox()
+    role = RoleConfig(
+        id="REV",
+        summary="code_reviewer",
+        description="Review code",
+        tools=["read_file", "update_issue_status"],
+    )
+    context = _context()
+    context["role"] = "code_reviewer"
+    context["roles"] = ["code_reviewer"]
+    context["required_action_tools"] = ["read_file", "update_issue_status"]
+    context["required_statuses"] = ["code_review"]
+    context["required_read_paths"] = ["agent_output/requirements.txt", "agent_output/main.py"]
+
+    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    assert result.success is True
+    assert model.calls == 1
+    assert len(toolbox.calls) == 2
+    assert toolbox.calls[0][0] == "read_file"
+    assert toolbox.calls[1][0] == "update_issue_status"
 
 
 @pytest.mark.asyncio
