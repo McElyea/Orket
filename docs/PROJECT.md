@@ -24,5 +24,5 @@ This document defines the stable project context for Orket.
 - Local-first execution is the default operating assumption.
 
 ## Complexity Gate
-- iDesign threshold: 7 issues
-- Preferred structure at threshold and above: managers, engines, accessors
+- Legacy structural-threshold field exists in organization config.
+- Default runtime mode is structural-governance disabled (`force_none`) unless explicitly enabled.

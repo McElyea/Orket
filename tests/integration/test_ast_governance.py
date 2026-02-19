@@ -28,7 +28,7 @@ def test_tool_gate_blocks_ast_violation(tmp_path):
         "path": "accessors/db_accessor.py",
         "content": "import orket.managers.my_manager\nclass DbAccessor: pass"
     }
-    context = {"role": "coder"}
+    context = {"role": "coder", "idesign_enabled": True}
     
     result = gate.validate("write_file", args, context, ["coder"])
     assert "iDesign AST Violation: Layer Violation" in result
@@ -39,8 +39,20 @@ def test_tool_gate_allows_valid_ast(tmp_path):
         "path": "managers/order_manager.py",
         "content": "class OrderManager:\n    def process(self): pass"
     }
-    context = {"role": "coder"}
+    context = {"role": "coder", "idesign_enabled": True}
     
+    result = gate.validate("write_file", args, context, ["coder"])
+    assert result is None
+
+
+def test_tool_gate_skips_idesign_ast_when_disabled(tmp_path):
+    gate = ToolGate(None, tmp_path)
+    args = {
+        "path": "accessors/db_accessor.py",
+        "content": "import orket.managers.my_manager\nclass DbAccessor: pass",
+    }
+    context = {"role": "coder", "idesign_enabled": False}
+
     result = gate.validate("write_file", args, context, ["coder"])
     assert result is None
 

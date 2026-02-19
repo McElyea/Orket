@@ -83,16 +83,17 @@ class ToolGate:
                 tool_calls=[ToolCall(tool="write_file", args=args)],
             )
 
-            violations = iDesignValidator.validate_turn(temp_turn, self.workspace_root)
-            if violations:
-                return f"iDesign Violation: {violations[0].message} (Code: {violations[0].code.value})"
+            if self._idesign_enabled(context):
+                violations = iDesignValidator.validate_turn(temp_turn, self.workspace_root)
+                if violations:
+                    return f"iDesign Violation: {violations[0].message} (Code: {violations[0].code.value})"
 
-            if full_path.suffix == ".py":
-                content = args.get("content", "")
-                ast_violations = ASTValidator.validate_code(content, full_path.name)
-                errors = [v for v in ast_violations if v.severity == "error"]
-                if errors:
-                    return f"iDesign AST Violation: {errors[0].message} (Line: {errors[0].line})"
+                if full_path.suffix == ".py":
+                    content = args.get("content", "")
+                    ast_violations = ASTValidator.validate_code(content, full_path.name)
+                    errors = [v for v in ast_violations if v.severity == "error"]
+                    if errors:
+                        return f"iDesign AST Violation: {errors[0].message} (Line: {errors[0].line})"
 
             if self.org and hasattr(self.org, "forbidden_file_types"):
                 forbidden = self.org.forbidden_file_types
@@ -119,6 +120,11 @@ class ToolGate:
             return f"Invalid file path: {e}"
 
         return None
+
+    def _idesign_enabled(self, context: Dict[str, Any]) -> bool:
+        if not isinstance(context, dict):
+            return False
+        return bool(context.get("idesign_enabled", False))
 
     def _validate_dependency_file_ownership(
         self,

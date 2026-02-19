@@ -512,7 +512,8 @@ class TurnExecutor:
             "dependency_context": context.get("dependency_context", {}),
             "required_action_tools": context.get("required_action_tools", []),
             "required_statuses": context.get("required_statuses", []),
-            "required_read_paths": context.get("required_read_paths", []),
+            "required_read_paths": self._required_read_paths(context),
+            "missing_required_read_paths": self._missing_required_read_paths(context),
             "required_write_paths": context.get("required_write_paths", []),
             "stage_gate_mode": context.get("stage_gate_mode"),
             "runtime_verifier_ok": context.get("runtime_verifier_ok"),
@@ -530,8 +531,11 @@ class TurnExecutor:
         })
 
         required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
+        if "read_file" in required_action_tools and not self._required_read_paths(context):
+            required_action_tools = [tool for tool in required_action_tools if tool != "read_file"]
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
-        required_read_paths = [str(p).strip() for p in (context.get("required_read_paths") or []) if str(p).strip()]
+        required_read_paths = self._required_read_paths(context)
+        missing_required_read_paths = self._missing_required_read_paths(context)
         required_write_paths = [str(p).strip() for p in (context.get("required_write_paths") or []) if str(p).strip()]
         if required_action_tools or required_statuses:
             contract_lines = []
@@ -576,6 +580,30 @@ class TurnExecutor:
                 {
                     "role": "user",
                     "content": "Read Path Contract:\n" + "\n".join(read_lines),
+                }
+            )
+        if missing_required_read_paths:
+            log_event(
+                "preflight_missing_read_paths",
+                {
+                    "issue_id": issue.id,
+                    "role": role.name,
+                    "session_id": context.get("session_id", "unknown-session"),
+                    "turn_index": int(context.get("turn_index", 0)),
+                    "missing_required_read_paths_count": len(missing_required_read_paths),
+                    "missing_required_read_paths": missing_required_read_paths,
+                },
+                self.workspace,
+            )
+            missing_lines = [
+                "- The following expected read paths are currently missing in workspace:",
+                *[f"  - {path}" for path in missing_required_read_paths],
+                "- Do not fabricate reads for missing paths; proceed with available files and state missing inputs explicitly.",
+            ]
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Missing Input Preflight Notice:\n" + "\n".join(missing_lines),
                 }
             )
 
@@ -1192,11 +1220,31 @@ class TurnExecutor:
         )
 
     def _required_read_paths(self, context: Dict[str, Any]) -> List[str]:
-        return [
+        existing, _ = self._partition_required_read_paths(context)
+        return existing
+
+    def _missing_required_read_paths(self, context: Dict[str, Any]) -> List[str]:
+        _, missing = self._partition_required_read_paths(context)
+        return missing
+
+    def _partition_required_read_paths(self, context: Dict[str, Any]) -> tuple[List[str], List[str]]:
+        required_paths = [
             str(path).strip()
             for path in (context.get("required_read_paths") or [])
             if str(path).strip()
         ]
+        if not required_paths:
+            return [], []
+
+        existing: List[str] = []
+        missing: List[str] = []
+        for rel_path in required_paths:
+            candidate = (self.workspace / rel_path).resolve()
+            if candidate.exists() and candidate.is_file():
+                existing.append(rel_path)
+            else:
+                missing.append(rel_path)
+        return existing, missing
 
     def _required_write_paths(self, context: Dict[str, Any]) -> List[str]:
         return [
@@ -1227,6 +1275,8 @@ class TurnExecutor:
     ) -> Dict[str, Any]:
         observed_tools = [call.tool for call in (turn.tool_calls or []) if call.tool]
         required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
+        if "read_file" in required_action_tools and not self._required_read_paths(context):
+            required_action_tools = [tool for tool in required_action_tools if tool != "read_file"]
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
         missing_required = [tool for tool in required_action_tools if tool not in observed_tools]
         observed_statuses = [

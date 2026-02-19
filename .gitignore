@@ -24,8 +24,8 @@ wheels/
 # Orket Specific
 orket_persistence.db
 workspace/**
-tmp/
-logs/
+tmp/**
+logs/**
 *.log
 server.out
 server.err
@@ -33,9 +33,9 @@ user_settings.json
 
 # Node / Frontend
 node_modules/
-ui/node_modules/
+ui/node_modules/**
 ui/dist/
-dist/
+dist/**
 .eslintcache
 .stylelintcache
 

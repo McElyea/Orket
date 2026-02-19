@@ -265,7 +265,9 @@ class ExecutionPipeline:
             "architect_decide": "architect_decides",
             "let_architect_decide": "architect_decides",
         }
-        return aliases.get(normalized, "architect_decides")
+        # iDesign is backburnered by default; opt-in explicitly with ORKET_IDESIGN_MODE
+        # or process_rules.idesign_mode when needed.
+        return aliases.get(normalized, "force_none")
 
     async def run_epic(
         self,
@@ -673,4 +675,3 @@ async def orchestrate(epic_name: str, workspace: Path, **kwargs) -> Any:
 
 async def orchestrate_rock(rock_name: str, workspace: Path, **kwargs) -> Dict[str, Any]:
     return await ExecutionPipeline(workspace, kwargs.get("department", "core")).run_rock(rock_name, **kwargs)
-

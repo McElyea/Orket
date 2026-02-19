@@ -97,6 +97,12 @@ class DefaultEvaluatorNode:
         }
 
     def evaluate_failure(self, issue: Any, result: Any) -> Dict[str, Any]:
+        if self._is_recoverable_missing_read_error(result):
+            next_retry_count = issue.retry_count + 1
+            if next_retry_count > issue.max_retries:
+                return {"action": "catastrophic", "next_retry_count": next_retry_count}
+            return {"action": "retry", "next_retry_count": next_retry_count}
+
         if result.violations or self._is_governance_deterministic_failure(result):
             return {"action": "governance_violation", "next_retry_count": issue.retry_count}
 
@@ -120,6 +126,14 @@ class DefaultEvaluatorNode:
             "architecture decision contract not met",
         )
         return any(marker in error_text for marker in governance_markers)
+
+    def _is_recoverable_missing_read_error(self, result: Any) -> bool:
+        violations = [str(item or "").strip().lower() for item in (getattr(result, "violations", []) or [])]
+        marker = "tool read_file failed: file not found"
+        if violations and all(marker in violation for violation in violations):
+            return True
+        error_text = str(getattr(result, "error", "") or "").strip().lower()
+        return marker in error_text
 
     def success_post_actions(self, success_eval: Dict[str, Any]) -> Dict[str, Any]:
         trigger_sandbox = bool(success_eval.get("trigger_sandbox"))
@@ -153,7 +167,7 @@ class DefaultEvaluatorNode:
         return mapping.get(action)
 
     def governance_violation_message(self, error: str | None) -> str:
-        return f"iDesign Violation: {error}"
+        return f"Governance Violation: {error}"
 
     def catastrophic_failure_message(self, issue_id: str, max_retries: int) -> str:
         return (
@@ -927,4 +941,3 @@ class DefaultModelClientPolicyNode:
 
     def create_client(self, provider: Any) -> Any:
         return _DefaultAsyncModelClient(provider)
-

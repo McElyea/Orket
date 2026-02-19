@@ -134,7 +134,7 @@ class IssueConfig(BaseCardConfig):
     metrics: IssueMetrics = Field(default_factory=IssueMetrics)
 
 class ArchitectureGovernance(BaseModel):
-    idesign: bool = Field(default=True)
+    idesign: bool = Field(default=False)
     pattern: str = Field(default="Standard")
     reasoning: Optional[str] = None
 
@@ -231,7 +231,7 @@ class BrandingConfig(BaseModel):
 
 class ArchitecturePrescription(BaseModel):
 
-    idesign_threshold: int = Field(default=10, description="Number of issues in an Epic before iDesign is mandatory.")
+    idesign_threshold: int = Field(default=10, description="Legacy iDesign threshold (inactive unless iDesign mode is explicitly enabled).")
 
     preferred_stack: Dict[str, str] = Field(default_factory=dict)
 

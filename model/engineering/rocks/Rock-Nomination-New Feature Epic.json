@@ -1,0 +1,11 @@
+{
+  "name": "Rock-Nomination-New Feature Epic",
+  "description": "Strategic parent for Development of a new feature for the product.",
+  "owner_department": "engineering",
+  "epics": [
+    {
+      "epic": "New Feature Epic",
+      "department": "engineering"
+    }
+  ]
+}

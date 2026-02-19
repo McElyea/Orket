@@ -19,7 +19,7 @@ class PolicyViolationReport(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     session_id: str
     card_id: str
-    violation_type: str  # "state_transition", "tool_gate", "idesign", "timeout"
+    violation_type: str  # "state_transition", "tool_gate", "structural", "timeout"
     detail: str
     attempted_action: Optional[Dict[str, Any]] = None
     remedy_suggestion: str
@@ -53,9 +53,9 @@ class FailureReporter:
         elif "tool" in violation.lower() or "gate" in violation.lower():
             v_type = "tool_gate"
             remedy = "The agent attempted a restricted tool call. Verify workspace permissions."
-        elif "idesign" in violation.lower():
-            v_type = "idesign"
-            remedy = "Structural violation detected. Ensure the '7 issue' iDesign rule is being followed."
+        elif "idesign" in violation.lower() or "structural" in violation.lower():
+            v_type = "structural"
+            remedy = "Structural violation detected. Review architecture governance settings and scope contracts."
 
         report = PolicyViolationReport(
             session_id=session_id,

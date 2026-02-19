@@ -1409,71 +1409,71 @@
   {
     "id": "019",
     "tier": 3,
-    "description": "Run-length encoding.",
-    "problem": "Encode a string with run-length encoding, e.g. aaabb -> a3b2.",
-    "function_signature": "def rle_encode(s):",
-    "instruction": "Implement rle_encode(s).",
+    "description": "Deterministic run-length-encoding CLI program.",
+    "problem": "Build a runnable Python program that applies run-length encoding to one input string from CLI arguments.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints the encoded string.",
     "constraints": [
-      "Return empty for empty input"
+      "Use Python standard library only",
+      "Return empty output line for empty input",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          "aaabb"
-        ],
-        "output": "a3b2"
+        "input": "python agent_output/main.py aaabb",
+        "output": "a3b2\\n"
       },
       {
-        "input": [
-          "abcd"
-        ],
-        "output": "a1b1c1d1"
+        "input": "python agent_output/main.py abcd",
+        "output": "a1b1c1d1\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def rle_encode(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "rle_encode",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
             "aaabb"
           ],
-          "expected": "a3b2"
+          "expected_stdout": "a3b2\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             "abcd"
           ],
-          "expected": "a1b1c1d1"
+          "expected_stdout": "a1b1c1d1\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
-          "args": [
-            ""
-          ],
-          "expected": ""
+          "args": [],
+          "expected_stdout": "",
+          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -1576,72 +1576,79 @@
   {
     "id": "021",
     "tier": 4,
-    "description": "Longest substring without repeating characters.",
-    "problem": "Return the length of the longest substring without duplicate characters.",
-    "function_signature": "def longest_unique_substring_len(s):",
-    "instruction": "Implement longest_unique_substring_len(s) using deterministic logic.",
+    "description": "Deterministic longest-unique-substring CLI program.",
+    "problem": "Build a runnable Python program that returns the length of the longest substring without duplicate characters.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts one ASCII string argument and prints the integer result.",
     "constraints": [
-      "Input is ASCII string",
-      "Return integer length"
+      "Use Python standard library only",
+      "Output integer with trailing newline",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          "abcabcbb"
-        ],
-        "output": 3
+        "input": "python agent_output/main.py abcabcbb",
+        "output": "3\\n"
       },
       {
-        "input": [
-          "bbbbb"
-        ],
-        "output": 1
+        "input": "python agent_output/main.py bbbbb",
+        "output": "1\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def longest_unique_substring_len(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "longest_unique_substring_len",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
             "abcabcbb"
           ],
-          "expected": 3
+          "expected_stdout": "3\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             "bbbbb"
           ],
-          "expected": 1
+          "expected_stdout": "1\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             "pwwkew"
           ],
-          "expected": 3
+          "expected_stdout": "3\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
+        },
+        {
+          "args": [],
+          "expected_stdout": "",
+          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -2023,70 +2030,85 @@
   {
     "id": "025",
     "tier": 4,
-    "description": "Minimum window substring.",
-    "problem": "Return the minimum-length substring of s that contains all characters of t (with multiplicity), or empty string.",
-    "function_signature": "def min_window_substring(s, t):",
-    "instruction": "Implement min_window_substring(s, t).",
+    "description": "Deterministic minimum-window-substring CLI program.",
+    "problem": "Build a runnable Python program that returns the minimum-length substring of s containing all characters of t, or empty string.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts two string arguments s and t and prints the minimum window result.",
     "constraints": [
-      "Case-sensitive",
-      "Return left-most minimum when multiple windows share length"
+      "Use Python standard library only",
+      "Case-sensitive behavior",
+      "Return left-most minimum when multiple windows share length",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          "ADOBECODEBANC",
-          "ABC"
-        ],
-        "output": "BANC"
+        "input": "python agent_output/main.py ADOBECODEBANC ABC",
+        "output": "BANC\\n"
+      },
+      {
+        "input": "python agent_output/main.py a aa",
+        "output": "\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def min_window_substring(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "min_window_substring",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
             "ADOBECODEBANC",
             "ABC"
           ],
-          "expected": "BANC"
+          "expected_stdout": "BANC\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             "a",
             "aa"
           ],
-          "expected": ""
+          "expected_stdout": "\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
             "ab",
             "b"
           ],
-          "expected": "b"
+          "expected_stdout": "b\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
+        },
+        {
+          "args": [
+            "onlyone"
+          ],
+          "expected_stdout": "",
+          "expected_stderr": "error: expected exactly 2 arguments\\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -2094,96 +2116,86 @@
   {
     "id": "026",
     "tier": 4,
-    "description": "Search in rotated sorted array.",
-    "problem": "Given a rotated sorted array with unique elements, return index of target or -1.",
-    "function_signature": "def search_rotated(values, target):",
-    "instruction": "Implement search_rotated(values, target).",
+    "description": "Deterministic rotated-array-search CLI program.",
+    "problem": "Build a runnable Python program that returns the index of target in a rotated sorted array, or -1 if absent.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts a JSON array string and a target integer, then prints the index.",
     "constraints": [
-      "Values are unique",
-      "Return integer index"
+      "Use Python standard library only",
+      "Input array values are unique",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          [
-            4,
-            5,
-            6,
-            7,
-            0,
-            1,
-            2
-          ],
-          0
-        ],
-        "output": 4
+        "input": "python agent_output/main.py \"[4,5,6,7,0,1,2]\" 0",
+        "output": "4\\n"
+      },
+      {
+        "input": "python agent_output/main.py \"[4,5,6,7,0,1,2]\" 3",
+        "output": "-1\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def search_rotated(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse",
+        "json"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "search_rotated",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
-            [
-              4,
-              5,
-              6,
-              7,
-              0,
-              1,
-              2
-            ],
-            0
+            "[4,5,6,7,0,1,2]",
+            "0"
           ],
-          "expected": 4
+          "expected_stdout": "4\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            [
-              4,
-              5,
-              6,
-              7,
-              0,
-              1,
-              2
-            ],
-            3
+            "[4,5,6,7,0,1,2]",
+            "3"
           ],
-          "expected": -1
+          "expected_stdout": "-1\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            [
-              1
-            ],
-            0
+            "[1]",
+            "0"
           ],
-          "expected": -1
+          "expected_stdout": "-1\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
+        },
+        {
+          "args": [
+            "not-json",
+            "0"
+          ],
+          "expected_stdout": "",
+          "expected_stderr": "error: first argument must be a JSON integer array\\n",
+          "expected_exit_code": 2
         }
       ]
     }
@@ -2494,109 +2506,91 @@
   {
     "id": "030",
     "tier": 4,
-    "description": "Evaluate Reverse Polish Notation expression.",
-    "problem": "Evaluate a tokenized Reverse Polish Notation expression and return the integer result.",
-    "function_signature": "def eval_rpn(tokens):",
-    "instruction": "Implement eval_rpn(tokens). Treat token as operator only when token is one of + - * /. Otherwise parse token as signed integer (including negatives like -11).",
+    "description": "Deterministic RPN-evaluator CLI program.",
+    "problem": "Build a runnable Python program that evaluates a Reverse Polish Notation token list and prints the integer result.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts one JSON array of token strings and prints evaluation result.",
     "constraints": [
+      "Use Python standard library only",
       "Operators are +, -, *, /",
-      "Operands may be signed integers as strings",
-      "Division truncates toward zero"
+      "Division truncates toward zero",
+      "Provide a real CLI entrypoint in agent_output/main.py"
     ],
     "io_examples": [
       {
-        "input": [
-          [
-            "2",
-            "1",
-            "+",
-            "3",
-            "*"
-          ]
-        ],
-        "output": 9
+        "input": "python agent_output/main.py \"[\"2\",\"1\",\"+\",\"3\",\"*\"]\"",
+        "output": "9\\n"
+      },
+      {
+        "input": "python agent_output/main.py \"[\"-2\",\"3\",\"/\"]\"",
+        "output": "0\\n"
       }
     ],
     "acceptance_contract": {
-      "mode": "function",
+      "mode": "system",
       "required_artifacts": [
         "run.log",
         "report.json"
       ],
       "pass_conditions": [
-        "Function returns expected values for examples",
+        "CLI returns expected output for valid cases",
+        "CLI returns deterministic error behavior for invalid input",
         "Required artifacts are produced",
         "Task-level checks pass"
       ],
       "determinism_profile": "strict",
       "quality_required_keywords": [
-        "def eval_rpn(",
-        "return"
+        "if __name__ == \"__main__\":",
+        "argparse",
+        "json"
       ],
       "quality_forbidden_keywords": [
-        "__main__",
-        "print(",
         "run_cli",
         "log_crash"
       ]
     },
     "evaluation": {
-      "type": "function_examples",
-      "function_name": "eval_rpn",
+      "type": "cli_examples",
+      "entrypoint": "agent_output/main.py",
       "examples": [
         {
           "args": [
-            [
-              "2",
-              "1",
-              "+",
-              "3",
-              "*"
-            ]
+            "[\"2\",\"1\",\"+\",\"3\",\"*\"]"
           ],
-          "expected": 9
+          "expected_stdout": "9\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            [
-              "4",
-              "13",
-              "5",
-              "/",
-              "+"
-            ]
+            "[\"4\",\"13\",\"5\",\"/\",\"+\"]"
           ],
-          "expected": 6
+          "expected_stdout": "6\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            [
-              "10",
-              "6",
-              "9",
-              "3",
-              "+",
-              "-11",
-              "*",
-              "/",
-              "*",
-              "17",
-              "+",
-              "5",
-              "+"
-            ]
+            "[\"10\",\"6\",\"9\",\"3\",\"+\",\"-11\",\"*\",\"/\",\"*\",\"17\",\"+\",\"5\",\"+\"]"
           ],
-          "expected": 22
+          "expected_stdout": "22\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
         },
         {
           "args": [
-            [
-              "-2",
-              "3",
-              "/"
-            ]
+            "[\"-2\",\"3\",\"/\"]"
           ],
-          "expected": 0
+          "expected_stdout": "0\\n",
+          "expected_stderr": "",
+          "expected_exit_code": 0
+        },
+        {
+          "args": [
+            "oops"
+          ],
+          "expected_stdout": "",
+          "expected_stderr": "error: argument must be a JSON token array\\n",
+          "expected_exit_code": 2
         }
       ]
     }

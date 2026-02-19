@@ -154,34 +154,34 @@ set ORKET_FRONTEND_FRAMEWORK_MODE=force_angular
 python -m orket.interfaces.cli --epic sanity_test
 ```
 
-### iDesign Mode
-Controls whether iDesign is required, disabled, or delegated to the architect.
+### Structural Governance Mode (Legacy iDesign Flag)
+Controls whether legacy structural-governance enforcement is required, disabled, or delegated.
 
 Valid values:
 1. `force_idesign`
 2. `force_none`
-3. `architect_decides` (default)
+3. `architect_decides`
 
 Configuration order (highest wins):
 1. Environment variable `ORKET_IDESIGN_MODE`
 2. `process_rules.idesign_mode` in organization config
-3. Default fallback: `architect_decides`
+3. Default fallback: `force_none`
 
 Examples:
 ```bash
-# Force iDesign for all epics
+# Force legacy structural governance for all epics
 set ORKET_IDESIGN_MODE=force_idesign
 python -m orket.interfaces.cli --epic sanity_test
 ```
 
 ```bash
-# Force non-iDesign mode for all epics
+# Disable legacy structural governance for all epics (repo default)
 set ORKET_IDESIGN_MODE=force_none
 python -m orket.interfaces.cli --epic sanity_test
 ```
 
 ```bash
-# Let architect governance setting decide (repo default)
+# Let epic governance setting decide
 set ORKET_IDESIGN_MODE=architect_decides
 python -m orket.interfaces.cli --epic sanity_test
 ```

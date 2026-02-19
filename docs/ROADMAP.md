@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-02-17.
+Last updated: 2026-02-19.
 
 ## Operating Constraints (Current)
 1. Orket engine loop remains the runtime; storage backend is pluggable.
@@ -89,3 +89,48 @@ Closeout commands:
    - `python scripts/run_live_card_benchmark_suite.py --runs 1 --raw-out benchmarks/results/live_card_100_determinism_report.json --scored-out benchmarks/results/live_card_100_scored_report.json`
 2. Live pytest gate:
    - `set ORKET_RUN_BENCHMARK_LIVE_100=1 && python -m pytest tests/live/test_benchmark_task_bank_live.py -q`
+
+## Priority 4: iDesign Decoupling and Crash Hardening (Active)
+Objective: remove iDesign backdoor coupling from default runtime paths and prevent governance over-escalation for recoverable tool/runtime failures.
+
+Observed failures from `workspace/default/orket_crash.log` (2026-02-17):
+1. Repeated terminal governance crashes: `iDesign Violation: Governance violations: ['Tool read_file failed: File not found']`
+2. iDesign AST syntax violations still raised as terminal governance despite iDesign backburner policy.
+3. Runtime crash unrelated to governance: `NameError: name 'Path' is not defined` in `orket/domain/bug_fix_phase.py`.
+4. Policy strictness mismatch: small-project card fails terminally when required `code_reviewer` seat is missing.
+
+Plan:
+1. De-couple iDesign wording and exception routing from default governance path:
+   - Replace default failure message prefix from `iDesign Violation:` to neutral `Governance Violation:` when `architecture_governance.idesign` is false.
+   - Keep iDesign-specific labeling only when iDesign is explicitly enabled by epic policy.
+2. Reclassify missing-file read failures as recoverable turn failures instead of terminal governance violations:
+   - Treat `Tool read_file failed: File not found` as actionable context/read-scope issue.
+   - Route first occurrence to corrective reprompt with explicit recovery guidance (confirm path, list directory, create file if task allows).
+   - Escalate to terminal only after deterministic repeated non-progress threshold is exceeded.
+3. Gate iDesign AST enforcement behind explicit iDesign enablement:
+   - When iDesign is disabled/backburnered, skip AST iDesign validators entirely for normal card paths.
+   - Add a hard assertion in evaluator nodes that iDesign AST violations cannot surface when mode is disabled.
+4. Add preflight and guardrail checks before agent tool loop:
+   - Validate required read paths exist (or are creatable) and emit deterministic warning artifacts instead of immediate governance failure.
+   - Inject task-context fallback for missing optional inputs so first turn does not fail on absent files.
+5. Fix concrete runtime defects found in crash log:
+   - Patch `orket/domain/bug_fix_phase.py` to import/use `Path` correctly and add regression test.
+   - Improve small-task team policy handling:
+     - preflight-reject with actionable message before turn execution, or
+     - auto-inject `code_reviewer` seat where policy requires it.
+6. Add targeted regression tests:
+   - `read_file` missing path -> corrective reprompt path, not immediate governance terminal.
+   - iDesign disabled -> no iDesign AST violation message/exceptions.
+   - bug-fix phase start path logging does not raise `NameError`.
+   - small-team policy violation caught in preflight with deterministic remediation output.
+7. Add acceptance gates for this priority:
+   - `python -m pytest tests/application/test_turn_executor_middleware.py -q`
+   - `python -m pytest tests/integration/test_idesign_enforcement.py -q`
+   - `python -m pytest tests/integration/test_engine_boundaries.py -q`
+   - `python -m pytest tests -q`
+
+Exit criteria:
+1. Zero occurrences of `iDesign Violation: Governance violations: ['Tool read_file failed: File not found']` across two consecutive live runs.
+2. Zero iDesign AST violations when `architecture_governance.idesign=false`.
+3. Bug-fix phase no longer throws `NameError: Path`.
+4. Determinism/benchmark pipelines remain green after decoupling changes.

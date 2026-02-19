@@ -5,7 +5,7 @@ from orket.schema import SkillConfig, DialectConfig
 class PromptCompiler:
     """
     Service responsible for assembling the final system instruction string.
-    Implements iDesign structural constraints and card system protocols.
+    Implements card system protocols and optional structural constraints.
     """
     
     @staticmethod
@@ -17,17 +17,10 @@ class PromptCompiler:
         for r in skill.responsibilities:
             prompt += f"- {r}\n"
 
-        prompt += "\niDESIGN CONSTRAINTS (Structural Integrity):\n"
-        idesign_standard = [
-            "Maintain strict separation of concerns: Managers, Engines, Accessors, Utilities.",
-            "Managers orchestrate the workflow and high-level logic.",
-            "Engines handle complex computations or business rules.",
-            "Accessors manage state or external tool interactions.",
-            "Utilities provide cross-cutting logic.",
-            "Organize files into: /controllers, /managers, /engines, /accessors, /utils, /tests."
-        ]
-        for c in (idesign_standard + (skill.idesign_constraints or [])):
-            prompt += f"- {c}\n"
+        if skill.idesign_constraints:
+            prompt += "\nSTRUCTURAL CONSTRAINTS (Optional):\n"
+            for c in (skill.idesign_constraints or []):
+                prompt += f"- {c}\n"
 
         prompt += "\nCARD SYSTEM PROTOCOL:\n"
         prompt += "- You MAY call 'get_issue_context' to read comment history and intent.\n"
