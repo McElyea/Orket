@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import re
 import ast
 import shlex
@@ -85,7 +85,13 @@ class OrketDriver:
 
         if self._should_handle_as_conversation(message):
             self._log_operator_metric("operator_request_total", route="conversation")
-            return self._conversation_reply(message)
+            rule_reply = self._conversation_reply(message)
+            if rule_reply is not None:
+                return rule_reply
+            model_reply = await self._conversation_model_reply(request_text)
+            if model_reply:
+                return model_reply
+            return "I can chat normally and help with Orket operations when you ask explicitly."
 
         # 1. Gather current context + Inventory
         loader = ConfigLoader(Path("model"), "core")
@@ -98,7 +104,7 @@ class OrketDriver:
             "request": message
         }
 
-        # 2. Build compiled prompt
+        # 2. Build action-mode prompt
         if self.skill and self.dialect:
             system_prompt = f"IDENTITY: {self.skill.name}\nINTENT: {self.skill.intent}\n\n"
             system_prompt += "RESPONSIBILITIES:\n" + "\n".join([f"- {r}" for r in self.skill.responsibilities]) + "\n\n"
@@ -653,7 +659,7 @@ Do not include commentary outside the JSON.
         )
         return any(re.search(pattern, text) for pattern in explicit_patterns)
 
-    def _conversation_reply(self, message: str) -> str:
+    def _conversation_reply(self, message: str) -> Optional[str]:
         text = str(message or "").strip()
         if not text:
             return "I am here. You can chat with me or ask me to make a specific board change."
@@ -692,7 +698,48 @@ Do not include commentary outside the JSON.
         math_answer = self._try_answer_math(text)
         if math_answer is not None:
             return math_answer
-        return "Understood. What would you like to talk about?"
+        return None
+
+    async def _conversation_model_reply(self, message: str) -> Optional[str]:
+        complete_fn = getattr(self.provider, "complete", None)
+        if not callable(complete_fn):
+            return None
+        try:
+            response = await complete_fn(
+                [
+                    {"role": "system", "content": self._conversation_system_prompt()},
+                    {"role": "user", "content": message},
+                ]
+            )
+            content = str(getattr(response, "content", "") or "").strip()
+            if not content:
+                return None
+            return self._normalize_conversation_model_output(content)
+        except (RuntimeError, ValueError, TypeError, KeyError, OSError):
+            return None
+
+    def _conversation_system_prompt(self) -> str:
+        return (
+            "You are the Orket Operator conversational assistant. "
+            "Chat naturally, clearly, and briefly. "
+            "Do not produce JSON, plans, or structural board mutations. "
+            "If the user asks for structural actions, ask them to request explicitly with Orket CLI commands."
+        )
+
+    def _normalize_conversation_model_output(self, content: str) -> str:
+        text = content.strip()
+        if text.startswith("{") and text.endswith("}"):
+            try:
+                payload = json.loads(text)
+            except json.JSONDecodeError:
+                return text
+            response = str(payload.get("response", "") or "").strip()
+            reasoning = str(payload.get("reasoning", "") or "").strip()
+            if response:
+                return response
+            if reasoning:
+                return reasoning
+        return text
 
     def _capabilities_summary(self) -> str:
         departments = sorted([p.name for p in self.model_root.iterdir() if p.is_dir()]) if self.model_root.exists() else []

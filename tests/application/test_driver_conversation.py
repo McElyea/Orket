@@ -115,6 +115,24 @@ async def test_process_request_anything_else_not_generic_fallback():
 
 
 @pytest.mark.asyncio
+async def test_process_request_general_conversation_uses_model_reply():
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.model_root = Path("model")
+    driver.skill = None
+    driver.dialect = None
+
+    class _Provider:
+        async def complete(self, _messages):
+            return SimpleNamespace(content="I can help reason through that tradeoff.")
+
+    driver.provider = _Provider()
+
+    response = await driver.process_request("Can we discuss tradeoffs in this design?")
+
+    assert response == "I can help reason through that tradeoff."
+
+
+@pytest.mark.asyncio
 async def test_process_request_about_application_question():
     driver = OrketDriver.__new__(OrketDriver)
     driver.model_root = Path("model")
