@@ -354,10 +354,11 @@ def test_runtime_policy_options(monkeypatch):
 def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder", "reviewer"])
-    monkeypatch.setattr(api_module, "load_user_settings", lambda: {"preferred_coder": "qwen2.5-coder:14b"})
+    monkeypatch.setattr(api_module, "load_user_preferences", lambda: {"models": {"coder": "qwen2.5-coder:14b"}})
+    monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
 
     class FakeSelector:
-        def __init__(self, organization=None, user_settings=None):
+        def __init__(self, organization=None, preferences=None, user_settings=None):
             self._role = None
 
         def select(self, role, department="core", override=None, asset_config=None):
@@ -401,10 +402,11 @@ def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
 
 def test_model_assignments_endpoint_respects_role_filter(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "load_user_preferences", lambda: {})
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
 
     class FakeSelector:
-        def __init__(self, organization=None, user_settings=None):
+        def __init__(self, organization=None, preferences=None, user_settings=None):
             self._role = None
 
         def select(self, role, department="core", override=None, asset_config=None):
@@ -1534,6 +1536,121 @@ def test_run_detail_and_replay_404_paths(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_run_replay_list_endpoint_returns_turn_index_for_timeline(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+
+    async def fake_get_run(session_id):
+        return {"session_id": session_id}
+
+    async def fake_get_session(session_id):
+        return {"id": session_id}
+
+    monkeypatch.setattr(api_module.engine.run_ledger, "get_run", fake_get_run)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+
+    default_workspace = Path(tmp_path) / "workspace" / "default"
+    default_workspace.mkdir(parents=True, exist_ok=True)
+    log_path = default_workspace / "orket.log"
+    lines = [
+        {
+            "timestamp": "2026-02-19T01:00:00+00:00",
+            "role": "coder",
+            "event": "turn_start",
+            "data": {
+                "runtime_event": {
+                    "session_id": "REP-1",
+                    "issue_id": "ISS-1",
+                    "turn_index": 1,
+                    "turn_trace_id": "REP-1:ISS-1:coder:1",
+                    "selected_model": "qwen2.5-coder:14b",
+                }
+            },
+        },
+        {
+            "timestamp": "2026-02-19T01:00:01+00:00",
+            "role": "coder",
+            "event": "turn_complete",
+            "data": {
+                "runtime_event": {
+                    "session_id": "REP-1",
+                    "issue_id": "ISS-1",
+                    "turn_index": 1,
+                    "turn_trace_id": "REP-1:ISS-1:coder:1",
+                }
+            },
+        },
+        {
+            "timestamp": "2026-02-19T01:00:02+00:00",
+            "role": "reviewer",
+            "event": "turn_complete",
+            "data": {
+                "runtime_event": {
+                    "session_id": "REP-1",
+                    "issue_id": "ISS-1",
+                    "turn_index": 2,
+                    "turn_trace_id": "REP-1:ISS-1:reviewer:2",
+                }
+            },
+        },
+    ]
+    log_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+
+    response = client.get("/v1/runs/REP-1/replay", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["session_id"] == "REP-1"
+    assert payload["turn_count"] == 2
+    assert payload["turns"][0]["issue_id"] == "ISS-1"
+    assert payload["turns"][0]["turn_index"] == 1
+    assert payload["turns"][0]["role"] == "coder"
+    assert payload["turns"][0]["selected_model"] == "qwen2.5-coder:14b"
+    assert payload["turns"][1]["turn_index"] == 2
+
+
+@pytest.mark.asyncio
+async def test_session_replay_endpoint_without_target_returns_timeline(monkeypatch, tmp_path):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_module, "PROJECT_ROOT", Path(tmp_path))
+
+    async def fake_get_run(session_id):
+        return {"session_id": session_id}
+
+    async def fake_get_session(session_id):
+        return {"id": session_id}
+
+    monkeypatch.setattr(api_module.engine.run_ledger, "get_run", fake_get_run)
+    monkeypatch.setattr(api_module.engine.sessions, "get_session", fake_get_session)
+
+    default_workspace = Path(tmp_path) / "workspace" / "default"
+    default_workspace.mkdir(parents=True, exist_ok=True)
+    log_path = default_workspace / "orket.log"
+    lines = [
+        {
+            "timestamp": "2026-02-19T02:00:00+00:00",
+            "role": "coder",
+            "event": "turn_complete",
+            "data": {
+                "runtime_event": {
+                    "session_id": "REP-2",
+                    "issue_id": "ISS-2",
+                    "turn_index": 1,
+                    "turn_trace_id": "REP-2:ISS-2:coder:1",
+                }
+            },
+        }
+    ]
+    log_path.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+
+    response = client.get("/v1/sessions/REP-2/replay", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["session_id"] == "REP-2"
+    assert payload["turn_count"] == 1
+    assert payload["turns"][0]["issue_id"] == "ISS-2"
+    assert payload["turns"][0]["turn_index"] == 1
+
+@pytest.mark.asyncio
 async def test_execution_graph_endpoint_real_runtime(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
@@ -2026,5 +2143,3 @@ def test_cards_archive_uses_runtime_response_normalization(monkeypatch):
         "missing_ids": ["Z"],
         "policy": "custom",
     }
-
-

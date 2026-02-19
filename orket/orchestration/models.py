@@ -1,18 +1,25 @@
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 import json
+import os
 
 from orket.schema import OrganizationConfig, EpicConfig, RockConfig
-from orket.settings import load_user_settings
+from orket.settings import load_user_settings, load_user_preferences
 
 class ModelSelector:
     """
     Centralized engine for selecting models based on organization standards,
     user preferences, and per-asset overrides.
     """
-    def __init__(self, organization: Optional[OrganizationConfig] = None, user_settings: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        organization: Optional[OrganizationConfig] = None,
+        preferences: Optional[Dict[str, Any]] = None,
+        user_settings: Optional[Dict[str, Any]] = None,
+    ):
         self.org = organization
-        self.user_settings = user_settings or load_user_settings()
+        self.preferences = preferences if preferences is not None else load_user_preferences()
+        self.user_settings = user_settings if user_settings is not None else load_user_settings()
         self._compliance_score_cache: Dict[str, float] = {}
         self._compliance_score_cache_path: Optional[str] = None
         self._last_selection_decision: Dict[str, Any] = {}
@@ -26,9 +33,10 @@ class ModelSelector:
         Determines the best model for a specific role using a strict precedence chain:
         1. CLI/API Override
         2. Asset-level Override (Epic/Rock config)
-        3. User Preferences (user_settings.json)
-        4. Organizational Standards (organization.json)
-        5. Hardcoded Fallbacks (The 'Safety Net')
+        3. Environment Override
+        4. User Preferences (preferences.json)
+        5. Organizational Standards (organization.json)
+        6. Hardcoded Fallbacks (The 'Safety Net')
         """
         
         # 1. CLI/API Override (Highest priority)
@@ -48,27 +56,29 @@ class ModelSelector:
             if role in model_overrides:
                 return self._apply_compliance_policy(role=role, selected_model=model_overrides[role])
 
-        # 3. User Preferences
-        # Map generic roles to preferred keys in user_settings.json
-        pref_key_map = {
-            "coder": "preferred_coder",
-            "backend_specialist": "preferred_coder",
-            "senior_developer": "preferred_coder",
-            "lead_architect": "preferred_architect",
-            "architect": "preferred_architect",
-            "reviewer": "preferred_reviewer",
-            "integrity_guard": "preferred_reviewer"
-        }
-        
-        pref_key = pref_key_map.get(role)
-        if pref_key and self.user_settings.get(pref_key):
-            return self._apply_compliance_policy(role=role, selected_model=self.user_settings.get(pref_key))
+        # 3. Environment Override
+        env_override = self._resolve_env_override(role)
+        if env_override:
+            return self._apply_compliance_policy(role=role, selected_model=env_override)
 
-        # 4. Organizational Standards
-        if self.org and self.org.architecture.preferred_stack:
-            # Check if role maps to a stack tier
-            # (Simplified for now: Organization can define 'default_llm')
-            org_default = self.org.process_rules.get("default_llm")
+        # 4. User Preferences (preferences.json -> models.<role>)
+        pref_role = self._normalize_preference_role(role)
+        model_map = self.preferences.get("models")
+        if isinstance(model_map, dict):
+            preferred_model = str(model_map.get(pref_role, "")).strip()
+            if preferred_model:
+                return self._apply_compliance_policy(role=role, selected_model=preferred_model)
+
+        # 5. Organizational Standards
+        process_rules = getattr(self.org, "process_rules", None) if self.org else None
+        if isinstance(process_rules, dict):
+            role_models = process_rules.get("models")
+            if isinstance(role_models, dict):
+                org_model = str(role_models.get(pref_role, "")).strip()
+                if org_model:
+                    return self._apply_compliance_policy(role=role, selected_model=org_model)
+            # Organization-level default
+            org_default = process_rules.get("default_llm")
             if org_default:
                 return self._apply_compliance_policy(role=role, selected_model=org_default)
 
@@ -80,11 +90,33 @@ class ModelSelector:
 
     def _fallback_model_for_role(self, role: str) -> str:
         fallbacks = {
-            "architect": "llama3.1:8b",
-            "coder": "qwen2.5-coder:7b",
-            "reviewer": "llama3.1:8b",
+            "architect": "deepseek-r1:32b",
+            "coder": "qwen2.5-coder:14b",
+            "reviewer": "Mistral-Nemo:12B",
+            "operations_lead": "qwen2.5-coder:14b",
         }
-        return fallbacks.get(role, "llama3.1:8b")
+        return fallbacks.get(role, "qwen2.5-coder:14b")
+
+    def _resolve_env_override(self, role: str) -> Optional[str]:
+        normalized_role = str(role or "").strip().upper().replace("-", "_")
+        candidates = [f"ORKET_MODEL_{normalized_role}"]
+        if role == "operations_lead":
+            candidates.insert(0, "ORKET_OPERATOR_MODEL")
+        for key in candidates:
+            value = str(os.environ.get(key, "")).strip()
+            if value:
+                return value
+        return None
+
+    def _normalize_preference_role(self, role: str) -> str:
+        normalized = str(role or "").strip().lower().replace("-", "_")
+        alias_map = {
+            "backend_specialist": "coder",
+            "senior_developer": "coder",
+            "lead_architect": "architect",
+            "integrity_guard": "reviewer",
+        }
+        return alias_map.get(normalized, normalized)
 
     def _resolve_model_compliance_policy(self) -> Dict[str, Any]:
         policy: Dict[str, Any] = {}

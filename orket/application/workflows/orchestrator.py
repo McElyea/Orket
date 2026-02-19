@@ -11,7 +11,7 @@ from collections import defaultdict
 
 from orket.schema import (
     EpicConfig, TeamConfig, EnvironmentConfig, IssueConfig,
-    CardStatus, RoleConfig, DialectConfig, SkillConfig
+    CardStatus, RoleConfig, DialectConfig, SkillConfig, SeatConfig
 )
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.orchestration.models import ModelSelector
@@ -50,7 +50,7 @@ from orket.core.domain.guard_review import GuardReviewPayload
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.verification_scope import build_verification_scope
 from orket.utils import sanitize_name
-from orket.settings import load_user_settings
+from orket.settings import load_user_settings, load_user_preferences
 
 class Orchestrator:
     """
@@ -148,6 +148,51 @@ class Orchestrator:
             return max(1, int(raw))
         except (TypeError, ValueError):
             return 3
+
+    def _should_auto_inject_small_project_reviewer(self) -> bool:
+        env_raw = (os.environ.get("ORKET_SMALL_PROJECT_AUTO_INJECT_REVIEWER") or "").strip().lower()
+        if env_raw in {"1", "true", "yes", "on"}:
+            return True
+        if env_raw in {"0", "false", "no", "off"}:
+            return False
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            value = self.org.process_rules.get("small_project_auto_inject_code_reviewer", False)
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                lowered = value.strip().lower()
+                return lowered in {"1", "true", "yes", "on"}
+        return False
+
+    def _small_project_reviewer_seat_name(self) -> str:
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            configured = str(
+                self.org.process_rules.get(
+                    "small_project_auto_inject_reviewer_seat_name",
+                    "auto_code_reviewer",
+                )
+                or ""
+            ).strip()
+            if configured:
+                return configured
+        return "auto_code_reviewer"
+
+    def _auto_inject_small_project_reviewer_seat(self, team: TeamConfig) -> str:
+        seat_name = self._small_project_reviewer_seat_name()
+        seats = getattr(team, "seats", {}) or {}
+        existing = seats.get(seat_name)
+        if existing is None:
+            seats[seat_name] = SeatConfig(
+                name="Auto Injected Code Reviewer",
+                roles=["code_reviewer"],
+            )
+            return seat_name
+
+        existing_roles = list(getattr(existing, "roles", []) or [])
+        normalized_roles = {str(role).strip().lower() for role in existing_roles if str(role).strip()}
+        if "code_reviewer" not in normalized_roles:
+            existing.roles = existing_roles + ["code_reviewer"]
+        return seat_name
 
     def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> Dict[str, Any]:
         issue_count = len(list(getattr(epic, "issues", []) or []))
@@ -413,9 +458,40 @@ class Orchestrator:
         """
         from orket.orchestration.models import ModelSelector
         small_policy = self._resolve_small_project_team_policy(epic, team)
+        if (
+            small_policy["active"]
+            and not small_policy["reviewer_seat"]
+            and self._should_auto_inject_small_project_reviewer()
+        ):
+            injected_seat = self._auto_inject_small_project_reviewer_seat(team)
+            log_event(
+                "team_policy_auto_injected_code_reviewer",
+                {
+                    "run_id": run_id,
+                    "epic": epic.name,
+                    "injected_seat": injected_seat,
+                    "reason": "small_project_missing_code_reviewer",
+                },
+                self.workspace,
+            )
+            small_policy = self._resolve_small_project_team_policy(epic, team)
         if small_policy["active"] and not small_policy["reviewer_seat"]:
+            available_seats = sorted((getattr(team, "seats", {}) or {}).keys())
+            log_event(
+                "team_policy_preflight_failed",
+                {
+                    "run_id": run_id,
+                    "epic": epic.name,
+                    "reason": "missing_code_reviewer_seat",
+                    "small_project_policy": small_policy,
+                    "available_seats": available_seats,
+                },
+                self.workspace,
+            )
             raise ExecutionFailed(
-                "Small-project team policy requires a code_reviewer seat, but none was found."
+                "Small-project policy preflight failed: missing code_reviewer seat. "
+                f"Available seats={available_seats}. Add a seat with role 'code_reviewer' "
+                "or increase small_project_issue_threshold to disable small-team mode for this epic."
             )
         log_event(
             "team_selection_decision",
@@ -551,12 +627,13 @@ class Orchestrator:
             )
 
         # 1. Setup Execution Environment
-        settings_path = self.config_root / "user_settings.json"
-        if settings_path.exists():
-            user_settings = json.loads(settings_path.read_text(encoding="utf-8"))
-        else:
-            user_settings = load_user_settings()
-        model_selector = ModelSelector(organization=self.org, user_settings=user_settings)
+        user_settings = load_user_settings()
+        preferences = load_user_preferences()
+        model_selector = ModelSelector(
+            organization=self.org,
+            preferences=preferences,
+            user_settings=user_settings,
+        )
         prompt_strategy_node = self.decision_nodes.resolve_prompt_strategy(model_selector, self.org)
         
         tool_gate = ToolGate(organization=self.org, workspace_root=self.workspace)
@@ -1022,6 +1099,11 @@ class Orchestrator:
         selection_policy = self._resolve_prompt_selection_policy()
         selection_strict = self._resolve_prompt_selection_strict()
         exact_version = self._resolve_prompt_version_exact()
+        architecture_governance = getattr(epic, "architecture_governance", None)
+        idesign_enabled = bool(getattr(architecture_governance, "idesign", False))
+        if not isinstance(getattr(issue, "params", None), dict):
+            issue.params = {}
+        issue.params["idesign_enabled"] = idesign_enabled
         provisional_context = self._build_turn_context(
             run_id=run_id,
             issue=issue,
@@ -1033,6 +1115,7 @@ class Orchestrator:
             runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
             prompt_metadata={},
             prompt_layers={},
+            idesign_enabled=idesign_enabled,
             resume_mode=resume_mode,
         )
         prompt_metadata: Dict[str, Any] = {
@@ -1114,6 +1197,7 @@ class Orchestrator:
             runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
             prompt_metadata=prompt_metadata,
             prompt_layers=prompt_layers,
+            idesign_enabled=idesign_enabled,
             resume_mode=resume_mode,
         )
 
@@ -1330,6 +1414,7 @@ class Orchestrator:
         runtime_verifier_ok: Optional[bool] = None,
         prompt_metadata: Optional[Dict[str, Any]] = None,
         prompt_layers: Optional[Dict[str, Any]] = None,
+        idesign_enabled: bool = False,
         resume_mode: bool = False,
     ) -> Dict[str, Any]:
         required_action_tools = []
@@ -1505,6 +1590,7 @@ class Orchestrator:
             "architecture_forced_pattern": forced_pattern,
             "frontend_framework_allowed": ["vue", "react", "angular"],
             "frontend_framework_forced": forced_frontend_framework,
+            "idesign_enabled": bool(idesign_enabled),
             "create_pending_gate_request": _pending_gate_request_writer,
             "resume_mode": bool(resume_mode),
             "history": self._history_context(),
@@ -1648,7 +1734,10 @@ class Orchestrator:
             )
             issue.status = failure_status
             await self.async_cards.save(issue.model_dump())
-            raise failure_exception_class(self.evaluator_node.governance_violation_message(result.error))
+            message = self.evaluator_node.governance_violation_message(result.error)
+            if not self._is_issue_idesign_enabled(issue):
+                message = self._normalize_governance_violation_message(message)
+            raise failure_exception_class(message)
 
         if action == "catastrophic":
             event_name = self.evaluator_node.failure_event_name(action)
@@ -1717,4 +1806,14 @@ class Orchestrator:
             )
         )
 
+    def _is_issue_idesign_enabled(self, issue: IssueConfig) -> bool:
+        params = getattr(issue, "params", None)
+        if not isinstance(params, dict):
+            return False
+        return bool(params.get("idesign_enabled", False))
 
+    def _normalize_governance_violation_message(self, message: str | None) -> str:
+        normalized = str(message or "")
+        normalized = normalized.replace("iDesign Violation:", "Governance Violation:")
+        normalized = normalized.replace("iDesign AST Violation", "Governance AST Violation")
+        return normalized

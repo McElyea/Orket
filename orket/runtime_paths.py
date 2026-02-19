@@ -61,6 +61,14 @@ def resolve_user_settings_path(path: Path | None = None) -> Path:
     return target
 
 
+def resolve_user_preferences_path(path: Path | None = None) -> Path:
+    if path is not None:
+        return path
+    target = durable_root() / "config" / "preferences.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    return target
+
+
 def resolve_gitea_artifact_cache_root(path: str | None = None) -> Path:
     if path:
         return Path(path)

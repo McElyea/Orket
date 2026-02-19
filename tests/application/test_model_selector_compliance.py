@@ -23,7 +23,7 @@ def test_model_selector_demotes_blocked_model_to_fallback():
                 "blocked_models": ["qwen2.5-coder:7b"],
             }
         ),
-        user_settings={"preferred_coder": "qwen2.5-coder:7b"},
+        preferences={"models": {"coder": "qwen2.5-coder:7b"}},
     )
     selected = selector.select(role="coder")
     assert selected == "qwen2.5-coder:14b"
@@ -39,7 +39,7 @@ def test_model_selector_demotes_low_compliance_score_from_inline_scores():
                 "model_scores": {"qwen2.5-coder:7b": 72.0},
             }
         ),
-        user_settings={"preferred_coder": "qwen2.5-coder:7b"},
+        preferences={"models": {"coder": "qwen2.5-coder:7b"}},
     )
     selected = selector.select(role="coder")
     assert selected == "llama3.1:8b"
@@ -55,7 +55,7 @@ def test_model_selector_keeps_model_when_score_meets_threshold():
                 "model_scores": {"qwen2.5-coder:7b": 90.0},
             }
         ),
-        user_settings={"preferred_coder": "qwen2.5-coder:7b"},
+        preferences={"models": {"coder": "qwen2.5-coder:7b"}},
     )
     selected = selector.select(role="coder")
     assert selected == "qwen2.5-coder:7b"
@@ -82,7 +82,7 @@ def test_model_selector_uses_score_source_report_file(tmp_path: Path):
                 "score_source": str(report_path),
             }
         ),
-        user_settings={"preferred_coder": "qwen2.5-coder:7b"},
+        preferences={"models": {"coder": "qwen2.5-coder:7b"}},
     )
     selected = selector.select(role="coder")
     assert selected == "qwen2.5-coder:14b"

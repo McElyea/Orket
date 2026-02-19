@@ -16,7 +16,7 @@ from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.time_utils import now_local
-from orket.settings import load_user_settings, save_user_settings
+from orket.settings import load_user_settings, save_user_settings, load_user_preferences
 from orket.orchestration.models import ModelSelector
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
@@ -496,7 +496,11 @@ async def get_runtime_policy_options():
 async def get_model_assignments(roles: Optional[str] = None):
     role_filter = _parse_roles_filter(roles)
     active_roles = role_filter or _discover_active_roles(PROJECT_ROOT / "model")
-    selector = ModelSelector(organization=engine.org, user_settings=load_user_settings())
+    selector = ModelSelector(
+        organization=engine.org,
+        preferences=load_user_preferences(),
+        user_settings=load_user_settings(),
+    )
 
     items: list[dict[str, Any]] = []
     for role in active_roles:
@@ -971,6 +975,112 @@ async def get_run_token_summary(session_id: str):
         "turns": turns,
     }
 
+
+def _collect_replay_turns(session_id: str, role: Optional[str] = None) -> list[dict[str, Any]]:
+    candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
+    candidate_files.append(PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log")
+
+    records: list[dict[str, Any]] = []
+    seen: set[tuple[Any, ...]] = set()
+    for path in candidate_files:
+        for record in _read_log_records(path):
+            signature = (
+                record.get("timestamp"),
+                record.get("event"),
+                str((record.get("data") or {}).get("turn_trace_id") or ""),
+                str(record.get("role") or ""),
+                str((record.get("data") or {}).get("issue_id") or ""),
+                str((record.get("data") or {}).get("turn_index") or ""),
+            )
+            if signature in seen:
+                continue
+            seen.add(signature)
+            records.append(record)
+
+    model_by_turn_trace: dict[str, str] = {}
+    turns: list[dict[str, Any]] = []
+    role_filter = str(role or "").strip().lower()
+
+    for record in records:
+        if _record_session_id(record) != session_id:
+            continue
+        event = str(record.get("event") or "")
+        data = record.get("data", {})
+        if not isinstance(data, dict):
+            continue
+        runtime_event = data.get("runtime_event", {})
+        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
+        turn_trace_id = str(
+            runtime_event.get("turn_trace_id")
+            or data.get("turn_trace_id")
+            or ""
+        ).strip()
+
+        if event == "turn_start":
+            selected_model = str(
+                runtime_event.get("selected_model")
+                or data.get("selected_model")
+                or ""
+            ).strip()
+            if turn_trace_id and selected_model:
+                model_by_turn_trace[turn_trace_id] = selected_model
+            continue
+
+        if event != "turn_complete":
+            continue
+
+        normalized_role = str(
+            record.get("role")
+            or runtime_event.get("role")
+            or data.get("role")
+            or "unknown"
+        ).strip().lower()
+        if role_filter and normalized_role != role_filter:
+            continue
+
+        issue_id = str(runtime_event.get("issue_id") or data.get("issue_id") or "").strip()
+        turn_index_raw = runtime_event.get("turn_index") or data.get("turn_index") or 0
+        try:
+            turn_index = int(turn_index_raw)
+        except (TypeError, ValueError):
+            turn_index = 0
+
+        turns.append(
+            {
+                "session_id": session_id,
+                "issue_id": issue_id or None,
+                "turn_index": turn_index,
+                "role": normalized_role,
+                "turn_trace_id": turn_trace_id or None,
+                "selected_model": str(
+                    model_by_turn_trace.get(turn_trace_id)
+                    or runtime_event.get("selected_model")
+                    or data.get("selected_model")
+                    or ""
+                ).strip() or None,
+                "timestamp": str(record.get("timestamp") or ""),
+            }
+        )
+
+    turns.sort(key=lambda item: (item["turn_index"], str(item["issue_id"] or ""), str(item["role"]), item["timestamp"]))
+    return turns
+
+
+@v1_router.get("/runs/{session_id}/replay")
+async def list_run_replay_turns(session_id: str, role: Optional[str] = None):
+    run_record = await engine.run_ledger.get_run(session_id)
+    session = await engine.sessions.get_session(session_id)
+    if run_record is None and session is None:
+        raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
+    turns = _collect_replay_turns(session_id=session_id, role=role)
+    return {
+        "session_id": session_id,
+        "turn_count": len(turns),
+        "filters": {"role": role or None},
+        "turns": turns,
+    }
+
+
 @v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str):
     log_event("api_backlog", {"session_id": session_id}, PROJECT_ROOT)
@@ -1054,15 +1164,22 @@ async def halt_session(session_id: str):
 @v1_router.get("/sessions/{session_id}/replay")
 async def replay_session_turn(
     session_id: str,
-    issue_id: str,
-    turn_index: int = Query(ge=1),
+    issue_id: Optional[str] = None,
+    turn_index: Optional[int] = Query(default=None, ge=1),
     role: Optional[str] = None,
 ):
+    if not issue_id and turn_index is None:
+        return await list_run_replay_turns(session_id=session_id, role=role)
+    if bool(issue_id) != bool(turn_index):
+        raise HTTPException(
+            status_code=422,
+            detail="Both 'issue_id' and 'turn_index' are required for targeted replay.",
+        )
     try:
         replay = engine.replay_turn(
             session_id=session_id,
-            issue_id=issue_id,
-            turn_index=turn_index,
+            issue_id=str(issue_id),
+            turn_index=int(turn_index),
             role=role,
         )
     except FileNotFoundError as exc:
