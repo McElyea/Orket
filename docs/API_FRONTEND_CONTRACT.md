@@ -1,5 +1,11 @@
 # Frontend API Contract
 
+Canonical GitHub URL:
+`https://github.com/McElyea/Orket/blob/main/docs/API_FRONTEND_CONTRACT.md`
+
+This repository copy is the source of truth used for code review and change tracking.
+Prefer sharing the GitHub URL above instead of local filesystem paths.
+
 Last verified against `orket/interfaces/api.py`: 2026-02-19.
 
 ## Purpose

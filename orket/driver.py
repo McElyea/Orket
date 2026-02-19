@@ -75,11 +75,16 @@ class OrketDriver:
         return inventory
 
     async def process_request(self, message: str) -> str:
+        request_text = str(message or "").strip()
+        self._log_operator_metric("operator_request_total", route="received")
+
         cli_response = await self._try_cli_command(message)
         if cli_response is not None:
+            self._log_operator_metric("operator_request_total", route="cli")
             return cli_response
 
         if self._should_handle_as_conversation(message):
+            self._log_operator_metric("operator_request_total", route="conversation")
             return self._conversation_reply(message)
 
         # 1. Gather current context + Inventory
@@ -162,11 +167,27 @@ Do not include commentary outside the JSON.
             start = text.find('{')
             end = text.rfind('}')
             if start == -1 or end == -1:
+                self._log_operator_metric("operator_request_total", route="model_no_json")
                 return f"Driver failed to find JSON in response: {text[:100]}..."
                 
             plan = json.loads(text[start:end+1])
+            action = str(plan.get("action") or "").strip().lower()
+            if action in {"create_issue", "create_epic", "create_rock", "adopt_issue"} and not self._has_explicit_structural_intent(request_text):
+                self._log_operator_metric("operator_structural_action_blocked", action=action)
+                log_event(
+                    "operator_structural_action_blocked",
+                    {"action": action, "request": request_text},
+                    Path("workspace/default"),
+                    role="DRIVER",
+                )
+                return (
+                    "I can do that, but please ask explicitly for a board change. "
+                    "For example: '/create epic <name> <department>' or 'create epic <name>'."
+                )
+            self._log_operator_metric("operator_request_total", route="model")
             return await self.execute_plan(plan)
         except json.JSONDecodeError as e:
+            self._log_operator_metric("operator_request_total", route="model_json_error")
             return f"Driver failed to parse JSON: {str(e)}"
         except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
             # Fallback for unexpected logical errors, but still better than a bare except
@@ -296,13 +317,13 @@ Do not include commentary outside the JSON.
 
         normalized = text.lower()
         if normalized in {"help", "/help", "what can you do", "capabilities", "/capabilities"}:
-            return self._cli_help_text()
+            return self._capabilities_summary()
         if "what can you do" in normalized or "capabilities" in normalized:
-            return self._cli_help_text()
+            return self._capabilities_summary()
         if "in this environment" in normalized and any(
             token in normalized for token in ("what can", "available", "do here", "use here")
         ):
-            return self._cli_help_text()
+            return self._capabilities_summary()
 
         command_text = text
         if text.startswith("/"):
@@ -602,6 +623,10 @@ Do not include commentary outside the JSON.
             "create epic",
             "create issue",
             "create rock",
+            "add card",
+            "list cards",
+            "/add-card",
+            "/list-cards",
             "new epic",
             "new issue",
             "new rock",
@@ -616,6 +641,18 @@ Do not include commentary outside the JSON.
         )
         return not any(marker in text for marker in structural_markers)
 
+    def _has_explicit_structural_intent(self, message: str) -> bool:
+        text = str(message or "").strip().lower()
+        if not text:
+            return False
+
+        explicit_patterns = (
+            r"^/(create|add-card|add_card|list-cards|list_cards|show|list)\b",
+            r"\b(create|add|move|adopt|archive|delete|update|run|halt)\b.{0,40}\b(epic|issue|rock|card|session|team|environment)\b",
+            r"\b(make|perform|do)\b.{0,40}\b(board|structural)\b.{0,20}\b(change|action)\b",
+        )
+        return any(re.search(pattern, text) for pattern in explicit_patterns)
+
     def _conversation_reply(self, message: str) -> str:
         text = str(message or "").strip()
         if not text:
@@ -623,7 +660,7 @@ Do not include commentary outside the JSON.
 
         lowered = text.lower()
         if "what can you do" in lowered or "capabilities" in lowered or "in this environment" in lowered:
-            return self._cli_help_text()
+            return self._capabilities_summary()
         if (
             "tell me about this application" in lowered
             or "about this app" in lowered
@@ -656,6 +693,21 @@ Do not include commentary outside the JSON.
         if math_answer is not None:
             return math_answer
         return "Understood. What would you like to talk about?"
+
+    def _capabilities_summary(self) -> str:
+        departments = sorted([p.name for p in self.model_root.iterdir() if p.is_dir()]) if self.model_root.exists() else []
+        summary = [self._cli_help_text()]
+        if departments:
+            summary.append(f"Detected departments: {', '.join(departments)}")
+        summary.append("Conversation mode is on by default. I only run structural actions when explicitly requested.")
+        return "\n".join(summary)
+
+    def _log_operator_metric(self, metric_name: str, **tags: Any) -> None:
+        try:
+            payload = {"metric": metric_name, "value": 1, "tags": tags}
+            log_event("operator_metric", payload, Path("workspace/default"), role="DRIVER")
+        except (RuntimeError, ValueError, OSError):
+            return
 
     def _try_answer_math(self, message: str) -> str | None:
         lowered = str(message or "").strip().lower()
@@ -708,4 +760,3 @@ Do not include commentary outside the JSON.
         if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
             return float(node.value)
         raise ValueError("Unsupported expression")
-

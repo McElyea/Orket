@@ -56,6 +56,7 @@ def test_should_handle_as_conversation_detects_structural_intent():
     driver = OrketDriver.__new__(OrketDriver)
     assert driver._should_handle_as_conversation("create epic for billing rewrite") is False
     assert driver._should_handle_as_conversation("you are not set up to converse anymore") is True
+    assert driver._has_explicit_structural_intent("/create epic billing_rewrite core") is True
 
 
 @pytest.mark.asyncio
@@ -96,6 +97,7 @@ async def test_process_request_capabilities_question_returns_help():
 
     assert "Operator CLI is available." in response
     assert "/list" in response
+    assert "Conversation mode is on by default" in response
 
 
 @pytest.mark.asyncio
@@ -180,3 +182,23 @@ async def test_process_request_what_question_not_generic_fallback():
 
     assert "Understood. What would you like to talk about?" not in response
     assert "capabilities" in response.lower()
+
+
+@pytest.mark.asyncio
+async def test_process_request_blocks_implicit_structural_action_from_model():
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.model_root = Path("model")
+    driver.skill = None
+    driver.dialect = None
+
+    class _Provider:
+        async def complete(self, _messages):
+            return SimpleNamespace(
+                content='{"action":"create_epic","new_asset":{"name":"silent_change"},"reasoning":"do it"}'
+            )
+
+    driver.provider = _Provider()
+
+    response = await driver.process_request("settings")
+
+    assert "please ask explicitly for a board change" in response.lower()
