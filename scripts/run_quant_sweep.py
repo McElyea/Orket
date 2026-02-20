@@ -32,6 +32,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", default="benchmarks/results/quant_sweep")
     parser.add_argument("--summary-out", default="benchmarks/results/quant_sweep/sweep_summary.json")
     parser.add_argument("--adherence-threshold", type=float, default=0.95)
+    parser.add_argument("--latency-ceiling", type=float, default=10.0, help="Max total latency (seconds) for frontier eligibility.")
     return parser.parse_args()
 
 
@@ -92,6 +93,12 @@ def _compute_vibe_delta(*, baseline_adherence: float, baseline_memory_mib: float
         return None
     quality_loss = max(0.0, baseline_adherence - adherence)
     return round(quality_loss / memory_saved_gib, 3)
+
+
+def _is_frontier_eligible(*, row: dict[str, Any], min_adherence: float, latency_ceiling: float) -> bool:
+    adherence = float(row.get("adherence_score", 0.0) or 0.0)
+    latency = float(row.get("total_latency", 0.0) or 0.0)
+    return adherence >= min_adherence and latency <= latency_ceiling
 
 
 def _quant_report_out(base_dir: Path, model_id: str, quant_tag: str) -> Path:
@@ -204,22 +211,31 @@ def main() -> int:
         baseline_quant = str(baseline.get("quant_tag") or "")
 
         for row in per_quant:
-            row["vibe_delta"] = _compute_vibe_delta(
-                baseline_adherence=baseline_adherence,
-                baseline_memory_mib=baseline_memory,
-                adherence=float(row.get("adherence_score", 0.0) or 0.0),
-                memory_mib=float(row.get("peak_memory_rss", 0.0) or 0.0),
-            )
+            if str(row.get("quant_tag") or "") == baseline_quant:
+                row["vibe_delta"] = 0.0
+            else:
+                row["vibe_delta"] = _compute_vibe_delta(
+                    baseline_adherence=baseline_adherence,
+                    baseline_memory_mib=baseline_memory,
+                    adherence=float(row.get("adherence_score", 0.0) or 0.0),
+                    memory_mib=float(row.get("peak_memory_rss", 0.0) or 0.0),
+                )
             row["vibe_delta_status"] = "OK"
 
         target_adherence = baseline_adherence * float(args.adherence_threshold)
-        frontier_candidates = [
-            row for row in per_quant if float(row.get("adherence_score", 0.0) or 0.0) >= target_adherence
-        ]
         frontier = None
-        if frontier_candidates:
-            frontier = sorted(frontier_candidates, key=lambda row: row["quant_rank"])[0]
-        optimal = frontier or baseline
+        # Deterministic frontier: scan from the smallest quant rank upward and choose first eligible.
+        for row in sorted(per_quant, key=lambda item: item["quant_rank"]):
+            if _is_frontier_eligible(row=row, min_adherence=target_adherence, latency_ceiling=float(args.latency_ceiling)):
+                frontier = row
+                break
+        optimal = frontier
+        frontier_reason = "lowest quant meeting adherence and latency thresholds"
+        recommendation = f"For this hardware, use {optimal['quant_tag']} for best Vibe." if optimal else (
+            "No quantization met the vibe threshold; hardware/model mismatch."
+        )
+        if optimal is None:
+            frontier_reason = "no quant met adherence and latency thresholds"
         sessions.append(
             {
                 "model_id": str(model_id),
@@ -227,14 +243,11 @@ def main() -> int:
                 "per_quant": sorted(per_quant, key=lambda row: row["quant_rank"], reverse=True),
                 "efficiency_frontier": {
                     "adherence_threshold": float(args.adherence_threshold),
-                    "optimal_quant_tag": optimal.get("quant_tag"),
-                    "reason": (
-                        "lowest quant meeting >=95% baseline adherence"
-                        if frontier is not None
-                        else "no quant met threshold"
-                    ),
+                    "latency_ceiling": float(args.latency_ceiling),
+                    "optimal_quant_tag": (optimal or {}).get("quant_tag"),
+                    "reason": frontier_reason,
                 },
-                "recommendation": f"For this hardware, use {optimal['quant_tag']} for best Vibe.",
+                "recommendation": recommendation,
             }
         )
 
@@ -250,6 +263,7 @@ def main() -> int:
             "quants": quant_tags,
             "task_bank": str(args.task_bank),
             "runs_per_quant": int(args.runs),
+            "latency_ceiling": float(args.latency_ceiling),
         },
         "sessions": sessions,
     }
