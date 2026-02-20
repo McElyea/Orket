@@ -5,6 +5,7 @@ import ast
 import hashlib
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -27,6 +28,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--run-dir", default="", help="Workspace/run directory.")
     parser.add_argument("--runs-root", default="workspace/runs", help="Durable root for indexed run artifacts.")
     parser.add_argument("--department", default="core")
+    parser.add_argument("--save-baseline", action="store_true", help="Append run telemetry as a baseline artifact.")
     return parser.parse_args()
 
 
@@ -152,6 +154,172 @@ def _iso_z(dt: datetime) -> str:
 
 def _round3(value: float) -> float:
     return float(Decimal(str(value)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP))
+
+
+def _normalized_token(value: str) -> str:
+    token = str(value or "").strip().lower().replace(" ", "_")
+    return token or "unknown"
+
+
+def _task_revision(task: dict[str, Any]) -> str:
+    acceptance = task.get("acceptance_contract") if isinstance(task, dict) else {}
+    if not isinstance(acceptance, dict):
+        acceptance = {}
+    for key in ("task_revision", "revision"):
+        raw = task.get(key) if isinstance(task, dict) else None
+        if str(raw or "").strip():
+            return str(raw).strip()
+        raw = acceptance.get(key)
+        if str(raw or "").strip():
+            return str(raw).strip()
+    return "unspecified"
+
+
+def _hardware_fingerprint() -> str:
+    raw_os_family = platform.system().strip().lower()
+    if raw_os_family == "darwin":
+        raw_os_family = "macos"
+    os_family = _normalized_token(raw_os_family)
+    os_version = _normalized_token(platform.release())
+    cpu_model = _normalized_token(platform.processor() or platform.machine())
+    physical_cores = int(psutil.cpu_count(logical=False) or psutil.cpu_count(logical=True) or 0)
+    ram_gib = int(round(psutil.virtual_memory().total / float(1024**3)))
+    gpu_name = _normalized_token(os.environ.get("ORKET_GPU_NAME", "none"))
+    return f"{os_family}-{os_version}|{cpu_model}|{physical_cores}c|{ram_gib}gb|{gpu_name}"
+
+
+def _extract_code_density(response_text: str, fallback_source: str) -> float:
+    text = str(response_text or "")
+    if not text:
+        return 0.0
+    fenced_blocks = re.findall(r"```(?:[a-zA-Z0-9_+-]+)?\n(.*?)```", text, flags=re.DOTALL)
+    code_chars = sum(len(block) for block in fenced_blocks)
+    if code_chars == 0 and fallback_source.strip():
+        try:
+            ast.parse(fallback_source)
+        except SyntaxError:
+            code_chars = 0
+        else:
+            code_chars = len(fallback_source)
+    return _round3(min(1.0, max(0.0, code_chars / float(len(text)))))
+
+
+def _default_vibe_metrics() -> dict[str, Any]:
+    return {
+        "latency_variance": None,
+        "code_density": 0.0,
+        "gen_retries": 0,
+        "vibe_delta": None,
+        "vibe_delta_status": "NO_BASELINE",
+        "baseline_ref": "",
+    }
+
+
+def _load_baseline_history(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if isinstance(payload, dict):
+        history = payload.get("history")
+        if isinstance(history, list):
+            return [row for row in history if isinstance(row, dict)]
+    if isinstance(payload, list):
+        return [row for row in payload if isinstance(row, dict)]
+    return []
+
+
+def _baseline_file_path(test_id: str) -> Path:
+    return Path("orket_storage") / "baselines" / f"{test_id}.json"
+
+
+def _select_baseline_record(
+    *,
+    test_id: str,
+    hardware_fingerprint: str,
+    task_revision: str,
+    baseline_ref: str = "",
+) -> tuple[dict[str, Any] | None, str]:
+    history = _load_baseline_history(_baseline_file_path(test_id))
+    if not history:
+        return None, "NO_BASELINE"
+    hw_matches = [
+        row
+        for row in history
+        if str((row.get("baseline_metadata") or {}).get("hardware_fingerprint", "")).strip() == hardware_fingerprint
+    ]
+    if not hw_matches:
+        return None, "HW_MISMATCH"
+    rev_matches = [
+        row
+        for row in hw_matches
+        if str((row.get("baseline_metadata") or {}).get("task_revision", "")).strip() == task_revision
+    ]
+    if not rev_matches:
+        return None, "REV_MISMATCH"
+    if baseline_ref:
+        ref_match = [
+            row
+            for row in rev_matches
+            if str((row.get("baseline_metadata") or {}).get("test_run_id", "")).strip() == baseline_ref
+        ]
+        if ref_match:
+            rev_matches = ref_match
+    rev_matches.sort(
+        key=lambda row: str((row.get("baseline_metadata") or {}).get("created_at", "")),
+        reverse=True,
+    )
+    return rev_matches[0], "OK"
+
+
+def _compute_vibe_delta(current: dict[str, Any], baseline: dict[str, Any]) -> float | None:
+    baseline_adherence = baseline.get("adherence_score")
+    baseline_mem = baseline.get("peak_memory_rss")
+    current_adherence = current.get("adherence_score")
+    current_mem = current.get("peak_memory_rss")
+    if not all(isinstance(x, (int, float)) for x in [baseline_adherence, baseline_mem, current_adherence, current_mem]):
+        return None
+    memory_saved_gib = (float(baseline_mem) - float(current_mem)) / 1024.0
+    if memory_saved_gib <= 0.0:
+        return None
+    quality_loss = max(0.0, float(baseline_adherence) - float(current_adherence))
+    return _round3(quality_loss / memory_saved_gib)
+
+
+def _append_baseline_record(
+    *,
+    test_id: str,
+    run_id: str,
+    task_revision: str,
+    hardware_fingerprint: str,
+    telemetry: dict[str, Any],
+    created_at: str,
+) -> str:
+    path = _baseline_file_path(test_id)
+    history = _load_baseline_history(path)
+    record = {
+        "baseline_metadata": {
+            "test_run_id": run_id,
+            "model_id": str(os.environ.get("ORKET_MODEL_ID", "unknown")).strip() or "unknown",
+            "model_hash": str(os.environ.get("ORKET_MODEL_HASH", "")).strip(),
+            "quant_tag": str(os.environ.get("ORKET_QUANT_TAG", "unknown")).strip() or "unknown",
+            "hardware_fingerprint": hardware_fingerprint,
+            "task_revision": task_revision,
+            "created_at": created_at,
+        },
+        "gold_telemetry": {
+            "adherence_score": telemetry.get("adherence_score"),
+            "peak_memory_rss": telemetry.get("peak_memory_rss"),
+            "total_latency": telemetry.get("total_latency"),
+        },
+    }
+    history.append(record)
+    payload = {"test_id": test_id, "history": history}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return run_id
 
 
 def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
@@ -1091,6 +1259,7 @@ def main() -> int:
     final_main_text = (
         final_main_path.read_text(encoding="utf-8", errors="replace") if final_main_path.exists() else ""
     )
+    coder_final_message = _extract_coder_final_message(run_dir=run_dir, session_id=session_id, task_id=task_id_padded)
     adherence_score: float | None = None
     constraint_validation: dict[str, Any] = {
         "passed_checks": 0,
@@ -1105,12 +1274,40 @@ def main() -> int:
             adherence_score = _round3(float(adherence_score))
         else:
             adherence_score = None
+    task_revision = _task_revision(task)
+    hardware_fingerprint = _hardware_fingerprint()
+    baseline_ref = str((task.get("baseline_ref") or (task.get("acceptance_contract") or {}).get("baseline_ref") or "")).strip()
+    vibe_metrics = _default_vibe_metrics()
+    vibe_metrics["code_density"] = _extract_code_density(coder_final_message, final_main_text)
+    baseline_record, baseline_status = _select_baseline_record(
+        test_id=task_id,
+        hardware_fingerprint=hardware_fingerprint,
+        task_revision=task_revision,
+        baseline_ref=baseline_ref,
+    )
+    vibe_metrics["vibe_delta_status"] = baseline_status
+    if baseline_record is not None:
+        baseline_meta = baseline_record.get("baseline_metadata") or {}
+        vibe_metrics["baseline_ref"] = str(baseline_meta.get("test_run_id", "")).strip()
     telemetry = {
         "init_latency": None,
         "total_latency": _round3(total_latency_s),
         "peak_memory_rss": _round3(float(peak_memory_rss_mib)),
         "adherence_score": adherence_score,
+        "vibe_metrics": vibe_metrics,
     }
+    if baseline_record is not None:
+        vibe_metrics["vibe_delta"] = _compute_vibe_delta(telemetry, baseline_record.get("gold_telemetry") or {})
+    if args.save_baseline:
+        saved_ref = _append_baseline_record(
+            test_id=task_id,
+            run_id=run_id,
+            task_revision=task_revision,
+            hardware_fingerprint=hardware_fingerprint,
+            telemetry=telemetry,
+            created_at=_iso_z(ended_at),
+        )
+        vibe_metrics["baseline_ref"] = saved_ref
 
     quality_checks = _materialize_required_artifacts(
         run_dir=run_dir,
@@ -1126,8 +1323,6 @@ def main() -> int:
     validation_issues = _validate_task_outputs(run_dir=run_dir, task=task, output_file=output_file)
     validation_passed = len(validation_issues) == 0 and int(result_returncode) == 0
     final_exit_code = 0 if validation_passed else 2
-
-    coder_final_message = _extract_coder_final_message(run_dir=run_dir, session_id=session_id, task_id=task_id_padded)
 
     runtime_event_payload = {
         "schema_version": "v1",
@@ -1187,6 +1382,8 @@ def main() -> int:
         "quality_checks": quality_checks,
         "telemetry": telemetry,
         "constraint_validation": constraint_validation,
+        "hardware_fingerprint": hardware_fingerprint,
+        "task_revision": task_revision,
         "workspace": str(run_dir).replace("\\", "/"),
         "canonical_run_dir": str(canonical_run_dir).replace("\\", "/"),
         "observability_path": str(canonical_run_dir / "observability" / session_id).replace("\\", "/")

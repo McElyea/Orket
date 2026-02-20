@@ -98,11 +98,19 @@ def _normalize_telemetry(
     exit_code: int,
 ) -> dict[str, Any]:
     telemetry = runner_payload.get("telemetry") if isinstance(runner_payload, dict) else None
+    default_vibe = {
+        "latency_variance": None,
+        "code_density": 0.0,
+        "gen_retries": 0,
+        "vibe_delta": None,
+        "vibe_delta_status": "NO_BASELINE",
+    }
     default = {
         "init_latency": None,
         "total_latency": _round3(float(elapsed_ms) / 1000.0),
         "peak_memory_rss": 0.0,
         "adherence_score": None if exit_code != 0 else 1.0,
+        "vibe_metrics": default_vibe,
     }
     if not isinstance(telemetry, dict):
         return default
@@ -111,6 +119,10 @@ def _normalize_telemetry(
     total_latency = telemetry.get("total_latency")
     peak_memory_rss = telemetry.get("peak_memory_rss")
     adherence_score = telemetry.get("adherence_score")
+    vibe_metrics = telemetry.get("vibe_metrics") if isinstance(telemetry.get("vibe_metrics"), dict) else {}
+    vibe_status = str(vibe_metrics.get("vibe_delta_status") or "NO_BASELINE").strip()
+    if vibe_status not in {"OK", "NO_BASELINE", "HW_MISMATCH", "REV_MISMATCH"}:
+        vibe_status = "NO_BASELINE"
     return {
         "init_latency": _round3(float(init_latency)) if isinstance(init_latency, (int, float)) else None,
         "total_latency": _round3(float(total_latency))
@@ -122,6 +134,19 @@ def _normalize_telemetry(
         "adherence_score": _round3(float(adherence_score))
         if isinstance(adherence_score, (int, float))
         else (None if exit_code != 0 else default["adherence_score"]),
+        "vibe_metrics": {
+            "latency_variance": _round3(float(vibe_metrics.get("latency_variance")))
+            if isinstance(vibe_metrics.get("latency_variance"), (int, float))
+            else None,
+            "code_density": _round3(float(vibe_metrics.get("code_density")))
+            if isinstance(vibe_metrics.get("code_density"), (int, float))
+            else 0.0,
+            "gen_retries": int(vibe_metrics.get("gen_retries") or 0),
+            "vibe_delta": _round3(float(vibe_metrics.get("vibe_delta")))
+            if isinstance(vibe_metrics.get("vibe_delta"), (int, float))
+            else None,
+            "vibe_delta_status": vibe_status,
+        },
     }
 
 
@@ -265,13 +290,20 @@ def main() -> int:
                         "total_latency": _round3(float(run.get("duration_ms", 0.0) or 0.0) / 1000.0),
                         "peak_memory_rss": 0.0,
                         "adherence_score": None,
+                        "vibe_metrics": {
+                            "latency_variance": None,
+                            "code_density": 0.0,
+                            "gen_retries": 0,
+                            "vibe_delta": None,
+                            "vibe_delta_status": "NO_BASELINE",
+                        },
                     },
                 }
             )
 
     total_tasks = len(tasks)
     report: dict[str, Any] = {
-        "schema_version": "1.1.0",
+        "schema_version": "1.1.3",
         "report_generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "test_runs": test_runs,
         "generated_at_utc": datetime.now(UTC).isoformat(),
