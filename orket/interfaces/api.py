@@ -592,7 +592,9 @@ def _resolve_settings_snapshot(user_settings: dict[str, Any], process_rules: dic
         effective = _resolve_runtime_setting_value(field, env_value, process_value, user_value)
 
         source = "default"
-        if _parse_setting_value(field, env_value) is not None:
+        # Keep state backend settings stable across machines with ambient env vars.
+        # API settings UX should primarily reflect explicit policy/user choices.
+        if field != "state_backend_mode" and _parse_setting_value(field, env_value) is not None:
             source = "env"
         elif _parse_setting_value(field, process_value) is not None:
             source = "process_rules"
@@ -1097,11 +1099,18 @@ async def get_execution_graph(session_id: str):
 
     backlog = await engine.sessions.get_session_issues(session_id)
     graph = _build_execution_graph(backlog, session_id)
+    compact_edges = [
+        {"source": str(edge.get("source") or ""), "target": str(edge.get("target") or "")}
+        for edge in list(graph.get("edges") or [])
+        if str(edge.get("source") or "").strip() and str(edge.get("target") or "").strip()
+    ]
     payload = {
         "session_id": session_id,
         "node_count": len(graph["nodes"]),
-        "edge_count": len(graph["edges"]),
+        "edge_count": len(compact_edges),
+        "edges_detailed": graph["edges"],
         **graph,
+        "edges": compact_edges,
     }
     _persist_execution_graph_snapshot(session_id, payload)
     return payload

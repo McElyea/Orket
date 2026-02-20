@@ -15,14 +15,11 @@ from pathlib import Path
 import os
 import httpx
 from datetime import datetime
-from dotenv import load_dotenv
 
 from orket.logging import log_event
 from orket.adapters.vcs.webhook_db import WebhookDatabase
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from orket.domain.sandbox import TechStack, SandboxRegistry
-
-load_dotenv()
 
 
 class GiteaWebhookHandler:

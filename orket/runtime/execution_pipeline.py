@@ -119,6 +119,15 @@ class ExecutionPipeline:
     def _validate_state_backend_mode(self) -> None:
         if self.state_backend_mode != "gitea":
             return
+        # When backend mode is explicitly forced through env, require explicit env pilot
+        # enablement as well to avoid hidden host/user setting leakage.
+        env_mode = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip().lower()
+        env_pilot_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
+        if env_mode == "gitea" and not env_pilot_raw:
+            raise NotImplementedError(
+                "State backend mode 'gitea' requires pilot enablement "
+                "(set ORKET_ENABLE_GITEA_STATE_PILOT=true or runtime policy gitea_state_pilot_enabled=true)."
+            )
         if not self.gitea_state_pilot_enabled:
             raise NotImplementedError(
                 "State backend mode 'gitea' requires pilot enablement "

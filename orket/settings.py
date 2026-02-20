@@ -27,6 +27,9 @@ def set_preferences_file(path: Path):
 
 def load_env():
     """Simple .env loader to avoid extra dependencies."""
+    # Keep tests hermetic: avoid re-injecting host .env values after monkeypatch.delenv.
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
     if ENV_FILE.exists():
         fs = AsyncFileTools(Path("."))
         for line in fs.read_file_sync(str(ENV_FILE)).splitlines():

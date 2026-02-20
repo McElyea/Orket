@@ -8,6 +8,7 @@ import re
 import subprocess
 import tempfile
 import time
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -72,6 +73,58 @@ def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _round3(value: float) -> float:
+    return float(Decimal(str(value)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP))
+
+
+def _extract_last_json_object(raw_output: str) -> dict[str, Any]:
+    for line in reversed((raw_output or "").splitlines()):
+        candidate = line.strip()
+        if not candidate.startswith("{"):
+            continue
+        try:
+            payload = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            return payload
+    return {}
+
+
+def _normalize_telemetry(
+    runner_payload: dict[str, Any],
+    *,
+    elapsed_ms: float,
+    exit_code: int,
+) -> dict[str, Any]:
+    telemetry = runner_payload.get("telemetry") if isinstance(runner_payload, dict) else None
+    default = {
+        "init_latency": None,
+        "total_latency": _round3(float(elapsed_ms) / 1000.0),
+        "peak_memory_rss": 0.0,
+        "adherence_score": None if exit_code != 0 else 1.0,
+    }
+    if not isinstance(telemetry, dict):
+        return default
+
+    init_latency = telemetry.get("init_latency")
+    total_latency = telemetry.get("total_latency")
+    peak_memory_rss = telemetry.get("peak_memory_rss")
+    adherence_score = telemetry.get("adherence_score")
+    return {
+        "init_latency": _round3(float(init_latency)) if isinstance(init_latency, (int, float)) else None,
+        "total_latency": _round3(float(total_latency))
+        if isinstance(total_latency, (int, float))
+        else default["total_latency"],
+        "peak_memory_rss": _round3(float(peak_memory_rss))
+        if isinstance(peak_memory_rss, (int, float))
+        else default["peak_memory_rss"],
+        "adherence_score": _round3(float(adherence_score))
+        if isinstance(adherence_score, (int, float))
+        else (None if exit_code != 0 else default["adherence_score"]),
+    }
+
+
 def _run_once(
     task: dict[str, Any],
     run_index: int,
@@ -108,6 +161,13 @@ def _run_once(
         )
         elapsed_ms = round((time.perf_counter() - started) * 1000.0, 3)
         raw_output = (result.stdout or "") + "\n" + (result.stderr or "")
+        runner_payload = _extract_last_json_object(raw_output)
+        telemetry = _normalize_telemetry(
+            runner_payload=runner_payload,
+            elapsed_ms=elapsed_ms,
+            exit_code=int(result.returncode),
+        )
+        outcome = "pass" if int(result.returncode) == 0 else "fail"
 
         artifact_payload = []
         for glob_pattern in artifact_globs:
@@ -134,9 +194,11 @@ def _run_once(
         return {
             "run_index": run_index,
             "exit_code": int(result.returncode),
+            "outcome": outcome,
             "hash": digest,
             "duration_ms": elapsed_ms,
             "cost_usd": 0.0,
+            "telemetry": telemetry,
             "normalized_output_preview": normalized[:300],
         }
 
@@ -156,6 +218,7 @@ def main() -> int:
     deterministic_count = 0
     latency_samples: list[float] = []
     cost_samples: list[float] = []
+    test_runs: list[dict[str, Any]] = []
     for task in tasks:
         task_id = str(task.get("id", "unknown"))
         runs = [
@@ -188,9 +251,29 @@ def main() -> int:
             "hashes": hashes,
             "runs": runs,
         }
+        for run in runs:
+            if not isinstance(run, dict):
+                continue
+            test_runs.append(
+                {
+                    "test_id": task_id,
+                    "outcome": str(run.get("outcome", "error")),
+                    "telemetry": run.get("telemetry")
+                    if isinstance(run.get("telemetry"), dict)
+                    else {
+                        "init_latency": None,
+                        "total_latency": _round3(float(run.get("duration_ms", 0.0) or 0.0) / 1000.0),
+                        "peak_memory_rss": 0.0,
+                        "adherence_score": None,
+                    },
+                }
+            )
 
     total_tasks = len(tasks)
     report: dict[str, Any] = {
+        "schema_version": "1.1.0",
+        "report_generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "test_runs": test_runs,
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "task_bank": str(task_bank_path).replace("\\", "/"),
         "venue": str(args.venue),

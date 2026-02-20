@@ -17,14 +17,11 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, HTTPException, Header
 from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
 import uvicorn
 
 from orket import __version__
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.logging import log_event
-
-load_dotenv()
 
 app = FastAPI(
     title="Orket Webhook Server",

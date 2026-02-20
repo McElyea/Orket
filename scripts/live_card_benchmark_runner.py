@@ -5,13 +5,18 @@ import ast
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
+import time
 import uuid
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+import psutil
 
 
 def _parse_args() -> argparse.Namespace:
@@ -145,10 +150,67 @@ def _iso_z(dt: datetime) -> str:
     return dt.isoformat().replace("+00:00", "Z")
 
 
+def _round3(value: float) -> float:
+    return float(Decimal(str(value)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP))
+
+
 def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _process_tree_rss_bytes(proc: psutil.Process) -> int:
+    total = 0
+    try:
+        total += int(proc.memory_info().rss)
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        return 0
+    try:
+        children = proc.children(recursive=True)
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        children = []
+    for child in children:
+        try:
+            total += int(child.memory_info().rss)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return total
+
+
+def _run_command_with_peak_rss(
+    cmd: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str],
+    poll_interval_s: float = 0.05,
+) -> tuple[int, str, str, float]:
+    with tempfile.TemporaryDirectory(prefix="orket_live_runner_subprocess_") as td:
+        temp_root = Path(td)
+        stdout_path = temp_root / "stdout.log"
+        stderr_path = temp_root / "stderr.log"
+        with stdout_path.open("w", encoding="utf-8") as stdout_handle, stderr_path.open(
+            "w", encoding="utf-8"
+        ) as stderr_handle:
+            process = subprocess.Popen(
+                cmd,
+                stdout=stdout_handle,
+                stderr=stderr_handle,
+                text=True,
+                cwd=str(cwd),
+                env=env,
+            )
+            peak_rss_bytes = 0
+            ps_proc = psutil.Process(process.pid)
+            while process.poll() is None:
+                peak_rss_bytes = max(peak_rss_bytes, _process_tree_rss_bytes(ps_proc))
+                time.sleep(poll_interval_s)
+            peak_rss_bytes = max(peak_rss_bytes, _process_tree_rss_bytes(ps_proc))
+            returncode = int(process.wait())
+        stdout_text = stdout_path.read_text(encoding="utf-8", errors="replace")
+        stderr_text = stderr_path.read_text(encoding="utf-8", errors="replace")
+    peak_memory_rss_mib = _round3(peak_rss_bytes / float(1024**2))
+    return returncode, stdout_text, stderr_text, peak_memory_rss_mib
 
 
 def _parse_session_id(orket_log_path: Path) -> str:
@@ -256,6 +318,178 @@ def _count_meaningful_statements(func: ast.FunctionDef) -> int:
             continue
         count += 1
     return count
+
+
+class ConstraintValidator:
+    def __init__(self, task: dict[str, Any]) -> None:
+        self._regex_required: list[str] = []
+        self._regex_forbidden: list[str] = []
+        self._ast_rules: list[dict[str, Any]] = []
+        self._require_no_imports = False
+        self._require_type_hints = False
+        self._load_rules(task)
+
+    def _load_rules(self, task: dict[str, Any]) -> None:
+        acceptance = task.get("acceptance_contract") or {}
+        spec = acceptance.get("constraints")
+        if spec is None:
+            spec = task.get("constraints")
+        if isinstance(spec, dict):
+            self._regex_required = [
+                str(pattern).strip()
+                for pattern in (spec.get("regex_required") or [])
+                if str(pattern).strip()
+            ]
+            self._regex_forbidden = [
+                str(pattern).strip()
+                for pattern in (spec.get("regex_forbidden") or [])
+                if str(pattern).strip()
+            ]
+            self._ast_rules = [rule for rule in (spec.get("ast_rules") or []) if isinstance(rule, dict)]
+            return
+        if not isinstance(spec, list):
+            return
+        for raw in spec:
+            token = str(raw).strip().lower()
+            if not token:
+                continue
+            if token == "no imports":
+                self._require_no_imports = True
+                continue
+            if token == "use type hints":
+                self._require_type_hints = True
+                continue
+            if token.startswith("forbid:"):
+                pattern = token.split(":", 1)[1].strip()
+                if pattern:
+                    self._regex_forbidden.append(pattern)
+                continue
+            if token.startswith("require:"):
+                pattern = token.split(":", 1)[1].strip()
+                if pattern:
+                    self._regex_required.append(pattern)
+
+    def _validate_regex(self, source: str, checks: list[dict[str, Any]]) -> tuple[int, int]:
+        passed = 0
+        total = 0
+        for pattern in self._regex_required:
+            total += 1
+            matched = bool(re.search(pattern, source))
+            if matched:
+                passed += 1
+            checks.append(
+                {
+                    "kind": "regex_required",
+                    "rule": pattern,
+                    "passed": matched,
+                }
+            )
+        for pattern in self._regex_forbidden:
+            total += 1
+            matched = bool(re.search(pattern, source))
+            ok = not matched
+            if ok:
+                passed += 1
+            checks.append(
+                {
+                    "kind": "regex_forbidden",
+                    "rule": pattern,
+                    "passed": ok,
+                }
+            )
+        return passed, total
+
+    @staticmethod
+    def _annotation_name(node: ast.AST | None) -> str:
+        if node is None:
+            return ""
+        if isinstance(node, ast.Name):
+            return node.id
+        if isinstance(node, ast.Attribute):
+            return node.attr
+        if isinstance(node, ast.Subscript):
+            return ConstraintValidator._annotation_name(node.value)
+        return ""
+
+    def _validate_ast(self, source: str, checks: list[dict[str, Any]]) -> tuple[int, int]:
+        if not (self._ast_rules or self._require_no_imports or self._require_type_hints):
+            return 0, 0
+        try:
+            module = ast.parse(source or "")
+        except SyntaxError:
+            total_checks = len(self._ast_rules)
+            if self._require_no_imports:
+                total_checks += 1
+            if self._require_type_hints:
+                total_checks += 1
+            for _ in range(total_checks):
+                checks.append({"kind": "ast", "rule": "parseable", "passed": False})
+            return 0, total_checks
+
+        passed = 0
+        total = 0
+        funcs = [node for node in ast.walk(module) if isinstance(node, ast.FunctionDef)]
+        funcs_by_name = {fn.name: fn for fn in funcs}
+
+        if self._require_no_imports:
+            total += 1
+            has_imports = any(isinstance(node, (ast.Import, ast.ImportFrom)) for node in ast.walk(module))
+            ok = not has_imports
+            if ok:
+                passed += 1
+            checks.append({"kind": "ast", "rule": "no_imports", "passed": ok})
+
+        if self._require_type_hints:
+            total += 1
+            hinted = False
+            for fn in funcs:
+                has_arg_ann = any(arg.annotation is not None for arg in (fn.args.args + fn.args.kwonlyargs))
+                has_ret_ann = fn.returns is not None
+                if has_arg_ann or has_ret_ann:
+                    hinted = True
+                    break
+            if hinted:
+                passed += 1
+            checks.append({"kind": "ast", "rule": "use_type_hints", "passed": hinted})
+
+        for rule in self._ast_rules:
+            target_name = str(rule.get("required_function_name", "")).strip()
+            expected_arg_count = rule.get("argument_count")
+            expected_return = str(rule.get("return_type_annotation", "")).strip()
+            total += 1
+            fn = funcs_by_name.get(target_name) if target_name else (funcs[0] if funcs else None)
+            ok = fn is not None
+            if ok and expected_arg_count is not None:
+                try:
+                    expected = int(expected_arg_count)
+                except (TypeError, ValueError):
+                    expected = -1
+                arg_count = len(fn.args.args) if fn is not None else -1
+                ok = ok and (arg_count == expected)
+            if ok and expected_return:
+                actual_return = self._annotation_name(fn.returns if fn is not None else None)
+                ok = actual_return == expected_return
+            if ok:
+                passed += 1
+            checks.append({"kind": "ast_rule", "rule": rule, "passed": ok})
+        return passed, total
+
+    def validate(self, source: str) -> dict[str, Any]:
+        checks: list[dict[str, Any]] = []
+        regex_passed, regex_total = self._validate_regex(source, checks)
+        ast_passed, ast_total = self._validate_ast(source, checks)
+        total = regex_total + ast_total
+        passed = regex_passed + ast_passed
+        if total == 0:
+            score: float | None = 1.0
+        else:
+            score = _round3(passed / float(total))
+        return {
+            "passed_checks": passed,
+            "total_checks": total,
+            "adherence_score": score,
+            "checks": checks,
+        }
 
 
 def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None = None) -> dict[str, Any]:
@@ -662,6 +896,8 @@ def _materialize_required_artifacts(
     process_exit_code: int,
     started_at: datetime,
     ended_at: datetime,
+    telemetry: dict[str, Any] | None = None,
+    constraint_validation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     acceptance = task.get("acceptance_contract") or {}
     required_artifacts = [str(x).strip() for x in (acceptance.get("required_artifacts") or []) if str(x).strip()]
@@ -730,6 +966,8 @@ def _materialize_required_artifacts(
                 },
                 "main_sha256": main_sha,
                 "quality_checks": quality_checks,
+                "telemetry": telemetry or {},
+                "constraint_validation": constraint_validation or {},
                 "acceptance_contract": acceptance,
             }
             report_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -819,40 +1057,76 @@ def main() -> int:
 
     env = dict(os.environ)
     env.setdefault("ORKET_DISABLE_SANDBOX", "1")
+    generation_started_perf = time.perf_counter()
+    result_returncode = 1
+    result_stdout = ""
+    result_stderr = ""
+    peak_memory_rss_mib = 0.0
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False, env=env)
+        (
+            result_returncode,
+            result_stdout,
+            result_stderr,
+            peak_memory_rss_mib,
+        ) = _run_command_with_peak_rss(cmd, cwd=Path.cwd(), env=env)
+    except OSError as exc:
+        result_stderr = str(exc)
     finally:
         try:
             epic_path.unlink(missing_ok=True)
         except OSError:
             pass
+    total_latency_s = _round3(time.perf_counter() - generation_started_perf)
 
     # Persist command output as an artifact for harness hashing and troubleshooting.
     (run_dir / "live_runner_output.log").write_text(
-        ((result.stdout or "") + "\n" + (result.stderr or "")).strip() + "\n",
+        ((result_stdout or "") + "\n" + (result_stderr or "")).strip() + "\n",
         encoding="utf-8",
     )
 
     ended_at = _utc_now()
     orket_log_path = run_dir / "orket.log"
     session_id = _parse_session_id(orket_log_path)
+    final_main_path = run_dir / "agent_output" / "main.py"
+    final_main_text = (
+        final_main_path.read_text(encoding="utf-8", errors="replace") if final_main_path.exists() else ""
+    )
+    adherence_score: float | None = None
+    constraint_validation: dict[str, Any] = {
+        "passed_checks": 0,
+        "total_checks": 0,
+        "adherence_score": None,
+        "checks": [],
+    }
+    if final_main_text.strip():
+        constraint_validation = ConstraintValidator(task).validate(final_main_text)
+        adherence_score = constraint_validation.get("adherence_score")
+        if isinstance(adherence_score, (int, float)):
+            adherence_score = _round3(float(adherence_score))
+        else:
+            adherence_score = None
+    telemetry = {
+        "init_latency": None,
+        "total_latency": _round3(total_latency_s),
+        "peak_memory_rss": _round3(float(peak_memory_rss_mib)),
+        "adherence_score": adherence_score,
+    }
+
     quality_checks = _materialize_required_artifacts(
         run_dir=run_dir,
         task=task,
         task_id=task_id,
         output_file=output_file,
-        process_exit_code=int(result.returncode),
+        process_exit_code=int(result_returncode),
         started_at=started_at,
         ended_at=ended_at,
+        telemetry=telemetry,
+        constraint_validation=constraint_validation,
     )
     validation_issues = _validate_task_outputs(run_dir=run_dir, task=task, output_file=output_file)
-    validation_passed = len(validation_issues) == 0 and int(result.returncode) == 0
+    validation_passed = len(validation_issues) == 0 and int(result_returncode) == 0
     final_exit_code = 0 if validation_passed else 2
 
-    final_main_path = run_dir / "agent_output" / "main.py"
-    final_main_text = (
-        final_main_path.read_text(encoding="utf-8", errors="replace") if final_main_path.exists() else ""
-    )
     coder_final_message = _extract_coder_final_message(run_dir=run_dir, session_id=session_id, task_id=task_id_padded)
 
     runtime_event_payload = {
@@ -911,6 +1185,8 @@ def main() -> int:
         "validation_passed": validation_passed,
         "validation_issues": validation_issues,
         "quality_checks": quality_checks,
+        "telemetry": telemetry,
+        "constraint_validation": constraint_validation,
         "workspace": str(run_dir).replace("\\", "/"),
         "canonical_run_dir": str(canonical_run_dir).replace("\\", "/"),
         "observability_path": str(canonical_run_dir / "observability" / session_id).replace("\\", "/")
@@ -944,6 +1220,7 @@ def main() -> int:
                 "output_file": output_file,
                 "validation_passed": validation_passed,
                 "validation_issues": validation_issues,
+                "telemetry": telemetry,
             },
             sort_keys=True,
         )
