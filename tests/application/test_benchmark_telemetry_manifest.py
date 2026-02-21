@@ -57,6 +57,40 @@ def test_run_determinism_harness_emits_telemetry_manifest_defaults(tmp_path: Pat
     assert telemetry["total_latency"] >= 0.0
     assert telemetry["peak_memory_rss"] == 0.0
     assert telemetry["adherence_score"] == 1.0
+    assert telemetry["internal_model_seconds"] is None
+    assert telemetry["orchestration_overhead_ratio"] is None
+    assert telemetry["run_quality_status"] == "POLLUTED"
+    assert telemetry["run_quality_reasons"] == ["MISSING_EXPERIMENTAL_CONTROLS", "MISSING_TOKEN_TIMINGS"]
+    assert telemetry["system_load_start"] == {}
+    assert telemetry["system_load_end"] == {}
+    assert telemetry["experimental_controls"] == {
+        "seed": None,
+        "threads": None,
+        "affinity_policy": "",
+        "warmup_steps": None,
+    }
+    assert telemetry["token_metrics_status"] == "TOKEN_AND_TIMING_UNAVAILABLE"
+    assert telemetry["token_metrics"] == {
+        "status": "TOKEN_AND_TIMING_UNAVAILABLE",
+        "counts": {
+            "prompt_tokens": None,
+            "output_tokens": None,
+            "total_tokens": None,
+        },
+        "latencies": {
+            "prefill_seconds": None,
+            "decode_seconds": None,
+            "total_turn_seconds": telemetry["total_latency"],
+        },
+        "throughput": {
+            "prompt_tokens_per_second": None,
+            "generation_tokens_per_second": None,
+        },
+        "audit": {
+            "raw_usage": {},
+            "raw_timings": {},
+        },
+    }
     assert telemetry["vibe_metrics"] == {
         "latency_variance": None,
         "code_density": 0.0,
@@ -105,6 +139,28 @@ def test_run_determinism_harness_uses_runner_telemetry_when_present(tmp_path: Pa
                 "    'total_latency': 1.98765,",
                 "    'peak_memory_rss': 256.44444,",
                 "    'adherence_score': 0.66666,",
+                "    'token_metrics_status': 'OK',",
+                "    'token_metrics': {",
+                "      'status': 'OK',",
+                "      'counts': {",
+                "        'prompt_tokens': 512,",
+                "        'output_tokens': 128,",
+                "        'total_tokens': 640",
+                "      },",
+                "      'latencies': {",
+                "        'prefill_seconds': 0.8504,",
+                "        'decode_seconds': 5.121,",
+                "        'total_turn_seconds': 6.1",
+                "      },",
+                "      'throughput': {",
+                "        'prompt_tokens_per_second': 602.35294,",
+                "        'generation_tokens_per_second': 24.99512",
+                "      },",
+                "      'audit': {",
+                "        'raw_usage': {'prompt_tokens': 512, 'completion_tokens': 128, 'total_tokens': 640},",
+                "        'raw_timings': {'prompt_ms': 850.4, 'predicted_ms': 5121.0}",
+                "      }",
+                "    },",
                 "    'vibe_metrics': {",
                 "      'latency_variance': 12.34567,",
                 "      'code_density': 0.75491,",
@@ -146,6 +202,40 @@ def test_run_determinism_harness_uses_runner_telemetry_when_present(tmp_path: Pa
         "total_latency": 1.988,
         "peak_memory_rss": 256.444,
         "adherence_score": 0.667,
+        "internal_model_seconds": None,
+        "orchestration_overhead_ratio": None,
+        "run_quality_status": "POLLUTED",
+        "run_quality_reasons": [],
+        "system_load_start": {},
+        "system_load_end": {},
+        "experimental_controls": {
+            "seed": None,
+            "threads": None,
+            "affinity_policy": "",
+            "warmup_steps": None,
+        },
+        "token_metrics_status": "OK",
+        "token_metrics": {
+            "status": "OK",
+            "counts": {
+                "prompt_tokens": 512,
+                "output_tokens": 128,
+                "total_tokens": 640,
+            },
+            "latencies": {
+                "prefill_seconds": 0.85,
+                "decode_seconds": 5.121,
+                "total_turn_seconds": 6.1,
+            },
+            "throughput": {
+                "prompt_tokens_per_second": 602.35,
+                "generation_tokens_per_second": 25.0,
+            },
+            "audit": {
+                "raw_usage": {"prompt_tokens": 512, "completion_tokens": 128, "total_tokens": 640},
+                "raw_timings": {"prompt_ms": 850.4, "predicted_ms": 5121.0},
+            },
+        },
         "vibe_metrics": {
             "latency_variance": 12.346,
             "code_density": 0.755,

@@ -53,6 +53,14 @@ def _parse_args() -> argparse.Namespace:
         default=0,
         help="Optional inclusive upper bound for numeric task ID filtering.",
     )
+    parser.add_argument("--seed", type=int, default=0, help="Benchmark seed metadata (0 means unset).")
+    parser.add_argument("--threads", type=int, default=0, help="Thread-count metadata (0 means unset).")
+    parser.add_argument(
+        "--affinity-policy",
+        default="",
+        help="CPU affinity policy/mask metadata (empty means unset).",
+    )
+    parser.add_argument("--warmup-steps", type=int, default=0, help="Warmup steps metadata (0 means unset).")
     return parser.parse_args()
 
 
@@ -101,6 +109,27 @@ def _normalize_telemetry(
     exit_code: int,
 ) -> dict[str, Any]:
     telemetry = runner_payload.get("telemetry") if isinstance(runner_payload, dict) else None
+    default_token_metrics = {
+        "status": "TOKEN_AND_TIMING_UNAVAILABLE",
+        "counts": {
+            "prompt_tokens": None,
+            "output_tokens": None,
+            "total_tokens": None,
+        },
+        "latencies": {
+            "prefill_seconds": None,
+            "decode_seconds": None,
+            "total_turn_seconds": _round3(float(elapsed_ms) / 1000.0),
+        },
+        "throughput": {
+            "prompt_tokens_per_second": None,
+            "generation_tokens_per_second": None,
+        },
+        "audit": {
+            "raw_usage": {},
+            "raw_timings": {},
+        },
+    }
     default_vibe = {
         "latency_variance": None,
         "code_density": 0.0,
@@ -113,6 +142,20 @@ def _normalize_telemetry(
         "total_latency": _round3(float(elapsed_ms) / 1000.0),
         "peak_memory_rss": 0.0,
         "adherence_score": None if exit_code != 0 else 1.0,
+        "internal_model_seconds": None,
+        "orchestration_overhead_ratio": None,
+        "run_quality_status": "POLLUTED",
+        "run_quality_reasons": ["MISSING_EXPERIMENTAL_CONTROLS", "MISSING_TOKEN_TIMINGS"],
+        "system_load_start": {},
+        "system_load_end": {},
+        "experimental_controls": {
+            "seed": None,
+            "threads": None,
+            "affinity_policy": "",
+            "warmup_steps": None,
+        },
+        "token_metrics_status": "TOKEN_AND_TIMING_UNAVAILABLE",
+        "token_metrics": default_token_metrics,
         "vibe_metrics": default_vibe,
     }
     if not isinstance(telemetry, dict):
@@ -122,10 +165,28 @@ def _normalize_telemetry(
     total_latency = telemetry.get("total_latency")
     peak_memory_rss = telemetry.get("peak_memory_rss")
     adherence_score = telemetry.get("adherence_score")
+    token_metrics = telemetry.get("token_metrics") if isinstance(telemetry.get("token_metrics"), dict) else {}
+    token_status = str(
+        telemetry.get("token_metrics_status")
+        or token_metrics.get("status")
+        or "TOKEN_AND_TIMING_UNAVAILABLE"
+    ).strip()
+    if token_status not in {"OK", "TOKEN_COUNT_UNAVAILABLE", "TIMING_UNAVAILABLE", "TOKEN_AND_TIMING_UNAVAILABLE"}:
+        token_status = "TOKEN_AND_TIMING_UNAVAILABLE"
     vibe_metrics = telemetry.get("vibe_metrics") if isinstance(telemetry.get("vibe_metrics"), dict) else {}
     vibe_status = str(vibe_metrics.get("vibe_delta_status") or "NO_BASELINE").strip()
     if vibe_status not in {"OK", "NO_BASELINE", "HW_MISMATCH", "REV_MISMATCH"}:
         vibe_status = "NO_BASELINE"
+    run_quality_status = str(telemetry.get("run_quality_status") or "POLLUTED").strip().upper()
+    if run_quality_status not in {"CLEAN", "POLLUTED"}:
+        run_quality_status = "POLLUTED"
+    run_quality_reasons_raw = telemetry.get("run_quality_reasons")
+    run_quality_reasons = []
+    if isinstance(run_quality_reasons_raw, list):
+        run_quality_reasons = [str(reason).strip() for reason in run_quality_reasons_raw if str(reason).strip()]
+    system_load_start = telemetry.get("system_load_start") if isinstance(telemetry.get("system_load_start"), dict) else {}
+    system_load_end = telemetry.get("system_load_end") if isinstance(telemetry.get("system_load_end"), dict) else {}
+    controls = telemetry.get("experimental_controls") if isinstance(telemetry.get("experimental_controls"), dict) else {}
     return {
         "init_latency": _round3(float(init_latency)) if isinstance(init_latency, (int, float)) else None,
         "total_latency": _round3(float(total_latency))
@@ -137,6 +198,70 @@ def _normalize_telemetry(
         "adherence_score": _round3(float(adherence_score))
         if isinstance(adherence_score, (int, float))
         else (None if exit_code != 0 else default["adherence_score"]),
+        "internal_model_seconds": _round3(float(telemetry.get("internal_model_seconds")))
+        if isinstance(telemetry.get("internal_model_seconds"), (int, float))
+        else None,
+        "orchestration_overhead_ratio": _round3(float(telemetry.get("orchestration_overhead_ratio")))
+        if isinstance(telemetry.get("orchestration_overhead_ratio"), (int, float))
+        else None,
+        "run_quality_status": run_quality_status,
+        "run_quality_reasons": run_quality_reasons,
+        "system_load_start": system_load_start,
+        "system_load_end": system_load_end,
+        "experimental_controls": {
+            "seed": int(controls.get("seed")) if isinstance(controls.get("seed"), int) else None,
+            "threads": int(controls.get("threads")) if isinstance(controls.get("threads"), int) else None,
+            "affinity_policy": str(controls.get("affinity_policy", "")).strip(),
+            "warmup_steps": int(controls.get("warmup_steps")) if isinstance(controls.get("warmup_steps"), int) else None,
+        },
+        "token_metrics_status": token_status,
+        "token_metrics": {
+            "status": token_status,
+            "counts": {
+                "prompt_tokens": int(token_metrics.get("counts", {}).get("prompt_tokens"))
+                if isinstance(token_metrics.get("counts", {}).get("prompt_tokens"), int)
+                else None,
+                "output_tokens": int(token_metrics.get("counts", {}).get("output_tokens"))
+                if isinstance(token_metrics.get("counts", {}).get("output_tokens"), int)
+                else None,
+                "total_tokens": int(token_metrics.get("counts", {}).get("total_tokens"))
+                if isinstance(token_metrics.get("counts", {}).get("total_tokens"), int)
+                else None,
+            },
+            "latencies": {
+                "prefill_seconds": _round3(float(token_metrics.get("latencies", {}).get("prefill_seconds")))
+                if isinstance(token_metrics.get("latencies", {}).get("prefill_seconds"), (int, float))
+                else None,
+                "decode_seconds": _round3(float(token_metrics.get("latencies", {}).get("decode_seconds")))
+                if isinstance(token_metrics.get("latencies", {}).get("decode_seconds"), (int, float))
+                else None,
+                "total_turn_seconds": _round3(float(token_metrics.get("latencies", {}).get("total_turn_seconds")))
+                if isinstance(token_metrics.get("latencies", {}).get("total_turn_seconds"), (int, float))
+                else default_token_metrics["latencies"]["total_turn_seconds"],
+            },
+            "throughput": {
+                "prompt_tokens_per_second": round(
+                    float(token_metrics.get("throughput", {}).get("prompt_tokens_per_second")),
+                    2,
+                )
+                if isinstance(token_metrics.get("throughput", {}).get("prompt_tokens_per_second"), (int, float))
+                else None,
+                "generation_tokens_per_second": round(
+                    float(token_metrics.get("throughput", {}).get("generation_tokens_per_second")),
+                    2,
+                )
+                if isinstance(token_metrics.get("throughput", {}).get("generation_tokens_per_second"), (int, float))
+                else None,
+            },
+            "audit": {
+                "raw_usage": token_metrics.get("audit", {}).get("raw_usage")
+                if isinstance(token_metrics.get("audit", {}).get("raw_usage"), dict)
+                else {},
+                "raw_timings": token_metrics.get("audit", {}).get("raw_timings")
+                if isinstance(token_metrics.get("audit", {}).get("raw_timings"), dict)
+                else {},
+            },
+        },
         "vibe_metrics": {
             "latency_variance": _round3(float(vibe_metrics.get("latency_variance")))
             if isinstance(vibe_metrics.get("latency_variance"), (int, float))
@@ -160,6 +285,11 @@ def _run_once(
     execution_mode: str,
     runner_template: str,
     artifact_globs: list[str],
+    *,
+    seed: int,
+    threads: int,
+    affinity_policy: str,
+    warmup_steps: int,
 ) -> dict[str, Any]:
     repo_root = Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix="orket_det_") as temp_dir:
@@ -173,12 +303,20 @@ def _run_once(
             execution_mode=execution_mode,
             venue=runtime_target,
             flow=execution_mode,
+            seed=str(seed),
+            threads=str(threads),
+            affinity_policy=str(affinity_policy),
+            warmup_steps=str(warmup_steps),
             workdir=str(run_dir),
             run_dir=str(run_dir),
             repo_root=str(repo_root),
         )
 
         env = os.environ.copy()
+        env["ORKET_BENCH_SEED"] = str(seed)
+        env["ORKET_BENCH_THREADS"] = str(threads)
+        env["ORKET_BENCH_AFFINITY_POLICY"] = str(affinity_policy)
+        env["ORKET_BENCH_WARMUP_STEPS"] = str(warmup_steps)
         started = time.perf_counter()
         result = subprocess.run(
             command,
@@ -259,6 +397,10 @@ def main() -> int:
                 execution_mode=str(args.execution_mode),
                 runner_template=str(args.runner_template),
                 artifact_globs=list(args.artifact_glob),
+                seed=int(args.seed),
+                threads=int(args.threads),
+                affinity_policy=str(args.affinity_policy),
+                warmup_steps=int(args.warmup_steps),
             )
             for index in range(int(args.runs))
         ]
@@ -295,6 +437,40 @@ def main() -> int:
                         "total_latency": _round3(float(run.get("duration_ms", 0.0) or 0.0) / 1000.0),
                         "peak_memory_rss": 0.0,
                         "adherence_score": None,
+                        "internal_model_seconds": None,
+                        "orchestration_overhead_ratio": None,
+                        "run_quality_status": "POLLUTED",
+                        "run_quality_reasons": ["MISSING_EXPERIMENTAL_CONTROLS", "MISSING_TOKEN_TIMINGS"],
+                        "system_load_start": {},
+                        "system_load_end": {},
+                        "experimental_controls": {
+                            "seed": int(args.seed) if int(args.seed) > 0 else None,
+                            "threads": int(args.threads) if int(args.threads) > 0 else None,
+                            "affinity_policy": str(args.affinity_policy),
+                            "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
+                        },
+                        "token_metrics_status": "TOKEN_AND_TIMING_UNAVAILABLE",
+                        "token_metrics": {
+                            "status": "TOKEN_AND_TIMING_UNAVAILABLE",
+                            "counts": {
+                                "prompt_tokens": None,
+                                "output_tokens": None,
+                                "total_tokens": None,
+                            },
+                            "latencies": {
+                                "prefill_seconds": None,
+                                "decode_seconds": None,
+                                "total_turn_seconds": _round3(float(run.get("duration_ms", 0.0) or 0.0) / 1000.0),
+                            },
+                            "throughput": {
+                                "prompt_tokens_per_second": None,
+                                "generation_tokens_per_second": None,
+                            },
+                            "audit": {
+                                "raw_usage": {},
+                                "raw_timings": {},
+                            },
+                        },
                         "vibe_metrics": {
                             "latency_variance": None,
                             "code_density": 0.0,
@@ -322,6 +498,12 @@ def main() -> int:
         "artifact_globs": list(args.artifact_glob),
         "task_id_min": int(args.task_id_min),
         "task_id_max": int(args.task_id_max),
+        "experimental_controls": {
+            "seed": int(args.seed) if int(args.seed) > 0 else None,
+            "threads": int(args.threads) if int(args.threads) > 0 else None,
+            "affinity_policy": str(args.affinity_policy),
+            "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
+        },
         "total_tasks": total_tasks,
         "deterministic_tasks": deterministic_count,
         "determinism_rate": (deterministic_count / total_tasks) if total_tasks else 0.0,

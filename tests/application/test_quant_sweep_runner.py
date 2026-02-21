@@ -107,14 +107,25 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
     assert summary["matrix"]["task_bank"] == str(task_bank)
     assert summary["matrix"]["runs_per_quant"] == 1
     assert summary["matrix"]["latency_ceiling"] == 10.0
+    assert summary["matrix"]["experimental_controls"] == {
+        "seed": None,
+        "threads": None,
+        "affinity_policy": "",
+        "warmup_steps": None,
+    }
 
     assert len(summary["sessions"]) == 1
     session = summary["sessions"][0]
     assert session["model_id"] == "qwen-coder"
     assert session["baseline_quant"] == "Q8_0"
-    assert session["efficiency_frontier"]["optimal_quant_tag"] == "Q6_K"
+    assert session["efficiency_frontier"]["minimum_viable_quant_tag"] == "Q6_K"
+    assert session["efficiency_frontier"]["best_value_quant_tag"] == "Q8_0"
     assert session["recommendation"] == "For this hardware, use Q6_K for best Vibe."
     assert session["efficiency_frontier"]["reason"] == "lowest quant meeting adherence and latency thresholds"
+    assert session["recommendation_detail"] == {
+        "minimum_viable_quant": "Q6_K",
+        "best_value_quant": "Q8_0",
+    }
 
     per_quant = {row["quant_tag"]: row for row in session["per_quant"]}
     assert per_quant["Q8_0"]["vibe_delta"] == 0.0
@@ -214,6 +225,85 @@ def test_run_quant_sweep_recommends_mismatch_when_no_quant_meets_threshold(tmp_p
     assert result.returncode == 0, result.stdout + "\n" + result.stderr
     summary = json.loads(summary_out.read_text(encoding="utf-8"))
     session = summary["sessions"][0]
-    assert session["efficiency_frontier"]["optimal_quant_tag"] is None
+    assert session["efficiency_frontier"]["minimum_viable_quant_tag"] is None
+    assert session["efficiency_frontier"]["best_value_quant_tag"] is None
     assert session["efficiency_frontier"]["reason"] == "no quant met adherence and latency thresholds"
     assert session["recommendation"] == "No quantization met the vibe threshold; hardware/model mismatch."
+
+
+def test_run_quant_sweep_canary_gate_blocks_on_missing_telemetry(tmp_path: Path) -> None:
+    task_bank = tmp_path / "tasks.json"
+    task_bank.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "001",
+                    "tier": 1,
+                    "description": "Task 001",
+                    "acceptance_contract": {
+                        "mode": "function",
+                        "required_artifacts": [],
+                        "pass_conditions": ["ok"],
+                        "determinism_profile": "strict",
+                    },
+                }
+            ],
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    fake_runner = tmp_path / "fake_quant_runner_no_tokens.py"
+    fake_runner.write_text(
+        "\n".join(
+            [
+                "import argparse",
+                "import json",
+                "p = argparse.ArgumentParser()",
+                "p.add_argument('--task', required=True)",
+                "p.add_argument('--venue', default='x')",
+                "p.add_argument('--flow', default='y')",
+                "p.parse_args()",
+                "print(json.dumps({",
+                "  'telemetry': {",
+                "    'init_latency': None,",
+                "    'total_latency': 1.0,",
+                "    'peak_memory_rss': 100.0,",
+                "    'adherence_score': 1.0",
+                "  }",
+                "}))",
+                "raise SystemExit(0)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    summary_out = tmp_path / "sweep_summary.json"
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/run_quant_sweep.py",
+            "--model-id",
+            "qwen-coder",
+            "--quant-tags",
+            "Q8_0,Q4_K_M",
+            "--task-bank",
+            str(task_bank),
+            "--runs",
+            "1",
+            "--runner-template",
+            f"python {fake_runner} --task {{task_file}} --venue {{venue}} --flow {{flow}}",
+            "--summary-out",
+            str(summary_out),
+            "--task-limit",
+            "1",
+            "--canary-runs",
+            "2",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "Canary gate failed; aborting quant sweep." in (result.stdout + "\n" + result.stderr)

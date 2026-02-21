@@ -27,6 +27,12 @@ class LocalModelProvider:
         self.timeout = timeout
         self.client = ollama.AsyncClient()
 
+    @staticmethod
+    def _ns_to_ms(value: Any) -> float | None:
+        if not isinstance(value, (int, float)):
+            return None
+        return float(value) / 1_000_000.0
+
     async def complete(self, messages: List[Dict[str, str]]) -> ModelResponse:
         options = {"temperature": self.temperature}
         if self.seed is not None:
@@ -50,11 +56,25 @@ class LocalModelProvider:
                 if isinstance(prompt_tokens, int) and isinstance(completion_tokens, int):
                     total_tokens = prompt_tokens + completion_tokens
 
+                prompt_ms = self._ns_to_ms(response.get("prompt_eval_duration"))
+                predicted_ms = self._ns_to_ms(response.get("eval_duration"))
+                total_ms = self._ns_to_ms(response.get("total_duration"))
+
                 raw = {
                     "ollama": response,
                     "input_tokens": prompt_tokens,
                     "output_tokens": completion_tokens,
                     "total_tokens": total_tokens,
+                    "usage": {
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens,
+                    },
+                    "timings": {
+                        "prompt_ms": prompt_ms,
+                        "predicted_ms": predicted_ms,
+                        "total_ms": total_ms,
+                    },
                     "provider": "ollama-async",
                     "model": self.model,
                     "retries": attempt,
@@ -93,4 +113,3 @@ class LocalModelProvider:
     async def clear_context(self):
         # Ollama chat calls are stateless unless using explicit sessions.
         pass
-

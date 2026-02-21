@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import platform
 import re
@@ -36,6 +37,18 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--summary-out", default="benchmarks/results/quant_sweep/sweep_summary.json")
     parser.add_argument("--adherence-threshold", type=float, default=0.95)
     parser.add_argument("--latency-ceiling", type=float, default=10.0, help="Max total latency (seconds) for frontier eligibility.")
+    parser.add_argument("--seed", type=int, default=0, help="Benchmark seed metadata (0 means unset).")
+    parser.add_argument("--threads", type=int, default=0, help="Thread-count metadata (0 means unset).")
+    parser.add_argument("--affinity-policy", default="", help="CPU affinity policy/mask metadata.")
+    parser.add_argument("--warmup-steps", type=int, default=0, help="Warmup steps metadata (0 means unset).")
+    parser.add_argument("--canary-runs", type=int, default=0, help="If >0, run canary repeats before matrix execution.")
+    parser.add_argument("--canary-task-limit", type=int, default=1, help="Task limit for canary harness run.")
+    parser.add_argument(
+        "--canary-latency-variance-threshold",
+        type=float,
+        default=0.03,
+        help="Max allowed internal latency coefficient of variation for canary.",
+    )
     return parser.parse_args()
 
 
@@ -116,6 +129,12 @@ def _collect_quant_metrics(report: dict[str, Any]) -> dict[str, Any]:
     memory_samples: list[float] = []
     latency_samples: list[float] = []
     init_latency_samples: list[float] = []
+    prompt_tps_samples: list[float] = []
+    generation_tps_samples: list[float] = []
+    token_statuses: list[str] = []
+    run_quality_statuses: list[str] = []
+    run_quality_reason_samples: list[str] = []
+    overhead_samples: list[float] = []
     for row in test_runs:
         if not isinstance(row, dict):
             continue
@@ -124,6 +143,18 @@ def _collect_quant_metrics(report: dict[str, Any]) -> dict[str, Any]:
         memory = telemetry.get("peak_memory_rss")
         latency = telemetry.get("total_latency")
         init_latency = telemetry.get("init_latency")
+        token_metrics = telemetry.get("token_metrics") if isinstance(telemetry.get("token_metrics"), dict) else {}
+        throughput = token_metrics.get("throughput") if isinstance(token_metrics.get("throughput"), dict) else {}
+        prompt_tps = throughput.get("prompt_tokens_per_second")
+        generation_tps = throughput.get("generation_tokens_per_second")
+        overhead_ratio = telemetry.get("orchestration_overhead_ratio")
+        run_quality_status = str(telemetry.get("run_quality_status") or "POLLUTED").strip().upper()
+        run_quality_reasons = telemetry.get("run_quality_reasons")
+        token_status = str(
+            telemetry.get("token_metrics_status")
+            or token_metrics.get("status")
+            or "TOKEN_AND_TIMING_UNAVAILABLE"
+        ).strip()
         if isinstance(adherence, (int, float)):
             adherence_samples.append(float(adherence))
         if isinstance(memory, (int, float)):
@@ -132,13 +163,165 @@ def _collect_quant_metrics(report: dict[str, Any]) -> dict[str, Any]:
             latency_samples.append(float(latency))
         if isinstance(init_latency, (int, float)):
             init_latency_samples.append(float(init_latency))
+        if isinstance(prompt_tps, (int, float)):
+            prompt_tps_samples.append(float(prompt_tps))
+        if isinstance(generation_tps, (int, float)):
+            generation_tps_samples.append(float(generation_tps))
+        if isinstance(overhead_ratio, (int, float)):
+            overhead_samples.append(float(overhead_ratio))
+        token_statuses.append(token_status)
+        run_quality_statuses.append(run_quality_status if run_quality_status in {"CLEAN", "POLLUTED"} else "POLLUTED")
+        if isinstance(run_quality_reasons, list):
+            for reason in run_quality_reasons:
+                reason_text = str(reason).strip()
+                if reason_text:
+                    run_quality_reason_samples.append(reason_text)
+
+    status_priority = {
+        "OK": 0,
+        "TIMING_UNAVAILABLE": 1,
+        "TOKEN_COUNT_UNAVAILABLE": 2,
+        "TOKEN_AND_TIMING_UNAVAILABLE": 3,
+    }
+    aggregate_token_status = "TOKEN_AND_TIMING_UNAVAILABLE"
+    if token_statuses:
+        aggregate_token_status = sorted(
+            token_statuses,
+            key=lambda token: status_priority.get(token, 99),
+        )[0]
+    aggregate_run_quality = "POLLUTED"
+    if run_quality_statuses and all(status == "CLEAN" for status in run_quality_statuses):
+        aggregate_run_quality = "CLEAN"
+    unique_run_quality_reasons = sorted(set(run_quality_reason_samples))
     return {
         "adherence_score": _safe_avg(adherence_samples),
         "peak_memory_rss": _safe_avg(memory_samples),
         "total_latency": _safe_avg(latency_samples),
         "init_latency": _safe_avg(init_latency_samples) if init_latency_samples else None,
+        "prompt_tokens_per_second": _safe_avg(prompt_tps_samples) if prompt_tps_samples else None,
+        "generation_tokens_per_second": _safe_avg(generation_tps_samples) if generation_tps_samples else None,
+        "orchestration_overhead_ratio": _safe_avg(overhead_samples) if overhead_samples else None,
+        "token_metrics_status": aggregate_token_status,
+        "run_quality_status": aggregate_run_quality,
+        "run_quality_reasons": unique_run_quality_reasons,
         "determinism_rate": float(report.get("determinism_rate", 0.0) or 0.0),
         "test_runs": len(test_runs),
+    }
+
+
+def _best_value_quant(rows: list[dict[str, Any]], *, min_adherence: float, latency_ceiling: float) -> dict[str, Any] | None:
+    candidates = [row for row in rows if _is_frontier_eligible(row=row, min_adherence=min_adherence, latency_ceiling=latency_ceiling)]
+    if not candidates:
+        return None
+
+    def _utility(row: dict[str, Any]) -> float:
+        adherence = float(row.get("adherence_score", 0.0) or 0.0)
+        latency = float(row.get("total_latency", 0.0) or 0.0)
+        if latency <= 0:
+            return 0.0
+        return adherence / latency
+
+    # Deterministic tie-breakers: highest utility, then adherence, then lower latency, then higher quant rank.
+    return sorted(
+        candidates,
+        key=lambda row: (
+            round(_utility(row), 9),
+            float(row.get("adherence_score", 0.0) or 0.0),
+            -float(row.get("total_latency", 0.0) or 0.0),
+            int(row.get("quant_rank", 0) or 0),
+        ),
+        reverse=True,
+    )[0]
+
+
+def _run_canary(
+    *,
+    args: argparse.Namespace,
+    model_id: str,
+    quant_tag: str,
+    out_dir: Path,
+) -> dict[str, Any]:
+    canary_out = out_dir / "_canary_report.json"
+    harness_cmd = [
+        "python",
+        "scripts/run_determinism_harness.py",
+        "--task-bank",
+        args.task_bank,
+        "--runs",
+        str(args.canary_runs),
+        "--runtime-target",
+        args.runtime_target,
+        "--execution-mode",
+        args.execution_mode,
+        "--runner-template",
+        args.runner_template,
+        "--output",
+        str(canary_out),
+        "--task-limit",
+        str(max(1, int(args.canary_task_limit))),
+        "--seed",
+        str(args.seed),
+        "--threads",
+        str(args.threads),
+        "--affinity-policy",
+        str(args.affinity_policy),
+        "--warmup-steps",
+        str(args.warmup_steps),
+    ]
+    env = dict(os.environ)
+    env["ORKET_MODEL_ID"] = str(model_id)
+    env["ORKET_QUANT_TAG"] = str(quant_tag)
+    if str(args.model_hash).strip():
+        env["ORKET_MODEL_HASH"] = str(args.model_hash).strip()
+    _run(harness_cmd, env=env)
+
+    report = _load_json(canary_out)
+    test_runs = report.get("test_runs") if isinstance(report.get("test_runs"), list) else []
+    adherence_values: list[float] = []
+    internal_latencies: list[float] = []
+    missing_telemetry_count = 0
+    for row in test_runs:
+        if not isinstance(row, dict):
+            continue
+        telemetry = row.get("telemetry") if isinstance(row.get("telemetry"), dict) else {}
+        adherence = telemetry.get("adherence_score")
+        internal_latency = telemetry.get("internal_model_seconds")
+        token_status = str(telemetry.get("token_metrics_status") or "TOKEN_AND_TIMING_UNAVAILABLE").strip()
+        if isinstance(adherence, (int, float)):
+            adherence_values.append(float(adherence))
+        if isinstance(internal_latency, (int, float)):
+            internal_latencies.append(float(internal_latency))
+        if token_status != "OK":
+            missing_telemetry_count += 1
+
+    adherence_variance = 0.0
+    if adherence_values:
+        adherence_variance = max(adherence_values) - min(adherence_values)
+    latency_variance = None
+    if internal_latencies:
+        mean_latency = sum(internal_latencies) / len(internal_latencies)
+        if mean_latency > 0:
+            sq = [(value - mean_latency) ** 2 for value in internal_latencies]
+            stdev = math.sqrt(sum(sq) / len(sq))
+            latency_variance = stdev / mean_latency
+    missing_telemetry_rate = (missing_telemetry_count / len(test_runs)) if test_runs else 1.0
+
+    passed = (
+        adherence_variance == 0.0
+        and (latency_variance is not None and latency_variance <= float(args.canary_latency_variance_threshold))
+        and missing_telemetry_rate == 0.0
+    )
+    return {
+        "model_id": str(model_id),
+        "quant_tag": str(quant_tag),
+        "runs": int(args.canary_runs),
+        "task_limit": int(args.canary_task_limit),
+        "adherence_variance": round(adherence_variance, 6),
+        "internal_latency_variance": round(float(latency_variance), 6) if isinstance(latency_variance, float) else None,
+        "missing_telemetry_rate": round(missing_telemetry_rate, 6),
+        "latency_variance_threshold": float(args.canary_latency_variance_threshold),
+        "passed": bool(passed),
+        "report_path": str(canary_out).replace("\\", "/"),
     }
 
 
@@ -155,6 +338,18 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     summary_out = Path(args.summary_out)
     summary_out.parent.mkdir(parents=True, exist_ok=True)
+
+    canary_result = None
+    if int(args.canary_runs) > 0:
+        canary_result = _run_canary(
+            args=args,
+            model_id=model_ids[0],
+            quant_tag=quant_tags[0],
+            out_dir=out_dir,
+        )
+        if not bool(canary_result.get("passed")):
+            print(json.dumps({"canary": canary_result}, indent=2))
+            raise SystemExit("Canary gate failed; aborting quant sweep.")
 
     sessions: list[dict[str, Any]] = []
     for model_id in model_ids:
@@ -178,6 +373,14 @@ def main() -> int:
                 args.runner_template,
                 "--output",
                 str(raw_out),
+                "--seed",
+                str(args.seed),
+                "--threads",
+                str(args.threads),
+                "--affinity-policy",
+                str(args.affinity_policy),
+                "--warmup-steps",
+                str(args.warmup_steps),
             ]
             if args.task_limit > 0:
                 harness_cmd.extend(["--task-limit", str(args.task_limit)])
@@ -232,12 +435,13 @@ def main() -> int:
             if _is_frontier_eligible(row=row, min_adherence=target_adherence, latency_ceiling=float(args.latency_ceiling)):
                 frontier = row
                 break
-        optimal = frontier
+        minimum_viable = frontier
+        best_value = _best_value_quant(per_quant, min_adherence=target_adherence, latency_ceiling=float(args.latency_ceiling))
         frontier_reason = "lowest quant meeting adherence and latency thresholds"
-        recommendation = f"For this hardware, use {optimal['quant_tag']} for best Vibe." if optimal else (
+        recommendation = f"For this hardware, use {minimum_viable['quant_tag']} for best Vibe." if minimum_viable else (
             "No quantization met the vibe threshold; hardware/model mismatch."
         )
-        if optimal is None:
+        if minimum_viable is None:
             frontier_reason = "no quant met adherence and latency thresholds"
         sessions.append(
             {
@@ -247,8 +451,14 @@ def main() -> int:
                 "efficiency_frontier": {
                     "adherence_threshold": float(args.adherence_threshold),
                     "latency_ceiling": float(args.latency_ceiling),
-                    "optimal_quant_tag": (optimal or {}).get("quant_tag"),
+                    "minimum_viable_quant_tag": (minimum_viable or {}).get("quant_tag"),
+                    "best_value_quant_tag": (best_value or {}).get("quant_tag"),
+                    "optimal_quant_tag": (minimum_viable or {}).get("quant_tag"),
                     "reason": frontier_reason,
+                },
+                "recommendation_detail": {
+                    "minimum_viable_quant": (minimum_viable or {}).get("quant_tag"),
+                    "best_value_quant": (best_value or {}).get("quant_tag"),
                 },
                 "recommendation": recommendation,
             }
@@ -267,11 +477,18 @@ def main() -> int:
             "task_bank": str(args.task_bank),
             "runs_per_quant": int(args.runs),
             "latency_ceiling": float(args.latency_ceiling),
+            "experimental_controls": {
+                "seed": int(args.seed) if int(args.seed) > 0 else None,
+                "threads": int(args.threads) if int(args.threads) > 0 else None,
+                "affinity_policy": str(args.affinity_policy).strip(),
+                "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
+            },
             "runtime_target": str(args.runtime_target),
             "execution_mode": str(args.execution_mode),
             "venue": str(args.runtime_target),
             "flow": str(args.execution_mode),
         },
+        "canary": canary_result,
         "sessions": sessions,
     }
 

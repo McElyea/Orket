@@ -29,6 +29,10 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--runs-root", default="workspace/runs", help="Durable root for indexed run artifacts.")
     parser.add_argument("--department", default="core")
     parser.add_argument("--save-baseline", action="store_true", help="Append run telemetry as a baseline artifact.")
+    parser.add_argument("--seed", type=int, default=0, help="Benchmark seed metadata (0 means unset).")
+    parser.add_argument("--threads", type=int, default=0, help="Thread-count metadata (0 means unset).")
+    parser.add_argument("--affinity-policy", default="", help="CPU affinity policy/mask metadata.")
+    parser.add_argument("--warmup-steps", type=int, default=0, help="Warmup steps metadata (0 means unset).")
     return parser.parse_args()
 
 
@@ -213,6 +217,232 @@ def _default_vibe_metrics() -> dict[str, Any]:
         "vibe_delta_status": "NO_BASELINE",
         "baseline_ref": "",
     }
+
+
+def _default_token_metrics(total_turn_seconds: float) -> dict[str, Any]:
+    return {
+        "status": "TOKEN_AND_TIMING_UNAVAILABLE",
+        "counts": {
+            "prompt_tokens": None,
+            "output_tokens": None,
+            "total_tokens": None,
+        },
+        "latencies": {
+            "prefill_seconds": None,
+            "decode_seconds": None,
+            "total_turn_seconds": _round3(float(total_turn_seconds)),
+        },
+        "throughput": {
+            "prompt_tokens_per_second": None,
+            "generation_tokens_per_second": None,
+        },
+        "audit": {
+            "raw_usage": {},
+            "raw_timings": {},
+        },
+    }
+
+
+def _experimental_controls_from_args(args: argparse.Namespace) -> dict[str, Any]:
+    return {
+        "seed": int(args.seed) if int(args.seed) > 0 else None,
+        "threads": int(args.threads) if int(args.threads) > 0 else None,
+        "affinity_policy": str(args.affinity_policy).strip(),
+        "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
+    }
+
+
+def _system_load_snapshot() -> dict[str, Any]:
+    core_count = int(psutil.cpu_count(logical=False) or psutil.cpu_count(logical=True) or 0)
+    cpu_percent = float(psutil.cpu_percent(interval=0.0))
+    load_1m: float | None = None
+    if hasattr(os, "getloadavg"):
+        try:
+            load_1m = float(os.getloadavg()[0])
+        except OSError:
+            load_1m = None
+    return {
+        "cpu_percent": _round3(cpu_percent),
+        "load_1m": _round3(load_1m) if isinstance(load_1m, (int, float)) else None,
+        "core_count": core_count,
+    }
+
+
+def _internal_model_seconds_from_token_metrics(token_metrics: dict[str, Any]) -> float | None:
+    raw_timings = token_metrics.get("audit", {}).get("raw_timings")
+    if not isinstance(raw_timings, dict):
+        return None
+    prompt_ms = raw_timings.get("prompt_ms")
+    predicted_ms = raw_timings.get("predicted_ms")
+    if not isinstance(prompt_ms, (int, float)) or not isinstance(predicted_ms, (int, float)):
+        return None
+    internal = (float(prompt_ms) + float(predicted_ms)) / 1000.0
+    return _round3(internal)
+
+
+def _orchestration_overhead_ratio(total_latency_s: float, internal_model_seconds: float | None) -> float | None:
+    if not isinstance(internal_model_seconds, (int, float)):
+        return None
+    if total_latency_s <= 0:
+        return None
+    ratio = (float(total_latency_s) - float(internal_model_seconds)) / float(total_latency_s)
+    return _round3(max(0.0, ratio))
+
+
+def _run_quality(
+    *,
+    token_status: str,
+    controls: dict[str, Any],
+    system_load_start: dict[str, Any],
+    system_load_end: dict[str, Any],
+    overhead_ratio: float | None,
+) -> tuple[str, list[str]]:
+    reasons: list[str] = []
+    if token_status != "OK":
+        reasons.append("MISSING_TOKEN_TIMINGS")
+
+    if not controls.get("seed") or not controls.get("threads") or not str(controls.get("affinity_policy") or "").strip():
+        reasons.append("MISSING_EXPERIMENTAL_CONTROLS")
+
+    for snapshot in (system_load_start, system_load_end):
+        cpu_percent = snapshot.get("cpu_percent")
+        if isinstance(cpu_percent, (int, float)) and float(cpu_percent) >= 90.0:
+            reasons.append("HIGH_CPU_SATURATION")
+            break
+    for snapshot in (system_load_start, system_load_end):
+        load_1m = snapshot.get("load_1m")
+        cores = snapshot.get("core_count")
+        if isinstance(load_1m, (int, float)) and isinstance(cores, int) and cores > 0 and float(load_1m) > float(cores):
+            reasons.append("HIGH_SYSTEM_LOAD")
+            break
+
+    if isinstance(overhead_ratio, (int, float)) and float(overhead_ratio) > 0.25:
+        reasons.append("HIGH_ORCHESTRATION_OVERHEAD")
+    return ("CLEAN" if not reasons else "POLLUTED"), reasons
+
+
+def _record_session_id(record: dict[str, Any]) -> str:
+    data = record.get("data")
+    data = data if isinstance(data, dict) else {}
+    runtime_event = data.get("runtime_event")
+    runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
+    return str(runtime_event.get("session_id") or data.get("session_id") or "").strip()
+
+
+def _extract_token_metrics_from_log(
+    *,
+    log_path: Path,
+    session_id: str,
+    total_turn_seconds: float,
+) -> dict[str, Any]:
+    metrics = _default_token_metrics(total_turn_seconds)
+    if not log_path.exists() or not session_id:
+        return metrics
+
+    prompt_tokens_total = 0
+    output_tokens_total = 0
+    total_tokens_total = 0
+    prompt_ms_total = 0.0
+    predicted_ms_total = 0.0
+    has_prompt_output_tokens = False
+    has_total_tokens = False
+    has_prompt_ms = False
+    has_predicted_ms = False
+
+    for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if str(record.get("event") or "").strip() != "turn_complete":
+            continue
+        if _record_session_id(record) != session_id:
+            continue
+
+        data = record.get("data")
+        data = data if isinstance(data, dict) else {}
+        runtime_event = data.get("runtime_event")
+        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
+        tokens_payload = runtime_event.get("tokens", data.get("tokens"))
+        if isinstance(tokens_payload, int):
+            tokens_payload = {"total_tokens": tokens_payload}
+        if not isinstance(tokens_payload, dict):
+            continue
+
+        prompt_tokens = tokens_payload.get("prompt_tokens")
+        output_tokens = tokens_payload.get("output_tokens")
+        total_tokens = tokens_payload.get("total_tokens")
+        prompt_ms = tokens_payload.get("prompt_ms")
+        predicted_ms = tokens_payload.get("predicted_ms")
+
+        if isinstance(prompt_tokens, int) and isinstance(output_tokens, int):
+            has_prompt_output_tokens = True
+            prompt_tokens_total += prompt_tokens
+            output_tokens_total += output_tokens
+        if isinstance(total_tokens, int):
+            has_total_tokens = True
+            total_tokens_total += total_tokens
+        if isinstance(prompt_ms, (int, float)):
+            has_prompt_ms = True
+            prompt_ms_total += float(prompt_ms)
+        if isinstance(predicted_ms, (int, float)):
+            has_predicted_ms = True
+            predicted_ms_total += float(predicted_ms)
+
+    has_tokens = has_prompt_output_tokens
+    has_timings = has_prompt_ms and has_predicted_ms
+
+    status = "OK"
+    if not has_tokens and not has_timings:
+        status = "TOKEN_AND_TIMING_UNAVAILABLE"
+    elif not has_tokens:
+        status = "TOKEN_COUNT_UNAVAILABLE"
+    elif not has_timings:
+        status = "TIMING_UNAVAILABLE"
+
+    total_tokens_value = total_tokens_total if has_total_tokens else None
+    if total_tokens_value is None and has_tokens:
+        total_tokens_value = prompt_tokens_total + output_tokens_total
+
+    prefill_seconds = _round3(prompt_ms_total / 1000.0) if has_timings else None
+    decode_seconds = _round3(predicted_ms_total / 1000.0) if has_timings else None
+    prompt_tps = None
+    gen_tps = None
+    if has_tokens and has_timings and isinstance(prefill_seconds, float) and prefill_seconds > 0:
+        prompt_tps = round(prompt_tokens_total / prefill_seconds, 2)
+    if has_tokens and has_timings and isinstance(decode_seconds, float) and decode_seconds > 0:
+        gen_tps = round(output_tokens_total / decode_seconds, 2)
+
+    metrics["status"] = status
+    metrics["counts"] = {
+        "prompt_tokens": prompt_tokens_total if has_tokens else None,
+        "output_tokens": output_tokens_total if has_tokens else None,
+        "total_tokens": total_tokens_value,
+    }
+    metrics["latencies"] = {
+        "prefill_seconds": prefill_seconds,
+        "decode_seconds": decode_seconds,
+        "total_turn_seconds": _round3(float(total_turn_seconds)),
+    }
+    metrics["throughput"] = {
+        "prompt_tokens_per_second": prompt_tps,
+        "generation_tokens_per_second": gen_tps,
+    }
+    metrics["audit"] = {
+        "raw_usage": {
+            "prompt_tokens": prompt_tokens_total if has_tokens else None,
+            "completion_tokens": output_tokens_total if has_tokens else None,
+            "total_tokens": total_tokens_value,
+        },
+        "raw_timings": {
+            "prompt_ms": _round3(prompt_ms_total) if has_timings else None,
+            "predicted_ms": _round3(predicted_ms_total) if has_timings else None,
+        },
+    }
+    return metrics
 
 
 def _load_baseline_history(path: Path) -> list[dict[str, Any]]:
@@ -1225,6 +1455,17 @@ def main() -> int:
 
     env = dict(os.environ)
     env.setdefault("ORKET_DISABLE_SANDBOX", "1")
+    controls = _experimental_controls_from_args(args)
+    for env_key, value in {
+        "ORKET_BENCH_SEED": controls.get("seed"),
+        "ORKET_BENCH_THREADS": controls.get("threads"),
+        "ORKET_BENCH_AFFINITY_POLICY": controls.get("affinity_policy"),
+        "ORKET_BENCH_WARMUP_STEPS": controls.get("warmup_steps"),
+    }.items():
+        if value is None:
+            continue
+        env[env_key] = str(value)
+    system_load_start = _system_load_snapshot()
     generation_started_perf = time.perf_counter()
     result_returncode = 1
     result_stdout = ""
@@ -1245,6 +1486,7 @@ def main() -> int:
         except OSError:
             pass
     total_latency_s = _round3(time.perf_counter() - generation_started_perf)
+    system_load_end = _system_load_snapshot()
 
     # Persist command output as an artifact for harness hashing and troubleshooting.
     (run_dir / "live_runner_output.log").write_text(
@@ -1289,11 +1531,35 @@ def main() -> int:
     if baseline_record is not None:
         baseline_meta = baseline_record.get("baseline_metadata") or {}
         vibe_metrics["baseline_ref"] = str(baseline_meta.get("test_run_id", "")).strip()
+    token_metrics = _extract_token_metrics_from_log(
+        log_path=orket_log_path,
+        session_id=session_id,
+        total_turn_seconds=total_latency_s,
+    )
+    token_status = str(token_metrics.get("status") or "TOKEN_AND_TIMING_UNAVAILABLE")
+    internal_model_seconds = _internal_model_seconds_from_token_metrics(token_metrics)
+    overhead_ratio = _orchestration_overhead_ratio(total_latency_s, internal_model_seconds)
+    run_quality_status, run_quality_reasons = _run_quality(
+        token_status=token_status,
+        controls=controls,
+        system_load_start=system_load_start,
+        system_load_end=system_load_end,
+        overhead_ratio=overhead_ratio,
+    )
     telemetry = {
         "init_latency": None,
         "total_latency": _round3(total_latency_s),
         "peak_memory_rss": _round3(float(peak_memory_rss_mib)),
         "adherence_score": adherence_score,
+        "internal_model_seconds": internal_model_seconds,
+        "orchestration_overhead_ratio": overhead_ratio,
+        "run_quality_status": run_quality_status,
+        "run_quality_reasons": run_quality_reasons,
+        "system_load_start": system_load_start,
+        "system_load_end": system_load_end,
+        "experimental_controls": controls,
+        "token_metrics_status": token_status,
+        "token_metrics": token_metrics,
         "vibe_metrics": vibe_metrics,
     }
     if baseline_record is not None:
