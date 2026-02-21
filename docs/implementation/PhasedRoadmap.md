@@ -31,7 +31,7 @@ Use this file to:
 1. Deterministic memory and persistence program:
 Archived under `docs/archive/MemoryPersistence/`.
 2. Skills contract and loader program:
-Completed in `docs/implementation/SkillsPlan.md`.
+Archived under `docs/archive/Skills/`.
 
 ## Guardrails (All Phases)
 1. Pass/fail quality gates use Orket telemetry, not hardware sidecar metrics.

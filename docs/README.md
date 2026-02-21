@@ -16,9 +16,8 @@ This index maps each document to a single purpose to reduce duplication.
 4. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`: context artifact fields.
 5. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`: thermal artifact fields.
 6. `docs/specs/SIDECAR_PARSE_SCHEMA.md`: canonical sidecar parse schema and status contract.
-7. `docs/specs/SKILL_CONTRACT_SCHEMA.md`: canonical Skill manifest contract fields and invariants.
-8. `docs/specs/SKILL_LOADER_ERROR_SCHEMA.md`: canonical Skill loader error payload and error code contract.
-9. `docs/archive/MemoryPersistence/`: archived deterministic memory persistence plan and related schema contracts.
+7. `docs/archive/Skills/`: archived Skill plan and schema contracts.
+8. `docs/archive/MemoryPersistence/`: archived deterministic memory persistence plan and related schema contracts.
 
 ## Implementation Plans
 1. `docs/implementation/PhasedRoadmap.md`: canonical ordered backlog for remaining implementation work.

@@ -8,7 +8,7 @@ def _read(path: Path) -> str:
 
 
 def test_skill_contract_schema_doc_exists_and_contains_required_tokens() -> None:
-    path = Path("docs/specs/SKILL_CONTRACT_SCHEMA.md")
+    path = Path("docs/archive/Skills/SKILL_CONTRACT_SCHEMA.md")
     assert path.exists(), f"Missing schema doc: {path}"
     text = _read(path)
 

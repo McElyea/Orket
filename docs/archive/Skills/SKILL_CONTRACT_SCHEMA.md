@@ -70,4 +70,4 @@ Effective `determinism_eligible` is derived by Orket from:
 Invalid contract payloads MUST be rejected by loader policy and surfaced through canonical loader errors.
 
 Companion schema doc:
-1. `docs/specs/SKILL_LOADER_ERROR_SCHEMA.md`
+1. `docs/archive/Skills/SKILL_LOADER_ERROR_SCHEMA.md`
