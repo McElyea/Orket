@@ -65,6 +65,11 @@ Next execution slice:
 1. Wire `scripts/compare_memory_determinism.py` into `.gitea/workflows/quality.yml`. Status: done (2026-02-21)
 2. Add workflow gate coverage for comparator in `tests/platform/test_quality_workflow_gates.py`. Status: done (2026-02-21)
 
+Next execution slice:
+1. Add trace truncation marker metadata to runtime memory trace artifacts. Status: done (2026-02-21)
+2. Enforce max trace size + truncation marker in `scripts/check_memory_determinism.py`. Status: done (2026-02-21)
+3. Add truncation enforcement tests in `tests/application/test_check_memory_determinism_script.py`. Status: done (2026-02-21)
+
 ## Phase 1: Next Up
 1. Thermal gate and cooldown policy checks for GPU lab sessions.
 Deliverables:

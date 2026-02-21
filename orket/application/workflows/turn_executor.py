@@ -1960,10 +1960,12 @@ class TurnExecutor:
             },
             "issue_id": issue.id,
             "role_id": role.id,
+            "metadata": {"truncated": False},
         }
         retrieval_trace = {
             "events": list(context.get("memory_retrieval_trace_events") or []),
             "retrieval_trace_schema_version": "memory.retrieval_trace.v1",
+            "metadata": {"truncated": False},
         }
         self._write_turn_artifact(
             session_id,

@@ -52,6 +52,12 @@ def _parse_args() -> argparse.Namespace:
         help="Optional path to retrieval trace JSON artifact (object or array).",
     )
     parser.add_argument("--out", default="", help="Optional output path for report JSON.")
+    parser.add_argument(
+        "--max-trace-bytes",
+        type=int,
+        default=10 * 1024 * 1024,
+        help="Maximum allowed size per trace artifact before truncation marker is required.",
+    )
     return parser.parse_args()
 
 
@@ -105,24 +111,37 @@ def main() -> int:
     failures: list[str] = []
 
     trace_path = Path(args.trace)
+    trace_size = trace_path.stat().st_size
     trace_payload = _load(trace_path)
     if not isinstance(trace_payload, dict):
         failures.append("trace:invalid_type")
     else:
         _validate_trace(trace_payload, failures)
+        if trace_size > int(args.max_trace_bytes):
+            metadata = trace_payload.get("metadata") if isinstance(trace_payload.get("metadata"), dict) else {}
+            if metadata.get("truncated") is not True:
+                failures.append("trace:missing:truncation_marker")
 
     retrieval_path_text = str(args.retrieval_trace or "").strip()
     retrieval_checked = ""
+    retrieval_size = 0
     if retrieval_path_text:
         retrieval_path = Path(retrieval_path_text)
         retrieval_checked = str(retrieval_path).replace("\\", "/")
+        retrieval_size = retrieval_path.stat().st_size
         retrieval_payload = _load(retrieval_path)
         _validate_retrieval_trace(retrieval_payload, failures)
+        if retrieval_size > int(args.max_trace_bytes):
+            metadata = retrieval_payload.get("metadata") if isinstance(retrieval_payload, dict) else {}
+            if metadata.get("truncated") is not True:
+                failures.append("retrieval_trace:missing:truncation_marker")
 
     report = {
         "status": "PASS" if not failures else "FAIL",
         "trace": str(trace_path).replace("\\", "/"),
+        "trace_size_bytes": trace_size,
         "retrieval_trace": retrieval_checked,
+        "retrieval_trace_size_bytes": retrieval_size,
         "failures": failures,
     }
     text = json.dumps(report, indent=2)

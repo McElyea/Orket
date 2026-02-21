@@ -284,13 +284,9 @@ Exit criteria:
 2. Runbook covers triage for memory determinism failures.
 
 ## Backlog (Remaining Work)
-1. Emit `memory.determinism_trace.v1` artifacts from runtime execution paths.
-2. Emit `memory.retrieval_trace.v1` artifacts with deterministic linkage to event trace.
-3. Add runtime integration tests for trace emission in deterministic modes.
-4. Add equivalence comparator implementation and failure-diff diagnostics.
-5. Add persistence-backed (non in-memory) isolation/idempotency/recovery integration tests.
-6. Add retention and truncation enforcement tests for memory trace artifacts.
-7. Integrate memory determinism check into release/report pipelines beyond quality workflow smoke.
+1. Expand runtime trace emission beyond current turn-level scaffolding to full interceptor lifecycle coverage.
+2. Add persistence-backed (non in-memory) isolation/idempotency/recovery integration tests.
+3. Integrate memory determinism checks into release/report pipelines beyond quality workflow smoke.
 
 ## Risks and Controls
 1. Risk: false determinism failures due to unstable normalization.
