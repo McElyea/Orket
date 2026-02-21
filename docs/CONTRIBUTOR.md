@@ -2,10 +2,23 @@
 
 This guide is human/agent agnostic.
 
-## Read First
-1. `docs/ROADMAP.md`
-2. `docs/ARCHITECTURE.md`
-3. `docs/TESTING_POLICY.md`
+## Protocol
+1. Start each session by reading:
+   - this file
+   - `docs/CONTRIBUTOR.md`
+   - `docs/ROADMAP.md`
+   - `docs/ARCHITECTURE.md`
+2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
+3. Keep runtime paths in `orket/` async-safe and governance mechanical.
+4. Do not scan dependency/vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
+5. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.
+6. No session narrative here. Use temporary scratch notes if needed.
+7. The roadmap has the next steps, no need to journal them here.
+
+## Current Focus
+1. Keep `docs/ROADMAP.md` active-only (remove completed/obsolete items at each handoff).
+2. Preserve deterministic green gates (`pytest`, dependency direction, volatility boundaries).
+3. Keep pilot evidence artifacts current (`architecture_pilot_matrix*`, `microservices_pilot_stability_check.json`).
 
 ## Quick Setup
 1. Install dependencies: `pip install -r requirements.txt`
