@@ -55,6 +55,10 @@ Next execution slice:
 4. Resolve deterministic trace retention baseline in determinism trace spec. Status: done (2026-02-21)
 5. Add contract tests for these clarified rules. Status: done (2026-02-21)
 
+Next execution slice:
+1. Add core memory contract models under `orket/core/contracts/memory_models.py`. Status: done (2026-02-21)
+2. Add core validation tests for determinism and retrieval contracts. Status: done (2026-02-21)
+
 1. Telemetry contract hardening across providers.
 Success criteria:
 1. Providers emit only canonical token/timing states.
