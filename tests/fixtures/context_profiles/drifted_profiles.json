@@ -1,0 +1,22 @@
+{
+  "profiles": {
+    "safe": {
+      "contexts": [4096, 2048],
+      "adherence_min": 0.9,
+      "ttft_ceiling_ms": 500.0,
+      "decode_floor_tps": 10.0
+    },
+    "balanced": {
+      "contexts": [8192, 16384, 32768],
+      "adherence_min": 0.93,
+      "ttft_ceiling_ms": 350.0,
+      "decode_floor_tps": 15.0
+    },
+    "stress": {
+      "contexts": [16384, 32768, 65536],
+      "adherence_min": 0.95,
+      "ttft_ceiling_ms": 250.0,
+      "decode_floor_tps": 20.0
+    }
+  }
+}

@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add context-sweep fixture set for profile-policy regression.
-Deliverables:
-1. Add minimal fixtures for safe/balanced/stress policy validation.
-2. Verify policy checker catches threshold/order drift on fixture mutations.
-3. Keep fixture updates additive and reviewed with roadmap changes.
-
-2. Add full-workflow guard/check markdown digest.
+1. Add full-workflow guard/check markdown digest.
 Deliverables:
 1. Render human-readable markdown summary from explorer check artifacts.
 2. Include status table and artifact links.
 3. Upload digest alongside JSON check outputs.
+
+2. Add profile-policy fixture documentation.
+Deliverables:
+1. Document fixture purpose and update rules.
+2. Link fixtures from runbook/profile policy section.
+3. Require fixture updates when context profile defaults change.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

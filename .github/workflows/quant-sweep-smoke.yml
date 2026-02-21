@@ -43,6 +43,8 @@ on:
       - "tests/application/test_context_rollup_contract.py"
       - "tests/application/test_cleanup_context_sweep_artifacts.py"
       - "tests/application/test_check_context_profile_policy.py"
+      - "tests/fixtures/context_profiles/valid_profiles.json"
+      - "tests/fixtures/context_profiles/drifted_profiles.json"
       - "tests/application/test_build_explorer_check_summary.py"
       - "benchmarks/configs/quant_sweep_common_sessions.json"
       - "benchmarks/configs/quant_sweep_logic_only.json"

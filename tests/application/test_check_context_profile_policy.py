@@ -75,3 +75,40 @@ def test_check_context_profile_policy_fails_for_bad_order(tmp_path: Path) -> Non
     assert result.returncode == 2
     payload = json.loads(result.stdout)
     assert payload["status"] == "FAIL"
+
+
+def test_check_context_profile_policy_fixture_regressions(tmp_path: Path) -> None:
+    matrix = tmp_path / "matrix.json"
+    matrix.write_text(
+        json.dumps({"context_sweep_profile": "safe", "context_sweep_contexts": [4096, 8192]}),
+        encoding="utf-8",
+    )
+    valid = subprocess.run(
+        [
+            "python",
+            "scripts/check_context_profile_policy.py",
+            "--profiles",
+            "tests/fixtures/context_profiles/valid_profiles.json",
+            "--matrix-configs",
+            str(matrix),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert valid.returncode == 0, valid.stdout + "\n" + valid.stderr
+
+    drift = subprocess.run(
+        [
+            "python",
+            "scripts/check_context_profile_policy.py",
+            "--profiles",
+            "tests/fixtures/context_profiles/drifted_profiles.json",
+            "--matrix-configs",
+            str(matrix),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert drift.returncode == 2
