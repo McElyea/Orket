@@ -147,6 +147,16 @@ python scripts/render_quant_sweep_report.py `
   --include-invalid
 ```
 
+## Quant Frontier Explorer Artifact
+Generate a comparable frontier artifact keyed by hardware fingerprint + lane + profile:
+
+```powershell
+python scripts/quant_frontier_explorer.py `
+  --summary benchmarks/results/quant_sweep/sweep_summary.json `
+  --out benchmarks/results/quant_sweep/frontier_explorer.json `
+  --storage-root orket_storage/frontiers
+```
+
 ## Baseline Operations
 List baselines:
 
