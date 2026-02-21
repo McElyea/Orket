@@ -159,6 +159,12 @@ jobs:
             --trace benchmarks/results/memory/memory_trace_fixture.json \
             --retrieval-trace benchmarks/results/memory/memory_retrieval_trace_fixture.json \
             --out benchmarks/results/memory/memory_determinism_check.json
+          python scripts/compare_memory_determinism.py \
+            --left benchmarks/results/memory/memory_trace_fixture.json \
+            --right benchmarks/results/memory/memory_trace_fixture.json \
+            --left-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
+            --right-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
+            --out benchmarks/results/memory/memory_determinism_compare.json
 
       - name: Build monolith variant matrix plan
         run: |

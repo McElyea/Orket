@@ -21,6 +21,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 1 --venue standard --flow default --runner-template 'python scripts/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmark_determinism_report.json --scored-out benchmarks/results/benchmark_scored_report.json",
         "python scripts/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmark_scoring_gate.json --require-thresholds",
         "python scripts/check_memory_determinism.py",
+        "python scripts/compare_memory_determinism.py",
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]
     assert not missing, "quality workflow missing required architecture gates: " + ", ".join(missing)
