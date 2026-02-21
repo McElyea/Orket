@@ -536,7 +536,22 @@ def test_run_quant_sweep_records_hardware_sidecar_output(tmp_path: Path) -> None
         "\n".join(
             [
                 "import json",
-                "print(json.dumps({'provider': 'llama-bench', 'generation_tps': 42.5}))",
+                "print(json.dumps({",
+                "  'vram_total_mb': 24576,",
+                "  'vram_used_mb': 21340,",
+                "  'ttft_ms': 142,",
+                "  'prefill_tps': 312.4,",
+                "  'decode_tps': 28.7,",
+                "  'thermal_start_c': 54,",
+                "  'thermal_end_c': 71,",
+                "  'kernel_launch_ms': 3.2,",
+                "  'model_load_ms': 412,",
+                "  'pcie_throughput_gbps': 22.1,",
+                "  'cuda_graph_warmup_ms': 14.0,",
+                "  'gpu_clock_mhz': 2730,",
+                "  'power_draw_watts': 358,",
+                "  'fan_speed_percent': 74",
+                "}))",
             ]
         ),
         encoding="utf-8",
@@ -573,4 +588,89 @@ def test_run_quant_sweep_records_hardware_sidecar_output(tmp_path: Path) -> None
     row = summary["sessions"][0]["per_quant"][0]
     assert row["hardware_sidecar"]["enabled"] is True
     assert row["hardware_sidecar"]["return_code"] == 0
-    assert row["hardware_sidecar"]["parsed"]["provider"] == "llama-bench"
+    assert row["hardware_sidecar"]["vram_total_mb"] == 24576.0
+    assert row["hardware_sidecar"]["decode_tps"] == 28.7
+    assert row["hardware_sidecar"]["sidecar_parse_status"] == "OK"
+    assert row["hardware_sidecar"]["sidecar_parse_errors"] == []
+
+
+def test_run_quant_sweep_sidecar_required_field_missing_sets_status(tmp_path: Path) -> None:
+    task_bank = tmp_path / "tasks.json"
+    task_bank.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "001",
+                    "tier": 1,
+                    "description": "Task 001",
+                    "acceptance_contract": {
+                        "mode": "function",
+                        "required_artifacts": [],
+                        "pass_conditions": ["ok"],
+                        "determinism_profile": "strict",
+                    },
+                }
+            ],
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    fake_runner = tmp_path / "fake_quant_runner_clean.py"
+    fake_runner.write_text(
+        "\n".join(
+            [
+                "import argparse",
+                "import json",
+                "p = argparse.ArgumentParser()",
+                "p.add_argument('--task', required=True)",
+                "p.add_argument('--venue', default='x')",
+                "p.add_argument('--flow', default='y')",
+                "p.parse_args()",
+                "print(json.dumps({'telemetry': {'init_latency': None, 'total_latency': 1.0, 'peak_memory_rss': 100.0, 'adherence_score': 1.0, 'run_quality_status': 'CLEAN', 'run_quality_reasons': []}}))",
+                "raise SystemExit(0)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    sidecar = tmp_path / "fake_sidecar_missing.py"
+    sidecar.write_text(
+        "\n".join(
+            [
+                "import json",
+                "print(json.dumps({'vram_total_mb': 24576, 'vram_used_mb': 20000}))",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    summary_out = tmp_path / "sweep_summary.json"
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/run_quant_sweep.py",
+            "--model-id",
+            "qwen-coder",
+            "--quant-tags",
+            "Q8_0",
+            "--task-bank",
+            str(task_bank),
+            "--runs",
+            "1",
+            "--runner-template",
+            f"python {fake_runner} --task {{task_file}} --venue {{venue}} --flow {{flow}}",
+            "--summary-out",
+            str(summary_out),
+            "--task-limit",
+            "1",
+            "--hardware-sidecar-template",
+            f"python {sidecar}",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    summary = json.loads(summary_out.read_text(encoding="utf-8"))
+    sidecar_block = summary["sessions"][0]["per_quant"][0]["hardware_sidecar"]
+    assert sidecar_block["sidecar_parse_status"] == "REQUIRED_FIELD_MISSING"
+    assert "missing:ttft_ms" in sidecar_block["sidecar_parse_errors"]
