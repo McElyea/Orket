@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add lab-side context sweep policy presets.
-Deliverables:
-1. Provide preset context ladders for safe/balanced/stress profiles.
-2. Define default thresholds for adherence/ttft/decode per profile.
-3. Add runbook examples for profile-driven context sweeps.
-
-2. Add full-workflow context sweep artifact publication.
+1. Add full-workflow context sweep artifact publication.
 Deliverables:
 1. Run `run_context_sweep.py` in full self-hosted workflow.
 2. Upload per-context summaries plus final context ceiling artifact.
 3. Preserve run-provenance references in workflow-generated context artifacts.
+
+2. Add explorer schema companion docs under `docs/specs/`.
+Deliverables:
+1. Add per-artifact field tables for frontier/context/thermal schemas.
+2. Include migration notes for future `v2` explorer schema versions.
+3. Link companion docs from `EXPLORER_SCHEMA_POLICY.md`.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

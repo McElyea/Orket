@@ -10,7 +10,9 @@ from typing import Any
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run multi-context sweep and emit linked context ceiling artifact.")
-    parser.add_argument("--contexts", required=True, help="Comma-separated contexts, e.g. 4096,8192,16384")
+    parser.add_argument("--contexts", default="", help="Comma-separated contexts, e.g. 4096,8192,16384")
+    parser.add_argument("--context-profile", default="", choices=["", "safe", "balanced", "stress"])
+    parser.add_argument("--context-profiles-config", default="benchmarks/configs/context_sweep_profiles.json")
     parser.add_argument("--model-id", required=True)
     parser.add_argument("--quant-tags", required=True)
     parser.add_argument("--task-bank", default="benchmarks/task_bank/v2_realworld/tasks.json")
@@ -28,9 +30,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--execution-lane", default="lab", choices=["ci", "lab"])
     parser.add_argument("--vram-profile", default="safe", choices=["safe", "balanced", "stress"])
     parser.add_argument("--provenance-ref", default="")
-    parser.add_argument("--adherence-min", type=float, default=0.0)
-    parser.add_argument("--ttft-ceiling-ms", type=float, default=0.0)
-    parser.add_argument("--decode-floor-tps", type=float, default=0.0)
+    parser.add_argument("--adherence-min", type=float, default=-1.0)
+    parser.add_argument("--ttft-ceiling-ms", type=float, default=-1.0)
+    parser.add_argument("--decode-floor-tps", type=float, default=-1.0)
     parser.add_argument("--include-invalid", action="store_true")
     parser.add_argument("--out-dir", default="benchmarks/results/context_sweep")
     parser.add_argument("--summary-template", default="context_{context}_summary.json")
@@ -58,9 +60,47 @@ def _contexts(raw: str) -> list[int]:
     return values
 
 
+def _load_profiles(path: str) -> dict[str, dict[str, Any]]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Context profiles config must be a JSON object")
+    profiles = payload.get("profiles")
+    if isinstance(profiles, dict):
+        return {str(key): value for key, value in profiles.items() if isinstance(value, dict)}
+    return {}
+
+
 def main() -> int:
     args = _parse_args()
-    contexts = _contexts(args.contexts)
+    contexts_raw = str(args.contexts or "").strip()
+    adherence_min = float(args.adherence_min)
+    ttft_ceiling_ms = float(args.ttft_ceiling_ms)
+    decode_floor_tps = float(args.decode_floor_tps)
+    profile = str(args.context_profile or "").strip()
+    if profile:
+        profiles = _load_profiles(str(args.context_profiles_config))
+        profile_payload = profiles.get(profile)
+        if not isinstance(profile_payload, dict):
+            raise SystemExit(f"Unknown context profile '{profile}' in {args.context_profiles_config}")
+        if not contexts_raw:
+            profile_contexts = profile_payload.get("contexts")
+            if isinstance(profile_contexts, list):
+                contexts_raw = ",".join(str(token) for token in profile_contexts)
+        if adherence_min < 0:
+            adherence_min = float(profile_payload.get("adherence_min", 0.0) or 0.0)
+        if ttft_ceiling_ms < 0:
+            ttft_ceiling_ms = float(profile_payload.get("ttft_ceiling_ms", 0.0) or 0.0)
+        if decode_floor_tps < 0:
+            decode_floor_tps = float(profile_payload.get("decode_floor_tps", 0.0) or 0.0)
+    if not contexts_raw:
+        raise SystemExit("No contexts provided. Set --contexts or --context-profile.")
+    if adherence_min < 0:
+        adherence_min = 0.0
+    if ttft_ceiling_ms < 0:
+        ttft_ceiling_ms = 0.0
+    if decode_floor_tps < 0:
+        decode_floor_tps = 0.0
+    contexts = _contexts(contexts_raw)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -122,11 +162,11 @@ def main() -> int:
         "--model-id",
         str(args.model_id),
         "--adherence-min",
-        str(float(args.adherence_min)),
+        str(adherence_min),
         "--ttft-ceiling-ms",
-        str(float(args.ttft_ceiling_ms)),
+        str(ttft_ceiling_ms),
         "--decode-floor-tps",
-        str(float(args.decode_floor_tps)),
+        str(decode_floor_tps),
         "--execution-lane",
         str(args.execution_lane),
         "--vram-profile",
@@ -146,6 +186,7 @@ def main() -> int:
         json.dumps(
             {
                 "status": "OK",
+                "context_profile": profile,
                 "contexts": contexts,
                 "summary_paths": summary_paths,
                 "context_ceiling_out": str(context_out).replace("\\", "/"),

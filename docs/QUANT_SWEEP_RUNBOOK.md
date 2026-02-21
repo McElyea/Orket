@@ -190,6 +190,24 @@ python scripts/run_context_sweep.py `
   --out-dir benchmarks/results/context_sweep
 ```
 
+Context profile presets:
+1. Config file: `benchmarks/configs/context_sweep_profiles.json`
+2. Supported profiles: `safe`, `balanced`, `stress`
+
+Profile-driven run:
+
+```powershell
+python scripts/run_context_sweep.py `
+  --context-profile safe `
+  --context-profiles-config benchmarks/configs/context_sweep_profiles.json `
+  --model-id qwen2.5-coder:7b `
+  --quant-tags Q8_0 `
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json `
+  --execution-lane lab `
+  --vram-profile safe `
+  --out-dir benchmarks/results/context_sweep
+```
+
 ## Thermal Stability Profiler Artifact
 Generate thermal stability recommendation from repeated run summaries:
 

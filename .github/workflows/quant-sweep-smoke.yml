@@ -27,6 +27,7 @@ on:
       - "tests/application/test_lab_guard_checker.py"
       - "tests/application/test_run_context_sweep.py"
       - "benchmarks/configs/quant_sweep_common_sessions.json"
+      - "benchmarks/configs/context_sweep_profiles.json"
       - "benchmarks/configs/sidecar_profiles.json"
       - "docs/QUANT_SWEEP_RUNBOOK.md"
       - ".github/workflows/quant-sweep-smoke.yml"
