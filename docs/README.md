@@ -20,7 +20,7 @@ This index maps each document to a single purpose to reduce duplication.
 
 ## Implementation Plans
 1. `docs/implementation/PhasedRoadmap.md`: canonical ordered backlog for remaining implementation work.
-2. Completed plan artifacts should move to `docs/archive/`.
+2. Completed plan/spec artifacts should move to `docs/archive/<ProjectName>/`.
 
 ## Engineering Policy
 1. `docs/TESTING_POLICY.md`: test-lane policy (`unit`/`integration`/`acceptance`/`live`).

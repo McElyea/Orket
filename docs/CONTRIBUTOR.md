@@ -9,6 +9,7 @@ This guide is human/agent agnostic.
    - `docs/ROADMAP.md`
    - `docs/ARCHITECTURE.md`
 2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
+   - If a project is complete, move its plan/spec docs to `docs/archive/<ProjectName>/` and update links.
 3. Keep runtime paths in `orket/` async-safe and governance mechanical.
 4. Do not scan dependency/vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
 5. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.

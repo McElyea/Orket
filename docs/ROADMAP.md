@@ -10,5 +10,6 @@ This file is intentionally minimal to reduce roadmap churn and noise.
 
 ## Roadmap Policy
 1. Keep active and remaining execution work in `docs/implementation/PhasedRoadmap.md`.
-2. Keep detailed program plans in `docs/implementation/*.md` only while active; remove completed plans and rely on git history.
-3. Use git history for completed work; do not keep long completed sections here.
+2. Keep detailed program plans in `docs/implementation/*.md` only while active.
+3. When a project is complete, move related plan/spec docs to `docs/archive/<ProjectName>/`.
+4. Do not keep long completed sections in active roadmap files.
