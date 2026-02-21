@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add full-workflow context sweep artifact publication.
-Deliverables:
-1. Run `run_context_sweep.py` in full self-hosted workflow.
-2. Upload per-context summaries plus final context ceiling artifact.
-3. Preserve run-provenance references in workflow-generated context artifacts.
-
-2. Add explorer schema companion docs under `docs/specs/`.
+1. Add explorer schema companion docs under `docs/specs/`.
 Deliverables:
 1. Add per-artifact field tables for frontier/context/thermal schemas.
 2. Include migration notes for future `v2` explorer schema versions.
 3. Link companion docs from `EXPLORER_SCHEMA_POLICY.md`.
+
+2. Add context sweep workflow policy knobs.
+Deliverables:
+1. Add workflow inputs for `execution_lane` and `vram_profile` in context sweep steps.
+2. Allow profile-based threshold overrides per workflow run.
+3. Persist chosen context profile/thresholds in workflow provenance output.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

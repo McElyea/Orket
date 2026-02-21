@@ -201,3 +201,81 @@ def test_run_context_sweep_can_resolve_context_profile(tmp_path: Path) -> None:
     assert payload["contexts"] == [1024, 2048]
     ceiling = json.loads((out_dir / "context_ceiling.json").read_text(encoding="utf-8"))
     assert ceiling["safe_context_ceiling"] == 2048
+
+
+def test_run_context_sweep_can_resolve_matrix_config_defaults(tmp_path: Path) -> None:
+    task_bank = tmp_path / "tasks.json"
+    task_bank.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "001",
+                    "tier": 1,
+                    "description": "Task 001",
+                    "acceptance_contract": {
+                        "mode": "function",
+                        "required_artifacts": [],
+                        "pass_conditions": ["ok"],
+                        "determinism_profile": "strict",
+                    },
+                }
+            ],
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    fake_runner = tmp_path / "fake_context_runner.py"
+    fake_runner.write_text(
+        "\n".join(
+            [
+                "import argparse",
+                "import json",
+                "p = argparse.ArgumentParser()",
+                "p.add_argument('--task', required=True)",
+                "p.add_argument('--venue', default='x')",
+                "p.add_argument('--flow', default='y')",
+                "p.parse_args()",
+                "print(json.dumps({'telemetry': {'init_latency': None, 'total_latency': 1.0, 'peak_memory_rss': 100.0, 'adherence_score': 1.0, 'token_metrics_status': 'OK', 'run_quality_status': 'CLEAN', 'run_quality_reasons': []}}))",
+                "raise SystemExit(0)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    matrix = tmp_path / "matrix.json"
+    matrix.write_text(
+        json.dumps(
+            {
+                "models": ["resolved-model"],
+                "quants": ["Q6_K"],
+                "task_bank": str(task_bank).replace("\\", "/"),
+                "runs_per_quant": 1,
+                "runner_template": f"python {fake_runner} --task {{task_file}} --venue {{venue}} --flow {{flow}}",
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_dir = tmp_path / "context_sweep"
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/run_context_sweep.py",
+            "--contexts",
+            "1024",
+            "--matrix-config",
+            str(matrix),
+            "--model-id",
+            "",
+            "--quant-tags",
+            "",
+            "--out-dir",
+            str(out_dir),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    summary_path = out_dir / "context_1024_summary.json"
+    summary_payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert summary_payload["sessions"][0]["model_id"] == "resolved-model"

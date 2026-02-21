@@ -10,6 +10,7 @@ from typing import Any
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run multi-context sweep and emit linked context ceiling artifact.")
+    parser.add_argument("--matrix-config", default="", help="Optional matrix config used to resolve sweep defaults.")
     parser.add_argument("--contexts", default="", help="Comma-separated contexts, e.g. 4096,8192,16384")
     parser.add_argument("--context-profile", default="", choices=["", "safe", "balanced", "stress"])
     parser.add_argument("--context-profiles-config", default="benchmarks/configs/context_sweep_profiles.json")
@@ -70,8 +71,59 @@ def _load_profiles(path: str) -> dict[str, dict[str, Any]]:
     return {}
 
 
+def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
+    matrix_path = str(args.matrix_config or "").strip()
+    if not matrix_path:
+        return args
+    payload = json.loads(Path(matrix_path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Matrix config must be a JSON object")
+    defaults = {
+        "model_id": "",
+        "quant_tags": "",
+        "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+        "runs": 1,
+        "runtime_target": "local-hardware",
+        "execution_mode": "live-card",
+        "runner_template": (
+            "python scripts/live_card_benchmark_runner.py --task {task_file} "
+            "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
+        ),
+        "task_limit": 0,
+        "seed": 0,
+        "threads": 0,
+        "affinity_policy": "",
+        "warmup_steps": 0,
+    }
+    mapping = {
+        "model_id": "models",
+        "quant_tags": "quants",
+        "task_bank": "task_bank",
+        "runs": "runs_per_quant",
+        "runtime_target": "runtime_target",
+        "execution_mode": "execution_mode",
+        "runner_template": "runner_template",
+        "task_limit": "task_limit",
+        "seed": "seed",
+        "threads": "threads",
+        "affinity_policy": "affinity_policy",
+        "warmup_steps": "warmup_steps",
+    }
+    for arg_key, cfg_key in mapping.items():
+        current = getattr(args, arg_key)
+        if current != defaults.get(arg_key):
+            continue
+        cfg_value = payload.get(cfg_key)
+        if cfg_value is None:
+            continue
+        if arg_key in {"model_id", "quant_tags"} and isinstance(cfg_value, list):
+            cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
+        setattr(args, arg_key, cfg_value)
+    return args
+
+
 def main() -> int:
-    args = _parse_args()
+    args = _apply_matrix_config(_parse_args())
     contexts_raw = str(args.contexts or "").strip()
     adherence_min = float(args.adherence_min)
     ttft_ceiling_ms = float(args.ttft_ceiling_ms)

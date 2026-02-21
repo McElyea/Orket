@@ -15,6 +15,14 @@ on:
         description: "Summary output path"
         required: false
         default: "benchmarks/results/quant_sweep/full_sweep_summary.json"
+      context_sweep_contexts:
+        description: "Comma-separated contexts for context sweep orchestration"
+        required: false
+        default: "8192"
+      context_profile:
+        description: "Context sweep profile label"
+        required: false
+        default: "safe"
       max_missing_telemetry_rate:
         description: "KPI policy: max missing telemetry rate"
         required: false
@@ -91,13 +99,16 @@ jobs:
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/full_frontier_explorer.json \
             --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}"
-          mkdir -p benchmarks/results/context_sweep
-          cp "${SUMMARY_OUT}" benchmarks/results/context_sweep/context_8192.json
-          python scripts/context_ceiling_finder.py \
-            --contexts 8192 \
-            --summary-template benchmarks/results/context_sweep/context_{context}.json \
-            --out benchmarks/results/context_sweep/context_ceiling.json \
-            --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}"
+          python scripts/run_context_sweep.py \
+            --contexts "${{ github.event.inputs.context_sweep_contexts || '8192' }}" \
+            --context-profile "${{ github.event.inputs.context_profile || 'safe' }}" \
+            --matrix-config "${MATRIX_CONFIG}" \
+            --model-id "" \
+            --quant-tags "" \
+            --execution-lane lab \
+            --vram-profile safe \
+            --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}" \
+            --out-dir benchmarks/results/context_sweep
           python scripts/thermal_stability_profiler.py \
             --summaries "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/thermal/thermal_profile.json \

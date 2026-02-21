@@ -208,6 +208,10 @@ python scripts/run_context_sweep.py `
   --out-dir benchmarks/results/context_sweep
 ```
 
+Full self-hosted workflow context sweep uses:
+1. `context_sweep_contexts` input (default `8192`)
+2. `context_profile` input (default `safe`)
+
 ## Thermal Stability Profiler Artifact
 Generate thermal stability recommendation from repeated run summaries:
 
