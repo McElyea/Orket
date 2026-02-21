@@ -36,8 +36,13 @@ Done criteria:
 4. Contract tests exist and pass for determinism/retrieval/memory-buffer spec invariants.
 
 Next execution slice:
-1. Add `scripts/check_memory_determinism.py` skeleton for schema-level deterministic trace validation.
-2. Wire script into a focused test (`tests/application/` or `tests/contracts/`) before workflow integration.
+1. Add `scripts/check_memory_determinism.py` skeleton for schema-level deterministic trace validation. Status: done (2026-02-21)
+2. Wire script into a focused test (`tests/application/` or `tests/contracts/`) before workflow integration. Status: done (2026-02-21)
+
+Next execution slice:
+1. Implement `tests/application/test_buffered_write_isolation.py`.
+2. Implement `tests/application/test_memory_commit_idempotency.py`.
+3. Implement `tests/application/test_memory_commit_recovery.py`.
 
 1. Telemetry contract hardening across providers.
 Success criteria:
