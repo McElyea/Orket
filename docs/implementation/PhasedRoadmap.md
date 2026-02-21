@@ -70,7 +70,7 @@ Next execution slice:
 3. Enforce lab guard execution in `.gitea/workflows/quant-sweep-full-selfhosted.yml` with workflow gate coverage tests. Status: done (2026-02-21)
 
 ## Phase 2: Planned Later
-1. Add model selector and adaptive routing prototypes after diagnostics evidence is stable.
+1. No open Phase 2 items.
 
 Next execution slice:
 1. Add sidecar schema spec under `docs/specs/SIDECAR_PARSE_SCHEMA.md`. Status: done (2026-02-21)
@@ -80,6 +80,10 @@ Next execution slice:
 Next execution slice:
 1. Add experimental VRAM fragmentation analyzer script (`scripts/analyze_vram_fragmentation.py`). Status: done (2026-02-21)
 2. Add regression tests for analyzer output and no-sample fallback. Status: done (2026-02-21)
+
+Next execution slice:
+1. Add model selector/adaptive routing prototype (`scripts/prototype_model_selector.py`) over quant sweep summaries. Status: done (2026-02-21)
+2. Add regression tests for candidate ranking and no-candidate fallback behavior. Status: done (2026-02-21)
 
 ## Cross-Cutting Program Tracks
 1. Deterministic memory and persistence program:
