@@ -114,6 +114,12 @@ jobs:
           python scripts/quant_sweep_kpi_report.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/full_sweep_kpis.json
+          python scripts/analyze_vram_fragmentation.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --out benchmarks/results/quant_sweep/vram_fragmentation_analysis.json
+          python scripts/prototype_model_selector.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --out benchmarks/results/quant_sweep/model_selector_prototype.json
 
       - name: Enforce sidecar parse policy contract
         run: |
@@ -240,6 +246,8 @@ jobs:
             benchmarks/results/quant_sweep/full_sweep_kpis.json
             benchmarks/results/quant_sweep/full_sweep_provenance.json
             benchmarks/results/quant_sweep/full_frontier_explorer.json
+            benchmarks/results/quant_sweep/vram_fragmentation_analysis.json
+            benchmarks/results/quant_sweep/model_selector_prototype.json
             benchmarks/results/quant_sweep/explorer_artifact_index.json
             benchmarks/results/quant_sweep/explorer_ingestion_check.json
             benchmarks/results/quant_sweep/lab_guard_check.json
