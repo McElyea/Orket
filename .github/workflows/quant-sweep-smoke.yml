@@ -24,6 +24,7 @@ on:
       - "scripts/cleanup_context_sweep_artifacts.py"
       - "scripts/check_context_profile_policy.py"
       - "scripts/build_explorer_check_summary.py"
+      - "scripts/render_explorer_check_digest.py"
       - "tests/application/test_quant_sweep_runner.py"
       - "tests/application/test_manage_baselines_script.py"
       - "tests/application/test_benchmark_telemetry_manifest.py"
@@ -46,6 +47,7 @@ on:
       - "tests/fixtures/context_profiles/valid_profiles.json"
       - "tests/fixtures/context_profiles/drifted_profiles.json"
       - "tests/application/test_build_explorer_check_summary.py"
+      - "tests/application/test_render_explorer_check_digest.py"
       - "benchmarks/configs/quant_sweep_common_sessions.json"
       - "benchmarks/configs/quant_sweep_logic_only.json"
       - "benchmarks/configs/quant_sweep_refactor_heavy.json"
@@ -94,7 +96,8 @@ jobs:
             tests/application/test_context_rollup_contract.py \
             tests/application/test_cleanup_context_sweep_artifacts.py \
             tests/application/test_check_context_profile_policy.py \
-            tests/application/test_build_explorer_check_summary.py -q
+            tests/application/test_build_explorer_check_summary.py \
+            tests/application/test_render_explorer_check_digest.py -q
 
       - name: Matrix Dry Run Smoke
         run: |

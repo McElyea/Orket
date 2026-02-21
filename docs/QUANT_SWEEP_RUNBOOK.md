@@ -355,6 +355,14 @@ python scripts/build_explorer_check_summary.py `
   --out benchmarks/results/quant_sweep/explorer_check_summary.json
 ```
 
+Render markdown digest for operators:
+
+```powershell
+python scripts/render_explorer_check_digest.py `
+  --summary benchmarks/results/quant_sweep/explorer_check_summary.json `
+  --out benchmarks/results/quant_sweep/explorer_check_digest.md
+```
+
 ## Baseline Operations
 List baselines:
 

@@ -172,6 +172,9 @@ jobs:
             --rollup benchmarks/results/context_sweep/context_rollup_check.json \
             --guards benchmarks/results/quant_sweep/lab_guard_check.json \
             --out benchmarks/results/quant_sweep/explorer_check_summary.json
+          python scripts/render_explorer_check_digest.py \
+            --summary benchmarks/results/quant_sweep/explorer_check_summary.json \
+            --out benchmarks/results/quant_sweep/explorer_check_digest.md
 
       - name: Enforce KPI Policy
         run: |
@@ -229,6 +232,7 @@ jobs:
             benchmarks/results/quant_sweep/explorer_ingestion_check.json
             benchmarks/results/quant_sweep/lab_guard_check.json
             benchmarks/results/quant_sweep/explorer_check_summary.json
+            benchmarks/results/quant_sweep/explorer_check_digest.md
             benchmarks/results/context_sweep/context_ceiling.json
             benchmarks/results/context_sweep/context_rollup.json
             benchmarks/results/context_sweep/context_rollup_check.json
