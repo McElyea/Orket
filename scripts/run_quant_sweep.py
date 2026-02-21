@@ -35,6 +35,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--task-id-max", type=int, default=0)
     parser.add_argument("--out-dir", default="benchmarks/results/quant_sweep")
     parser.add_argument("--summary-out", default="benchmarks/results/quant_sweep/sweep_summary.json")
+    parser.add_argument("--matrix-config", default="", help="Optional JSON config file for matrix/session defaults.")
+    parser.add_argument("--dry-run", action="store_true", help="Print resolved sweep plan and exit.")
     parser.add_argument("--adherence-threshold", type=float, default=0.95)
     parser.add_argument("--latency-ceiling", type=float, default=10.0, help="Max total latency (seconds) for frontier eligibility.")
     parser.add_argument("--seed", type=int, default=0, help="Benchmark seed metadata (0 means unset).")
@@ -50,6 +52,82 @@ def _parse_args() -> argparse.Namespace:
         help="Max allowed internal latency coefficient of variation for canary.",
     )
     return parser.parse_args()
+
+
+def _load_matrix_config(path: str) -> dict[str, Any]:
+    config_path = Path(str(path).strip())
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Matrix config must be a JSON object")
+    return payload
+
+
+def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
+    if not str(args.matrix_config or "").strip():
+        return args
+
+    config = _load_matrix_config(str(args.matrix_config))
+    defaults = {
+        "task_bank": "benchmarks/task_bank/v1/tasks.json",
+        "runs": 1,
+        "runtime_target": "local-hardware",
+        "execution_mode": "live-card",
+        "runner_template": (
+            "python scripts/live_card_benchmark_runner.py --task {task_file} "
+            "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
+        ),
+        "task_limit": 0,
+        "task_id_min": 0,
+        "task_id_max": 0,
+        "out_dir": "benchmarks/results/quant_sweep",
+        "summary_out": "benchmarks/results/quant_sweep/sweep_summary.json",
+        "adherence_threshold": 0.95,
+        "latency_ceiling": 10.0,
+        "seed": 0,
+        "threads": 0,
+        "affinity_policy": "",
+        "warmup_steps": 0,
+        "canary_runs": 0,
+        "canary_task_limit": 1,
+        "canary_latency_variance_threshold": 0.03,
+    }
+    mapping = {
+        "model_id": "models",
+        "quant_tags": "quants",
+        "task_bank": "task_bank",
+        "runs": "runs_per_quant",
+        "runtime_target": "runtime_target",
+        "execution_mode": "execution_mode",
+        "runner_template": "runner_template",
+        "task_limit": "task_limit",
+        "task_id_min": "task_id_min",
+        "task_id_max": "task_id_max",
+        "out_dir": "out_dir",
+        "summary_out": "summary_out",
+        "adherence_threshold": "adherence_threshold",
+        "latency_ceiling": "latency_ceiling",
+        "seed": "seed",
+        "threads": "threads",
+        "affinity_policy": "affinity_policy",
+        "warmup_steps": "warmup_steps",
+        "canary_runs": "canary_runs",
+        "canary_task_limit": "canary_task_limit",
+        "canary_latency_variance_threshold": "canary_latency_variance_threshold",
+    }
+
+    for arg_key, cfg_key in mapping.items():
+        current = getattr(args, arg_key)
+        if arg_key not in {"model_id", "quant_tags"} and current != defaults.get(arg_key):
+            continue
+        cfg_value = config.get(cfg_key)
+        if cfg_value is None:
+            continue
+        if arg_key == "model_id" and isinstance(cfg_value, list):
+            cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
+        if arg_key == "quant_tags" and isinstance(cfg_value, list):
+            cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
+        setattr(args, arg_key, cfg_value)
+    return args
 
 
 def _run(cmd: list[str], *, env: dict[str, str]) -> None:
@@ -326,7 +404,7 @@ def _run_canary(
 
 
 def main() -> int:
-    args = _parse_args()
+    args = _apply_matrix_config(_parse_args())
     model_ids = [token.strip() for token in str(args.model_id).split(",") if token.strip()]
     if not model_ids:
         raise SystemExit("--model-id must include at least one model id")
@@ -338,6 +416,35 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     summary_out = Path(args.summary_out)
     summary_out.parent.mkdir(parents=True, exist_ok=True)
+
+    if args.dry_run:
+        dry_plan = {
+            "models": model_ids,
+            "quants": quant_tags,
+            "task_bank": str(args.task_bank),
+            "runs_per_quant": int(args.runs),
+            "task_limit": int(args.task_limit),
+            "task_id_min": int(args.task_id_min),
+            "task_id_max": int(args.task_id_max),
+            "runtime_target": str(args.runtime_target),
+            "execution_mode": str(args.execution_mode),
+            "out_dir": str(out_dir).replace("\\", "/"),
+            "summary_out": str(summary_out).replace("\\", "/"),
+            "experimental_controls": {
+                "seed": int(args.seed) if int(args.seed) > 0 else None,
+                "threads": int(args.threads) if int(args.threads) > 0 else None,
+                "affinity_policy": str(args.affinity_policy).strip(),
+                "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
+            },
+            "canary": {
+                "enabled": int(args.canary_runs) > 0,
+                "runs": int(args.canary_runs),
+                "task_limit": int(args.canary_task_limit),
+                "latency_variance_threshold": float(args.canary_latency_variance_threshold),
+            },
+        }
+        print(json.dumps({"dry_run": dry_plan}, indent=2))
+        return 0
 
     canary_result = None
     if int(args.canary_runs) > 0:

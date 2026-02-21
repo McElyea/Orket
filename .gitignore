@@ -63,6 +63,7 @@ project_dumper_small.txt
 **/project_dumper_small.py
 **/project_dumper_small.txt
 Agents/
+model/core/rocks/run_the_business.json
 
 # Infrastructure (Gitea, MySQL, Sandboxes)
 infrastructure/gitea/

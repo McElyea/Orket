@@ -307,3 +307,58 @@ def test_run_quant_sweep_canary_gate_blocks_on_missing_telemetry(tmp_path: Path)
     )
     assert result.returncode != 0
     assert "Canary gate failed; aborting quant sweep." in (result.stdout + "\n" + result.stderr)
+
+
+def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
+    matrix_cfg = tmp_path / "matrix.json"
+    matrix_cfg.write_text(
+        json.dumps(
+            {
+                "models": ["qwen-coder"],
+                "quants": ["Q8_0", "Q6_K"],
+                "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+                "runs_per_quant": 2,
+                "task_limit": 3,
+                "runtime_target": "local-hardware",
+                "execution_mode": "live-card",
+                "seed": 123,
+                "threads": 12,
+                "affinity_policy": "pcores",
+                "warmup_steps": 2,
+                "canary_runs": 5,
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/run_quant_sweep.py",
+            "--model-id",
+            "placeholder-model",
+            "--quant-tags",
+            "Q4_K_M",
+            "--matrix-config",
+            str(matrix_cfg),
+            "--dry-run",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    payload = json.loads(result.stdout)
+    plan = payload["dry_run"]
+    assert plan["models"] == ["qwen-coder"]
+    assert plan["quants"] == ["Q8_0", "Q6_K"]
+    assert plan["runs_per_quant"] == 2
+    assert plan["task_limit"] == 3
+    assert plan["task_bank"] == "benchmarks/task_bank/v2_realworld/tasks.json"
+    assert plan["experimental_controls"] == {
+        "seed": 123,
+        "threads": 12,
+        "affinity_policy": "pcores",
+        "warmup_steps": 2,
+    }
+    assert plan["canary"]["enabled"] is True
+    assert plan["canary"]["runs"] == 5
