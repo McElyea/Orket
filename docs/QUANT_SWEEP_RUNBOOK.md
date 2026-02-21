@@ -157,6 +157,22 @@ python scripts/quant_frontier_explorer.py `
   --storage-root orket_storage/frontiers
 ```
 
+## Context Ceiling Finder Artifact
+Generate safe context ceiling recommendation from context sweep summaries:
+
+```powershell
+python scripts/context_ceiling_finder.py `
+  --contexts 4096,8192,16384 `
+  --summary-template benchmarks/results/context_sweep/context_{context}.json `
+  --adherence-min 0.95 `
+  --ttft-ceiling-ms 250 `
+  --decode-floor-tps 20 `
+  --execution-lane lab `
+  --vram-profile safe `
+  --out benchmarks/results/context_sweep/context_ceiling.json `
+  --storage-root orket_storage/context_ceilings
+```
+
 ## Baseline Operations
 List baselines:
 
