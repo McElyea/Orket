@@ -15,16 +15,12 @@ This index maps each document to a single purpose to reduce duplication.
 3. `docs/specs/EXPLORER_FRONTIER_SCHEMA.md`: frontier artifact fields.
 4. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`: context artifact fields.
 5. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`: thermal artifact fields.
-6. `docs/specs/MEMORY_CANONICALIZATION_JSON_V1.md`: canonical JSON normalization for memory determinism artifacts.
-7. `docs/specs/MEMORY_DETERMINISM_TRACE_SCHEMA.md`: deterministic run trace contract.
-8. `docs/specs/MEMORY_RETRIEVAL_TRACE_SCHEMA.md`: retrieval trace contract.
-9. `docs/specs/MEMORY_TOOL_PROFILE_SCHEMA.md`: tool profile and fingerprint ownership contract.
-10. `docs/specs/MEMORY_BUFFER_STATE_MACHINE.md`: buffered write and commit recovery state-machine contract.
-11. `docs/specs/SIDECAR_PARSE_SCHEMA.md`: canonical sidecar parse schema and status contract.
+6. `docs/specs/SIDECAR_PARSE_SCHEMA.md`: canonical sidecar parse schema and status contract.
+7. `docs/archive/MemoryPersistence/`: archived deterministic memory persistence plan and related schema contracts.
 
 ## Implementation Plans
 1. `docs/implementation/PhasedRoadmap.md`: canonical ordered backlog for remaining implementation work.
-2. Completed implementation plan artifacts are intentionally removed when closed; use git history for archived plans.
+2. Completed plan artifacts should move to `docs/archive/`.
 
 ## Engineering Policy
 1. `docs/TESTING_POLICY.md`: test-lane policy (`unit`/`integration`/`acceptance`/`live`).

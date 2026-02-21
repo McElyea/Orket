@@ -29,7 +29,7 @@ Use this file to:
 
 ## Cross-Cutting Program Tracks
 1. Deterministic memory and persistence program:
-Completed. See git history for `docs/implementation/MEMORY_PERSISTENCE_PLAN.md`.
+Archived under `docs/archive/MemoryPersistence/`.
 
 ## Guardrails (All Phases)
 1. Pass/fail quality gates use Orket telemetry, not hardware sidecar metrics.
