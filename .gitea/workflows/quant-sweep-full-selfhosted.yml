@@ -115,6 +115,18 @@ jobs:
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/full_sweep_kpis.json
 
+      - name: Enforce sidecar parse policy contract
+        run: |
+          python scripts/check_sidecar_parse_policy.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --out benchmarks/results/quant_sweep/sidecar_parse_policy_check.json
+
+      - name: Enforce valid-run frontier policy
+        run: |
+          python scripts/check_valid_run_policy.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --out benchmarks/results/quant_sweep/valid_run_policy_check.json
+
       - name: Build Explorer Artifacts
         shell: bash
         run: |
