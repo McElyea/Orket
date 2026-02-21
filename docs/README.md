@@ -20,6 +20,7 @@ This index maps each document to a single purpose to reduce duplication.
 8. `docs/specs/MEMORY_RETRIEVAL_TRACE_SCHEMA.md`: retrieval trace contract.
 9. `docs/specs/MEMORY_TOOL_PROFILE_SCHEMA.md`: tool profile and fingerprint ownership contract.
 10. `docs/specs/MEMORY_BUFFER_STATE_MACHINE.md`: buffered write and commit recovery state-machine contract.
+11. `docs/specs/SIDECAR_PARSE_SCHEMA.md`: canonical sidecar parse schema and status contract.
 
 ## Implementation Plans
 1. `docs/implementation/MEMORY_PERSISTENCE_PLAN.md`: deterministic memory/persistence implementation plan.
