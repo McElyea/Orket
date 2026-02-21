@@ -20,7 +20,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--vram-profile", default="safe", choices=["safe", "balanced", "stress"])
     parser.add_argument("--provenance-ref", default="", help="Optional provenance reference (for example run_id:sha).")
     parser.add_argument("--out", required=True)
-    parser.add_argument("--storage-root", default="orket_storage/thermal_profiles")
+    parser.add_argument("--storage-root", default=".orket/durable/diagnostics/thermal_profiles")
     return parser.parse_args()
 
 

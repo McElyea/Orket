@@ -35,7 +35,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--provenance-ref", default="", help="Optional provenance reference (for example run_id:sha).")
     parser.add_argument(
         "--storage-root",
-        default="orket_storage/context_ceilings",
+        default=".orket/durable/diagnostics/context_ceilings",
         help="Storage root for comparable context ceiling history.",
     )
     return parser.parse_args()

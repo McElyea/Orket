@@ -156,7 +156,7 @@ python scripts/quant_frontier_explorer.py `
   --summary benchmarks/results/quant_sweep/sweep_summary.json `
   --out benchmarks/results/quant_sweep/frontier_explorer.json `
   --provenance-ref local-run:manual `
-  --storage-root orket_storage/frontiers
+  --storage-root .orket/durable/diagnostics/frontiers
 ```
 
 ## Context Ceiling Finder Artifact
@@ -173,7 +173,7 @@ python scripts/context_ceiling_finder.py `
   --vram-profile safe `
   --provenance-ref local-run:manual `
   --out benchmarks/results/context_sweep/context_ceiling.json `
-  --storage-root orket_storage/context_ceilings
+  --storage-root .orket/durable/diagnostics/context_ceilings
 ```
 
 ## Context Sweep Orchestrator
@@ -223,7 +223,7 @@ Full self-hosted workflow context sweep uses:
    - `apply` (explicit opt-in cleanup)
 
 Storage behavior:
-1. `--storage-mode persistent` (default): writes context history to `orket_storage/context_ceilings`.
+1. `--storage-mode persistent` (default): writes context history to `.orket/durable/diagnostics/context_ceilings`.
 2. `--storage-mode ephemeral`: writes context history under `<out-dir>/.storage/context_ceilings` to avoid repo-root byproducts.
 
 ## Thermal Stability Profiler Artifact
@@ -239,7 +239,7 @@ python scripts/thermal_stability_profiler.py `
   --vram-profile safe `
   --provenance-ref local-run:manual `
   --out benchmarks/results/thermal/thermal_profile.json `
-  --storage-root orket_storage/thermal_profiles
+  --storage-root .orket/durable/diagnostics/thermal_profiles
 ```
 
 ## Explorer Schema Contract Check
@@ -380,14 +380,14 @@ python scripts/render_explorer_check_digest.py `
 List baselines:
 
 ```powershell
-python scripts/manage_baselines.py list --storage-root orket_storage/baselines
+python scripts/manage_baselines.py list --storage-root .orket/durable/diagnostics/baselines
 ```
 
 Resolve for current run:
 
 ```powershell
 python scripts/manage_baselines.py resolve `
-  --storage-root orket_storage/baselines `
+  --storage-root .orket/durable/diagnostics/baselines `
   --test-id 001 `
   --hardware-fingerprint "<fingerprint>" `
   --task-revision v1
@@ -397,7 +397,7 @@ Health summary:
 
 ```powershell
 python scripts/manage_baselines.py health `
-  --storage-root orket_storage/baselines `
+  --storage-root .orket/durable/diagnostics/baselines `
   --hardware-fingerprint "<fingerprint>" `
   --task-revision v1
 ```
@@ -406,7 +406,7 @@ Prune old history while keeping newest 3:
 
 ```powershell
 python scripts/manage_baselines.py prune `
-  --storage-root orket_storage/baselines `
+  --storage-root .orket/durable/diagnostics/baselines `
   --keep-last 3
 ```
 
@@ -414,7 +414,7 @@ Pin a baseline record so prune never removes it:
 
 ```powershell
 python scripts/manage_baselines.py pin-baseline `
-  --storage-root orket_storage/baselines `
+  --storage-root .orket/durable/diagnostics/baselines `
   --test-id 001 `
   --baseline-ref <test-run-id>
 ```
@@ -423,7 +423,7 @@ Unpin a baseline record:
 
 ```powershell
 python scripts/manage_baselines.py unpin-baseline `
-  --storage-root orket_storage/baselines `
+  --storage-root .orket/durable/diagnostics/baselines `
   --test-id 001 `
   --baseline-ref <test-run-id>
 ```

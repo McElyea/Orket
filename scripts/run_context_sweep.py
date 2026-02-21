@@ -43,7 +43,7 @@ def _parse_args() -> argparse.Namespace:
         "--storage-mode",
         default="persistent",
         choices=["persistent", "ephemeral"],
-        help="persistent writes to orket_storage unless storage-root is set; ephemeral writes under out-dir/.storage.",
+        help="persistent writes under .orket/durable/diagnostics unless storage-root is set; ephemeral writes under out-dir/.storage.",
     )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--threads", type=int, default=0)
@@ -180,7 +180,7 @@ def main() -> int:
         if str(args.storage_mode) == "ephemeral":
             resolved_storage_root = str((out_dir / ".storage" / "context_ceilings").resolve())
         else:
-            resolved_storage_root = "orket_storage/context_ceilings"
+            resolved_storage_root = ".orket/durable/diagnostics/context_ceilings"
 
     summary_template = str(args.summary_template)
     summary_paths: list[str] = []

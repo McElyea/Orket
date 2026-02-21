@@ -12,15 +12,15 @@ def _parse_args() -> argparse.Namespace:
     sub = parser.add_subparsers(dest="command", required=True)
 
     list_cmd = sub.add_parser("list", help="List baseline files and latest metadata.")
-    list_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    list_cmd.add_argument("--storage-root", default=".orket/durable/diagnostics/baselines")
     list_cmd.add_argument("--test-id", default="")
 
     show_cmd = sub.add_parser("show", help="Show baseline history for one test id.")
-    show_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    show_cmd.add_argument("--storage-root", default=".orket/durable/diagnostics/baselines")
     show_cmd.add_argument("--test-id", required=True)
 
     resolve_cmd = sub.add_parser("resolve", help="Resolve latest matching baseline.")
-    resolve_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    resolve_cmd.add_argument("--storage-root", default=".orket/durable/diagnostics/baselines")
     resolve_cmd.add_argument("--test-id", required=True)
     resolve_cmd.add_argument("--hardware-fingerprint", required=True)
     resolve_cmd.add_argument("--task-revision", required=True)
@@ -31,23 +31,23 @@ def _parse_args() -> argparse.Namespace:
     pin_cmd.add_argument("--baseline-ref", required=True)
 
     health_cmd = sub.add_parser("health", help="Compute baseline health summary and stale/incompatibility stats.")
-    health_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    health_cmd.add_argument("--storage-root", default=".orket/durable/diagnostics/baselines")
     health_cmd.add_argument("--hardware-fingerprint", default="")
     health_cmd.add_argument("--task-revision", default="")
 
     prune_cmd = sub.add_parser("prune", help="Prune baseline history entries per test id.")
-    prune_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    prune_cmd.add_argument("--storage-root", default=".orket/durable/diagnostics/baselines")
     prune_cmd.add_argument("--test-id", default="")
     prune_cmd.add_argument("--keep-last", type=int, default=0, help="Keep only the newest N records (0 disables prune).")
     prune_cmd.add_argument("--dry-run", action="store_true")
 
     pin_baseline_cmd = sub.add_parser("pin-baseline", help="Pin a baseline record by test run id.")
-    pin_baseline_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    pin_baseline_cmd.add_argument("--storage-root", default=".orket/durable/diagnostics/baselines")
     pin_baseline_cmd.add_argument("--test-id", required=True)
     pin_baseline_cmd.add_argument("--baseline-ref", required=True)
 
     unpin_baseline_cmd = sub.add_parser("unpin-baseline", help="Unpin a baseline record by test run id.")
-    unpin_baseline_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    unpin_baseline_cmd.add_argument("--storage-root", default=".orket/durable/diagnostics/baselines")
     unpin_baseline_cmd.add_argument("--test-id", required=True)
     unpin_baseline_cmd.add_argument("--baseline-ref", required=True)
 

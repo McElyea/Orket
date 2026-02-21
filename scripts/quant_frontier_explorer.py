@@ -15,7 +15,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--provenance-ref", default="", help="Optional provenance reference (for example run_id:sha).")
     parser.add_argument(
         "--storage-root",
-        default="orket_storage/frontiers",
+        default=".orket/durable/diagnostics/frontiers",
         help="Storage root for comparable historical frontier records",
     )
     return parser.parse_args()

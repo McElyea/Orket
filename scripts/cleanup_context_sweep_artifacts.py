@@ -33,7 +33,7 @@ def main() -> int:
         "dry_run": bool(args.dry_run),
         "removed": removed,
         "skipped": skipped,
-        "note": "Persistent orket_storage data is never removed by this command.",
+        "note": "Persistent .orket durable diagnostics data is never removed by this command.",
     }
     print(json.dumps(report, indent=2))
     return 0

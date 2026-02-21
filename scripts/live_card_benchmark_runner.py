@@ -462,7 +462,7 @@ def _load_baseline_history(path: Path) -> list[dict[str, Any]]:
 
 
 def _baseline_file_path(test_id: str) -> Path:
-    return Path("orket_storage") / "baselines" / f"{test_id}.json"
+    return Path(".orket") / "durable" / "diagnostics" / "baselines" / f"{test_id}.json"
 
 
 def _select_baseline_record(
