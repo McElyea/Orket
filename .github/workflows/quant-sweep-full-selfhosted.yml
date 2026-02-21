@@ -149,6 +149,9 @@ jobs:
             --context benchmarks/results/context_sweep/context_ceiling.json \
             --thermal benchmarks/results/thermal/thermal_profile.json \
             --out benchmarks/results/quant_sweep/explorer_artifact_index.json
+          python scripts/check_explorer_ingestion.py \
+            --index benchmarks/results/quant_sweep/explorer_artifact_index.json \
+            --out benchmarks/results/quant_sweep/explorer_ingestion_check.json
           python scripts/check_lab_guards.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --allow-skip
@@ -206,6 +209,7 @@ jobs:
             benchmarks/results/quant_sweep/full_sweep_provenance.json
             benchmarks/results/quant_sweep/full_frontier_explorer.json
             benchmarks/results/quant_sweep/explorer_artifact_index.json
+            benchmarks/results/quant_sweep/explorer_ingestion_check.json
             benchmarks/results/context_sweep/context_ceiling.json
             benchmarks/results/thermal/thermal_profile.json
             benchmarks/results/quant_sweep/sidecar/**/*.json

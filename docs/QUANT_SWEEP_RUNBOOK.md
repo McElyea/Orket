@@ -289,6 +289,14 @@ python scripts/build_explorer_artifact_index.py `
   --out benchmarks/results/quant_sweep/explorer_artifact_index.json
 ```
 
+Validate explorer ingestion readiness:
+
+```powershell
+python scripts/check_explorer_ingestion.py `
+  --index benchmarks/results/quant_sweep/explorer_artifact_index.json `
+  --out benchmarks/results/quant_sweep/explorer_ingestion_check.json
+```
+
 ## Baseline Operations
 List baselines:
 
