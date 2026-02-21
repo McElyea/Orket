@@ -36,7 +36,21 @@ def main() -> int:
     vram_ratio_limit = float(PROFILE_TO_RATIO[str(args.vram_profile)])
     failures: list[str] = []
     skips: list[str] = []
+    violation_records: list[dict[str, Any]] = []
+    skip_records: list[dict[str, Any]] = []
     checks = 0
+    summary_lane = str(summary.get("execution_lane") or "").strip()
+    summary_profile = str(summary.get("vram_profile") or "").strip()
+
+    if summary_profile and summary_profile != str(args.vram_profile):
+        record = {
+            "model_id": "summary",
+            "quant_tag": "summary",
+            "code": "VRAM_PROFILE_MISMATCH",
+            "detail": f"{summary_profile}!={args.vram_profile}",
+        }
+        violation_records.append(record)
+        failures.append(f"summary:summary:VRAM_PROFILE_MISMATCH:{summary_profile}!={args.vram_profile}")
 
     sessions = summary.get("sessions") if isinstance(summary.get("sessions"), list) else []
     for session in sessions:
@@ -56,23 +70,61 @@ def main() -> int:
             prefix = f"{model_id}:{quant_tag}"
 
             if not isinstance(thermal_start, (int, float)):
+                record = {
+                    "model_id": model_id,
+                    "quant_tag": quant_tag,
+                    "code": "COOLDOWN_SKIPPED_MISSING_THERMAL_START",
+                    "detail": "",
+                }
+                skip_records.append(record)
                 skips.append(f"{prefix}:COOLDOWN_SKIPPED_MISSING_THERMAL_START")
             else:
                 checks += 1
                 if float(thermal_start) > float(args.cooldown_target_c):
-                    failures.append(f"{prefix}:COOLDOWN_TARGET_NOT_MET:{thermal_start}>{args.cooldown_target_c}")
+                    detail = f"{thermal_start}>{args.cooldown_target_c}"
+                    record = {
+                        "model_id": model_id,
+                        "quant_tag": quant_tag,
+                        "code": "COOLDOWN_TARGET_NOT_MET",
+                        "detail": detail,
+                    }
+                    violation_records.append(record)
+                    failures.append(f"{prefix}:COOLDOWN_TARGET_NOT_MET:{detail}")
 
             if not isinstance(vram_total, (int, float)) or float(vram_total) <= 0 or not isinstance(vram_used, (int, float)):
                 if parse_status in {"NOT_APPLICABLE", "OPTIONAL_FIELD_MISSING"}:
-                    skips.append(f"{prefix}:VRAM_GUARD_SKIPPED_{parse_status}")
+                    code = f"VRAM_GUARD_SKIPPED_{parse_status}"
+                    record = {
+                        "model_id": model_id,
+                        "quant_tag": quant_tag,
+                        "code": code,
+                        "detail": "",
+                    }
+                    skip_records.append(record)
+                    skips.append(f"{prefix}:{code}")
                 else:
+                    record = {
+                        "model_id": model_id,
+                        "quant_tag": quant_tag,
+                        "code": "VRAM_GUARD_SKIPPED_MISSING_METRICS",
+                        "detail": "",
+                    }
+                    skip_records.append(record)
                     skips.append(f"{prefix}:VRAM_GUARD_SKIPPED_MISSING_METRICS")
             else:
                 checks += 1
                 ratio = float(vram_used) / float(vram_total)
                 if ratio > vram_ratio_limit:
+                    detail = f"{ratio:.6f}>{vram_ratio_limit:.6f}"
+                    record = {
+                        "model_id": model_id,
+                        "quant_tag": quant_tag,
+                        "code": "VRAM_RATIO_EXCEEDED",
+                        "detail": detail,
+                    }
+                    violation_records.append(record)
                     failures.append(
-                        f"{prefix}:VRAM_RATIO_EXCEEDED:{ratio:.6f}>{vram_ratio_limit:.6f}"
+                        f"{prefix}:VRAM_RATIO_EXCEEDED:{detail}"
                     )
 
     status = "PASS"
@@ -83,12 +135,16 @@ def main() -> int:
     report = {
         "status": status,
         "summary_path": str(Path(args.summary)).replace("\\", "/"),
+        "execution_lane": summary_lane,
         "profile": str(args.vram_profile),
         "thresholds": {
             "cooldown_target_c": float(args.cooldown_target_c),
             "vram_ratio_limit": vram_ratio_limit,
         },
         "checks": checks,
+        "polluted_status_reasons": sorted({str(item.get("code") or "") for item in violation_records if str(item.get("code") or "")}),
+        "violations": violation_records,
+        "skips": skip_records,
         "failures": failures,
         "skip_reasons": skips,
     }

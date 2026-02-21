@@ -276,6 +276,11 @@ python scripts/check_lab_guards.py `
   --allow-skip
 ```
 
+Guard check output fields:
+1. `polluted_status_reasons`: deterministic code list for failed guard conditions.
+2. `violations`: structured per-row failure records (`model_id`, `quant_tag`, `code`, `detail`).
+3. `skips`: structured per-row skip records when metrics are unavailable.
+
 ## Context Sweep Output Contract Check
 Validate per-context summaries and context-ceiling coverage:
 

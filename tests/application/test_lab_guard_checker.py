@@ -52,6 +52,8 @@ def test_lab_guard_checker_fails_on_cooldown_or_vram_limit(tmp_path: Path) -> No
     assert result.returncode == 2
     payload = json.loads(result.stdout)
     assert payload["status"] == "FAIL"
+    assert "COOLDOWN_TARGET_NOT_MET" in payload["polluted_status_reasons"]
+    assert "VRAM_RATIO_EXCEEDED" in payload["polluted_status_reasons"]
 
 
 def test_lab_guard_checker_skips_when_metrics_not_applicable(tmp_path: Path) -> None:
@@ -76,3 +78,31 @@ def test_lab_guard_checker_skips_when_metrics_not_applicable(tmp_path: Path) -> 
     payload = json.loads(result.stdout)
     assert payload["status"] == "SKIP"
     assert payload["skip_reasons"]
+    assert payload["polluted_status_reasons"] == []
+
+
+def test_lab_guard_checker_passes_within_limits(tmp_path: Path) -> None:
+    summary = tmp_path / "summary.json"
+    summary.write_text(
+        json.dumps(_summary(thermal_start=45, vram_total=100, vram_used=40), indent=2) + "\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/check_lab_guards.py",
+            "--summary",
+            str(summary),
+            "--cooldown-target-c",
+            "50",
+            "--vram-profile",
+            "safe",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "PASS"
+    assert payload["polluted_status_reasons"] == []
