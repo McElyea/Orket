@@ -206,6 +206,7 @@ python scripts/run_context_sweep.py `
   --task-bank benchmarks/task_bank/v2_realworld/tasks.json `
   --execution-lane lab `
   --vram-profile safe `
+  --storage-mode ephemeral `
   --out-dir benchmarks/results/context_sweep
 ```
 
@@ -217,6 +218,10 @@ Full self-hosted workflow context sweep uses:
    - `context_adherence_min`
    - `context_ttft_ceiling_ms`
    - `context_decode_floor_tps`
+
+Storage behavior:
+1. `--storage-mode persistent` (default): writes context history to `orket_storage/context_ceilings`.
+2. `--storage-mode ephemeral`: writes context history under `<out-dir>/.storage/context_ceilings` to avoid repo-root byproducts.
 
 ## Thermal Stability Profiler Artifact
 Generate thermal stability recommendation from repeated run summaries:

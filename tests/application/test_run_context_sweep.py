@@ -94,6 +94,8 @@ def test_run_context_sweep_generates_per_context_summaries_and_ceiling(tmp_path:
             str(out_dir),
             "--context-ceiling-out",
             "ceiling.json",
+            "--storage-mode",
+            "ephemeral",
         ],
         capture_output=True,
         text=True,
@@ -102,6 +104,7 @@ def test_run_context_sweep_generates_per_context_summaries_and_ceiling(tmp_path:
     assert result.returncode == 0, result.stdout + "\n" + result.stderr
     payload = json.loads(result.stdout)
     assert payload["status"] == "OK"
+    assert ".storage" in payload["storage_root"]
     assert len(payload["summary_paths"]) == 3
 
     ceiling = json.loads((out_dir / "ceiling.json").read_text(encoding="utf-8"))
@@ -190,6 +193,8 @@ def test_run_context_sweep_can_resolve_context_profile(tmp_path: Path) -> None:
             "1",
             "--out-dir",
             str(out_dir),
+            "--storage-mode",
+            "ephemeral",
         ],
         capture_output=True,
         text=True,
@@ -198,6 +203,7 @@ def test_run_context_sweep_can_resolve_context_profile(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stdout + "\n" + result.stderr
     payload = json.loads(result.stdout)
     assert payload["context_profile"] == "safe"
+    assert ".storage" in payload["storage_root"]
     assert payload["contexts"] == [1024, 2048]
     ceiling = json.loads((out_dir / "context_ceiling.json").read_text(encoding="utf-8"))
     assert ceiling["safe_context_ceiling"] == 2048
@@ -270,6 +276,8 @@ def test_run_context_sweep_can_resolve_matrix_config_defaults(tmp_path: Path) ->
             "",
             "--out-dir",
             str(out_dir),
+            "--storage-mode",
+            "ephemeral",
         ],
         capture_output=True,
         text=True,

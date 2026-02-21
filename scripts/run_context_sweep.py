@@ -38,7 +38,13 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", default="benchmarks/results/context_sweep")
     parser.add_argument("--summary-template", default="context_{context}_summary.json")
     parser.add_argument("--context-ceiling-out", default="context_ceiling.json")
-    parser.add_argument("--storage-root", default="orket_storage/context_ceilings")
+    parser.add_argument("--storage-root", default="")
+    parser.add_argument(
+        "--storage-mode",
+        default="persistent",
+        choices=["persistent", "ephemeral"],
+        help="persistent writes to orket_storage unless storage-root is set; ephemeral writes under out-dir/.storage.",
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--threads", type=int, default=0)
     parser.add_argument("--affinity-policy", default="")
@@ -169,6 +175,12 @@ def main() -> int:
     contexts = _contexts(contexts_raw)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    resolved_storage_root = str(args.storage_root).strip()
+    if not resolved_storage_root:
+        if str(args.storage_mode) == "ephemeral":
+            resolved_storage_root = str((out_dir / ".storage" / "context_ceilings").resolve())
+        else:
+            resolved_storage_root = "orket_storage/context_ceilings"
 
     summary_template = str(args.summary_template)
     summary_paths: list[str] = []
@@ -242,7 +254,7 @@ def main() -> int:
         "--out",
         str(context_out),
         "--storage-root",
-        str(args.storage_root),
+        str(resolved_storage_root),
     ]
     if bool(args.include_invalid):
         finder_cmd.append("--include-invalid")
@@ -256,6 +268,7 @@ def main() -> int:
                 "contexts": contexts,
                 "summary_paths": summary_paths,
                 "context_ceiling_out": str(context_out).replace("\\", "/"),
+                "storage_root": str(resolved_storage_root).replace("\\", "/"),
             },
             indent=2,
         )
