@@ -89,6 +89,22 @@ Results are stored under:
 
 `benchmarks/results/quant_sweep/sidecar/<model>/<quant>_hardware_sidecar.json`
 
+Profile-based sidecar mode:
+
+```powershell
+python scripts/run_quant_sweep.py `
+  --model-id qwen2.5-coder:7b `
+  --quant-tags Q8_0,Q6_K `
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json `
+  --hardware-sidecar-profile nvidia `
+  --sidecar-profiles-config benchmarks/configs/sidecar_profiles.json
+```
+
+Profile compatibility notes:
+1. `nvidia` uses `scripts/sidecar_probe.py --backend nvidia` (queries `nvidia-smi` when available).
+2. `amd` uses `scripts/sidecar_probe.py --backend amd` (fallback numeric payload; extend with ROCm-specific probes as needed).
+3. `cpu_only` uses `scripts/sidecar_probe.py --backend cpu` (diagnostic placeholder payload).
+
 ## Sidecar Metric Mapping
 Use sidecar as hardware diagnostics only; do not gate pass/fail on sidecar values.
 1. Sidecar decode throughput (`generation_tps`) maps to Orket `token_metrics.throughput.generation_tokens_per_second`.

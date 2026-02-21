@@ -862,3 +862,55 @@ def test_run_quant_sweep_include_invalid_allows_sidecar_parse_failures_in_fronti
     summary = json.loads(summary_out.read_text(encoding="utf-8"))
     assert summary["sessions"][0]["per_quant"][0]["valid"] is False
     assert summary["sessions"][0]["efficiency_frontier"]["minimum_viable_quant_tag"] == "Q8_0"
+
+
+def test_run_quant_sweep_dry_run_resolves_sidecar_profile(tmp_path: Path) -> None:
+    matrix_cfg = tmp_path / "matrix.json"
+    sidecar_cfg = tmp_path / "sidecar_profiles.json"
+    matrix_cfg.write_text(
+        json.dumps(
+            {
+                "models": ["qwen-coder"],
+                "quants": ["Q8_0"],
+                "hardware_sidecar_profile": "cpu_only",
+                "sidecar_profiles_config": str(sidecar_cfg).replace("\\", "/"),
+            }
+        ),
+        encoding="utf-8",
+    )
+    sidecar_cfg.write_text(
+        json.dumps(
+            {
+                "profiles": {
+                    "cpu_only": {
+                        "template": "python scripts/sidecar_probe.py --backend cpu --model {model_id} --quant {quant_tag} --out {out_file}",
+                        "timeout_sec": 45,
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/run_quant_sweep.py",
+            "--model-id",
+            "placeholder-model",
+            "--quant-tags",
+            "Q4_K_M",
+            "--matrix-config",
+            str(matrix_cfg),
+            "--dry-run",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    payload = json.loads(result.stdout)
+    sidecar = payload["dry_run"]["hardware_sidecar"]
+    assert sidecar["enabled"] is True
+    assert sidecar["profile"] == "cpu_only"
+    assert sidecar["timeout_sec"] == 45
+    assert "sidecar_probe.py --backend cpu" in sidecar["template"]

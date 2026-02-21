@@ -69,6 +69,16 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument("--hardware-sidecar-timeout-sec", type=int, default=120, help="Timeout for sidecar command.")
+    parser.add_argument(
+        "--hardware-sidecar-profile",
+        default="",
+        help="Optional sidecar profile name from sidecar profiles config.",
+    )
+    parser.add_argument(
+        "--sidecar-profiles-config",
+        default="benchmarks/configs/sidecar_profiles.json",
+        help="Path to sidecar profiles config.",
+    )
     parser.add_argument("--adherence-threshold", type=float, default=0.95)
     parser.add_argument("--latency-ceiling", type=float, default=10.0, help="Max total latency (seconds) for frontier eligibility.")
     parser.add_argument(
@@ -108,6 +118,17 @@ def _load_matrix_config(path: str) -> dict[str, Any]:
     return payload
 
 
+def _load_sidecar_profiles(path: str) -> dict[str, dict[str, Any]]:
+    config_path = Path(str(path).strip())
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Sidecar profiles config must be a JSON object")
+    profiles = payload.get("profiles")
+    if isinstance(profiles, dict):
+        return {str(key): value for key, value in profiles.items() if isinstance(value, dict)}
+    return {}
+
+
 def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
     if not str(args.matrix_config or "").strip():
         return args
@@ -140,6 +161,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "canary_latency_variance_threshold": 0.03,
         "hardware_sidecar_template": "",
         "hardware_sidecar_timeout_sec": 120,
+        "hardware_sidecar_profile": "",
+        "sidecar_profiles_config": "benchmarks/configs/sidecar_profiles.json",
     }
     mapping = {
         "model_id": "models",
@@ -167,6 +190,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "canary_latency_variance_threshold": "canary_latency_variance_threshold",
         "hardware_sidecar_template": "hardware_sidecar_template",
         "hardware_sidecar_timeout_sec": "hardware_sidecar_timeout_sec",
+        "hardware_sidecar_profile": "hardware_sidecar_profile",
+        "sidecar_profiles_config": "sidecar_profiles_config",
     }
 
     for arg_key, cfg_key in mapping.items():
@@ -182,6 +207,27 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
             cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
         setattr(args, arg_key, cfg_value)
     return args
+
+
+def _resolve_sidecar_settings(args: argparse.Namespace) -> tuple[str, int, str]:
+    template = str(args.hardware_sidecar_template or "").strip()
+    timeout_sec = int(args.hardware_sidecar_timeout_sec)
+    profile = str(args.hardware_sidecar_profile or "").strip()
+
+    if template:
+        return template, timeout_sec, profile or "custom"
+    if not profile:
+        return "", timeout_sec, ""
+
+    profiles = _load_sidecar_profiles(str(args.sidecar_profiles_config))
+    profile_payload = profiles.get(profile)
+    if not isinstance(profile_payload, dict):
+        raise SystemExit(f"Unknown sidecar profile '{profile}' in {args.sidecar_profiles_config}")
+    resolved_template = str(profile_payload.get("template") or "").strip()
+    if not resolved_template:
+        raise SystemExit(f"Sidecar profile '{profile}' does not define a template")
+    resolved_timeout = int(profile_payload.get("timeout_sec", timeout_sec) or timeout_sec)
+    return resolved_template, resolved_timeout, profile
 
 
 def _run(cmd: list[str], *, env: dict[str, str]) -> None:
@@ -710,6 +756,7 @@ def _run_canary(
 
 def main() -> int:
     args = _apply_matrix_config(_parse_args())
+    sidecar_template, sidecar_timeout_sec, sidecar_profile = _resolve_sidecar_settings(args)
     model_ids = [token.strip() for token in str(args.model_id).split(",") if token.strip()]
     if not model_ids:
         raise SystemExit("--model-id must include at least one model id")
@@ -752,9 +799,11 @@ def main() -> int:
                 "latency_variance_threshold": float(args.canary_latency_variance_threshold),
             },
             "hardware_sidecar": {
-                "enabled": bool(str(args.hardware_sidecar_template or "").strip()),
-                "template": str(args.hardware_sidecar_template),
-                "timeout_sec": int(args.hardware_sidecar_timeout_sec),
+                "enabled": bool(str(sidecar_template).strip()),
+                "profile": sidecar_profile,
+                "profiles_config": str(args.sidecar_profiles_config),
+                "template": str(sidecar_template),
+                "timeout_sec": int(sidecar_timeout_sec),
             },
         }
         print(json.dumps({"dry_run": dry_plan}, indent=2))
@@ -821,8 +870,8 @@ def main() -> int:
             report = _load_json(raw_out)
             metrics = _collect_quant_metrics(report)
             sidecar = _run_sidecar(
-                template=str(args.hardware_sidecar_template),
-                timeout_sec=int(args.hardware_sidecar_timeout_sec),
+                template=str(sidecar_template),
+                timeout_sec=int(sidecar_timeout_sec),
                 model_id=str(model_id),
                 quant_tag=str(quant_tag),
                 runtime_target=str(args.runtime_target),
@@ -931,9 +980,11 @@ def main() -> int:
             "execution_lane": str(args.execution_lane),
             "vram_profile": str(args.vram_profile),
             "hardware_sidecar": {
-                "enabled": bool(str(args.hardware_sidecar_template or "").strip()),
-                "template": str(args.hardware_sidecar_template),
-                "timeout_sec": int(args.hardware_sidecar_timeout_sec),
+                "enabled": bool(str(sidecar_template).strip()),
+                "profile": sidecar_profile,
+                "profiles_config": str(args.sidecar_profiles_config),
+                "template": str(sidecar_template),
+                "timeout_sec": int(sidecar_timeout_sec),
             },
             "runtime_target": str(args.runtime_target),
             "execution_mode": str(args.execution_mode),

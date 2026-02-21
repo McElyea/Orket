@@ -70,25 +70,19 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add structured GPU profile variants for sidecar templates.
-Deliverables:
-1. Define backend/vendor profile presets (NVIDIA/AMD/CPU-only).
-2. Keep canonical sidecar schema stable across profiles.
-3. Add profile compatibility notes to runbook.
-
-2. Build Orket #1: Quant Frontier Explorer.
+1. Build Orket #1: Quant Frontier Explorer.
 Deliverables:
 1. Run quant matrix under selected `vram_profile`.
 2. Output minimum-viable quant and best-value quant with rationale.
 3. Store comparables keyed by lane/profile/hardware fingerprint.
 
-3. Build Orket #2: Context Ceiling Finder.
+2. Build Orket #2: Context Ceiling Finder.
 Deliverables:
 1. Step context until instability or guardrail boundary.
 2. Track TTFT, decode throughput, and validity degradation.
 3. Emit safe ceiling recommendation per lane/profile.
 
-4. Build Orket #3: Thermal Stability Profiler.
+3. Build Orket #3: Thermal Stability Profiler.
 Deliverables:
 1. Repeated-run thermal delta analysis with cooldown policy checks.
 2. Heat-soak detection and polluted-run marking.

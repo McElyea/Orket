@@ -9,11 +9,13 @@ on:
       - "scripts/manage_baselines.py"
       - "scripts/check_quant_sweep_kpis.py"
       - "scripts/quant_sweep_kpi_report.py"
+      - "scripts/sidecar_probe.py"
       - "tests/application/test_quant_sweep_runner.py"
       - "tests/application/test_manage_baselines_script.py"
       - "tests/application/test_benchmark_telemetry_manifest.py"
       - "tests/application/test_quant_sweep_kpi_scripts.py"
       - "benchmarks/configs/quant_sweep_common_sessions.json"
+      - "benchmarks/configs/sidecar_profiles.json"
       - "docs/QUANT_SWEEP_RUNBOOK.md"
       - ".github/workflows/quant-sweep-smoke.yml"
   workflow_dispatch:

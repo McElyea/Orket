@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "nvidia": {
+      "backend": "nvidia",
+      "template": "python scripts/sidecar_probe.py --backend nvidia --model {model_id} --quant {quant_tag} --out {out_file}",
+      "timeout_sec": 120
+    },
+    "amd": {
+      "backend": "amd",
+      "template": "python scripts/sidecar_probe.py --backend amd --model {model_id} --quant {quant_tag} --out {out_file}",
+      "timeout_sec": 120
+    },
+    "cpu_only": {
+      "backend": "cpu",
+      "template": "python scripts/sidecar_probe.py --backend cpu --model {model_id} --quant {quant_tag} --out {out_file}",
+      "timeout_sec": 60
+    }
+  }
+}
