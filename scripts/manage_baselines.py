@@ -30,6 +30,17 @@ def _parse_args() -> argparse.Namespace:
     pin_cmd.add_argument("--task-file", required=True)
     pin_cmd.add_argument("--baseline-ref", required=True)
 
+    health_cmd = sub.add_parser("health", help="Compute baseline health summary and stale/incompatibility stats.")
+    health_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    health_cmd.add_argument("--hardware-fingerprint", default="")
+    health_cmd.add_argument("--task-revision", default="")
+
+    prune_cmd = sub.add_parser("prune", help="Prune baseline history entries per test id.")
+    prune_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    prune_cmd.add_argument("--test-id", default="")
+    prune_cmd.add_argument("--keep-last", type=int, default=0, help="Keep only the newest N records (0 disables prune).")
+    prune_cmd.add_argument("--dry-run", action="store_true")
+
     return parser.parse_args()
 
 
@@ -152,6 +163,112 @@ def _cmd_pin(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_health(args: argparse.Namespace) -> int:
+    storage_root = Path(args.storage_root)
+    hardware = str(args.hardware_fingerprint).strip()
+    task_revision = str(args.task_revision).strip()
+    files = sorted(storage_root.glob("*.json")) if storage_root.exists() else []
+
+    tests_total = 0
+    records_total = 0
+    stale_total = 0
+    incompatible_hardware_total = 0
+    incompatible_revision_total = 0
+    per_test: list[dict[str, Any]] = []
+    for file_path in files:
+        test_id = file_path.stem
+        rows = _sort_history_desc(_history(storage_root, test_id))
+        tests_total += 1
+        records_total += len(rows)
+        if len(rows) > 1:
+            stale_total += len(rows) - 1
+
+        hw_mismatch = 0
+        rev_mismatch = 0
+        for row in rows:
+            meta = row.get("baseline_metadata") if isinstance(row, dict) else {}
+            meta = meta if isinstance(meta, dict) else {}
+            row_hw = str(meta.get("hardware_fingerprint", "")).strip()
+            row_rev = str(meta.get("task_revision", "")).strip()
+            if hardware and row_hw != hardware:
+                hw_mismatch += 1
+            if task_revision and row_rev != task_revision:
+                rev_mismatch += 1
+        incompatible_hardware_total += hw_mismatch
+        incompatible_revision_total += rev_mismatch
+        per_test.append(
+            {
+                "test_id": test_id,
+                "records": len(rows),
+                "stale_records": max(0, len(rows) - 1),
+                "hardware_mismatch_records": hw_mismatch,
+                "revision_mismatch_records": rev_mismatch,
+            }
+        )
+
+    print(
+        json.dumps(
+            {
+                "generated_at": datetime.now(UTC).isoformat(),
+                "storage_root": str(storage_root).replace("\\", "/"),
+                "scope": {
+                    "hardware_fingerprint": hardware,
+                    "task_revision": task_revision,
+                },
+                "summary": {
+                    "tests_total": tests_total,
+                    "records_total": records_total,
+                    "stale_records_total": stale_total,
+                    "hardware_mismatch_records_total": incompatible_hardware_total,
+                    "revision_mismatch_records_total": incompatible_revision_total,
+                },
+                "per_test": per_test,
+            },
+            indent=2,
+        )
+    )
+    return 0
+
+
+def _cmd_prune(args: argparse.Namespace) -> int:
+    storage_root = Path(args.storage_root)
+    keep_last = int(args.keep_last)
+    if keep_last <= 0:
+        print(json.dumps({"status": "NOOP", "reason": "keep_last must be > 0"}, indent=2))
+        return 0
+
+    files = sorted(storage_root.glob("*.json")) if storage_root.exists() else []
+    test_filter = str(args.test_id).strip()
+    modified: list[dict[str, Any]] = []
+    for file_path in files:
+        test_id = file_path.stem
+        if test_filter and test_id != test_filter:
+            continue
+        rows = _sort_history_desc(_history(storage_root, test_id))
+        if len(rows) <= keep_last:
+            continue
+        kept = rows[:keep_last]
+        removed = len(rows) - len(kept)
+        modified.append({"test_id": test_id, "removed": removed, "remaining": len(kept)})
+        if args.dry_run:
+            continue
+        payload = {"test_id": test_id, "history": kept}
+        file_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+    print(
+        json.dumps(
+            {
+                "status": "OK",
+                "dry_run": bool(args.dry_run),
+                "keep_last": keep_last,
+                "modified": modified,
+            },
+            indent=2,
+        )
+    )
+    return 0
+
+
 def main() -> int:
     args = _parse_args()
     if args.command == "list":
@@ -162,6 +279,10 @@ def main() -> int:
         return _cmd_resolve(args)
     if args.command == "pin":
         return _cmd_pin(args)
+    if args.command == "health":
+        return _cmd_health(args)
+    if args.command == "prune":
+        return _cmd_prune(args)
     raise SystemExit(f"Unsupported command: {args.command}")
 
 

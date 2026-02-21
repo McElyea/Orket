@@ -1,0 +1,49 @@
+name: Quant Sweep Smoke
+
+on:
+  pull_request:
+    paths:
+      - "scripts/run_quant_sweep.py"
+      - "scripts/run_determinism_harness.py"
+      - "scripts/live_card_benchmark_runner.py"
+      - "scripts/manage_baselines.py"
+      - "tests/application/test_quant_sweep_runner.py"
+      - "tests/application/test_manage_baselines_script.py"
+      - "tests/application/test_benchmark_telemetry_manifest.py"
+      - "benchmarks/configs/quant_sweep_common_sessions.json"
+      - "docs/QUANT_SWEEP_RUNBOOK.md"
+      - ".github/workflows/quant-sweep-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Quant Sweep Unit Coverage
+        run: |
+          python -m pytest \
+            tests/application/test_quant_sweep_runner.py \
+            tests/application/test_manage_baselines_script.py \
+            tests/application/test_benchmark_telemetry_manifest.py -q
+
+      - name: Matrix Dry Run Smoke
+        run: |
+          python scripts/run_quant_sweep.py \
+            --model-id placeholder-model \
+            --quant-tags Q8_0 \
+            --matrix-config benchmarks/configs/quant_sweep_common_sessions.json \
+            --dry-run

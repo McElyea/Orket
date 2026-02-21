@@ -276,3 +276,4 @@ python -m orket.interfaces.cli --archive-build build-my-project --archive-reason
 - Product publish/mirroring: `docs/PRODUCT_PUBLISHING.md`
 - Local cleanup policy: `docs/LOCAL_CLEANUP_POLICY.md`
 - CI lane policy: `docs/TESTING_POLICY.md`
+- Quant sweep operations: `docs/QUANT_SWEEP_RUNBOOK.md`

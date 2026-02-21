@@ -1,0 +1,104 @@
+# Quant Sweep Runbook
+
+## Purpose
+Run reproducible quantization sweeps with strict telemetry, canary gating, and optional hardware sidecar diagnostics.
+
+## Preset Matrix
+Use the shared preset config:
+
+`benchmarks/configs/quant_sweep_common_sessions.json`
+
+## Dry Run
+Resolve matrix, controls, and artifacts without executing model runs:
+
+```powershell
+python scripts/run_quant_sweep.py `
+  --model-id placeholder `
+  --quant-tags Q8_0 `
+  --matrix-config benchmarks/configs/quant_sweep_common_sessions.json `
+  --dry-run
+```
+
+Expected output includes:
+1. `commit_sha`
+2. `models`, `quants`
+3. `experimental_controls`
+4. `canary` settings
+5. sidecar settings if configured
+
+## Full Sweep
+Run preset matrix:
+
+```powershell
+python scripts/run_quant_sweep.py `
+  --model-id placeholder `
+  --quant-tags Q8_0 `
+  --matrix-config benchmarks/configs/quant_sweep_common_sessions.json `
+  --summary-out benchmarks/results/quant_sweep/sweep_summary.json
+```
+
+Notes:
+1. `--model-id` and `--quant-tags` are still required CLI args; matrix config overrides them.
+2. Canary gate aborts sweep if thresholds fail.
+3. Polluted quant rows are excluded from frontier/recommendations by default.
+
+## Polluted Override
+Include polluted rows in frontier logic:
+
+```powershell
+python scripts/run_quant_sweep.py `
+  --model-id qwen2.5-coder:7b `
+  --quant-tags Q8_0,Q6_K,Q4_K_M `
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json `
+  --allow-polluted-frontier
+```
+
+## Optional Hardware Sidecar
+Attach per-quant hardware diagnostics command:
+
+```powershell
+python scripts/run_quant_sweep.py `
+  --model-id qwen2.5-coder:7b `
+  --quant-tags Q8_0,Q6_K `
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json `
+  --hardware-sidecar-template "python scripts/fake_llama_bench.py --model {model_id} --quant {quant_tag}" `
+  --hardware-sidecar-timeout-sec 120
+```
+
+Results are stored under:
+
+`benchmarks/results/quant_sweep/sidecar/<model>/<quant>_hardware_sidecar.json`
+
+## Baseline Operations
+List baselines:
+
+```powershell
+python scripts/manage_baselines.py list --storage-root orket_storage/baselines
+```
+
+Resolve for current run:
+
+```powershell
+python scripts/manage_baselines.py resolve `
+  --storage-root orket_storage/baselines `
+  --test-id 001 `
+  --hardware-fingerprint "<fingerprint>" `
+  --task-revision v1
+```
+
+Health summary:
+
+```powershell
+python scripts/manage_baselines.py health `
+  --storage-root orket_storage/baselines `
+  --hardware-fingerprint "<fingerprint>" `
+  --task-revision v1
+```
+
+Prune old history while keeping newest 3:
+
+```powershell
+python scripts/manage_baselines.py prune `
+  --storage-root orket_storage/baselines `
+  --keep-last 3
+```

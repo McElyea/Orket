@@ -5,6 +5,9 @@ Last updated: 2026-02-21
 ## Outcome
 Deliver production-ready quantization testing on live Orket runs, with strict telemetry, deterministic summaries, and actionable quant recommendations per hardware fingerprint.
 
+## Status
+Current scope is implemented. Ongoing work is regression hardening and operational tuning.
+
 ## Guiding Rules (Updated)
 1. No guessing: missing provider metadata remains explicit (`TOKEN_COUNT_UNAVAILABLE`, `TIMING_UNAVAILABLE`, `TOKEN_AND_TIMING_UNAVAILABLE`).
 2. Phase isolation: model-internal time and wall-clock time are both tracked and never conflated.
@@ -20,6 +23,13 @@ Deliver production-ready quantization testing on live Orket runs, with strict te
 4. Sweep summary includes per-quant comparisons, baseline quant selection, frontier logic, and recommendation text.
 5. Runtime naming migration is in place with backward-compatible aliases for `venue` and `flow`.
 6. Regression coverage exists for telemetry normalization and baseline/vibe logic.
+7. Canary gate is implemented in quant sweep execution.
+8. Run-quality status and polluted-run exclusion are implemented with override policy.
+9. Matrix config presets and dry-run plan resolution are implemented.
+10. Baseline management CLI now supports list/show/resolve/pin/health/prune.
+11. Optional hardware sidecar capture is implemented and joined in sweep summary.
+12. CI smoke workflow is added for quant sweep scripts/tests and matrix dry-run.
+13. Quant sweep runbook is documented in `docs/QUANT_SWEEP_RUNBOOK.md`.
 
 ## Delivery Plan (Remaining Work)
 
