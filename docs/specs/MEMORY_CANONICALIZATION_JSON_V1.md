@@ -26,9 +26,17 @@ Any artifact that uses canonicalization must log:
 2. Hash algorithm where applicable (default `sha256` in v1 contracts)
 
 ## Open Clarifications (Phase 0 Closure Required)
-1. Unicode normalization form (`NFC` vs `NFD`)
-2. Datetime normalization format (ISO 8601 UTC policy details)
-3. Missing vs `null` canonical policy per field class
+1. Unicode normalization form: `NFC` (required for string canonicalization).
+2. Datetime normalization format: ISO 8601 UTC with trailing `Z`.
+3. Missing vs `null` policy:
+missing means field omitted;
+`null` means field explicitly present with null value.
+Canonicalization must preserve this distinction.
+
+## Determinism Notes
+1. Producers must normalize strings to `NFC` before serialization.
+2. Datetime values must be normalized to UTC before canonicalization.
+3. Required fields may not be omitted; optional fields may be omitted or explicitly `null` per schema.
 
 ## Evolution Rules
 1. Changes to required canonicalization behavior require a new version.

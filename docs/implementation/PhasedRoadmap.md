@@ -48,6 +48,13 @@ Next execution slice:
 1. Wire `scripts/check_memory_determinism.py` into `.gitea/workflows/quality.yml`. Status: done (2026-02-21)
 2. Add workflow gate coverage in `tests/platform/test_quality_workflow_gates.py`. Status: done (2026-02-21)
 
+Next execution slice:
+1. Resolve Phase 0 spec clarifications for canonicalization edge behavior. Status: done (2026-02-21)
+2. Resolve retrieval deterministic-mode backend contract in retrieval trace spec. Status: done (2026-02-21)
+3. Resolve buffer recovery lease defaults in buffer state-machine spec. Status: done (2026-02-21)
+4. Resolve deterministic trace retention baseline in determinism trace spec. Status: done (2026-02-21)
+5. Add contract tests for these clarified rules. Status: done (2026-02-21)
+
 1. Telemetry contract hardening across providers.
 Success criteria:
 1. Providers emit only canonical token/timing states.

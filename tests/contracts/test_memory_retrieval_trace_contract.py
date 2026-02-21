@@ -32,6 +32,8 @@ def test_memory_retrieval_trace_schema_contract() -> None:
         "rank",
         "score` descending",
         "record_id` ascending",
+        "backend-native deterministic mode",
+        "deterministic wrapper re-ranking",
     ]
 
     missing = [token for token in required_tokens if token not in text]
@@ -52,6 +54,8 @@ def test_memory_buffer_state_machine_has_single_owner_lease_rule() -> None:
         "A `commit_id` may be owned by exactly one recovery worker at a time.",
         "lease-based with explicit timeout and renewal",
         "Expired leases become eligible for reassignment.",
+        "Lease timeout default (v1): 30 seconds.",
+        "every 10 seconds",
     ]
     missing = [token for token in required_tokens if token not in text]
     assert not missing, f"Missing required buffer recovery contract tokens: {missing}"

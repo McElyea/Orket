@@ -51,6 +51,11 @@ Define required trace fields for runs that claim deterministic behavior.
 2. `event_id` is excluded from equivalence matching.
 3. Structural/behavioral matching is required; semantic intent matching is out of scope for this schema.
 
+## Retention and Size Baseline (v1)
+1. Deterministic run traces must be retained for at least 14 days.
+2. Trace artifact size cap is 10 MB per run artifact.
+3. If cap is reached, truncation must be explicit and include a truncation marker field in the artifact metadata.
+
 ## Evolution Rules
 1. Required field changes require a version increment.
 2. Additive optional fields are permitted within `v1`.

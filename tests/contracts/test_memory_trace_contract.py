@@ -31,6 +31,9 @@ def test_memory_determinism_trace_schema_contract() -> None:
         "tool_result_fingerprint",
         "side_effect_fingerprint",
         "excluded from equivalence matching",
+        "retained for at least 14 days",
+        "10 MB per run artifact",
+        "truncation marker field",
     ]
 
     missing = [token for token in required_tokens if token not in text]
@@ -49,3 +52,16 @@ def test_memory_determinism_trace_schema_has_required_output_shape_examples() ->
 
     missing = [example for example in required_examples if example not in text]
     assert not missing, "Determinism trace schema must include text/plan/code_patch canonical examples."
+
+
+def test_memory_canonicalization_schema_has_edge_behavior_contract() -> None:
+    path = Path("docs/specs/MEMORY_CANONICALIZATION_JSON_V1.md")
+    text = _read(path)
+    required_tokens = [
+        "Unicode normalization form: `NFC`",
+        "ISO 8601 UTC with trailing `Z`",
+        "missing means field omitted",
+        "null` means field explicitly present with null value",
+    ]
+    missing = [token for token in required_tokens if token not in text]
+    assert not missing, f"Missing canonicalization edge-behavior tokens: {missing}"

@@ -45,8 +45,12 @@ Define retrieval trace fields required for deterministic replay and equivalence 
 5. Score value equality is not required for equivalence in `v1` unless later policy overrides it.
 
 ## Open Clarifications (Phase 0 Closure Required)
-1. Backend deterministic-mode contract for ANN behavior across vendors.
-2. Any vendor-specific fallback or wrapper/re-ranking requirements.
+1. Deterministic backend contract (v1):
+either backend-native deterministic mode must be enabled,
+or retrieval results must pass through deterministic wrapper re-ranking before use.
+2. Deterministic wrapper minimum behavior:
+stable ranking by score desc + record_id asc tie-break,
+and deterministic filter application order.
 
 ## Evolution Rules
 1. Required field changes require a version increment.

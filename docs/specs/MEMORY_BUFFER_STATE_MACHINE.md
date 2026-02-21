@@ -42,8 +42,9 @@ different payload fingerprint -> hard error (`payload_mismatch`)
 3. Partial commit application is forbidden.
 
 ## Open Clarifications (Phase 0 Closure Required)
-1. Lease timeout defaults and renewal cadence.
-2. Recovery worker reassignment policy after lease expiry.
+1. Lease timeout default (v1): 30 seconds.
+2. Renewal cadence recommendation (v1): renew by current owner every 10 seconds while `commit_pending`.
+3. Reassignment policy (v1): once lease is expired, any recovery worker may acquire ownership.
 
 ## Evolution Rules
 1. State or reason-code contract changes require version increment.
