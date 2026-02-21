@@ -1,0 +1,25 @@
+{
+  "models": [
+    "qwen2.5-coder:7b",
+    "llama3.1:8b"
+  ],
+  "quants": [
+    "Q8_0",
+    "Q6_K",
+    "Q4_K_M"
+  ],
+  "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+  "runs_per_quant": 3,
+  "task_limit": 0,
+  "runtime_target": "local-hardware",
+  "execution_mode": "live-card",
+  "adherence_threshold": 0.97,
+  "latency_ceiling": 12.0,
+  "seed": 1337,
+  "threads": 0,
+  "affinity_policy": "",
+  "warmup_steps": 2,
+  "canary_runs": 10,
+  "canary_task_limit": 2,
+  "canary_latency_variance_threshold": 0.03
+}

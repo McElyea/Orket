@@ -8,6 +8,11 @@ Use the shared preset config:
 
 `benchmarks/configs/quant_sweep_common_sessions.json`
 
+Additional preset packs:
+1. `benchmarks/configs/quant_sweep_logic_only.json`
+2. `benchmarks/configs/quant_sweep_refactor_heavy.json`
+3. `benchmarks/configs/quant_sweep_mixed.json`
+
 ## Dry Run
 Resolve matrix, controls, and artifacts without executing model runs:
 

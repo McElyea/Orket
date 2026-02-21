@@ -54,26 +54,22 @@ Success criteria:
 3. `--include-invalid` only affects frontier/comparison visibility.
 
 ## Next (After Now)
-1. Add matrix preset pack for execution modes.
-Deliverables:
-1. `logic_only`, `refactor_heavy`, `mixed` preset configs.
-2. Explicit controls per preset (`seed`, `threads`, `affinity_policy`, `warmup_steps`).
-
-2. Add self-hosted full quant sweep workflow.
+1. Add self-hosted full quant sweep workflow.
 Deliverables:
 1. Manual-dispatch workflow for real model runs.
 2. Sweep summary + sidecar artifact upload.
 3. Commit/provenance metadata in artifacts.
 
-3. Integrate KPI policy checker into full workflow.
+2. Integrate KPI policy checker into full workflow.
 Deliverables:
 1. Real sweep summary used as KPI input.
 2. Workflow fails on SLO violation.
 
-4. Baseline retention automation.
+3. Separate smoke and full workflows by contract.
 Deliverables:
-1. Age/count retention policy doc.
-2. Scheduled prune command path with pin-safe behavior.
+1. Smoke remains deterministic and model-free.
+2. Full workflow is model-loaded and sidecar-capable.
+3. Both paths publish distinct, non-overlapping artifact contracts.
 
 ## Later
 1. Visualization/reporting script (TPS vs adherence, frontier annotations) using only validated telemetry.
