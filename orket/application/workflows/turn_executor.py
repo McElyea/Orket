@@ -136,6 +136,27 @@ class TurnExecutor:
         turn_index = int(context.get("turn_index", 0))
         turn_trace_id = f"{session_id}:{issue_id}:{role_name}:{turn_index}"
         started_at = time.perf_counter()
+        current_turn: Optional[ExecutionTurn] = None
+
+        def _emit_failure_traces(error: str, failure_type: str) -> None:
+            self._append_memory_event(
+                context,
+                role_name=role_name,
+                interceptor="on_turn_failure",
+                decision_type=str(failure_type).strip() or "turn_failed",
+            )
+            self._emit_memory_traces(
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+                issue=issue,
+                role=role,
+                context=context,
+                turn=current_turn,
+                failure_reason=str(error or "").strip() or "turn_failed",
+                failure_type=str(failure_type or "").strip() or "turn_failed",
+            )
 
         try:
             if self._memory_trace_enabled(context):
@@ -153,6 +174,7 @@ class TurnExecutor:
             )
             if middleware_outcome and middleware_outcome.short_circuit:
                 reason = middleware_outcome.reason or "short-circuit before_prompt"
+                _emit_failure_traces(reason, "before_prompt_short_circuit")
                 return TurnResult.failed(reason, should_retry=False)
             self._append_memory_event(
                 context,
@@ -210,6 +232,7 @@ class TurnExecutor:
             )
             if middleware_outcome and middleware_outcome.short_circuit:
                 reason = middleware_outcome.reason or "short-circuit after_model"
+                _emit_failure_traces(reason, "after_model_short_circuit")
                 return TurnResult.failed(reason, should_retry=False)
             self._append_memory_event(
                 context,
@@ -243,6 +266,7 @@ class TurnExecutor:
                 role_name=role_name,
                 context=context,
             )
+            current_turn = turn
             self._synthesize_required_status_tool_call(turn, context)
             contract_violations = self._collect_contract_violations(turn, role, context)
             if contract_violations:
@@ -280,6 +304,7 @@ class TurnExecutor:
                 )
                 if middleware_outcome and middleware_outcome.short_circuit:
                     reason = middleware_outcome.reason or "short-circuit after_model"
+                    _emit_failure_traces(reason, "after_model_short_circuit")
                     return TurnResult.failed(reason, should_retry=False)
                 self._append_memory_event(
                     context,
@@ -294,6 +319,7 @@ class TurnExecutor:
                     role_name=role_name,
                     context=context,
                 )
+                current_turn = turn
                 self._synthesize_required_status_tool_call(turn, context)
                 contract_violations = self._collect_contract_violations(turn, role, context)
                 if contract_violations:
@@ -317,6 +343,7 @@ class TurnExecutor:
                         },
                         self.workspace,
                     )
+                    _emit_failure_traces(primary_reason, "contract_violation")
                     return TurnResult.failed(
                         self._deterministic_failure_message(primary_reason),
                         should_retry=False,
@@ -406,6 +433,7 @@ class TurnExecutor:
                 },
                 self.workspace
             )
+            _emit_failure_traces(str(e), "state_violation")
             return TurnResult.failed(f"State violation: {e}", should_retry=False)
 
         except ToolValidationError as e:
@@ -423,6 +451,7 @@ class TurnExecutor:
                 },
                 self.workspace
             )
+            _emit_failure_traces(str(e), "tool_violation")
             return TurnResult.governance_violation(e.violations)
 
         except ModelTimeoutError as e:
@@ -440,6 +469,7 @@ class TurnExecutor:
                 },
                 self.workspace
             )
+            _emit_failure_traces(str(e), "timeout")
             return TurnResult.failed(str(e), should_retry=True)
 
         except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as e:
@@ -459,6 +489,7 @@ class TurnExecutor:
                 },
                 self.workspace
             )
+            _emit_failure_traces(str(e), type(e).__name__)
             return TurnResult.failed(f"Unexpected error: {e}", should_retry=False)
 
     def _validate_preconditions(
@@ -1982,18 +2013,18 @@ class TurnExecutor:
         issue: IssueConfig,
         role: RoleConfig,
         context: Dict[str, Any],
-        turn: ExecutionTurn,
+        turn: Optional[ExecutionTurn] = None,
+        failure_reason: str = "",
+        failure_type: str = "",
     ) -> None:
         if not self._memory_trace_enabled(context):
             return
 
         normalization_version = str(context.get("normalization_version") or "json-v1").strip() or "json-v1"
         tool_profile_version = str(context.get("tool_profile_version") or "unknown-v1").strip() or "unknown-v1"
-        output_struct = {"type": "text", "sections": ["body"]}
-        output_shape_hash = self._hash_payload(output_struct)
 
         trace_tool_calls = []
-        for call in (turn.tool_calls or []):
+        for call in ((turn.tool_calls if turn is not None else []) or []):
             trace_tool_calls.append(
                 {
                     "tool_name": str(call.tool or "").strip(),
@@ -2022,13 +2053,15 @@ class TurnExecutor:
                     }
                 )
         else:
+            fallback_interceptor = "on_turn_failure" if failure_reason else "turn"
+            fallback_decision = str(failure_type).strip() if failure_reason else "execute_turn"
             trace_events = [
                 {
                     "event_id": f"{session_id}:{issue_id}:{role_name}:{turn_index}:0",
                     "index": 0,
                     "role": role_name,
-                    "interceptor": "turn",
-                    "decision_type": "execute_turn",
+                    "interceptor": fallback_interceptor,
+                    "decision_type": fallback_decision or "execute_turn",
                     "tool_calls": trace_tool_calls,
                     "guardrails_triggered": list(context.get("guardrails_triggered") or []),
                     "retrieval_event_ids": [
@@ -2038,6 +2071,17 @@ class TurnExecutor:
                     ],
                 }
             ]
+
+        output_type = str(context.get("output_type") or "").strip()
+        if not output_type:
+            output_type = "error" if failure_reason else "text"
+        output_struct = {"type": output_type}
+        if failure_reason:
+            output_struct["status"] = "failed"
+            output_struct["failure_type"] = str(failure_type).strip() or "turn_failed"
+        elif output_type == "text":
+            output_struct["sections"] = ["body"]
+        output_shape_hash = self._hash_payload(output_struct)
 
         memory_trace = {
             "run_id": session_id,
@@ -2050,7 +2094,7 @@ class TurnExecutor:
             "determinism_trace_schema_version": "memory.determinism_trace.v1",
             "events": trace_events,
             "output": {
-                "output_type": str(context.get("output_type") or "text").strip() or "text",
+                "output_type": output_type,
                 "output_shape_hash": output_shape_hash,
                 "normalization_version": normalization_version,
             },

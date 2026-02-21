@@ -19,34 +19,26 @@ Use this file to:
 4. Update `Last updated` whenever phase priorities change.
 
 ## Phase 0: Active Now
-1. Deterministic memory and persistence program: instrumentation implementation.
-Track: [Memory Persistence Plan](MEMORY_PERSISTENCE_PLAN.md)
-Deliverables:
-1. Emit `memory.determinism_trace.v1` artifacts from runtime execution paths.
-2. Emit `memory.retrieval_trace.v1` artifacts linked by `retrieval_event_id` and `event_id`.
-3. Integrate `scripts/check_memory_determinism.py` into execution/reporting paths beyond workflow smoke.
-4. Add integration tests covering deterministic trace emission and equivalence preconditions.
-
-2. Telemetry contract hardening across providers.
+1. Telemetry contract hardening across providers.
 Success criteria:
 1. Providers emit only canonical token/timing states.
 2. Streaming and non-streaming transitions are consistent.
 3. Adapter integration tests cover both paths.
 4. All emitted artifacts include `execution_lane` and `vram_profile`.
 
-3. Orchestration-overhead consistency guarantees.
+2. Orchestration-overhead consistency guarantees.
 Success criteria:
 1. `internal_model_seconds` present on success and failure paths.
 2. `orchestration_overhead_ratio` present on success and failure paths.
 3. `run_quality_reasons` present on success and failure paths.
 
-4. GPU sidecar parse policy finalization.
+3. GPU sidecar parse policy finalization.
 Success criteria:
 1. Required fields parsed as canonical snake_case keys.
 2. Optional fields parsed when present; missing optionals never fail execution.
 3. `sidecar_parse_status` and `sidecar_parse_errors` emitted deterministically.
 
-5. Valid-run policy enforcement end-to-end.
+4. Valid-run policy enforcement end-to-end.
 Success criteria:
 1. Invalid runs excluded from KPI aggregates always.
 2. Invalid runs excluded from recommendations by default.

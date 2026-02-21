@@ -37,6 +37,75 @@ jobs:
           --raw-out benchmarks/results/nightly_phase5_determinism_report.json
           --scored-out benchmarks/results/nightly_phase5_scored_report.json
 
+      - name: Enforce Memory Determinism Contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          out_dir = Path("benchmarks/results/memory")
+          out_dir.mkdir(parents=True, exist_ok=True)
+          trace = {
+              "run_id": "nightly-memory-fixture",
+              "workflow_id": "nightly_benchmark",
+              "memory_snapshot_id": "snapshot-fixture",
+              "visibility_mode": "read_only",
+              "model_config_id": "fixture-model",
+              "policy_set_id": "fixture-policy",
+              "determinism_trace_schema_version": "memory.determinism_trace.v1",
+              "events": [
+                  {
+                      "event_id": "evt-0",
+                      "index": 0,
+                      "role": "bench",
+                      "interceptor": "before_prompt",
+                      "decision_type": "prompt_ready",
+                      "tool_calls": [],
+                      "guardrails_triggered": [],
+                      "retrieval_event_ids": ["ret-0"],
+                  }
+              ],
+              "output": {
+                  "output_type": "text",
+                  "output_shape_hash": "fixture-shape-hash",
+                  "normalization_version": "json-v1",
+              },
+              "metadata": {"truncated": False},
+          }
+          retrieval = {
+              "events": [
+                  {
+                      "retrieval_event_id": "ret-0",
+                      "run_id": "nightly-memory-fixture",
+                      "event_id": "evt-0",
+                      "policy_id": "fixture-policy",
+                      "policy_version": "v1",
+                      "query_normalization_version": "json-v1",
+                      "query_fingerprint": "fixture-query",
+                      "retrieval_mode": "text_to_vector",
+                      "candidate_count": 0,
+                      "selected_records": [],
+                      "applied_filters": {},
+                      "retrieval_trace_schema_version": "memory.retrieval_trace.v1",
+                  }
+              ],
+              "retrieval_trace_schema_version": "memory.retrieval_trace.v1",
+              "metadata": {"truncated": False},
+          }
+          (out_dir / "memory_trace_fixture.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
+          (out_dir / "memory_retrieval_trace_fixture.json").write_text(json.dumps(retrieval, indent=2), encoding="utf-8")
+          PY
+          python scripts/check_memory_determinism.py \
+            --trace benchmarks/results/memory/memory_trace_fixture.json \
+            --retrieval-trace benchmarks/results/memory/memory_retrieval_trace_fixture.json \
+            --out benchmarks/results/nightly_memory_determinism_check.json
+          python scripts/compare_memory_determinism.py \
+            --left benchmarks/results/memory/memory_trace_fixture.json \
+            --right benchmarks/results/memory/memory_trace_fixture.json \
+            --left-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
+            --right-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
+            --out benchmarks/results/nightly_memory_determinism_compare.json
+
       - name: Build Trend Report
         run: >
           python scripts/report_benchmark_trends.py
