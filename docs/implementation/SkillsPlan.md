@@ -94,18 +94,14 @@ Exit criteria:
 1. Green deterministic contract checks in CI.
 2. Clear operator diagnostics for each canonical loader error.
 
-## Initial Backlog
-1. Add `docs/specs/SKILL_CONTRACT_SCHEMA.md`.
-2. Add `docs/specs/SKILL_LOADER_ERROR_SCHEMA.md`.
-3. Add `tests/contracts/test_skill_contract_schema.py`.
-4. Add `tests/contracts/test_skill_loader_error_codes.py`.
-5. Add `tests/application/test_skill_loader_rejects_invalid_manifest.py`.
-6. Add `tests/application/test_skill_validation_metadata.py`.
-7. Add `scripts/check_skill_contracts.py`.
+## Remaining Backlog
+1. Add Skill adapter/runtime mapping for `entrypoint_id -> tool_profile_id/tool_profile_version`.
+2. Add adapter enforcement tests for undeclared entrypoint invocation rejection.
+3. Add adapter enforcement tests for undeclared permission usage rejection.
+4. Wire `scripts/check_skill_contracts.py` into the quality lane after adapter enforcement lands.
 
 ## Definition of Done (v1)
 1. Skill loadability is contract-first and enforced mechanically.
 2. Loader error output is canonical and machine-readable.
 3. Determinism eligibility metadata is stable and reproducible.
 4. Skill entrypoints integrate with tool profiles without undeclared behavior leaks.
-

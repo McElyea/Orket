@@ -19,13 +19,11 @@ Use this file to:
 4. Update `Last updated` whenever phase priorities change.
 
 ## Phase 0: Active Now
-1. Skill contract implementation and loader enforcement.
+1. Skill runtime adapter linkage.
 Track: [Skills Implementation Plan](SkillsPlan.md)
 Deliverables:
-1. Freeze Skill contract schemas and loader error schema.
-2. Implement Skill validation metadata and deterministic eligibility checks.
-3. Enforce contract-first load behavior for invalid Skills.
-4. Wire Skill entrypoints to tool profile linkage in adapter/runtime path.
+1. Wire Skill entrypoints to tool profile linkage in adapter/runtime path.
+2. Add integration tests for declared-entrypoint-only invocation and permission guard enforcement.
 
 ## Phase 1: Next Up
 1. No open Phase 1 items.
