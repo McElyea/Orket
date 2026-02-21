@@ -106,6 +106,9 @@ jobs:
             --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json \
             --context benchmarks/results/context_sweep/context_ceiling.json \
             --thermal benchmarks/results/thermal/thermal_profile.json
+          python scripts/check_lab_guards.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --allow-skip
 
       - name: Enforce KPI Policy
         run: |

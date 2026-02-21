@@ -201,6 +201,17 @@ python scripts/check_explorer_schema_contracts.py `
   --thermal benchmarks/results/thermal/thermal_profile.json
 ```
 
+## Lab Guard Check
+Validate cooldown + VRAM profile guard diagnostics from sweep summary:
+
+```powershell
+python scripts/check_lab_guards.py `
+  --summary benchmarks/results/quant_sweep/sweep_summary.json `
+  --cooldown-target-c 50 `
+  --vram-profile safe `
+  --allow-skip
+```
+
 ## Baseline Operations
 List baselines:
 
