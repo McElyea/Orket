@@ -138,6 +138,8 @@ class TurnExecutor:
         started_at = time.perf_counter()
 
         try:
+            if self._memory_trace_enabled(context):
+                context["_memory_trace_events"] = []
             # 1. Validate we can execute this turn
             self._validate_preconditions(issue, role, context)
 
@@ -152,6 +154,12 @@ class TurnExecutor:
             if middleware_outcome and middleware_outcome.short_circuit:
                 reason = middleware_outcome.reason or "short-circuit before_prompt"
                 return TurnResult.failed(reason, should_retry=False)
+            self._append_memory_event(
+                context,
+                role_name=role_name,
+                interceptor="before_prompt",
+                decision_type="prompt_ready",
+            )
             prompt_hash = self._message_hash(messages)
 
             # 3. Call LLM (async)
@@ -203,6 +211,12 @@ class TurnExecutor:
             if middleware_outcome and middleware_outcome.short_circuit:
                 reason = middleware_outcome.reason or "short-circuit after_model"
                 return TurnResult.failed(reason, should_retry=False)
+            self._append_memory_event(
+                context,
+                role_name=role_name,
+                interceptor="after_model",
+                decision_type="model_response_processed",
+            )
             response_content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
             response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
             self._write_turn_artifact(
@@ -267,6 +281,12 @@ class TurnExecutor:
                 if middleware_outcome and middleware_outcome.short_circuit:
                     reason = middleware_outcome.reason or "short-circuit after_model"
                     return TurnResult.failed(reason, should_retry=False)
+                self._append_memory_event(
+                    context,
+                    role_name=role_name,
+                    interceptor="after_model",
+                    decision_type="model_response_reprompt_processed",
+                )
 
                 turn = self._parse_response(
                     response=response,
@@ -837,6 +857,22 @@ class TurnExecutor:
                     }
                     violations.append(tool_call.result["error"])
                     continue
+                self._append_memory_event(
+                    context,
+                    role_name=turn.role,
+                    interceptor="before_tool",
+                    decision_type="tool_call_ready",
+                    tool_calls=[
+                        {
+                            "tool_name": tool_call.tool,
+                            "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
+                            "normalized_args": dict(tool_call.args or {}),
+                            "normalization_version": str(context.get("normalization_version") or "json-v1"),
+                            "tool_result_fingerprint": self._hash_payload({}),
+                            "side_effect_fingerprint": None,
+                        }
+                    ],
+                )
 
                 # --- MECHANICAL GOVERNANCE: Tool Gate Enforcement ---
                 gate_violation = self.tool_gate.validate(
@@ -943,6 +979,22 @@ class TurnExecutor:
                 )
 
                 tool_call.result = result
+                self._append_memory_event(
+                    context,
+                    role_name=turn.role,
+                    interceptor="after_tool",
+                    decision_type="tool_call_result",
+                    tool_calls=[
+                        {
+                            "tool_name": tool_call.tool,
+                            "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
+                            "normalized_args": dict(tool_call.args or {}),
+                            "normalization_version": str(context.get("normalization_version") or "json-v1"),
+                            "tool_result_fingerprint": self._hash_payload(result if isinstance(result, dict) else {}),
+                            "side_effect_fingerprint": None,
+                        }
+                    ],
+                )
                 self._persist_tool_result(
                     session_id=session_id,
                     issue_id=turn.issue_id,
@@ -1895,6 +1947,31 @@ class TurnExecutor:
         normalized = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
+    def _append_memory_event(
+        self,
+        context: Dict[str, Any],
+        *,
+        role_name: str,
+        interceptor: str,
+        decision_type: str,
+        tool_calls: Optional[List[Dict[str, Any]]] = None,
+        guardrails_triggered: Optional[List[str]] = None,
+        retrieval_event_ids: Optional[List[str]] = None,
+    ) -> None:
+        events = context.get("_memory_trace_events")
+        if not isinstance(events, list):
+            return
+        events.append(
+            {
+                "role": role_name,
+                "interceptor": str(interceptor).strip(),
+                "decision_type": str(decision_type).strip(),
+                "tool_calls": list(tool_calls or []),
+                "guardrails_triggered": list(guardrails_triggered or []),
+                "retrieval_event_ids": list(retrieval_event_ids or []),
+            }
+        )
+
     def _emit_memory_traces(
         self,
         *,
@@ -1928,16 +2005,24 @@ class TurnExecutor:
                 }
             )
 
-        memory_trace = {
-            "run_id": session_id,
-            "workflow_id": str(context.get("workflow_id") or "turn_executor").strip() or "turn_executor",
-            "memory_snapshot_id": str(context.get("memory_snapshot_id") or "unknown").strip() or "unknown",
-            "visibility_mode": str(context.get("visibility_mode") or "off").strip() or "off",
-            "model_config_id": str(context.get("model_config_id") or context.get("selected_model") or "unknown").strip()
-            or "unknown",
-            "policy_set_id": str(context.get("policy_set_id") or "unknown").strip() or "unknown",
-            "determinism_trace_schema_version": "memory.determinism_trace.v1",
-            "events": [
+        collected_events = context.get("_memory_trace_events") if isinstance(context.get("_memory_trace_events"), list) else []
+        if collected_events:
+            trace_events = []
+            for idx, evt in enumerate(collected_events):
+                trace_events.append(
+                    {
+                        "event_id": f"{session_id}:{issue_id}:{role_name}:{turn_index}:{idx}",
+                        "index": idx,
+                        "role": str(evt.get("role", role_name)),
+                        "interceptor": str(evt.get("interceptor", "turn")),
+                        "decision_type": str(evt.get("decision_type", "execute_turn")),
+                        "tool_calls": list(evt.get("tool_calls") or []),
+                        "guardrails_triggered": list(evt.get("guardrails_triggered") or []),
+                        "retrieval_event_ids": list(evt.get("retrieval_event_ids") or []),
+                    }
+                )
+        else:
+            trace_events = [
                 {
                     "event_id": f"{session_id}:{issue_id}:{role_name}:{turn_index}:0",
                     "index": 0,
@@ -1952,7 +2037,18 @@ class TurnExecutor:
                         if str((row or {}).get("retrieval_event_id", "")).strip()
                     ],
                 }
-            ],
+            ]
+
+        memory_trace = {
+            "run_id": session_id,
+            "workflow_id": str(context.get("workflow_id") or "turn_executor").strip() or "turn_executor",
+            "memory_snapshot_id": str(context.get("memory_snapshot_id") or "unknown").strip() or "unknown",
+            "visibility_mode": str(context.get("visibility_mode") or "off").strip() or "off",
+            "model_config_id": str(context.get("model_config_id") or context.get("selected_model") or "unknown").strip()
+            or "unknown",
+            "policy_set_id": str(context.get("policy_set_id") or "unknown").strip() or "unknown",
+            "determinism_trace_schema_version": "memory.determinism_trace.v1",
+            "events": trace_events,
             "output": {
                 "output_type": str(context.get("output_type") or "text").strip() or "text",
                 "output_shape_hash": output_shape_hash,

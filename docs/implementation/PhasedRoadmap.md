@@ -70,6 +70,10 @@ Next execution slice:
 2. Enforce max trace size + truncation marker in `scripts/check_memory_determinism.py`. Status: done (2026-02-21)
 3. Add truncation enforcement tests in `tests/application/test_check_memory_determinism_script.py`. Status: done (2026-02-21)
 
+Next execution slice:
+1. Expand runtime memory trace events from single turn event to lifecycle events (`before_prompt`, `after_model`, `before_tool`, `after_tool`). Status: done (2026-02-21)
+2. Update emission coverage tests for lifecycle event presence. Status: done (2026-02-21)
+
 ## Phase 1: Next Up
 1. Thermal gate and cooldown policy checks for GPU lab sessions.
 Deliverables:

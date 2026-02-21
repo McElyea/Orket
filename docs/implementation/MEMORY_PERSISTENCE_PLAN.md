@@ -284,7 +284,7 @@ Exit criteria:
 2. Runbook covers triage for memory determinism failures.
 
 ## Backlog (Remaining Work)
-1. Expand runtime trace emission beyond current turn-level scaffolding to full interceptor lifecycle coverage.
+1. Complete runtime trace emission for failure-path lifecycle events (`on_turn_failure`, blocked/terminal paths) to match success-path interceptor coverage.
 2. Add persistence-backed (non in-memory) isolation/idempotency/recovery integration tests.
 3. Integrate memory determinism checks into release/report pipelines beyond quality workflow smoke.
 

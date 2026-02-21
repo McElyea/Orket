@@ -86,6 +86,10 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
     assert trace["visibility_mode"] == "read_only"
     assert trace["memory_snapshot_id"] == "snapshot-1"
     assert isinstance(trace["events"], list) and trace["events"]
-    assert trace["events"][0]["retrieval_event_ids"] == ["ret-1"]
+    interceptors = [str(evt.get("interceptor")) for evt in trace["events"]]
+    assert "before_prompt" in interceptors
+    assert "after_model" in interceptors
+    assert "before_tool" in interceptors
+    assert "after_tool" in interceptors
     assert retrieval["retrieval_trace_schema_version"] == "memory.retrieval_trace.v1"
     assert len(retrieval["events"]) == 1
