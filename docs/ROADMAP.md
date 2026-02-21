@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add explorer index regression fixture snapshots.
-Deliverables:
-1. Store representative index fixtures for schema regression tests.
-2. Verify ingestion checker behavior on fixture drift.
-3. Keep fixtures minimal and additive.
-
-2. Add workflow-level report summary block for explorer checks.
+1. Add workflow-level report summary block for explorer checks.
 Deliverables:
 1. Emit a compact summary of ingestion/rollup/guard statuses at workflow end.
 2. Include links/paths to generated check artifacts.
 3. Keep summary machine-readable for downstream dashboards.
+
+2. Add context-sweep fixture set for profile-policy regression.
+Deliverables:
+1. Add minimal fixtures for safe/balanced/stress policy validation.
+2. Verify policy checker catches threshold/order drift on fixture mutations.
+3. Keep fixture updates additive and reviewed with roadmap changes.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

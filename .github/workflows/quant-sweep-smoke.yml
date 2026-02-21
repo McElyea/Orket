@@ -36,6 +36,8 @@ on:
       - "tests/application/test_context_sweep_output_contracts.py"
       - "tests/application/test_build_explorer_artifact_index.py"
       - "tests/application/test_check_explorer_ingestion.py"
+      - "tests/fixtures/explorer_index/valid_index.json"
+      - "tests/fixtures/explorer_index/invalid_missing_kind.json"
       - "tests/application/test_build_context_sweep_rollup.py"
       - "tests/application/test_context_rollup_contract.py"
       - "tests/application/test_cleanup_context_sweep_artifacts.py"

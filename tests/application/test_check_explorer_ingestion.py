@@ -57,3 +57,24 @@ def test_check_explorer_ingestion_fails_on_missing_fields(tmp_path: Path) -> Non
     payload = json.loads(result.stdout)
     assert payload["status"] == "FAIL"
     assert any("MISSING_REQUIRED_KINDS" in failure for failure in payload["failures"])
+
+
+def test_check_explorer_ingestion_fixture_regression_cases(tmp_path: Path) -> None:
+    valid_fixture = Path("tests/fixtures/explorer_index/valid_index.json")
+    invalid_fixture = Path("tests/fixtures/explorer_index/invalid_missing_kind.json")
+
+    valid_run = subprocess.run(
+        ["python", "scripts/check_explorer_ingestion.py", "--index", str(valid_fixture)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert valid_run.returncode == 0, valid_run.stdout + "\n" + valid_run.stderr
+
+    invalid_run = subprocess.run(
+        ["python", "scripts/check_explorer_ingestion.py", "--index", str(invalid_fixture)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert invalid_run.returncode == 2

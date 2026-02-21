@@ -1,0 +1,19 @@
+{
+  "rows": [
+    {
+      "kind": "frontier",
+      "schema_version": "explorer.frontier.v1",
+      "provenance_ref": "run:sha"
+    },
+    {
+      "kind": "context",
+      "schema_version": "explorer.context_ceiling.v1",
+      "provenance_ref": "run:sha"
+    },
+    {
+      "kind": "thermal",
+      "schema_version": "explorer.thermal_stability.v1",
+      "provenance_ref": "run:sha"
+    }
+  ]
+}
