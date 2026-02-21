@@ -8,7 +8,7 @@ on:
       storage_root:
         description: "Baseline storage root"
         required: false
-        default: "orket_storage/baselines"
+        default: ".orket/durable/diagnostics/baselines"
       keep_last:
         description: "Unpinned baseline records to keep per test id"
         required: false
@@ -31,13 +31,13 @@ jobs:
         run: |
           mkdir -p benchmarks/results/quant_sweep
           python scripts/manage_baselines.py health \
-            --storage-root "${{ github.event.inputs.storage_root || 'orket_storage/baselines' }}" \
+            --storage-root "${{ github.event.inputs.storage_root || '.orket/durable/diagnostics/baselines' }}" \
             > benchmarks/results/quant_sweep/baseline_health_weekly.json
 
       - name: Baseline Prune Plan (Dry Run)
         run: |
           python scripts/manage_baselines.py prune \
-            --storage-root "${{ github.event.inputs.storage_root || 'orket_storage/baselines' }}" \
+            --storage-root "${{ github.event.inputs.storage_root || '.orket/durable/diagnostics/baselines' }}" \
             --keep-last "${{ github.event.inputs.keep_last || '10' }}" \
             --dry-run \
             > benchmarks/results/quant_sweep/baseline_prune_weekly.json

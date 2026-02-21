@@ -55,7 +55,7 @@ on:
       - "benchmarks/configs/context_sweep_profiles.json"
       - "benchmarks/configs/sidecar_profiles.json"
       - "docs/QUANT_SWEEP_RUNBOOK.md"
-      - ".github/workflows/quant-sweep-smoke.yml"
+      - ".gitea/workflows/quant-sweep-smoke.yml"
   workflow_dispatch:
 
 jobs:
