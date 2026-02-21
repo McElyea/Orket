@@ -19,6 +19,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--cooldown-target-c", type=float, default=50.0)
     parser.add_argument("--vram-profile", default="safe", choices=["safe", "balanced", "stress"])
     parser.add_argument("--allow-skip", action="store_true", help="Treat SKIP status as success.")
+    parser.add_argument("--out", default="", help="Optional path to write check report JSON.")
     return parser.parse_args()
 
 
@@ -91,7 +92,12 @@ def main() -> int:
         "failures": failures,
         "skip_reasons": skips,
     }
-    print(json.dumps(report, indent=2))
+    text = json.dumps(report, indent=2)
+    print(text)
+    if str(args.out or "").strip():
+        out_path = Path(str(args.out))
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(text + "\n", encoding="utf-8")
     if status == "FAIL":
         return 2
     if status == "SKIP" and not bool(args.allow_skip):

@@ -165,7 +165,13 @@ jobs:
             --out benchmarks/results/context_sweep/context_rollup_check.json
           python scripts/check_lab_guards.py \
             --summary "${{ env.SUMMARY_OUT }}" \
-            --allow-skip
+            --allow-skip \
+            --out benchmarks/results/quant_sweep/lab_guard_check.json
+          python scripts/build_explorer_check_summary.py \
+            --ingestion benchmarks/results/quant_sweep/explorer_ingestion_check.json \
+            --rollup benchmarks/results/context_sweep/context_rollup_check.json \
+            --guards benchmarks/results/quant_sweep/lab_guard_check.json \
+            --out benchmarks/results/quant_sweep/explorer_check_summary.json
 
       - name: Enforce KPI Policy
         run: |
@@ -221,6 +227,8 @@ jobs:
             benchmarks/results/quant_sweep/full_frontier_explorer.json
             benchmarks/results/quant_sweep/explorer_artifact_index.json
             benchmarks/results/quant_sweep/explorer_ingestion_check.json
+            benchmarks/results/quant_sweep/lab_guard_check.json
+            benchmarks/results/quant_sweep/explorer_check_summary.json
             benchmarks/results/context_sweep/context_ceiling.json
             benchmarks/results/context_sweep/context_rollup.json
             benchmarks/results/context_sweep/context_rollup_check.json

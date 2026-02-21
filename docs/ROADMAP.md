@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add workflow-level report summary block for explorer checks.
-Deliverables:
-1. Emit a compact summary of ingestion/rollup/guard statuses at workflow end.
-2. Include links/paths to generated check artifacts.
-3. Keep summary machine-readable for downstream dashboards.
-
-2. Add context-sweep fixture set for profile-policy regression.
+1. Add context-sweep fixture set for profile-policy regression.
 Deliverables:
 1. Add minimal fixtures for safe/balanced/stress policy validation.
 2. Verify policy checker catches threshold/order drift on fixture mutations.
 3. Keep fixture updates additive and reviewed with roadmap changes.
+
+2. Add full-workflow guard/check markdown digest.
+Deliverables:
+1. Render human-readable markdown summary from explorer check artifacts.
+2. Include status table and artifact links.
+3. Upload digest alongside JSON check outputs.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

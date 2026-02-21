@@ -345,6 +345,16 @@ python scripts/check_context_profile_policy.py `
   --matrix-configs benchmarks/configs/quant_sweep_common_sessions.json,benchmarks/configs/quant_sweep_logic_only.json,benchmarks/configs/quant_sweep_refactor_heavy.json,benchmarks/configs/quant_sweep_mixed.json
 ```
 
+Build workflow-level explorer check summary:
+
+```powershell
+python scripts/build_explorer_check_summary.py `
+  --ingestion benchmarks/results/quant_sweep/explorer_ingestion_check.json `
+  --rollup benchmarks/results/context_sweep/context_rollup_check.json `
+  --guards benchmarks/results/quant_sweep/lab_guard_check.json `
+  --out benchmarks/results/quant_sweep/explorer_check_summary.json
+```
+
 ## Baseline Operations
 List baselines:
 
