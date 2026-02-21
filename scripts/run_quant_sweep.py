@@ -37,6 +37,15 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--summary-out", default="benchmarks/results/quant_sweep/sweep_summary.json")
     parser.add_argument("--matrix-config", default="", help="Optional JSON config file for matrix/session defaults.")
     parser.add_argument("--dry-run", action="store_true", help="Print resolved sweep plan and exit.")
+    parser.add_argument(
+        "--hardware-sidecar-template",
+        default="",
+        help=(
+            "Optional command template executed per quant for hardware diagnostics. "
+            "Placeholders: {model_id}, {quant_tag}, {runtime_target}, {execution_mode}, {out_file}."
+        ),
+    )
+    parser.add_argument("--hardware-sidecar-timeout-sec", type=int, default=120, help="Timeout for sidecar command.")
     parser.add_argument("--adherence-threshold", type=float, default=0.95)
     parser.add_argument("--latency-ceiling", type=float, default=10.0, help="Max total latency (seconds) for frontier eligibility.")
     parser.add_argument(
@@ -95,6 +104,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "canary_runs": 0,
         "canary_task_limit": 1,
         "canary_latency_variance_threshold": 0.03,
+        "hardware_sidecar_template": "",
+        "hardware_sidecar_timeout_sec": 120,
     }
     mapping = {
         "model_id": "models",
@@ -118,6 +129,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "canary_runs": "canary_runs",
         "canary_task_limit": "canary_task_limit",
         "canary_latency_variance_threshold": "canary_latency_variance_threshold",
+        "hardware_sidecar_template": "hardware_sidecar_template",
+        "hardware_sidecar_timeout_sec": "hardware_sidecar_timeout_sec",
     }
 
     for arg_key, cfg_key in mapping.items():
@@ -228,6 +241,69 @@ def _quant_report_out(base_dir: Path, model_id: str, quant_tag: str) -> Path:
     safe_model = re.sub(r"[^a-zA-Z0-9_.-]+", "_", model_id.strip())
     safe_quant = re.sub(r"[^a-zA-Z0-9_.-]+", "_", quant_tag.strip())
     return base_dir / safe_model / f"{safe_quant}_determinism_report.json"
+
+
+def _sidecar_out(base_dir: Path, model_id: str, quant_tag: str) -> Path:
+    safe_model = re.sub(r"[^a-zA-Z0-9_.-]+", "_", model_id.strip())
+    safe_quant = re.sub(r"[^a-zA-Z0-9_.-]+", "_", quant_tag.strip())
+    return base_dir / "sidecar" / safe_model / f"{safe_quant}_hardware_sidecar.json"
+
+
+def _run_sidecar(
+    *,
+    template: str,
+    timeout_sec: int,
+    model_id: str,
+    quant_tag: str,
+    runtime_target: str,
+    execution_mode: str,
+    out_file: Path,
+) -> dict[str, Any]:
+    if not str(template or "").strip():
+        return {"enabled": False}
+
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    command = str(template).format(
+        model_id=model_id,
+        quant_tag=quant_tag,
+        runtime_target=runtime_target,
+        execution_mode=execution_mode,
+        out_file=str(out_file).replace("\\", "/"),
+    )
+    result = subprocess.run(
+        command,
+        shell=True,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=max(1, int(timeout_sec)),
+    )
+    stdout = str(result.stdout or "")
+    stderr = str(result.stderr or "")
+    parsed: dict[str, Any] | None = None
+    try:
+        payload = json.loads(stdout) if stdout.strip().startswith("{") else None
+    except json.JSONDecodeError:
+        payload = None
+    if isinstance(payload, dict):
+        parsed = payload
+
+    sidecar_payload = {
+        "enabled": True,
+        "command": command,
+        "return_code": int(result.returncode),
+        "stdout": stdout,
+        "stderr": stderr,
+        "parsed": parsed,
+        "recorded_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+    }
+    out_file.write_text(json.dumps(sidecar_payload, indent=2) + "\n", encoding="utf-8")
+    return {
+        "enabled": True,
+        "return_code": int(result.returncode),
+        "out_file": str(out_file).replace("\\", "/"),
+        "parsed": parsed,
+    }
 
 
 def _collect_quant_metrics(report: dict[str, Any]) -> dict[str, Any]:
@@ -488,6 +564,11 @@ def main() -> int:
                 "task_limit": int(args.canary_task_limit),
                 "latency_variance_threshold": float(args.canary_latency_variance_threshold),
             },
+            "hardware_sidecar": {
+                "enabled": bool(str(args.hardware_sidecar_template or "").strip()),
+                "template": str(args.hardware_sidecar_template),
+                "timeout_sec": int(args.hardware_sidecar_timeout_sec),
+            },
         }
         print(json.dumps({"dry_run": dry_plan}, indent=2))
         return 0
@@ -552,11 +633,21 @@ def main() -> int:
 
             report = _load_json(raw_out)
             metrics = _collect_quant_metrics(report)
+            sidecar = _run_sidecar(
+                template=str(args.hardware_sidecar_template),
+                timeout_sec=int(args.hardware_sidecar_timeout_sec),
+                model_id=str(model_id),
+                quant_tag=str(quant_tag),
+                runtime_target=str(args.runtime_target),
+                execution_mode=str(args.execution_mode),
+                out_file=_sidecar_out(out_dir, str(model_id), str(quant_tag)),
+            )
             per_quant.append(
                 {
                     "quant_tag": quant_tag,
                     "quant_rank": _quant_rank(quant_tag),
                     "report_path": str(raw_out).replace("\\", "/"),
+                    "hardware_sidecar": sidecar,
                     **metrics,
                 }
             )
@@ -646,6 +737,11 @@ def main() -> int:
                 "threads": int(args.threads) if int(args.threads) > 0 else None,
                 "affinity_policy": str(args.affinity_policy).strip(),
                 "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
+            },
+            "hardware_sidecar": {
+                "enabled": bool(str(args.hardware_sidecar_template or "").strip()),
+                "template": str(args.hardware_sidecar_template),
+                "timeout_sec": int(args.hardware_sidecar_timeout_sec),
             },
             "runtime_target": str(args.runtime_target),
             "execution_mode": str(args.execution_mode),
