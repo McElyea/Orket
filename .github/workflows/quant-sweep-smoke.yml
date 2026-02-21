@@ -13,6 +13,7 @@ on:
       - "scripts/quant_frontier_explorer.py"
       - "scripts/context_ceiling_finder.py"
       - "scripts/thermal_stability_profiler.py"
+      - "scripts/check_explorer_schema_contracts.py"
       - "tests/application/test_quant_sweep_runner.py"
       - "tests/application/test_manage_baselines_script.py"
       - "tests/application/test_benchmark_telemetry_manifest.py"
@@ -20,6 +21,7 @@ on:
       - "tests/application/test_quant_frontier_explorer.py"
       - "tests/application/test_context_ceiling_finder.py"
       - "tests/application/test_thermal_stability_profiler.py"
+      - "tests/application/test_explorer_schema_contracts.py"
       - "benchmarks/configs/quant_sweep_common_sessions.json"
       - "benchmarks/configs/sidecar_profiles.json"
       - "docs/QUANT_SWEEP_RUNBOOK.md"
@@ -53,7 +55,8 @@ jobs:
             tests/application/test_quant_sweep_kpi_scripts.py \
             tests/application/test_quant_frontier_explorer.py \
             tests/application/test_context_ceiling_finder.py \
-            tests/application/test_thermal_stability_profiler.py -q
+            tests/application/test_thermal_stability_profiler.py \
+            tests/application/test_explorer_schema_contracts.py -q
 
       - name: Matrix Dry Run Smoke
         run: |

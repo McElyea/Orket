@@ -188,6 +188,16 @@ python scripts/thermal_stability_profiler.py `
   --storage-root orket_storage/thermal_profiles
 ```
 
+## Explorer Schema Contract Check
+Validate explorer artifact required fields in CI or local runs:
+
+```powershell
+python scripts/check_explorer_schema_contracts.py `
+  --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json `
+  --context benchmarks/results/context_sweep/context_ceiling.json `
+  --thermal benchmarks/results/thermal/thermal_profile.json
+```
+
 ## Baseline Operations
 List baselines:
 

@@ -83,6 +83,27 @@ jobs:
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/full_sweep_kpis.json
 
+      - name: Build Explorer Artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/quant_frontier_explorer.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --out benchmarks/results/quant_sweep/full_frontier_explorer.json
+          mkdir -p benchmarks/results/context_sweep
+          cp "${SUMMARY_OUT}" benchmarks/results/context_sweep/context_8192.json
+          python scripts/context_ceiling_finder.py \
+            --contexts 8192 \
+            --summary-template benchmarks/results/context_sweep/context_{context}.json \
+            --out benchmarks/results/context_sweep/context_ceiling.json
+          python scripts/thermal_stability_profiler.py \
+            --summaries "${{ env.SUMMARY_OUT }}" \
+            --out benchmarks/results/thermal/thermal_profile.json
+          python scripts/check_explorer_schema_contracts.py \
+            --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json \
+            --context benchmarks/results/context_sweep/context_ceiling.json \
+            --thermal benchmarks/results/thermal/thermal_profile.json
+
       - name: Enforce KPI Policy
         run: |
           python scripts/check_quant_sweep_kpis.py \
@@ -125,4 +146,7 @@ jobs:
             ${{ env.SUMMARY_OUT }}
             benchmarks/results/quant_sweep/full_sweep_kpis.json
             benchmarks/results/quant_sweep/full_sweep_provenance.json
+            benchmarks/results/quant_sweep/full_frontier_explorer.json
+            benchmarks/results/context_sweep/context_ceiling.json
+            benchmarks/results/thermal/thermal_profile.json
             benchmarks/results/quant_sweep/sidecar/**/*.json
