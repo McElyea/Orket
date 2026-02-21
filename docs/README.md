@@ -23,8 +23,8 @@ This index maps each document to a single purpose to reduce duplication.
 11. `docs/specs/SIDECAR_PARSE_SCHEMA.md`: canonical sidecar parse schema and status contract.
 
 ## Implementation Plans
-1. `docs/implementation/MEMORY_PERSISTENCE_PLAN.md`: deterministic memory/persistence implementation plan.
-2. `docs/implementation/PhasedRoadmap.md`: canonical ordered backlog for remaining implementation work.
+1. `docs/implementation/PhasedRoadmap.md`: canonical ordered backlog for remaining implementation work.
+2. Completed implementation plan artifacts are intentionally removed when closed; use git history for archived plans.
 
 ## Engineering Policy
 1. `docs/TESTING_POLICY.md`: test-lane policy (`unit`/`integration`/`acceptance`/`live`).
