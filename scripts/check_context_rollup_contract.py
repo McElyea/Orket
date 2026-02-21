@@ -33,6 +33,18 @@ def main() -> int:
         if key not in rollup:
             failures.append(f"MISSING_ROLLUP_FIELD:{key}")
 
+    rollup_provenance = rollup.get("provenance") if isinstance(rollup.get("provenance"), dict) else {}
+    rollup_provenance_ref = str(rollup_provenance.get("ref") or "").strip()
+    if not rollup_provenance_ref:
+        failures.append("MISSING_ROLLUP_PROVENANCE_REF")
+
+    ceiling_provenance = ceiling.get("provenance") if isinstance(ceiling.get("provenance"), dict) else {}
+    ceiling_provenance_ref = str(ceiling_provenance.get("ref") or "").strip()
+    if not ceiling_provenance_ref:
+        failures.append("MISSING_CONTEXT_CEILING_PROVENANCE_REF")
+    elif rollup_provenance_ref and ceiling_provenance_ref and rollup_provenance_ref != ceiling_provenance_ref:
+        failures.append("PROVENANCE_REF_MISMATCH")
+
     points = ceiling.get("points") if isinstance(ceiling.get("points"), list) else []
     total = len(points)
     passed = sum(1 for point in points if isinstance(point, dict) and bool(point.get("passed")))
@@ -50,6 +62,9 @@ def main() -> int:
         "status": "PASS" if not failures else "FAIL",
         "rollup": str(Path(args.rollup)).replace("\\", "/"),
         "context_ceiling": str(Path(args.context_ceiling)).replace("\\", "/"),
+        "execution_lane": str(rollup.get("execution_lane") or "").strip(),
+        "vram_profile": str(rollup.get("vram_profile") or "").strip(),
+        "provenance_ref": rollup_provenance_ref,
         "failures": failures,
     }
     text = json.dumps(report, indent=2)

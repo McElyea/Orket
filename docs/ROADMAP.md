@@ -70,24 +70,22 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add profile-policy fixture documentation.
+1. Add thermal gate and cooldown policy checks for GPU sessions.
 Deliverables:
-1. Document fixture purpose and update rules.
-2. Link fixtures from runbook/profile policy section.
-3. Require fixture updates when context profile defaults change.
+1. Add `wait_for_cooldown` policy checker for lab lane runs.
+2. Emit deterministic polluted status reasons for cooldown timeout and hot-start conditions.
+3. Add regression tests for pass/fail/skip thermal policy paths.
 
-2. Add provenance-field enforcement in rollup and digest checks.
+2. Add VRAM pre-flight guard rails (strict vs extended thresholds) as optional diagnostics.
 Deliverables:
-1. Require non-empty provenance refs in context rollup outputs.
-2. Require digest generation to fail if summary provenance fields are missing.
-3. Add regression tests for provenance-missing failure paths.
+1. Add profile-driven VRAM thresholds per run (`safe`, `balanced`, `stress`).
+2. Emit guard decision metadata into summary and check artifacts.
+3. Add regression tests for threshold enforcement and skip handling.
 
 ## Later
-1. Add thermal gate and cooldown policy checks for GPU sessions.
-2. Add VRAM pre-flight guard rails (strict vs extended thresholds) as optional diagnostics.
-3. Add sidecar schema spec files under `docs/specs/` for long-term contract governance.
-4. Add VRAM fragmentation analyzer experiments.
-5. Add model selector and adaptive routing prototypes after diagnostics evidence is stable.
+1. Add sidecar schema spec files under `docs/specs/` for long-term contract governance.
+2. Add VRAM fragmentation analyzer experiments.
+3. Add model selector and adaptive routing prototypes after diagnostics evidence is stable.
 
 ## Idea Intake (Best Practice)
 Use this format when adding ideas (in `Agents/Ideas.md`):

@@ -345,6 +345,14 @@ python scripts/check_context_profile_policy.py `
   --matrix-configs benchmarks/configs/quant_sweep_common_sessions.json,benchmarks/configs/quant_sweep_logic_only.json,benchmarks/configs/quant_sweep_refactor_heavy.json,benchmarks/configs/quant_sweep_mixed.json
 ```
 
+Context profile policy fixtures:
+1. `tests/fixtures/context_profiles/valid_profiles.json`: expected-good default shape.
+2. `tests/fixtures/context_profiles/drifted_profiles.json`: intentional drift fixture to verify failure paths.
+3. When updating `benchmarks/configs/context_sweep_profiles.json` defaults or supported profile keys:
+   - Update `valid_profiles.json` to match new defaults.
+   - Update `drifted_profiles.json` to preserve at least one deterministic policy violation.
+   - Run `python -m pytest tests/application/test_check_context_profile_policy.py -q`.
+
 Build workflow-level explorer check summary:
 
 ```powershell

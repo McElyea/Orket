@@ -45,6 +45,9 @@ def main() -> int:
     payload = {
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "status": "PASS" if not failed else "FAIL",
+        "execution_lane": str(rollup.get("execution_lane") or "").strip(),
+        "vram_profile": str(rollup.get("vram_profile") or "").strip(),
+        "provenance_ref": str(rollup.get("provenance_ref") or "").strip(),
         "statuses": statuses,
         "failed_checks": failed,
         "artifacts": {

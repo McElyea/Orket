@@ -7,6 +7,7 @@ from pathlib import Path
 
 def _ceiling() -> dict:
     return {
+        "provenance": {"ref": "r1"},
         "safe_context_ceiling": 8192,
         "points": [
             {"context": 4096, "passed": True},
@@ -74,3 +75,28 @@ def test_context_rollup_contract_fails_on_mismatch(tmp_path: Path) -> None:
     assert result.returncode == 2
     payload = json.loads(result.stdout)
     assert payload["status"] == "FAIL"
+
+
+def test_context_rollup_contract_fails_on_missing_provenance_ref(tmp_path: Path) -> None:
+    rollup = tmp_path / "rollup.json"
+    ceiling = tmp_path / "ceiling.json"
+    bad = _rollup()
+    bad["provenance"] = {"ref": ""}
+    rollup.write_text(json.dumps(bad, indent=2) + "\n", encoding="utf-8")
+    ceiling.write_text(json.dumps(_ceiling(), indent=2) + "\n", encoding="utf-8")
+    result = subprocess.run(
+        [
+            "python",
+            "scripts/check_context_rollup_contract.py",
+            "--rollup",
+            str(rollup),
+            "--context-ceiling",
+            str(ceiling),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    payload = json.loads(result.stdout)
+    assert "MISSING_ROLLUP_PROVENANCE_REF" in payload["failures"]

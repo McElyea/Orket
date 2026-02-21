@@ -6,7 +6,12 @@ from pathlib import Path
 
 
 def _check(status: str) -> dict:
-    return {"status": status}
+    return {
+        "status": status,
+        "execution_lane": "lab",
+        "vram_profile": "safe",
+        "provenance_ref": "run:test",
+    }
 
 
 def test_build_explorer_check_summary_passes(tmp_path: Path) -> None:
@@ -38,6 +43,9 @@ def test_build_explorer_check_summary_passes(tmp_path: Path) -> None:
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert payload["status"] == "PASS"
     assert payload["statuses"]["guards"] == "SKIP"
+    assert payload["execution_lane"] == "lab"
+    assert payload["vram_profile"] == "safe"
+    assert payload["provenance_ref"] == "run:test"
 
 
 def test_build_explorer_check_summary_fails_on_failed_check(tmp_path: Path) -> None:
