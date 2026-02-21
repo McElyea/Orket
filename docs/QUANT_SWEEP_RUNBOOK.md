@@ -221,6 +221,9 @@ Current explorer schema versions:
 2. `explorer.context_ceiling.v1`
 3. `explorer.thermal_stability.v1`
 
+Explorer schema upgrade policy:
+`docs/specs/EXPLORER_SCHEMA_POLICY.md`
+
 ## Lab Guard Check
 Validate cooldown + VRAM profile guard diagnostics from sweep summary:
 

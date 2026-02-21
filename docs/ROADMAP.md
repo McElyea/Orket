@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add explorer schema upgrade notes to `docs/specs/`.
-Deliverables:
-1. Document current explorer schema versions and required fields.
-2. Define additive-only change policy and deprecation process.
-3. Link spec docs from runbook for downstream consumers.
-
-2. Add lab-side context sweep policy presets.
+1. Add lab-side context sweep policy presets.
 Deliverables:
 1. Provide preset context ladders for safe/balanced/stress profiles.
 2. Define default thresholds for adherence/ttft/decode per profile.
 3. Add runbook examples for profile-driven context sweeps.
+
+2. Add full-workflow context sweep artifact publication.
+Deliverables:
+1. Run `run_context_sweep.py` in full self-hosted workflow.
+2. Upload per-context summaries plus final context ceiling artifact.
+3. Preserve run-provenance references in workflow-generated context artifacts.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.
