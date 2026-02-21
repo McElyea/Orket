@@ -283,19 +283,14 @@ Exit criteria:
 1. Production-safe default mode enforced.
 2. Runbook covers triage for memory determinism failures.
 
-## Backlog (Initial Tickets)
-1. Add `docs/specs/MEMORY_CANONICALIZATION_JSON_V1.md`.
-2. Add `docs/specs/MEMORY_DETERMINISM_TRACE_SCHEMA.md`.
-3. Add `docs/specs/MEMORY_RETRIEVAL_TRACE_SCHEMA.md`.
-4. Add `docs/specs/MEMORY_TOOL_PROFILE_SCHEMA.md`.
-5. Add `docs/specs/MEMORY_BUFFER_STATE_MACHINE.md`.
-6. Add `tests/contracts/test_memory_trace_contract.py`.
-7. Add `tests/contracts/test_memory_retrieval_trace_contract.py`.
-8. Add `tests/application/test_buffered_write_isolation.py`.
-9. Add `tests/application/test_memory_commit_idempotency.py`.
-10. Add `tests/application/test_memory_commit_recovery.py`.
-11. Add `scripts/check_memory_determinism.py`.
-12. Wire check into Gitea quality workflow after contract stabilizes.
+## Backlog (Remaining Work)
+1. Emit `memory.determinism_trace.v1` artifacts from runtime execution paths.
+2. Emit `memory.retrieval_trace.v1` artifacts with deterministic linkage to event trace.
+3. Add runtime integration tests for trace emission in deterministic modes.
+4. Add equivalence comparator implementation and failure-diff diagnostics.
+5. Add persistence-backed (non in-memory) isolation/idempotency/recovery integration tests.
+6. Add retention and truncation enforcement tests for memory trace artifacts.
+7. Integrate memory determinism check into release/report pipelines beyond quality workflow smoke.
 
 ## Risks and Controls
 1. Risk: false determinism failures due to unstable normalization.

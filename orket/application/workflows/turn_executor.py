@@ -358,6 +358,16 @@ class TurnExecutor:
                 },
                 self.workspace
             )
+            self._emit_memory_traces(
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+                issue=issue,
+                role=role,
+                context=context,
+                turn=turn,
+            )
 
             return TurnResult.succeeded(turn)
 
@@ -1875,6 +1885,102 @@ class TurnExecutor:
     def _message_hash(self, messages: List[Dict[str, str]]) -> str:
         normalized = json.dumps(messages, sort_keys=True, ensure_ascii=False)
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
+
+    def _memory_trace_enabled(self, context: Dict[str, Any]) -> bool:
+        if bool(context.get("memory_trace_enabled", False)):
+            return True
+        return str(context.get("visibility_mode", "")).strip() != ""
+
+    def _hash_payload(self, payload: Any) -> str:
+        normalized = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+    def _emit_memory_traces(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        issue: IssueConfig,
+        role: RoleConfig,
+        context: Dict[str, Any],
+        turn: ExecutionTurn,
+    ) -> None:
+        if not self._memory_trace_enabled(context):
+            return
+
+        normalization_version = str(context.get("normalization_version") or "json-v1").strip() or "json-v1"
+        tool_profile_version = str(context.get("tool_profile_version") or "unknown-v1").strip() or "unknown-v1"
+        output_struct = {"type": "text", "sections": ["body"]}
+        output_shape_hash = self._hash_payload(output_struct)
+
+        trace_tool_calls = []
+        for call in (turn.tool_calls or []):
+            trace_tool_calls.append(
+                {
+                    "tool_name": str(call.tool or "").strip(),
+                    "tool_profile_version": tool_profile_version,
+                    "normalized_args": dict(call.args or {}),
+                    "normalization_version": normalization_version,
+                    "tool_result_fingerprint": self._hash_payload(call.result if isinstance(call.result, dict) else {}),
+                    "side_effect_fingerprint": None,
+                }
+            )
+
+        memory_trace = {
+            "run_id": session_id,
+            "workflow_id": str(context.get("workflow_id") or "turn_executor").strip() or "turn_executor",
+            "memory_snapshot_id": str(context.get("memory_snapshot_id") or "unknown").strip() or "unknown",
+            "visibility_mode": str(context.get("visibility_mode") or "off").strip() or "off",
+            "model_config_id": str(context.get("model_config_id") or context.get("selected_model") or "unknown").strip()
+            or "unknown",
+            "policy_set_id": str(context.get("policy_set_id") or "unknown").strip() or "unknown",
+            "determinism_trace_schema_version": "memory.determinism_trace.v1",
+            "events": [
+                {
+                    "event_id": f"{session_id}:{issue_id}:{role_name}:{turn_index}:0",
+                    "index": 0,
+                    "role": role_name,
+                    "interceptor": "turn",
+                    "decision_type": "execute_turn",
+                    "tool_calls": trace_tool_calls,
+                    "guardrails_triggered": list(context.get("guardrails_triggered") or []),
+                    "retrieval_event_ids": [
+                        str((row or {}).get("retrieval_event_id", "")).strip()
+                        for row in (context.get("memory_retrieval_trace_events") or [])
+                        if str((row or {}).get("retrieval_event_id", "")).strip()
+                    ],
+                }
+            ],
+            "output": {
+                "output_type": str(context.get("output_type") or "text").strip() or "text",
+                "output_shape_hash": output_shape_hash,
+                "normalization_version": normalization_version,
+            },
+            "issue_id": issue.id,
+            "role_id": role.id,
+        }
+        retrieval_trace = {
+            "events": list(context.get("memory_retrieval_trace_events") or []),
+            "retrieval_trace_schema_version": "memory.retrieval_trace.v1",
+        }
+        self._write_turn_artifact(
+            session_id,
+            issue_id,
+            role_name,
+            turn_index,
+            "memory_trace.json",
+            json.dumps(memory_trace, indent=2, ensure_ascii=False, default=str),
+        )
+        self._write_turn_artifact(
+            session_id,
+            issue_id,
+            role_name,
+            turn_index,
+            "memory_retrieval_trace.json",
+            json.dumps(retrieval_trace, indent=2, ensure_ascii=False, default=str),
+        )
 
     def _write_turn_artifact(
         self,

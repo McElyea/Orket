@@ -19,70 +19,43 @@ Use this file to:
 4. Update `Last updated` whenever phase priorities change.
 
 ## Phase 0: Active Now
-0. Roadmap kickoff (in progress): Memory contract freeze prep.
+1. Deterministic memory and persistence program: instrumentation implementation.
 Track: [Memory Persistence Plan](MEMORY_PERSISTENCE_PLAN.md)
-Execution slice:
-1. Draft `docs/specs/MEMORY_CANONICALIZATION_JSON_V1.md`. Status: done (2026-02-21)
-2. Draft `docs/specs/MEMORY_DETERMINISM_TRACE_SCHEMA.md`. Status: done (2026-02-21)
-3. Draft `docs/specs/MEMORY_RETRIEVAL_TRACE_SCHEMA.md`. Status: done (2026-02-21)
-4. Draft `docs/specs/MEMORY_TOOL_PROFILE_SCHEMA.md`. Status: done (2026-02-21)
-5. Draft `docs/specs/MEMORY_BUFFER_STATE_MACHINE.md`. Status: done (2026-02-21)
-6. Add `tests/contracts/test_memory_trace_contract.py`. Status: done (2026-02-21)
-7. Add `tests/contracts/test_memory_retrieval_trace_contract.py`. Status: done (2026-02-21)
-Done criteria:
-1. All five docs created with required fields and version headers.
-2. Includes canonical examples for text/plan/code_patch output-shape hashing.
-3. Includes recovery single-owner lease semantics.
-4. Contract tests exist and pass for determinism/retrieval/memory-buffer spec invariants.
+Deliverables:
+1. Emit `memory.determinism_trace.v1` artifacts from runtime execution paths.
+2. Emit `memory.retrieval_trace.v1` artifacts linked by `retrieval_event_id` and `event_id`.
+3. Integrate `scripts/check_memory_determinism.py` into execution/reporting paths beyond workflow smoke.
+4. Add integration tests covering deterministic trace emission and equivalence preconditions.
 
-Next execution slice:
-1. Add `scripts/check_memory_determinism.py` skeleton for schema-level deterministic trace validation. Status: done (2026-02-21)
-2. Wire script into a focused test (`tests/application/` or `tests/contracts/`) before workflow integration. Status: done (2026-02-21)
-
-Next execution slice:
-1. Implement `tests/application/test_buffered_write_isolation.py`. Status: done (2026-02-21)
-2. Implement `tests/application/test_memory_commit_idempotency.py`. Status: done (2026-02-21)
-3. Implement `tests/application/test_memory_commit_recovery.py`. Status: done (2026-02-21)
-
-Next execution slice:
-1. Wire `scripts/check_memory_determinism.py` into `.gitea/workflows/quality.yml`. Status: done (2026-02-21)
-2. Add workflow gate coverage in `tests/platform/test_quality_workflow_gates.py`. Status: done (2026-02-21)
-
-Next execution slice:
-1. Resolve Phase 0 spec clarifications for canonicalization edge behavior. Status: done (2026-02-21)
-2. Resolve retrieval deterministic-mode backend contract in retrieval trace spec. Status: done (2026-02-21)
-3. Resolve buffer recovery lease defaults in buffer state-machine spec. Status: done (2026-02-21)
-4. Resolve deterministic trace retention baseline in determinism trace spec. Status: done (2026-02-21)
-5. Add contract tests for these clarified rules. Status: done (2026-02-21)
-
-Next execution slice:
-1. Add core memory contract models under `orket/core/contracts/memory_models.py`. Status: done (2026-02-21)
-2. Add core validation tests for determinism and retrieval contracts. Status: done (2026-02-21)
-
-1. Telemetry contract hardening across providers.
+2. Telemetry contract hardening across providers.
 Success criteria:
 1. Providers emit only canonical token/timing states.
 2. Streaming and non-streaming transitions are consistent.
 3. Adapter integration tests cover both paths.
 4. All emitted artifacts include `execution_lane` and `vram_profile`.
 
-2. Orchestration-overhead consistency guarantees.
+3. Orchestration-overhead consistency guarantees.
 Success criteria:
 1. `internal_model_seconds` present on success and failure paths.
 2. `orchestration_overhead_ratio` present on success and failure paths.
 3. `run_quality_reasons` present on success and failure paths.
 
-3. GPU sidecar parse policy finalization.
+4. GPU sidecar parse policy finalization.
 Success criteria:
 1. Required fields parsed as canonical snake_case keys.
 2. Optional fields parsed when present; missing optionals never fail execution.
 3. `sidecar_parse_status` and `sidecar_parse_errors` emitted deterministically.
 
-4. Valid-run policy enforcement end-to-end.
+5. Valid-run policy enforcement end-to-end.
 Success criteria:
 1. Invalid runs excluded from KPI aggregates always.
 2. Invalid runs excluded from recommendations by default.
 3. `--include-invalid` affects frontier/comparison visibility only.
+
+Next execution slice:
+1. Emit memory determinism trace artifacts from runtime execution path. Status: done (2026-02-21)
+2. Emit memory retrieval trace artifact envelope from runtime execution path. Status: done (2026-02-21)
+3. Add runtime emission coverage test (`tests/application/test_memory_trace_emission.py`). Status: done (2026-02-21)
 
 ## Phase 1: Next Up
 1. Thermal gate and cooldown policy checks for GPU lab sessions.
