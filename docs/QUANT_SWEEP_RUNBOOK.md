@@ -310,6 +310,15 @@ python scripts/build_context_sweep_rollup.py `
   --out benchmarks/results/context_sweep/context_rollup.json
 ```
 
+Validate rollup consistency against context-ceiling source:
+
+```powershell
+python scripts/check_context_rollup_contract.py `
+  --rollup benchmarks/results/context_sweep/context_rollup.json `
+  --context-ceiling benchmarks/results/context_sweep/context_ceiling.json `
+  --out benchmarks/results/context_sweep/context_rollup_check.json
+```
+
 ## Baseline Operations
 List baselines:
 

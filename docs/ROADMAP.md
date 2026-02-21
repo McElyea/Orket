@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add rollup contract checks for context artifacts.
-Deliverables:
-1. Validate context rollup schema and required fields in smoke tests.
-2. Verify rollup consistency against context-ceiling point counts.
-3. Fail workflow when rollup and source artifacts diverge.
-
-2. Add reusable cleanup command for ephemeral context sweep outputs.
+1. Add reusable cleanup command for ephemeral context sweep outputs.
 Deliverables:
 1. Remove stale `<out-dir>/.storage` directories safely.
 2. Keep persistent `orket_storage` data untouched by default.
 3. Document cleanup command usage in runbook.
+
+2. Add context sweep profile policy verification in smoke tests.
+Deliverables:
+1. Ensure preset matrix context profile keys remain present and valid.
+2. Validate profile threshold defaults are non-regressive.
+3. Fail CI on missing/invalid profile policy fields.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

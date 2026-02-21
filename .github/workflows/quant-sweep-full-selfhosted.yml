@@ -155,6 +155,10 @@ jobs:
           python scripts/build_context_sweep_rollup.py \
             --context-ceiling benchmarks/results/context_sweep/context_ceiling.json \
             --out benchmarks/results/context_sweep/context_rollup.json
+          python scripts/check_context_rollup_contract.py \
+            --rollup benchmarks/results/context_sweep/context_rollup.json \
+            --context-ceiling benchmarks/results/context_sweep/context_ceiling.json \
+            --out benchmarks/results/context_sweep/context_rollup_check.json
           python scripts/check_lab_guards.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --allow-skip
@@ -215,5 +219,6 @@ jobs:
             benchmarks/results/quant_sweep/explorer_ingestion_check.json
             benchmarks/results/context_sweep/context_ceiling.json
             benchmarks/results/context_sweep/context_rollup.json
+            benchmarks/results/context_sweep/context_rollup_check.json
             benchmarks/results/thermal/thermal_profile.json
             benchmarks/results/quant_sweep/sidecar/**/*.json
