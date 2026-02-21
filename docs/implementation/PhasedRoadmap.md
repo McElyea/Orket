@@ -44,6 +44,10 @@ Next execution slice:
 2. Implement `tests/application/test_memory_commit_idempotency.py`. Status: done (2026-02-21)
 3. Implement `tests/application/test_memory_commit_recovery.py`. Status: done (2026-02-21)
 
+Next execution slice:
+1. Wire `scripts/check_memory_determinism.py` into `.gitea/workflows/quality.yml`. Status: done (2026-02-21)
+2. Add workflow gate coverage in `tests/platform/test_quality_workflow_gates.py`. Status: done (2026-02-21)
+
 1. Telemetry contract hardening across providers.
 Success criteria:
 1. Providers emit only canonical token/timing states.
