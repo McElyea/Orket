@@ -542,9 +542,28 @@ def _build_stability_kpis(sessions: list[dict[str, Any]]) -> dict[str, Any]:
         if not isinstance(session, dict):
             continue
         frontier = session.get("efficiency_frontier") if isinstance(session.get("efficiency_frontier"), dict) else {}
-        if str(frontier.get("minimum_viable_quant_tag") or "").strip():
-            frontier_success += 1
+        adherence_ratio = float(frontier.get("adherence_threshold", 0.95) or 0.95)
+        latency_ceiling = float(frontier.get("latency_ceiling", 0.0) or 0.0)
         per_quant = session.get("per_quant") if isinstance(session.get("per_quant"), list) else []
+        baseline_row = None
+        if per_quant:
+            baseline_row = sorted(
+                [row for row in per_quant if isinstance(row, dict)],
+                key=lambda row: int(row.get("quant_rank", 0) or 0),
+                reverse=True,
+            )[0]
+        baseline_adherence = float((baseline_row or {}).get("adherence_score", 0.0) or 0.0)
+        min_adherence = baseline_adherence * adherence_ratio
+        if any(
+            _is_frontier_eligible(
+                row=row,
+                min_adherence=min_adherence,
+                latency_ceiling=latency_ceiling,
+            )
+            for row in per_quant
+            if isinstance(row, dict)
+        ):
+            frontier_success += 1
         for row in per_quant:
             if not isinstance(row, dict):
                 continue
