@@ -124,3 +124,26 @@ python scripts/manage_baselines.py prune `
   --storage-root orket_storage/baselines `
   --keep-last 3
 ```
+
+Pin a baseline record so prune never removes it:
+
+```powershell
+python scripts/manage_baselines.py pin-baseline `
+  --storage-root orket_storage/baselines `
+  --test-id 001 `
+  --baseline-ref <test-run-id>
+```
+
+Unpin a baseline record:
+
+```powershell
+python scripts/manage_baselines.py unpin-baseline `
+  --storage-root orket_storage/baselines `
+  --test-id 001 `
+  --baseline-ref <test-run-id>
+```
+
+Retention policy defaults:
+1. Keep newest 10 unpinned records per test id (`--keep-last 10`).
+2. Pinned records are retained regardless of age.
+3. Run prune weekly in operations/CI maintenance windows.

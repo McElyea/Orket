@@ -1,0 +1,51 @@
+name: Baseline Retention Weekly
+
+on:
+  schedule:
+    - cron: "0 10 * * 0"
+  workflow_dispatch:
+    inputs:
+      storage_root:
+        description: "Baseline storage root"
+        required: false
+        default: "orket_storage/baselines"
+      keep_last:
+        description: "Unpinned baseline records to keep per test id"
+        required: false
+        default: "10"
+
+jobs:
+  retention-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Baseline Health Summary
+        run: |
+          mkdir -p benchmarks/results/quant_sweep
+          python scripts/manage_baselines.py health \
+            --storage-root "${{ github.event.inputs.storage_root || 'orket_storage/baselines' }}" \
+            > benchmarks/results/quant_sweep/baseline_health_weekly.json
+
+      - name: Baseline Prune Plan (Dry Run)
+        run: |
+          python scripts/manage_baselines.py prune \
+            --storage-root "${{ github.event.inputs.storage_root || 'orket_storage/baselines' }}" \
+            --keep-last "${{ github.event.inputs.keep_last || '10' }}" \
+            --dry-run \
+            > benchmarks/results/quant_sweep/baseline_prune_weekly.json
+
+      - name: Upload Retention Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-retention-weekly
+          path: |
+            benchmarks/results/quant_sweep/baseline_health_weekly.json
+            benchmarks/results/quant_sweep/baseline_prune_weekly.json

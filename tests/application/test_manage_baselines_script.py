@@ -204,3 +204,128 @@ def test_manage_baselines_health_and_prune(tmp_path: Path) -> None:
     payload_after = json.loads((baselines_root / "001.json").read_text(encoding="utf-8"))
     assert len(payload_after["history"]) == 1
     assert payload_after["history"][0]["baseline_metadata"]["test_run_id"] == "b"
+
+
+def test_manage_baselines_pin_and_unpin_controls_prune(tmp_path: Path) -> None:
+    baselines_root = tmp_path / "orket_storage" / "baselines"
+    baselines_root.mkdir(parents=True, exist_ok=True)
+    (baselines_root / "001.json").write_text(
+        json.dumps(
+            {
+                "test_id": "001",
+                "history": [
+                    {
+                        "baseline_metadata": {
+                            "test_run_id": "old-1",
+                            "hardware_fingerprint": "hw-a",
+                            "task_revision": "v1",
+                            "created_at": "2026-01-01T00:00:00Z",
+                        },
+                        "gold_telemetry": {},
+                    },
+                    {
+                        "baseline_metadata": {
+                            "test_run_id": "old-2",
+                            "hardware_fingerprint": "hw-a",
+                            "task_revision": "v1",
+                            "created_at": "2026-01-02T00:00:00Z",
+                        },
+                        "gold_telemetry": {},
+                    },
+                    {
+                        "baseline_metadata": {
+                            "test_run_id": "new-1",
+                            "hardware_fingerprint": "hw-a",
+                            "task_revision": "v1",
+                            "created_at": "2026-02-01T00:00:00Z",
+                        },
+                        "gold_telemetry": {},
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    pin = subprocess.run(
+        [
+            "python",
+            "scripts/manage_baselines.py",
+            "pin-baseline",
+            "--storage-root",
+            str(baselines_root),
+            "--test-id",
+            "001",
+            "--baseline-ref",
+            "old-1",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert pin.returncode == 0, pin.stdout + "\n" + pin.stderr
+    pin_payload = json.loads(pin.stdout)
+    assert pin_payload["status"] == "OK"
+    assert pin_payload["pinned"] is True
+
+    prune = subprocess.run(
+        [
+            "python",
+            "scripts/manage_baselines.py",
+            "prune",
+            "--storage-root",
+            str(baselines_root),
+            "--keep-last",
+            "1",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert prune.returncode == 0, prune.stdout + "\n" + prune.stderr
+
+    payload_after_prune = json.loads((baselines_root / "001.json").read_text(encoding="utf-8"))
+    remaining_ids = {
+        row["baseline_metadata"]["test_run_id"] for row in payload_after_prune["history"]
+    }
+    assert remaining_ids == {"old-1", "new-1"}
+
+    unpin = subprocess.run(
+        [
+            "python",
+            "scripts/manage_baselines.py",
+            "unpin-baseline",
+            "--storage-root",
+            str(baselines_root),
+            "--test-id",
+            "001",
+            "--baseline-ref",
+            "old-1",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert unpin.returncode == 0, unpin.stdout + "\n" + unpin.stderr
+    unpin_payload = json.loads(unpin.stdout)
+    assert unpin_payload["status"] == "OK"
+    assert unpin_payload["pinned"] is False
+
+    prune_again = subprocess.run(
+        [
+            "python",
+            "scripts/manage_baselines.py",
+            "prune",
+            "--storage-root",
+            str(baselines_root),
+            "--keep-last",
+            "1",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert prune_again.returncode == 0, prune_again.stdout + "\n" + prune_again.stderr
+    final_payload = json.loads((baselines_root / "001.json").read_text(encoding="utf-8"))
+    assert len(final_payload["history"]) == 1
+    assert final_payload["history"][0]["baseline_metadata"]["test_run_id"] == "new-1"

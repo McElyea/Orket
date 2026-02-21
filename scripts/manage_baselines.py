@@ -41,6 +41,16 @@ def _parse_args() -> argparse.Namespace:
     prune_cmd.add_argument("--keep-last", type=int, default=0, help="Keep only the newest N records (0 disables prune).")
     prune_cmd.add_argument("--dry-run", action="store_true")
 
+    pin_baseline_cmd = sub.add_parser("pin-baseline", help="Pin a baseline record by test run id.")
+    pin_baseline_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    pin_baseline_cmd.add_argument("--test-id", required=True)
+    pin_baseline_cmd.add_argument("--baseline-ref", required=True)
+
+    unpin_baseline_cmd = sub.add_parser("unpin-baseline", help="Unpin a baseline record by test run id.")
+    unpin_baseline_cmd.add_argument("--storage-root", default="orket_storage/baselines")
+    unpin_baseline_cmd.add_argument("--test-id", required=True)
+    unpin_baseline_cmd.add_argument("--baseline-ref", required=True)
+
     return parser.parse_args()
 
 
@@ -64,6 +74,13 @@ def _history(storage_root: Path, test_id: str) -> list[dict[str, Any]]:
     if isinstance(history, list):
         return [row for row in history if isinstance(row, dict)]
     return []
+
+
+def _write_history(storage_root: Path, test_id: str, rows: list[dict[str, Any]]) -> None:
+    path = _baseline_file(storage_root, test_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"test_id": test_id, "history": rows}
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
 def _sort_history_desc(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -92,6 +109,13 @@ def _cmd_list(args: argparse.Namespace) -> int:
             {
                 "test_id": test_id,
                 "history_count": len(history),
+                "pinned_count": len(
+                    [
+                        row
+                        for row in history
+                        if bool((row.get("baseline_metadata") or {}).get("pinned", False))
+                    ]
+                ),
                 "latest_test_run_id": str(meta.get("test_run_id", "")),
                 "latest_created_at": str(meta.get("created_at", "")),
                 "latest_hardware_fingerprint": str(meta.get("hardware_fingerprint", "")),
@@ -247,13 +271,16 @@ def _cmd_prune(args: argparse.Namespace) -> int:
         rows = _sort_history_desc(_history(storage_root, test_id))
         if len(rows) <= keep_last:
             continue
-        kept = rows[:keep_last]
+        pinned_rows = [row for row in rows if bool((row.get("baseline_metadata") or {}).get("pinned", False))]
+        unpinned_rows = [row for row in rows if not bool((row.get("baseline_metadata") or {}).get("pinned", False))]
+        kept = pinned_rows + unpinned_rows[:keep_last]
         removed = len(rows) - len(kept)
+        if removed <= 0:
+            continue
         modified.append({"test_id": test_id, "removed": removed, "remaining": len(kept)})
         if args.dry_run:
             continue
-        payload = {"test_id": test_id, "history": kept}
-        file_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        _write_history(storage_root, test_id, _sort_history_desc(kept))
 
     print(
         json.dumps(
@@ -266,6 +293,54 @@ def _cmd_prune(args: argparse.Namespace) -> int:
             indent=2,
         )
     )
+    return 0
+
+
+def _cmd_pin_baseline(args: argparse.Namespace) -> int:
+    storage_root = Path(args.storage_root)
+    test_id = str(args.test_id).strip()
+    baseline_ref = str(args.baseline_ref).strip()
+    rows = _history(storage_root, test_id)
+    if not rows:
+        print(json.dumps({"status": "NO_BASELINE", "test_id": test_id, "baseline_ref": baseline_ref}, indent=2))
+        return 0
+    updated = False
+    for row in rows:
+        meta = row.get("baseline_metadata")
+        meta = meta if isinstance(meta, dict) else {}
+        if str(meta.get("test_run_id", "")).strip() == baseline_ref:
+            meta["pinned"] = True
+            row["baseline_metadata"] = meta
+            updated = True
+    if not updated:
+        print(json.dumps({"status": "BASELINE_REF_NOT_FOUND", "test_id": test_id, "baseline_ref": baseline_ref}, indent=2))
+        return 0
+    _write_history(storage_root, test_id, rows)
+    print(json.dumps({"status": "OK", "test_id": test_id, "baseline_ref": baseline_ref, "pinned": True}, indent=2))
+    return 0
+
+
+def _cmd_unpin_baseline(args: argparse.Namespace) -> int:
+    storage_root = Path(args.storage_root)
+    test_id = str(args.test_id).strip()
+    baseline_ref = str(args.baseline_ref).strip()
+    rows = _history(storage_root, test_id)
+    if not rows:
+        print(json.dumps({"status": "NO_BASELINE", "test_id": test_id, "baseline_ref": baseline_ref}, indent=2))
+        return 0
+    updated = False
+    for row in rows:
+        meta = row.get("baseline_metadata")
+        meta = meta if isinstance(meta, dict) else {}
+        if str(meta.get("test_run_id", "")).strip() == baseline_ref:
+            meta["pinned"] = False
+            row["baseline_metadata"] = meta
+            updated = True
+    if not updated:
+        print(json.dumps({"status": "BASELINE_REF_NOT_FOUND", "test_id": test_id, "baseline_ref": baseline_ref}, indent=2))
+        return 0
+    _write_history(storage_root, test_id, rows)
+    print(json.dumps({"status": "OK", "test_id": test_id, "baseline_ref": baseline_ref, "pinned": False}, indent=2))
     return 0
 
 
@@ -283,6 +358,10 @@ def main() -> int:
         return _cmd_health(args)
     if args.command == "prune":
         return _cmd_prune(args)
+    if args.command == "pin-baseline":
+        return _cmd_pin_baseline(args)
+    if args.command == "unpin-baseline":
+        return _cmd_unpin_baseline(args)
     raise SystemExit(f"Unsupported command: {args.command}")
 
 
