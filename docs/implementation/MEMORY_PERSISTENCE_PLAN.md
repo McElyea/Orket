@@ -285,8 +285,7 @@ Exit criteria:
 
 ## Backlog (Remaining Work)
 1. Complete runtime trace emission for failure-path lifecycle events (`on_turn_failure`, blocked/terminal paths) to match success-path interceptor coverage.
-2. Add persistence-backed (non in-memory) isolation/idempotency/recovery integration tests.
-3. Integrate memory determinism checks into release/report pipelines beyond quality workflow smoke.
+2. Integrate memory determinism checks into release/report pipelines beyond quality workflow smoke.
 
 ## Risks and Controls
 1. Risk: false determinism failures due to unstable normalization.

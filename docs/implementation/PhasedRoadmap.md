@@ -74,6 +74,10 @@ Next execution slice:
 1. Expand runtime memory trace events from single turn event to lifecycle events (`before_prompt`, `after_model`, `before_tool`, `after_tool`). Status: done (2026-02-21)
 2. Update emission coverage tests for lifecycle event presence. Status: done (2026-02-21)
 
+Next execution slice:
+1. Add persistence-backed commit integration store for memory commit semantics tests. Status: done (2026-02-21)
+2. Add restart/idempotency persistence integration tests for commit state. Status: done (2026-02-21)
+
 ## Phase 1: Next Up
 1. Thermal gate and cooldown policy checks for GPU lab sessions.
 Deliverables:
