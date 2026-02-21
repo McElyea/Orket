@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add full-workflow optional cleanup step for ephemeral context outputs.
-Deliverables:
-1. Add workflow input to run cleanup after artifact upload.
-2. Use cleanup command in non-destructive mode by default (`--dry-run`).
-3. Allow explicit opt-in deletion when operators request it.
-
-2. Add explorer index regression fixture snapshots.
+1. Add explorer index regression fixture snapshots.
 Deliverables:
 1. Store representative index fixtures for schema regression tests.
 2. Verify ingestion checker behavior on fixture drift.
 3. Keep fixtures minimal and additive.
+
+2. Add workflow-level report summary block for explorer checks.
+Deliverables:
+1. Emit a compact summary of ingestion/rollup/guard statuses at workflow end.
+2. Include links/paths to generated check artifacts.
+3. Keep summary machine-readable for downstream dashboards.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

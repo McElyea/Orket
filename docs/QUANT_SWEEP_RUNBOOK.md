@@ -218,6 +218,9 @@ Full self-hosted workflow context sweep uses:
    - `context_adherence_min`
    - `context_ttft_ceiling_ms`
    - `context_decode_floor_tps`
+5. `context_cleanup_mode`:
+   - `dry-run` (default, non-destructive)
+   - `apply` (explicit opt-in cleanup)
 
 Storage behavior:
 1. `--storage-mode persistent` (default): writes context history to `orket_storage/context_ceilings`.

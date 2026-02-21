@@ -43,6 +43,10 @@ on:
         description: "Optional context sweep decode TPS floor override"
         required: false
         default: "0"
+      context_cleanup_mode:
+        description: "Context artifact cleanup mode: dry-run or apply"
+        required: false
+        default: "dry-run"
       max_missing_telemetry_rate:
         description: "KPI policy: max missing telemetry rate"
         required: false
@@ -222,3 +226,16 @@ jobs:
             benchmarks/results/context_sweep/context_rollup_check.json
             benchmarks/results/thermal/thermal_profile.json
             benchmarks/results/quant_sweep/sidecar/**/*.json
+
+      - name: Context Sweep Cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event.inputs.context_cleanup_mode || 'dry-run' }}" == "apply" ]]; then
+            python scripts/cleanup_context_sweep_artifacts.py \
+              --out-dir benchmarks/results/context_sweep
+          else
+            python scripts/cleanup_context_sweep_artifacts.py \
+              --out-dir benchmarks/results/context_sweep \
+              --dry-run
+          fi
