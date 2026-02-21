@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.application.middleware import MiddlewareOutcome, MiddlewarePipeline
+from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
@@ -77,7 +77,7 @@ async def test_turn_executor_middleware_hook_order(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-        middleware=MiddlewarePipeline([_Hooks()]),
+        middleware=TurnLifecycleInterceptors([_Hooks()]),
     )
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
@@ -97,7 +97,7 @@ async def test_turn_executor_middleware_short_circuit_before_tool(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-        middleware=MiddlewarePipeline([_Hooks()]),
+        middleware=TurnLifecycleInterceptors([_Hooks()]),
     )
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
@@ -123,7 +123,7 @@ async def test_turn_executor_calls_on_turn_failure_hook(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-        middleware=MiddlewarePipeline([_Hooks()]),
+        middleware=TurnLifecycleInterceptors([_Hooks()]),
     )
     toolbox = _ToolBox()
 

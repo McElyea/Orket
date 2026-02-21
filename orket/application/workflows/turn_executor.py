@@ -32,7 +32,7 @@ from orket.logging import log_event
 from orket.core.policies.tool_gate import ToolGate
 from orket.core.domain.verification_scope import parse_verification_scope
 from orket.naming import sanitize_name
-from orket.application.middleware import MiddlewarePipeline
+from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_parser import ToolParser
 
 
@@ -88,7 +88,7 @@ class TurnExecutor:
         state_machine: StateMachine,
         tool_gate: ToolGate,
         workspace: Path,
-        middleware: Optional[MiddlewarePipeline] = None,
+        middleware: Optional[TurnLifecycleInterceptors] = None,
     ):
         """
         Initialize turn executor.
@@ -101,7 +101,7 @@ class TurnExecutor:
         self.state = state_machine
         self.tool_gate = tool_gate
         self.workspace = workspace
-        self.middleware = middleware or MiddlewarePipeline([])
+        self.middleware = middleware or TurnLifecycleInterceptors([])
 
     async def execute_turn(
         self,

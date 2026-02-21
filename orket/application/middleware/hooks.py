@@ -6,14 +6,14 @@ from typing import Any, Dict, List, Optional, Protocol
 
 @dataclass
 class MiddlewareOutcome:
-    """Optional control surface returned by middleware hooks."""
+    """Optional control surface returned by lifecycle interceptors."""
 
     short_circuit: bool = False
     reason: Optional[str] = None
     replacement: Any = None
 
 
-class TurnMiddleware(Protocol):
+class TurnLifecycleInterceptor(Protocol):
     def before_prompt(
         self,
         messages: List[Dict[str, str]],
@@ -68,13 +68,20 @@ class TurnMiddleware(Protocol):
         ...
 
 
-class MiddlewarePipeline:
-    def __init__(self, middlewares: Optional[List[TurnMiddleware]] = None):
-        self.middlewares = list(middlewares or [])
+class TurnLifecycleInterceptors:
+    def __init__(
+        self,
+        interceptors: Optional[List[TurnLifecycleInterceptor]] = None,
+        *,
+        middlewares: Optional[List[TurnLifecycleInterceptor]] = None,
+    ):
+        # Backward compatibility: `middlewares=` was the old constructor argument.
+        source = interceptors if interceptors is not None else middlewares
+        self.interceptors = list(source or [])
 
     def _iter(self):
-        for middleware in self.middlewares:
-            yield middleware
+        for interceptor in self.interceptors:
+            yield interceptor
 
     def apply_before_prompt(
         self,
@@ -85,8 +92,8 @@ class MiddlewarePipeline:
         context: Dict[str, Any],
     ) -> tuple[List[Dict[str, str]], Optional[MiddlewareOutcome]]:
         current = messages
-        for middleware in self._iter():
-            handler = getattr(middleware, "before_prompt", None)
+        for interceptor in self._iter():
+            handler = getattr(interceptor, "before_prompt", None)
             if not callable(handler):
                 continue
             outcome = handler(current, issue=issue, role=role, context=context)
@@ -107,8 +114,8 @@ class MiddlewarePipeline:
         context: Dict[str, Any],
     ) -> tuple[Any, Optional[MiddlewareOutcome]]:
         current = response
-        for middleware in self._iter():
-            handler = getattr(middleware, "after_model", None)
+        for interceptor in self._iter():
+            handler = getattr(interceptor, "after_model", None)
             if not callable(handler):
                 continue
             outcome = handler(current, issue=issue, role=role, context=context)
@@ -129,8 +136,8 @@ class MiddlewarePipeline:
         role_name: str,
         context: Dict[str, Any],
     ) -> Optional[MiddlewareOutcome]:
-        for middleware in self._iter():
-            handler = getattr(middleware, "before_tool", None)
+        for interceptor in self._iter():
+            handler = getattr(interceptor, "before_tool", None)
             if not callable(handler):
                 continue
             outcome = handler(tool_name, args, issue=issue, role_name=role_name, context=context)
@@ -149,8 +156,8 @@ class MiddlewarePipeline:
         context: Dict[str, Any],
     ) -> Dict[str, Any]:
         current = result
-        for middleware in self._iter():
-            handler = getattr(middleware, "after_tool", None)
+        for interceptor in self._iter():
+            handler = getattr(interceptor, "after_tool", None)
             if not callable(handler):
                 continue
             outcome = handler(tool_name, args, current, issue=issue, role_name=role_name, context=context)
@@ -166,7 +173,12 @@ class MiddlewarePipeline:
         role: Any,
         context: Dict[str, Any],
     ) -> None:
-        for middleware in self._iter():
-            handler = getattr(middleware, "on_turn_failure", None)
+        for interceptor in self._iter():
+            handler = getattr(interceptor, "on_turn_failure", None)
             if callable(handler):
                 handler(error, issue=issue, role=role, context=context)
+
+
+# Backward-compatible aliases.
+TurnMiddleware = TurnLifecycleInterceptor
+MiddlewarePipeline = TurnLifecycleInterceptors

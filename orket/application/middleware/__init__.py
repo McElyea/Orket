@@ -1,5 +1,17 @@
-"""Application middleware hooks for turn/model/tool lifecycle."""
+"""Application lifecycle interceptors for turn/model/tool execution."""
 
-from orket.application.middleware.hooks import MiddlewareOutcome, MiddlewarePipeline, TurnMiddleware
+from orket.application.middleware.hooks import (
+    MiddlewareOutcome,
+    MiddlewarePipeline,
+    TurnLifecycleInterceptor,
+    TurnLifecycleInterceptors,
+    TurnMiddleware,
+)
 
-__all__ = ["TurnMiddleware", "MiddlewareOutcome", "MiddlewarePipeline"]
+__all__ = [
+    "TurnLifecycleInterceptor",
+    "TurnLifecycleInterceptors",
+    "MiddlewareOutcome",
+    "TurnMiddleware",
+    "MiddlewarePipeline",
+]
