@@ -47,6 +47,15 @@ Notes:
 2. Canary gate aborts sweep if thresholds fail.
 3. Polluted quant rows are excluded from frontier/recommendations by default.
 
+## CI Workflow Modes
+1. Smoke workflow: `.github/workflows/quant-sweep-smoke.yml`
+   - Deterministic and model-free.
+   - Runs unit tests + matrix dry-run only.
+2. Full self-hosted workflow: `.github/workflows/quant-sweep-full-selfhosted.yml`
+   - Executes real sweep runs on self-hosted hardware.
+   - Produces summary, KPI report, sidecar artifacts, and provenance metadata.
+   - Fails on KPI policy violations.
+
 ## Polluted Override
 Include polluted rows in frontier logic:
 

@@ -1,0 +1,128 @@
+name: Quant Sweep Full (Self-Hosted)
+
+on:
+  workflow_dispatch:
+    inputs:
+      matrix_config:
+        description: "Matrix config path"
+        required: false
+        default: "benchmarks/configs/quant_sweep_mixed.json"
+      task_bank:
+        description: "Task bank path (optional override)"
+        required: false
+        default: ""
+      summary_out:
+        description: "Summary output path"
+        required: false
+        default: "benchmarks/results/quant_sweep/full_sweep_summary.json"
+      max_missing_telemetry_rate:
+        description: "KPI policy: max missing telemetry rate"
+        required: false
+        default: "0.01"
+      max_polluted_run_rate:
+        description: "KPI policy: max polluted run rate"
+        required: false
+        default: "0.10"
+      min_frontier_success_rate:
+        description: "KPI policy: min frontier success rate"
+        required: false
+        default: "0.80"
+      min_determinism_rate:
+        description: "KPI policy: min determinism rate"
+        required: false
+        default: "1.0"
+
+jobs:
+  full-sweep:
+    runs-on: [self-hosted]
+    timeout-minutes: 240
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Resolve Sweep Inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          MATRIX_CONFIG="${{ github.event.inputs.matrix_config || 'benchmarks/configs/quant_sweep_mixed.json' }}"
+          TASK_BANK="${{ github.event.inputs.task_bank || '' }}"
+          SUMMARY_OUT="${{ github.event.inputs.summary_out || 'benchmarks/results/quant_sweep/full_sweep_summary.json' }}"
+          mkdir -p "$(dirname "$SUMMARY_OUT")"
+          echo "MATRIX_CONFIG=$MATRIX_CONFIG" >> "$GITHUB_ENV"
+          echo "TASK_BANK=$TASK_BANK" >> "$GITHUB_ENV"
+          echo "SUMMARY_OUT=$SUMMARY_OUT" >> "$GITHUB_ENV"
+
+      - name: Run Full Quant Sweep
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA_ARGS=()
+          if [[ -n "${TASK_BANK}" ]]; then
+            EXTRA_ARGS+=(--task-bank "${TASK_BANK}")
+          fi
+          python scripts/run_quant_sweep.py \
+            --model-id placeholder-model \
+            --quant-tags Q8_0 \
+            --matrix-config "${MATRIX_CONFIG}" \
+            --summary-out "${SUMMARY_OUT}" \
+            "${EXTRA_ARGS[@]}"
+
+      - name: Build KPI Report
+        run: |
+          python scripts/quant_sweep_kpi_report.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --out benchmarks/results/quant_sweep/full_sweep_kpis.json
+
+      - name: Enforce KPI Policy
+        run: |
+          python scripts/check_quant_sweep_kpis.py \
+            --summary "${{ env.SUMMARY_OUT }}" \
+            --max-missing-telemetry-rate "${{ github.event.inputs.max_missing_telemetry_rate || '0.01' }}" \
+            --max-polluted-run-rate "${{ github.event.inputs.max_polluted_run_rate || '0.10' }}" \
+            --min-frontier-success-rate "${{ github.event.inputs.min_frontier_success_rate || '0.80' }}" \
+            --min-determinism-rate "${{ github.event.inputs.min_determinism_rate || '1.0' }}"
+
+      - name: Write Provenance
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, UTC
+          from pathlib import Path
+
+          summary_out = Path(os.environ["SUMMARY_OUT"])
+          payload = {
+              "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+              "workflow": "quant-sweep-full-selfhosted",
+              "run_id": os.environ.get("GITHUB_RUN_ID", ""),
+              "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", ""),
+              "sha": os.environ.get("GITHUB_SHA", ""),
+              "ref": os.environ.get("GITHUB_REF", ""),
+              "summary_out": str(summary_out).replace("\\", "/"),
+              "matrix_config": os.environ.get("MATRIX_CONFIG", ""),
+              "task_bank_override": os.environ.get("TASK_BANK", ""),
+          }
+          out = Path("benchmarks/results/quant_sweep/full_sweep_provenance.json")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload Full Sweep Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: quant-sweep-full-selfhosted-artifacts
+          path: |
+            ${{ env.SUMMARY_OUT }}
+            benchmarks/results/quant_sweep/full_sweep_kpis.json
+            benchmarks/results/quant_sweep/full_sweep_provenance.json
+            benchmarks/results/quant_sweep/sidecar/**/*.json

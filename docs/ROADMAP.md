@@ -54,24 +54,25 @@ Success criteria:
 3. `--include-invalid` only affects frontier/comparison visibility.
 
 ## Next (After Now)
-1. Add self-hosted full quant sweep workflow.
+1. Add visualization/reporting script for operator review.
 Deliverables:
-1. Manual-dispatch workflow for real model runs.
-2. Sweep summary + sidecar artifact upload.
-3. Commit/provenance metadata in artifacts.
+1. Generate TPS vs adherence scatter from `sweep_summary.json`.
+2. Annotate minimum-viable and best-value quant frontier points.
+3. Consume validated rows only by default.
 
-2. Integrate KPI policy checker into full workflow.
+2. Expand E2E regression matrix for policy interactions.
 Deliverables:
-1. Real sweep summary used as KPI input.
-2. Workflow fails on SLO violation.
+1. Cover sidecar parsing + KPI gating + invalid-run inclusion interactions.
+2. Add regression fixtures for `sidecar_parse_status` error states.
+3. Enforce no schema drift in CI contract tests.
 
-3. Separate smoke and full workflows by contract.
+3. Add structured GPU profile variants for sidecar templates.
 Deliverables:
-1. Smoke remains deterministic and model-free.
-2. Full workflow is model-loaded and sidecar-capable.
-3. Both paths publish distinct, non-overlapping artifact contracts.
+1. Define backend/vendor profile presets (NVIDIA/AMD/CPU-only).
+2. Keep canonical sidecar schema stable across profiles.
+3. Add profile compatibility notes to runbook.
 
 ## Later
-1. Visualization/reporting script (TPS vs adherence, frontier annotations) using only validated telemetry.
-2. Expand E2E regression matrix for sidecar parsing + KPI gating + invalid-run policy interactions.
-3. Add structured GPU profile variants for sidecar templates (vendor/backend-specific modes).
+1. Add thermal gate and cooldown policy checks for GPU sessions.
+2. Add VRAM pre-flight guard rails (strict vs extended thresholds) as optional diagnostics.
+3. Add sidecar schema spec files under `docs/specs/` for long-term contract governance.
