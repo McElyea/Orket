@@ -19,8 +19,10 @@ def _manifest() -> dict:
             {
                 "entrypoint_id": "write-main",
                 "runtime": "python",
+                "runtime_version": "3.11.0",
                 "command": "python run.py",
                 "working_directory": ".",
+                "runtime_limits": {"max_execution_time": 10, "max_memory": 256},
                 "input_schema": {},
                 "output_schema": {},
                 "error_schema": {},
@@ -42,6 +44,7 @@ def test_build_tool_profile_bindings_from_manifest() -> None:
     row = bindings["write_file"]
     assert row["entrypoint_id"] == "write-main"
     assert row["tool_profile_version"] == "1.1.0"
+    assert row["runtime_limits"]["max_execution_time"] == 10
     assert row["required_permissions"] == {"filesystem": ["write"]}
 
 
@@ -61,4 +64,3 @@ def test_synthesize_role_tool_profile_bindings_creates_deterministic_defaults() 
     bindings = synthesize_role_tool_profile_bindings(["write_file", "read_file", "write_file"])
     assert sorted(bindings.keys()) == ["read_file", "write_file"]
     assert bindings["write_file"]["tool_profile_version"] == "role-tools.v1"
-

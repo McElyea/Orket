@@ -43,6 +43,14 @@ def load_skill_manifest_or_raise(payload: dict[str, Any]) -> dict[str, Any]:
     errors = list(validation.get("errors") or [])
     code = "ERR_CONTRACT_INVALID"
     stage = "loader"
+    entrypoint_id: str | None = None
+    for item in errors:
+        text = str(item)
+        if text.startswith("entrypoint:"):
+            parts = text.split(":")
+            if len(parts) >= 3:
+                entrypoint_id = parts[1].strip() or None
+                break
     if any(str(item).startswith("schema:") for item in errors):
         code = "ERR_SCHEMA_INVALID"
         stage = "schema"
@@ -52,6 +60,18 @@ def load_skill_manifest_or_raise(payload: dict[str, Any]) -> dict[str, Any]:
     elif "contract:manifest_digest_missing_algorithm_prefix" in errors:
         code = "ERR_CONTRACT_INVALID"
         stage = "contract"
+    elif any(str(item).endswith(":runtime_unpinned") for item in errors):
+        code = "ERR_RUNTIME_UNPINNED"
+        stage = "runtime"
+    elif any(str(item).endswith(":fingerprint_incomplete") for item in errors):
+        code = "ERR_FINGERPRINT_INCOMPLETE"
+        stage = "fingerprint"
+    elif any(str(item).endswith(":side_effect_undeclared") for item in errors):
+        code = "ERR_SIDE_EFFECT_UNDECLARED"
+        stage = "side_effect"
+    elif any(str(item).endswith(":permission_undeclared") for item in errors):
+        code = "ERR_PERMISSION_UNDECLARED"
+        stage = "permissions"
 
     raise SkillLoaderError(
         error_code=code,
@@ -61,5 +81,5 @@ def load_skill_manifest_or_raise(payload: dict[str, Any]) -> dict[str, Any]:
         skill_contract_version_seen=str(payload.get("skill_contract_version") or "unknown"),
         validation_stage=stage,
         retryable=False,
+        entrypoint_id=entrypoint_id,
     )
-

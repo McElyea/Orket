@@ -2,7 +2,7 @@
 
 Last updated: 2026-02-21
 Owner: Orket Core
-Status: Draft (active refinement)
+Status: Completed (v1)
 
 ## Scope
 This document defines the implementation plan for the Orket Skill Contract and Skill loader/runtime path in the Local Skill Runtime (LSR).
@@ -96,6 +96,13 @@ Exit criteria:
 
 ## Remaining Backlog
 1. No open backlog items for v1.
+
+## Implementation Status (v1)
+1. Phase 0 complete: contract and loader error schemas are versioned in `docs/specs/`.
+2. Phase 1 complete: validator emits deterministic metadata and enforces runtime pinning, fingerprint completeness, side-effect coverage, and permission declaration checks.
+3. Phase 2 complete: loader rejects invalid manifests with canonical error payloads and entrypoint-aware stages/codes.
+4. Phase 3 complete: adapter maps entrypoints to tool profiles and runtime metadata; executor enforces declared-entrypoint-only, required permissions, and runtime limit caps.
+5. Phase 4 complete: contract/integration tests are in CI scope and runbook troubleshooting is documented.
 
 ## Definition of Done (v1)
 1. Skill loadability is contract-first and enforced mechanically.

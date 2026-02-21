@@ -24,8 +24,11 @@ def build_tool_profile_bindings(skill_manifest_payload: dict[str, Any]) -> dict[
             raise ValueError(f"duplicate tool_profile_id binding: {tool_name}")
         bindings[tool_name] = {
             "entrypoint_id": str(entrypoint.get("entrypoint_id") or "").strip() or tool_name,
+            "runtime": str(entrypoint.get("runtime") or "").strip() or "unknown",
+            "runtime_version": str(entrypoint.get("runtime_version") or "").strip() or "",
             "tool_profile_id": tool_name,
             "tool_profile_version": str(entrypoint.get("tool_profile_version") or "").strip() or "unknown-v1",
+            "runtime_limits": dict(entrypoint.get("runtime_limits") or {}),
             "requested_permissions": dict(entrypoint.get("requested_permissions") or {}),
             "required_permissions": dict(entrypoint.get("required_permissions") or {}),
         }
@@ -49,8 +52,11 @@ def synthesize_role_tool_profile_bindings(
             continue
         bindings[tool_name] = {
             "entrypoint_id": tool_name,
+            "runtime": "role",
+            "runtime_version": "",
             "tool_profile_id": tool_name,
             "tool_profile_version": profile_version,
+            "runtime_limits": {},
             "requested_permissions": {},
             "required_permissions": {},
         }

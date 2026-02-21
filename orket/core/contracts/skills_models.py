@@ -10,16 +10,22 @@ class SkillEntrypointContract(BaseModel):
 
     entrypoint_id: str = Field(min_length=1)
     runtime: str = Field(min_length=1)
+    runtime_version: str | None = None
     command: str = Field(min_length=1)
     working_directory: str = Field(min_length=1)
+    runtime_limits: dict[str, Any] = Field(default_factory=dict)
+    requested_determinism_profile: str | None = None
     input_schema: dict[str, Any] = Field(default_factory=dict)
     output_schema: dict[str, Any] = Field(default_factory=dict)
     error_schema: dict[str, Any] = Field(default_factory=dict)
     args_fingerprint_fields: list[str] = Field(default_factory=list)
     result_fingerprint_fields: list[str] = Field(default_factory=list)
     side_effect_fingerprint_fields: list[str] = Field(default_factory=list)
+    side_effect_categories: list[str] = Field(default_factory=list)
     requested_permissions: dict[str, Any] = Field(default_factory=dict)
     required_permissions: dict[str, Any] = Field(default_factory=dict)
+    required_environment_variables: list[str] = Field(default_factory=list)
+    value_fingerprints: dict[str, Any] = Field(default_factory=dict)
     tool_profile_id: str = Field(min_length=1)
     tool_profile_version: str = Field(min_length=1)
 
@@ -33,4 +39,3 @@ class SkillManifestContract(BaseModel):
     description: str = Field(min_length=1)
     manifest_digest: str = Field(min_length=1)
     entrypoints: list[SkillEntrypointContract] = Field(min_length=1)
-

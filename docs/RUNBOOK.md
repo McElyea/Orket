@@ -127,6 +127,24 @@ python scripts/report_failure_modes.py --out benchmarks/results/failure_modes.js
 `workspace/default/observability/<run_id>/<issue_id>/<turn_index>_<role>/checkpoint.json`
 - Replay problematic turn (see command above).
 
+## Skill Contract Troubleshooting
+1. Validate a Skill manifest directly:
+```bash
+python scripts/check_skill_contracts.py --manifest <path_to_skill_manifest.json>
+```
+2. Common loader error codes:
+- `ERR_SCHEMA_INVALID`: missing/invalid required contract fields.
+- `ERR_CONTRACT_UNSUPPORTED_VERSION`: unsupported `skill_contract_version`.
+- `ERR_RUNTIME_UNPINNED`: entrypoint runtime missing `runtime_version`.
+- `ERR_FINGERPRINT_INCOMPLETE`: required argument/result fingerprint fields missing.
+- `ERR_PERMISSION_UNDECLARED`: required permissions are not declared in requested permissions.
+- `ERR_SIDE_EFFECT_UNDECLARED`: side-effect categories declared without fingerprint coverage.
+3. For runtime tool failures in enforced skill mode, inspect:
+`workspace/default/observability/<run_id>/<issue_id>/<turn_index>_<role>/memory_trace.json`
+4. If runtime-limit violations occur, check orchestrator process rules:
+- `skill_max_execution_time`
+- `skill_max_memory`
+
 ## Security and Secrets
 1. Keep secrets in `.env` only.
 2. Do not commit `.env`, DB files, or local runtime state.

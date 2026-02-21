@@ -26,18 +26,21 @@ Every Skill manifest MUST include:
 Each `entrypoints[*]` item MUST include:
 1. `entrypoint_id`
 2. `runtime` (`python`, `node`, `shell`, `container`)
-3. `command` (or module reference)
-4. `working_directory`
-5. `input_schema`
-6. `output_schema`
-7. `error_schema`
-8. `args_fingerprint_fields`
-9. `result_fingerprint_fields`
-10. `side_effect_fingerprint_fields`
-11. `requested_permissions`
-12. `required_permissions`
-13. `tool_profile_id`
-14. `tool_profile_version`
+3. `runtime_version` (required for pinned runtimes in deterministic mode)
+4. `command` (or module reference)
+5. `working_directory`
+6. `runtime_limits` (for example: `max_execution_time`, `max_memory`)
+7. `input_schema`
+8. `output_schema`
+9. `error_schema`
+10. `args_fingerprint_fields`
+11. `result_fingerprint_fields`
+12. `side_effect_fingerprint_fields`
+13. `side_effect_categories`
+14. `requested_permissions`
+15. `required_permissions`
+16. `tool_profile_id`
+17. `tool_profile_version`
 
 ## Execution Context Contract
 Entrypoints MUST declare or inherit deterministic execution context assumptions:
@@ -68,4 +71,3 @@ Invalid contract payloads MUST be rejected by loader policy and surfaced through
 
 Companion schema doc:
 1. `docs/specs/SKILL_LOADER_ERROR_SCHEMA.md`
-

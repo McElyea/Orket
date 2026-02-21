@@ -21,12 +21,15 @@ def test_skill_contract_schema_doc_exists_and_contains_required_tokens() -> None
         "entrypoints",
         "entrypoint_id",
         "runtime",
+        "runtime_version",
+        "runtime_limits",
         "input_schema",
         "output_schema",
         "error_schema",
         "args_fingerprint_fields",
         "result_fingerprint_fields",
         "side_effect_fingerprint_fields",
+        "side_effect_categories",
         "requested_permissions",
         "required_permissions",
         "tool_profile_id",
@@ -36,4 +39,3 @@ def test_skill_contract_schema_doc_exists_and_contains_required_tokens() -> None
     ]
     missing = [token for token in required_tokens if token not in text]
     assert not missing, f"Missing required skill contract schema tokens: {missing}"
-

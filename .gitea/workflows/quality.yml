@@ -183,6 +183,7 @@ jobs:
                   {
                       "entrypoint_id": "write-main",
                       "runtime": "python",
+                      "runtime_version": "3.11.0",
                       "command": "python run.py",
                       "working_directory": ".",
                       "input_schema": {},

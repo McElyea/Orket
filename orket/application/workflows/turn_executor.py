@@ -945,6 +945,13 @@ class TurnExecutor:
                             f"'{tool_call.tool}' ({', '.join(missing_permissions)})."
                         )
                         continue
+                    limit_violations = self._runtime_limit_violations(binding, context)
+                    if limit_violations:
+                        violations.append(
+                            "Skill contract violation: runtime limits exceeded for "
+                            f"'{tool_call.tool}' ({', '.join(limit_violations)})."
+                        )
+                        continue
 
                 if tool_call.tool in approval_required_tools:
                     request_id = None
@@ -1011,10 +1018,16 @@ class TurnExecutor:
                         self.workspace,
                     )
                 else:
+                    execution_context = dict(context)
+                    if isinstance(binding, dict):
+                        execution_context["skill_entrypoint_id"] = str(binding.get("entrypoint_id") or "")
+                        execution_context["skill_runtime"] = str(binding.get("runtime") or "")
+                        execution_context["skill_runtime_version"] = str(binding.get("runtime_version") or "")
+                        execution_context["tool_runtime_limits"] = dict(binding.get("runtime_limits") or {})
                     result = await toolbox.execute(
                         tool_call.tool,
                         tool_call.args,
-                        context
+                        execution_context
                     )
                 result = self.middleware.apply_after_tool(
                     tool_call.tool,
@@ -1123,6 +1136,33 @@ class TurnExecutor:
         if isinstance(values, list):
             return {str(item).strip() for item in values if str(item).strip()}
         return set()
+
+    def _runtime_limit_violations(self, binding: Dict[str, Any], context: Dict[str, Any]) -> List[str]:
+        limits = binding.get("runtime_limits")
+        if not isinstance(limits, dict) or not limits:
+            return []
+
+        violations: List[str] = []
+        requested_exec = self._as_positive_float(limits.get("max_execution_time"))
+        requested_memory = self._as_positive_float(limits.get("max_memory"))
+        allowed_exec = self._as_positive_float(context.get("max_tool_execution_time"))
+        allowed_memory = self._as_positive_float(context.get("max_tool_memory"))
+
+        if requested_exec is not None and allowed_exec is not None and requested_exec > allowed_exec:
+            violations.append("max_execution_time")
+        if requested_memory is not None and allowed_memory is not None and requested_memory > allowed_memory:
+            violations.append("max_memory")
+
+        return violations
+
+    def _as_positive_float(self, value: Any) -> float | None:
+        if value is None:
+            return None
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+        return number if number > 0 else None
 
     def _collect_contract_violations(
         self,

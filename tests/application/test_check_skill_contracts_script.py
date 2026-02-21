@@ -16,6 +16,7 @@ def _valid_manifest() -> dict:
             {
                 "entrypoint_id": "main",
                 "runtime": "python",
+                "runtime_version": "3.11.0",
                 "command": "python run.py",
                 "working_directory": ".",
                 "input_schema": {},
@@ -72,4 +73,3 @@ def test_check_skill_contracts_script_fails_invalid_manifest(tmp_path: Path) -> 
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert payload["status"] == "FAIL"
     assert any(item.startswith("schema:") for item in payload["failures"])
-

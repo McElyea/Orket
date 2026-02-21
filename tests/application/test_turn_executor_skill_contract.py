@@ -19,7 +19,11 @@ class _Model:
 
 
 class _ToolBox:
+    def __init__(self):
+        self.last_context = None
+
     async def execute(self, tool_name, args, context=None):
+        self.last_context = dict(context or {})
         return {"ok": True, "tool": tool_name, "args": args}
 
 
@@ -90,3 +94,59 @@ async def test_turn_executor_rejects_tool_when_required_permission_missing(tmp_p
     assert result.success is False
     assert any("missing required permissions" in item for item in (result.violations or []))
 
+
+@pytest.mark.asyncio
+async def test_turn_executor_rejects_tool_when_runtime_limits_exceed_allowed_caps(tmp_path: Path) -> None:
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    context = _context()
+    context["skill_contract_enforced"] = True
+    context["max_tool_execution_time"] = 5
+    context["max_tool_memory"] = 128
+    context["skill_tool_bindings"] = {
+        "write_file": {
+            "entrypoint_id": "write-main",
+            "tool_profile_id": "write_file",
+            "tool_profile_version": "1.0.0",
+            "required_permissions": {},
+            "runtime_limits": {"max_execution_time": 10, "max_memory": 256},
+        }
+    }
+
+    result = await executor.execute_turn(_issue(), _role(), _Model(), _ToolBox(), context)
+    assert result.success is False
+    assert any("runtime limits exceeded" in item for item in (result.violations or []))
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_passes_skill_runtime_binding_context_to_toolbox(tmp_path: Path) -> None:
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    toolbox = _ToolBox()
+    context = _context()
+    context["skill_contract_enforced"] = True
+    context["skill_tool_bindings"] = {
+        "write_file": {
+            "entrypoint_id": "write-main",
+            "runtime": "python",
+            "runtime_version": "3.11.0",
+            "tool_profile_id": "write_file",
+            "tool_profile_version": "1.0.0",
+            "required_permissions": {},
+            "runtime_limits": {"max_execution_time": 10},
+        }
+    }
+
+    result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, context)
+    assert result.success is True
+    assert toolbox.last_context is not None
+    assert toolbox.last_context["skill_entrypoint_id"] == "write-main"
+    assert toolbox.last_context["skill_runtime"] == "python"
+    assert toolbox.last_context["skill_runtime_version"] == "3.11.0"
+    assert toolbox.last_context["tool_runtime_limits"]["max_execution_time"] == 10

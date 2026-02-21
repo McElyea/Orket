@@ -14,6 +14,7 @@ def _valid_manifest() -> dict:
             {
                 "entrypoint_id": "main",
                 "runtime": "python",
+                "runtime_version": "3.11.0",
                 "command": "python run.py",
                 "working_directory": ".",
                 "input_schema": {},
@@ -48,3 +49,13 @@ def test_skill_validation_metadata_is_deterministic_for_identical_payload() -> N
     second = validate_skill_manifest(payload)
     assert first == second
 
+
+def test_skill_validation_metadata_flags_side_effect_declaration_gaps() -> None:
+    payload = _valid_manifest()
+    payload["entrypoints"][0]["side_effect_categories"] = ["network.http"]
+    payload["entrypoints"][0]["side_effect_fingerprint_fields"] = []
+
+    result = validate_skill_manifest(payload)
+    assert result["determinism_eligible"] is False
+    assert result["side_effect_risk"] == "undeclared"
+    assert any(item.endswith(":side_effect_undeclared") for item in result["errors"])

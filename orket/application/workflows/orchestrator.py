@@ -1543,6 +1543,21 @@ class Orchestrator:
             forced_frontend_framework = "angular"
         scope_limits = self._resolve_verification_scope_limits()
         architecture_patterns = allowed_architecture_patterns()
+        process_rules = (
+            self.org.process_rules
+            if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
+            else {}
+        )
+        raw_max_tool_execution_time = process_rules.get("skill_max_execution_time")
+        raw_max_tool_memory = process_rules.get("skill_max_memory")
+        try:
+            max_tool_execution_time = float(raw_max_tool_execution_time) if raw_max_tool_execution_time is not None else None
+        except (TypeError, ValueError):
+            max_tool_execution_time = None
+        try:
+            max_tool_memory = float(raw_max_tool_memory) if raw_max_tool_memory is not None else None
+        except (TypeError, ValueError):
+            max_tool_memory = None
         resolved_skill_tool_bindings = {
             str(key).strip(): dict(value or {})
             for key, value in (skill_tool_bindings or {}).items()
@@ -1615,6 +1630,8 @@ class Orchestrator:
             "skill_contract_enforced": bool(resolved_skill_tool_bindings),
             "skill_tool_bindings": resolved_skill_tool_bindings,
             "tool_profile_version": tool_profile_version,
+            "max_tool_execution_time": max_tool_execution_time,
+            "max_tool_memory": max_tool_memory,
         }
 
     async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:
