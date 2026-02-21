@@ -319,6 +319,21 @@ python scripts/check_context_rollup_contract.py `
   --out benchmarks/results/context_sweep/context_rollup_check.json
 ```
 
+Cleanup ephemeral context sweep storage:
+
+```powershell
+python scripts/cleanup_context_sweep_artifacts.py `
+  --out-dir benchmarks/results/context_sweep
+```
+
+Dry run cleanup preview:
+
+```powershell
+python scripts/cleanup_context_sweep_artifacts.py `
+  --out-dir benchmarks/results/context_sweep `
+  --dry-run
+```
+
 ## Baseline Operations
 List baselines:
 

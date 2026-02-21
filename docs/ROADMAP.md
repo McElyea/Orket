@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add reusable cleanup command for ephemeral context sweep outputs.
-Deliverables:
-1. Remove stale `<out-dir>/.storage` directories safely.
-2. Keep persistent `orket_storage` data untouched by default.
-3. Document cleanup command usage in runbook.
-
-2. Add context sweep profile policy verification in smoke tests.
+1. Add context sweep profile policy verification in smoke tests.
 Deliverables:
 1. Ensure preset matrix context profile keys remain present and valid.
 2. Validate profile threshold defaults are non-regressive.
 3. Fail CI on missing/invalid profile policy fields.
+
+2. Add full-workflow optional cleanup step for ephemeral context outputs.
+Deliverables:
+1. Add workflow input to run cleanup after artifact upload.
+2. Use cleanup command in non-destructive mode by default (`--dry-run`).
+3. Allow explicit opt-in deletion when operators request it.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.
