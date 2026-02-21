@@ -1,52 +1,65 @@
 # Orket
 
-Orket is a local-first, state-driven execution engine for automated workflows. It uses an asynchronous traction loop to coordinate LLM turns against a structured card system, enforced by a mechanical state machine.
+Orket is a local-first workflow runtime that executes card-based work with LLM turns, guard checks, and persistent state.
 
-## Core Idea
-- Roles are stable contracts.
-- Models are unique specialists with different strengths and failure modes.
-- Reliability comes from capability-aware model assignment plus mechanical governance.
-- The system absorbs model variance through explicit contracts, stage gates, and deterministic retries.
+## Current Focus
+1. Quantization diagnostics and sweep operations for live/local model runs.
+2. Deterministic telemetry contracts and run-validity policy.
+3. Guarded workflow execution through state and tool gates.
 
-## Core Mechanics
+## Runtime Model
 
-### 1. The Traction Loop
-The engine operates on a continuous traction cycle:
-- Scan: Identifies the next priority card in the backlog.
-- Prepare: Compiles system instructions based on roles and model dialects.
-- Execute: Runs an asynchronous LLM turn to generate tool calls.
-- Govern: Validates every tool call and state transition against mechanical boundaries.
-- Persist: Commits changes to a local SQLite repository and updates the workspace.
+### Card Lifecycle
 
-### 2. Mechanical Governance
-Orket enforces strict operational boundaries to ensure system integrity:
-- State Machine: Prevents illegal status transitions.
-- Tool Gating: Restricts file operations to approved boundaries.
-- Directory Isolation: Separates execution fixtures from agent output.
-
-### 3. Local-First Sovereignty
-Orket is designed to run entirely on local hardware:
-- Orchestration: Asynchronous Python engine (`FastAPI` + `aiosqlite`).
-- Models: Integration with local `Ollama` instances.
-- Storage: Local SQLite database and filesystem-based workspaces.
-
-## Quickstart
-
-1. Install dependencies:
-```bash
-pip install .
+```text
+OPEN -> CLAIMED -> IN_PROGRESS -> REVIEW -> DONE
+  |        |           |            |
+  |        |           |            +--> BLOCKED (guard/rule failure)
+  |        |           +--> FAILED (execution failure)
+  |        +--> OPEN (lease/claim released)
+  +--> ARCHIVED (operator action)
 ```
 
-2. Set up environment:
-Create a `.env` file from `.env.example`.
+### Turn Execution and Guard Flow
 
-3. Launch the core:
+```text
+[Planner/Selector]
+      |
+      v
+[Turn Executor] --tool calls--> [Tool Gate] ----deny----> [Violation + Blocked]
+      |                              |
+      |                              +--allow--> [Action]
+      v
+[State Transition Request] --> [State Machine Gate] --deny--> [Violation + Blocked]
+      |                                  |
+      +-------------allow----------------+
+                     |
+                     v
+               [Persist + Emit Telemetry]
+```
+
+## Repository Map
+1. `orket/core`: contracts, state rules, policy types.
+2. `orket/application`: orchestration services and workflow logic.
+3. `orket/adapters`: model/storage/tool integrations.
+4. `orket/interfaces`: API/CLI surfaces.
+5. `scripts/`: operational and benchmark tooling.
+6. `benchmarks/`: task banks, runs, and diagnostics artifacts.
+7. `docs/`: architecture, security, runbooks, and active roadmap.
+
+## Quick Start
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+2. Configure environment:
+```bash
+cp .env.example .env
+```
+3. Run the API server:
 ```bash
 python server.py
 ```
 
-## Docs Navigation
-- `docs/PROJECT.md` for project framing and operating model.
-- `docs/ARCHITECTURE.md` for architecture and durable/volatile state boundaries.
-- `docs/ROADMAP.md` for current priorities.
-- `docs/RUNBOOK.md` for operations.
+## Documentation
+Start with `docs/README.md` for a source-of-truth index.

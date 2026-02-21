@@ -1,59 +1,28 @@
 # Prompt Lab
 
-This directory is optional and never runtime-critical.
+Optional tooling for prompt evaluation and candidate comparison.
+
+This directory is not runtime-critical for core orchestration.
 
 ## Eval Harness
-Run:
-
 ```bash
 python scripts/prompt_lab/eval_harness.py
 ```
+Output: `benchmarks/results/prompt_eval_metrics.json`
 
-Outputs:
-- `benchmarks/results/prompt_eval_metrics.json`
-
-Tracked metrics:
-- `tool_parse_rate`
-- `required_action_completion_rate`
-- `status_progression_rate`
-- `guard_decision_reach_rate`
-
-## PromptWizard
-PromptWizard is not required for runtime.
-If introduced later, keep it isolated under this directory and behind explicit scripts.
-
-## Offline Optimize
-Generate candidate prompt versions without mutating `model/core/*`:
-
+## Candidate Generation
 ```bash
 python scripts/prompt_lab/optimize_prompts.py --root . --out prompts/candidates --kind all --source-status stable --bump patch
 ```
-
 Outputs:
-- `prompts/candidates/manifest.json`
-- `prompts/candidates/role/*.candidate.json`
-- `prompts/candidates/dialect/*.candidate.json`
+1. `prompts/candidates/manifest.json`
+2. `prompts/candidates/role/*.candidate.json`
+3. `prompts/candidates/dialect/*.candidate.json`
 
 ## Candidate Comparison
-Compare candidate run outputs against stable baselines:
-
 ```bash
-python scripts/prompt_lab/compare_candidates.py \
-  --stable-eval benchmarks/results/prompt_eval_metrics.stable.json \
-  --candidate-eval benchmarks/results/prompt_eval_metrics.candidate.json \
-  --stable-patterns benchmarks/results/live_patterns.stable.json \
-  --candidate-patterns benchmarks/results/live_patterns.candidate.json \
-  --thresholds benchmarks/results/prompt_promotion_thresholds.json
+python scripts/prompt_lab/compare_candidates.py --stable-eval benchmarks/results/prompt_eval_metrics.stable.json --candidate-eval benchmarks/results/prompt_eval_metrics.candidate.json --stable-patterns benchmarks/results/live_patterns.stable.json --candidate-patterns benchmarks/results/live_patterns.candidate.json --thresholds benchmarks/results/prompt_promotion_thresholds.json
 ```
-
 Exit code:
-- `0` when candidate is non-regressive by configured gates.
-- `1` when regression is detected.
-
-Additional guard-aware pattern gates are supported in threshold JSON:
-- `guard_retry_scheduled_max_increase`
-- `guard_terminal_failure_max_increase`
-- `guard_terminal_reason_hallucination_persistent_max_increase`
-- `turn_non_progress_hallucination_scope_max_increase`
-- `turn_non_progress_security_scope_max_increase`
-- `turn_non_progress_consistency_scope_max_increase`
+1. `0`: candidate passes configured gates.
+2. `1`: candidate fails configured gates.

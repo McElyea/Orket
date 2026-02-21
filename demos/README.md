@@ -1,32 +1,15 @@
-# Orket Demos
+# Demos
 
-Interactive demonstration scripts showing how Orket features work.
+Small scripts that exercise isolated runtime behaviors.
 
-## Available Demos
+## Included
+1. `demos/priority.py`: card priority and dependency weighting examples.
+2. `demos/wait_reason.py`: bottleneck/wait-reason examples.
 
-### priority.py
-Shows the priority-based scheduling system:
-- Basic priority ordering (no dependencies)
-- Priority + dependency weighting
-- Realistic sprint scenarios
-- Legacy string migration
-
+## Run
 ```bash
 python demos/priority.py
-```
-
-### wait_reason.py
-Demonstrates diagnostic bottleneck detection:
-- Resource constraints (VRAM maxed)
-- Dependency pile-ups
-- Human intervention requirements
-- Mixed bottleneck scenarios
-- Unblocking flows
-
-```bash
 python demos/wait_reason.py
 ```
 
-## Purpose
-
-These demos are educational tools that show how v0.3.8 features work in practice. They use real Orket classes but with simplified scenarios.
+These demos are not operational benchmarks and are not used as release gates.
