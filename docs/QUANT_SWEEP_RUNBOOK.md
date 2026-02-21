@@ -334,6 +334,14 @@ python scripts/cleanup_context_sweep_artifacts.py `
   --dry-run
 ```
 
+Validate context profile policy defaults:
+
+```powershell
+python scripts/check_context_profile_policy.py `
+  --profiles benchmarks/configs/context_sweep_profiles.json `
+  --matrix-configs benchmarks/configs/quant_sweep_common_sessions.json,benchmarks/configs/quant_sweep_logic_only.json,benchmarks/configs/quant_sweep_refactor_heavy.json,benchmarks/configs/quant_sweep_mixed.json
+```
+
 ## Baseline Operations
 List baselines:
 
