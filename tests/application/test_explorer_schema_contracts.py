@@ -13,6 +13,7 @@ def test_explorer_schema_contracts_pass_for_valid_payloads(tmp_path: Path) -> No
         json.dumps(
             {
                 "generated_at": "2026-02-21T00:00:00Z",
+                "schema_version": "explorer.frontier.v1",
                 "execution_lane": "lab",
                 "vram_profile": "safe",
                 "provenance": {},
@@ -29,6 +30,7 @@ def test_explorer_schema_contracts_pass_for_valid_payloads(tmp_path: Path) -> No
         json.dumps(
             {
                 "generated_at": "2026-02-21T00:00:00Z",
+                "schema_version": "explorer.context_ceiling.v1",
                 "execution_lane": "lab",
                 "vram_profile": "safe",
                 "provenance": {},
@@ -46,6 +48,7 @@ def test_explorer_schema_contracts_pass_for_valid_payloads(tmp_path: Path) -> No
         json.dumps(
             {
                 "generated_at": "2026-02-21T00:00:00Z",
+                "schema_version": "explorer.thermal_stability.v1",
                 "execution_lane": "lab",
                 "vram_profile": "safe",
                 "provenance": {},

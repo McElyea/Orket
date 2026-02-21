@@ -93,6 +93,7 @@ def main() -> int:
     out_path = Path(args.out)
     summary = _load_json(summary_path)
     payload = {
+        "schema_version": "explorer.frontier.v1",
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "source_summary": str(summary_path).replace("\\", "/"),
         "summary_generated_at": str(summary.get("generated_at") or ""),

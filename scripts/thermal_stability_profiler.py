@@ -172,6 +172,7 @@ def main() -> int:
         recommendation = "Thermal pollution detected; reduce load or increase cooldown."
 
     artifact = {
+        "schema_version": "explorer.thermal_stability.v1",
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "execution_lane": str(args.execution_lane),
         "vram_profile": str(args.vram_profile),

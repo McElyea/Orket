@@ -201,6 +201,11 @@ python scripts/check_explorer_schema_contracts.py `
   --thermal benchmarks/results/thermal/thermal_profile.json
 ```
 
+Current explorer schema versions:
+1. `explorer.frontier.v1`
+2. `explorer.context_ceiling.v1`
+3. `explorer.thermal_stability.v1`
+
 ## Lab Guard Check
 Validate cooldown + VRAM profile guard diagnostics from sweep summary:
 
