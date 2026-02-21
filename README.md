@@ -56,10 +56,17 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 ```
-3. Run the API server:
+3. Start the local CLI:
+```bash
+python main.py
+```
+4. Start the API server:
 ```bash
 python server.py
 ```
+
+CLI note:
+1. Running `python main.py` with no `--epic`, `--card`, or `--rock` enters interactive driver mode for local conversation with your configured model.
 
 ## Documentation
 Start with `docs/README.md` for a source-of-truth index.

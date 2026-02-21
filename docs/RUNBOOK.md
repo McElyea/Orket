@@ -1,279 +1,161 @@
 # Orket Operational Runbook
 
-## Scope
-Use this document for active operations and incident response.  
-Detailed procedures live in dedicated docs linked below.
+Last reviewed: 2026-02-21
 
-## Prerequisites
-- Python 3.10+
-- `ORKET_API_KEY` set for protected API routes
-- `GITEA_WEBHOOK_SECRET` and `GITEA_ADMIN_PASSWORD` set for webhook runtime
-- `ORKET_TIMEZONE=MST` (or `America/Denver`) for local-time logs and API timestamps
+## Purpose
+This document is the operator path for starting, validating, troubleshooting, and maintaining Orket.
 
-## First Run Setup
+## Fast Path (5 Minutes)
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+2. Configure env file:
+```bash
+cp .env.example .env
+```
+3. Start local CLI conversation mode:
+```bash
+python main.py
+```
+4. Start API server (separate shell):
+```bash
+python server.py
+```
+5. Optional webhook server (separate shell):
+```bash
+python -m orket.webhook_server
+```
+6. Health checks:
+- API: `GET /health`
+- Webhook: `GET /health`
+
+## First-Time Setup
 1. Clone:
 ```bash
 git clone https://github.com/McElyea/Orket.git
 cd Orket
 ```
-2. Create environment file:
-```bash
-cp .env.example .env
-```
-3. Fill required values in `.env`:
-- `DASHBOARD_PASSWORD`
-- `DASHBOARD_SECRET_KEY`
-- `GITEA_ADMIN_USER`
-- `GITEA_ADMIN_PASSWORD`
-- `GITEA_ADMIN_EMAIL`
-- `POSTGRES_PASSWORD`
-- `MYSQL_PASSWORD`
-- `MONGO_PASSWORD`
-4. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
-5. Start Gitea:
+2. Create `.env` from template and fill required values used by your runtime path.
+3. If using Gitea integration, start Gitea:
 ```bash
 cd infrastructure
 docker-compose -f docker-compose.gitea.yml up -d
 ```
-6. Complete web setup at `http://localhost:3000`.
-7. Verify baseline:
+4. Run baseline validation:
 ```bash
 python -m pytest tests/test_golden_flow.py -v
 ```
 
-## Credential Management
-Rule:
-1. All secrets belong in `.env`.
+## Runtime Entry Points
+1. `python main.py`
+- CLI runtime.
+- With no `--epic`, `--card`, or `--rock`, this enters interactive driver mode.
 
-Protected by `.gitignore`:
-1. `.env`
-2. `.orket/durable/config/user_settings.json`
-3. `*.db`
-4. `infrastructure/gitea/`
-5. `infrastructure/mysql/`
+2. `python server.py`
+- Starts FastAPI API service.
 
-Safe to commit:
-1. `config/organization.json`
-2. `config/*_example.json`
-3. `.env.example`
+3. `python -m orket.webhook_server`
+- Starts webhook receiver with signature validation.
 
-Rotation:
-1. Generate a new value.
-2. Update `.env`.
-3. Restart dependent services.
-4. Verify auth/session-dependent flows.
-
-Leak response:
-1. Rotate leaked credentials immediately.
-2. Remove exposed secrets from git history.
-3. Force-push cleaned history if required.
-4. Notify collaborators to refresh local state.
-
-## Start Services
-API server:
+## Core Operator Commands
+1. Show board:
 ```bash
-python server.py
+python -m orket.interfaces.cli --board
+```
+2. Run an epic:
+```bash
+python -m orket.interfaces.cli --epic <epic_name>
+```
+3. Replay one turn:
+```bash
+python -m orket.interfaces.cli --replay-turn <run_id>:<issue_id>:<turn_index>[:role]
+```
+4. Archive related cards:
+```bash
+python -m orket.interfaces.cli --archive-related <token> --archive-reason "manual archive"
 ```
 
-Webhook server:
-```bash
-python -m orket.webhook_server
-```
-
-Health checks:
-- API: `GET /health`
-- Webhook: `GET /health`
-
-## Deploy
-```bash
-docker build -t orket:latest .
-docker run --rm -p 8082:8082 --env-file .env orket:latest
-```
-
-## Migrations
-```bash
-python scripts/run_migrations.py
-```
-
-Optional DB overrides:
-```bash
-python scripts/run_migrations.py --runtime-db /data/orket_persistence.db --webhook-db /data/webhook.db
-```
-
-Default durable DB paths:
-1. `.orket/durable/db/orket_persistence.db`
-2. `.orket/durable/db/webhook.db`
-
-## Architecture Policy Knobs
-### Architecture Mode
-Controls whether project architecture shape is forced or decided by the architect.
-
-Valid values:
-1. `force_monolith`
-2. `force_microservices`
-3. `architect_decides` (default)
-
-Configuration order (highest wins):
-1. Environment variable `ORKET_ARCHITECTURE_MODE`
-2. `process_rules.architecture_mode` in organization config
-3. Default fallback: `architect_decides`
-
-Examples:
-```bash
-# Force monolith recommendation
-set ORKET_ARCHITECTURE_MODE=force_monolith
-python -m orket.interfaces.cli --epic sanity_test
-```
-
-```bash
-# Force microservices recommendation
-set ORKET_ARCHITECTURE_MODE=force_microservices
-python -m orket.interfaces.cli --epic sanity_test
-```
-
-### Frontend Framework Mode
-Controls frontend framework recommendation policy for architect decisions.
-
-Valid values:
-1. `force_vue`
-2. `force_react`
-3. `force_angular`
-4. `architect_decides` (default)
-
-Configuration order (highest wins):
-1. Environment variable `ORKET_FRONTEND_FRAMEWORK_MODE`
-2. `process_rules.frontend_framework_mode` in organization config
-3. Default fallback: `architect_decides`
-
-Examples:
-```bash
-set ORKET_FRONTEND_FRAMEWORK_MODE=force_angular
-python -m orket.interfaces.cli --epic sanity_test
-```
-
-### Structural Governance Mode (Legacy iDesign Flag)
-Controls whether legacy structural-governance enforcement is required, disabled, or delegated.
-
-Valid values:
-1. `force_idesign`
-2. `force_none`
-3. `architect_decides`
-
-Configuration order (highest wins):
-1. Environment variable `ORKET_IDESIGN_MODE`
-2. `process_rules.idesign_mode` in organization config
-3. Default fallback: `force_none`
-
-Examples:
-```bash
-# Force legacy structural governance for all epics
-set ORKET_IDESIGN_MODE=force_idesign
-python -m orket.interfaces.cli --epic sanity_test
-```
-
-```bash
-# Disable legacy structural governance for all epics (repo default)
-set ORKET_IDESIGN_MODE=force_none
-python -m orket.interfaces.cli --epic sanity_test
-```
-
-```bash
-# Let epic governance setting decide
-set ORKET_IDESIGN_MODE=architect_decides
-python -m orket.interfaces.cli --epic sanity_test
-```
-
-## Release Gate
-Local smoke:
+## Release and Verification Gates
+1. Local smoke:
 ```bash
 python scripts/release_smoke.py
 ```
-
-Security canary only:
+2. Security canary:
 ```bash
 python scripts/security_canary.py
 ```
-
-Volatility boundary gate:
+3. Volatility boundary gate:
 ```bash
 python scripts/check_volatility_boundaries.py
 ```
-
-Failure/non-progress report:
+4. Failure/non-progress report:
 ```bash
 python scripts/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/failure_modes.json
 ```
 
-Prompt eval metrics:
+## Migrations and Storage
+1. Run migrations:
 ```bash
-python scripts/prompt_lab/eval_harness.py --out benchmarks/results/prompt_eval_metrics.json
+python scripts/run_migrations.py
 ```
-
-Real-service stress (no mocks/fakes):
+2. Optional DB path overrides:
 ```bash
-python scripts/real_service_stress.py --profile heavy
+python scripts/run_migrations.py --runtime-db /data/orket_persistence.db --webhook-db /data/webhook.db
 ```
+3. Default durable DB paths:
+- `.orket/durable/db/orket_persistence.db`
+- `.orket/durable/db/webhook.db`
 
-Maximum load profile:
+## Incident Triage
+1. API errors / 5xx:
+- Check `workspace/default/orket.log`.
+- Validate DB paths and permissions.
+- Restart service and re-check `/health`.
+
+2. Webhook failures:
+- Verify `GITEA_WEBHOOK_SECRET`.
+- Verify webhook signature header is present.
+- Confirm rate limit behavior (`429`) when expected.
+
+3. Stalled execution:
+- Generate report:
 ```bash
-python scripts/real_service_stress.py --profile aggressive
+python scripts/report_failure_modes.py --out benchmarks/results/failure_modes.json
 ```
+- Inspect checkpoints under:
+`workspace/default/observability/<run_id>/<issue_id>/<turn_index>_<role>/checkpoint.json`
+- Replay problematic turn (see command above).
 
-Checklist:
-1. Quality workflow passes.
-2. Volatility boundary gate passes.
-3. Docker smoke passes (`/health` probe).
-4. Migration smoke passes.
-5. Latest load artifact exists in `benchmarks/results/`.
+## Security and Secrets
+1. Keep secrets in `.env` only.
+2. Do not commit `.env`, DB files, or local runtime state.
+3. Rotate leaked credentials immediately.
 
-## Incident Playbook
-### API 5xx spike
-1. Check `workspace/default/orket.log`.
-2. Validate DB path/permissions.
-3. Restart services and re-check `/health`.
+## Policy Knobs (Advanced)
+These are optional runtime controls.
 
-### Webhook storm/abuse
-1. Confirm `ORKET_RATE_LIMIT`.
-2. Confirm `429` on `/webhook/gitea`.
-3. Rotate `GITEA_WEBHOOK_SECRET` if needed.
+1. Architecture mode: `ORKET_ARCHITECTURE_MODE`
+- `force_monolith`
+- `force_microservices`
+- `architect_decides`
 
-### Verification stalls
-1. Confirm `ORKET_VERIFY_TIMEOUT_SEC`.
-2. Check fixtures under `workspace/verification/`.
-3. Inspect logs for fixture load failures.
+2. Frontend framework mode: `ORKET_FRONTEND_FRAMEWORK_MODE`
+- `force_vue`
+- `force_react`
+- `force_angular`
+- `architect_decides`
 
-### Stalled Role Pipeline
-1. Generate a failure/non-progress report:
-   - `python scripts/report_failure_modes.py --out benchmarks/results/failure_modes.json`
-2. Inspect per-turn checkpoints:
-   - `workspace/default/observability/<run_id>/<issue_id>/<turn_index>_<role>/checkpoint.json`
-3. Replay one turn for diagnostics:
-   - `python -m orket.interfaces.cli --replay-turn <run_id>:<issue_id>:<turn_index>[:role]`
-4. If repeated non-progress is present, run prompt metrics:
-   - `python scripts/prompt_lab/eval_harness.py`
-5. Resume by rerunning the same epic/session id after stalled cards are re-queued by resume policy.
+3. Legacy structural governance mode: `ORKET_IDESIGN_MODE`
+- `force_idesign`
+- `force_none`
+- `architect_decides`
 
-## Archive Operations
-Archive cards related to removed projects (DB history preserved):
-```bash
-python -m orket.interfaces.cli --archive-related price_arbitrage --archive-related sneaky_price_watch --archive-reason "project removal"
-```
+Repo default behavior keeps legacy structural governance disabled unless explicitly enabled.
 
-Archive by build:
-```bash
-python -m orket.interfaces.cli --archive-build build-my-project --archive-reason "project removal"
-```
-
-## Security Operations
-- Keep secrets in environment variables.
-- Run workflow gates before merge.
-- Track security findings in your current audit artifact/process (the old `docs/SECURITY_AUDIT_2026-02-11.md` file was removed).
-
-## Detailed Procedures
-- Product publish/mirroring: `docs/PRODUCT_PUBLISHING.md`
-- Local cleanup policy: `docs/LOCAL_CLEANUP_POLICY.md`
-- CI lane policy: `docs/TESTING_POLICY.md`
-- Quant sweep operations: `docs/QUANT_SWEEP_RUNBOOK.md`
+## Related Docs
+1. `docs/README.md` (docs index)
+2. `docs/SECURITY.md`
+3. `docs/QUANT_SWEEP_RUNBOOK.md`
+4. `docs/TESTING_POLICY.md`
+5. `docs/ROADMAP.md`
