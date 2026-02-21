@@ -57,6 +57,10 @@ Next execution slice:
 2. Emit memory retrieval trace artifact envelope from runtime execution path. Status: done (2026-02-21)
 3. Add runtime emission coverage test (`tests/application/test_memory_trace_emission.py`). Status: done (2026-02-21)
 
+Next execution slice:
+1. Add deterministic equivalence comparator script for left/right traces. Status: done (2026-02-21)
+2. Add pass/fail script tests for deterministic equivalence comparison. Status: done (2026-02-21)
+
 ## Phase 1: Next Up
 1. Thermal gate and cooldown policy checks for GPU lab sessions.
 Deliverables:
