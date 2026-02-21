@@ -26,19 +26,13 @@ Success criteria:
 3. Adapter integration tests cover both paths.
 4. All emitted artifacts include `execution_lane` and `vram_profile`.
 
-2. Orchestration-overhead consistency guarantees.
-Success criteria:
-1. `internal_model_seconds` present on success and failure paths.
-2. `orchestration_overhead_ratio` present on success and failure paths.
-3. `run_quality_reasons` present on success and failure paths.
-
-3. GPU sidecar parse policy finalization.
+2. GPU sidecar parse policy finalization.
 Success criteria:
 1. Required fields parsed as canonical snake_case keys.
 2. Optional fields parsed when present; missing optionals never fail execution.
 3. `sidecar_parse_status` and `sidecar_parse_errors` emitted deterministically.
 
-4. Valid-run policy enforcement end-to-end.
+3. Valid-run policy enforcement end-to-end.
 Success criteria:
 1. Invalid runs excluded from KPI aggregates always.
 2. Invalid runs excluded from recommendations by default.
@@ -69,6 +63,10 @@ Next execution slice:
 Next execution slice:
 1. Add persistence-backed commit integration store for memory commit semantics tests. Status: done (2026-02-21)
 2. Add restart/idempotency persistence integration tests for commit state. Status: done (2026-02-21)
+
+Next execution slice:
+1. Add orchestration-overhead consistency checker for benchmark report telemetry. Status: done (2026-02-21)
+2. Wire consistency checker into `.gitea/workflows/quality.yml` and gate test coverage. Status: done (2026-02-21)
 
 ## Phase 1: Next Up
 1. Thermal gate and cooldown policy checks for GPU lab sessions.

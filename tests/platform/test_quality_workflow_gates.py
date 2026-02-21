@@ -19,6 +19,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea_state_hardening_check.json --out benchmarks/results/gitea_state_phase3_readiness.json --require-ready",
         "python scripts/run_architecture_pilot_matrix.py --out benchmarks/results/architecture_pilot_matrix.json",
         "python scripts/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 1 --venue standard --flow default --runner-template 'python scripts/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmark_determinism_report.json --scored-out benchmarks/results/benchmark_scored_report.json",
+        "python scripts/check_orchestration_overhead_consistency.py --report benchmarks/results/benchmark_determinism_report.json --out benchmarks/results/orchestration_overhead_consistency.json",
         "python scripts/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmark_scoring_gate.json --require-thresholds",
         "python scripts/check_memory_determinism.py",
         "python scripts/compare_memory_determinism.py",
