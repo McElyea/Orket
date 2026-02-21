@@ -2,7 +2,7 @@
 
 Last updated: 2026-02-21
 Owner: Orket Core
-Status: No open backlog items
+Status: Active execution backlog
 
 ## Purpose
 This is the canonical working backlog for in-flight implementation work.
@@ -19,7 +19,13 @@ Use this file to:
 4. Update `Last updated` whenever phase priorities change.
 
 ## Phase 0: Active Now
-1. No open Phase 0 items.
+1. Skill contract implementation and loader enforcement.
+Track: [Skills Implementation Plan](SkillsPlan.md)
+Deliverables:
+1. Freeze Skill contract schemas and loader error schema.
+2. Implement Skill validation metadata and deterministic eligibility checks.
+3. Enforce contract-first load behavior for invalid Skills.
+4. Wire Skill entrypoints to tool profile linkage in adapter/runtime path.
 
 ## Phase 1: Next Up
 1. No open Phase 1 items.
@@ -30,6 +36,8 @@ Use this file to:
 ## Cross-Cutting Program Tracks
 1. Deterministic memory and persistence program:
 Archived under `docs/archive/MemoryPersistence/`.
+2. Skills contract and loader program:
+Tracked in `docs/implementation/SkillsPlan.md`.
 
 ## Guardrails (All Phases)
 1. Pass/fail quality gates use Orket telemetry, not hardware sidecar metrics.

@@ -1,6 +1,6 @@
 # Contributor Guide
 
-This guide is human/agent agnostic.
+Orket
 
 ## Protocol
 1. Start each session by reading:
