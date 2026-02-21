@@ -175,6 +175,21 @@ python scripts/context_ceiling_finder.py `
   --storage-root orket_storage/context_ceilings
 ```
 
+## Context Sweep Orchestrator
+Run multi-context sweeps and emit linked context ceiling artifact in one command:
+
+```powershell
+python scripts/run_context_sweep.py `
+  --contexts 4096,8192,16384 `
+  --model-id qwen2.5-coder:7b `
+  --quant-tags Q8_0 `
+  --task-bank benchmarks/task_bank/v2_realworld/tasks.json `
+  --execution-lane lab `
+  --vram-profile safe `
+  --provenance-ref local-run:manual `
+  --out-dir benchmarks/results/context_sweep
+```
+
 ## Thermal Stability Profiler Artifact
 Generate thermal stability recommendation from repeated run summaries:
 

@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add dedicated context sweep orchestration command for live runs.
-Deliverables:
-1. Drive multi-context runs without manual summary path setup.
-2. Emit per-context summaries and a linked context-ceiling artifact in one command.
-3. Preserve lane/profile/provenance labels across generated artifacts.
-
-2. Add explorer schema upgrade notes to `docs/specs/`.
+1. Add explorer schema upgrade notes to `docs/specs/`.
 Deliverables:
 1. Document current explorer schema versions and required fields.
 2. Define additive-only change policy and deprecation process.
 3. Link spec docs from runbook for downstream consumers.
+
+2. Add lab-side context sweep policy presets.
+Deliverables:
+1. Provide preset context ladders for safe/balanced/stress profiles.
+2. Define default thresholds for adherence/ttft/decode per profile.
+3. Add runbook examples for profile-driven context sweeps.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.
