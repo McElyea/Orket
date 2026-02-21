@@ -62,17 +62,12 @@ Next execution slice:
 3. Wire both policy checkers into `.gitea/workflows/quant-sweep-full-selfhosted.yml` with workflow gate coverage tests. Status: done (2026-02-21)
 
 ## Phase 1: Next Up
-1. Thermal gate and cooldown policy checks for GPU lab sessions.
-Deliverables:
-1. Add `wait_for_cooldown` policy checker for lab lane runs.
-2. Emit deterministic polluted status reasons for cooldown timeout and hot-start conditions.
-3. Add regression tests for pass/fail/skip thermal policy paths.
+1. No open Phase 1 items.
 
-2. VRAM pre-flight guard rails as optional diagnostics.
-Deliverables:
-1. Add profile-driven thresholds per run (`safe`, `balanced`, `stress`).
-2. Emit guard decision metadata into summary and check artifacts.
-3. Add regression tests for threshold enforcement and skip handling.
+Next execution slice:
+1. Confirm thermal cooldown policy enforcement via `scripts/check_lab_guards.py` with deterministic reason codes and pass/fail/skip regression tests. Status: done (2026-02-21)
+2. Confirm VRAM pre-flight profile thresholds (`safe`, `balanced`, `stress`) and guard metadata emission via quant sweep + guard artifacts. Status: done (2026-02-21)
+3. Enforce lab guard execution in `.gitea/workflows/quant-sweep-full-selfhosted.yml` with workflow gate coverage tests. Status: done (2026-02-21)
 
 ## Phase 2: Planned Later
 1. Add sidecar schema specs under `docs/specs/` for long-term contract governance.
