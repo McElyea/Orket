@@ -12,6 +12,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build quant frontier explorer artifact from sweep summary.")
     parser.add_argument("--summary", required=True, help="Path to sweep_summary.json")
     parser.add_argument("--out", required=True, help="Path for frontier explorer artifact")
+    parser.add_argument("--provenance-ref", default="", help="Optional provenance reference (for example run_id:sha).")
     parser.add_argument(
         "--storage-root",
         default="orket_storage/frontiers",
@@ -99,6 +100,11 @@ def main() -> int:
         "hardware_fingerprint": str(summary.get("hardware_fingerprint") or "unknown"),
         "execution_lane": str(summary.get("execution_lane") or (summary.get("matrix") or {}).get("execution_lane") or "unknown"),
         "vram_profile": str(summary.get("vram_profile") or (summary.get("matrix") or {}).get("vram_profile") or "unknown"),
+        "provenance": {
+            "ref": str(args.provenance_ref or ""),
+            "source_summary": str(summary_path).replace("\\", "/"),
+            "commit_sha": str(summary.get("commit_sha") or ""),
+        },
         "sessions": _build_session_rows(summary),
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)

@@ -18,6 +18,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--monotonic-window", type=int, default=3, help="Consecutive increases to flag heat soak.")
     parser.add_argument("--execution-lane", default="lab", choices=["ci", "lab"])
     parser.add_argument("--vram-profile", default="safe", choices=["safe", "balanced", "stress"])
+    parser.add_argument("--provenance-ref", default="", help="Optional provenance reference (for example run_id:sha).")
     parser.add_argument("--out", required=True)
     parser.add_argument("--storage-root", default="orket_storage/thermal_profiles")
     return parser.parse_args()
@@ -177,6 +178,10 @@ def main() -> int:
         "hardware_fingerprint": hardware_fingerprint,
         "model_id": model_id or "unknown",
         "quant_tag": quant_tag or "unknown",
+        "provenance": {
+            "ref": str(args.provenance_ref or ""),
+            "summary_paths": [str(path).replace("\\", "/") for path in summary_paths],
+        },
         "thresholds": {
             "cooldown_target_c": float(args.cooldown_target_c),
             "polluted_thermal_threshold_c": float(args.polluted_thermal_threshold_c),

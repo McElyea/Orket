@@ -28,7 +28,7 @@ def _check_required(payload: dict[str, Any], required: list[str], label: str, fa
 
 
 def _check_common(payload: dict[str, Any], label: str, failures: list[str]) -> None:
-    _check_required(payload, ["generated_at", "execution_lane", "vram_profile"], label, failures)
+    _check_required(payload, ["generated_at", "execution_lane", "vram_profile", "provenance"], label, failures)
 
 
 def main() -> int:

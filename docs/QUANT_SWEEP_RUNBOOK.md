@@ -154,6 +154,7 @@ Generate a comparable frontier artifact keyed by hardware fingerprint + lane + p
 python scripts/quant_frontier_explorer.py `
   --summary benchmarks/results/quant_sweep/sweep_summary.json `
   --out benchmarks/results/quant_sweep/frontier_explorer.json `
+  --provenance-ref local-run:manual `
   --storage-root orket_storage/frontiers
 ```
 
@@ -169,6 +170,7 @@ python scripts/context_ceiling_finder.py `
   --decode-floor-tps 20 `
   --execution-lane lab `
   --vram-profile safe `
+  --provenance-ref local-run:manual `
   --out benchmarks/results/context_sweep/context_ceiling.json `
   --storage-root orket_storage/context_ceilings
 ```
@@ -184,6 +186,7 @@ python scripts/thermal_stability_profiler.py `
   --monotonic-window 2 `
   --execution-lane lab `
   --vram-profile safe `
+  --provenance-ref local-run:manual `
   --out benchmarks/results/thermal/thermal_profile.json `
   --storage-root orket_storage/thermal_profiles
 ```

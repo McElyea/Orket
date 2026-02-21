@@ -89,16 +89,19 @@ jobs:
           set -euo pipefail
           python scripts/quant_frontier_explorer.py \
             --summary "${{ env.SUMMARY_OUT }}" \
-            --out benchmarks/results/quant_sweep/full_frontier_explorer.json
+            --out benchmarks/results/quant_sweep/full_frontier_explorer.json \
+            --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}"
           mkdir -p benchmarks/results/context_sweep
           cp "${SUMMARY_OUT}" benchmarks/results/context_sweep/context_8192.json
           python scripts/context_ceiling_finder.py \
             --contexts 8192 \
             --summary-template benchmarks/results/context_sweep/context_{context}.json \
-            --out benchmarks/results/context_sweep/context_ceiling.json
+            --out benchmarks/results/context_sweep/context_ceiling.json \
+            --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}"
           python scripts/thermal_stability_profiler.py \
             --summaries "${{ env.SUMMARY_OUT }}" \
-            --out benchmarks/results/thermal/thermal_profile.json
+            --out benchmarks/results/thermal/thermal_profile.json \
+            --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}"
           python scripts/check_explorer_schema_contracts.py \
             --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json \
             --context benchmarks/results/context_sweep/context_ceiling.json \

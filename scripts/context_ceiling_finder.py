@@ -32,6 +32,7 @@ def _parse_args() -> argparse.Namespace:
         help="VRAM safety profile label.",
     )
     parser.add_argument("--out", required=True, help="Output artifact path.")
+    parser.add_argument("--provenance-ref", default="", help="Optional provenance reference (for example run_id:sha).")
     parser.add_argument(
         "--storage-root",
         default="orket_storage/context_ceilings",
@@ -217,6 +218,11 @@ def main() -> int:
         "hardware_fingerprint": hardware_fingerprint,
         "model_id": selected_model_id or "unknown",
         "quant_tag": selected_quant_tag or "unknown",
+        "provenance": {
+            "ref": str(args.provenance_ref or ""),
+            "summary_template": str(args.summary_template),
+            "contexts": contexts,
+        },
         "thresholds": {
             "adherence_min": float(args.adherence_min),
             "ttft_ceiling_ms": float(args.ttft_ceiling_ms),

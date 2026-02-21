@@ -63,6 +63,8 @@ def test_quant_frontier_explorer_builds_artifact_and_appends_store(tmp_path: Pat
             str(out),
             "--storage-root",
             str(storage),
+            "--provenance-ref",
+            "run-1:abc123",
         ],
         capture_output=True,
         text=True,
@@ -72,6 +74,7 @@ def test_quant_frontier_explorer_builds_artifact_and_appends_store(tmp_path: Pat
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert payload["execution_lane"] == "lab"
     assert payload["vram_profile"] == "safe"
+    assert payload["provenance"]["ref"] == "run-1:abc123"
     assert payload["sessions"][0]["minimum_viable_quant"] == "Q6_K"
     assert payload["sessions"][0]["best_value_quant"] == "Q8_0"
 

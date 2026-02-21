@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add provenance linkage to all explorer artifacts.
-Deliverables:
-1. Include provenance reference (run id/sha/source summary) in frontier/context/thermal artifacts.
-2. Add tests that fail if provenance is missing.
-3. Surface provenance in runbook examples.
-
-2. Promote thermal and VRAM guard diagnostics from later into runnable checks.
+1. Promote thermal and VRAM guard diagnostics from later into runnable checks.
 Deliverables:
 1. Add cooldown gate checks for lab workflows.
 2. Add optional VRAM pre-flight checks (safe/balanced/stress).
 3. Emit explicit skip reasons when guards are not applicable.
+
+2. Add CI/Lab schema version pinning for explorer artifacts.
+Deliverables:
+1. Introduce explorer schema version field and additive evolution policy.
+2. Validate version presence in schema contract checks.
+3. Document upgrade path for downstream consumers.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.
