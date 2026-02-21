@@ -297,6 +297,14 @@ python scripts/check_explorer_ingestion.py `
   --out benchmarks/results/quant_sweep/explorer_ingestion_check.json
 ```
 
+Build context sweep rollup output:
+
+```powershell
+python scripts/build_context_sweep_rollup.py `
+  --context-ceiling benchmarks/results/context_sweep/context_ceiling.json `
+  --out benchmarks/results/context_sweep/context_rollup.json
+```
+
 ## Baseline Operations
 List baselines:
 

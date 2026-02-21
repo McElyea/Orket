@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add context-sweep result summary rollup output.
-Deliverables:
-1. Emit a compact rollup file for per-context pass/fail counts and safe ceiling.
-2. Include lane/profile/provenance in rollup metadata.
-3. Upload rollup in full workflow artifacts bundle.
-
-2. Add automated cleanup policy for local `orket_storage` test byproducts.
+1. Add automated cleanup policy for local `orket_storage` test byproducts.
 Deliverables:
 1. Prevent local test-generated `orket_storage` directories from polluting workspace.
 2. Document cleanup behavior for local runs.
 3. Keep cleanup non-destructive for intentional baseline/frontier history data.
+
+2. Add rollup contract checks for context artifacts.
+Deliverables:
+1. Validate context rollup schema and required fields in smoke tests.
+2. Verify rollup consistency against context-ceiling point counts.
+3. Fail workflow when rollup and source artifacts diverge.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.
