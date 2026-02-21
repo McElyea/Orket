@@ -23,6 +23,26 @@ on:
         description: "Context sweep profile label"
         required: false
         default: "safe"
+      context_execution_lane:
+        description: "Context sweep execution lane"
+        required: false
+        default: "lab"
+      context_vram_profile:
+        description: "Context sweep VRAM profile"
+        required: false
+        default: "safe"
+      context_adherence_min:
+        description: "Optional context sweep adherence minimum override"
+        required: false
+        default: "0"
+      context_ttft_ceiling_ms:
+        description: "Optional context sweep TTFT ceiling override (ms)"
+        required: false
+        default: "0"
+      context_decode_floor_tps:
+        description: "Optional context sweep decode TPS floor override"
+        required: false
+        default: "0"
       max_missing_telemetry_rate:
         description: "KPI policy: max missing telemetry rate"
         required: false
@@ -105,8 +125,11 @@ jobs:
             --matrix-config "${MATRIX_CONFIG}" \
             --model-id "" \
             --quant-tags "" \
-            --execution-lane lab \
-            --vram-profile safe \
+            --execution-lane "${{ github.event.inputs.context_execution_lane || 'lab' }}" \
+            --vram-profile "${{ github.event.inputs.context_vram_profile || 'safe' }}" \
+            --adherence-min "${{ github.event.inputs.context_adherence_min || '0' }}" \
+            --ttft-ceiling-ms "${{ github.event.inputs.context_ttft_ceiling_ms || '0' }}" \
+            --decode-floor-tps "${{ github.event.inputs.context_decode_floor_tps || '0' }}" \
             --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}" \
             --out-dir benchmarks/results/context_sweep
           python scripts/thermal_stability_profiler.py \
@@ -149,6 +172,15 @@ jobs:
               "summary_out": str(summary_out).replace("\\", "/"),
               "matrix_config": os.environ.get("MATRIX_CONFIG", ""),
               "task_bank_override": os.environ.get("TASK_BANK", ""),
+              "context_sweep": {
+                  "contexts": "${{ github.event.inputs.context_sweep_contexts || '8192' }}",
+                  "context_profile": "${{ github.event.inputs.context_profile || 'safe' }}",
+                  "execution_lane": "${{ github.event.inputs.context_execution_lane || 'lab' }}",
+                  "vram_profile": "${{ github.event.inputs.context_vram_profile || 'safe' }}",
+                  "adherence_min": "${{ github.event.inputs.context_adherence_min || '0' }}",
+                  "ttft_ceiling_ms": "${{ github.event.inputs.context_ttft_ceiling_ms || '0' }}",
+                  "decode_floor_tps": "${{ github.event.inputs.context_decode_floor_tps || '0' }}",
+              },
           }
           out = Path("benchmarks/results/quant_sweep/full_sweep_provenance.json")
           out.parent.mkdir(parents=True, exist_ok=True)

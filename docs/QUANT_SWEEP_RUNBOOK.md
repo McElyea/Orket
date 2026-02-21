@@ -211,6 +211,11 @@ python scripts/run_context_sweep.py `
 Full self-hosted workflow context sweep uses:
 1. `context_sweep_contexts` input (default `8192`)
 2. `context_profile` input (default `safe`)
+3. `context_execution_lane` and `context_vram_profile` inputs for lane/profile labeling
+4. Optional threshold overrides:
+   - `context_adherence_min`
+   - `context_ttft_ceiling_ms`
+   - `context_decode_floor_tps`
 
 ## Thermal Stability Profiler Artifact
 Generate thermal stability recommendation from repeated run summaries:
