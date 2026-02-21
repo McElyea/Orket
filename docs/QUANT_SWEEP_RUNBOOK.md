@@ -246,6 +246,11 @@ Current explorer schema versions:
 Explorer schema upgrade policy:
 `docs/specs/EXPLORER_SCHEMA_POLICY.md`
 
+Companion field tables:
+1. `docs/specs/EXPLORER_FRONTIER_SCHEMA.md`
+2. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`
+3. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`
+
 ## Lab Guard Check
 Validate cooldown + VRAM profile guard diagnostics from sweep summary:
 

@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add explorer schema companion docs under `docs/specs/`.
-Deliverables:
-1. Add per-artifact field tables for frontier/context/thermal schemas.
-2. Include migration notes for future `v2` explorer schema versions.
-3. Link companion docs from `EXPLORER_SCHEMA_POLICY.md`.
-
-2. Add context sweep workflow policy knobs.
+1. Add context sweep workflow policy knobs.
 Deliverables:
 1. Add workflow inputs for `execution_lane` and `vram_profile` in context sweep steps.
 2. Allow profile-based threshold overrides per workflow run.
 3. Persist chosen context profile/thresholds in workflow provenance output.
+
+2. Add context-sweep results contract checks in full workflow.
+Deliverables:
+1. Validate generated context summaries and context-ceiling artifact are present.
+2. Fail workflow on missing per-context outputs for selected context set.
+3. Surface context-sweep coverage summary in workflow logs.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

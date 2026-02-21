@@ -34,3 +34,8 @@ Every explorer artifact must include:
 ## Contract Enforcement
 1. `scripts/check_explorer_schema_contracts.py` is the CI contract gate.
 2. Smoke workflow must execute contract tests for all explorer artifacts.
+
+## Companion Schemas
+1. Frontier: `docs/specs/EXPLORER_FRONTIER_SCHEMA.md`
+2. Context ceiling: `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`
+3. Thermal stability: `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`
