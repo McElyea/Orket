@@ -52,6 +52,7 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
                 "    'total_latency': 1.0,",
                 "    'peak_memory_rss': mem,",
                 "    'adherence_score': adherence,",
+                "    'token_metrics_status': 'OK',",
                 "    'run_quality_status': 'CLEAN',",
                 "    'run_quality_reasons': [],",
                 "    'vibe_metrics': {",
@@ -129,6 +130,9 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
         "minimum_viable_quant": "Q6_K",
         "best_value_quant": "Q8_0",
     }
+    assert summary["stability_kpis"]["frontier_success_rate"] == 1.0
+    assert summary["stability_kpis"]["missing_telemetry_rate"] == 0.0
+    assert summary["stability_kpis"]["polluted_run_rate"] == 0.0
 
     per_quant = {row["quant_tag"]: row for row in session["per_quant"]}
     assert per_quant["Q8_0"]["vibe_delta"] == 0.0
@@ -234,6 +238,7 @@ def test_run_quant_sweep_recommends_mismatch_when_no_quant_meets_threshold(tmp_p
     assert session["efficiency_frontier"]["best_value_quant_tag"] is None
     assert session["efficiency_frontier"]["reason"] == "no quant met adherence and latency thresholds"
     assert session["recommendation"] == "No quantization met the vibe threshold; hardware/model mismatch."
+    assert summary["stability_kpis"]["frontier_success_rate"] == 0.0
 
 
 def test_run_quant_sweep_canary_gate_blocks_on_missing_telemetry(tmp_path: Path) -> None:

@@ -69,6 +69,28 @@ Results are stored under:
 
 `benchmarks/results/quant_sweep/sidecar/<model>/<quant>_hardware_sidecar.json`
 
+## Sidecar Metric Mapping
+Use sidecar as hardware diagnostics only; do not gate pass/fail on sidecar values.
+1. Sidecar decode throughput (`generation_tps`) maps to Orket `token_metrics.throughput.generation_tokens_per_second`.
+2. Sidecar prefill throughput maps to Orket `token_metrics.throughput.prompt_tokens_per_second` when provider timings are present.
+3. Sidecar totals are compared against Orket wall-clock metrics for orchestration overhead analysis, not quality scoring.
+4. If sidecar and Orket diverge significantly, trust Orket for task efficacy and use sidecar for hardware investigation.
+
+## Stability KPI Tracking
+Sweep summaries include `stability_kpis`:
+1. `determinism_rate`
+2. `missing_telemetry_rate`
+3. `polluted_run_rate`
+4. `frontier_success_rate`
+
+Extract KPI report:
+
+```powershell
+python scripts/quant_sweep_kpi_report.py `
+  --summary benchmarks/results/quant_sweep/sweep_summary.json `
+  --out benchmarks/results/quant_sweep/sweep_kpis.json
+```
+
 ## Baseline Operations
 List baselines:
 

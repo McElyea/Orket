@@ -432,6 +432,48 @@ def _best_value_quant(
     )[0]
 
 
+def _build_stability_kpis(sessions: list[dict[str, Any]]) -> dict[str, Any]:
+    total_quant_rows = 0
+    total_runs = 0
+    determinism_weighted = 0.0
+    missing_telemetry_runs = 0
+    polluted_runs = 0
+    frontier_success = 0
+
+    for session in sessions:
+        if not isinstance(session, dict):
+            continue
+        frontier = session.get("efficiency_frontier") if isinstance(session.get("efficiency_frontier"), dict) else {}
+        if str(frontier.get("minimum_viable_quant_tag") or "").strip():
+            frontier_success += 1
+        per_quant = session.get("per_quant") if isinstance(session.get("per_quant"), list) else []
+        for row in per_quant:
+            if not isinstance(row, dict):
+                continue
+            total_quant_rows += 1
+            run_count = int(row.get("test_runs", 0) or 0)
+            run_weight = max(1, run_count)
+            total_runs += run_weight
+            determinism_weighted += float(row.get("determinism_rate", 0.0) or 0.0) * run_weight
+            token_status = str(row.get("token_metrics_status") or "TOKEN_AND_TIMING_UNAVAILABLE").strip()
+            if token_status != "OK":
+                missing_telemetry_runs += run_weight
+            run_quality = str(row.get("run_quality_status") or "POLLUTED").strip().upper()
+            if run_quality != "CLEAN":
+                polluted_runs += run_weight
+
+    sessions_count = len(sessions)
+    return {
+        "determinism_rate": round((determinism_weighted / total_runs), 6) if total_runs else 0.0,
+        "missing_telemetry_rate": round((missing_telemetry_runs / total_runs), 6) if total_runs else 0.0,
+        "polluted_run_rate": round((polluted_runs / total_runs), 6) if total_runs else 0.0,
+        "frontier_success_rate": round((frontier_success / sessions_count), 6) if sessions_count else 0.0,
+        "quant_rows": total_quant_rows,
+        "sessions": sessions_count,
+        "weighted_runs": total_runs,
+    }
+
+
 def _run_canary(
     *,
     args: argparse.Namespace,
@@ -751,6 +793,7 @@ def main() -> int:
         "canary": canary_result,
         "sessions": sessions,
     }
+    summary["stability_kpis"] = _build_stability_kpis(sessions)
 
     summary_out.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))
