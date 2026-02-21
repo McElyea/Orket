@@ -3,7 +3,7 @@
 Last updated: 2026-02-21
 
 ## Outcome
-Deliver production-ready quantization diagnostics on live Orket runs with strict telemetry, valid-run enforcement, and reproducible recommendations.
+Deliver production-ready quantization diagnostics on live Orket runs, then use those validated diagnostics to ship the next Orket experiment tools.
 
 ## How To Read This
 This is a forward-only execution plan.
@@ -20,59 +20,100 @@ After every 5 completed roadmap items:
 3. Add new `Later` items.
 4. Update `Last updated`.
 
-## Non-Negotiable Guardrails
+## Non-Negotiable Guardrails (All Work)
 1. Pass/fail quality gates use Orket telemetry, not hardware sidecar metrics.
 2. Invalid/polluted runs are excluded from KPI aggregates with no override.
 3. `--include-invalid` may affect frontier/comparison views only.
 4. Schema evolution is additive-only and backward compatible.
+5. Every artifact must include `execution_lane` (`ci` | `lab`) and `vram_profile` (`safe` | `balanced` | `stress`).
+
+## Execution Lanes
+1. `ci` lane (mock-friendly):
+   - Fast deterministic contract checks.
+   - Parser/state-machine/schema/error-path coverage.
+   - No hardware dependency.
+2. `lab` lane (live hardware):
+   - Thermal, VRAM, throughput, and variance physics.
+   - Valid-run policy enforcement in real conditions.
+   - Produces recommendation-grade evidence.
+
+## VRAM Safety Profiles
+1. `safe`: 50% cap (default for long experiment sessions).
+2. `balanced`: 70-80% cap (representative everyday operation).
+3. `stress`: 90-95% cap (boundary and cliff discovery).
+4. Results are only comparable when profile + lane match.
 
 ## Now (Execute Immediately)
-1. Finalize telemetry contract across providers.
+1. Finalize remaining telemetry contract hardening across providers.
 Success criteria:
 1. Providers emit only canonical token/timing states.
 2. Streaming/non-streaming state transitions are consistent.
 3. Adapter integration tests cover both paths.
+4. All emitted artifacts include `execution_lane` and `vram_profile`.
 
-2. Harden orchestration-overhead contract.
+2. Finish orchestration-overhead consistency guarantees.
 Success criteria:
-1. `internal_model_seconds` emitted on all success/failure paths.
-2. `orchestration_overhead_ratio` emitted on all success/failure paths.
-3. Run-quality reason fields are always present.
+1. `internal_model_seconds` present on all success/failure paths.
+2. `orchestration_overhead_ratio` present on all success/failure paths.
+3. `run_quality_reasons` present on all success/failure paths.
 
-3. Implement canonical GPU sidecar parse contract.
+3. Lock GPU sidecar parse policy as canonical.
 Success criteria:
-1. Required sidecar fields parsed into canonical snake_case keys.
-2. Optional sidecar fields parsed when available without failing run.
-3. Sidecar block emits:
-   - `sidecar_parse_status`
-   - `sidecar_parse_errors`
+1. Required fields parsed as canonical snake_case keys.
+2. Optional fields parsed when present; missing optionals never fail run execution.
+3. `sidecar_parse_status` and `sidecar_parse_errors` emitted deterministically.
 
-4. Enforce valid-run policy in summary logic.
+4. Enforce valid-run policy end-to-end.
 Success criteria:
 1. Invalid runs excluded from KPI aggregates always.
 2. Invalid runs excluded from recommendation by default.
-3. `--include-invalid` only affects frontier/comparison visibility.
+3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add visualization/reporting script for operator review.
-Deliverables:
-1. Generate TPS vs adherence scatter from `sweep_summary.json`.
-2. Annotate minimum-viable and best-value quant frontier points.
-3. Consume validated rows only by default.
-
-2. Expand E2E regression matrix for policy interactions.
+1. Expand E2E regression matrix for policy interactions.
 Deliverables:
 1. Cover sidecar parsing + KPI gating + invalid-run inclusion interactions.
 2. Add regression fixtures for `sidecar_parse_status` error states.
 3. Enforce no schema drift in CI contract tests.
 
-3. Add structured GPU profile variants for sidecar templates.
+2. Add structured GPU profile variants for sidecar templates.
 Deliverables:
 1. Define backend/vendor profile presets (NVIDIA/AMD/CPU-only).
 2. Keep canonical sidecar schema stable across profiles.
 3. Add profile compatibility notes to runbook.
 
+3. Build Orket #1: Quant Frontier Explorer.
+Deliverables:
+1. Run quant matrix under selected `vram_profile`.
+2. Output minimum-viable quant and best-value quant with rationale.
+3. Store comparables keyed by lane/profile/hardware fingerprint.
+
+4. Build Orket #2: Context Ceiling Finder.
+Deliverables:
+1. Step context until instability or guardrail boundary.
+2. Track TTFT, decode throughput, and validity degradation.
+3. Emit safe ceiling recommendation per lane/profile.
+
+5. Build Orket #3: Thermal Stability Profiler.
+Deliverables:
+1. Repeated-run thermal delta analysis with cooldown policy checks.
+2. Heat-soak detection and polluted-run marking.
+3. Stability recommendation for session cadence.
+
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.
 2. Add VRAM pre-flight guard rails (strict vs extended thresholds) as optional diagnostics.
 3. Add sidecar schema spec files under `docs/specs/` for long-term contract governance.
+4. Add VRAM fragmentation analyzer experiments.
+5. Add model selector and adaptive routing prototypes after diagnostics evidence is stable.
+
+## Idea Intake (Best Practice)
+Use this format when adding ideas (in `Agents/Ideas.md`):
+1. `Problem`: what is failing or unknown.
+2. `Hypothesis`: what change should improve it.
+3. `Scope`: affected files/components.
+4. `Lane`: `ci`, `lab`, or both.
+5. `Safety Profile`: `safe`, `balanced`, or `stress`.
+6. `Success Metrics`: exact pass/fail thresholds.
+7. `Go/No-Go`: explicit gate for merge/next-phase.
+8. `Artifacts`: expected output files/fields.

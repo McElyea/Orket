@@ -105,6 +105,26 @@ python scripts/quant_sweep_kpi_report.py `
   --out benchmarks/results/quant_sweep/sweep_kpis.json
 ```
 
+## Operator Visualization Report
+Generate operator-facing report artifacts (scatter dataset + markdown):
+
+```powershell
+python scripts/render_quant_sweep_report.py `
+  --summary benchmarks/results/quant_sweep/sweep_summary.json `
+  --out-md benchmarks/results/quant_sweep/sweep_report.md `
+  --out-scatter benchmarks/results/quant_sweep/sweep_scatter.json
+```
+
+Include invalid rows in report views only:
+
+```powershell
+python scripts/render_quant_sweep_report.py `
+  --summary benchmarks/results/quant_sweep/sweep_summary.json `
+  --out-md benchmarks/results/quant_sweep/sweep_report.md `
+  --out-scatter benchmarks/results/quant_sweep/sweep_scatter.json `
+  --include-invalid
+```
+
 ## Baseline Operations
 List baselines:
 
