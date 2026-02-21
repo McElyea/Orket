@@ -70,11 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Build Orket #3: Thermal Stability Profiler.
+1. Add CI/Lab schema contract tests for new explorer artifacts.
 Deliverables:
-1. Repeated-run thermal delta analysis with cooldown policy checks.
-2. Heat-soak detection and polluted-run marking.
-3. Stability recommendation for session cadence.
+1. Validate `execution_lane` and `vram_profile` are present in all explorer artifacts.
+2. Enforce additive-only schema evolution for frontier/context/thermal artifacts.
+3. Ensure CI checks fail on missing required fields.
+
+2. Connect explorer artifacts into full self-hosted workflow outputs.
+Deliverables:
+1. Publish frontier/context/thermal artifacts in workflow uploads.
+2. Persist comparable histories under `orket_storage`.
+3. Include provenance linkage in each explorer artifact.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

@@ -173,6 +173,21 @@ python scripts/context_ceiling_finder.py `
   --storage-root orket_storage/context_ceilings
 ```
 
+## Thermal Stability Profiler Artifact
+Generate thermal stability recommendation from repeated run summaries:
+
+```powershell
+python scripts/thermal_stability_profiler.py `
+  --summaries benchmarks/results/quant_sweep/run1.json,benchmarks/results/quant_sweep/run2.json,benchmarks/results/quant_sweep/run3.json `
+  --cooldown-target-c 50 `
+  --polluted-thermal-threshold-c 85 `
+  --monotonic-window 2 `
+  --execution-lane lab `
+  --vram-profile safe `
+  --out benchmarks/results/thermal/thermal_profile.json `
+  --storage-root orket_storage/thermal_profiles
+```
+
 ## Baseline Operations
 List baselines:
 
