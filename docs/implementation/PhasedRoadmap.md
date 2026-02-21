@@ -19,11 +19,7 @@ Use this file to:
 4. Update `Last updated` whenever phase priorities change.
 
 ## Phase 0: Active Now
-1. Skill runtime adapter linkage.
-Track: [Skills Implementation Plan](SkillsPlan.md)
-Deliverables:
-1. Wire Skill entrypoints to tool profile linkage in adapter/runtime path.
-2. Add integration tests for declared-entrypoint-only invocation and permission guard enforcement.
+1. No open Phase 0 items.
 
 ## Phase 1: Next Up
 1. No open Phase 1 items.
@@ -35,7 +31,7 @@ Deliverables:
 1. Deterministic memory and persistence program:
 Archived under `docs/archive/MemoryPersistence/`.
 2. Skills contract and loader program:
-Tracked in `docs/implementation/SkillsPlan.md`.
+Completed in `docs/implementation/SkillsPlan.md`.
 
 ## Guardrails (All Phases)
 1. Pass/fail quality gates use Orket telemetry, not hardware sidecar metrics.

@@ -874,6 +874,7 @@ class TurnExecutor:
 
         for tool_call in turn.tool_calls:
             try:
+                binding = self._resolve_skill_tool_binding(context, str(tool_call.tool or ""))
                 middleware_outcome = self.middleware.apply_before_tool(
                     tool_call.tool,
                     tool_call.args,
@@ -896,6 +897,7 @@ class TurnExecutor:
                     tool_calls=[
                         {
                             "tool_name": tool_call.tool,
+                            "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_call.tool or "unknown"),
                             "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
                             "normalized_args": dict(tool_call.args or {}),
                             "normalization_version": str(context.get("normalization_version") or "json-v1"),
@@ -929,6 +931,20 @@ class TurnExecutor:
                     )
                     violations.append(f"Governance Violation: {gate_violation}")
                     continue
+
+                if bool(context.get("skill_contract_enforced")):
+                    if binding is None:
+                        violations.append(
+                            f"Skill contract violation: undeclared entrypoint/tool '{tool_call.tool}'."
+                        )
+                        continue
+                    missing_permissions = self._missing_required_permissions(binding, context)
+                    if missing_permissions:
+                        violations.append(
+                            "Skill contract violation: missing required permissions for "
+                            f"'{tool_call.tool}' ({', '.join(missing_permissions)})."
+                        )
+                        continue
 
                 if tool_call.tool in approval_required_tools:
                     request_id = None
@@ -1018,6 +1034,7 @@ class TurnExecutor:
                     tool_calls=[
                         {
                             "tool_name": tool_call.tool,
+                            "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_call.tool or "unknown"),
                             "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
                             "normalized_args": dict(tool_call.args or {}),
                             "normalization_version": str(context.get("normalization_version") or "json-v1"),
@@ -1072,6 +1089,40 @@ class TurnExecutor:
 
         if violations:
             raise ToolValidationError(violations)
+
+    def _resolve_skill_tool_binding(self, context: Dict[str, Any], tool_name: str) -> Dict[str, Any] | None:
+        bindings = context.get("skill_tool_bindings")
+        if not isinstance(bindings, dict):
+            return None
+        binding = bindings.get(str(tool_name).strip())
+        if not isinstance(binding, dict):
+            return None
+        return binding
+
+    def _missing_required_permissions(self, binding: Dict[str, Any], context: Dict[str, Any]) -> List[str]:
+        required = binding.get("required_permissions")
+        if not isinstance(required, dict) or not required:
+            return []
+        granted = context.get("granted_permissions")
+        granted = granted if isinstance(granted, dict) else {}
+
+        missing: List[str] = []
+        for scope, values in required.items():
+            required_values = self._permission_values(values)
+            granted_values = self._permission_values(granted.get(scope))
+            for value in sorted(required_values - granted_values):
+                missing.append(f"{scope}:{value}")
+        return missing
+
+    def _permission_values(self, values: Any) -> set[str]:
+        if values is None:
+            return set()
+        if isinstance(values, str):
+            normalized = values.strip()
+            return {normalized} if normalized else set()
+        if isinstance(values, list):
+            return {str(item).strip() for item in values if str(item).strip()}
+        return set()
 
     def _collect_contract_violations(
         self,

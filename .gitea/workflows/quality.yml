@@ -166,6 +166,45 @@ jobs:
             --right-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
             --out benchmarks/results/memory/memory_determinism_compare.json
 
+      - name: Enforce skill contract smoke
+        run: |
+          mkdir -p benchmarks/results/skills
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = {
+              "skill_contract_version": "1.0.5",
+              "skill_id": "quality.skill.demo",
+              "skill_version": "1.0.0",
+              "description": "Quality smoke skill contract fixture",
+              "manifest_digest": "sha256:abc123",
+              "entrypoints": [
+                  {
+                      "entrypoint_id": "write-main",
+                      "runtime": "python",
+                      "command": "python run.py",
+                      "working_directory": ".",
+                      "input_schema": {},
+                      "output_schema": {},
+                      "error_schema": {},
+                      "args_fingerprint_fields": ["input.path"],
+                      "result_fingerprint_fields": ["result.ok"],
+                      "side_effect_fingerprint_fields": [],
+                      "requested_permissions": {"filesystem": ["write"]},
+                      "required_permissions": {"filesystem": ["write"]},
+                      "tool_profile_id": "write_file",
+                      "tool_profile_version": "1.0.0",
+                  }
+              ],
+          }
+          out = Path("benchmarks/results/skills/skill_contract_fixture.json")
+          out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          PY
+          python scripts/check_skill_contracts.py \
+            --manifest benchmarks/results/skills/skill_contract_fixture.json \
+            --out benchmarks/results/skills/skill_contract_check.json
+
       - name: Build monolith variant matrix plan
         run: |
           python scripts/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json

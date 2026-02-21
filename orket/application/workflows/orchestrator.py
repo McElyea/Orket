@@ -27,6 +27,7 @@ from orket.application.services.dependency_manager import (
 )
 from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
 from orket.application.services.guard_agent import GuardAgent
+from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
 from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
@@ -1090,6 +1091,7 @@ class Orchestrator:
             tools=role_config.tools,
             prompt_metadata=dict(getattr(role_config, "prompt_metadata", {}) or {}),
         )
+        skill_tool_bindings = synthesize_role_tool_profile_bindings(role_config.tools)
         # Phase 6.4: RAG (Memory Context)
         search_query = (issue.name or "") + " " + (issue.note or "")
         memories = await self.memory.search(search_query.strip())
@@ -1117,6 +1119,7 @@ class Orchestrator:
             prompt_layers={},
             idesign_enabled=idesign_enabled,
             resume_mode=resume_mode,
+            skill_tool_bindings=skill_tool_bindings,
         )
         prompt_metadata: Dict[str, Any] = {
             "prompt_id": "legacy.prompt_compiler",
@@ -1199,6 +1202,7 @@ class Orchestrator:
             prompt_layers=prompt_layers,
             idesign_enabled=idesign_enabled,
             resume_mode=resume_mode,
+            skill_tool_bindings=skill_tool_bindings,
         )
 
         log_event(
@@ -1416,6 +1420,7 @@ class Orchestrator:
         prompt_layers: Optional[Dict[str, Any]] = None,
         idesign_enabled: bool = False,
         resume_mode: bool = False,
+        skill_tool_bindings: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         required_action_tools = []
         required_tools_fn = getattr(self.loop_policy_node, "required_action_tools_for_seat", None)
@@ -1538,6 +1543,19 @@ class Orchestrator:
             forced_frontend_framework = "angular"
         scope_limits = self._resolve_verification_scope_limits()
         architecture_patterns = allowed_architecture_patterns()
+        resolved_skill_tool_bindings = {
+            str(key).strip(): dict(value or {})
+            for key, value in (skill_tool_bindings or {}).items()
+            if str(key).strip()
+        }
+        profile_versions = sorted(
+            {
+                str((row or {}).get("tool_profile_version") or "").strip()
+                for row in resolved_skill_tool_bindings.values()
+                if str((row or {}).get("tool_profile_version") or "").strip()
+            }
+        )
+        tool_profile_version = profile_versions[0] if len(profile_versions) == 1 else "unknown-v1"
 
         return {
             "session_id": run_id,
@@ -1594,6 +1612,9 @@ class Orchestrator:
             "create_pending_gate_request": _pending_gate_request_writer,
             "resume_mode": bool(resume_mode),
             "history": self._history_context(),
+            "skill_contract_enforced": bool(resolved_skill_tool_bindings),
+            "skill_tool_bindings": resolved_skill_tool_bindings,
+            "tool_profile_version": tool_profile_version,
         }
 
     async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:

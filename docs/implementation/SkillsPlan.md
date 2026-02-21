@@ -95,10 +95,7 @@ Exit criteria:
 2. Clear operator diagnostics for each canonical loader error.
 
 ## Remaining Backlog
-1. Add Skill adapter/runtime mapping for `entrypoint_id -> tool_profile_id/tool_profile_version`.
-2. Add adapter enforcement tests for undeclared entrypoint invocation rejection.
-3. Add adapter enforcement tests for undeclared permission usage rejection.
-4. Wire `scripts/check_skill_contracts.py` into the quality lane after adapter enforcement lands.
+1. No open backlog items for v1.
 
 ## Definition of Done (v1)
 1. Skill loadability is contract-first and enforced mechanically.
