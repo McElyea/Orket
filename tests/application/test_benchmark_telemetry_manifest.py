@@ -283,7 +283,7 @@ def test_baseline_selection_and_vibe_delta(tmp_path: Path) -> None:
     cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
-        baseline_dir = tmp_path / "orket_storage" / "baselines"
+        baseline_dir = tmp_path / ".orket" / "durable" / "diagnostics" / "baselines"
         baseline_dir.mkdir(parents=True, exist_ok=True)
         baseline_path = baseline_dir / "001.json"
         baseline_path.write_text(
