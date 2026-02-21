@@ -140,6 +140,10 @@ jobs:
             --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json \
             --context benchmarks/results/context_sweep/context_ceiling.json \
             --thermal benchmarks/results/thermal/thermal_profile.json
+          python scripts/check_context_sweep_outputs.py \
+            --contexts "${{ github.event.inputs.context_sweep_contexts || '8192' }}" \
+            --summary-template benchmarks/results/context_sweep/context_{context}_summary.json \
+            --context-ceiling benchmarks/results/context_sweep/context_ceiling.json
           python scripts/check_lab_guards.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --allow-skip

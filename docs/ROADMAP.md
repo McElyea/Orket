@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add context-sweep results contract checks in full workflow.
-Deliverables:
-1. Validate generated context summaries and context-ceiling artifact are present.
-2. Fail workflow on missing per-context outputs for selected context set.
-3. Surface context-sweep coverage summary in workflow logs.
-
-2. Add explorer artifact index output for downstream ingestion.
+1. Add explorer artifact index output for downstream ingestion.
 Deliverables:
 1. Emit a single index file listing frontier/context/thermal artifact paths.
 2. Include schema versions and provenance refs in the index rows.
 3. Upload index in full workflow artifacts bundle.
+
+2. Add context sweep workflow policy defaults to matrix presets.
+Deliverables:
+1. Include recommended context profiles in benchmark config sets.
+2. Align profile defaults with runbook safe/balanced/stress guidance.
+3. Keep profile changes additive and backward compatible.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.

@@ -267,6 +267,16 @@ python scripts/check_lab_guards.py `
   --allow-skip
 ```
 
+## Context Sweep Output Contract Check
+Validate per-context summaries and context-ceiling coverage:
+
+```powershell
+python scripts/check_context_sweep_outputs.py `
+  --contexts 4096,8192,16384 `
+  --summary-template benchmarks/results/context_sweep/context_{context}_summary.json `
+  --context-ceiling benchmarks/results/context_sweep/context_ceiling.json
+```
+
 ## Baseline Operations
 List baselines:
 
