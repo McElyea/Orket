@@ -21,5 +21,10 @@
   "warmup_steps": 1,
   "canary_runs": 10,
   "canary_task_limit": 1,
-  "canary_latency_variance_threshold": 0.03
+  "canary_latency_variance_threshold": 0.03,
+  "context_sweep_profile": "safe",
+  "context_sweep_contexts": [4096, 8192, 16384],
+  "context_adherence_min": 0.95,
+  "context_ttft_ceiling_ms": 250.0,
+  "context_decode_floor_tps": 20.0
 }

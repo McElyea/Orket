@@ -19,6 +19,8 @@ def test_quant_sweep_preset_configs_include_required_controls() -> None:
         "threads",
         "affinity_policy",
         "warmup_steps",
+        "context_sweep_profile",
+        "context_sweep_contexts",
     }
     configs_root = Path("benchmarks/configs")
     for name in config_names:
@@ -28,3 +30,4 @@ def test_quant_sweep_preset_configs_include_required_controls() -> None:
         assert required_keys.issubset(payload.keys()), name
         assert isinstance(payload["models"], list) and payload["models"], name
         assert isinstance(payload["quants"], list) and payload["quants"], name
+        assert isinstance(payload["context_sweep_contexts"], list) and payload["context_sweep_contexts"], name

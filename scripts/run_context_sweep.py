@@ -79,6 +79,9 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
     if not isinstance(payload, dict):
         raise ValueError("Matrix config must be a JSON object")
     defaults = {
+        "contexts": "",
+        "context_profile": "",
+        "context_profiles_config": "benchmarks/configs/context_sweep_profiles.json",
         "model_id": "",
         "quant_tags": "",
         "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
@@ -94,8 +97,14 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "threads": 0,
         "affinity_policy": "",
         "warmup_steps": 0,
+        "adherence_min": -1.0,
+        "ttft_ceiling_ms": -1.0,
+        "decode_floor_tps": -1.0,
     }
     mapping = {
+        "contexts": "context_sweep_contexts",
+        "context_profile": "context_sweep_profile",
+        "context_profiles_config": "context_profiles_config",
         "model_id": "models",
         "quant_tags": "quants",
         "task_bank": "task_bank",
@@ -108,6 +117,9 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "threads": "threads",
         "affinity_policy": "affinity_policy",
         "warmup_steps": "warmup_steps",
+        "adherence_min": "context_adherence_min",
+        "ttft_ceiling_ms": "context_ttft_ceiling_ms",
+        "decode_floor_tps": "context_decode_floor_tps",
     }
     for arg_key, cfg_key in mapping.items():
         current = getattr(args, arg_key)
@@ -117,6 +129,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         if cfg_value is None:
             continue
         if arg_key in {"model_id", "quant_tags"} and isinstance(cfg_value, list):
+            cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
+        if arg_key == "contexts" and isinstance(cfg_value, list):
             cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
         setattr(args, arg_key, cfg_value)
     return args
