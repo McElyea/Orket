@@ -7,9 +7,12 @@ on:
       - "scripts/run_determinism_harness.py"
       - "scripts/live_card_benchmark_runner.py"
       - "scripts/manage_baselines.py"
+      - "scripts/check_quant_sweep_kpis.py"
+      - "scripts/quant_sweep_kpi_report.py"
       - "tests/application/test_quant_sweep_runner.py"
       - "tests/application/test_manage_baselines_script.py"
       - "tests/application/test_benchmark_telemetry_manifest.py"
+      - "tests/application/test_quant_sweep_kpi_scripts.py"
       - "benchmarks/configs/quant_sweep_common_sessions.json"
       - "docs/QUANT_SWEEP_RUNBOOK.md"
       - ".github/workflows/quant-sweep-smoke.yml"
@@ -38,7 +41,8 @@ jobs:
           python -m pytest \
             tests/application/test_quant_sweep_runner.py \
             tests/application/test_manage_baselines_script.py \
-            tests/application/test_benchmark_telemetry_manifest.py -q
+            tests/application/test_benchmark_telemetry_manifest.py \
+            tests/application/test_quant_sweep_kpi_scripts.py -q
 
       - name: Matrix Dry Run Smoke
         run: |

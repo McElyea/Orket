@@ -46,6 +46,12 @@ Notes:
 1. `--model-id` and `--quant-tags` are still required CLI args; matrix config overrides them.
 2. Canary gate aborts sweep if thresholds fail.
 3. Polluted quant rows are excluded from frontier/recommendations by default.
+4. Sweep artifacts include `execution_lane` and `vram_profile` labels.
+
+Recommended lane/profile labels:
+1. `--execution-lane ci --vram-profile safe` for deterministic non-physics CI work.
+2. `--execution-lane lab --vram-profile safe` for long local experiment sessions.
+3. `--execution-lane lab --vram-profile balanced|stress` for boundary testing.
 
 ## CI Workflow Modes
 1. Smoke workflow: `.github/workflows/quant-sweep-smoke.yml`

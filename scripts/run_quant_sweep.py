@@ -34,6 +34,8 @@ OPTIONAL_SIDECAR_FIELDS = [
     "fan_speed_percent",
 ]
 
+VALID_SIDECAR_PARSE_STATUSES = {"OK", "OPTIONAL_FIELD_MISSING", "NOT_APPLICABLE"}
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run automated quantization sweep and generate vibe summary.")
@@ -80,6 +82,13 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--threads", type=int, default=0, help="Thread-count metadata (0 means unset).")
     parser.add_argument("--affinity-policy", default="", help="CPU affinity policy/mask metadata.")
     parser.add_argument("--warmup-steps", type=int, default=0, help="Warmup steps metadata (0 means unset).")
+    parser.add_argument("--execution-lane", default="lab", choices=["ci", "lab"], help="Execution lane label.")
+    parser.add_argument(
+        "--vram-profile",
+        default="safe",
+        choices=["safe", "balanced", "stress"],
+        help="VRAM safety profile label.",
+    )
     parser.add_argument("--canary-runs", type=int, default=0, help="If >0, run canary repeats before matrix execution.")
     parser.add_argument("--canary-task-limit", type=int, default=1, help="Task limit for canary harness run.")
     parser.add_argument(
@@ -124,6 +133,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "threads": 0,
         "affinity_policy": "",
         "warmup_steps": 0,
+        "execution_lane": "lab",
+        "vram_profile": "safe",
         "canary_runs": 0,
         "canary_task_limit": 1,
         "canary_latency_variance_threshold": 0.03,
@@ -149,6 +160,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "threads": "threads",
         "affinity_policy": "affinity_policy",
         "warmup_steps": "warmup_steps",
+        "execution_lane": "execution_lane",
+        "vram_profile": "vram_profile",
         "canary_runs": "canary_runs",
         "canary_task_limit": "canary_task_limit",
         "canary_latency_variance_threshold": "canary_latency_variance_threshold",
@@ -237,12 +250,26 @@ def _compute_vibe_delta(*, baseline_adherence: float, baseline_memory_mib: float
     return round(quality_loss / memory_saved_gib, 3)
 
 
-def _is_frontier_eligible(*, row: dict[str, Any], min_adherence: float, latency_ceiling: float) -> bool:
-    adherence = float(row.get("adherence_score", 0.0) or 0.0)
-    latency = float(row.get("total_latency", 0.0) or 0.0)
+def _is_row_valid(row: dict[str, Any]) -> bool:
     run_quality_status = str(row.get("run_quality_status") or "POLLUTED").strip().upper()
     if run_quality_status != "CLEAN":
         return False
+    token_status = str(row.get("token_metrics_status") or "TOKEN_AND_TIMING_UNAVAILABLE").strip().upper()
+    if token_status != "OK":
+        return False
+    sidecar = row.get("hardware_sidecar")
+    if isinstance(sidecar, dict):
+        sidecar_status = str(sidecar.get("sidecar_parse_status") or "NOT_APPLICABLE").strip().upper()
+        if sidecar_status not in VALID_SIDECAR_PARSE_STATUSES:
+            return False
+    return True
+
+
+def _is_frontier_eligible(*, row: dict[str, Any], min_adherence: float, latency_ceiling: float) -> bool:
+    if not _is_row_valid(row):
+        return False
+    adherence = float(row.get("adherence_score", 0.0) or 0.0)
+    latency = float(row.get("total_latency", 0.0) or 0.0)
     return adherence >= min_adherence and latency <= latency_ceiling
 
 
@@ -575,8 +602,7 @@ def _build_stability_kpis(sessions: list[dict[str, Any]]) -> dict[str, Any]:
             token_status = str(row.get("token_metrics_status") or "TOKEN_AND_TIMING_UNAVAILABLE").strip()
             if token_status != "OK":
                 missing_telemetry_runs += run_weight
-            run_quality = str(row.get("run_quality_status") or "POLLUTED").strip().upper()
-            if run_quality != "CLEAN":
+            if not _is_row_valid(row):
                 polluted_runs += run_weight
 
     sessions_count = len(sessions)
@@ -717,6 +743,8 @@ def main() -> int:
                 "affinity_policy": str(args.affinity_policy).strip(),
                 "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
             },
+            "execution_lane": str(args.execution_lane),
+            "vram_profile": str(args.vram_profile),
             "canary": {
                 "enabled": int(args.canary_runs) > 0,
                 "runs": int(args.canary_runs),
@@ -808,8 +836,11 @@ def main() -> int:
                     "report_path": str(raw_out).replace("\\", "/"),
                     "hardware_sidecar": sidecar,
                     **metrics,
+                    "execution_lane": str(args.execution_lane),
+                    "vram_profile": str(args.vram_profile),
                 }
             )
+            per_quant[-1]["valid"] = bool(_is_row_valid(per_quant[-1]))
 
         if not per_quant:
             continue
@@ -897,6 +928,8 @@ def main() -> int:
                 "affinity_policy": str(args.affinity_policy).strip(),
                 "warmup_steps": int(args.warmup_steps) if int(args.warmup_steps) > 0 else None,
             },
+            "execution_lane": str(args.execution_lane),
+            "vram_profile": str(args.vram_profile),
             "hardware_sidecar": {
                 "enabled": bool(str(args.hardware_sidecar_template or "").strip()),
                 "template": str(args.hardware_sidecar_template),
@@ -907,6 +940,8 @@ def main() -> int:
             "venue": str(args.runtime_target),
             "flow": str(args.execution_mode),
         },
+        "execution_lane": str(args.execution_lane),
+        "vram_profile": str(args.vram_profile),
         "canary": canary_result,
         "sessions": sessions,
     }
