@@ -19,20 +19,13 @@ Use this file to:
 4. Update `Last updated` whenever phase priorities change.
 
 ## Phase 0: Active Now
-1. Telemetry contract hardening across providers.
-Success criteria:
-1. Providers emit only canonical token/timing states.
-2. Streaming and non-streaming transitions are consistent.
-3. Adapter integration tests cover both paths.
-4. All emitted artifacts include `execution_lane` and `vram_profile`.
-
-2. GPU sidecar parse policy finalization.
+1. GPU sidecar parse policy finalization.
 Success criteria:
 1. Required fields parsed as canonical snake_case keys.
 2. Optional fields parsed when present; missing optionals never fail execution.
 3. `sidecar_parse_status` and `sidecar_parse_errors` emitted deterministically.
 
-3. Valid-run policy enforcement end-to-end.
+2. Valid-run policy enforcement end-to-end.
 Success criteria:
 1. Invalid runs excluded from KPI aggregates always.
 2. Invalid runs excluded from recommendations by default.
@@ -67,6 +60,11 @@ Next execution slice:
 Next execution slice:
 1. Add orchestration-overhead consistency checker for benchmark report telemetry. Status: done (2026-02-21)
 2. Wire consistency checker into `.gitea/workflows/quality.yml` and gate test coverage. Status: done (2026-02-21)
+
+Next execution slice:
+1. Normalize benchmark telemetry artifacts to always include `execution_lane` and `vram_profile`. Status: done (2026-02-21)
+2. Add telemetry artifact contract checker for canonical token/timing status and lane/profile keys. Status: done (2026-02-21)
+3. Wire telemetry artifact checker into `.gitea/workflows/quality.yml` and gate test coverage. Status: done (2026-02-21)
 
 ## Phase 1: Next Up
 1. Thermal gate and cooldown policy checks for GPU lab sessions.

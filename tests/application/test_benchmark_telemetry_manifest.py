@@ -57,6 +57,8 @@ def test_run_determinism_harness_emits_telemetry_manifest_defaults(tmp_path: Pat
     assert telemetry["total_latency"] >= 0.0
     assert telemetry["peak_memory_rss"] == 0.0
     assert telemetry["adherence_score"] == 1.0
+    assert telemetry["execution_lane"] == "ci"
+    assert telemetry["vram_profile"] == "safe"
     assert telemetry["internal_model_seconds"] is None
     assert telemetry["orchestration_overhead_ratio"] is None
     assert telemetry["run_quality_status"] == "POLLUTED"
@@ -198,6 +200,8 @@ def test_run_determinism_harness_uses_runner_telemetry_when_present(tmp_path: Pa
     payload = json.loads(out.read_text(encoding="utf-8"))
     telemetry = payload["test_runs"][0]["telemetry"]
     assert telemetry == {
+        "execution_lane": "ci",
+        "vram_profile": "safe",
         "init_latency": 0.123,
         "total_latency": 1.988,
         "peak_memory_rss": 256.444,

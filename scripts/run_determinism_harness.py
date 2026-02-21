@@ -107,6 +107,8 @@ def _normalize_telemetry(
     *,
     elapsed_ms: float,
     exit_code: int,
+    execution_lane: str,
+    vram_profile: str,
 ) -> dict[str, Any]:
     telemetry = runner_payload.get("telemetry") if isinstance(runner_payload, dict) else None
     default_token_metrics = {
@@ -138,6 +140,8 @@ def _normalize_telemetry(
         "vibe_delta_status": "NO_BASELINE",
     }
     default = {
+        "execution_lane": execution_lane,
+        "vram_profile": vram_profile,
         "init_latency": None,
         "total_latency": _round3(float(elapsed_ms) / 1000.0),
         "peak_memory_rss": 0.0,
@@ -160,6 +164,9 @@ def _normalize_telemetry(
     }
     if not isinstance(telemetry, dict):
         return default
+
+    telemetry_execution_lane = str(telemetry.get("execution_lane") or execution_lane).strip() or execution_lane
+    telemetry_vram_profile = str(telemetry.get("vram_profile") or vram_profile).strip() or vram_profile
 
     init_latency = telemetry.get("init_latency")
     total_latency = telemetry.get("total_latency")
@@ -188,6 +195,8 @@ def _normalize_telemetry(
     system_load_end = telemetry.get("system_load_end") if isinstance(telemetry.get("system_load_end"), dict) else {}
     controls = telemetry.get("experimental_controls") if isinstance(telemetry.get("experimental_controls"), dict) else {}
     return {
+        "execution_lane": telemetry_execution_lane,
+        "vram_profile": telemetry_vram_profile,
         "init_latency": _round3(float(init_latency)) if isinstance(init_latency, (int, float)) else None,
         "total_latency": _round3(float(total_latency))
         if isinstance(total_latency, (int, float))
@@ -334,6 +343,8 @@ def _run_once(
             runner_payload=runner_payload,
             elapsed_ms=elapsed_ms,
             exit_code=int(result.returncode),
+            execution_lane=("lab" if str(runtime_target).strip().lower() in {"lab", "gpu", "selfhosted"} else "ci"),
+            vram_profile=(str(os.environ.get("ORKET_VRAM_PROFILE", "")).strip() or "safe"),
         )
         outcome = "pass" if int(result.returncode) == 0 else "fail"
 
@@ -433,6 +444,8 @@ def main() -> int:
                     "telemetry": run.get("telemetry")
                     if isinstance(run.get("telemetry"), dict)
                     else {
+                        "execution_lane": ("lab" if str(args.runtime_target).strip().lower() in {"lab", "gpu", "selfhosted"} else "ci"),
+                        "vram_profile": (str(os.environ.get("ORKET_VRAM_PROFILE", "")).strip() or "safe"),
                         "init_latency": None,
                         "total_latency": _round3(float(run.get("duration_ms", 0.0) or 0.0) / 1000.0),
                         "peak_memory_rss": 0.0,

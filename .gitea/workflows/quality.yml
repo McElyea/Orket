@@ -203,6 +203,10 @@ jobs:
         run: |
           python scripts/check_orchestration_overhead_consistency.py --report benchmarks/results/benchmark_determinism_report.json --out benchmarks/results/orchestration_overhead_consistency.json
 
+      - name: Enforce telemetry lane/profile fields
+        run: |
+          python scripts/check_telemetry_artifact_fields.py --report benchmarks/results/benchmark_determinism_report.json --out benchmarks/results/telemetry_artifact_fields_check.json
+
       - name: Enforce benchmark scoring gate
         run: |
           python scripts/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmark_scoring_gate.json --require-thresholds
