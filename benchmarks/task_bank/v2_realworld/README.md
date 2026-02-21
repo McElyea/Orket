@@ -31,9 +31,9 @@ python scripts/live_card_benchmark_runner.py --task workspace/realworld/task001.
 python scripts/run_determinism_harness.py ^
   --task-bank benchmarks/task_bank/v2_realworld/tasks.json ^
   --runs 1 ^
-  --venue local-hardware ^
-  --flow live-card ^
-  --runner-template "python scripts/live_card_benchmark_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}" ^
+  --runtime-target local-hardware ^
+  --execution-mode live-card ^
+  --runner-template "python scripts/live_card_benchmark_runner.py --task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}" ^
   --artifact-glob live_runner_output.log ^
   --task-id-min 1 ^
   --task-id-max 20 ^

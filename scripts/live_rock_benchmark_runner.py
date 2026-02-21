@@ -28,8 +28,8 @@ card_runner = _load_card_runner()
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run one benchmark task through live Orket rock execution.")
     parser.add_argument("--task", required=True, help="Path to benchmark task JSON.")
-    parser.add_argument("--venue", default="local-hardware")
-    parser.add_argument("--flow", default="live-rock")
+    parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="local-hardware")
+    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live-rock")
     parser.add_argument("--run-dir", default="", help="Workspace/run directory.")
     parser.add_argument("--runs-root", default="workspace/runs", help="Durable root for indexed run artifacts.")
     parser.add_argument("--department", default="core")
@@ -297,8 +297,10 @@ def main() -> int:
         "runtime_roles": sorted(runtime_roles),
         "model_map": {},
         "prompt_checksum": "",
-        "venue": str(args.venue),
-        "flow": str(args.flow),
+        "runtime_target": str(args.runtime_target),
+        "execution_mode": str(args.execution_mode),
+        "venue": str(args.runtime_target),
+        "flow": str(args.execution_mode),
         "department": str(args.department),
         "output_file": output_file,
         "final_main_path": str(canonical_run_dir / "coder_final_main.py").replace("\\", "/"),

@@ -147,13 +147,17 @@ def score_report(
 
     all_scores = [task["score"] for task in per_task_scores.values()]
     overall_avg_score = round(sum(all_scores) / len(all_scores), 3) if all_scores else 0.0
+    runtime_target = report_payload.get("runtime_target", report_payload.get("venue"))
+    execution_mode = report_payload.get("execution_mode", report_payload.get("flow"))
 
     return {
         "schema_version": "v1",
         "policy_version": str(policy.get("policy_version", "v1")),
         "input_report": report_payload.get("task_bank"),
-        "venue": report_payload.get("venue"),
-        "flow": report_payload.get("flow"),
+        "runtime_target": runtime_target,
+        "execution_mode": execution_mode,
+        "venue": runtime_target,
+        "flow": execution_mode,
         "runs_per_task": report_payload.get("runs_per_task"),
         "determinism_rate": report_payload.get("determinism_rate"),
         "avg_latency_ms": round(sum(latency_samples) / len(latency_samples), 3) if latency_samples else 0.0,

@@ -18,13 +18,16 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run benchmark tasks repeatedly and report output drift.")
     parser.add_argument("--task-bank", default="benchmarks/task_bank/v1/tasks.json")
     parser.add_argument("--runs", type=int, default=5)
-    parser.add_argument("--venue", default="standard")
-    parser.add_argument("--flow", default="default")
+    parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="standard")
+    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="default")
     parser.add_argument("--output", default="benchmarks/results/determinism_report.json")
     parser.add_argument(
         "--runner-template",
-        default="orket run --task {task_file} --venue {venue} --flow {flow}",
-        help="Command template placeholders: {task_file}, {venue}, {flow}, {run_dir}, {repo_root}, {workdir}.",
+        default="orket run --task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode}",
+        help=(
+            "Command template placeholders: {task_file}, {runtime_target}, {execution_mode}, "
+            "{venue}, {flow}, {run_dir}, {repo_root}, {workdir}."
+        ),
     )
     parser.add_argument(
         "--artifact-glob",
@@ -153,8 +156,8 @@ def _normalize_telemetry(
 def _run_once(
     task: dict[str, Any],
     run_index: int,
-    venue: str,
-    flow: str,
+    runtime_target: str,
+    execution_mode: str,
     runner_template: str,
     artifact_globs: list[str],
 ) -> dict[str, Any]:
@@ -166,8 +169,10 @@ def _run_once(
 
         command = runner_template.format(
             task_file=str(task_file),
-            venue=venue,
-            flow=flow,
+            runtime_target=runtime_target,
+            execution_mode=execution_mode,
+            venue=runtime_target,
+            flow=execution_mode,
             workdir=str(run_dir),
             run_dir=str(run_dir),
             repo_root=str(repo_root),
@@ -250,8 +255,8 @@ def main() -> int:
             _run_once(
                 task=task,
                 run_index=index + 1,
-                venue=str(args.venue),
-                flow=str(args.flow),
+                runtime_target=str(args.runtime_target),
+                execution_mode=str(args.execution_mode),
                 runner_template=str(args.runner_template),
                 artifact_globs=list(args.artifact_glob),
             )
@@ -308,8 +313,10 @@ def main() -> int:
         "test_runs": test_runs,
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "task_bank": str(task_bank_path).replace("\\", "/"),
-        "venue": str(args.venue),
-        "flow": str(args.flow),
+        "runtime_target": str(args.runtime_target),
+        "execution_mode": str(args.execution_mode),
+        "venue": str(args.runtime_target),
+        "flow": str(args.execution_mode),
         "runs_per_task": int(args.runs),
         "runner_template": str(args.runner_template),
         "artifact_globs": list(args.artifact_glob),

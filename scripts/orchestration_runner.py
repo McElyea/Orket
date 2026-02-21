@@ -10,8 +10,8 @@ from typing import Any
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 5 orchestration runner with compliance artifacts.")
     parser.add_argument("--task", required=True, help="Path to task JSON file.")
-    parser.add_argument("--venue", default="standard")
-    parser.add_argument("--flow", default="default")
+    parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="standard")
+    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="default")
     parser.add_argument(
         "--run-dir",
         default="",
@@ -33,7 +33,7 @@ def _required_artifacts(task: dict[str, Any]) -> list[str]:
     return [str(item) for item in required if isinstance(item, str) and item.strip()]
 
 
-def _build_report(task: dict[str, Any], venue: str, flow: str, artifact_names: list[str]) -> dict[str, Any]:
+def _build_report(task: dict[str, Any], runtime_target: str, execution_mode: str, artifact_names: list[str]) -> dict[str, Any]:
     task_id = str(task.get("id", "unknown"))
     instruction = str(task.get("instruction", "")).strip()
     acceptance = task.get("acceptance_contract", {})
@@ -75,8 +75,10 @@ def _build_report(task: dict[str, Any], venue: str, flow: str, artifact_names: l
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "task_id": task_id,
         "tier": task.get("tier"),
-        "venue": venue,
-        "flow": flow,
+        "runtime_target": runtime_target,
+        "execution_mode": execution_mode,
+        "venue": runtime_target,
+        "flow": execution_mode,
         "status": "pass" if overall_pass else "fail",
         "artifacts": artifact_names,
         "compliance_checks": checks,
@@ -114,8 +116,8 @@ def main() -> int:
 
     report_payload = _build_report(
         task=task,
-        venue=str(args.venue),
-        flow=str(args.flow),
+        runtime_target=str(args.runtime_target),
+        execution_mode=str(args.execution_mode),
         artifact_names=artifact_names,
     )
 
@@ -125,8 +127,10 @@ def main() -> int:
             [
                 f"task_id={task.get('id')}",
                 f"tier={task.get('tier')}",
-                f"venue={args.venue}",
-                f"flow={args.flow}",
+                f"runtime_target={args.runtime_target}",
+                f"execution_mode={args.execution_mode}",
+                f"venue={args.runtime_target}",
+                f"flow={args.execution_mode}",
                 f"status={report_payload['status']}",
             ]
         )

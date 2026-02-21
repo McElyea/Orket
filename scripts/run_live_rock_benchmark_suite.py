@@ -12,8 +12,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--task-bank", default="benchmarks/task_bank/v2_realworld/tasks.json")
     parser.add_argument("--policy", default="model/core/contracts/benchmark_scoring_policy.json")
     parser.add_argument("--runs", type=int, default=1)
-    parser.add_argument("--venue", default="local-hardware")
-    parser.add_argument("--flow", default="live-rock")
+    parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="local-hardware")
+    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live-rock")
     parser.add_argument("--task-id-min", type=int, default=1)
     parser.add_argument("--task-id-max", type=int, default=40)
     parser.add_argument("--raw-out", default="benchmarks/results/live_rock_v2_001_040_determinism_report.json")
@@ -43,12 +43,15 @@ def main() -> int:
         args.task_bank,
         "--runs",
         str(args.runs),
-        "--venue",
-        args.venue,
-        "--flow",
-        args.flow,
+        "--runtime-target",
+        args.runtime_target,
+        "--execution-mode",
+        args.execution_mode,
         "--runner-template",
-        "python scripts/live_rock_benchmark_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}",
+        (
+            "python scripts/live_rock_benchmark_runner.py --task {task_file} "
+            "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
+        ),
         "--artifact-glob",
         "live_runner_output.log",
         "--task-id-min",

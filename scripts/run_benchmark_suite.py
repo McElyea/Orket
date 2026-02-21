@@ -10,8 +10,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--task-bank", default="benchmarks/task_bank/v1/tasks.json")
     parser.add_argument("--policy", default="model/core/contracts/benchmark_scoring_policy.json")
     parser.add_argument("--runs", type=int, default=1)
-    parser.add_argument("--venue", default="standard")
-    parser.add_argument("--flow", default="default")
+    parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="standard")
+    parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="default")
     parser.add_argument("--runner-template", required=True)
     parser.add_argument("--task-limit", type=int, default=0)
     parser.add_argument("--task-id-min", type=int, default=0)
@@ -43,10 +43,10 @@ def main() -> int:
         args.task_bank,
         "--runs",
         str(args.runs),
-        "--venue",
-        args.venue,
-        "--flow",
-        args.flow,
+        "--runtime-target",
+        args.runtime_target,
+        "--execution-mode",
+        args.execution_mode,
         "--runner-template",
         args.runner_template,
         "--output",
