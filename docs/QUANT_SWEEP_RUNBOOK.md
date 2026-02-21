@@ -277,6 +277,17 @@ python scripts/check_context_sweep_outputs.py `
   --context-ceiling benchmarks/results/context_sweep/context_ceiling.json
 ```
 
+## Explorer Artifact Index
+Build a single index for frontier/context/thermal artifacts:
+
+```powershell
+python scripts/build_explorer_artifact_index.py `
+  --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json `
+  --context benchmarks/results/context_sweep/context_ceiling.json `
+  --thermal benchmarks/results/thermal/thermal_profile.json `
+  --out benchmarks/results/quant_sweep/explorer_artifact_index.json
+```
+
 ## Baseline Operations
 List baselines:
 

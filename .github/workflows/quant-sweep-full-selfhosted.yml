@@ -144,6 +144,11 @@ jobs:
             --contexts "${{ github.event.inputs.context_sweep_contexts || '8192' }}" \
             --summary-template benchmarks/results/context_sweep/context_{context}_summary.json \
             --context-ceiling benchmarks/results/context_sweep/context_ceiling.json
+          python scripts/build_explorer_artifact_index.py \
+            --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json \
+            --context benchmarks/results/context_sweep/context_ceiling.json \
+            --thermal benchmarks/results/thermal/thermal_profile.json \
+            --out benchmarks/results/quant_sweep/explorer_artifact_index.json
           python scripts/check_lab_guards.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --allow-skip
@@ -200,6 +205,7 @@ jobs:
             benchmarks/results/quant_sweep/full_sweep_kpis.json
             benchmarks/results/quant_sweep/full_sweep_provenance.json
             benchmarks/results/quant_sweep/full_frontier_explorer.json
+            benchmarks/results/quant_sweep/explorer_artifact_index.json
             benchmarks/results/context_sweep/context_ceiling.json
             benchmarks/results/thermal/thermal_profile.json
             benchmarks/results/quant_sweep/sidecar/**/*.json

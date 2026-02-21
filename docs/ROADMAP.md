@@ -70,17 +70,17 @@ Success criteria:
 3. `--include-invalid` affects frontier/comparison visibility only.
 
 ## Next (After Now)
-1. Add explorer artifact index output for downstream ingestion.
-Deliverables:
-1. Emit a single index file listing frontier/context/thermal artifact paths.
-2. Include schema versions and provenance refs in the index rows.
-3. Upload index in full workflow artifacts bundle.
-
-2. Add context sweep workflow policy defaults to matrix presets.
+1. Add context sweep workflow policy defaults to matrix presets.
 Deliverables:
 1. Include recommended context profiles in benchmark config sets.
 2. Align profile defaults with runbook safe/balanced/stress guidance.
 3. Keep profile changes additive and backward compatible.
+
+2. Add workflow-level explorer ingestion smoke check.
+Deliverables:
+1. Validate generated artifact index contains all required explorer kinds.
+2. Fail workflow when schema version or provenance ref is missing in index rows.
+3. Publish ingestion check output alongside artifact index.
 
 ## Later
 1. Add thermal gate and cooldown policy checks for GPU sessions.
