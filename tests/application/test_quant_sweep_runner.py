@@ -52,6 +52,8 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
                 "    'total_latency': 1.0,",
                 "    'peak_memory_rss': mem,",
                 "    'adherence_score': adherence,",
+                "    'run_quality_status': 'CLEAN',",
+                "    'run_quality_reasons': [],",
                 "    'vibe_metrics': {",
                 "      'latency_variance': None,",
                 "      'code_density': 0.9,",
@@ -100,6 +102,7 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
     summary = json.loads(summary_out.read_text(encoding="utf-8"))
 
     assert summary["schema_version"] == "1.1.3"
+    assert isinstance(summary["commit_sha"], str)
     assert isinstance(summary["generated_at"], str)
     assert isinstance(summary["hardware_fingerprint"], str)
     assert summary["matrix"]["models"] == ["qwen-coder"]
@@ -180,6 +183,8 @@ def test_run_quant_sweep_recommends_mismatch_when_no_quant_meets_threshold(tmp_p
                 "    'total_latency': latency,",
                 "    'peak_memory_rss': mem,",
                 "    'adherence_score': adherence,",
+                "    'run_quality_status': 'CLEAN',",
+                "    'run_quality_reasons': [],",
                 "    'vibe_metrics': {",
                 "      'latency_variance': None,",
                 "      'code_density': 0.9,",
@@ -349,6 +354,7 @@ def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stdout + "\n" + result.stderr
     payload = json.loads(result.stdout)
     plan = payload["dry_run"]
+    assert isinstance(plan["commit_sha"], str)
     assert plan["models"] == ["qwen-coder"]
     assert plan["quants"] == ["Q8_0", "Q6_K"]
     assert plan["runs_per_quant"] == 2
@@ -362,3 +368,120 @@ def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
     }
     assert plan["canary"]["enabled"] is True
     assert plan["canary"]["runs"] == 5
+
+
+def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path) -> None:
+    task_bank = tmp_path / "tasks.json"
+    task_bank.write_text(
+        json.dumps(
+            [
+                {
+                    "id": "001",
+                    "tier": 1,
+                    "description": "Task 001",
+                    "acceptance_contract": {
+                        "mode": "function",
+                        "required_artifacts": [],
+                        "pass_conditions": ["ok"],
+                        "determinism_profile": "strict",
+                    },
+                }
+            ],
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    fake_runner = tmp_path / "fake_quant_runner_polluted.py"
+    fake_runner.write_text(
+        "\n".join(
+            [
+                "import argparse",
+                "import json",
+                "import os",
+                "p = argparse.ArgumentParser()",
+                "p.add_argument('--task', required=True)",
+                "p.add_argument('--venue', default='x')",
+                "p.add_argument('--flow', default='y')",
+                "p.parse_args()",
+                "quant = os.environ.get('ORKET_QUANT_TAG', 'unknown')",
+                "if quant == 'Q8_0':",
+                "    adherence, mem = 1.0, 3000.0",
+                "else:",
+                "    adherence, mem = 0.98, 2300.0",
+                "print(json.dumps({",
+                "  'telemetry': {",
+                "    'init_latency': None,",
+                "    'total_latency': 1.0,",
+                "    'peak_memory_rss': mem,",
+                "    'adherence_score': adherence,",
+                "    'run_quality_status': 'POLLUTED',",
+                "    'run_quality_reasons': ['HIGH_SYSTEM_LOAD']",
+                "  }",
+                "}))",
+                "raise SystemExit(0)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    summary_default = tmp_path / "sweep_default.json"
+    default_result = subprocess.run(
+        [
+            "python",
+            "scripts/run_quant_sweep.py",
+            "--model-id",
+            "qwen-coder",
+            "--quant-tags",
+            "Q8_0,Q6_K",
+            "--task-bank",
+            str(task_bank),
+            "--runs",
+            "1",
+            "--runner-template",
+            f"python {fake_runner} --task {{task_file}} --venue {{venue}} --flow {{flow}}",
+            "--summary-out",
+            str(summary_default),
+            "--task-limit",
+            "1",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert default_result.returncode == 0, default_result.stdout + "\n" + default_result.stderr
+    default_payload = json.loads(summary_default.read_text(encoding="utf-8"))
+    default_session = default_payload["sessions"][0]
+    assert default_session["efficiency_frontier"]["minimum_viable_quant_tag"] is None
+    assert default_session["efficiency_frontier"]["best_value_quant_tag"] is None
+
+    summary_override = tmp_path / "sweep_override.json"
+    override_result = subprocess.run(
+        [
+            "python",
+            "scripts/run_quant_sweep.py",
+            "--model-id",
+            "qwen-coder",
+            "--quant-tags",
+            "Q8_0,Q6_K",
+            "--task-bank",
+            str(task_bank),
+            "--runs",
+            "1",
+            "--runner-template",
+            f"python {fake_runner} --task {{task_file}} --venue {{venue}} --flow {{flow}}",
+            "--summary-out",
+            str(summary_override),
+            "--task-limit",
+            "1",
+            "--allow-polluted-frontier",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert override_result.returncode == 0, override_result.stdout + "\n" + override_result.stderr
+    override_payload = json.loads(summary_override.read_text(encoding="utf-8"))
+    override_session = override_payload["sessions"][0]
+    assert override_session["efficiency_frontier"]["minimum_viable_quant_tag"] == "Q6_K"

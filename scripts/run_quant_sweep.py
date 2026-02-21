@@ -39,6 +39,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true", help="Print resolved sweep plan and exit.")
     parser.add_argument("--adherence-threshold", type=float, default=0.95)
     parser.add_argument("--latency-ceiling", type=float, default=10.0, help="Max total latency (seconds) for frontier eligibility.")
+    parser.add_argument(
+        "--allow-polluted-frontier",
+        action="store_true",
+        help="Include POLLUTED quant rows in frontier/recommendation calculations.",
+    )
     parser.add_argument("--seed", type=int, default=0, help="Benchmark seed metadata (0 means unset).")
     parser.add_argument("--threads", type=int, default=0, help="Thread-count metadata (0 means unset).")
     parser.add_argument("--affinity-policy", default="", help="CPU affinity policy/mask metadata.")
@@ -140,6 +145,13 @@ def _run(cmd: list[str], *, env: dict[str, str]) -> None:
         raise SystemExit(result.returncode)
 
 
+def _git_commit_sha() -> str:
+    result = subprocess.run(["git", "rev-parse", "HEAD"], check=False, capture_output=True, text=True)
+    if result.returncode != 0:
+        return ""
+    return str(result.stdout or "").strip()
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -192,7 +204,24 @@ def _compute_vibe_delta(*, baseline_adherence: float, baseline_memory_mib: float
 def _is_frontier_eligible(*, row: dict[str, Any], min_adherence: float, latency_ceiling: float) -> bool:
     adherence = float(row.get("adherence_score", 0.0) or 0.0)
     latency = float(row.get("total_latency", 0.0) or 0.0)
+    run_quality_status = str(row.get("run_quality_status") or "POLLUTED").strip().upper()
+    if run_quality_status != "CLEAN":
+        return False
     return adherence >= min_adherence and latency <= latency_ceiling
+
+
+def _is_frontier_eligible_with_policy(
+    *,
+    row: dict[str, Any],
+    min_adherence: float,
+    latency_ceiling: float,
+    allow_polluted_frontier: bool,
+) -> bool:
+    if allow_polluted_frontier:
+        adherence = float(row.get("adherence_score", 0.0) or 0.0)
+        latency = float(row.get("total_latency", 0.0) or 0.0)
+        return adherence >= min_adherence and latency <= latency_ceiling
+    return _is_frontier_eligible(row=row, min_adherence=min_adherence, latency_ceiling=latency_ceiling)
 
 
 def _quant_report_out(base_dir: Path, model_id: str, quant_tag: str) -> Path:
@@ -287,8 +316,23 @@ def _collect_quant_metrics(report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _best_value_quant(rows: list[dict[str, Any]], *, min_adherence: float, latency_ceiling: float) -> dict[str, Any] | None:
-    candidates = [row for row in rows if _is_frontier_eligible(row=row, min_adherence=min_adherence, latency_ceiling=latency_ceiling)]
+def _best_value_quant(
+    rows: list[dict[str, Any]],
+    *,
+    min_adherence: float,
+    latency_ceiling: float,
+    allow_polluted_frontier: bool,
+) -> dict[str, Any] | None:
+    candidates = [
+        row
+        for row in rows
+        if _is_frontier_eligible_with_policy(
+            row=row,
+            min_adherence=min_adherence,
+            latency_ceiling=latency_ceiling,
+            allow_polluted_frontier=allow_polluted_frontier,
+        )
+    ]
     if not candidates:
         return None
 
@@ -416,9 +460,11 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     summary_out = Path(args.summary_out)
     summary_out.parent.mkdir(parents=True, exist_ok=True)
+    commit_sha = _git_commit_sha()
 
     if args.dry_run:
         dry_plan = {
+            "commit_sha": commit_sha,
             "models": model_ids,
             "quants": quant_tags,
             "task_bank": str(args.task_bank),
@@ -539,11 +585,21 @@ def main() -> int:
         frontier = None
         # Deterministic frontier: scan from the smallest quant rank upward and choose first eligible.
         for row in sorted(per_quant, key=lambda item: item["quant_rank"]):
-            if _is_frontier_eligible(row=row, min_adherence=target_adherence, latency_ceiling=float(args.latency_ceiling)):
+            if _is_frontier_eligible_with_policy(
+                row=row,
+                min_adherence=target_adherence,
+                latency_ceiling=float(args.latency_ceiling),
+                allow_polluted_frontier=bool(args.allow_polluted_frontier),
+            ):
                 frontier = row
                 break
         minimum_viable = frontier
-        best_value = _best_value_quant(per_quant, min_adherence=target_adherence, latency_ceiling=float(args.latency_ceiling))
+        best_value = _best_value_quant(
+            per_quant,
+            min_adherence=target_adherence,
+            latency_ceiling=float(args.latency_ceiling),
+            allow_polluted_frontier=bool(args.allow_polluted_frontier),
+        )
         frontier_reason = "lowest quant meeting adherence and latency thresholds"
         recommendation = f"For this hardware, use {minimum_viable['quant_tag']} for best Vibe." if minimum_viable else (
             "No quantization met the vibe threshold; hardware/model mismatch."
@@ -577,6 +633,7 @@ def main() -> int:
     summary = {
         "schema_version": "1.1.3",
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "commit_sha": commit_sha,
         "hardware_fingerprint": _hardware_fingerprint(),
         "matrix": {
             "models": model_ids,
