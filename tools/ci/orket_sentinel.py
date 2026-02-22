@@ -9,12 +9,548 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
 TRIPLET_SUFFIXES = {
     ".body.json": "body",
     ".links.json": "links",
     ".manifest.json": "manifest",
 }
+
+STAGE_ORDER = {
+    "base_shape": 0,
+    "dto_links": 1,
+    "relationship_vocabulary": 2,
+    "policy": 3,
+    "determinism": 4,
+}
+
+TYPED_MAPPING: dict[str, dict[str, set[str]]] = {
+    "invocation": {
+        "skill": {"skill"},
+        "entrypoint": {"entrypoint"},
+        "validation_result": {"validation_result"},
+        "trace_events": {"trace_event"},
+    },
+    "validation_result": {
+        "skill": {"skill"},
+        "entrypoint": {"entrypoint"},
+        "tool_profile": {"tool_profile"},
+        "invocation": {"invocation"},
+        "artifacts": {"artifact"},
+        "trace_events": {"trace_event"},
+    },
+}
+
+RELATIONSHIP_VOCABULARY = {
+    "declares": {
+        "cardinality": "one",
+        "allowed_source_dto_types": {"invocation", "validation_result"},
+        "allowed_target_reference_types": {"skill", "entrypoint", "tool_profile"},
+    },
+    "derives_from": {
+        "cardinality": "many",
+        "allowed_source_dto_types": {"validation_result"},
+        "allowed_target_reference_types": {"artifact"},
+    },
+    "validates": {
+        "cardinality": "one",
+        "allowed_source_dto_types": {"validation_result"},
+        "allowed_target_reference_types": {"invocation"},
+    },
+    "produces": {
+        "cardinality": "many",
+        "allowed_source_dto_types": {"invocation", "validation_result"},
+        "allowed_target_reference_types": {"trace_event"},
+    },
+    "causes": {
+        "cardinality": "many",
+        "allowed_source_dto_types": {"invocation", "validation_result"},
+        "allowed_target_reference_types": {"trace_event", "artifact"},
+    },
+}
+
+RAW_ID_FORBIDDEN_TOKENS = {
+    "skill_id",
+    "entrypoint_id",
+    "validation_result_id",
+    "invocation_id",
+    "artifact_id",
+    "trace_event_id",
+    "tool_profile_id",
+    "workspace_id",
+    "pending_gate_request_id",
+}
+
+
+@dataclass(frozen=True)
+class GatekeeperIssue:
+    stage: str
+    code: str
+    location: str
+    message: str
+    details: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class CompleteTriplet:
+    stem: str
+    body_path: str
+    links_path: str
+    manifest_path: str
+
+
+@dataclass
+class Reporter:
+    errors: int = 0
+    warnings: int = 0
+    lines: list[str] = field(default_factory=list)
+
+    def emit(
+        self,
+        level: str,
+        code: str,
+        location: str,
+        message: str,
+        *,
+        stage: str = "ci",
+        **details: Any,
+    ) -> None:
+        escaped_message = _escape_message(message)
+        details_text = _format_details(details)
+        line = f"[{level}] [STAGE:{stage}] [CODE:{code}] [LOC:{location}] {escaped_message}"
+        if details_text:
+            line = f"{line} | {details_text}"
+        print(line)
+        self.lines.append(line)
+        if level == "FAIL":
+            self.errors += 1
+
+    def summary(self) -> int:
+        outcome = "FAIL" if self.errors > 0 else "PASS"
+        line = f"[SUMMARY] outcome={outcome} stage=ci errors={self.errors} warnings={self.warnings}"
+        print(line)
+        self.lines.append(line)
+        return 1 if self.errors > 0 else 0
+
+
+class Gatekeeper:
+    def __init__(self, triplet: CompleteTriplet):
+        self._triplet = triplet
+        self._body: Any = None
+        self._links: Any = None
+        self._manifest: Any = None
+        self._dto_type: str | None = None
+
+    def validate(self) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        issues.extend(self._load_json_artifacts())
+        if issues:
+            return self._sorted_failures(issues)
+
+        issues.extend(self._validate_base_shape())
+        issues.extend(self._validate_dto_links())
+        issues.extend(self._validate_relationship_vocabulary())
+        issues.extend(self._validate_policy())
+        issues.extend(self._validate_determinism())
+        return self._sorted_failures(issues)
+
+    def _load_json_artifacts(self) -> list[GatekeeperIssue]:
+        loaded: dict[str, Any] = {}
+        files = {
+            "body": self._triplet.body_path,
+            "links": self._triplet.links_path,
+            "manifest": self._triplet.manifest_path,
+        }
+        issues: list[GatekeeperIssue] = []
+
+        for name in ("body", "links", "manifest"):
+            path = files[name]
+            root = f"/{name}"
+            try:
+                text = Path(path).read_text(encoding="utf-8")
+                loaded[name] = json.loads(text)
+            except Exception as exc:  # noqa: BLE001
+                issues.append(
+                    GatekeeperIssue(
+                        stage="base_shape",
+                        code="E_BASE_SHAPE_INVALID_JSON",
+                        location=root,
+                        message="Triplet member failed JSON parse.",
+                        details={"path": path, "error": str(exc)},
+                    )
+                )
+
+        if issues:
+            return issues
+
+        self._body = loaded["body"]
+        self._links = loaded["links"]
+        self._manifest = loaded["manifest"]
+        self._dto_type = self._infer_dto_type()
+        return issues
+
+    def _infer_dto_type(self) -> str | None:
+        candidates: list[Any] = []
+        if isinstance(self._body, dict):
+            candidates.append(self._body.get("dto_type"))
+            candidates.append(self._body.get("type"))
+        if isinstance(self._manifest, dict):
+            candidates.append(self._manifest.get("dto_type"))
+            candidates.append(self._manifest.get("type"))
+
+        for candidate in candidates:
+            if isinstance(candidate, str):
+                normalized = candidate.strip().lower()
+                if normalized in TYPED_MAPPING:
+                    return normalized
+
+        stem_name = Path(self._triplet.stem).name.lower()
+        for dto_type in TYPED_MAPPING:
+            if dto_type in stem_name:
+                return dto_type
+        return None
+
+    def _validate_base_shape(self) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        if not isinstance(self._body, dict):
+            issues.append(
+                GatekeeperIssue(
+                    stage="base_shape",
+                    code="E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                    location="/body",
+                    message="Triplet body must be a JSON object.",
+                    details={"actual_type": type(self._body).__name__},
+                )
+            )
+        if not isinstance(self._links, dict):
+            issues.append(
+                GatekeeperIssue(
+                    stage="base_shape",
+                    code="E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                    location="/links",
+                    message="Triplet links must be a JSON object.",
+                    details={"actual_type": type(self._links).__name__},
+                )
+            )
+            return issues
+        if not isinstance(self._manifest, dict):
+            issues.append(
+                GatekeeperIssue(
+                    stage="base_shape",
+                    code="E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                    location="/manifest",
+                    message="Triplet manifest must be a JSON object.",
+                    details={"actual_type": type(self._manifest).__name__},
+                )
+            )
+
+        for key in sorted(self._links):
+            pointer = f"/links/{_pointer_token(key)}"
+            value = self._links[key]
+            if isinstance(value, dict):
+                issues.extend(self._validate_reference(value, pointer))
+                continue
+            if isinstance(value, list):
+                for index, item in enumerate(value):
+                    ref_pointer = f"{pointer}/{index}"
+                    if not isinstance(item, dict):
+                        issues.append(
+                            GatekeeperIssue(
+                                stage="base_shape",
+                                code="E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                                location=ref_pointer,
+                                message="Array links value must contain reference objects.",
+                                details={"actual_type": type(item).__name__},
+                            )
+                        )
+                        continue
+                    issues.extend(self._validate_reference(item, ref_pointer))
+                continue
+            issues.append(
+                GatekeeperIssue(
+                    stage="base_shape",
+                    code="E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                    location=pointer,
+                    message="Links value is not a valid object or reference shape.",
+                    details={"actual_type": type(value).__name__},
+                )
+            )
+        return issues
+
+    def _validate_reference(self, value: dict[str, Any], pointer: str) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        ref_type = value.get("type")
+        ref_id = value.get("id")
+        if not isinstance(ref_type, str) or not ref_type:
+            issues.append(
+                GatekeeperIssue(
+                    stage="base_shape",
+                    code="E_BASE_SHAPE_INVALID_REFERENCE",
+                    location=f"{pointer}/type",
+                    message="Reference object requires non-empty string 'type'.",
+                )
+            )
+        if not isinstance(ref_id, str) or not ref_id:
+            issues.append(
+                GatekeeperIssue(
+                    stage="base_shape",
+                    code="E_BASE_SHAPE_INVALID_REFERENCE",
+                    location=f"{pointer}/id",
+                    message="Reference object requires non-empty string 'id'.",
+                )
+            )
+        return issues
+
+    def _validate_dto_links(self) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        if not isinstance(self._links, dict):
+            return issues
+
+        if not self._dto_type or self._dto_type not in TYPED_MAPPING:
+            issues.append(
+                GatekeeperIssue(
+                    stage="dto_links",
+                    code="E_DTO_LINKS_UNKNOWN_KEY",
+                    location="/body/dto_type",
+                    message="Unknown dto_type for links validation.",
+                    details={"dto_type": self._dto_type},
+                )
+            )
+            return issues
+
+        mapping = TYPED_MAPPING[self._dto_type]
+        for key in sorted(self._links):
+            pointer = f"/links/{_pointer_token(key)}"
+            value = self._links[key]
+            if key not in mapping:
+                issues.append(
+                    GatekeeperIssue(
+                        stage="dto_links",
+                        code="E_DTO_LINKS_UNKNOWN_KEY",
+                        location=pointer,
+                        message="Unknown links key for the specified DTO type.",
+                        details={"dto_type": self._dto_type, "key": key},
+                    )
+                )
+                continue
+
+            expects_array = key in {"artifacts", "trace_events"}
+            if expects_array and not isinstance(value, list):
+                issues.append(
+                    GatekeeperIssue(
+                        stage="dto_links",
+                        code="E_DTO_LINKS_WRONG_CONTAINER_SHAPE",
+                        location=pointer,
+                        message="Scalar/Array container mismatch for links key.",
+                        details={"expected": "array", "actual_type": type(value).__name__},
+                    )
+                )
+                continue
+            if not expects_array and not isinstance(value, dict):
+                issues.append(
+                    GatekeeperIssue(
+                        stage="dto_links",
+                        code="E_DTO_LINKS_WRONG_CONTAINER_SHAPE",
+                        location=pointer,
+                        message="Scalar/Array container mismatch for links key.",
+                        details={"expected": "object", "actual_type": type(value).__name__},
+                    )
+                )
+                continue
+
+            refs = value if isinstance(value, list) else [value]
+            for index, ref in enumerate(refs):
+                ref_pointer = f"{pointer}/{index}" if isinstance(value, list) else pointer
+                if not isinstance(ref, dict):
+                    continue
+                ref_type = ref.get("type")
+                if not isinstance(ref_type, str) or ref_type not in mapping[key]:
+                    issues.append(
+                        GatekeeperIssue(
+                            stage="dto_links",
+                            code="E_TYPED_REF_MISMATCH",
+                            location=f"{ref_pointer}/type",
+                            message="Reference.type not allowed for this links key.",
+                            details={"allowed": sorted(mapping[key]), "actual": ref_type, "key": key},
+                        )
+                    )
+        return issues
+
+    def _validate_relationship_vocabulary(self) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        if not isinstance(self._links, dict) or not self._dto_type:
+            return issues
+
+        relationship_counts: dict[str, int] = {}
+        for key in sorted(self._links):
+            value = self._links[key]
+            refs = value if isinstance(value, list) else [value]
+            for index, ref in enumerate(refs):
+                if not isinstance(ref, dict):
+                    continue
+                ref_type = ref.get("type")
+                relationship = ref.get("relationship")
+                pointer = f"/links/{_pointer_token(key)}"
+                if isinstance(value, list):
+                    pointer = f"{pointer}/{index}"
+
+                if not isinstance(relationship, str) or relationship not in RELATIONSHIP_VOCABULARY:
+                    issues.append(
+                        GatekeeperIssue(
+                            stage="relationship_vocabulary",
+                            code="E_RELATIONSHIP_INCOMPATIBLE",
+                            location=f"{pointer}/relationship",
+                            message="Relationship triplet not permitted for this source/target pair.",
+                            details={
+                                "dto_type": self._dto_type,
+                                "relationship": relationship,
+                                "ref_type": ref_type,
+                            },
+                        )
+                    )
+                    continue
+
+                rel_rule = RELATIONSHIP_VOCABULARY[relationship]
+                if (
+                    self._dto_type not in rel_rule["allowed_source_dto_types"]
+                    or not isinstance(ref_type, str)
+                    or ref_type not in rel_rule["allowed_target_reference_types"]
+                ):
+                    issues.append(
+                        GatekeeperIssue(
+                            stage="relationship_vocabulary",
+                            code="E_RELATIONSHIP_INCOMPATIBLE",
+                            location=pointer,
+                            message="Relationship triplet not permitted for this source/target pair.",
+                            details={
+                                "dto_type": self._dto_type,
+                                "relationship": relationship,
+                                "ref_type": ref_type,
+                            },
+                        )
+                    )
+                    continue
+
+                relationship_counts[relationship] = relationship_counts.get(relationship, 0) + 1
+
+        for relationship, count in sorted(relationship_counts.items()):
+            rel_rule = RELATIONSHIP_VOCABULARY[relationship]
+            if rel_rule["cardinality"] == "one" and count > 1:
+                issues.append(
+                    GatekeeperIssue(
+                        stage="relationship_vocabulary",
+                        code="E_RELATIONSHIP_CARDINALITY_VIOLATION",
+                        location="/links",
+                        message="Relationship cardinality (one) exceeded.",
+                        details={"relationship": relationship, "count": count},
+                    )
+                )
+
+        return issues
+
+    def _validate_policy(self) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        allowed_local_ids: set[str] = set()
+        if isinstance(self._manifest, dict):
+            policy_obj = self._manifest.get("policy")
+            if isinstance(policy_obj, dict):
+                local_ids = policy_obj.get("allowed_local_ids")
+                if isinstance(local_ids, list):
+                    allowed_local_ids = {value for value in local_ids if isinstance(value, str)}
+
+        for root_name, value in (("/body", self._body), ("/links", self._links)):
+            issues.extend(self._scan_raw_ids(value, root_name, allowed_local_ids))
+
+        return issues
+
+    def _scan_raw_ids(self, value: Any, pointer: str, allowed_local_ids: set[str]) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        if isinstance(value, dict):
+            for key in sorted(value):
+                key_pointer = f"{pointer}/{_pointer_token(key)}"
+                violating_token = self._match_forbidden_token(key, allowed_local_ids)
+                if violating_token is not None:
+                    issues.append(
+                        GatekeeperIssue(
+                            stage="policy",
+                            code="E_POLICY_RAW_ID_FORBIDDEN",
+                            location=key_pointer,
+                            message="Forbidden raw ID token detected in DTO keys.",
+                            details={"key": key, "token": violating_token},
+                        )
+                    )
+                issues.extend(self._scan_raw_ids(value[key], key_pointer, allowed_local_ids))
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                issues.extend(self._scan_raw_ids(item, f"{pointer}/{index}", allowed_local_ids))
+        return issues
+
+    def _match_forbidden_token(self, key: str, allowed_local_ids: set[str]) -> str | None:
+        if key in allowed_local_ids:
+            return None
+        for token in sorted(RAW_ID_FORBIDDEN_TOKENS):
+            if key == token or key.endswith("_" + token):
+                return token
+        return None
+
+    def _validate_determinism(self) -> list[GatekeeperIssue]:
+        issues: list[GatekeeperIssue] = []
+        if not isinstance(self._manifest, dict) or not isinstance(self._links, dict):
+            return issues
+
+        order_insensitive = self._manifest.get("order_insensitive")
+        if order_insensitive is None:
+            determinism_obj = self._manifest.get("determinism")
+            if isinstance(determinism_obj, dict):
+                order_insensitive = determinism_obj.get("order_insensitive")
+
+        if not isinstance(order_insensitive, list):
+            issues.append(
+                GatekeeperIssue(
+                    stage="determinism",
+                    code="E_DETERMINISM_VIOLATION",
+                    location="/manifest/order_insensitive",
+                    message="Determinism manifest must define order_insensitive array.",
+                    details={"actual_type": type(order_insensitive).__name__},
+                )
+            )
+            return issues
+
+        for index, key in enumerate(order_insensitive):
+            key_pointer = f"/manifest/order_insensitive/{index}"
+            if not isinstance(key, str):
+                issues.append(
+                    GatekeeperIssue(
+                        stage="determinism",
+                        code="E_DETERMINISM_VIOLATION",
+                        location=key_pointer,
+                        message="Determinism keys must be strings.",
+                        details={"actual_type": type(key).__name__},
+                    )
+                )
+                continue
+            if key not in self._links or not isinstance(self._links[key], list):
+                issues.append(
+                    GatekeeperIssue(
+                        stage="determinism",
+                        code="E_DETERMINISM_VIOLATION",
+                        location=key_pointer,
+                        message="Determinism key must exist as array-valued links key.",
+                        details={"key": key},
+                    )
+                )
+
+        return issues
+
+    def _sorted_failures(self, issues: list[GatekeeperIssue]) -> list[GatekeeperIssue]:
+        return sorted(
+            issues,
+            key=lambda issue: (
+                STAGE_ORDER.get(issue.stage, 99),
+                issue.location,
+                issue.code,
+                _format_details(issue.details),
+            ),
+        )
 
 
 def _escape_message(message: str) -> str:
@@ -38,31 +574,6 @@ def _format_details(details: dict[str, Any]) -> str:
     for key in sorted(details):
         parts.append(f"{key}={_format_value(details[key])}")
     return " ".join(parts)
-
-
-@dataclass
-class Reporter:
-    errors: int = 0
-    warnings: int = 0
-    lines: list[str] = field(default_factory=list)
-
-    def emit(self, level: str, code: str, location: str, message: str, **details: Any) -> None:
-        escaped_message = _escape_message(message)
-        details_text = _format_details(details)
-        line = f"[{level}] [STAGE:ci] [CODE:{code}] [LOC:{location}] {escaped_message}"
-        if details_text:
-            line = f"{line} | {details_text}"
-        print(line)
-        self.lines.append(line)
-        if level == "FAIL":
-            self.errors += 1
-
-    def summary(self) -> int:
-        outcome = "FAIL" if self.errors > 0 else "PASS"
-        line = f"[SUMMARY] outcome={outcome} stage=ci errors={self.errors} warnings={self.warnings}"
-        print(line)
-        self.lines.append(line)
-        return 1 if self.errors > 0 else 0
 
 
 def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
@@ -120,7 +631,8 @@ def _changed_files(base_ref: str) -> list[str]:
     diff = _run_git(["diff", "--name-only", "--diff-filter=ACMR", f"{base_ref}...HEAD"])
     if diff.returncode != 0:
         raise RuntimeError(diff.stderr.strip() or "git diff failed")
-    return [line.strip().replace("\\", "/") for line in diff.stdout.splitlines() if line.strip()]
+    changed = [line.strip().replace("\\", "/") for line in diff.stdout.splitlines() if line.strip()]
+    return sorted(changed)
 
 
 def _triplet_roots() -> list[str]:
@@ -159,11 +671,12 @@ def _classify(changed: list[str], roots: list[str]) -> tuple[list[tuple[str, str
 def _validate_triplets(
     candidates: list[tuple[str, str, str]],
     reporter: Reporter,
-) -> None:
+) -> list[CompleteTriplet]:
     stems: dict[str, dict[str, str]] = {}
     for stem, member, path in candidates:
         stems.setdefault(stem, {})[member] = path
 
+    complete_triplets: list[CompleteTriplet] = []
     for stem in sorted(stems):
         mapping = stems[stem]
         required = ("body", "links", "manifest")
@@ -179,13 +692,47 @@ def _validate_triplets(
                 changed=changed,
                 missing=missing,
             )
-        else:
+            continue
+
+        reporter.emit(
+            "INFO",
+            "I_TRIPLET_COMPLETE",
+            loc,
+            "Triplet complete.",
+            changed=changed,
+        )
+        complete_triplets.append(
+            CompleteTriplet(
+                stem=stem,
+                body_path=mapping["body"],
+                links_path=mapping["links"],
+                manifest_path=mapping["manifest"],
+            )
+        )
+
+    return complete_triplets
+
+
+def _run_gatekeeper(triplets: list[CompleteTriplet], reporter: Reporter) -> None:
+    for triplet in triplets:
+        issues = Gatekeeper(triplet).validate()
+        for issue in issues:
+            reporter.emit(
+                "FAIL",
+                issue.code,
+                issue.location,
+                issue.message,
+                stage=issue.stage,
+                stem=triplet.stem,
+                **issue.details,
+            )
+        if not issues:
             reporter.emit(
                 "INFO",
-                "I_TRIPLET_COMPLETE",
-                loc,
-                "Triplet complete.",
-                changed=changed,
+                "I_GATEKEEPER_PASS",
+                "/ci/diff/" + _pointer_token(triplet.stem),
+                "Gatekeeper pipeline passed for triplet.",
+                stem=triplet.stem,
             )
 
 
@@ -253,8 +800,10 @@ def main() -> int:
 
     candidates, solo_json = _classify(changed, roots)
 
+    complete_triplets: list[CompleteTriplet] = []
     if candidates:
-        _validate_triplets(candidates, reporter)
+        complete_triplets = _validate_triplets(candidates, reporter)
+        _run_gatekeeper(complete_triplets, reporter)
     if solo_json:
         _validate_solo_json(solo_json, reporter)
     if not candidates and not solo_json:
