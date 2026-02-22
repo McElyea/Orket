@@ -1,0 +1,23 @@
+{
+  "entrypoint": {
+    "id": "entrypoint:beta",
+    "relationship": "declares",
+    "type": "entrypoint"
+  },
+  "skill": {
+    "id": "skill:beta",
+    "relationship": "declares",
+    "type": "skill"
+  },
+  "trace_events": [
+    {
+      "id": "account:event-1",
+      "relationship": "produces",
+      "type": "trace_event"
+    }
+  ],
+  "validation_result": {
+    "id": "validation_result:beta",
+    "type": "validation_result"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "skill": {
+    "id": "valid_user:skill-1",
+    "relationship": "declares",
+    "type": "skill"
+  },
+  "trace_events": [
+    {
+      "id": "account:event-1",
+      "relationship": "produces",
+      "type": "trace_event"
+    },
+    {
+      "id": "profile:event-2",
+      "relationship": "produces",
+      "type": "trace_event"
+    }
+  ]
+}

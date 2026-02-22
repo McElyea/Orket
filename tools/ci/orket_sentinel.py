@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -92,6 +94,10 @@ def _resolve_log_format_version() -> int:
 
 LOG_FORMAT_VERSION = _resolve_log_format_version()
 
+VALID_STAGES = set(STAGE_ORDER)
+_CODE_RE = re.compile(r"^[A-Z][A-Z0-9_]+$")
+_TOKEN_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
 
 @dataclass(frozen=True)
 class GatekeeperIssue:
@@ -108,6 +114,21 @@ class CompleteTriplet:
     body_path: str
     links_path: str
     manifest_path: str
+
+
+@dataclass(frozen=True)
+class PluginContext:
+    triplet: CompleteTriplet
+
+
+@dataclass(frozen=True)
+class PluginEvent:
+    level: str
+    stage: str
+    code: str
+    location: str
+    message: str
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -140,6 +161,98 @@ class Reporter:
         print(line)
         self.lines.append(line)
         return 1 if self.errors > 0 else 0
+
+
+def _stem_label(stem: str) -> str:
+    return Path(stem).name
+
+
+def _candidate_stem(value: str) -> str | None:
+    token = value.strip()
+    if not token:
+        return None
+    if ":" in token:
+        token = token.split(":", 1)[0]
+    if "/" in token:
+        token = token.strip("/").split("/")[-1]
+    if _TOKEN_RE.fullmatch(token):
+        return token
+    return None
+
+
+def _reference_candidate_stem(reference: dict[str, Any]) -> str | None:
+    namespace = reference.get("namespace")
+    if isinstance(namespace, str):
+        candidate = _candidate_stem(namespace)
+        if candidate:
+            return candidate
+    ref_id = reference.get("id")
+    if isinstance(ref_id, str):
+        return _candidate_stem(ref_id)
+    return None
+
+
+def _related_stems_plugin(ctx: PluginContext) -> list[PluginEvent]:
+    links_path = Path(ctx.triplet.links_path)
+    try:
+        links_obj = json.loads(links_path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if not isinstance(links_obj, dict):
+        return []
+
+    source = _stem_label(ctx.triplet.stem)
+    related: set[str] = set()
+    for value in links_obj.values():
+        refs = value if isinstance(value, list) else [value]
+        for ref in refs:
+            if not isinstance(ref, dict):
+                continue
+            candidate = _reference_candidate_stem(ref)
+            if candidate and candidate != source:
+                related.add(candidate)
+
+    return [
+        PluginEvent(
+            level="INFO",
+            stage="relationship_vocabulary",
+            code="I_VOCAB_LINKS_RESOLVED",
+            location="/links",
+            message=f"Resolved links for stem {source}",
+            details={"stem": ctx.triplet.stem, "related_stems": sorted(related)},
+        )
+    ]
+
+
+PLUGIN_REGISTRY: dict[str, Any] = {
+    "related_stems": _related_stems_plugin,
+}
+
+
+def _enabled_plugins() -> list[str]:
+    raw = os.getenv("ENABLED_SENTINEL_PLUGINS", "related_stems")
+    selected = []
+    for item in raw.split(","):
+        token = item.strip()
+        if token:
+            selected.append(token)
+    return selected
+
+
+def _validate_plugin_event(event: PluginEvent) -> str | None:
+    if event.level not in {"INFO", "FAIL"}:
+        return "level"
+    if event.stage not in VALID_STAGES:
+        return "stage"
+    if not _CODE_RE.fullmatch(event.code):
+        return "code"
+    if not isinstance(event.location, str) or not event.location.startswith("/"):
+        return "location"
+    if not isinstance(event.message, str) or not event.message:
+        return "message"
+    if not isinstance(event.details, dict):
+        return "details"
+    return None
 
 
 class Gatekeeper:
@@ -663,6 +776,26 @@ def _changed_files(base_ref: str) -> list[str]:
     return sorted(changed)
 
 
+def _fixture_dir(name: str) -> Path:
+    return Path("tools/ci/fixtures") / name
+
+
+def _fixture_changed_files(name: str) -> tuple[list[str], list[str]]:
+    fixture_root = _fixture_dir(name)
+    if not fixture_root.exists():
+        raise RuntimeError(f"fixture_not_found:{fixture_root}")
+    dto_root = fixture_root / "data" / "dto"
+    if not dto_root.exists():
+        raise RuntimeError(f"fixture_missing_dto_root:{dto_root}")
+    changed = sorted(
+        str(path).replace("\\", "/")
+        for path in fixture_root.rglob("*.json")
+        if path.is_file()
+    )
+    roots = [str(dto_root).replace("\\", "/")]
+    return changed, roots
+
+
 def _triplet_roots() -> list[str]:
     roots_raw = os.getenv("TRIPLELOCK_ROOTS", "data/dto")
     roots = []
@@ -671,6 +804,12 @@ def _triplet_roots() -> list[str]:
         if root:
             roots.append(root)
     return roots
+
+
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(add_help=True)
+    parser.add_argument("--test-fixture", dest="test_fixture", default=None)
+    return parser.parse_args(argv)
 
 
 def _is_under_roots(path: str, roots: list[str]) -> bool:
@@ -741,6 +880,54 @@ def _validate_triplets(
     return complete_triplets
 
 
+def _run_plugins(triplet: CompleteTriplet, reporter: Reporter) -> None:
+    for plugin_name in _enabled_plugins():
+        plugin = PLUGIN_REGISTRY.get(plugin_name)
+        if plugin is None:
+            reporter.emit(
+                "FAIL",
+                "E_PLUGIN_UNKNOWN",
+                "/ci/plugins",
+                "Enabled plugin is not registered.",
+                plugin=plugin_name,
+            )
+            continue
+        try:
+            events = plugin(PluginContext(triplet=triplet))
+        except Exception as exc:  # noqa: BLE001
+            reporter.emit(
+                "FAIL",
+                "E_PLUGIN_EXECUTION_FAILED",
+                "/ci/plugins",
+                "Plugin execution failed.",
+                plugin=plugin_name,
+                error=str(exc),
+                stem=triplet.stem,
+            )
+            continue
+        for event in events:
+            invalid_field = _validate_plugin_event(event)
+            if invalid_field is not None:
+                reporter.emit(
+                    "FAIL",
+                    "E_PLUGIN_EVENT_INVALID",
+                    "/ci/plugins",
+                    "Plugin emitted invalid event shape.",
+                    plugin=plugin_name,
+                    invalid_field=invalid_field,
+                    stem=triplet.stem,
+                )
+                continue
+            reporter.emit(
+                event.level,
+                event.code,
+                event.location,
+                event.message,
+                stage=event.stage,
+                **event.details,
+            )
+
+
 def _run_gatekeeper(triplets: list[CompleteTriplet], reporter: Reporter) -> None:
     for triplet in triplets:
         issues = Gatekeeper(triplet).validate()
@@ -762,6 +949,7 @@ def _run_gatekeeper(triplets: list[CompleteTriplet], reporter: Reporter) -> None
                 "Gatekeeper pipeline passed for triplet.",
                 stem=triplet.stem,
             )
+        _run_plugins(triplet, reporter)
 
 
 def _validate_solo_json(paths: list[str], reporter: Reporter) -> None:
@@ -790,41 +978,65 @@ def _validate_solo_json(paths: list[str], reporter: Reporter) -> None:
 
 
 def main() -> int:
+    args = _parse_args()
     reporter = Reporter()
     roots = _triplet_roots()
 
-    base_ref = _resolve_base_ref()
-    if not base_ref:
+    changed: list[str]
+    if args.test_fixture:
+        try:
+            changed, roots = _fixture_changed_files(args.test_fixture)
+        except Exception as exc:  # noqa: BLE001
+            reporter.emit(
+                "FAIL",
+                "E_FIXTURE_UNAVAILABLE",
+                "/ci/fixtures",
+                "Unable to load requested test fixture.",
+                fixture=args.test_fixture,
+                error=str(exc),
+            )
+            return reporter.summary()
         reporter.emit(
-            "FAIL",
-            "E_DIFF_UNAVAILABLE",
-            "/ci/diff",
-            "Unable to resolve base ref for git diff.",
-            roots=roots,
+            "INFO",
+            "I_FIXTURE_MODE",
+            "/ci/fixtures",
+            "Running sentinel in fixture mode.",
+            fixture=args.test_fixture,
+            changed_count=len(changed),
         )
-        return reporter.summary()
+    else:
+        base_ref = _resolve_base_ref()
+        if not base_ref:
+            reporter.emit(
+                "FAIL",
+                "E_DIFF_UNAVAILABLE",
+                "/ci/diff",
+                "Unable to resolve base ref for git diff.",
+                roots=roots,
+            )
+            return reporter.summary()
 
-    try:
-        changed = _changed_files(base_ref)
-    except Exception as exc:  # noqa: BLE001 - normalized to contract error code.
+        try:
+            changed = _changed_files(base_ref)
+        except Exception as exc:  # noqa: BLE001 - normalized to contract error code.
+            reporter.emit(
+                "FAIL",
+                "E_DIFF_UNAVAILABLE",
+                "/ci/diff",
+                "Unable to compute changed files.",
+                base_ref=base_ref,
+                error=str(exc),
+            )
+            return reporter.summary()
+
         reporter.emit(
-            "FAIL",
-            "E_DIFF_UNAVAILABLE",
+            "INFO",
+            "I_DIFF_READY",
             "/ci/diff",
-            "Unable to compute changed files.",
+            "Computed changed files.",
             base_ref=base_ref,
-            error=str(exc),
+            changed_count=len(changed),
         )
-        return reporter.summary()
-
-    reporter.emit(
-        "INFO",
-        "I_DIFF_READY",
-        "/ci/diff",
-        "Computed changed files.",
-        base_ref=base_ref,
-        changed_count=len(changed),
-    )
 
     candidates, solo_json = _classify(changed, roots)
 

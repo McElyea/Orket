@@ -1,0 +1,13 @@
+{
+  "entrypoint": {
+    "id": "entrypoint:alpha",
+    "relationship": "declares",
+    "type": "entrypoint"
+  },
+  "skill": {
+    "id": "skill:alpha",
+    "relationship": "declares",
+    "type": "skill"
+  },
+  "trace_events": []
+}

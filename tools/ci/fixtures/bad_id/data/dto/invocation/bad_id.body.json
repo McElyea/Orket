@@ -1,0 +1,5 @@
+{
+  "dto_type": "invocation",
+  "request": "fixture_bad_id",
+  "x_skill_id": "raw-skill-id"
+}
