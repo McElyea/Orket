@@ -50,6 +50,8 @@ Authoritative stage order: `base_shape -> dto_links -> relationship_vocabulary -
     `$id`: `https://orket.dev/schema/v1/orket.references.package.json`
     Purpose: package identity, stage order, and integrity root.
 
+Note: Inventory lists 14 supporting documents; however, only the 11 artifacts listed in `orket.references.package.json` are integrity-pinned. Helper-schemas are for reference only.
+
 ## 2) Final `orket.references.package.json` (hashed manifest body)
 
 ```json
@@ -142,6 +144,8 @@ Authoritative stage order: `base_shape -> dto_links -> relationship_vocabulary -
    `9888d093c0e39185f6570eb191a8bf6dcfaf5d081ee62050dd22cc3d815ec35b`
 
 ## 4) Relationship Vocabulary Schema + Instance
+
+REWORK NOTE: Relationship labels MUST match ^[a-z][a-z0-9_]*$. While the underlying JSON schema artifact remains the integrity-pinned source, this pattern is a normative requirement enforced by the Gatekeeper.
 
 ### 4.1 `relationship-vocabulary.schema.json`
 
@@ -313,8 +317,8 @@ Authoritative stage order: `base_shape -> dto_links -> relationship_vocabulary -
       "description": "Scalar/Array container mismatch for links key."
     },
     "E_TYPED_REF_MISMATCH": {
-      "stage": "relationship_vocabulary",
-      "description": "Reference type incompatible with its declared relationship."
+      "stage": "dto_links",
+      "description": "Reference.type not allowed for this links key."
     },
     "E_RELATIONSHIP_INCOMPATIBLE": {
       "stage": "relationship_vocabulary",
@@ -385,9 +389,37 @@ Authoritative stage order: `base_shape -> dto_links -> relationship_vocabulary -
 }
 ```
 
-## 8) Determinism Schema + Per-DTO Manifests
+## 8) Typed Reference Enforcement (Normative)
 
-### 8.1 `links.determinism.schema.json`
+Because DTO links schemas use generic `$ref` links to `reference.schema.json`, typed enforcement is defined by links-key to allowed `ref.type` mappings.
+
+Rule:
+For any reference under a given links key, `ref.type` MUST be in the allowed set for that key.
+Otherwise emit `E_TYPED_REF_MISMATCH` at stage `dto_links`.
+
+Invocation mapping:
+
+| links key | allowed `ref.type` |
+|---|---|
+| `skill` | `["skill"]` |
+| `entrypoint` | `["entrypoint"]` |
+| `validation_result` | `["validation_result"]` |
+| `trace_events` | `["trace_event"]` |
+
+ValidationResult mapping:
+
+| links key | allowed `ref.type` |
+|---|---|
+| `skill` | `["skill"]` |
+| `entrypoint` | `["entrypoint"]` |
+| `tool_profile` | `["tool_profile"]` |
+| `invocation` | `["invocation"]` |
+| `artifacts` | `["artifact"]` |
+| `trace_events` | `["trace_event"]` |
+
+## 9) Determinism Schema + Per-DTO Manifests
+
+### 9.1 `links.determinism.schema.json`
 
 ```json
 {
@@ -407,7 +439,7 @@ Authoritative stage order: `base_shape -> dto_links -> relationship_vocabulary -
 }
 ```
 
-### 8.2 `invocation.links.determinism.json`
+### 9.2 `invocation.links.determinism.json`
 
 ```json
 {
@@ -417,7 +449,7 @@ Authoritative stage order: `base_shape -> dto_links -> relationship_vocabulary -
 }
 ```
 
-### 8.3 `validation_result.links.determinism.json`
+### 9.3 `validation_result.links.determinism.json`
 
 ```json
 {

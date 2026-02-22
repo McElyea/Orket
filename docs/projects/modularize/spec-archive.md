@@ -1,8 +1,11 @@
 ARCHIVE - not normative
 Extracted into: standard.md, implementation.md, contract-package.md 
 May contain contradictions, stale naming, and superseded stage models.
+This archive text contains superseded normative claims (e.g., 6-stage pipeline and typed_reference stage). Treat it as raw history only.
+Within this archive, "Stage 6" wording refers to determinism; the living pipeline is five stages.
+The authoritative typed-mapping and raw-id traversal rules are now specified in living docs (contract-package.md and implementation.md).
 
-Below is a fully consolidated single-file “source of truth” with:
+Below is a fully consolidated single-file historical snapshot with:
 
 /schema/v1/... $ids (no #v1 fragments)
 
@@ -43,7 +46,7 @@ Validator composition + canonical permissive semantic algorithm
 
 Integrity-pinned package manifest
 
-All content is normative unless explicitly marked as examples or non-goals.
+This content was normative when authored, but is now superseded unless restated in the Living docs.
 
 1. Core primitives
 1.1 reference.schema.json
@@ -563,7 +566,8 @@ an array-valued links key in that DTO links schema.
 
 If not, the DTO is non-conformant with determinism requirements and MUST yield E_DETERMINISM_VIOLATION in Stage 6.
 
-5. Raw-ID policy
+5. Raw-ID policy (HISTORICAL SNAPSHOT)
+HISTORICAL: older drafts used forbidden_cross_layer_suffixes; current contract uses forbidden_tokens.
 5.1 raw_id.policy.schema.json
 {
   "$id": "https://orket.dev/schema/v1/raw_id.policy.schema.json",
@@ -628,7 +632,7 @@ ends with _<suffix> for any forbidden suffix (underscore boundary rule),
 
 unless the full property name is listed in allowed_local_ids.
 
-6. Error registry (normative)
+6. Error registry (HISTORICAL SNAPSHOT)
 6.1 validation.errors.schema.json
 {
   "$id": "https://orket.dev/schema/v1/validation.errors.schema.json",
