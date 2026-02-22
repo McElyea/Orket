@@ -1,6 +1,6 @@
 # Orket Sovereign Infrastructure Plan
 
-Status: Active execution (Card 13 landed)
+Status: Completed (conformance gates passed; pending archive decision)
 Scope root: `docs/projects/modularize/`
 Implementation scope: Sentinel guardrail + CI workflows + modularize doc alignment
 
@@ -58,11 +58,11 @@ full schema validation for solo JSONs beyond parseability.
 
 1. `tools/ci/orket_sentinel.py`
 2. `.gitea/workflows/orket-sentinel.yml`
-4. `docs/projects/modularize/standard.md` updates:
+3. `docs/projects/modularize/standard.md` updates:
 diagnostic logging section and CI root pointer guidance.
-5. `docs/projects/modularize/contract-package.md` updates:
+4. `docs/projects/modularize/contract-package.md` updates:
 rework note and typed enforcement section consistency.
-6. `docs/projects/modularize/implementation.md` updates:
+5. `docs/projects/modularize/implementation.md` updates:
 raw-id matching algorithm + single-line log format section.
 
 ## 5) Work Breakdown Structure
@@ -628,6 +628,14 @@ Acceptance criteria:
 2. Sentinel produces deterministic logs and summary in pass/fail scenarios.
 3. Workflows fail on sentinel FAIL and pass on PASS.
 
+Status:
+1. Completed.
+2. Verification evidence:
+`python -m py_compile tools/ci/orket_sentinel.py`
+`$env:BASE_REF='HEAD'; python tools/ci/orket_sentinel.py`
+3. Invariant probe passed:
+single-line event output preserved and event delimiter count remained one.
+
 ### Card 13: Gatekeeper Wiring (Sentinel Upgrade)
 
 Objective:
@@ -701,7 +709,8 @@ Verification:
 3. Targeted run with synthetic newline-containing detail/message payloads.
 
 Status:
-1. In progress.
+1. Completed.
+2. Implemented in `tools/ci/orket_sentinel.py` with unconditional delimiter, newline-safe details, `None -> null`, and root-specific base-shape type codes.
 
 ## 17) Progress Updates
 
@@ -709,3 +718,4 @@ Status:
 2. Gatekeeper pipeline added to `tools/ci/orket_sentinel.py` with deterministic stage/pointer failure ordering.
 3. Local compile + smoke checks passed.
 4. 2026-02-22: Card 14 started for unconditional delimiter, newline-safe details, and base-shape code split.
+5. 2026-02-22: Card 14 completed; Card 12 final conformance gate completed.
