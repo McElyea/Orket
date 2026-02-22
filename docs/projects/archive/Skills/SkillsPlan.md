@@ -36,7 +36,7 @@ Implementation target includes:
 4. Validation/loader artifacts and diagnostics:
 `workspace/.../observability/.../skill_validation.json`
 5. Skill schema docs and references:
-`docs/specs/` and `docs/archive/` where applicable.
+`docs/specs/` and `docs/projects/archive/` where applicable.
 
 ## Phase Plan
 

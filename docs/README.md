@@ -3,7 +3,7 @@
 This index maps each document to a single purpose to reduce duplication.
 
 ## Start Here
-1. `docs/ROADMAP.md`: roadmap entrypoint; active sequencing lives in `docs/implementation/PhasedRoadmap.md`.
+1. `docs/ROADMAP.md`: single active roadmap and project-priority index.
 2. `docs/RUNBOOK.md`: operational commands and incident handling.
 3. `docs/SECURITY.md`: auth, webhook trust boundary, and security posture.
 4. `docs/ARCHITECTURE.md`: runtime layering and dependency direction.
@@ -16,12 +16,12 @@ This index maps each document to a single purpose to reduce duplication.
 4. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`: context artifact fields.
 5. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`: thermal artifact fields.
 6. `docs/specs/SIDECAR_PARSE_SCHEMA.md`: canonical sidecar parse schema and status contract.
-7. `docs/archive/Skills/`: archived Skill plan and schema contracts.
-8. `docs/archive/MemoryPersistence/`: archived deterministic memory persistence plan and related schema contracts.
+7. `docs/projects/archive/Skills/`: archived Skill plan and schema contracts.
+8. `docs/projects/archive/MemoryPersistence/`: archived deterministic memory persistence plan and related schema contracts.
 
 ## Implementation Plans
-1. `docs/implementation/PhasedRoadmap.md`: canonical ordered backlog for remaining implementation work.
-2. Completed plan/spec artifacts should move to `docs/archive/<ProjectName>/`.
+1. Active project plans live under `docs/projects/<ProjectName>/` and must be indexed in `docs/ROADMAP.md`.
+2. Completed plan/spec artifacts should move to `docs/projects/archive/<ProjectName>/`.
 
 ## Engineering Policy
 1. `docs/TESTING_POLICY.md`: test-lane policy (`unit`/`integration`/`acceptance`/`live`).
