@@ -57,8 +57,7 @@ full schema validation for solo JSONs beyond parseability.
 ## 4) Deliverables
 
 1. `tools/ci/orket_sentinel.py`
-2. `.github/workflows/orket-sentinel.yml`
-3. `.gitea/workflows/orket-sentinel.yml`
+2. `.gitea/workflows/orket-sentinel.yml`
 4. `docs/projects/modularize/standard.md` updates:
 diagnostic logging section and CI root pointer guidance.
 5. `docs/projects/modularize/contract-package.md` updates:
@@ -131,13 +130,11 @@ emit INFO `"Validated solo JSON parse."`.
 
 ## 5.6 Workflow Integration
 
-1. Create GitHub workflow:
-push + pull_request, checkout `fetch-depth: 0`, run sentinel.
-2. Create Gitea workflow:
-equivalent behavior with full history checkout/fetch and sentinel run.
-3. Set env in both:
+1. Create Gitea workflow:
+push + pull_request equivalent, full history checkout/fetch, run sentinel.
+2. Set env:
 `TRIPLELOCK_ROOTS=data/dto`.
-4. Keep workflows isolated:
+3. Keep workflows isolated:
 no dependency on unrelated jobs.
 
 ## 5.7 Documentation Alignment
@@ -163,7 +160,7 @@ ensure raw-id traversal/match algorithm section is exact and explicit.
 4. Implement Triple-Lock validation and JSON parse checks.
 5. Add summary and exit behavior.
 6. Run local smoke checks on synthetic changed-file sets.
-7. Add GitHub and Gitea workflows.
+7. Add/update Gitea workflow.
 8. Patch modularize docs to match implemented behavior.
 9. Run static verification grep for:
 stage order, forbidden key terms, logging format string, error codes.
@@ -228,10 +225,9 @@ Recommended INFO codes:
 
 ## 10.2 Integration-Level (workflow behavior)
 
-1. GitHub workflow triggers on push and PR.
-2. Gitea workflow triggers on push and PR equivalent.
-3. Full-history fetch prevents shallow diff failures in normal operation.
-4. Sentinel non-zero exit fails workflow.
+1. Gitea workflow triggers on push and PR equivalent.
+2. Full-history fetch prevents shallow diff failures in normal operation.
+3. Sentinel non-zero exit fails workflow.
 
 ## 10.3 Regression Checks
 
@@ -260,7 +256,7 @@ adjust classification logic only, not fail-closed principle.
 ## 13) Implementation Checklist
 
 1. Add sentinel script with executable main.
-2. Wire both workflows with `TRIPLELOCK_ROOTS=data/dto`.
+2. Wire `.gitea/workflows/orket-sentinel.yml` with `TRIPLELOCK_ROOTS=data/dto`.
 3. Patch `standard.md` diagnostic logging section.
 4. Patch `contract-package.md` rework note + schema block adjustment.
 5. Patch `implementation.md` raw-id + log-format sections.
@@ -491,36 +487,10 @@ Test checklist:
 Rollback:
 1. Revert only outcome/exit function.
 
-### Card 07: GitHub Workflow Wiring
+### Card 07: Gitea Workflow Wiring
 
 Objective:
-Wire sentinel into GitHub Actions with full history.
-
-Files:
-1. `.github/workflows/orket-sentinel.yml`
-
-Scope:
-1. Trigger on `push` and `pull_request`.
-2. Use checkout with `fetch-depth: 0`.
-3. Run `python3 tools/ci/orket_sentinel.py`.
-4. Set env `TRIPLELOCK_ROOTS=data/dto`.
-
-Acceptance criteria:
-1. Workflow appears in GitHub Actions.
-2. Workflow executes sentinel on push and PR.
-3. Sentinel failure fails workflow.
-
-Test checklist:
-1. PR with incomplete triplet fails.
-2. PR with complete triplet and valid solo JSON passes.
-
-Rollback:
-1. Disable or revert only this workflow file.
-
-### Card 08: Gitea Workflow Wiring
-
-Objective:
-Wire sentinel into Gitea with equivalent behavior.
+Wire sentinel into local Gitea automation with full history.
 
 Files:
 1. `.gitea/workflows/orket-sentinel.yml`
@@ -533,10 +503,35 @@ Scope:
 
 Acceptance criteria:
 1. Gitea runner executes sentinel.
-2. Failure semantics match GitHub workflow.
+2. Sentinel failure fails workflow.
 
 Test checklist:
-1. Same failing/passing fixtures used for GitHub run.
+1. PR with incomplete triplet fails.
+2. PR with complete triplet and valid solo JSON passes.
+
+Rollback:
+1. Revert only `.gitea/workflows/orket-sentinel.yml`.
+
+### Card 08: Gitea Workflow Validation
+
+Objective:
+Validate Gitea sentinel workflow behavior and reproducibility.
+
+Files:
+1. `.gitea/workflows/orket-sentinel.yml`
+
+Scope:
+1. Trigger parity with push/PR behavior as supported.
+2. Ensure full history fetch/checkout.
+3. Run `python3 tools/ci/orket_sentinel.py`.
+4. Set env `TRIPLELOCK_ROOTS=data/dto`.
+
+Acceptance criteria:
+1. Gitea runner executes sentinel.
+2. Failure semantics are stable across repeated runs.
+
+Test checklist:
+1. Same failing/passing fixtures used for repeated Gitea runs.
 
 Rollback:
 1. Revert only `.gitea/workflows/orket-sentinel.yml`.
@@ -612,15 +607,14 @@ Run a final doc+runtime conformance pass before merge.
 
 Files:
 1. `tools/ci/orket_sentinel.py`
-2. `.github/workflows/orket-sentinel.yml`
-3. `.gitea/workflows/orket-sentinel.yml`
-4. `docs/projects/modularize/standard.md`
-5. `docs/projects/modularize/contract-package.md`
-6. `docs/projects/modularize/implementation.md`
+2. `.gitea/workflows/orket-sentinel.yml`
+3. `docs/projects/modularize/standard.md`
+4. `docs/projects/modularize/contract-package.md`
+5. `docs/projects/modularize/implementation.md`
 
 Scope:
 1. Validate sentinel outputs against logging contract.
-2. Validate both workflow files run sentinel with full history and env set.
+2. Validate Gitea workflow runs sentinel with full history and env set.
 3. Re-run modularize drift/audit checklist.
 4. Confirm no changes to hashes/grand seal/package version/stage order.
 

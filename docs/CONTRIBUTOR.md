@@ -37,6 +37,9 @@ Orket
 4. Prefer small, reversible changes.
 5. Do not commit secrets, `.env`, or local database files.
 6. Keep repo root clean; do not add tool-specific metadata folders in root when they can live under `Agents/`.
+7. CI/workflow policy: use `.gitea/workflows/` only.
+8. Do not add or modify `.github/workflows/*` unless explicitly requested by the project owner in the current task.
+9. When adding or changing automation, implement and validate the `.gitea` workflow first; treat GitHub workflow paths as out of scope by default.
 
 ## Project Map
 - Rocks: `model/core/rocks/`
@@ -66,3 +69,4 @@ Orket
 2. Tests run and results listed.
 3. Risk/rollback notes for non-trivial changes.
 4. Docs updated where behavior changed.
+5. Workflow changes (if any) are limited to `.gitea/workflows/` unless explicitly approved otherwise.
