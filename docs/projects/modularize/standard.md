@@ -63,6 +63,11 @@ Equivalent statement:
 2. No-skip diffing: CI must fail if change-set cannot be determined.
 3. Schema drift check: generated schema artifacts must match committed artifacts.
 
+Gatekeeper error naming convention:
+
+4. New stage-level Gatekeeper failures SHOULD follow `E_<STAGE>_<ERROR>`.
+5. Existing consumed codes may remain for compatibility unless explicitly versioned for rename.
+
 ## 7) Diagnostic Logging (Normative)
 
 All validation/CI events MUST provide:
@@ -70,13 +75,18 @@ All validation/CI events MUST provide:
 1. `location` as RFC 6901 JSON Pointer.
 2. Root pointers:
 `/body`, `/links`, `/manifest`, `/package`, `/ci/diff`, `/ci/schema`.
-3. Single-line rendering format:
-`[LEVEL] [STAGE:ci] [CODE:<code>] [LOC:<location>] <message> | <sorted k=v pairs>`.
-4. Deterministic detail formatting:
+3. Single-line rendering format (pipe is always present):
+`[LEVEL] [STAGE:<stage>] [CODE:<code>] [LOC:<location>] <message> | <details>`.
+4. Empty details payload is allowed; delimiter remains:
+`... <message> |`
+5. Deterministic detail formatting:
 keys sorted lexicographically;
 bools as `true`/`false`;
+`None` as `null`;
 dict/list values rendered with:
 `json.dumps(sort_keys=True, ensure_ascii=False, separators=(",", ":"))`.
+6. CR/LF escaping is required for message and all detail values:
+`\r -> \\r`, `\n -> \\n`.
 
 ## 8) Package Identity Constants
 

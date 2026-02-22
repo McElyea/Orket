@@ -114,11 +114,9 @@ class Reporter:
         stage: str = "ci",
         **details: Any,
     ) -> None:
-        escaped_message = _escape_message(message)
+        escaped_message = _escape_inline(message)
         details_text = _format_details(details)
-        line = f"[{level}] [STAGE:{stage}] [CODE:{code}] [LOC:{location}] {escaped_message}"
-        if details_text:
-            line = f"{line} | {details_text}"
+        line = f"[{level}] [STAGE:{stage}] [CODE:{code}] [LOC:{location}] {escaped_message} | {details_text}"
         print(line)
         self.lines.append(line)
         if level == "FAIL":
@@ -215,7 +213,7 @@ class Gatekeeper:
             issues.append(
                 GatekeeperIssue(
                     stage="base_shape",
-                    code="E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                    code="E_BASE_SHAPE_INVALID_BODY_VALUE",
                     location="/body",
                     message="Triplet body must be a JSON object.",
                     details={"actual_type": type(self._body).__name__},
@@ -236,7 +234,7 @@ class Gatekeeper:
             issues.append(
                 GatekeeperIssue(
                     stage="base_shape",
-                    code="E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                    code="E_BASE_SHAPE_INVALID_MANIFEST_VALUE",
                     location="/manifest",
                     message="Triplet manifest must be a JSON object.",
                     details={"actual_type": type(self._manifest).__name__},
@@ -553,8 +551,8 @@ class Gatekeeper:
         )
 
 
-def _escape_message(message: str) -> str:
-    return message.replace("\r", r"\r").replace("\n", r"\n")
+def _escape_inline(value: str) -> str:
+    return value.replace("\\", r"\\").replace("|", r"\u007c").replace("\r", r"\r").replace("\n", r"\n")
 
 
 def _pointer_token(value: str) -> str:
@@ -562,11 +560,14 @@ def _pointer_token(value: str) -> str:
 
 
 def _format_value(value: Any) -> str:
+    if value is None:
+        return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, (dict, list)):
-        return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    return str(value)
+        rendered = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+        return _escape_inline(rendered)
+    return _escape_inline(str(value))
 
 
 def _format_details(details: dict[str, Any]) -> str:

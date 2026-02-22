@@ -1,6 +1,6 @@
 # Orket Sovereign Infrastructure Plan
 
-Status: Draft for execution
+Status: Active execution (Card 13 landed)
 Scope root: `docs/projects/modularize/`
 Implementation scope: Sentinel guardrail + CI workflows + modularize doc alignment
 
@@ -27,6 +27,22 @@ single-line event format, stable ordering, deterministic details serialization.
 five-stage only (`base_shape -> dto_links -> relationship_vocabulary -> policy -> determinism`).
 7. No changes to:
 published hashes, grand seal, package version, stage order, JSON artifacts.
+
+## 2.1) Logging + Gatekeeper Hardening Requirements (Normative)
+
+1. Deterministic Pipe Contract:
+every emitted event line MUST include `|` even when details are empty.
+2. Single-Line Invariant:
+message and detail values MUST escape CR/LF (`\r -> \\r`, `\n -> \\n`).
+3. Deterministic details:
+keys sorted lexicographically; bools as `true`/`false`; `None` as `null`;
+dict/list via `json.dumps(sort_keys=True, ensure_ascii=False, separators=(",", ":"))`.
+4. Gatekeeper naming convention:
+use `E_<STAGE>_<ERROR>` for new stage failures where feasible without breaking existing consumers.
+5. Base-shape wrong-type specificity:
+`E_BASE_SHAPE_INVALID_BODY_VALUE` for `/body`,
+`E_BASE_SHAPE_INVALID_LINKS_VALUE` for `/links`,
+`E_BASE_SHAPE_INVALID_MANIFEST_VALUE` for `/manifest`.
 
 ## 3) Constraints and Non-Goals
 
@@ -300,11 +316,15 @@ Implementation notes:
 4. Render bool as `true`/`false`.
 5. Render dict/list via compact deterministic JSON:
 `json.dumps(..., sort_keys=True, ensure_ascii=False, separators=(",", ":"))`.
+6. Always emit the pipe delimiter (`|`) even when details are empty.
+7. Escape CR/LF in message and all detail values.
+8. Render `None` as `null`.
 
 Acceptance criteria:
 1. Emits correctly formatted INFO and FAIL lines.
 2. Emits exactly one SUMMARY line.
 3. Formatting output remains stable across runs.
+4. Every event line contains the delimiter and stays single-line.
 
 Test checklist:
 1. Unit test logger formatting with mixed detail types.
@@ -613,3 +633,85 @@ Acceptance criteria:
 1. Checklist all YES for required conformance items.
 2. Sentinel produces deterministic logs and summary in pass/fail scenarios.
 3. Workflows fail on sentinel FAIL and pass on PASS.
+
+### Card 13: Gatekeeper Wiring (Sentinel Upgrade)
+
+Objective:
+Upgrade sentinel to run a Gatekeeper 5-stage pipeline for complete `data/dto` triplets.
+
+Files:
+1. `tools/ci/orket_sentinel.py`
+
+Scope:
+1. Add a Gatekeeper module/class integrated into sentinel execution.
+2. Run stages for complete triplets only:
+`base_shape`, `dto_links`, `relationship_vocabulary`, `policy`, `determinism`.
+3. `base_shape`:
+validate JSON object shapes and reference structure (`type` + `id` required).
+4. `dto_links`:
+enforce typed mappings for `invocation` and `validation_result`.
+5. `relationship_vocabulary`:
+validate `(dto_type + relationship + ref_type)` compatibility and cardinality.
+6. `policy`:
+run recursive Raw-ID traversal on `/body` and `/links`.
+7. `determinism`:
+validate `order_insensitive` keys against array-valued links keys.
+8. Emit stage-scoped FAIL logs with locations rooted in `/body`, `/links`, or `/manifest`.
+9. Sort Gatekeeper FAIL emissions deterministically by stage then pointer.
+
+Acceptance criteria:
+1. Complete triplets execute the full 5-stage Gatekeeper pipeline.
+2. Stage name in emitted events is one of:
+`base_shape`, `dto_links`, `relationship_vocabulary`, `policy`, `determinism`.
+3. Gatekeeper failures are deterministic in ordering for repeated runs on the same input.
+4. Existing CI summary semantics remain unchanged.
+
+Verification:
+1. `python -m py_compile tools/ci/orket_sentinel.py`
+2. `$env:BASE_REF='HEAD'; python tools/ci/orket_sentinel.py`
+
+Status:
+1. Completed in commit `dd7c390`.
+2. Post-landing hardening:
+new Gatekeeper error codes should follow `E_<STAGE>_<ERROR>` without breaking existing consumers.
+
+### Card 14: Sovereign Logging Hardening
+
+Objective:
+Eliminate conditional delimiters and newline-injection risk in CI logs; tighten base-shape code specificity.
+
+Files:
+1. `tools/ci/orket_sentinel.py`
+2. `docs/projects/modularize/standard.md`
+3. `docs/projects/modularize/implementation.md`
+
+Scope:
+1. Enforce unconditional `|` delimiter emission for all event lines.
+2. Escape CR/LF in message and all detail values.
+3. Ensure `None` details render as `null`.
+4. Split base-shape wrong-type codes by root:
+`E_BASE_SHAPE_INVALID_BODY_VALUE`,
+`E_BASE_SHAPE_INVALID_LINKS_VALUE`,
+`E_BASE_SHAPE_INVALID_MANIFEST_VALUE`.
+5. Keep `E_POLICY_RAW_ID_FORBIDDEN` as normative exemplar for stage-scoped naming.
+
+Acceptance criteria:
+1. Multi-line exception/detail inputs still produce single-line logs.
+2. Every emitted event line includes `|` exactly once as delimiter.
+3. `/body` and `/manifest` wrong-type failures do not use `E_BASE_SHAPE_INVALID_LINKS_VALUE`.
+4. Docs explicitly capture unconditional delimiter + newline-safe detail behavior.
+
+Verification:
+1. `python -m py_compile tools/ci/orket_sentinel.py`
+2. `$env:BASE_REF='HEAD'; python tools/ci/orket_sentinel.py`
+3. Targeted run with synthetic newline-containing detail/message payloads.
+
+Status:
+1. In progress.
+
+## 17) Progress Updates
+
+1. 2026-02-22: Card 13 implemented and pushed in `dd7c390`.
+2. Gatekeeper pipeline added to `tools/ci/orket_sentinel.py` with deterministic stage/pointer failure ordering.
+3. Local compile + smoke checks passed.
+4. 2026-02-22: Card 14 started for unconditional delimiter, newline-safe details, and base-shape code split.

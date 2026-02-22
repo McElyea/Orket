@@ -69,7 +69,7 @@ If diff calculation fails, fail closed (No-skip diffing).
 
 Traversal:
 
-1. Recursively traverse the entire DTO JSON value.
+1. Recursively traverse the entire DTO JSON value (unbounded depth).
 2. For each JSON object:
    check every property name, then traverse each value.
 3. For each JSON array:
@@ -84,6 +84,11 @@ A property name `p` is a violation if:
 1. `p` equals any token in `forbidden_tokens` exactly, OR
 2. `p` ends with `"_" + token` for any token in `forbidden_tokens` (underscore-boundary suffix match),
 unless `p` is listed verbatim in `allowed_local_ids`.
+
+`allowed_local_ids` source:
+
+1. Read from `/manifest/policy/allowed_local_ids` when present.
+2. Any key that exactly matches an allowed local id is exempt, even if it would otherwise match forbidden token rules.
 
 On violation:
 
@@ -101,6 +106,11 @@ Recommended failure classes:
 3. `schema_drift`: generated artifact bytes differ from committed artifacts.
 4. `pipeline_violation`: stage order differs from the five-stage contract.
 5. `determinism_violation`: order-sensitive arrays or manifest rules violated.
+
+Gatekeeper naming guidance:
+
+6. New stage-level Gatekeeper failures should use `E_<STAGE>_<ERROR>` where feasible.
+7. Keep already-consumed legacy codes stable unless a versioned compatibility bridge is planned.
 
 Default mode for CI and release gates should be strict/fail-fast.
 
@@ -130,16 +140,19 @@ Note: E_TYPED_REF_MISMATCH is a legacy identifier now enforced within the `dto_l
 
 All CI/validation events MUST emit one line per event:
 
-`[LEVEL] [STAGE:ci] [CODE:<code>] [LOC:<location>] <message> | <sorted k=v pairs>`
+`[LEVEL] [STAGE:<stage>] [CODE:<code>] [LOC:<location>] <message> | <details>`
 
 Rules:
 
 1. `LEVEL` is `INFO` or `FAIL`.
 2. `location` is RFC 6901 JSON Pointer.
-3. Message escapes CR/LF as `\\r` and `\\n`.
-4. Detail keys are sorted lexicographically.
-5. Bool values render as `true`/`false`.
-6. Dict/list values render via:
+3. The pipe delimiter (`|`) is always emitted, even if details are empty.
+4. Message escapes CR/LF as `\\r` and `\\n`.
+5. All detail values are newline-safe with the same CR/LF escaping.
+6. Detail keys are sorted lexicographically.
+7. Bool values render as `true`/`false`.
+8. `None` renders as `null`.
+9. Dict/list values render via:
 `json.dumps(sort_keys=True, ensure_ascii=False, separators=(",", ":"))`.
-7. Emit a final summary line:
+10. Emit a final summary line:
 `[SUMMARY] outcome=PASS|FAIL stage=ci errors=<n> warnings=<n>`.
