@@ -19,4 +19,5 @@ jobs:
       - name: Run Orket Sentinel
         env:
           TRIPLELOCK_ROOTS: data/dto
+          LOG_FORMAT_VERSION: "2"
         run: python3 tools/ci/orket_sentinel.py

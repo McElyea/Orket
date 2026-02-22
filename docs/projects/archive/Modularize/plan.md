@@ -719,3 +719,4 @@ Status:
 3. Local compile + smoke checks passed.
 4. 2026-02-22: Card 14 started for unconditional delimiter, newline-safe details, and base-shape code split.
 5. 2026-02-22: Card 14 completed; Card 12 final conformance gate completed.
+6. 2026-02-22: Logging contract migration added: sentinel supports `LOG_FORMAT_VERSION` (`v1` legacy `k=v` payload and `v2` canonical JSON payload). Gitea sentinel workflow moved to `LOG_FORMAT_VERSION=2`.

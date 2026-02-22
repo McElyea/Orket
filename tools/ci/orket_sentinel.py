@@ -81,6 +81,18 @@ RAW_ID_FORBIDDEN_TOKENS = {
 }
 
 
+def _resolve_log_format_version() -> int:
+    raw = os.getenv("LOG_FORMAT_VERSION", "1").strip()
+    try:
+        parsed = int(raw)
+    except ValueError:
+        return 1
+    return parsed if parsed > 0 else 1
+
+
+LOG_FORMAT_VERSION = _resolve_log_format_version()
+
+
 @dataclass(frozen=True)
 class GatekeeperIssue:
     stage: str
@@ -115,7 +127,7 @@ class Reporter:
         **details: Any,
     ) -> None:
         escaped_message = _escape_inline(message)
-        details_text = _format_details(details)
+        details_text = _format_details_json(details) if LOG_FORMAT_VERSION >= 2 else _format_details_legacy(details)
         line = f"[{level}] [STAGE:{stage}] [CODE:{code}] [LOC:{location}] {escaped_message} | {details_text}"
         print(line)
         self.lines.append(line)
@@ -546,20 +558,20 @@ class Gatekeeper:
                 STAGE_ORDER.get(issue.stage, 99),
                 issue.location,
                 issue.code,
-                _format_details(issue.details),
+                _format_details_legacy(issue.details),
             ),
         )
 
 
 def _escape_inline(value: str) -> str:
-    return value.replace("\\", r"\\").replace("|", r"\u007c").replace("\r", r"\r").replace("\n", r"\n")
+    return value.replace("|", r"\u007c").replace("\r", r"\r").replace("\n", r"\n")
 
 
 def _pointer_token(value: str) -> str:
     return value.replace("~", "~0").replace("/", "~1")
 
 
-def _format_value(value: Any) -> str:
+def _format_value_legacy(value: Any) -> str:
     if value is None:
         return "null"
     if isinstance(value, bool):
@@ -570,11 +582,26 @@ def _format_value(value: Any) -> str:
     return _escape_inline(str(value))
 
 
-def _format_details(details: dict[str, Any]) -> str:
+def _format_details_legacy(details: dict[str, Any]) -> str:
     parts: list[str] = []
     for key in sorted(details):
-        parts.append(f"{key}={_format_value(details[key])}")
+        parts.append(f"{key}={_format_value_legacy(details[key])}")
     return " ".join(parts)
+
+
+def _sanitize_json_payload(value: Any) -> Any:
+    if isinstance(value, str):
+        return _escape_inline(value)
+    if isinstance(value, list):
+        return [_sanitize_json_payload(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _sanitize_json_payload(item) for key, item in value.items()}
+    return value
+
+
+def _format_details_json(details: dict[str, Any]) -> str:
+    sanitized = _sanitize_json_payload(details)
+    return json.dumps(sanitized, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
 
 
 def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
