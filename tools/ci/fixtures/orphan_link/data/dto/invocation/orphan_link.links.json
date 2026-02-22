@@ -1,0 +1,8 @@
+{
+  "skill": {
+    "id": "ghost:skill-x",
+    "relationship": "declares",
+    "type": "skill"
+  },
+  "trace_events": []
+}

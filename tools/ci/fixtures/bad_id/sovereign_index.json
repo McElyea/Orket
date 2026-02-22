@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-02-22T00:00:00Z",
+  "ids": [
+    "account:event-1",
+    "entrypoint:beta",
+    "skill:beta",
+    "validation_result:beta"
+  ],
+  "source": "fixture",
+  "version": "v1"
+}

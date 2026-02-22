@@ -34,13 +34,20 @@ SCENARIOS = (
         expected_exit=0,
         required_tokens=("I_TRIPLET_COMPLETE", "I_VOCAB_LINKS_RESOLVED", '"related_stems":["account","profile"]'),
     ),
+    Scenario(
+        name="orphan_link_violation",
+        fixture="orphan_link",
+        expected_exit=1,
+        required_tokens=("E_ORPHAN_LINK_VIOLATION",),
+    ),
 )
 
 
 def _run_scenario(scenario: Scenario) -> tuple[bool, str]:
     env = dict(os.environ)
     env["LOG_FORMAT_VERSION"] = "2"
-    env["ENABLED_SENTINEL_PLUGINS"] = "related_stems"
+    env["ENABLED_SENTINEL_PLUGINS"] = "related_stems,orphan_links"
+    env["SOVEREIGN_INDEX_PATH"] = f"tools/ci/fixtures/{scenario.fixture}/sovereign_index.json"
 
     cmd = [
         sys.executable,

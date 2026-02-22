@@ -1,0 +1,9 @@
+{
+  "determinism": {
+    "order_insensitive": []
+  },
+  "dto_type": "invocation",
+  "policy": {
+    "allowed_local_ids": []
+  }
+}

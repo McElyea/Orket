@@ -119,6 +119,7 @@ class CompleteTriplet:
 @dataclass(frozen=True)
 class PluginContext:
     triplet: CompleteTriplet
+    all_triplets: tuple[CompleteTriplet, ...]
 
 
 @dataclass(frozen=True)
@@ -224,8 +225,94 @@ def _related_stems_plugin(ctx: PluginContext) -> list[PluginEvent]:
     ]
 
 
+def _load_sovereign_index() -> tuple[set[str], str | None]:
+    index_path = os.getenv("SOVEREIGN_INDEX_PATH", "").strip()
+    if not index_path:
+        return set(), "missing_env"
+    path = Path(index_path)
+    if not path.exists():
+        return set(), "missing_file"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return set(), "invalid_json"
+    if not isinstance(payload, dict):
+        return set(), "invalid_shape"
+    ids = payload.get("ids")
+    if not isinstance(ids, list):
+        return set(), "invalid_ids"
+    normalized = {value for value in ids if isinstance(value, str) and value}
+    return normalized, None
+
+
+def _read_json_object(path: str) -> dict[str, Any]:
+    try:
+        parsed = json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _collect_local_batch_ids(ctx: PluginContext) -> set[str]:
+    local_ids: set[str] = set()
+    for triplet in ctx.all_triplets:
+        for parsed in (_read_json_object(triplet.body_path), _read_json_object(triplet.manifest_path)):
+            value = parsed.get("id")
+            if isinstance(value, str) and value:
+                local_ids.add(value)
+    return local_ids
+
+
+def _orphan_links_plugin(ctx: PluginContext) -> list[PluginEvent]:
+    index_ids, error = _load_sovereign_index()
+    if error is not None:
+        return [
+            PluginEvent(
+                level="FAIL",
+                stage="policy",
+                code="E_ORPHAN_INDEX_UNAVAILABLE",
+                location="/policy/sovereign_index",
+                message="Sovereign index unavailable for orphan-link validation.",
+                details={"stem": ctx.triplet.stem, "reason": error},
+            )
+        ]
+
+    links_obj = _read_json_object(ctx.triplet.links_path)
+    local_ids = _collect_local_batch_ids(ctx)
+    events: list[PluginEvent] = []
+
+    for key in sorted(links_obj):
+        value = links_obj[key]
+        refs = value if isinstance(value, list) else [value]
+        for index, ref in enumerate(refs):
+            if not isinstance(ref, dict):
+                continue
+            target_id = ref.get("id")
+            if not isinstance(target_id, str) or not target_id:
+                continue
+            if target_id in index_ids or target_id in local_ids:
+                continue
+            pointer = f"/links/{_pointer_token(key)}"
+            if isinstance(value, list):
+                pointer = f"{pointer}/{index}/id"
+            else:
+                pointer = f"{pointer}/id"
+            events.append(
+                PluginEvent(
+                    level="FAIL",
+                    stage="relationship_vocabulary",
+                    code="E_ORPHAN_LINK_VIOLATION",
+                    location=pointer,
+                    message="Reference target is missing from sovereign index and local batch.",
+                    details={"stem": ctx.triplet.stem, "target_id": target_id},
+                )
+            )
+    return events
+
+
 PLUGIN_REGISTRY: dict[str, Any] = {
     "related_stems": _related_stems_plugin,
+    "orphan_links": _orphan_links_plugin,
 }
 
 
@@ -880,7 +967,7 @@ def _validate_triplets(
     return complete_triplets
 
 
-def _run_plugins(triplet: CompleteTriplet, reporter: Reporter) -> None:
+def _run_plugins(triplet: CompleteTriplet, all_triplets: tuple[CompleteTriplet, ...], reporter: Reporter) -> None:
     for plugin_name in _enabled_plugins():
         plugin = PLUGIN_REGISTRY.get(plugin_name)
         if plugin is None:
@@ -893,7 +980,7 @@ def _run_plugins(triplet: CompleteTriplet, reporter: Reporter) -> None:
             )
             continue
         try:
-            events = plugin(PluginContext(triplet=triplet))
+            events = plugin(PluginContext(triplet=triplet, all_triplets=all_triplets))
         except Exception as exc:  # noqa: BLE001
             reporter.emit(
                 "FAIL",
@@ -929,6 +1016,7 @@ def _run_plugins(triplet: CompleteTriplet, reporter: Reporter) -> None:
 
 
 def _run_gatekeeper(triplets: list[CompleteTriplet], reporter: Reporter) -> None:
+    all_triplets = tuple(triplets)
     for triplet in triplets:
         issues = Gatekeeper(triplet).validate()
         for issue in issues:
@@ -949,7 +1037,7 @@ def _run_gatekeeper(triplets: list[CompleteTriplet], reporter: Reporter) -> None
                 "Gatekeeper pipeline passed for triplet.",
                 stem=triplet.stem,
             )
-        _run_plugins(triplet, reporter)
+        _run_plugins(triplet, all_triplets, reporter)
 
 
 def _validate_solo_json(paths: list[str], reporter: Reporter) -> None:

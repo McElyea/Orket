@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-02-22T00:00:00Z",
+  "ids": [
+    "entrypoint:alpha",
+    "skill:alpha"
+  ],
+  "source": "fixture",
+  "version": "v1"
+}

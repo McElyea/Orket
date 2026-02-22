@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-02-22T00:00:00Z",
+  "ids": [
+    "account:event-1",
+    "profile:event-2",
+    "valid_user:skill-1"
+  ],
+  "source": "fixture",
+  "version": "v1"
+}
