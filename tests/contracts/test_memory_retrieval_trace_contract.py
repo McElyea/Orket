@@ -8,7 +8,7 @@ def _read(path: Path) -> str:
 
 
 def test_memory_retrieval_trace_schema_contract() -> None:
-    path = Path("docs/archive/MemoryPersistence/MEMORY_RETRIEVAL_TRACE_SCHEMA.md")
+    path = Path("docs/projects/archive/MemoryPersistence/MEMORY_RETRIEVAL_TRACE_SCHEMA.md")
     assert path.exists(), f"Missing schema doc: {path}"
     text = _read(path)
 
@@ -41,7 +41,7 @@ def test_memory_retrieval_trace_schema_contract() -> None:
 
 
 def test_memory_buffer_state_machine_has_single_owner_lease_rule() -> None:
-    path = Path("docs/archive/MemoryPersistence/MEMORY_BUFFER_STATE_MACHINE.md")
+    path = Path("docs/projects/archive/MemoryPersistence/MEMORY_BUFFER_STATE_MACHINE.md")
     assert path.exists(), f"Missing schema doc: {path}"
     text = _read(path)
 

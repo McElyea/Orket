@@ -8,7 +8,7 @@ def _read(path: Path) -> str:
 
 
 def test_skill_loader_error_schema_doc_contains_required_fields_and_codes() -> None:
-    path = Path("docs/archive/Skills/SKILL_LOADER_ERROR_SCHEMA.md")
+    path = Path("docs/projects/archive/Skills/SKILL_LOADER_ERROR_SCHEMA.md")
     assert path.exists(), f"Missing schema doc: {path}"
     text = _read(path)
 

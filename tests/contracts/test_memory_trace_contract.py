@@ -8,7 +8,7 @@ def _read(path: Path) -> str:
 
 
 def test_memory_determinism_trace_schema_contract() -> None:
-    path = Path("docs/archive/MemoryPersistence/MEMORY_DETERMINISM_TRACE_SCHEMA.md")
+    path = Path("docs/projects/archive/MemoryPersistence/MEMORY_DETERMINISM_TRACE_SCHEMA.md")
     assert path.exists(), f"Missing schema doc: {path}"
     text = _read(path)
 
@@ -41,7 +41,7 @@ def test_memory_determinism_trace_schema_contract() -> None:
 
 
 def test_memory_determinism_trace_schema_has_required_output_shape_examples() -> None:
-    path = Path("docs/archive/MemoryPersistence/MEMORY_DETERMINISM_TRACE_SCHEMA.md")
+    path = Path("docs/projects/archive/MemoryPersistence/MEMORY_DETERMINISM_TRACE_SCHEMA.md")
     text = _read(path)
 
     required_examples = [
@@ -55,7 +55,7 @@ def test_memory_determinism_trace_schema_has_required_output_shape_examples() ->
 
 
 def test_memory_canonicalization_schema_has_edge_behavior_contract() -> None:
-    path = Path("docs/archive/MemoryPersistence/MEMORY_CANONICALIZATION_JSON_V1.md")
+    path = Path("docs/projects/archive/MemoryPersistence/MEMORY_CANONICALIZATION_JSON_V1.md")
     text = _read(path)
     required_tokens = [
         "Unicode normalization form: `NFC`",
