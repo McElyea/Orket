@@ -188,6 +188,6 @@ Completed in current execution slice:
 - digest vector regenerate+diff fail-closed check
 
 Next task:
-1. Move remaining kernel-law coverage from `tests/lsi` into `tests/kernel/v1` and keep `tests/kernel/v1` as sovereign gate source.
+1. Complete physical migration of legacy Spec-002 tests from `tests/lsi` into `tests/kernel/v1` (mirror import is already in place so sovereign gate coverage is active).
 2. Tighten registry audit from warning mode to strict mode once legacy non-kernel codes are either documented or split into separate registries.
 3. Replace deprecated `jsonschema.RefResolver` in schema-contract tests with `referencing`-based resolver wiring.
