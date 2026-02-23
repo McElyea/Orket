@@ -7,6 +7,9 @@ Owner: Orket Core
 ## Purpose
 This plan executes the sealed kernel requirements in `docs/projects/OS/KERNEL_REQUIREMENTS_EXIT.md` and establishes the gate to move OS work from Kernel Requirements to Capability and Replay hardening.
 
+## Strategic Impact
+Tombstones plus typed identity (`{dto_type}:{id}`) make the kernel a deterministic conflict-resolution engine instead of a file watcher. This is the foundation for local-first convergence, replay parity, and stable cross-runtime validation.
+
 ## Requirement Health
 The core requirements are strong enough to execute.
 
@@ -16,23 +19,30 @@ Confirmed strengths:
 3. Error-code registry exists and is linked.
 4. Kernel exit criteria are explicit.
 
-## External Inputs Needed From Owner
-The following inputs are still required because they are product decisions, not implementation guesses:
-1. Sovereign test home selection:
-Choose one canonical path for kernel-law tests and CI gate.
-Options:
-- `tests/kernel/v1/` (recommended, aligns with policy/docs)
-- `tests/lsi/` (current active law test location)
-2. Deletion representation in committed state:
-Choose one behavior for deleted stems:
-- hard delete committed index record
-- tombstone-marked committed index record
-3. Created-set identity mapping contract:
-Confirm whether staged creation identity is always `body.dto_type + body.id` for all DTO families, or provide per-dto mapping rules.
-4. Determinism numeric failure vocabulary:
-`docs/projects/OS/State/digest-spec-v1.md` references number failures; confirm canonical code names to add to `docs/projects/OS/contracts/error-codes-v1.json` (e.g., `E_NON_INTEGER_NUMBER`, `E_INTEGER_OUT_OF_RANGE`).
-5. Cross-language digest conformance runtime:
-Confirm second runtime for vector parity checks (Rust preferred, TS acceptable) for CI-grade multi-implementation validation.
+## Locked Decisions (Authoritative)
+1. Canonical kernel-law test home is `tests/kernel/v1/`.
+2. Registry authority is `docs/projects/OS/contracts/error-codes-v1.json`; all emitted issue and log `[CODE:X]` tokens must resolve to this list.
+3. Identity basis is typed identity: `{dto_type}:{id}` derived from staged body payloads.
+4. Tombstones are required deletion evidence; visibility subtraction is identity-based (not stem-only).
+5. Cross-language digest parity runtime is TypeScript under `conformance/ts`.
+6. Digest failures must use specific `E_DIGEST_*` codes, not umbrella promotion failures.
+
+## PR-Ready Integration Checklist
+1. Registry lock:
+- no duplicate codes in registry
+- no dynamic code variants/suffixes
+- deterministic registry ordering
+2. LSI identity wall:
+- derive visible identities from staged bodies (`body.dto_type`, `body.id`)
+- validate against committed visibility plus staged creations only
+3. TypeScript parity harness:
+- committed vector consumption only
+- CI may regenerate and diff but must not overwrite vectors
+4. Canonicalization and digest law:
+- one trailing LF
+- no CR and no padding drift
+- UTF-8 validity gate before canonicalization and hashing
+- integer-only numeric policy for v1
 
 ## Implementation Scope
 This plan covers Cards 001-005 closure and the kernel exit gate.
@@ -80,6 +90,7 @@ Deliverables:
 - include tombstoned stems in promoted set
 - prune ref sources for deleted stems
 - skip ref injection for tombstoned stems
+5. Ensure tombstone payload identity (`dto_type`, `id`) is used for visibility subtraction.
 
 Exit criteria:
 1. Tombstone vectors pass.
@@ -112,7 +123,7 @@ Exit criteria:
 
 ### Phase F: Mechanical Guardrails and CI Gate
 Deliverables:
-1. Add registry enforcement test:
+1. Add registry enforcement test (`tests/kernel/v1/test_registry.py`):
 fail if emitted `KernelIssue.code` not in `contracts/error-codes-v1.json`.
 2. Add digest vector tests with `State/digest-spec-v1.md` canonicalization and integer-only constraints.
 3. Add tombstone wire-format vector tests.
@@ -120,11 +131,15 @@ fail if emitted `KernelIssue.code` not in `contracts/error-codes-v1.json`.
 5. Add `scripts/audit_registry.py` to enforce registry/spec sync.
 6. Add `scripts/gen_digest_vectors.py` for maintainer-only vector generation.
 7. Add TypeScript parity gate under `conformance/ts`.
+8. Add CI diff-only vector verification:
+`python scripts/gen_digest_vectors.py --out /tmp/digest-v1.json`
+`diff -u tests/kernel/v1/vectors/digest-v1.json /tmp/digest-v1.json`
 
 Exit criteria:
 1. Kernel gate command is deterministic and green.
 2. Kernel exit condition in `KERNEL_REQUIREMENTS_EXIT.md` is fully satisfied.
 3. CI consumes committed vectors only (no write-back).
+4. Registry audit is green (`scripts/audit_registry.py`).
 
 ## Acceptance Gate (Kernel Requirements Exit)
 Kernel Requirements phase is closed only when all are true:
@@ -149,8 +164,21 @@ Control: Single sovereign gate path and roadmap linkage.
 3. Risk: Hidden deletion edge cases.
 Control: Tombstone positive/negative vectors and deletion-only promotion tests.
 
+## Gitea Validation Experiments
+1. Truth triangle gate (`audit_registry.py` + kernel pytest + TS parity):
+open a PR with an intentional fake code in registry only; verify audit fails deterministically.
+2. Golden-vector immutability:
+mutate a committed vector value and confirm parity fails; then run regen+diff and confirm CI does not overwrite vector files.
+3. One-law-per-PR ergonomics:
+run two small PRs (registry-only and base-shape-only) to validate review clarity and deterministic check attachment.
+
 ## Immediate Next Task
 Start Phase A and Phase B in one slice:
-1. finalize sovereign test home choice,
-2. land ledger preflight + NO-OP promotion,
-3. rerun kernel law suite to prove the first failing law flips.
+1. land ledger preflight + NO-OP promotion,
+2. rerun kernel law suite to prove the first failing law flips,
+3. land registry and digest guardrails in parallel (`test_registry.py`, vectors, TS parity harness).
+
+Immediate parallel hardening:
+1. land `test_registry.py` as a mechanical guardrail,
+2. land `gen_digest_vectors.py` + committed vectors,
+3. land `conformance/ts` parity runner wired to committed vectors.

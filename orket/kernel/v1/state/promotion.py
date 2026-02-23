@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,7 +24,12 @@ DIR_REFS = "refs"
 DIR_BY_ID = "by_id"
 
 E_PROMOTION_FAILED = "E_PROMOTION_FAILED"
+E_PROMOTION_OUT_OF_ORDER = "E_PROMOTION_OUT_OF_ORDER"
+E_PROMOTION_ALREADY_APPLIED = "E_PROMOTION_ALREADY_APPLIED"
 I_REF_MULTISOURCE = "I_REF_MULTISOURCE"
+I_NOOP_PROMOTION = "I_NOOP_PROMOTION"
+RUN_LEDGER_FILE = "run_ledger.json"
+TURN_ID_RE = re.compile(r"^turn-(\d{4})$")
 
 
 @dataclass(frozen=True)
@@ -76,6 +82,42 @@ def _scope_root(root: str, scope: str, run_id: str | None = None, turn_id: str |
             raise ValueError("staging scope requires run_id and turn_id")
         return base / DIR_STAGING / fs_token(run_id) / fs_token(turn_id)
     raise ValueError(f"unknown scope: {scope}")
+
+
+def _parse_turn_index(turn_id: str) -> int:
+    match = TURN_ID_RE.fullmatch(turn_id.strip())
+    if not match:
+        raise ValueError(f"invalid turn_id format: {turn_id}")
+    return int(match.group(1))
+
+
+def _ledger_path(committed_root: Path) -> Path:
+    return committed_root / DIR_INDEX / RUN_LEDGER_FILE
+
+
+def _load_last_promoted_turn_id(committed_root: Path) -> str:
+    path = _ledger_path(committed_root)
+    if not path.exists():
+        return "turn-0000"
+    try:
+        data = _read_json(path)
+    except Exception:
+        return "turn-0000"
+    if isinstance(data, dict):
+        value = data.get("last_promoted_turn_id")
+        if isinstance(value, str) and TURN_ID_RE.fullmatch(value):
+            return value
+    return "turn-0000"
+
+
+def _save_last_promoted_turn_id(committed_root: Path, turn_id: str) -> None:
+    _atomic_write_json(
+        _ledger_path(committed_root),
+        {
+            "lsi_version": LSI_VERSION,
+            "last_promoted_turn_id": turn_id,
+        },
+    )
 
 
 def _triplets_dir(scope_root: Path) -> Path:
@@ -210,29 +252,100 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
     events: list[str] = []
     issues: list[KernelIssue] = []
 
+    committed_root = _scope_root(root, DIR_COMMITTED)
+    base = _root_index(root)
     staging_root = _scope_root(root, DIR_STAGING, run_id, turn_id)
-    if not staging_root.exists():
+
+    # Sequential ledger preflight.
+    try:
+        requested_turn_index = _parse_turn_index(turn_id)
+        last_promoted_turn_id = _load_last_promoted_turn_id(committed_root)
+        last_promoted_turn_index = _parse_turn_index(last_promoted_turn_id)
+    except Exception as exc:  # noqa: BLE001
         issues.append(
             KernelIssue(
                 level="FAIL",
-                stage="determinism",
+                stage="promotion",
                 code=E_PROMOTION_FAILED,
-                location="/index/staging",
-                message="Staging root not found for promotion.",
-                details={"run_id": run_id, "turn_id": turn_id},
+                location="/index/committed/index/run_ledger.json",
+                message="Failed to parse promotion ledger or turn id.",
+                details={"error": str(exc), "turn_id": turn_id},
             )
         )
-        events.append(_event_line("FAIL", "determinism", E_PROMOTION_FAILED, "/index/staging", "Staging root not found.", run_id=run_id, turn_id=turn_id))
+        events.append(
+            _event_line(
+                "FAIL",
+                "promotion",
+                E_PROMOTION_FAILED,
+                "/index/committed/index/run_ledger.json",
+                "Failed to parse promotion ledger or turn id.",
+                error=str(exc),
+                turn_id=turn_id,
+            )
+        )
         return PromotionResult(outcome="FAIL", events=events, issues=issues)
 
-    promoted_stems = _list_staged_stems(staging_root)
-    if not promoted_stems:
-        # Nothing to promote is not an error.
-        events.append(_event_line("INFO", "determinism", "I_NOOP_PROMOTION", "/index/staging", "No staged stems to promote.", run_id=run_id, turn_id=turn_id))
-        return PromotionResult(outcome="PASS", promoted_stems=[], events=events, issues=[])
+    if requested_turn_index <= last_promoted_turn_index:
+        issues.append(
+            KernelIssue(
+                level="FAIL",
+                stage="promotion",
+                code=E_PROMOTION_ALREADY_APPLIED,
+                location="/index/committed/index/run_ledger.json",
+                message="Promotion turn already applied or older than ledger state.",
+                details={"turn_id": turn_id, "last_promoted_turn_id": last_promoted_turn_id},
+            )
+        )
+        events.append(
+            _event_line(
+                "FAIL",
+                "promotion",
+                E_PROMOTION_ALREADY_APPLIED,
+                "/index/committed/index/run_ledger.json",
+                "Promotion turn already applied or stale.",
+                turn_id=turn_id,
+                last_promoted_turn_id=last_promoted_turn_id,
+            )
+        )
+        return PromotionResult(outcome="FAIL", events=events, issues=issues)
 
-    committed_root = _scope_root(root, DIR_COMMITTED)
-    base = _root_index(root)
+    if requested_turn_index != (last_promoted_turn_index + 1):
+        issues.append(
+            KernelIssue(
+                level="FAIL",
+                stage="promotion",
+                code=E_PROMOTION_OUT_OF_ORDER,
+                location="/index/committed/index/run_ledger.json",
+                message="Promotion turn is out of sequence.",
+                details={"turn_id": turn_id, "last_promoted_turn_id": last_promoted_turn_id},
+            )
+        )
+        events.append(
+            _event_line(
+                "FAIL",
+                "promotion",
+                E_PROMOTION_OUT_OF_ORDER,
+                "/index/committed/index/run_ledger.json",
+                "Promotion turn is out of sequence.",
+                turn_id=turn_id,
+                last_promoted_turn_id=last_promoted_turn_id,
+            )
+        )
+        return PromotionResult(outcome="FAIL", events=events, issues=issues)
+
+    promoted_stems = _list_staged_stems(staging_root) if staging_root.exists() else []
+    deletion_only = not staging_root.exists()
+    if deletion_only:
+        committed_triplets = _triplets_dir(committed_root)
+        if committed_triplets.exists():
+            promoted_stems = sorted(
+                rel[: -len(".json")]
+                for rel in (
+                    str(p.relative_to(committed_triplets)).replace("\\", "/")
+                    for p in committed_triplets.rglob("*.json")
+                )
+                if rel.endswith(".json")
+            )
 
     new_root = base / f"{DIR_COMMITTED}.__new"
     bak_root = base / f"{DIR_COMMITTED}.__bak"
@@ -251,25 +364,28 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
             new_root.mkdir(parents=True, exist_ok=True)
 
         # 1) Copy staged objects (content-addressed) into new_root
-        staged_objects = _objects_dir(staging_root)
-        if staged_objects.exists():
-            for obj_file in staged_objects.rglob("*"):
-                if obj_file.is_dir():
-                    continue
-                rel = obj_file.relative_to(staged_objects)
-                dest = _objects_dir(new_root) / rel
-                if dest.exists():
-                    continue
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(obj_file, dest)
+        if staging_root.exists():
+            staged_objects = _objects_dir(staging_root)
+            if staged_objects.exists():
+                for obj_file in staged_objects.rglob("*"):
+                    if obj_file.is_dir():
+                        continue
+                    rel = obj_file.relative_to(staged_objects)
+                    dest = _objects_dir(new_root) / rel
+                    if dest.exists():
+                        continue
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(obj_file, dest)
 
-        # 2) Copy staged triplet records into new_root
-        staged_triplets = _triplets_dir(staging_root)
-        for stem in promoted_stems:
-            src = (staged_triplets / Path(stem)).with_suffix(".json")
-            dst = (_triplets_dir(new_root) / Path(stem)).with_suffix(".json")
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
+        # 2) Copy staged triplet records into new_root (skip for deletion-only)
+        if staging_root.exists():
+            staged_triplets = _triplets_dir(staging_root)
+            for stem in promoted_stems:
+                src = (staged_triplets / Path(stem)).with_suffix(".json")
+                dst = (_triplets_dir(new_root) / Path(stem)).with_suffix(".json")
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                if src.exists():
+                    shutil.copy2(src, dst)
 
         # 3) Stem-scoped pruning across ALL refs/by_id records in new_root
         refs_dir = _refs_by_id_dir(new_root)
@@ -286,34 +402,43 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
                     rec["lsi_version"] = LSI_VERSION
                 _atomic_write_json(ref_file, rec)
 
+        # Remove promoted stems' triplet records for deletion-only promotions.
+        if deletion_only:
+            for stem in promoted_stems:
+                dst = (_triplets_dir(new_root) / Path(stem)).with_suffix(".json")
+                if dst.exists():
+                    dst.unlink()
+
         # 4) Inject new sources derived from staged promoted stems
         # Group new sources by (type,id)
         grouped: dict[tuple[str, str], list[RefSource]] = {}
         staged_triplets_dir = _triplets_dir(staging_root)
 
-        for stem in promoted_stems:
-            triplet_path = (staged_triplets_dir / Path(stem)).with_suffix(".json")
-            trec = _read_json(triplet_path)
-            if not isinstance(trec, dict):
-                continue
-            links = _links_object_from_staged_triplet(staging_root, trec)
-            if not isinstance(links, dict):
-                continue
+        if staging_root.exists():
+            for stem in promoted_stems:
+                triplet_path = (staged_triplets_dir / Path(stem)).with_suffix(".json")
+                if not triplet_path.exists():
+                    continue
+                trec = _read_json(triplet_path)
+                if not isinstance(trec, dict):
+                    continue
+                links = _links_object_from_staged_triplet(staging_root, trec)
+                if not isinstance(links, dict):
+                    continue
 
-            links_digest = trec.get("links_digest")
-            if not isinstance(links_digest, str) or not links_digest:
-                # not fatal; just skip injection
-                continue
+                links_digest = trec.get("links_digest")
+                if not isinstance(links_digest, str) or not links_digest:
+                    continue
 
-            for ref_type, ref_id, ptr, rel in _iter_refs_from_links(links):
-                grouped.setdefault((ref_type, ref_id), []).append(
-                    RefSource(
-                        stem=stem,
-                        location=ptr,
-                        relationship=rel,
-                        artifact_digest=links_digest,
+                for ref_type, ref_id, ptr, rel in _iter_refs_from_links(links):
+                    grouped.setdefault((ref_type, ref_id), []).append(
+                        RefSource(
+                            stem=stem,
+                            location=ptr,
+                            relationship=rel,
+                            artifact_digest=links_digest,
+                        )
                     )
-                )
 
         # Apply grouped injections
         for (ref_type, ref_id), sources in sorted(grouped.items(), key=lambda kv: (kv[0][0], kv[0][1])):
@@ -340,20 +465,34 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
             if isinstance(sources_list, list) and len(sources_list) > 1:
                 stems = sorted({str(s.get("stem") or "") for s in sources_list if isinstance(s, dict)})
                 loc = f"/index/refs/by_id/{_pointer_token(ref_type)}/{_pointer_token(ref_id)}"
-                events.append(_event_line("INFO", "determinism", I_REF_MULTISOURCE, loc, "Multiple stems reference the same {type,id}.", type=ref_type, id=ref_id, stems=stems))
+                events.append(_event_line("INFO", "promotion", I_REF_MULTISOURCE, loc, "Multiple stems reference the same {type,id}.", type=ref_type, id=ref_id, stems=stems))
 
         # 5) Directory swap to make promotion atomic
         if committed_root.exists():
             os.replace(committed_root, bak_root)
         os.replace(new_root, committed_root)
+        _save_last_promoted_turn_id(committed_root, turn_id)
         if bak_root.exists():
             shutil.rmtree(bak_root)
 
         # Optional: remove the staging turn directory after successful promotion
         # (You may choose to retain evidence; minimal v1 purges staging on success.)
-        shutil.rmtree(staging_root)
+        if staging_root.exists():
+            shutil.rmtree(staging_root)
 
-        events.append(_event_line("INFO", "determinism", "I_PROMOTION_PASS", "/index/committed", "Promotion completed.", run_id=run_id, turn_id=turn_id, stems=promoted_stems))
+        if not promoted_stems:
+            events.append(
+                _event_line(
+                    "INFO",
+                    "promotion",
+                    I_NOOP_PROMOTION,
+                    "/index/staging",
+                    "No staged stems to promote.",
+                    run_id=run_id,
+                    turn_id=turn_id,
+                )
+            )
+        events.append(_event_line("INFO", "promotion", "I_PROMOTION_PASS", "/index/committed", "Promotion completed.", run_id=run_id, turn_id=turn_id, stems=promoted_stems))
         return PromotionResult(outcome="PASS", promoted_stems=promoted_stems, events=events, issues=[])
 
     except Exception as exc:  # noqa: BLE001
@@ -362,14 +501,14 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
         issues.append(
             KernelIssue(
                 level="FAIL",
-                stage="determinism",
+                stage="promotion",
                 code=E_PROMOTION_FAILED,
                 location="/index/committed",
                 message="Promotion failed; committed state not guaranteed updated.",
                 details={"error": msg, "run_id": run_id, "turn_id": turn_id},
             )
         )
-        events.append(_event_line("FAIL", "determinism", E_PROMOTION_FAILED, "/index/committed", "Promotion failed.", error=msg, run_id=run_id, turn_id=turn_id))
+        events.append(_event_line("FAIL", "promotion", E_PROMOTION_FAILED, "/index/committed", "Promotion failed.", error=msg, run_id=run_id, turn_id=turn_id))
 
         # Cleanup new_root if it exists; do NOT delete bak_root automatically.
         if new_root.exists():

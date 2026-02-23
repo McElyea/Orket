@@ -1,0 +1,64 @@
+{
+  "version": "digest-v1",
+  "algorithm": "sha256",
+  "vectors": [
+    {
+      "name": "basic-sorted",
+      "input": {
+        "b": 2,
+        "a": 1
+      },
+      "canonical": "{\"a\":1,\"b\":2}",
+      "digest_hex": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+    },
+    {
+      "name": "unicode-literal",
+      "input": {
+        "m": "🚀"
+      },
+      "canonical": "{\"m\":\"🚀\"}",
+      "digest_hex": "7f22f9209e36c918c6b6464498b025aa1b358339dffa766c6affd53b31670d52"
+    },
+    {
+      "name": "nested-mix",
+      "input": {
+        "root": [
+          {
+            "z": 2,
+            "a": 1
+          },
+          {
+            "k": "v"
+          }
+        ],
+        "n": 7
+      },
+      "canonical": "{\"n\":7,\"root\":[{\"a\":1,\"z\":2},{\"k\":\"v\"}]}",
+      "digest_hex": "9dcce1763256a2af701fcf8f6a7eed50eae28ad9495923e181fb3ebc316d1b94"
+    },
+    {
+      "name": "safe-int-boundary",
+      "input": {
+        "max_safe": 9007199254740991,
+        "min_safe": -9007199254740991
+      },
+      "canonical": "{\"max_safe\":9007199254740991,\"min_safe\":-9007199254740991}",
+      "digest_hex": "a89049ae419a1d5be4e19bf82d230cbd8b668759c1602a32899faddba91e2d9a"
+    },
+    {
+      "name": "fail-newline-required",
+      "expect_error": "E_DIGEST_TRAILING_NEWLINE_REQUIRED",
+      "raw_utf8": "{\"a\":1}"
+    },
+    {
+      "name": "fail-crlf",
+      "expect_error": "E_DIGEST_NORMALIZATION_MISMATCH",
+      "raw_utf8": "{\"a\":1}\r\n"
+    },
+    {
+      "name": "fail-invalid-utf8-lone-continuation",
+      "expect_error": "E_DIGEST_INVALID_UTF8",
+      "raw_b64": "gA=="
+    }
+  ]
+}

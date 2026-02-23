@@ -26,6 +26,18 @@ jobs:
         run: |
           python scripts/check_dependency_direction.py
 
+      - name: Audit OS registry/spec sync
+        run: |
+          python scripts/audit_registry.py
+
+      - name: Enforce kernel sovereign gate
+        run: |
+          python -m pytest -q tests/kernel/v1
+
+      - name: Enforce TS digest parity gate
+        run: |
+          npm test --prefix conformance/ts
+
       - name: Enforce volatility boundary script
         run: |
           python scripts/check_volatility_boundaries.py

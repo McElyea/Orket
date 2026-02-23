@@ -1,0 +1,10 @@
+{
+  "name": "orket-conformance-ts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript/Node digest parity harness for Orket kernel vectors",
+  "scripts": {
+    "test": "node test.js"
+  }
+}
+

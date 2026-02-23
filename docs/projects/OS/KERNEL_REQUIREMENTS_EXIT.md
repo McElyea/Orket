@@ -4,6 +4,9 @@ Sovereign Kernel - Normative Closure Specification (v1)
 
 This document defines the sealed, mechanically enforceable requirements for the Orket Kernel. Once implemented and the sovereign test suite is green, the Kernel Requirements phase is closed.
 
+Strategic impact:
+Tombstones plus typed identity (`{dto_type}:{id}`) convert kernel behavior from file watching into deterministic conflict resolution. Deletion is preserved as evidence so local-first convergence remains stable.
+
 ## 1. State Sovereignty (Ledger Law)
 
 Path: `committed/index/run_ledger.json`
@@ -32,7 +35,7 @@ Ordering MUST be numeric, not lexical.
 A turn is a NO-OP if the staging root is missing OR contains zero promoted stems (after considering tombstones).
 
 2.1 Behavior:
-Advance ledger to `turn_id`, emit `I_PROMOTION_NOOP`, and perform zero filesystem mutations to committed state.
+Advance ledger to `turn_id`, emit `I_NOOP_PROMOTION`, and perform zero filesystem mutations to committed state.
 
 2.2 Precedence:
 NO-OP classification occurs after ledger ordering validation.
@@ -114,6 +117,13 @@ Every emitted log token of the form `[CODE:X]` MUST also exist in the registry.
 6.5 Digest Specificity:
 Once digest enforcement is active, digest failures MUST use specific `E_DIGEST_*` codes rather than umbrella failures such as `E_PROMOTION_FAILED`.
 
+6.6 Registry Guardrail Test:
+`tests/kernel/v1/test_registry.py` MUST enforce:
+1. Registry schema/pattern validity and duplicate rejection.
+2. Emitted issue codes belong to `contracts/error-codes-v1.json`.
+3. Emitted `[CODE:X]` tokens belong to `contracts/error-codes-v1.json`.
+4. Deterministic failure output for missing registrations.
+
 ## 7. API Boundary and Packaging
 
 7.1 Boundary:
@@ -142,6 +152,11 @@ Vector handshake rule:
 1. Golden vectors are maintainer-generated and committed.
 2. CI consumes committed vectors and MUST NOT overwrite vector files.
 3. CI MAY regenerate and diff for parity checks, but write-back in CI is forbidden.
+
+Execution gate commands:
+1. `python scripts/audit_registry.py`
+2. `python -m pytest -q tests/kernel/v1`
+3. `npm test --prefix conformance/ts`
 
 ## 9. Kernel Requirements Exit Condition
 

@@ -26,6 +26,7 @@ DIR_BY_ID = "by_id"
 
 # Error/Info codes used by minimal LSI behaviors
 E_RELATIONSHIP_ORPHAN = "E_RELATIONSHIP_ORPHAN"
+E_LSI_ORPHAN_TARGET = "E_LSI_ORPHAN_TARGET"
 I_REF_MULTISOURCE = "I_REF_MULTISOURCE"
 
 
@@ -124,6 +125,10 @@ def _scope_root(root: str, scope: str, run_id: str | None = None, turn_id: str |
 
 def _objects_dir(scope_root: Path) -> Path:
     return scope_root / DIR_OBJECTS
+
+
+def _triplets_dir(scope_root: Path) -> Path:
+    return scope_root / DIR_TRIPLETS
 
 
 def _objects_path(scope_root: Path, digest_hex: str) -> Path:
@@ -276,11 +281,11 @@ class LocalSovereignIndex:
         """
         Minimal link integrity law:
           - Extract all {type,id} from /links for the staged stem.
-          - Check visibility layers in strict order:
-              1) Self   (staging refs where source.stem == stem)
-              2) Staging (any staging refs)
-              3) Committed (any committed refs)
-          - Missing => FAIL E_RELATIONSHIP_ORPHAN at pointer to /id
+          - Build visibility set from:
+              1) committed created identities
+              2) staged created identities (from bodies/manifests only)
+          - Links never create visibility.
+          - Missing => FAIL E_LSI_ORPHAN_TARGET at pointer to /id
         Returns (outcome, issues, events)
         """
         stem = stem.replace("\\", "/").strip("/")
@@ -293,14 +298,14 @@ class LocalSovereignIndex:
             issues = [
                 KernelIssue(
                     level="FAIL",
-                    stage="relationship_vocabulary",
-                    code=E_RELATIONSHIP_ORPHAN,
-                    location="/ci/schema",
-                    message="Triplet not found in staging for validation.",
-                    details={"stem": stem, "run_id": run_id, "turn_id": turn_id},
+                stage="lsi",
+                code=E_LSI_ORPHAN_TARGET,
+                location="/ci/schema",
+                message="Triplet not found in staging for validation.",
+                details={"stem": stem, "run_id": run_id, "turn_id": turn_id},
                 )
             ]
-            events.append(_event_line("FAIL", "relationship_vocabulary", E_RELATIONSHIP_ORPHAN, "/ci/schema", "Triplet missing in staging.", stem=stem))
+            events.append(_event_line("FAIL", "lsi", E_LSI_ORPHAN_TARGET, "/ci/schema", "Triplet missing in staging.", stem=stem))
             return "FAIL", issues, events
 
         links_digest = triplet.get("links_digest")
@@ -334,27 +339,35 @@ class LocalSovereignIndex:
             return "FAIL", issues, events
 
         # Evaluate refs deterministically in pointer order
-        refs = list(_iter_refs_from_links(links_obj))
-        refs.sort(key=lambda r: (r[2], r[0], r[1]))  # pointer, type, id
+        refs = sorted(_iter_refs_from_links(links_obj), key=lambda r: (r[2], r[0], r[1]))
+
+        committed_visible = self._collect_created_identities(_scope_root(self.root, DIR_COMMITTED))
+        staged_visible = self._collect_created_identities(staged_root)
+        visible_identities = committed_visible | staged_visible
 
         issues: list[KernelIssue] = []
         for ref_type, ref_id, ptr, relationship in refs:
             id_ptr = f"{ptr}/id"
-            found_layer = self._lookup_ref_visibility(run_id, turn_id, stem, ref_type, ref_id)
+            ref_identity = f"{ref_type}:{ref_id}"
+            found_layer = None
+            if ref_identity in staged_visible:
+                found_layer = "StagedCreation"
+            elif ref_identity in committed_visible:
+                found_layer = "Committed"
 
-            if not found_layer:
+            if ref_identity not in visible_identities:
                 issues.append(
                     KernelIssue(
                         level="FAIL",
-                        stage="relationship_vocabulary",
-                        code=E_RELATIONSHIP_ORPHAN,
+                        stage="lsi",
+                        code=E_LSI_ORPHAN_TARGET,
                         location=id_ptr,
-                        message="Reference target not found in Self/Staging/Committed visibility.",
+                        message="Reference target not visible in committed or staged creations.",
                         details={"type": ref_type, "id": ref_id, "relationship": relationship},
                     )
                 )
             else:
-                events.append(_event_line("INFO", "relationship_vocabulary", "I_REF_VISIBLE", id_ptr, "Reference target resolved.", layer=found_layer, type=ref_type, id=ref_id))
+                events.append(_event_line("INFO", "lsi", "I_REF_VISIBLE", id_ptr, "Reference target resolved.", layer=found_layer, type=ref_type, id=ref_id))
 
         # Deterministic issue ordering (stage fixed, then pointer, then code, then details)
         issues.sort(key=lambda i: (i.location, i.code, json.dumps(i.details, sort_keys=True, separators=(",", ":"))))
@@ -365,6 +378,31 @@ class LocalSovereignIndex:
             return "FAIL", issues, events
 
         return "PASS", [], events
+
+    def _collect_created_identities(self, scope_root: Path) -> set[str]:
+        identities: set[str] = set()
+        triplets_dir = _triplets_dir(scope_root)
+        if not triplets_dir.exists():
+            return identities
+
+        for triplet_file in sorted(triplets_dir.rglob("*.json"), key=lambda p: p.as_posix()):
+            try:
+                triplet_record = _read_json(triplet_file)
+            except Exception:
+                continue
+            if not isinstance(triplet_record, dict):
+                continue
+            body_digest = triplet_record.get("body_digest")
+            if not isinstance(body_digest, str) or not body_digest:
+                continue
+            body_obj = self._get_object_json(scope_root, body_digest)
+            if not isinstance(body_obj, dict):
+                continue
+            dto_type = body_obj.get("dto_type")
+            obj_id = body_obj.get("id")
+            if isinstance(dto_type, str) and dto_type and isinstance(obj_id, str) and obj_id:
+                identities.add(f"{dto_type}:{obj_id}")
+        return identities
 
     # ----------------------------
     # Internal storage mechanics
