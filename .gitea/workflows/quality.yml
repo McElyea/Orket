@@ -38,6 +38,11 @@ jobs:
         run: |
           npm test --prefix conformance/ts
 
+      - name: Enforce digest vectors are committed truth (no CI overwrite)
+        run: |
+          python scripts/gen_digest_vectors.py --out /tmp/digest-v1.json
+          diff -u tests/kernel/v1/vectors/digest-v1.json /tmp/digest-v1.json
+
       - name: Enforce volatility boundary script
         run: |
           python scripts/check_volatility_boundaries.py
