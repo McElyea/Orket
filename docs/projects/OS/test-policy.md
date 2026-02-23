@@ -1,24 +1,42 @@
-# OS Test Policy
+# OS Test Policy (Normative)
 
-Last updated: 2026-02-22
-Status: Normative
+## Purpose
+This policy defines the required test gates for OS v1 pull requests.
 
-## Required Gates
-1. All OS contract fixtures validate against JSON schemas.
-2. Replay fixtures are required for deterministic contract changes.
-3. Promotion atomicity tests are required for state transition changes.
-4. Fail-closed diff behavior must remain enforced.
-5. No partial commit behavior must be verified.
-6. RFC6901 pointer format checks must pass for emitted locations.
+## Required test categories
+1. Contract shape tests (schemas)
+2. Determinism tests (ordering + canonicalization)
+3. LSI behavior tests (shadowing, orphan detection, pruning)
+4. Promotion atomicity tests (no partial committed state)
+5. Capability enforcement tests (deny-by-default when enabled)
+6. Replay/equivalence tests (structural parity)
 
-## PR Must Fail If
-1. Contract shape changes without version bump.
-2. A required error code is removed or renamed without migration note.
-3. Canonicalization behavior changes without version bump.
-4. Nondeterministic ordering is introduced in contract outputs.
-5. Unknown plugin events pass through without schema validation failure.
+## Non-negotiable PR gates
+A PR MUST fail if any of the following occurs:
 
-## Required Test Families
-1. `tests/contracts/*` for schema and policy contracts.
-2. `tests/kernel/v1/*` for kernel interface compatibility.
-3. Fire-drill scenarios for triplet, policy, determinism, orphan-link checks.
+### Contract drift
+- Any Normative Schema changes without version policy compliance
+- Any DTO missing required version fields
+- Any additionalProperties introduced in schemas without explicit allowance
+
+### Determinism regression
+- Issues/events ordering becomes nondeterministic
+- Canonicalization output changes without a major bump
+- Structural digest rules change without a major bump
+
+### Fortress violation
+- Any write occurs under committed/ during execute_turn
+- Any partial promotion leaves committed/ in intermediate state
+
+### Fail-closed violations
+- Missing diff context (CI) silently passes where policy says fail
+- Missing link targets (LSI) do not fail with pointer-rooted error
+
+## Fixture policy (Replay / Equivalence)
+- Fixtures MUST be canonical JSON
+- Fixtures MUST include expected structural digests (computed from canonical bytes)
+- Replay tests MUST run >= 100 iterations without divergence (or deterministic equivalent proof)
+
+## Required test mapping
+All normative OS laws MUST map to at least one scenario test in:
+`tests/kernel/v1/`

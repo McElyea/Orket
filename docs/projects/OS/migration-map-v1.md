@@ -1,16 +1,25 @@
-# OS Migration Map v1
+# Migration Map v1 (Normative)
 
-Last updated: 2026-02-22
-Status: Normative migration map
+## Purpose
+Map current implementation to future kernel modules.
+This prevents rewrite ambiguity and preserves ownership boundaries.
 
-| Current File | Future Module | Responsibility | Status |
+## Current -> Target mapping
+
+| Current | Target | Responsibility | Rule |
 |---|---|---|---|
-| `tools/ci/orket_sentinel.py` | `orket/kernel/v1/validator.py` | 5-stage validation pipeline | Move |
-| `tools/ci/orket_sentinel.py` | `orket/kernel/v1/events.py` | deterministic event emission contract | Refactor |
-| `tools/ci/orket_map.py` | `orket/kernel/v1/observability/map.py` | structural visualization adapter | Optional Move |
-| `tools/ci/test_sentinel.py` | `tests/kernel/v1/test_fire_drill.py` | kernel fire-drill verification | Rewrite |
-| `tools/ci/fixtures/*` | `tests/kernel/v1/fixtures/*` | deterministic contract fixtures | Promote |
-| `related_stems` plugin (in sentinel) | `orket/kernel/v1/plugins/related_stems.py` | connectivity extraction | Move |
-| `orphan_links` plugin (in sentinel) | `orket/kernel/v1/plugins/orphan_links.py` | sovereign index integrity | Move |
-| `orket/kernel/v1/state/lsi.py` | `orket/kernel/v1/state/lsi.py` | local sovereign index state model | Keep |
-| `orket/kernel/v1/state/promotion.py` | `orket/kernel/v1/state/promotion.py` | promotion and commit semantics | Keep |
+| `tools/ci/orket_sentinel.py` | `orket/kernel/v1/validator.py` | 5-stage gatekeeper | Kernel owns law |
+| sentinel logging | `orket/kernel/v1/contracts.py` + logger util | deterministic narrative | Logs are narrative stream |
+| diff acquisition | CI layer (`tools/ci`) | diff sovereignty | Kernel must not require git |
+| related_stems plugin | `orket/kernel/v1/plugins/related_stems.py` | connectivity helper | Optional module |
+| orphan_links plugin | `orket/kernel/v1/state/lsi.py` + linking contract | link integrity | LSI is authority |
+| fixtures | `tests/kernel/v1/` | constitutional scenarios | tests are law |
+
+## Ownership boundaries
+- Kernel v1 owns deterministic validation law and DTO shapes.
+- LSI owns on-disk identity and linking integrity.
+- Promotion owns atomic staging->committed and pruning law.
+- CI tooling owns git diff and PR gating.
+
+## Adapter policy
+`tools/ci/orket_sentinel.py` may remain as a CLI adapter but MUST NOT remain the source of truth for kernel behavior once kernel/v1 modules exist.

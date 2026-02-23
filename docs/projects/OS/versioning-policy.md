@@ -1,30 +1,52 @@
-# OS Versioning Policy
-
-Last updated: 2026-02-22
-Status: Normative
+# OS Versioning Policy (Normative)
 
 ## Scope
-Applies to all files listed in `docs/projects/OS/contract-index.md`.
+This policy governs versioning for:
+- OS contract set (docs/projects/OS)
+- Kernel API contracts (kernel_api/v1)
+- LSI contracts (lsi/v1)
+- JSON schema artifacts in `docs/projects/OS/contracts/`
 
-## Rules
-1. Major version change (`vN -> vN+1`) is required for breaking shape changes.
-2. Minor version changes are additive only:
-new optional fields, new optional enum values, new non-breaking docs.
-3. Patch updates may clarify wording without changing meaning.
-4. Contract schemas MUST declare:
-`version` as a required field and `additionalProperties: false`.
+## Core rule
+Breaking changes are forbidden within v1 without an explicit major version bump.
 
-## Compatibility Window
-1. One prior major version may be accepted during migration.
-2. Current major version is authoritative in CI.
-3. Deprecation notice must be documented before removal.
+## Version fields
+All contract records MUST include explicit version identifiers:
+- Kernel DTOs: `contract_version: "kernel_api/v1"`
+- LSI records: `lsi_version: "lsi/v1"`
+- OS registry artifacts: `os_version: "os/v1"` where applicable
 
-## Deprecation Timeline
-1. Mark deprecated in docs with replacement.
-2. Keep compatibility for at least one full release window.
-3. Remove only after CI and migration map are updated.
+## Allowed change types
+### Patch changes (v1.x.y)
+Allowed:
+- Documentation clarifications that do not change behavior
+- Additional examples
+- Bugfixes in non-normative text
 
-## CI Requirements
-1. Schema validation runs on all contract fixtures.
-2. Version mismatch fails CI.
-3. Breaking shape change without major bump fails CI.
+Not allowed:
+- Any change that alters a MUST/SHALL requirement
+
+### Minor changes (v1.x)
+Allowed:
+- Additive fields to DTOs with safe defaults
+- Additive error codes (never rename/remove)
+- Additive test scenarios (tightening is allowed)
+
+Not allowed:
+- Removing or renaming fields
+- Changing meaning of existing fields
+- Changing deterministic ordering rules
+- Changing canonicalization rules
+
+### Major changes (v2)
+Required for:
+- Any breaking schema change
+- Any behavioral change to promotion atomicity
+- Any change to canonicalization or digest rules
+- Any change to visibility shadowing (Self > Staging > Committed)
+
+## Deprecation rule
+If a field/code is to be retired:
+- Mark deprecated in docs for one minor cycle
+- Continue accepting it through v1 compatibility
+- Remove only in next major

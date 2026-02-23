@@ -1,53 +1,32 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://orket.dev/os/contracts/kernel-issue.schema.json",
-  "title": "KernelIssueV1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KernelIssue",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "version",
-    "code",
-    "stage",
-    "location",
-    "message"
-  ],
+  "required": ["contract_version", "level", "stage", "code", "location", "message", "details"],
   "properties": {
-    "version": {
-      "const": "v1"
+    "contract_version": { "const": "kernel_api/v1" },
+    "level": { "enum": ["FAIL", "INFO"] },
+    "stage": {
+      "enum": ["base_shape", "dto_links", "relationship_vocabulary", "policy", "determinism", "ci", "lsi", "promotion", "capability", "replay"]
     },
     "code": {
       "type": "string",
-      "pattern": "^[A-Z][A-Z0-9_]+$"
-    },
-    "stage": {
-      "type": "string",
-      "enum": [
-        "base_shape",
-        "dto_links",
-        "relationship_vocabulary",
-        "policy",
-        "determinism"
-      ]
+      "minLength": 1,
+      "pattern": "^[EI]_[A-Z0-9_]+$"
     },
     "location": {
       "type": "string",
-      "pattern": "^(/([^/~]|~0|~1)*)+$"
+      "minLength": 1,
+      "description": "RFC6901 JSON Pointer",
+      "pattern": "^/(?:[^~]|~0|~1)*$"
     },
-    "message": {
-      "type": "string",
-      "minLength": 1
-    },
-    "severity": {
-      "type": "string",
-      "enum": [
-        "info",
-        "warning",
-        "error"
-      ]
-    },
+    "message": { "type": "string", "minLength": 1 },
     "details": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "description": "Deterministic JSON object; keys MUST be sorted during canonicalization."
     }
   }
 }

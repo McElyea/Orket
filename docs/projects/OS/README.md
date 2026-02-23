@@ -1,8 +1,5 @@
-﻿# OS Program (North Star)
+# Orket OS Program (v1)
 
-Last updated: 2026-02-22
-Status: Active discovery
-Owner: Orket Core
 This directory is the authoritative governance and contract surface for the Orket OS-class substrate.
 
 ## What this is
@@ -41,22 +38,3 @@ Tests live under:
 - Test Policy: `test-policy.md`
 - Migration Map: `migration-map-v1.md`
 - Roadmap / Cards: `Roadmap/Cards.md`
-
-## Purpose
-Define Orket as an OS-class substrate for agentic systems with stable kernel contracts, deterministic execution, and state integrity.
-
-## Program Areas
-1. Kernel: frozen core APIs and invariants.
-2. Execution: run lifecycle, stage orchestration, replay boundaries.
-3. State: memory, persistence, determinism, integrity checks.
-4. Security: capabilities, permissions, and policy enforcement.
-5. Roadmap: phased delivery cards and dependency ordering.
-
-## Working Rules
-1. High-level ideas are captured first, then refined into implementation cards.
-2. Contracts are versioned and enforced mechanically.
-3. Runtime changes should preserve deterministic test gates.
-
-## Current Inputs
-1. `docs/projects/OS/Idea1.md`
-2. `docs/projects/OS/Kernel/KERNEL_API_V1.md`
