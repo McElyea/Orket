@@ -1,4 +1,4 @@
-# orket/kernel/v1/promotion.py
+# orket/kernel/v1/state/promotion.py
 from __future__ import annotations
 
 import json
@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
-from .canonical import canonical_json_bytes, structural_digest
-from .contracts import KernelIssue
+from orket.kernel.v1.canonical import canonical_json_bytes, fs_token, structural_digest
+from orket.kernel.v1.contracts import KernelIssue
 
 # Keep these aligned with lsi.py (minimal v1)
 LSI_VERSION = "lsi/v1"
@@ -74,7 +74,7 @@ def _scope_root(root: str, scope: str, run_id: str | None = None, turn_id: str |
     if scope == DIR_STAGING:
         if not run_id or not turn_id:
             raise ValueError("staging scope requires run_id and turn_id")
-        return base / DIR_STAGING / run_id / turn_id
+        return base / DIR_STAGING / fs_token(run_id) / fs_token(turn_id)
     raise ValueError(f"unknown scope: {scope}")
 
 
@@ -190,9 +190,7 @@ def _inject_sources(record: dict[str, Any], new_sources: list[RefSource]) -> dic
 
 
 def _refs_record_path(scope_root: Path, ref_type: str, ref_id: str) -> Path:
-    # stored as refs/by_id/<type>/<id>.json, with id as filename
-    # NOTE: minimal v1: ref_id is used directly; if you need stricter FS encoding later, change here.
-    return _refs_by_id_dir(scope_root) / ref_type / f"{ref_id}.json"
+    return _refs_by_id_dir(scope_root) / fs_token(ref_type) / f"{fs_token(ref_id)}.json"
 
 
 def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:

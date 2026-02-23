@@ -1,42 +1,39 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://orket.dev/os/contracts/capability-decision.schema.json",
-  "title": "CapabilityDecisionV1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CapabilityDecision",
+  "description": "Auditable decision record for capability enforcement. Deterministic, local-first, no tokens/signatures.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "version",
-    "decision",
+    "contract_version",
+    "subject",
+    "action",
+    "resource",
+    "result",
     "reason_code",
-    "evaluated_at"
+    "evidence"
   ],
   "properties": {
-    "version": {
-      "const": "v1"
-    },
-    "decision": {
-      "type": "string",
-      "enum": [
-        "allow",
-        "deny"
-      ]
-    },
+    "contract_version": { "const": "kernel_api/v1" },
+
+    "subject": { "type": "string", "minLength": 1, "description": "Principal identity (role/agent/tool runner)." },
+    "action": { "type": "string", "minLength": 1, "description": "Requested action (e.g., tool.call, file.write)." },
+    "resource": { "type": "string", "minLength": 1, "description": "Target resource namespace (path, tool name, dto stem)." },
+
+    "result": { "type": "string", "enum": ["GRANT", "DENY"] },
+
     "reason_code": {
       "type": "string",
-      "pattern": "^[A-Z][A-Z0-9_]+$"
+      "minLength": 1,
+      "pattern": "^[EI]_[A-Z0-9_]+$",
+      "description": "Machine code describing why the action was granted/denied."
     },
-    "evaluated_at": {
-      "type": "string"
-    },
-    "capability_id": {
-      "type": "string"
-    },
-    "permission_set": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+
+    "evidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Deterministic evidence fields (policy refs, requested permissions)."
     }
   }
 }

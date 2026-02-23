@@ -1,43 +1,151 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://orket.dev/os/contracts/turn-result.schema.json",
-  "title": "TurnResultV1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TurnResult",
+  "description": "Kernel execute_turn result. Includes deterministic issues/events, capability audit, and transition evidence pointers/identity.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "version",
+    "contract_version",
     "run_id",
     "turn_id",
-    "status",
-    "issues"
+    "outcome",
+    "stage",
+    "errors",
+    "warnings",
+    "issues",
+    "events",
+    "transition",
+    "capabilities"
   ],
   "properties": {
-    "version": {
-      "const": "v1"
-    },
-    "run_id": {
-      "type": "string"
-    },
-    "turn_id": {
-      "type": "string"
-    },
-    "status": {
+    "contract_version": { "const": "kernel_api/v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "turn_id": { "type": "string", "minLength": 1 },
+
+    "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
+
+    "stage": {
       "type": "string",
-      "enum": [
-        "promoted",
-        "rejected",
-        "failed"
-      ]
+      "enum": ["base_shape", "dto_links", "relationship_vocabulary", "policy", "determinism", "ci", "lsi", "promotion", "capability", "replay"],
+      "description": "Highest stage reached (or failed)."
     },
+
+    "errors": { "type": "integer", "minimum": 0 },
+    "warnings": { "type": "integer", "minimum": 0 },
+
     "issues": {
       "type": "array",
-      "items": {
-        "$ref": "kernel-issue.schema.json"
+      "description": "Deterministically ordered by (stage_order, location, code, details_canonical).",
+      "items": { "$ref": "https://orket.dev/os/contracts/kernel-issue.schema.json" }
+    },
+
+    "events": {
+      "type": "array",
+      "description": "Narrative stream. Deterministic single-line, pipe-delimited; not digested.",
+      "items": { "type": "string" }
+    },
+
+    "transition": { "$ref": "#/$defs/TransitionEvidence" },
+    "capabilities": { "$ref": "#/$defs/CapabilityAudit" },
+
+    "trace": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/TracePointers" }
+      ],
+      "default": null
+    }
+  },
+  "$defs": {
+    "StructuralDigest": {
+      "type": "string",
+      "description": "Stable identity computed from canonical JSON bytes; used for lookup/compare, not a trust primitive.",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "TransitionEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_state_digest",
+        "proposed_state_digest",
+        "inputs_digest",
+        "diff_summary",
+        "artifacts"
+      ],
+      "properties": {
+        "prior_state_digest": {
+          "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/StructuralDigest" }],
+          "default": null
+        },
+        "proposed_state_digest": { "$ref": "#/$defs/StructuralDigest" },
+        "inputs_digest": { "$ref": "#/$defs/StructuralDigest" },
+
+        "diff_summary": { "$ref": "#/$defs/DiffSummary" },
+
+        "artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ArtifactDelta" }
+        }
       }
     },
-    "deterministic_sorting_rule": {
-      "type": "string",
-      "const": "issues sorted by stage,location,code"
+    "DiffSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "changed_count", "triplet_stems", "solo_json_paths"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["git_diff", "host_supplied", "none"] },
+        "changed_count": { "type": "integer", "minimum": 0 },
+        "triplet_stems": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "solo_json_paths": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "ArtifactDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "role", "action", "content_digest"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "enum": ["body", "links", "manifest", "index_record", "evidence"] },
+        "action": { "type": "string", "enum": ["added", "modified", "deleted"] },
+        "content_digest": { "$ref": "#/$defs/StructuralDigest" }
+      }
+    },
+    "CapabilityAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "decisions", "denied_count", "granted_count"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["enabled", "disabled"],
+          "description": "If disabled, kernel MUST emit I_CAPABILITY_SKIPPED in events."
+        },
+        "decisions": {
+          "type": "array",
+          "items": { "$ref": "https://orket.dev/os/contracts/capability-decision.schema.json" }
+        },
+        "denied_count": { "type": "integer", "minimum": 0 },
+        "granted_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "TracePointers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bundle_digest", "paths"],
+      "properties": {
+        "bundle_digest": { "$ref": "#/$defs/StructuralDigest" },
+        "paths": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
     }
   }
 }

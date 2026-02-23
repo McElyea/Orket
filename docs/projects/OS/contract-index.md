@@ -20,11 +20,13 @@ Anything not listed here is non-authoritative for OS v1.
 |---|---|---|---|---|
 | Execution | Run Lifecycle | `Execution/run-lifecycle-contract.md` | kernel_api/v1 | Normative |
 | Execution | Replay Contract | `Execution/replay-contract.md` | kernel_api/v1 | Normative |
+| Execution | Tombstone Wire Format | `Execution/tombstone-wire-format-v1.md` | kernel_api/v1 | Normative |
 
 | Domain | Contract | File | Version | Authority |
 |---|---|---|---|---|
 | State | Persistence/Snapshot | `State/persistence-snapshot-contract.md` | lsi/v1 | Normative |
 | State | Integrity/Linking | `State/integrity-linking-contract.md` | lsi/v1 | Normative |
+| State | Digest Spec | `State/digest-spec-v1.md` | lsi/v1 | Normative |
 
 | Domain | Contract | File | Version | Authority |
 |---|---|---|---|---|
@@ -40,6 +42,7 @@ Anything not listed here is non-authoritative for OS v1.
 | ReplayReport | `contracts/replay-report.schema.json` | kernel_api/v1 | Deterministic parity results |
 | CapabilityDecision | `contracts/capability-decision.schema.json` | kernel_api/v1 | Auditable deny/allow |
 | Error Codes Registry | `contracts/error-codes-v1.schema.json` | os/v1 | Stable code list |
+| Error Codes Instance | `contracts/error-codes-v1.json` | os/v1 | Canonical active code set |
 
 ## Compatibility rule
 Any change to a Normative Schema MUST follow `versioning-policy.md` and MUST pass `test-policy.md` gates.

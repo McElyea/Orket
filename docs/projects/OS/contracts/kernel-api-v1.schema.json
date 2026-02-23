@@ -1,174 +1,279 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://orket.dev/os/contracts/kernel-api-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "KernelApiV1",
+  "description": "Top-level request/response shapes for Orket Kernel API v1. This schema acts as a registry wrapper for the v1 DTO schemas.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "version",
-    "api",
-    "deterministic_ordering_rule",
-    "pointer_pattern"
+    "contract_version",
+    "requests",
+    "responses"
   ],
   "properties": {
-    "version": {
-      "const": "v1"
+    "contract_version": {
+      "const": "kernel_api/v1"
     },
-    "deterministic_ordering_rule": {
-      "type": "string",
-      "const": "stage,location,code"
-    },
-    "pointer_pattern": {
-      "type": "string",
-      "const": "^(/([^/~]|~0|~1)*)+$"
-    },
-    "api": {
+    "requests": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "start_run",
-        "execute_turn",
-        "finish_run",
-        "replay_run",
-        "compare_runs",
-        "authorize_tool_call",
-        "validate_triplet",
-        "validate_links_against_index"
+        "StartRunRequest",
+        "ExecuteTurnRequest",
+        "FinishRunRequest",
+        "ReplayRunRequest",
+        "CompareRunsRequest",
+        "AuthorizeToolCallRequest",
+        "ResolveCapabilityRequest"
       ],
       "properties": {
-        "start_run": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string"
-            }
-          }
+        "StartRunRequest": { "$ref": "#/$defs/StartRunRequest" },
+        "ExecuteTurnRequest": { "$ref": "#/$defs/ExecuteTurnRequest" },
+        "FinishRunRequest": { "$ref": "#/$defs/FinishRunRequest" },
+        "ReplayRunRequest": { "$ref": "#/$defs/ReplayRunRequest" },
+        "CompareRunsRequest": { "$ref": "#/$defs/CompareRunsRequest" },
+        "AuthorizeToolCallRequest": { "$ref": "#/$defs/AuthorizeToolCallRequest" },
+        "ResolveCapabilityRequest": { "$ref": "#/$defs/ResolveCapabilityRequest" }
+      }
+    },
+    "responses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "StartRunResponse",
+        "ExecuteTurnResponse",
+        "FinishRunResponse",
+        "ReplayRunResponse",
+        "CompareRunsResponse",
+        "AuthorizeToolCallResponse",
+        "ResolveCapabilityResponse"
+      ],
+      "properties": {
+        "StartRunResponse": { "$ref": "#/$defs/StartRunResponse" },
+        "ExecuteTurnResponse": { "$ref": "https://orket.dev/os/contracts/turn-result.schema.json" },
+        "FinishRunResponse": { "$ref": "#/$defs/FinishRunResponse" },
+        "ReplayRunResponse": { "$ref": "https://orket.dev/os/contracts/replay-report.schema.json" },
+        "CompareRunsResponse": { "$ref": "#/$defs/CompareRunsResponse" },
+        "AuthorizeToolCallResponse": { "$ref": "#/$defs/AuthorizeToolCallResponse" },
+        "ResolveCapabilityResponse": { "$ref": "#/$defs/ResolveCapabilityResponse" }
+      }
+    }
+  },
+  "$defs": {
+    "RunId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Run identity. Format is implementation-defined in v1; must be stable within a run workspace."
+    },
+    "TurnId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Turn identity unique within run_id. Sequential semantics are enforced by run lifecycle contract."
+    },
+    "KernelHandle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "run_id", "visibility_mode"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "run_id": { "$ref": "#/$defs/RunId" },
+        "visibility_mode": {
+          "type": "string",
+          "enum": ["local_only", "local_offline"],
+          "description": "v1 modes are local-first/offline; networking is non-goal."
         },
-        "execute_turn": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string",
-              "const": "turn-result.schema.json"
-            }
-          }
+        "workspace_root": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host-provided root path for run workspace. May vary by host and is not used for equivalence."
+        }
+      }
+    },
+
+    "StartRunRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "workflow_id"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "workflow_id": { "type": "string", "minLength": 1 },
+        "policy_profile_ref": { "type": "string", "minLength": 1 },
+        "model_profile_ref": { "type": "string", "minLength": 1 },
+        "visibility_mode": {
+          "type": "string",
+          "enum": ["local_only", "local_offline"],
+          "default": "local_only"
         },
-        "finish_run": {
+        "snapshot_semantics": {
+          "type": "string",
+          "enum": ["none", "turn_scoped", "run_scoped"],
+          "default": "turn_scoped"
+        }
+      }
+    },
+    "StartRunResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "run_handle"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "run_handle": { "$ref": "#/$defs/KernelHandle" }
+      }
+    },
+
+    "ExecuteTurnRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "run_handle", "turn_id", "turn_input"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "run_handle": { "$ref": "#/$defs/KernelHandle" },
+        "turn_id": { "$ref": "#/$defs/TurnId" },
+        "turn_input": {
           "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string"
-            }
-          }
+          "additionalProperties": true,
+          "description": "Host-defined intent/input payload. Canonicalization is host responsibility before digesting evidence."
         },
-        "replay_run": {
+        "commit_intent": {
+          "type": "string",
+          "enum": ["stage_only", "stage_and_request_promotion"],
+          "default": "stage_only",
+          "description": "Kernel stages changes; promotion is a separate operation under run lifecycle contract."
+        }
+      }
+    },
+
+    "FinishRunRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "run_handle", "outcome"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "run_handle": { "$ref": "#/$defs/KernelHandle" },
+        "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
+        "commit_policy": {
+          "type": "string",
+          "enum": ["discard_on_fail", "keep_evidence_on_fail"],
+          "default": "discard_on_fail"
+        }
+      }
+    },
+    "FinishRunResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "run_id", "outcome", "turns_executed", "events"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "run_id": { "$ref": "#/$defs/RunId" },
+        "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
+        "turns_executed": { "type": "integer", "minimum": 0 },
+        "events": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "ReplayRunRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "run_descriptor"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "run_descriptor": {
           "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string",
-              "const": "replay-report.schema.json"
-            }
-          }
+          "additionalProperties": true,
+          "description": "Pinned descriptor that identifies artifacts needed for replay (local-only). Shape is elaborated in replay contract."
+        }
+      }
+    },
+
+    "CompareRunsRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "run_a", "run_b", "compare_mode"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "run_a": { "type": "object", "additionalProperties": true },
+        "run_b": { "type": "object", "additionalProperties": true },
+        "compare_mode": {
+          "type": "string",
+          "enum": ["structural_parity"],
+          "default": "structural_parity"
+        }
+      }
+    },
+    "CompareRunsResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "outcome", "issues", "events"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
+        "issues": {
+          "type": "array",
+          "items": { "$ref": "https://orket.dev/os/contracts/kernel-issue.schema.json" }
         },
-        "compare_runs": {
+        "events": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "AuthorizeToolCallRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "context", "tool_request"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "context": {
           "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string",
-              "const": "replay-report.schema.json"
-            }
-          }
+          "additionalProperties": true,
+          "description": "Host/kernel context for authorization (role, dto_type, policy refs)."
         },
-        "authorize_tool_call": {
+        "tool_request": {
           "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string",
-              "const": "capability-decision.schema.json"
-            }
-          }
+          "additionalProperties": true,
+          "description": "Tool request with declared side effects and requested permissions."
+        }
+      }
+    },
+    "AuthorizeToolCallResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "decision"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "decision": { "$ref": "https://orket.dev/os/contracts/capability-decision.schema.json" }
+      }
+    },
+
+    "ResolveCapabilityRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "role", "task"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "role": { "type": "string", "minLength": 1 },
+        "task": { "type": "string", "minLength": 1 },
+        "context": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "ResolveCapabilityResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "capability_plan", "events"],
+      "properties": {
+        "contract_version": { "const": "kernel_api/v1" },
+        "capability_plan": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Deterministic plan describing allowed capabilities for the (role, task)."
         },
-        "validate_triplet": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string",
-              "const": "turn-result.schema.json"
-            }
-          }
-        },
-        "validate_links_against_index": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "request_schema",
-            "response_schema"
-          ],
-          "properties": {
-            "request_schema": {
-              "type": "string"
-            },
-            "response_schema": {
-              "type": "string",
-              "const": "turn-result.schema.json"
-            }
-          }
+        "events": {
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     }

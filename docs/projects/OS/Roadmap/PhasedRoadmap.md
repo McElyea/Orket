@@ -32,3 +32,17 @@ Status: Draft
 1. Environment flags and progressive enforcement.
 2. Runbook and triage paths.
 3. Archive completed phase specs as needed.
+
+## Immediate 6-PR Execution Sequence
+1. PR1 Deletion lock-in:
+implement tombstone parsing/update and make Law-6 tests green with tombstones.
+2. PR2 LSI visibility fix:
+resolve targets from sovereign index + staged created-set only; links cannot self-authorize.
+3. PR3 Sequential promotion:
+persist and enforce `last_promoted_turn_id`.
+4. PR4 Error code normalization:
+align runtime codes to canonical registry and enforce registry check test.
+5. PR5 Sovereign test consolidation:
+one canonical kernel-law test home and mandatory CI gate.
+6. PR6 API boundary wiring:
+thin kernel handlers for schema DTO round-trip request/response validation.

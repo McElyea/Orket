@@ -1,42 +1,74 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://orket.dev/os/contracts/replay-report.schema.json",
-  "title": "ReplayReportV1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReplayReport",
+  "description": "Replay and equivalence output for Orket Kernel v1. Deterministic parity results over local artifacts.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "version",
-    "run_id",
-    "equivalence",
-    "issues"
+    "contract_version",
+    "mode",
+    "outcome",
+    "runs_compared",
+    "turns_compared",
+    "issues",
+    "events",
+    "parity"
   ],
   "properties": {
-    "version": {
-      "const": "v1"
-    },
-    "run_id": {
-      "type": "string"
-    },
-    "equivalence": {
-      "type": "string",
-      "enum": [
-        "equivalent",
-        "non_equivalent",
-        "inconclusive"
-      ]
-    },
+    "contract_version": { "const": "kernel_api/v1" },
+    "mode": { "type": "string", "enum": ["replay_run", "compare_runs"] },
+    "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
+
+    "runs_compared": { "type": "integer", "minimum": 1 },
+    "turns_compared": { "type": "integer", "minimum": 0 },
+
     "issues": {
       "type": "array",
-      "items": {
-        "$ref": "kernel-issue.schema.json"
+      "items": { "$ref": "https://orket.dev/os/contracts/kernel-issue.schema.json" }
+    },
+    "events": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+
+    "parity": { "$ref": "#/$defs/ParityReport" }
+  },
+  "$defs": {
+    "StructuralDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "ParityReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "matches", "mismatches", "expected", "actual"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["structural_parity"] },
+        "matches": { "type": "integer", "minimum": 0 },
+        "mismatches": { "type": "integer", "minimum": 0 },
+        "expected": { "$ref": "#/$defs/ParitySide" },
+        "actual": { "$ref": "#/$defs/ParitySide" }
       }
     },
-    "compared_artifacts": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+    "ParitySide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "turn_digests"],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "turn_digests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TurnDigest" }
+        }
+      }
+    },
+    "TurnDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["turn_id", "turn_result_digest"],
+      "properties": {
+        "turn_id": { "type": "string", "minLength": 1 },
+        "turn_result_digest": { "$ref": "#/$defs/StructuralDigest" },
+        "evidence_digest": { "$ref": "#/$defs/StructuralDigest" }
+      }
     }
   }
 }

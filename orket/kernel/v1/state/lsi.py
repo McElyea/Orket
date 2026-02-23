@@ -1,4 +1,4 @@
-# orket/kernel/v1/lsi.py
+# orket/kernel/v1/state/lsi.py
 from __future__ import annotations
 
 import json
@@ -6,10 +6,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
-from urllib.parse import quote
-
-from .canonical import canonical_json_bytes, structural_digest, sorted_deterministically
-from .contracts import KernelIssue
+from orket.kernel.v1.canonical import canonical_json_bytes, fs_token, structural_digest, sorted_deterministically
+from orket.kernel.v1.contracts import KernelIssue
 
 # ----------------------------
 # Spec-002 constants (minimal)
@@ -57,13 +55,7 @@ def _pointer_token(value: str) -> str:
 
 
 def _fs_token(value: str) -> str:
-    """
-    Deterministic filesystem-safe token.
-    - Uses URL percent-encoding for non-safe chars.
-    - Keeps common safe characters unescaped.
-    Note: Windows forbids ':' in filenames; percent-encoding avoids that.
-    """
-    return quote(value, safe="-_.~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+    return fs_token(value)
 
 
 def _atomic_write_bytes(path: Path, payload: bytes) -> None:
