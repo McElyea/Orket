@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orket.dev/os/contracts/kernel-issue.schema.json",
+  "title": "KernelIssueV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "code",
+    "stage",
+    "location",
+    "message"
+  ],
+  "properties": {
+    "version": {
+      "const": "v1"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]+$"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "base_shape",
+        "dto_links",
+        "relationship_vocabulary",
+        "policy",
+        "determinism"
+      ]
+    },
+    "location": {
+      "type": "string",
+      "pattern": "^(/([^/~]|~0|~1)*)+$"
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ]
+    },
+    "details": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

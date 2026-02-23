@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orket.dev/os/contracts/kernel-api-v1.schema.json",
+  "title": "KernelApiV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "api",
+    "deterministic_ordering_rule",
+    "pointer_pattern"
+  ],
+  "properties": {
+    "version": {
+      "const": "v1"
+    },
+    "deterministic_ordering_rule": {
+      "type": "string",
+      "const": "stage,location,code"
+    },
+    "pointer_pattern": {
+      "type": "string",
+      "const": "^(/([^/~]|~0|~1)*)+$"
+    },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_run",
+        "execute_turn",
+        "finish_run",
+        "replay_run",
+        "compare_runs",
+        "authorize_tool_call",
+        "validate_triplet",
+        "validate_links_against_index"
+      ],
+      "properties": {
+        "start_run": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string"
+            }
+          }
+        },
+        "execute_turn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string",
+              "const": "turn-result.schema.json"
+            }
+          }
+        },
+        "finish_run": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string"
+            }
+          }
+        },
+        "replay_run": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string",
+              "const": "replay-report.schema.json"
+            }
+          }
+        },
+        "compare_runs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string",
+              "const": "replay-report.schema.json"
+            }
+          }
+        },
+        "authorize_tool_call": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string",
+              "const": "capability-decision.schema.json"
+            }
+          }
+        },
+        "validate_triplet": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string",
+              "const": "turn-result.schema.json"
+            }
+          }
+        },
+        "validate_links_against_index": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_schema",
+            "response_schema"
+          ],
+          "properties": {
+            "request_schema": {
+              "type": "string"
+            },
+            "response_schema": {
+              "type": "string",
+              "const": "turn-result.schema.json"
+            }
+          }
+        }
+      }
+    }
+  }
+}

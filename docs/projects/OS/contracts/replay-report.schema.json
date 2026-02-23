@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orket.dev/os/contracts/replay-report.schema.json",
+  "title": "ReplayReportV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "run_id",
+    "equivalence",
+    "issues"
+  ],
+  "properties": {
+    "version": {
+      "const": "v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "equivalence": {
+      "type": "string",
+      "enum": [
+        "equivalent",
+        "non_equivalent",
+        "inconclusive"
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "$ref": "kernel-issue.schema.json"
+      }
+    },
+    "compared_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    }
+  }
+}

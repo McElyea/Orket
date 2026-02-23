@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orket.dev/os/contracts/capability-decision.schema.json",
+  "title": "CapabilityDecisionV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "decision",
+    "reason_code",
+    "evaluated_at"
+  ],
+  "properties": {
+    "version": {
+      "const": "v1"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "deny"
+      ]
+    },
+    "reason_code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]+$"
+    },
+    "evaluated_at": {
+      "type": "string"
+    },
+    "capability_id": {
+      "type": "string"
+    },
+    "permission_set": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orket.dev/os/contracts/turn-result.schema.json",
+  "title": "TurnResultV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "run_id",
+    "turn_id",
+    "status",
+    "issues"
+  ],
+  "properties": {
+    "version": {
+      "const": "v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "promoted",
+        "rejected",
+        "failed"
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "$ref": "kernel-issue.schema.json"
+      }
+    },
+    "deterministic_sorting_rule": {
+      "type": "string",
+      "const": "issues sorted by stage,location,code"
+    }
+  }
+}
