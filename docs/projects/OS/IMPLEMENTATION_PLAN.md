@@ -173,12 +173,21 @@ mutate a committed vector value and confirm parity fails; then run regen+diff an
 run two small PRs (registry-only and base-shape-only) to validate review clarity and deterministic check attachment.
 
 ## Immediate Next Task
-Start Phase A and Phase B in one slice:
-1. land ledger preflight + NO-OP promotion,
-2. rerun kernel law suite to prove the first failing law flips,
-3. land registry and digest guardrails in parallel (`test_registry.py`, vectors, TS parity harness).
+Completed in current execution slice:
+1. Phase B ledger/order/no-op law behavior is implemented and green in kernel-law tests.
+2. Baseline Phase F guardrails are landed:
+- `test_registry.py`
+- `test_digest_vectors.py`
+- `scripts/audit_registry.py`
+- `scripts/gen_digest_vectors.py`
+- `conformance/ts` parity harness
+3. `.gitea/workflows/quality.yml` enforces:
+- registry audit
+- kernel sovereign test gate (`tests/kernel/v1`)
+- TS digest parity
+- digest vector regenerate+diff fail-closed check
 
-Immediate parallel hardening:
-1. land `test_registry.py` as a mechanical guardrail,
-2. land `gen_digest_vectors.py` + committed vectors,
-3. land `conformance/ts` parity runner wired to committed vectors.
+Next task:
+1. Execute Phase E validator boundary wiring (`start_run_v1`, `execute_turn_v1`, `finish_run_v1`) against schema-shaped IO.
+2. Add explicit tombstone wire-format runtime validation path (`E_TOMBSTONE_INVALID`, `E_TOMBSTONE_STEM_MISMATCH`) in promotion flow.
+3. Move remaining kernel-law coverage from `tests/lsi` into `tests/kernel/v1` and keep `tests/kernel/v1` as sovereign gate source.
