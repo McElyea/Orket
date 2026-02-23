@@ -188,6 +188,6 @@ Completed in current execution slice:
 - digest vector regenerate+diff fail-closed check
 
 Next task:
-1. Complete schema-level validation for validator handlers against contract artifacts.
-2. Move remaining kernel-law coverage from `tests/lsi` into `tests/kernel/v1` and keep `tests/kernel/v1` as sovereign gate source.
-3. Tighten registry audit from warning mode to strict mode once legacy non-kernel codes are either documented or split into separate registries.
+1. Move remaining kernel-law coverage from `tests/lsi` into `tests/kernel/v1` and keep `tests/kernel/v1` as sovereign gate source.
+2. Tighten registry audit from warning mode to strict mode once legacy non-kernel codes are either documented or split into separate registries.
+3. Replace deprecated `jsonschema.RefResolver` in schema-contract tests with `referencing`-based resolver wiring.
