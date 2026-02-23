@@ -188,6 +188,6 @@ Completed in current execution slice:
 - digest vector regenerate+diff fail-closed check
 
 Next task:
-1. Execute Phase E validator boundary wiring (`start_run_v1`, `execute_turn_v1`, `finish_run_v1`) against schema-shaped IO.
-2. Add explicit tombstone wire-format runtime validation path (`E_TOMBSTONE_INVALID`, `E_TOMBSTONE_STEM_MISMATCH`) in promotion flow.
-3. Move remaining kernel-law coverage from `tests/lsi` into `tests/kernel/v1` and keep `tests/kernel/v1` as sovereign gate source.
+1. Complete schema-level validation for validator handlers against contract artifacts.
+2. Move remaining kernel-law coverage from `tests/lsi` into `tests/kernel/v1` and keep `tests/kernel/v1` as sovereign gate source.
+3. Tighten registry audit from warning mode to strict mode once legacy non-kernel codes are either documented or split into separate registries.

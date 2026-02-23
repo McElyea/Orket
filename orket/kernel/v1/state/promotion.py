@@ -26,6 +26,8 @@ DIR_BY_ID = "by_id"
 E_PROMOTION_FAILED = "E_PROMOTION_FAILED"
 E_PROMOTION_OUT_OF_ORDER = "E_PROMOTION_OUT_OF_ORDER"
 E_PROMOTION_ALREADY_APPLIED = "E_PROMOTION_ALREADY_APPLIED"
+E_TOMBSTONE_INVALID = "E_TOMBSTONE_INVALID"
+E_TOMBSTONE_STEM_MISMATCH = "E_TOMBSTONE_STEM_MISMATCH"
 I_REF_MULTISOURCE = "I_REF_MULTISOURCE"
 I_NOOP_PROMOTION = "I_NOOP_PROMOTION"
 RUN_LEDGER_FILE = "run_ledger.json"
@@ -189,11 +191,126 @@ def _list_staged_stems(staging_root: Path) -> list[str]:
         return []
     stems: list[str] = []
     for p in td.rglob("*.json"):
+        if p.name.endswith(".tombstone.json"):
+            continue
         # stem is relative path without .json suffix, with forward slashes
         rel = p.relative_to(td).as_posix()
         if rel.endswith(".json"):
             stems.append(rel[: -len(".json")])
     return sorted(stems)
+
+
+def _load_tombstone_stems(staging_root: Path, turn_id: str) -> tuple[set[str], list[KernelIssue], list[str]]:
+    td = _triplets_dir(staging_root)
+    stems: set[str] = set()
+    issues: list[KernelIssue] = []
+    events: list[str] = []
+    if not td.exists():
+        return stems, issues, events
+
+    for p in sorted(td.rglob("*.tombstone.json"), key=lambda x: x.as_posix()):
+        rel = p.relative_to(td).as_posix()
+        stem_from_filename = rel[: -len(".tombstone.json")]
+        loc_base = f"/index/staging/triplets/{_pointer_token(rel)}"
+        try:
+            payload = _read_json(p)
+        except Exception as exc:  # noqa: BLE001
+            issues.append(
+                KernelIssue(
+                    level="FAIL",
+                    stage="promotion",
+                    code=E_TOMBSTONE_INVALID,
+                    location=loc_base,
+                    message="Tombstone JSON parse failed.",
+                    details={"error": str(exc)},
+                )
+            )
+            events.append(_event_line("FAIL", "promotion", E_TOMBSTONE_INVALID, loc_base, "Tombstone JSON parse failed.", error=str(exc)))
+            continue
+
+        valid_shape = (
+            isinstance(payload, dict)
+            and payload.get("kind") == "tombstone"
+            and isinstance(payload.get("stem"), str)
+            and isinstance(payload.get("dto_type"), str)
+            and isinstance(payload.get("id"), str)
+            and isinstance(payload.get("deleted_by_turn_id"), str)
+        )
+        if not valid_shape:
+            issues.append(
+                KernelIssue(
+                    level="FAIL",
+                    stage="promotion",
+                    code=E_TOMBSTONE_INVALID,
+                    location=loc_base,
+                    message="Tombstone payload is invalid.",
+                    details={"required": ["kind", "stem", "dto_type", "id", "deleted_by_turn_id"]},
+                )
+            )
+            events.append(
+                _event_line(
+                    "FAIL",
+                    "promotion",
+                    E_TOMBSTONE_INVALID,
+                    loc_base,
+                    "Tombstone payload is invalid.",
+                    required=["kind", "stem", "dto_type", "id", "deleted_by_turn_id"],
+                )
+            )
+            continue
+
+        payload_stem = str(payload["stem"]).replace("\\", "/").strip("/")
+        if payload_stem != stem_from_filename:
+            issues.append(
+                KernelIssue(
+                    level="FAIL",
+                    stage="promotion",
+                    code=E_TOMBSTONE_STEM_MISMATCH,
+                    location=f"{loc_base}/stem",
+                    message="Tombstone stem does not match filename-derived stem.",
+                    details={"expected": stem_from_filename, "actual": payload_stem},
+                )
+            )
+            events.append(
+                _event_line(
+                    "FAIL",
+                    "promotion",
+                    E_TOMBSTONE_STEM_MISMATCH,
+                    f"{loc_base}/stem",
+                    "Tombstone stem does not match filename-derived stem.",
+                    expected=stem_from_filename,
+                    actual=payload_stem,
+                )
+            )
+            continue
+
+        if payload.get("deleted_by_turn_id") != turn_id:
+            issues.append(
+                KernelIssue(
+                    level="FAIL",
+                    stage="promotion",
+                    code=E_TOMBSTONE_INVALID,
+                    location=f"{loc_base}/deleted_by_turn_id",
+                    message="Tombstone deleted_by_turn_id must match promotion turn.",
+                    details={"expected": turn_id, "actual": payload.get("deleted_by_turn_id")},
+                )
+            )
+            events.append(
+                _event_line(
+                    "FAIL",
+                    "promotion",
+                    E_TOMBSTONE_INVALID,
+                    f"{loc_base}/deleted_by_turn_id",
+                    "Tombstone deleted_by_turn_id must match promotion turn.",
+                    expected=turn_id,
+                    actual=payload.get("deleted_by_turn_id"),
+                )
+            )
+            continue
+
+        stems.add(stem_from_filename)
+
+    return stems, issues, events
 
 
 def _remove_sources_for_stem(record: dict[str, Any], stem: str) -> dict[str, Any]:
@@ -334,6 +451,12 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
         return PromotionResult(outcome="FAIL", events=events, issues=issues)
 
     promoted_stems = _list_staged_stems(staging_root) if staging_root.exists() else []
+    tombstoned_stems: set[str] = set()
+    if staging_root.exists():
+        tombstoned_stems, tombstone_issues, tombstone_events = _load_tombstone_stems(staging_root, turn_id)
+        if tombstone_issues:
+            return PromotionResult(outcome="FAIL", promoted_stems=[], events=tombstone_events, issues=tombstone_issues)
+        promoted_stems = sorted(set(promoted_stems) | tombstoned_stems)
     deletion_only = not staging_root.exists()
     if deletion_only:
         committed_triplets = _triplets_dir(committed_root)
@@ -384,6 +507,8 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
                 src = (staged_triplets / Path(stem)).with_suffix(".json")
                 dst = (_triplets_dir(new_root) / Path(stem)).with_suffix(".json")
                 dst.parent.mkdir(parents=True, exist_ok=True)
+                if stem in tombstoned_stems:
+                    continue
                 if src.exists():
                     shutil.copy2(src, dst)
 
@@ -403,8 +528,9 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
                 _atomic_write_json(ref_file, rec)
 
         # Remove promoted stems' triplet records for deletion-only promotions.
-        if deletion_only:
-            for stem in promoted_stems:
+        if deletion_only or tombstoned_stems:
+            to_remove = set(promoted_stems) if deletion_only else set(tombstoned_stems)
+            for stem in sorted(to_remove):
                 dst = (_triplets_dir(new_root) / Path(stem)).with_suffix(".json")
                 if dst.exists():
                     dst.unlink()
@@ -416,6 +542,8 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
 
         if staging_root.exists():
             for stem in promoted_stems:
+                if stem in tombstoned_stems:
+                    continue
                 triplet_path = (staged_triplets_dir / Path(stem)).with_suffix(".json")
                 if not triplet_path.exists():
                     continue
