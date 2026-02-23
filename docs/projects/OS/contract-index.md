@@ -16,6 +16,7 @@ Anything not listed here is non-authoritative for OS v1.
 | Governance | Test Policy | `test-policy.md` | os/v1 | Normative |
 | Governance | Migration Map | `migration-map-v1.md` | os/v1 | Normative |
 | Governance | Kernel Requirements Exit | `KERNEL_REQUIREMENTS_EXIT.md` | kernel_api/v1 | Normative closure gate |
+| Governance | Capability + Replay Requirements Exit | `CAPABILITY_REPLAY_REQUIREMENTS_EXIT.md` | kernel_api/v1 | Normative closure gate |
 
 | Domain | Contract | File | Version | Authority |
 |---|---|---|---|---|
