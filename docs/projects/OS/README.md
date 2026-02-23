@@ -37,4 +37,5 @@ Tests live under:
 - Versioning Policy: `versioning-policy.md`
 - Test Policy: `test-policy.md`
 - Migration Map: `migration-map-v1.md`
+- Implementation Plan: `IMPLEMENTATION_PLAN.md`
 - Roadmap / Cards: `Roadmap/Cards.md`

@@ -1,8 +1,8 @@
-﻿# State Area
+# State Area
 
 This folder defines memory, persistence, snapshot visibility, and integrity checks.
 
-Planned docs:
-1. persistence_model.md
-2. determinism_contract.md
-3. integrity_linking.md
+Normative docs:
+1. `persistence-snapshot-contract.md`
+2. `integrity-linking-contract.md`
+3. `digest-spec-v1.md`

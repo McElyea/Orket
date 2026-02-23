@@ -23,6 +23,8 @@ A PR MUST fail if any of the following occurs:
 - Any DTO missing required version fields
 - Any additionalProperties introduced in schemas without explicit allowance
 - Any emitted `KernelIssue.code` not present in `contracts/error-codes-v1.json`
+- Any emitted `[CODE:X]` token not present in `contracts/error-codes-v1.json`
+- Registry duplicates or unstable ordering in `contracts/error-codes-v1.json`
 
 ### Determinism regression
 - Issues/events ordering becomes nondeterministic
@@ -41,6 +43,8 @@ A PR MUST fail if any of the following occurs:
 - Fixtures MUST be canonical JSON
 - Fixtures MUST include expected structural digests (computed from canonical bytes)
 - Replay tests MUST run >= 100 iterations without divergence (or deterministic equivalent proof)
+- Digest vectors MUST be committed under `tests/kernel/v1/vectors/digest-v1.json`
+- CI MUST NOT overwrite vector files; CI may only compare regenerated output to committed vectors
 
 ## Required test mapping
 All normative OS laws MUST map to at least one scenario test in:
@@ -55,3 +59,11 @@ Required scenario coverage includes:
 - tombstone payload validation and stem mismatch failures
 - digest vectors match expected SHA-256 values across at least one independent implementation
 - link validation read-only behavior (no staged/committed index mutation during validate)
+- cross-language parity check (Python and TypeScript) over committed digest vectors
+
+Packaging and gate hygiene:
+- `tests/__init__.py`, `tests/kernel/__init__.py`, and `tests/kernel/v1/__init__.py` must exist for sovereign gate packaging stability.
+
+Conformance commands required by gate policy:
+- `python -m pytest -q tests/kernel/v1`
+- `npm test --prefix conformance/ts`

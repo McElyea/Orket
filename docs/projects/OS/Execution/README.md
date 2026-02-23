@@ -1,8 +1,8 @@
-﻿# Execution Area
+# Execution Area
 
 This folder defines run lifecycle orchestration and deterministic execution behavior.
 
-Planned docs:
-1. run_lifecycle.md
-2. stage_engine.md
-3. replay_contract.md
+Normative docs:
+1. `run-lifecycle-contract.md`
+2. `replay-contract.md`
+3. `tombstone-wire-format-v1.md`

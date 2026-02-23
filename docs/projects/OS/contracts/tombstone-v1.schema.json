@@ -7,6 +7,8 @@
   "required": [
     "kind",
     "stem",
+    "dto_type",
+    "id",
     "deleted_by_turn_id"
   ],
   "properties": {
@@ -14,6 +16,14 @@
       "const": "tombstone"
     },
     "stem": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dto_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "id": {
       "type": "string",
       "minLength": 1
     },

@@ -15,6 +15,7 @@ Anything not listed here is non-authoritative for OS v1.
 | Governance | Versioning Policy | `versioning-policy.md` | os/v1 | Normative |
 | Governance | Test Policy | `test-policy.md` | os/v1 | Normative |
 | Governance | Migration Map | `migration-map-v1.md` | os/v1 | Normative |
+| Governance | Kernel Requirements Exit | `KERNEL_REQUIREMENTS_EXIT.md` | kernel_api/v1 | Normative closure gate |
 
 | Domain | Contract | File | Version | Authority |
 |---|---|---|---|---|
@@ -42,6 +43,7 @@ Anything not listed here is non-authoritative for OS v1.
 | ReplayReport | `contracts/replay-report.schema.json` | kernel_api/v1 | Deterministic parity results |
 | CapabilityDecision | `contracts/capability-decision.schema.json` | kernel_api/v1 | Auditable deny/allow |
 | TombstoneV1 | `contracts/tombstone-v1.schema.json` | kernel_api/v1 | Canonical delete payload shape |
+| RunLedgerV1 | `contracts/run-ledger-v1.schema.json` | kernel_api/v1 | Sequential promotion high-water mark |
 | Error Codes Registry | `contracts/error-codes-v1.schema.json` | os/v1 | Stable code list |
 | Error Codes Instance | `contracts/error-codes-v1.json` | os/v1 | Canonical active code set |
 

@@ -42,6 +42,7 @@ Failure states:
 4. On mismatch, runtime MUST fail with `E_PROMOTION_OUT_OF_ORDER`.
 5. Re-promoting an already promoted turn SHOULD fail with `E_PROMOTION_ALREADY_APPLIED`.
 6. `turn_id` parsing MUST be strict and deterministic (`turn-0001` style numeric suffix).
+7. Ledger record shape is governed by `contracts/run-ledger-v1.schema.json`.
 
 Test requirements:
 1. Promote `turn-0002` with last promoted `turn-0000` -> `FAIL E_PROMOTION_OUT_OF_ORDER`.
@@ -70,6 +71,11 @@ FAIL with deterministic promotion failure code.
 4. On delete promotion, implementation MUST either:
 remove the stem index record, OR mark it tombstoned (single implementation path required).
 5. Tombstoned targets MUST be treated as not visible by link integrity unless explicitly permitted by policy.
+
+## Mutation Boundary
+1. `validate()` is read-only and MUST NOT mutate staging or committed index state.
+2. `promote()` is the only operation that mutates sovereign committed truth.
+3. Ledger advance MUST occur only after successful preflight and completion of the promotion decision path (including no-op/deletion-only cases).
 
 ## Required Error Codes
 1. `E_PROMOTION_OUT_OF_ORDER`

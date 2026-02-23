@@ -24,9 +24,12 @@ local batch IDs first, then sovereign committed index.
 
 ## Visibility Model (Normative)
 1. `visible(target) = in_sovereign_index(target) OR in_staged_created_set(target)`.
-2. `staged_created_set` MUST be derived from staged body/manifest creation records only.
-3. Links MUST NOT create visibility.
-4. Validation MUST NOT self-authorize targets by inserting them into ref tables during the same validation.
+2. Identity keys are `{dto_type}:{id}`.
+3. `staged_created_set` MUST be derived from staged body/manifest creation records only.
+4. Staged creation identity MUST be derived from staged body payload fields, not outer envelopes.
+5. Tombstone subtraction is identity-based (remove `{dto_type}:{id}`), not stem-only.
+6. Links MUST NOT create visibility.
+7. Validation MUST NOT self-authorize targets by inserting them into ref tables during the same validation.
 
 ## Required Orphan Behavior
 1. If target is not visible by model above, validation MUST fail `E_LSI_ORPHAN_TARGET`.

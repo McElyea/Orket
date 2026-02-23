@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orket.dev/os/contracts/run-ledger-v1.schema.json",
+  "title": "RunLedgerV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "run_id",
+    "last_promoted_turn_id"
+  ],
+  "properties": {
+    "version": {
+      "const": "v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "last_promoted_turn_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^turn-[0-9]{4,}$"
+    }
+  }
+}

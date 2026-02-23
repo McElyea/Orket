@@ -16,6 +16,8 @@ Define a deterministic wire format for delete operations so deletion behavior is
 {
   "kind": "tombstone",
   "stem": "path/to/stem",
+  "dto_type": "skill",
+  "id": "skill:alpha",
   "deleted_by_turn_id": "turn-0001"
 }
 ```
@@ -23,11 +25,13 @@ Define a deterministic wire format for delete operations so deletion behavior is
 Rules:
 1. `kind` MUST equal `"tombstone"`.
 2. `stem` MUST be non-empty and normalized to forward-slash path form.
-3. `deleted_by_turn_id` MUST be non-empty and match current promotion turn.
-4. Additional properties are not allowed.
+3. `dto_type` MUST be non-empty and represent the deleted object's type identity.
+4. `id` MUST be non-empty and represent the deleted object's id identity.
+5. `deleted_by_turn_id` MUST be non-empty and match current promotion turn.
+6. Additional properties are not allowed.
 
 ## Visibility Rule
-For LSI target resolution, a stem is visible only if it exists in sovereign index and does not have a corresponding staged tombstone, unless that stem is re-created in the same turn.
+For LSI target resolution, an identity key (`{dto_type}:{id}`) is visible only if it exists in sovereign index and is not tombstoned in the staged turn, unless the same identity is re-created in the turn.
 
 ## Required Errors
 1. `E_TOMBSTONE_INVALID`
