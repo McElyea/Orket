@@ -54,3 +54,4 @@ Required scenario coverage includes:
 - deletion-only promotion on missing/empty staging (when explicit deletes exist)
 - tombstone payload validation and stem mismatch failures
 - digest vectors match expected SHA-256 values across at least one independent implementation
+- link validation read-only behavior (no staged/committed index mutation during validate)

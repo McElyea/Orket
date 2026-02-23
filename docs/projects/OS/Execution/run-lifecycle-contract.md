@@ -36,10 +36,12 @@ Failure states:
 
 ### Law 2: Sequential Promotion Enforcement
 1. `turn-N` MUST NOT be promoted unless `turn-(N-1)` is already promoted.
-2. Runtime MUST persist `last_promoted_turn_id` in sovereign run metadata.
+2. Runtime MUST persist `last_promoted_turn_id` in sovereign run metadata at:
+`committed/index/run_ledger.json`.
 3. Promotion MUST compute `next_expected_turn_id(last_promoted_turn_id)` and compare to requested turn.
 4. On mismatch, runtime MUST fail with `E_PROMOTION_OUT_OF_ORDER`.
 5. Re-promoting an already promoted turn SHOULD fail with `E_PROMOTION_ALREADY_APPLIED`.
+6. `turn_id` parsing MUST be strict and deterministic (`turn-0001` style numeric suffix).
 
 Test requirements:
 1. Promote `turn-0002` with last promoted `turn-0000` -> `FAIL E_PROMOTION_OUT_OF_ORDER`.
@@ -59,6 +61,7 @@ treat as no-op promotion and PASS, while still advancing turn chain.
 perform deletion-only promotion and PASS.
 3. If staging state is malformed:
 FAIL with deterministic promotion failure code.
+4. No-op promotion MUST emit deterministic info code `I_NOOP_PROMOTION`.
 
 ### Pruning Rule for Delete-Stem
 1. Promotion MUST remove sources for deleted stem from `refs/by_id`.
@@ -74,3 +77,4 @@ remove the stem index record, OR mark it tombstoned (single implementation path 
 3. `E_LSI_ORPHAN_TARGET`
 4. `E_PROMOTION_STAGE_MISSING` (only if implementation chooses fail instead of no-op)
 5. `E_DELETE_MISSING_TOMBSTONE` (only if implementation requires explicit tombstone evidence)
+6. `I_NOOP_PROMOTION`
