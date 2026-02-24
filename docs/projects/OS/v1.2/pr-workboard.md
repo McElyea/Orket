@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution, PR-04 in progress)
+Status: Active (authoritative for v1.2 execution, PR-06 in progress)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -89,7 +89,7 @@ Suggested checks:
 
 ## PR-04: Canonicalization + Digest Rules Documentation
 Status:
-1. In progress.
+1. Complete.
 
 Goal:
 1. Lock byte-level rules so Python/TypeScript/comparator converge.
@@ -111,6 +111,9 @@ Required acceptance checks:
 3. Hash projections specify nullification, not omission.
 
 ## PR-05: Comparator Implementation (IssueKey Multimap + report_id Invariant)
+Status:
+1. Complete.
+
 Goal:
 1. Ship the deterministic gate implementation for replay parity.
 
@@ -141,6 +144,9 @@ Suggested checks:
 2. `python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py`
 
 ## PR-06: Kernel Emission Wiring (DecisionRecords + Correspondence Law)
+Status:
+1. In progress.
+
 Goal:
 1. Ensure runtime emits parity decision records deterministically.
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from functools import lru_cache
 from pathlib import Path
 from uuid import uuid4
@@ -70,6 +71,7 @@ def _base_turn_result(
         or {
             "mode": "disabled",
             "decisions": [],
+            "decisions_v1_2_1": [],
             "denied_count": 0,
             "granted_count": 0,
         },
@@ -87,6 +89,40 @@ def _capability_decision(*, subject: str, action: str, resource: str, result: st
         "reason_code": reason_code,
         "evidence": evidence,
     }
+
+
+def _capability_decision_record(
+    *,
+    run_id: str,
+    turn_id: str,
+    tool_name: str,
+    action: str,
+    ordinal: int,
+    outcome: str,
+    deny_code: str | None,
+    info_code: str | None,
+    reason: str,
+    provenance: dict[str, Any] | None,
+) -> dict[str, Any]:
+    payload = {
+        "contract_version": CONTRACT_VERSION,
+        "run_id": run_id,
+        "turn_id": turn_id,
+        "tool_name": tool_name,
+        "action": action,
+        "ordinal": ordinal,
+        "outcome": outcome,
+        "stage": "capability",
+        "deny_code": deny_code,
+        "info_code": info_code,
+        "reason": reason,
+        "provenance": provenance,
+    }
+    decision_id = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    payload["decision_id"] = decision_id
+    return payload
 
 
 def _capability_evidence(context: dict[str, Any]) -> dict[str, Any]:
@@ -356,6 +392,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
     capabilities: dict[str, Any] = {
         "mode": "disabled",
         "decisions": [],
+        "decisions_v1_2_1": [],
         "denied_count": 0,
         "granted_count": 0,
     }
@@ -371,6 +408,21 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
         capability_enabled = bool(context.get("capability_enforcement", True))
         if not capability_enabled:
             stage = "capability"
+            action = str(tool_call.get("action", "tool.call"))
+            resource = str(tool_call.get("resource", "unknown"))
+            decision_record = _capability_decision_record(
+                run_id=run_id,
+                turn_id=turn_id,
+                tool_name=resource,
+                action=action,
+                ordinal=0,
+                outcome="skipped",
+                deny_code=None,
+                info_code="I_CAPABILITY_SKIPPED",
+                reason="Capability module disabled for this request.",
+                provenance=None,
+            )
+            capabilities["decisions_v1_2_1"] = [decision_record]
             events.append(
                 _event("INFO", "capability", "I_CAPABILITY_SKIPPED", "/turn_input/context", "Capability module disabled.")
             )
@@ -435,6 +487,29 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
 
             capabilities["decisions"] = [decision]
             if decision["result"] == "DENY":
+                record_outcome = "unresolved" if decision["reason_code"] == "E_CAPABILITY_NOT_RESOLVED" else "denied"
+                record_deny_code = decision["reason_code"]
+                record_info_code = None
+                record_provenance = None
+            else:
+                record_outcome = "allowed"
+                record_deny_code = None
+                record_info_code = None
+                record_provenance = evidence
+            decision_record = _capability_decision_record(
+                run_id=run_id,
+                turn_id=turn_id,
+                tool_name=resource,
+                action=action,
+                ordinal=0,
+                outcome=record_outcome,
+                deny_code=record_deny_code,
+                info_code=record_info_code,
+                reason=f"Capability decision outcome: {record_outcome}.",
+                provenance=record_provenance,
+            )
+            capabilities["decisions_v1_2_1"] = [decision_record]
+            if decision["result"] == "DENY":
                 capabilities["denied_count"] = 1
                 outcome = "FAIL"
                 stage = "capability"
@@ -442,9 +517,9 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     _issue(
                         stage="capability",
                         code=decision["reason_code"],
-                        location="/turn_input/tool_call",
+                        location=f"/capabilities/decisions_v1_2_1/{decision_record['ordinal']}",
                         message="Capability policy denied tool execution.",
-                        details={"decision": decision},
+                        details={"decision": decision, "decision_record": decision_record},
                     )
                 )
                 events.append(
@@ -452,7 +527,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                         "FAIL",
                         "capability",
                         decision["reason_code"],
-                        "/turn_input/tool_call",
+                        f"/capabilities/decisions_v1_2_1/{decision_record['ordinal']}",
                         "Tool execution denied by capability policy.",
                     )
                 )

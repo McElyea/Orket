@@ -111,6 +111,10 @@ def test_execute_turn_v1_capability_unresolved_fails_with_capability_stage_code(
     assert any(issue["code"] == "E_CAPABILITY_NOT_RESOLVED" for issue in result["issues"])
     assert result["capabilities"]["mode"] == "enabled"
     assert result["capabilities"]["denied_count"] == 1
+    records = result["capabilities"]["decisions_v1_2_1"]
+    assert len(records) == 1
+    assert records[0]["outcome"] == "unresolved"
+    assert records[0]["deny_code"] == "E_CAPABILITY_NOT_RESOLVED"
 
 
 def test_execute_turn_v1_capability_module_off_emits_skipped_info() -> None:
@@ -128,6 +132,10 @@ def test_execute_turn_v1_capability_module_off_emits_skipped_info() -> None:
     assert result["outcome"] == "PASS"
     assert result["capabilities"]["mode"] == "disabled"
     assert any("I_CAPABILITY_SKIPPED" in event for event in result["events"])
+    records = result["capabilities"]["decisions_v1_2_1"]
+    assert len(records) == 1
+    assert records[0]["outcome"] == "skipped"
+    assert records[0]["info_code"] == "I_CAPABILITY_SKIPPED"
 
 
 def test_execute_turn_v1_capability_can_grant_from_policy_permissions() -> None:
@@ -146,6 +154,36 @@ def test_execute_turn_v1_capability_can_grant_from_policy_permissions() -> None:
     assert result["stage"] == "capability"
     assert result["capabilities"]["granted_count"] == 1
     assert result["capabilities"]["decisions"][0]["evidence"]["capability_source"] == "model/core/contracts/kernel_capability_policy_v1.json"
+    records = result["capabilities"]["decisions_v1_2_1"]
+    assert len(records) == 1
+    assert records[0]["outcome"] == "allowed"
+    assert isinstance(records[0]["provenance"], dict)
+
+
+def test_execute_turn_v1_capability_denied_correspondence_law() -> None:
+    result = execute_turn_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_handle": {"contract_version": "kernel_api/v1", "run_id": "run-cap-deny", "visibility_mode": "local_only"},
+            "turn_id": "turn-0001",
+            "turn_input": {
+                "context": {"capability_enforcement": True, "subject": "agent:one"},
+                "tool_call": {"action": "tool.call", "resource": "tool://shell"},
+            },
+        }
+    )
+    records = result["capabilities"]["decisions_v1_2_1"]
+    assert len(records) == 1
+    record = records[0]
+    assert record["outcome"] == "denied"
+    matching = [
+        issue
+        for issue in result["issues"]
+        if issue["stage"] == "capability"
+        and issue["code"] == record["deny_code"]
+        and issue["location"] == f"/capabilities/decisions_v1_2_1/{record['ordinal']}"
+    ]
+    assert matching, "Denied/unresolved decision record must have matching capability issue."
 
 
 def test_authorize_tool_call_v1_is_deny_by_default() -> None:
