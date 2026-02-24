@@ -8,3 +8,6 @@ Active roadmap files:
 3. `Card-Closure-Checklist.md`
 4. `ClosurePass-2026-02-24.md`
 5. `Closeout-Checklist.md`
+
+Related proposal material:
+1. `../proposals/v1.2/README.md`

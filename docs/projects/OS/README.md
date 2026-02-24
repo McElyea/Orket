@@ -40,3 +40,4 @@ Tests live under:
 - Implementation Plan: `IMPLEMENTATION_PLAN.md`
 - Roadmap / Cards: `Roadmap/Cards.md`
 - Closure Checklist: `Roadmap/Closeout-Checklist.md`
+- v1.2 Proposal Pack: `proposals/v1.2/README.md`
