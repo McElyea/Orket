@@ -1,0 +1,84 @@
+{
+  "$id": "https://orket.dev/os/contracts/replay-bundle.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReplayBundle",
+  "description": "Deterministic replay input manifest for compare/replay operations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "run_envelope",
+    "registry_digest",
+    "digests",
+    "turn_results"
+  ],
+  "properties": {
+    "contract_version": { "const": "replay_bundle/v1" },
+    "run_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "workflow_id",
+        "kernel_contract_version",
+        "schema_version"
+      ],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "workflow_id": { "type": "string", "minLength": 1 },
+        "kernel_contract_version": { "type": "string", "minLength": 1 },
+        "schema_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "registry_digest": {
+      "anyOf": [
+        { "$ref": "#/$defs/StructuralDigest" },
+        { "type": "null" }
+      ]
+    },
+    "digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_digest",
+        "runtime_digest",
+        "registry_digest"
+      ],
+      "properties": {
+        "policy_digest": { "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }] },
+        "runtime_digest": { "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }] },
+        "registry_digest": { "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }] }
+      }
+    },
+    "turn_results": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/TurnResultEntry" }
+    }
+  },
+  "$defs": {
+    "StructuralDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "TurnResultEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turn_id",
+        "turn_result_digest",
+        "paths"
+      ],
+      "properties": {
+        "turn_id": { "type": "string", "minLength": 1 },
+        "turn_result_digest": { "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }] },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence_digest": { "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }] }
+      }
+    }
+  }
+}

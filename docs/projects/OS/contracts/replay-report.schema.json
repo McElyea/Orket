@@ -20,6 +20,22 @@
     "mode": { "type": "string", "enum": ["replay_run", "compare_runs"] },
     "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
 
+    "status": { "type": "string", "enum": ["MATCH", "DIVERGENT", "ERROR"] },
+    "exit_code": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[EI]_[A-Z0-9_]+$" },
+        { "type": "null" }
+      ],
+      "default": null
+    },
+    "report_id": {
+      "anyOf": [
+        { "$ref": "#/$defs/StructuralDigest" },
+        { "type": "null" }
+      ],
+      "default": null
+    },
+
     "runs_compared": { "type": "integer", "minimum": 1 },
     "turns_compared": { "type": "integer", "minimum": 0 },
 
@@ -30,6 +46,30 @@
     "events": {
       "type": "array",
       "items": { "type": "string" }
+    },
+
+    "mismatches_detail": {
+      "type": "array",
+      "description": "Deterministic mismatch records sorted by (turn_id, stage_index, ordinal, surface, path).",
+      "items": { "$ref": "#/$defs/MismatchRecord" }
+    },
+    "digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registry_digest": {
+          "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }],
+          "description": "May be null when comparator ends in schema/ERROR path."
+        },
+        "policy_digest": {
+          "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }],
+          "description": "May be null when comparator ends in schema/ERROR path."
+        },
+        "runtime_digest": {
+          "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }],
+          "description": "May be null when comparator ends in schema/ERROR path."
+        }
+      }
     },
 
     "parity": { "$ref": "#/$defs/ParityReport" }
@@ -68,6 +108,61 @@
         "turn_id": { "type": "string", "minLength": 1 },
         "turn_result_digest": { "$ref": "#/$defs/StructuralDigest" },
         "evidence_digest": { "$ref": "#/$defs/StructuralDigest" }
+      }
+    },
+    "MismatchRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turn_id",
+        "stage_name",
+        "surface",
+        "path",
+        "diagnostic"
+      ],
+      "properties": {
+        "turn_id": { "type": "string", "minLength": 1 },
+        "stage_name": {
+          "type": "string",
+          "enum": [
+            "base_shape",
+            "dto_links",
+            "relationship_vocabulary",
+            "policy",
+            "determinism",
+            "ci",
+            "lsi",
+            "promotion",
+            "capability",
+            "replay"
+          ]
+        },
+        "stage_index": { "type": "integer", "minimum": 0 },
+        "ordinal": { "type": "integer", "minimum": 0 },
+        "surface": {
+          "type": "string",
+          "enum": [
+            "registry_digest",
+            "policy_digest",
+            "runtime_digest",
+            "turn_result_digest",
+            "stage_outcome",
+            "issue",
+            "decision_record",
+            "schema",
+            "input"
+          ]
+        },
+        "path": { "type": "string", "minLength": 1 },
+        "expected_digest": { "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }] },
+        "actual_digest": { "anyOf": [{ "$ref": "#/$defs/StructuralDigest" }, { "type": "null" }] },
+        "diagnostic": {
+          "anyOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": true }
+          ],
+          "description": "Diagnostic payload is excluded from report_id hash input via nullification."
+        }
       }
     }
   }

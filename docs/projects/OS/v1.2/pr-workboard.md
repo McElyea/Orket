@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution, PR-02 in progress)
+Status: Active (authoritative for v1.2 execution, PR-03 in progress)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -37,7 +37,7 @@ Suggested checks:
 
 ## PR-02: CapabilityDecisionRecord Schema + Coexistence Wiring
 Status:
-1. In progress.
+1. Complete.
 
 Goal:
 1. Introduce authoritative decision-record parity shape without breaking existing turn artifacts.
@@ -63,6 +63,9 @@ Required acceptance checks:
 2. Existing TurnResult fixtures still validate.
 
 ## PR-03: ReplayBundle + ReplayReport Schemas
+Status:
+1. In progress.
+
 Goal:
 1. Make replay input/output contracts authoritative and deterministic.
 

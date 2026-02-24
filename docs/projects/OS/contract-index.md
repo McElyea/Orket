@@ -46,6 +46,7 @@ Anything not listed here is non-authoritative for OS v1.
 | Kernel API Surface | `contracts/kernel-api-v1.schema.json` | kernel_api/v1 | Shape of requests/responses |
 | KernelIssue | `contracts/kernel-issue.schema.json` | kernel_api/v1 | RFC6901 required |
 | TurnResult | `contracts/turn-result.schema.json` | kernel_api/v1 | Deterministic issue ordering required |
+| ReplayBundle | `contracts/replay-bundle.schema.json` | replay_bundle/v1 | Deterministic replay input manifest |
 | ReplayReport | `contracts/replay-report.schema.json` | kernel_api/v1 | Deterministic parity results |
 | CapabilityDecision | `contracts/capability-decision.schema.json` | kernel_api/v1 | Auditable deny/allow |
 | CapabilityDecisionRecord | `contracts/capability-decision-record.schema.json` | kernel_api/v1 | Coexistence parity decision surface |
