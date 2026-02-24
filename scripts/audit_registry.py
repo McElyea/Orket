@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import hashlib
 from pathlib import Path
 
 
@@ -11,12 +12,35 @@ CODE_RE = re.compile(r"`([EI]_[A-Z0-9_]+)`")
 TOKEN_RE = re.compile(r"^[EI]_[A-Z0-9_]+$")
 
 
-def _load_registry(path: Path) -> list[str]:
+def _canonical_json_bytes(payload: dict) -> bytes:
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def _load_registry(path: Path) -> tuple[list[str], dict]:
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict) or not isinstance(payload.get("codes"), list):
-        raise ValueError("registry payload must contain list field 'codes'")
-    codes = [code for code in payload["codes"] if isinstance(code, str)]
-    return codes
+    if not isinstance(payload, dict):
+        raise ValueError("registry payload must be an object")
+
+    codes = payload.get("codes")
+    if isinstance(codes, list):
+        code_list = [code for code in codes if isinstance(code, str)]
+        wrapper = {
+            "contract_version": "os/v1",
+            "codes": {code: {"kind": "error" if code.startswith("E_") else "info"} for code in code_list},
+        }
+        return code_list, wrapper
+
+    if isinstance(codes, dict):
+        code_list = [code for code in codes.keys() if isinstance(code, str)]
+        wrapper = payload
+        return code_list, wrapper
+
+    raise ValueError("registry payload must contain 'codes' as object (preferred) or list (legacy)")
 
 
 def _extract_doc_codes(path: Path) -> set[str]:
@@ -28,7 +52,7 @@ def main() -> int:
     registry_path = Path("docs/projects/OS/contracts/error-codes-v1.json")
     docs_paths = sorted(Path("docs/projects/OS").rglob("*.md"))
 
-    registry_codes = _load_registry(registry_path)
+    registry_codes, registry_wrapper = _load_registry(registry_path)
     registry_set = set(registry_codes)
     doc_set: set[str] = set()
     for path in docs_paths:
@@ -65,8 +89,10 @@ def main() -> int:
             print(f"[FAIL] {error}")
         return 1
 
+    wrapper_digest = hashlib.sha256(_canonical_json_bytes(registry_wrapper)).hexdigest()
     print("[PASS] registry audit passed")
     print(f"[PASS] registry_count={len(registry_codes)} doc_code_count={len(doc_set)}")
+    print(f"[PASS] registry_digest_sha256={wrapper_digest}")
     return 0
 
 

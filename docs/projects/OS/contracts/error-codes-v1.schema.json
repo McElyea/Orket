@@ -2,23 +2,64 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://orket.dev/os/contracts/error-codes-v1.schema.json",
   "title": "ErrorCodesV1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "version",
-    "codes"
-  ],
-  "properties": {
-    "version": {
-      "const": "v1"
+  "description": "Canonical error/info code registry. Wrapper shape is authoritative; legacy list shape is accepted during migration.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_version",
+        "codes"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "os/v1"
+        },
+        "codes": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[EI]_[A-Z0-9_]+$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "info"
+                ]
+              }
+            }
+          }
+        }
+      }
     },
-    "codes": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "pattern": "^[A-Z][A-Z0-9_]+$"
-      },
-      "uniqueItems": true
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "codes"
+      ],
+      "properties": {
+        "version": {
+          "const": "v1"
+        },
+        "codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[EI]_[A-Z0-9_]+$"
+          },
+          "uniqueItems": true
+        }
+      }
     }
-  }
+  ]
 }

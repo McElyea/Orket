@@ -15,6 +15,7 @@ Anything not listed here is non-authoritative for OS v1.
 | Governance | Versioning Policy | `versioning-policy.md` | os/v1 | Normative |
 | Governance | Test Policy | `test-policy.md` | os/v1 | Normative |
 | Governance | Migration Map | `migration-map-v1.md` | os/v1 | Normative |
+| Governance | Sovereign Laws v1.2 | `contracts/sovereign-laws.md` | kernel_api/v1 | Normative for replay/capability parity |
 | Governance | v1.2 Locked Decisions | `v1.2/open-decisions.md` | kernel_api/v1 | Normative for v1.2 execution |
 | Governance | v1.2 Sovereign Laws | `v1.2/sovereign-laws.md` | kernel_api/v1 | Normative for v1.2 execution |
 | Governance | v1.2 Implementation Plan | `v1.2/implementation-plan.md` | os/v1 | Normative execution plan |
@@ -52,6 +53,7 @@ Anything not listed here is non-authoritative for OS v1.
 | RunLedgerV1 | `contracts/run-ledger-v1.schema.json` | kernel_api/v1 | Sequential promotion high-water mark |
 | Error Codes Registry | `contracts/error-codes-v1.schema.json` | os/v1 | Stable code list |
 | Error Codes Instance | `contracts/error-codes-v1.json` | os/v1 | Canonical active code set |
+| Stage Order Instance | `contracts/stage-order-v1.json` | kernel_api/v1 | Authoritative stage ordering spine |
 
 ## Compatibility rule
 Any change to a Normative Schema MUST follow `versioning-policy.md` and MUST pass `test-policy.md` gates.

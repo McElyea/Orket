@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import tempfile
+import hashlib
 from pathlib import Path
 
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
@@ -15,7 +16,23 @@ CODE_PATTERN_RE = re.compile(r"^[EI]_[A-Z0-9_]+$")
 
 def _registry_codes() -> list[str]:
     payload = json.loads(Path("docs/projects/OS/contracts/error-codes-v1.json").read_text(encoding="utf-8"))
-    return [code for code in payload["codes"] if isinstance(code, str)]
+    codes = payload.get("codes")
+    if isinstance(codes, list):
+        return [code for code in codes if isinstance(code, str)]
+    if isinstance(codes, dict):
+        return [code for code in codes.keys() if isinstance(code, str)]
+    raise AssertionError("Violation: Registry must expose codes as list or object.")
+
+
+def _registry_digest() -> str:
+    payload = json.loads(Path("docs/projects/OS/contracts/error-codes-v1.json").read_text(encoding="utf-8"))
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def _extract_event_codes(events: list[str]) -> set[str]:
@@ -32,6 +49,12 @@ def test_registry_integrity_and_ordering() -> None:
     assert len(codes) == len(set(codes)), "Violation: Registry contains duplicate code entries."
     bad = [code for code in codes if not CODE_PATTERN_RE.fullmatch(code)]
     assert not bad, f"Violation: Invalid code token(s) in registry: {bad}"
+
+
+def test_registry_digest_is_deterministic() -> None:
+    digest_a = _registry_digest()
+    digest_b = _registry_digest()
+    assert digest_a == digest_b, "Violation: Registry wrapper digest must be deterministic."
 
 
 def test_emitted_issue_and_event_codes_are_registered() -> None:
@@ -83,4 +106,3 @@ def test_emitted_issue_and_event_codes_are_registered() -> None:
         "Violation: Emitted code(s) are not registered in "
         f"docs/projects/OS/contracts/error-codes-v1.json: {missing}"
     )
-

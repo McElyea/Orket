@@ -1,0 +1,15 @@
+{
+  "contract_version": "kernel_api/v1",
+  "stage_order": [
+    "base_shape",
+    "dto_links",
+    "relationship_vocabulary",
+    "policy",
+    "determinism",
+    "ci",
+    "lsi",
+    "promotion",
+    "capability",
+    "replay"
+  ]
+}

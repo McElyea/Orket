@@ -11,7 +11,7 @@ Status: Normative
 
 ## Match Requirements
 Must match:
-1. Stage order and stage outcomes.
+1. Stage order and stage outcomes (`contracts/stage-order-v1.json`).
 2. Error and info codes (with pointers and stages).
 3. Contract digests and schema versions.
 

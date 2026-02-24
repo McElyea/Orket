@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution)
+Status: Active (authoritative for v1.2 execution, PR-01 in progress)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
