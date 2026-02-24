@@ -14,6 +14,7 @@ This policy defines the required test gates for OS v1 pull requests.
 8. Empty-stage/no-op and deletion-only promotion tests
 9. Error-code registry conformance tests
 10. Digest and tombstone reference vector tests
+11. Replay comparator law tests (IssueKey multimap, registry lock, report-id invariants)
 
 ## Non-negotiable PR gates
 A PR MUST fail if any of the following occurs:
@@ -25,6 +26,7 @@ A PR MUST fail if any of the following occurs:
 - Any emitted `KernelIssue.code` not present in `contracts/error-codes-v1.json`
 - Any emitted `[CODE:X]` token not present in `contracts/error-codes-v1.json`
 - Registry duplicates or unstable ordering in `contracts/error-codes-v1.json`
+- Replay comparator report-id derivation omits excluded keys instead of nullifying them
 
 ### Determinism regression
 - Issues/events ordering becomes nondeterministic
@@ -60,6 +62,12 @@ Required scenario coverage includes:
 - digest vectors match expected SHA-256 values across at least one independent implementation
 - link validation read-only behavior (no staged/committed index mutation during validate)
 - cross-language parity check (Python and TypeScript) over committed digest vectors
+- registry digest mismatch -> `E_REGISTRY_DIGEST_MISMATCH`
+- digest/version mismatch across replay digests -> `E_REPLAY_VERSION_MISMATCH`
+- issue-key multiplicity mismatch is detected even when IssueKey fields match
+- issue `message` drift does not fail replay parity
+- replay report mismatch ordering is deterministic by `(turn_id, stage_index, ordinal, surface, path)`
+- report-id hash nullifies `report_id` and `mismatches[*].diagnostic`
 
 Packaging and gate hygiene:
 - `tests/__init__.py`, `tests/kernel/__init__.py`, and `tests/kernel/v1/__init__.py` must exist for sovereign gate packaging stability.

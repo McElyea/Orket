@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution, PR-07 in progress)
+Status: Active (authoritative for v1.2 execution, PR-01..PR-07 complete; closeout step pending)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -170,7 +170,7 @@ Required acceptance checks:
 
 ## PR-07: TurnResult Digest Surface Implementation (D3)
 Status:
-1. In progress.
+1. Complete.
 
 Goal:
 1. Compute `turn_result_digest` from contract-only digest surface.
@@ -192,6 +192,9 @@ Suggested checks:
 2. `python -m pytest -q tests/kernel/v1/test_replay_stability.py`
 
 ## Closeout Step (After PR-07)
+Status:
+1. In progress.
+
 1. Update `docs/projects/OS/contract-index.md` with completed v1.2 artifacts.
 2. Update `docs/projects/OS/test-policy.md` with mandatory comparator checks.
 3. Archive this execution packet and keep only enduring normative docs.
