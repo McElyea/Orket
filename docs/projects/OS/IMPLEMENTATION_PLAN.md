@@ -209,8 +209,10 @@ Completed in current execution slice:
 20. Replay vectors include mixed issue-order normalization proof (`pass-mixed-issue-order-normalized`).
 21. Application workflow path supports minimal kernel lifecycle execution through `KernelV1Gateway.run_lifecycle(...)`.
 22. Orchestration-facing replay/compare boundary coverage is active in `tests/application/test_engine_refactor.py`.
+23. Production API path adoption is active at `POST /v1/kernel/lifecycle` (`orket/interfaces/api.py`) and routes to `OrchestrationEngine.kernel_run_lifecycle(...)`.
+24. Replay vectors include combined mismatch-case asserting deterministic `mismatch_fields` ordering.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Add a replay vector for mixed issue ordering that includes both pointer drift and stage drift in one case and verifies deterministic mismatch field ordering.
-3. Map one production request path (API endpoint or workflow entry) to call `OrchestrationEngine.kernel_run_lifecycle`.
+2. Add a replay vector with mixed issue ordering plus equal contract surface to prove pass behavior under randomized issue/event input order.
+3. Add API-level coverage for replay compare boundary through orchestration entrypoint (not direct validator call).

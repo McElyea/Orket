@@ -290,6 +290,58 @@
       "expect_outcome": "FAIL",
       "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
       "expect_mismatch_fields": ["stage_outcomes", "turn_digests"]
+    },
+    {
+      "name": "fail-combined-mismatch-fields-ordered",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS" }
+        ],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/2",
+            "message": "x",
+            "details": {}
+          }
+        ],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] ok |"
+        ]
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "FAIL" }
+        ],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_ALREADY_APPLIED",
+            "location": "/turns/1",
+            "message": "y",
+            "details": {}
+          }
+        ],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_NOOP_PROMOTION] [LOC:/turn-0001] noop |"
+        ]
+      },
+      "expect_outcome": "FAIL",
+      "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
+      "expect_mismatch_fields": ["event_codes", "issue_codes", "stage_outcomes"]
     }
   ]
 }

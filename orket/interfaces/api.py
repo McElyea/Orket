@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, List
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -113,6 +113,13 @@ class RuntimePolicyUpdateRequest(BaseModel):
     small_project_builder_variant: Optional[str] = None
     state_backend_mode: Optional[str] = None
     gitea_state_pilot_enabled: Optional[bool] = None
+
+
+class KernelLifecycleRequest(BaseModel):
+    workflow_id: str
+    execute_turn_requests: List[dict[str, Any]]
+    finish_outcome: str = "PASS"
+    start_request: Optional[dict[str, Any]] = None
 
 
 SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
@@ -404,6 +411,16 @@ async def health(): return {"status": "ok", "organization": "Orket"}
 @v1_router.get("/version")
 async def get_version():
     return {"version": __version__, "api": "v1"}
+
+
+@v1_router.post("/kernel/lifecycle")
+async def kernel_lifecycle(req: KernelLifecycleRequest):
+    return engine.kernel_run_lifecycle(
+        workflow_id=req.workflow_id,
+        execute_turn_requests=req.execute_turn_requests,
+        finish_outcome=req.finish_outcome,
+        start_request=req.start_request,
+    )
 
 @v1_router.post("/system/clear-logs")
 async def clear_logs():
