@@ -3,7 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 import tempfile
 
-from orket.kernel.v1.validator import execute_turn_v1, finish_run_v1, start_run_v1
+from orket.kernel.v1.validator import (
+    authorize_tool_call_v1,
+    compare_runs_v1,
+    execute_turn_v1,
+    finish_run_v1,
+    replay_run_v1,
+    resolve_capability_v1,
+    start_run_v1,
+)
 
 
 def test_start_run_v1_returns_run_handle_shape() -> None:
@@ -85,3 +93,99 @@ def test_finish_run_v1_returns_schema_shape() -> None:
         "events": [],
     }
 
+
+def test_execute_turn_v1_capability_unresolved_fails_with_capability_stage_code() -> None:
+    result = execute_turn_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_handle": {"contract_version": "kernel_api/v1", "run_id": "run-cap", "visibility_mode": "local_only"},
+            "turn_id": "turn-0001",
+            "turn_input": {
+                "context": {"capability_enforcement": True, "capability_resolved": False, "subject": "agent:one"},
+                "tool_call": {"action": "tool.call", "resource": "tool://shell"},
+            },
+        }
+    )
+    assert result["outcome"] == "FAIL"
+    assert result["stage"] == "capability"
+    assert any(issue["code"] == "E_CAPABILITY_NOT_RESOLVED" for issue in result["issues"])
+    assert result["capabilities"]["mode"] == "enabled"
+    assert result["capabilities"]["denied_count"] == 1
+
+
+def test_execute_turn_v1_capability_module_off_emits_skipped_info() -> None:
+    result = execute_turn_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_handle": {"contract_version": "kernel_api/v1", "run_id": "run-cap-off", "visibility_mode": "local_only"},
+            "turn_id": "turn-0001",
+            "turn_input": {
+                "context": {"capability_enforcement": False, "subject": "agent:one"},
+                "tool_call": {"action": "tool.call", "resource": "tool://shell"},
+            },
+        }
+    )
+    assert result["outcome"] == "PASS"
+    assert result["capabilities"]["mode"] == "disabled"
+    assert any("I_CAPABILITY_SKIPPED" in event for event in result["events"])
+
+
+def test_authorize_tool_call_v1_is_deny_by_default() -> None:
+    response = authorize_tool_call_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "context": {"subject": "agent:one", "capability_enforcement": True},
+            "tool_request": {"action": "tool.call", "resource": "tool://shell"},
+        }
+    )
+    decision = response["decision"]
+    assert decision["result"] == "DENY"
+    assert decision["reason_code"] == "E_CAPABILITY_DENIED"
+
+
+def test_resolve_capability_v1_module_off_returns_skipped_event() -> None:
+    response = resolve_capability_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "role": "coder",
+            "task": "edit",
+            "context": {"capability_enforcement": False},
+        }
+    )
+    assert response["capability_plan"]["mode"] == "disabled"
+    assert any("I_CAPABILITY_SKIPPED" in event for event in response["events"])
+
+
+def test_replay_run_v1_missing_input_emits_missing_code() -> None:
+    report = replay_run_v1({"contract_version": "kernel_api/v1", "run_descriptor": {"run_id": "run-r1"}})
+    assert report["outcome"] == "FAIL"
+    assert any(issue["code"] == "E_REPLAY_INPUT_MISSING" for issue in report["issues"])
+
+
+def test_replay_run_v1_version_mismatch_emits_version_code() -> None:
+    report = replay_run_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_descriptor": {
+                "run_id": "run-r2",
+                "workflow_id": "wf-r2",
+                "contract_version": "kernel_api/v0",
+                "schema_version": "v1",
+            },
+        }
+    )
+    assert report["outcome"] == "FAIL"
+    assert any(issue["code"] == "E_REPLAY_VERSION_MISMATCH" for issue in report["issues"])
+
+
+def test_compare_runs_v1_mismatch_emits_equivalence_failed() -> None:
+    report = compare_runs_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_a": {"run_id": "run-a", "turn_digests": [{"turn_id": "turn-0001", "turn_result_digest": "0" * 64}]},
+            "run_b": {"run_id": "run-b", "turn_digests": [{"turn_id": "turn-0001", "turn_result_digest": "1" * 64}]},
+            "compare_mode": "structural_parity",
+        }
+    )
+    assert report["outcome"] == "FAIL"
+    assert any(issue["code"] == "E_REPLAY_EQUIVALENCE_FAILED" for issue in report["issues"])

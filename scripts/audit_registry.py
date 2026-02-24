@@ -26,10 +26,7 @@ def _extract_doc_codes(path: Path) -> set[str]:
 
 def main() -> int:
     registry_path = Path("docs/projects/OS/contracts/error-codes-v1.json")
-    docs_paths = [
-        Path("docs/projects/OS/KERNEL_REQUIREMENTS_EXIT.md"),
-        Path("docs/projects/OS/State/digest-spec-v1.md"),
-    ]
+    docs_paths = sorted(Path("docs/projects/OS").rglob("*.md"))
 
     registry_codes = _load_registry(registry_path)
     registry_set = set(registry_codes)
@@ -57,11 +54,10 @@ def main() -> int:
     if missing_in_registry:
         errors.append(f"missing_in_registry={missing_in_registry}")
 
-    # Visibility side: registry extras are warnings (legacy/non-kernel domains may exist).
+    # Visibility side: registry extras fail closed (all active codes must be documented).
     extra_in_registry = sorted(registry_set - doc_set)
     if extra_in_registry:
-        print(f"[WARN] extra_in_registry_count={len(extra_in_registry)}")
-        print(f"[WARN] sample={extra_in_registry[:10]}")
+        errors.append(f"extra_in_registry={extra_in_registry}")
 
     if errors:
         print("[FAIL] registry audit failed")
@@ -76,4 +72,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

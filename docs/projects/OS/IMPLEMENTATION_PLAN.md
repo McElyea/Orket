@@ -186,8 +186,17 @@ Completed in current execution slice:
 - kernel sovereign test gate (`tests/kernel/v1`)
 - TS digest parity
 - digest vector regenerate+diff fail-closed check
+4. Legacy Spec-002 law tests are physically consolidated into `tests/kernel/v1`; `tests/lsi` mirror files are removed.
+5. `scripts/audit_registry.py` is now strict-mode fail-closed for registry extras, with complete OS doc coverage enforced.
+6. Deprecated `jsonschema.RefResolver` is replaced by `referencing.Registry` wiring in kernel schema-contract tests.
+7. Validator boundary now includes thin capability/replay handlers:
+- `resolve_capability_v1`
+- `authorize_tool_call_v1`
+- `replay_run_v1`
+- `compare_runs_v1`
+8. Kernel-v1 tests now enforce capability/replay closure codes and schema conformance for new response shapes.
 
 Next task:
-1. Complete physical migration of legacy Spec-002 tests from `tests/lsi` into `tests/kernel/v1` (mirror import is already in place so sovereign gate coverage is active).
-2. Tighten registry audit from warning mode to strict mode once legacy non-kernel codes are either documented or split into separate registries.
-3. Replace deprecated `jsonschema.RefResolver` in schema-contract tests with `referencing`-based resolver wiring.
+1. Expand capability policy surface from test scaffold to runtime policy sources and deterministic version metadata.
+2. Add replay fixture vectors and deterministic comparator evidence for multi-turn parity, not single-turn synthetic shape only.
+3. Tighten replay compare semantics from whole-object list equality to contract-scoped field parity rules in `Execution/replay-contract.md`.
