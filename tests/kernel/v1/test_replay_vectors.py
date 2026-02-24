@@ -25,3 +25,7 @@ def test_replay_vectors_compare_runs_contract_surface() -> None:
         if vector["expect_outcome"] == "FAIL":
             codes = [issue["code"] for issue in response["issues"]]
             assert vector["expect_code"] in codes, vector["name"]
+            details = response["issues"][0]["details"]
+            expected_fields = vector.get("expect_mismatch_fields")
+            if expected_fields is not None:
+                assert details["mismatch_fields"] == expected_fields, vector["name"]
