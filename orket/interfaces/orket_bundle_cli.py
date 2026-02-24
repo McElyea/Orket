@@ -17,6 +17,7 @@ from orket.core.domain.orket_manifest import (
 )
 from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.refactor_transaction import run_refactor_transaction
+from orket.interfaces.scaffold_init import run_scaffold_init
 
 
 ERROR_MANIFEST_NOT_FOUND = "E_MANIFEST_NOT_FOUND"
@@ -568,7 +569,24 @@ def _parser() -> argparse.ArgumentParser:
     api_add.add_argument("--dry-run", action="store_true", help="Plan only, no writes.")
     api_add.add_argument("--verify-profile", default="default", help="Verification profile from orket.config.json.")
     api_add.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    init_parser = subparsers.add_parser("init", help="Generate scaffold from local blueprint templates.")
+    init_parser.add_argument("template", help="Blueprint name (e.g. minimal-node).")
+    init_parser.add_argument("project_name", help="Project name token for template hydration.")
+    init_parser.add_argument("--dir", default="", help="Output directory path (defaults to ./<project_name>).")
+    init_parser.add_argument("--vars", default="", help="Comma-separated key=value variables.")
+    init_parser.add_argument("--no-verify", action="store_true", help="Skip post-generation verify commands.")
+    init_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     return parser
+
+
+def _parse_vars(raw: str) -> Dict[str, str]:
+    values: Dict[str, str] = {}
+    for token in [part.strip() for part in str(raw or "").split(",") if part.strip()]:
+        key, sep, value = token.partition("=")
+        if sep and key.strip():
+            values[key.strip()] = value.strip()
+    return values
 
 
 def _render_human(result: Dict[str, Any]) -> str:
@@ -626,6 +644,14 @@ def main(argv: List[str] | None = None) -> int:
             dry_run=bool(args.dry_run),
             auto_confirm=bool(args.yes),
             verify_profile=str(args.verify_profile),
+        )
+    elif args.command == "init":
+        result = run_scaffold_init(
+            template_name=str(args.template),
+            project_name=str(args.project_name),
+            output_dir=(str(args.dir).strip() or None),
+            variable_overrides=_parse_vars(str(args.vars or "")),
+            verify_enabled=not bool(args.no_verify),
         )
     else:
         print(json.dumps({"ok": False, "error": "unsupported_command"}, ensure_ascii=False))

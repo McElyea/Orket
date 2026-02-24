@@ -13,7 +13,7 @@ If the user requests "follow roadmap" without naming a project, execute the high
 Current default target: `core-pillars`.
 
 ## Priority Now
-1. `core-pillars`: execute by canonical slice plan (`docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`), current active slice `CP-1.3`.
+1. `core-pillars`: execute by canonical slice plan (`docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`), current active slice `CP-2.1`.
 2. `core-pillars`: active requirements/contracts (`docs/projects/core-pillars/01-REQUIREMENTS.md`).
 3. `core-pillars`: milestone tracking (`docs/projects/core-pillars/03-MILESTONES.md`).
 4. `OS`: paused/deferred while pillar-first path is validated (`docs/projects/OS/NEXT_PART_V1_REQUIREMENTS.md`).
