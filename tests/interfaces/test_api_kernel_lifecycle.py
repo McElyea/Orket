@@ -268,3 +268,21 @@ def test_kernel_compare_endpoint_response_conforms_to_replay_report_schema(monke
     schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
     registry = _build_registry(schema)
     Draft202012Validator(schema, registry=registry).validate(response.json())
+
+
+def test_kernel_compare_endpoint_realistic_artifact_fixture(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    fixture_path = Path("tests/interfaces/fixtures/kernel_compare_realistic_fixture.json")
+    fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+
+    response = client.post(
+        "/v1/kernel/compare",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_a": fixture["run_a"],
+            "run_b": fixture["run_b"],
+            "compare_mode": fixture["compare_mode"],
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["outcome"] == fixture["expect_outcome"]

@@ -1,0 +1,52 @@
+{
+  "run_a": {
+    "run_id": "sess-20260224-a",
+    "contract_version": "kernel_api/v1",
+    "schema_version": "v1",
+    "turn_digests": [
+      {
+        "turn_id": "turn-0001",
+        "turn_result_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "stage_outcomes": [
+      {
+        "turn_id": "turn-0001",
+        "stage": "promotion",
+        "outcome": "PASS"
+      }
+    ],
+    "issues": [],
+    "events": [
+      "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] promoted |"
+    ],
+    "trace_dir": "C:/agent/observability/sess-20260224-a/ISSUE-1/001_developer",
+    "checkpoint_path": "C:/agent/observability/sess-20260224-a/ISSUE-1/001_developer/checkpoint.json"
+  },
+  "run_b": {
+    "run_id": "sess-20260224-b",
+    "contract_version": "kernel_api/v1",
+    "schema_version": "v1",
+    "turn_digests": [
+      {
+        "turn_id": "turn-0001",
+        "turn_result_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "stage_outcomes": [
+      {
+        "turn_id": "turn-0001",
+        "stage": "promotion",
+        "outcome": "PASS"
+      }
+    ],
+    "issues": [],
+    "events": [
+      "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] promoted from another host |"
+    ],
+    "trace_dir": "/tmp/agent/observability/sess-20260224-b/ISSUE-1/001_developer",
+    "checkpoint_path": "/tmp/agent/observability/sess-20260224-b/ISSUE-1/001_developer/checkpoint.json"
+  },
+  "compare_mode": "structural_parity",
+  "expect_outcome": "PASS"
+}
