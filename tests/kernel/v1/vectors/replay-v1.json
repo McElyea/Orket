@@ -54,6 +54,66 @@
       "expect_outcome": "PASS"
     },
     {
+      "name": "pass-mixed-issue-order-normalized",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/2",
+            "message": "order",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/0",
+            "message": "orphan",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/0",
+            "message": "different human text",
+            "details": {"note": "ignored by contract parity"}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/2",
+            "message": "different message",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "expect_outcome": "PASS"
+    },
+    {
       "name": "fail-stage-outcome-mismatch",
       "run_a": {
         "run_id": "run-a",

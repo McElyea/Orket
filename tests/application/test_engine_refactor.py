@@ -30,6 +30,39 @@ class _FakeLoader:
         return None
 
 
+class _FakeKernelGateway:
+    def __init__(self):
+        self.calls = []
+
+    def start_run(self, request):
+        self.calls.append(("start_run", request))
+        return {"kind": "start", "request": request}
+
+    def execute_turn(self, request):
+        self.calls.append(("execute_turn", request))
+        return {"kind": "execute", "request": request}
+
+    def finish_run(self, request):
+        self.calls.append(("finish_run", request))
+        return {"kind": "finish", "request": request}
+
+    def resolve_capability(self, request):
+        self.calls.append(("resolve_capability", request))
+        return {"kind": "resolve", "request": request}
+
+    def authorize_tool_call(self, request):
+        self.calls.append(("authorize_tool_call", request))
+        return {"kind": "authorize", "request": request}
+
+    def replay_run(self, request):
+        self.calls.append(("replay_run", request))
+        return {"kind": "replay", "request": request}
+
+    def compare_runs(self, request):
+        self.calls.append(("compare_runs", request))
+        return {"kind": "compare", "request": request}
+
+
 @pytest.mark.asyncio
 async def test_engine_explicit_calls(monkeypatch):
     workspace = Path("./test_workspace")
@@ -87,4 +120,41 @@ def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
     assert replay["messages"][0]["role"] == "system"
     assert replay["model_response"] == "response"
     assert replay["parsed_tool_calls"][0]["tool"] == "write_file"
+
+
+def test_engine_kernel_gateway_path(monkeypatch, tmp_path):
+    fake_pipeline = _FakePipeline()
+    fake_gateway = _FakeKernelGateway()
+
+    monkeypatch.setattr("orket.settings.load_env", lambda: None)
+    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+
+    engine = OrchestrationEngine(tmp_path, kernel_gateway=fake_gateway)
+    request = {"contract_version": "kernel_api/v1", "workflow_id": "wf-engine"}
+
+    start = engine.kernel_start_run(request)
+    execute = engine.kernel_execute_turn({"contract_version": "kernel_api/v1"})
+    finish = engine.kernel_finish_run({"contract_version": "kernel_api/v1"})
+    resolve = engine.kernel_resolve_capability({"contract_version": "kernel_api/v1"})
+    authorize = engine.kernel_authorize_tool_call({"contract_version": "kernel_api/v1"})
+    replay = engine.kernel_replay_run({"contract_version": "kernel_api/v1"})
+    compare = engine.kernel_compare_runs({"contract_version": "kernel_api/v1"})
+
+    assert start["kind"] == "start"
+    assert execute["kind"] == "execute"
+    assert finish["kind"] == "finish"
+    assert resolve["kind"] == "resolve"
+    assert authorize["kind"] == "authorize"
+    assert replay["kind"] == "replay"
+    assert compare["kind"] == "compare"
+    assert [name for name, _ in fake_gateway.calls] == [
+        "start_run",
+        "execute_turn",
+        "finish_run",
+        "resolve_capability",
+        "authorize_tool_call",
+        "replay_run",
+        "compare_runs",
+    ]
 

@@ -15,6 +15,7 @@ from orket.application.services.runtime_policy import (
     resolve_gitea_state_pilot_enabled,
     resolve_state_backend_mode,
 )
+from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 from orket.runtime_paths import resolve_runtime_db_path
@@ -35,7 +36,8 @@ class OrchestrationEngine:
                  snapshots_repo: Optional[AsyncSnapshotRepository] = None,
                  success_repo: Optional[AsyncSuccessRepository] = None,
                  run_ledger_repo: Optional[AsyncRunLedgerRepository] = None,
-                 decision_nodes: Optional[DecisionNodeRegistry] = None):
+                 decision_nodes: Optional[DecisionNodeRegistry] = None,
+                 kernel_gateway: Optional[KernelV1Gateway] = None):
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.engine_runtime_node = self.decision_nodes.resolve_engine_runtime()
         self.engine_runtime_node.bootstrap_environment()
@@ -60,6 +62,7 @@ class OrchestrationEngine:
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
         self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
+        self.kernel_gateway = kernel_gateway or KernelV1Gateway()
 
         
         # PERSISTENT PIEPELINE (Avoid rebuilds)
@@ -267,3 +270,23 @@ class OrchestrationEngine:
             "parsed_tool_calls": _read_json(parsed_tools_path),
         }
 
+    def kernel_start_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway.start_run(request)
+
+    def kernel_execute_turn(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway.execute_turn(request)
+
+    def kernel_finish_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway.finish_run(request)
+
+    def kernel_resolve_capability(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway.resolve_capability(request)
+
+    def kernel_authorize_tool_call(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway.authorize_tool_call(request)
+
+    def kernel_replay_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway.replay_run(request)
+
+    def kernel_compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway.compare_runs(request)

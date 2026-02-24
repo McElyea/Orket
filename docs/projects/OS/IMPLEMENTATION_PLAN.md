@@ -205,8 +205,10 @@ Completed in current execution slice:
 16. Policy artifact schema is now normative at `docs/projects/OS/contracts/kernel-capability-policy-v1.schema.json` and enforced by kernel-v1 tests.
 17. Non-test adoption of the explicit API surface is active via `orket/application/services/kernel_v1_gateway.py`.
 18. Replay vectors now include event-code multiset drift and mixed turn-count edge cases.
+19. Orchestration integration path is active: `orket/orchestration/engine.py` now routes kernel v1 calls through `KernelV1Gateway`.
+20. Replay vectors include mixed issue-order normalization proof (`pass-mixed-issue-order-normalized`).
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Define integration path from existing orchestration/session flow into `KernelV1Gateway`.
-3. Add a replay vector for mixed issue ordering that proves deterministic sort normalization before comparison.
+2. Add a direct application workflow path that can execute a minimal kernel-v1 lifecycle (`start -> execute -> finish`) through `KernelV1Gateway`.
+3. Add integration coverage for replay-compare edge outcomes via orchestration-facing API call boundaries.
