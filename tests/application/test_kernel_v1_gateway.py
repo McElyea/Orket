@@ -18,3 +18,22 @@ def test_kernel_v1_gateway_uses_api_surface() -> None:
         }
     )
     assert resolve["capability_plan"]["mode"] == "enabled"
+
+
+def test_kernel_v1_gateway_run_lifecycle_minimal_path() -> None:
+    gateway = KernelV1Gateway()
+    lifecycle = gateway.run_lifecycle(
+        workflow_id="wf-lifecycle",
+        execute_turn_requests=[
+            {
+                "turn_id": "turn-0001",
+                "commit_intent": "stage_only",
+                "turn_input": {},
+            }
+        ],
+        finish_outcome="PASS",
+    )
+    assert lifecycle["start"]["contract_version"] == "kernel_api/v1"
+    assert len(lifecycle["turns"]) == 1
+    assert lifecycle["turns"][0]["contract_version"] == "kernel_api/v1"
+    assert lifecycle["finish"]["outcome"] == "PASS"

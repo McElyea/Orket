@@ -207,8 +207,10 @@ Completed in current execution slice:
 18. Replay vectors now include event-code multiset drift and mixed turn-count edge cases.
 19. Orchestration integration path is active: `orket/orchestration/engine.py` now routes kernel v1 calls through `KernelV1Gateway`.
 20. Replay vectors include mixed issue-order normalization proof (`pass-mixed-issue-order-normalized`).
+21. Application workflow path supports minimal kernel lifecycle execution through `KernelV1Gateway.run_lifecycle(...)`.
+22. Orchestration-facing replay/compare boundary coverage is active in `tests/application/test_engine_refactor.py`.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Add a direct application workflow path that can execute a minimal kernel-v1 lifecycle (`start -> execute -> finish`) through `KernelV1Gateway`.
-3. Add integration coverage for replay-compare edge outcomes via orchestration-facing API call boundaries.
+2. Add a replay vector for mixed issue ordering that includes both pointer drift and stage drift in one case and verifies deterministic mismatch field ordering.
+3. Map one production request path (API endpoint or workflow entry) to call `OrchestrationEngine.kernel_run_lifecycle`.

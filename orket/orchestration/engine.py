@@ -290,3 +290,18 @@ class OrchestrationEngine:
 
     def kernel_compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway.compare_runs(request)
+
+    def kernel_run_lifecycle(
+        self,
+        *,
+        workflow_id: str,
+        execute_turn_requests: List[Dict[str, Any]],
+        finish_outcome: str = "PASS",
+        start_request: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        return self.kernel_gateway.run_lifecycle(
+            workflow_id=workflow_id,
+            execute_turn_requests=execute_turn_requests,
+            finish_outcome=finish_outcome,
+            start_request=start_request,
+        )

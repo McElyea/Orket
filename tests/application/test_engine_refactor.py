@@ -158,3 +158,52 @@ def test_engine_kernel_gateway_path(monkeypatch, tmp_path):
         "compare_runs",
     ]
 
+
+def test_engine_kernel_lifecycle_and_compare_boundary_with_real_gateway(monkeypatch, tmp_path):
+    fake_pipeline = _FakePipeline()
+    monkeypatch.setattr("orket.settings.load_env", lambda: None)
+    monkeypatch.setattr("orket.orket.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.orket.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
+
+    engine = OrchestrationEngine(tmp_path)
+    lifecycle = engine.kernel_run_lifecycle(
+        workflow_id="wf-engine-lifecycle",
+        execute_turn_requests=[
+            {
+                "turn_id": "turn-0001",
+                "commit_intent": "stage_only",
+                "turn_input": {},
+            }
+        ],
+        finish_outcome="PASS",
+    )
+    assert lifecycle["start"]["contract_version"] == "kernel_api/v1"
+    assert lifecycle["finish"]["outcome"] == "PASS"
+
+    compare = engine.kernel_compare_runs(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_a": {
+                "run_id": "run-a",
+                "contract_version": "kernel_api/v1",
+                "schema_version": "v1",
+                "turn_digests": [{"turn_id": "turn-0001", "turn_result_digest": "0" * 64}],
+                "stage_outcomes": [{"turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS"}],
+                "issues": [],
+                "events": [],
+            },
+            "run_b": {
+                "run_id": "run-b",
+                "contract_version": "kernel_api/v1",
+                "schema_version": "v1",
+                "turn_digests": [{"turn_id": "turn-0001", "turn_result_digest": "1" * 64}],
+                "stage_outcomes": [{"turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS"}],
+                "issues": [],
+                "events": [],
+            },
+            "compare_mode": "structural_parity",
+        }
+    )
+    assert compare["outcome"] == "FAIL"
+    assert compare["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
+
