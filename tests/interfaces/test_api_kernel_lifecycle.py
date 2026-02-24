@@ -36,3 +36,29 @@ def test_kernel_lifecycle_endpoint_routes_to_engine(monkeypatch) -> None:
     assert response.json() == {"ok": True, "workflow_id": "wf-api-kernel"}
     assert captured["workflow_id"] == "wf-api-kernel"
     assert captured["execute_turn_requests"][0]["turn_id"] == "turn-0001"
+
+
+def test_kernel_compare_endpoint_routes_to_engine(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    def fake_kernel_compare_runs(request):
+        captured["request"] = request
+        return {"outcome": "FAIL", "issues": [{"code": "E_REPLAY_EQUIVALENCE_FAILED"}]}
+
+    monkeypatch.setattr(api_module.engine, "kernel_compare_runs", fake_kernel_compare_runs)
+
+    response = client.post(
+        "/v1/kernel/compare",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_a": {"run_id": "run-a"},
+            "run_b": {"run_id": "run-b"},
+            "compare_mode": "structural_parity",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["outcome"] == "FAIL"
+    assert response.json()["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
+    assert captured["request"]["contract_version"] == "kernel_api/v1"
+    assert captured["request"]["run_a"]["run_id"] == "run-a"

@@ -122,6 +122,12 @@ class KernelLifecycleRequest(BaseModel):
     start_request: Optional[dict[str, Any]] = None
 
 
+class KernelCompareRequest(BaseModel):
+    run_a: dict[str, Any]
+    run_b: dict[str, Any]
+    compare_mode: str = "structural_parity"
+
+
 SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
     "architecture_mode": {
         "env_var": "ORKET_ARCHITECTURE_MODE",
@@ -420,6 +426,18 @@ async def kernel_lifecycle(req: KernelLifecycleRequest):
         execute_turn_requests=req.execute_turn_requests,
         finish_outcome=req.finish_outcome,
         start_request=req.start_request,
+    )
+
+
+@v1_router.post("/kernel/compare")
+async def kernel_compare(req: KernelCompareRequest):
+    return engine.kernel_compare_runs(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_a": req.run_a,
+            "run_b": req.run_b,
+            "compare_mode": req.compare_mode,
+        }
     )
 
 @v1_router.post("/system/clear-logs")
