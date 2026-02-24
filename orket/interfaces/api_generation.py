@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+from orket.interfaces.replay_artifacts import write_replay_artifact
 
 ERROR_SCOPE_REQUIRED = "E_SCOPE_REQUIRED"
 ERROR_DRAFT_FAILURE = "E_DRAFT_FAILURE"
@@ -164,30 +165,51 @@ def run_api_add_transaction(
     verify_profile: str = "default",
 ) -> Dict[str, Any]:
     repo_root = Path.cwd().resolve()
+    request_payload = {
+        "route_name": route_name,
+        "schema": schema_text,
+        "method": method,
+        "scope": list(scope_inputs),
+        "dry_run": bool(dry_run),
+        "auto_confirm": bool(auto_confirm),
+        "verify_profile": verify_profile,
+    }
     if not _is_repo_git(repo_root):
-        return {"ok": False, "code": ERROR_GIT_REQUIRED, "message": "Current directory must be a git repository."}
+        result = {"ok": False, "code": ERROR_GIT_REQUIRED, "message": "Current directory must be a git repository."}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
     if not _is_clean_worktree(repo_root):
-        return {"ok": False, "code": ERROR_WORKTREE_DIRTY, "message": "Working tree must be clean before api-add transaction runs."}
+        result = {"ok": False, "code": ERROR_WORKTREE_DIRTY, "message": "Working tree must be clean before api-add transaction runs."}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
     if not scope_inputs:
-        return {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "--scope is required."}
+        result = {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "--scope is required."}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     try:
         fields = _parse_schema(schema_text)
     except ValueError as exc:
-        return {"ok": False, "code": ERROR_SCHEMA_PARSE_FAILED, "message": str(exc)}
+        result = {"ok": False, "code": ERROR_SCHEMA_PARSE_FAILED, "message": str(exc)}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     try:
         verify_commands = _load_verify_commands(repo_root, verify_profile)
     except ValueError as exc:
-        return {"ok": False, "code": ERROR_CONFIG_INVALID, "message": str(exc)}
+        result = {"ok": False, "code": ERROR_CONFIG_INVALID, "message": str(exc)}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     detected = _detect_express_style(repo_root)
     if detected is None:
-        return {
+        result = {
             "ok": False,
             "code": ERROR_PROJECT_STYLE_UNSUPPORTED,
             "message": "Unsupported project style for v1 API generation adapter.",
         }
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
     routes_index, routes_dir, controllers_dir = detected
     types_dir = repo_root / "src" / "types"
     route_file = routes_dir / f"{route_name}.js"
@@ -199,22 +221,30 @@ def run_api_add_transaction(
     for path in touch_set:
         violation = _validate_scoped(path, scope_roots)
         if violation:
-            return {
+            result = {
                 "ok": False,
                 "code": ERROR_WRITE_OUT_OF_SCOPE,
                 "message": f"Write blocked: {path.relative_to(repo_root).as_posix()}",
             }
+            write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+            return result
 
     plan_text = _render_plan(route_name, scope_inputs, [path.relative_to(repo_root) for path in touch_set], verify_commands)
 
     if dry_run:
-        return {"ok": True, "code": "OK", "message": "Dry run only.", "plan": plan_text}
+        result = {"ok": True, "code": "OK", "message": "Dry run only.", "plan": plan_text}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
     if not auto_confirm:
-        return {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "Mutation requires --yes confirmation.", "plan": plan_text}
+        result = {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "Mutation requires --yes confirmation.", "plan": plan_text}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     head = _run(["git", "rev-parse", "HEAD"], cwd=repo_root)
     if head.returncode != 0:
-        return {"ok": False, "code": ERROR_INTERNAL, "message": "Unable to resolve git HEAD."}
+        result = {"ok": False, "code": ERROR_INTERNAL, "message": "Unable to resolve git HEAD."}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
     head_sha = head.stdout.strip()
 
     try:
@@ -224,7 +254,9 @@ def run_api_add_transaction(
         register_line = f"{route_registration}(router);"
         already_present = import_line in routes_index_text and register_line in routes_index_text
         if already_present and route_file.exists() and controller_file.exists() and types_file.exists():
-            return {"ok": True, "code": "OK", "message": "Idempotent no-op: route already present.", "plan": plan_text, "idempotent": True}
+            result = {"ok": True, "code": "OK", "message": "Idempotent no-op: route already present.", "plan": plan_text, "idempotent": True}
+            write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+            return result
 
         route_file.parent.mkdir(parents=True, exist_ok=True)
         controllers_dir.mkdir(parents=True, exist_ok=True)
@@ -253,7 +285,7 @@ def run_api_add_transaction(
             if verify.returncode != 0:
                 _run(["git", "reset", "--hard", head_sha], cwd=repo_root)
                 _run(["git", "clean", "-fd"], cwd=repo_root)
-                return {
+                result = {
                     "ok": False,
                     "code": ERROR_DRAFT_FAILURE,
                     "message": f"Generated draft failed verification and was reverted: {verify_command}",
@@ -262,9 +294,15 @@ def run_api_add_transaction(
                     "verify_output_tail": _tail((verify.stdout or "") + "\n" + (verify.stderr or "")),
                     "plan": plan_text,
                 }
+                write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+                return result
 
-        return {"ok": True, "code": "OK", "message": "API route generated.", "plan": plan_text}
+        result = {"ok": True, "code": "OK", "message": "API route generated.", "plan": plan_text}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
     except OSError as exc:
         _run(["git", "reset", "--hard", head_sha], cwd=repo_root)
         _run(["git", "clean", "-fd"], cwd=repo_root)
-        return {"ok": False, "code": ERROR_INTERNAL, "message": f"api add failed with internal I/O error: {exc}"}
+        result = {"ok": False, "code": ERROR_INTERNAL, "message": f"api add failed with internal I/O error: {exc}"}
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result

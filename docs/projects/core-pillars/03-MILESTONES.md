@@ -9,8 +9,9 @@ Canonical slice execution detail:
 1. CP-1.1 Transaction Shell Foundation: completed.
 2. CP-1.2 API Generation First Adapter: completed.
 3. CP-1.3 Minimal Scaffolding Hydration: completed.
-4. CP-2.1 Replay Artifact Recorder (Bounded): active next.
-5. CP-2+ remaining slices: pending.
+4. CP-2.1 Replay Artifact Recorder (Bounded): completed.
+5. CP-2.2 Replay Comparator and Drift Gates: active next.
+6. CP-2+ remaining slices: pending.
 
 ## CP-1 (P1): Safety and API Vertical Slice
 1. Land command transaction shell and safety contracts (`A1`, `A2`, `A4`) first.

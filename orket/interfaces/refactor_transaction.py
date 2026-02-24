@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.interfaces.replay_artifacts import write_replay_artifact
 
 ERROR_SCOPE_REQUIRED = "E_SCOPE_REQUIRED"
 ERROR_TOUCHSET_EMPTY = "E_TOUCHSET_EMPTY"
@@ -144,53 +145,78 @@ def run_refactor_transaction(
     verify_profile: str = "default",
 ) -> Dict[str, Any]:
     repo_root = Path.cwd().resolve()
+    request_payload = {
+        "instruction": instruction,
+        "scope": list(scope_inputs),
+        "dry_run": bool(dry_run),
+        "auto_confirm": bool(auto_confirm),
+        "verify_profile": verify_profile,
+    }
     if not _is_repo_git(repo_root):
-        return {
+        result = {
             "ok": False,
             "code": ERROR_GIT_REQUIRED,
             "message": "Current directory must be a git repository.",
         }
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
     if not _is_clean_worktree(repo_root):
-        return {
+        result = {
             "ok": False,
             "code": ERROR_WORKTREE_DIRTY,
             "message": "Working tree must be clean before refactor transaction runs.",
         }
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     if not scope_inputs:
-        return {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "--scope is required."}
+        result = {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "--scope is required."}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     parsed = _parse_instruction(instruction)
     if parsed is None:
-        return {
+        result = {
             "ok": False,
             "code": ERROR_UNSUPPORTED_INSTRUCTION,
             "message": "Only 'rename <SymbolA> to <SymbolB>' is supported in CP-1.1.",
         }
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
     rename_from, rename_to = parsed
 
     try:
         verify_commands = _load_verify_commands(repo_root, verify_profile)
     except ValueError as exc:
-        return {"ok": False, "code": ERROR_CONFIG_INVALID, "message": str(exc)}
+        result = {"ok": False, "code": ERROR_CONFIG_INVALID, "message": str(exc)}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     scope_roots = [(repo_root / scope).resolve() for scope in scope_inputs]
     touch_set = _compute_touch_set(repo_root, scope_roots, rename_from)
     plan_text = _render_plan(instruction, scope_inputs, [path.relative_to(repo_root) for path in touch_set], verify_commands)
 
     if not touch_set:
-        return {"ok": False, "code": ERROR_TOUCHSET_EMPTY, "message": "No files in scope matched refactor plan.", "plan": plan_text}
+        result = {"ok": False, "code": ERROR_TOUCHSET_EMPTY, "message": "No files in scope matched refactor plan.", "plan": plan_text}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     if dry_run:
-        return {"ok": True, "code": "OK", "message": "Dry run only.", "plan": plan_text, "touch_count": len(touch_set)}
+        result = {"ok": True, "code": "OK", "message": "Dry run only.", "plan": plan_text, "touch_count": len(touch_set)}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     if not auto_confirm:
         # Non-interactive default in test/runtime shell; explicit --yes required for mutation.
-        return {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "Mutation requires --yes confirmation.", "plan": plan_text}
+        result = {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "Mutation requires --yes confirmation.", "plan": plan_text}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     head = _run(["git", "rev-parse", "HEAD"], cwd=repo_root)
     if head.returncode != 0:
-        return {"ok": False, "code": ERROR_INTERNAL, "message": "Unable to resolve git HEAD."}
+        result = {"ok": False, "code": ERROR_INTERNAL, "message": "Unable to resolve git HEAD."}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
     head_sha = head.stdout.strip()
 
     pattern = re.compile(rf"\b{re.escape(rename_from)}\b")
@@ -199,12 +225,14 @@ def run_refactor_transaction(
         for path in touch_set:
             violation = _validate_write(path, scope_roots)
             if violation:
-                return {
+                result = {
                     "ok": False,
                     "code": ERROR_MODEL_OUTPUT_OUT_OF_SCOPE,
                     "message": f"Planned write out of scope: {path.relative_to(repo_root)}",
                     "plan": plan_text,
                 }
+                write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+                return result
             source = path.read_text(encoding="utf-8")
             mutated = pattern.sub(rename_to, source)
             path.write_text(mutated, encoding="utf-8")
@@ -214,7 +242,7 @@ def run_refactor_transaction(
             if verify.returncode != 0:
                 _run(["git", "reset", "--hard", head_sha], cwd=repo_root)
                 _run(["git", "clean", "-fd"], cwd=repo_root)
-                return {
+                result = {
                     "ok": False,
                     "code": ERROR_VERIFY_FAILED_REVERTED,
                     "message": f"Verification failed and changes were reverted: {verify_command}",
@@ -223,9 +251,15 @@ def run_refactor_transaction(
                     "verify_output_tail": _tail((verify.stdout or "") + "\n" + (verify.stderr or "")),
                     "plan": plan_text,
                 }
+                write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+                return result
 
-        return {"ok": True, "code": "OK", "message": "Refactor completed.", "plan": plan_text, "touch_count": len(touch_set)}
+        result = {"ok": True, "code": "OK", "message": "Refactor completed.", "plan": plan_text, "touch_count": len(touch_set)}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result
     except OSError as exc:
         _run(["git", "reset", "--hard", head_sha], cwd=repo_root)
         _run(["git", "clean", "-fd"], cwd=repo_root)
-        return {"ok": False, "code": ERROR_INTERNAL, "message": f"Refactor failed with internal I/O error: {exc}"}
+        result = {"ok": False, "code": ERROR_INTERNAL, "message": f"Refactor failed with internal I/O error: {exc}"}
+        write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+        return result

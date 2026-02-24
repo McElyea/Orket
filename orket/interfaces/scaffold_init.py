@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.interfaces.replay_artifacts import write_replay_artifact
 
 ERROR_BLUEPRINT_NOT_FOUND = "E_BLUEPRINT_NOT_FOUND"
 ERROR_OUTPUT_DIR_EXISTS = "E_OUTPUT_DIR_EXISTS"
@@ -70,22 +71,34 @@ def run_scaffold_init(
     variable_overrides: Dict[str, str] | None = None,
     verify_enabled: bool = True,
 ) -> Dict[str, Any]:
+    repo_root = Path.cwd().resolve()
+    request_payload = {
+        "template_name": template_name,
+        "project_name": project_name,
+        "output_dir": output_dir,
+        "variables": variable_overrides or {},
+        "verify_enabled": bool(verify_enabled),
+    }
     blueprints = _builtin_blueprints()
     blueprint = blueprints.get(template_name)
     if blueprint is None:
-        return {
+        result = {
             "ok": False,
             "code": ERROR_BLUEPRINT_NOT_FOUND,
             "message": f"Blueprint not found: {template_name}",
         }
+        write_replay_artifact(command_name="init", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     target = Path(output_dir).resolve() if output_dir else (Path.cwd() / project_name).resolve()
     if target.exists():
-        return {
+        result = {
             "ok": False,
             "code": ERROR_OUTPUT_DIR_EXISTS,
             "message": f"Output directory already exists: {target}",
         }
+        write_replay_artifact(command_name="init", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     variables = {"project_name": project_name}
     for key, value in sorted((variable_overrides or {}).items()):
@@ -99,11 +112,13 @@ def run_scaffold_init(
             path.write_text(_render_template(raw, variables), encoding="utf-8")
     except OSError as exc:
         shutil.rmtree(target, ignore_errors=True)
-        return {
+        result = {
             "ok": False,
             "code": ERROR_INIT_CONFIG_INVALID,
             "message": f"Failed to write scaffold output: {exc}",
         }
+        write_replay_artifact(command_name="init", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     if verify_enabled:
         for command in blueprint.verify_commands:
@@ -111,7 +126,7 @@ def run_scaffold_init(
             if run.returncode != 0:
                 tail = _tail((run.stdout or "") + "\n" + (run.stderr or ""))
                 shutil.rmtree(target, ignore_errors=True)
-                return {
+                result = {
                     "ok": False,
                     "code": ERROR_INIT_VERIFY_FAILED,
                     "message": f"Init verify failed: {command}",
@@ -119,8 +134,10 @@ def run_scaffold_init(
                     "verify_exit_code": run.returncode,
                     "verify_output_tail": tail,
                 }
+                write_replay_artifact(command_name="init", request=request_payload, result=result, repo_root=repo_root)
+                return result
 
-    return {
+    result = {
         "ok": True,
         "code": "OK",
         "message": "Scaffold generated.",
@@ -129,3 +146,5 @@ def run_scaffold_init(
         "output_dir": str(target),
         "verify_enabled": verify_enabled,
     }
+    write_replay_artifact(command_name="init", request=request_payload, result=result, repo_root=repo_root)
+    return result
