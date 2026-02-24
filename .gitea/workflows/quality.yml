@@ -34,6 +34,10 @@ jobs:
         run: |
           python -m pytest -q tests/kernel/v1
 
+      - name: Enforce kernel API interface boundary tests
+        run: |
+          python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py
+
       - name: Enforce TS digest parity gate
         run: |
           npm test --prefix conformance/ts
