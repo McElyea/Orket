@@ -202,8 +202,9 @@ Completed in current execution slice:
 13. Replay vectors now include deterministic mismatch-field assertions (`details.mismatch_fields`) for stage/schema/issue-pointer drift.
 14. Policy artifact contract test is active at `tests/kernel/v1/test_capability_policy_contract.py`.
 15. Explicit kernel API module surface is now available at `orket/kernel/v1/api.py` with stable exported handlers for run lifecycle, capability, and replay.
+16. Policy artifact schema is now normative at `docs/projects/OS/contracts/kernel-capability-policy-v1.schema.json` and enforced by kernel-v1 tests.
 
 Next task:
 1. Add richer replay fixtures covering event-code multiset drift and mixed turn-count edge cases.
-2. Add a JSON Schema for `kernel_capability_policy_v1.json` and enforce it in kernel-v1 tests.
-3. Wire the explicit kernel API surface into one non-test call site as the canonical import path.
+2. Wire the explicit kernel API surface into one non-test call site as the canonical import path.
+3. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.

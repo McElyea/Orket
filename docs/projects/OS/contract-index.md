@@ -43,6 +43,7 @@ Anything not listed here is non-authoritative for OS v1.
 | TurnResult | `contracts/turn-result.schema.json` | kernel_api/v1 | Deterministic issue ordering required |
 | ReplayReport | `contracts/replay-report.schema.json` | kernel_api/v1 | Deterministic parity results |
 | CapabilityDecision | `contracts/capability-decision.schema.json` | kernel_api/v1 | Auditable deny/allow |
+| Kernel Capability Policy | `contracts/kernel-capability-policy-v1.schema.json` | kernel_api/v1 | Capability policy artifact shape |
 | TombstoneV1 | `contracts/tombstone-v1.schema.json` | kernel_api/v1 | Canonical delete payload shape |
 | RunLedgerV1 | `contracts/run-ledger-v1.schema.json` | kernel_api/v1 | Sequential promotion high-water mark |
 | Error Codes Registry | `contracts/error-codes-v1.schema.json` | os/v1 | Stable code list |

@@ -1,0 +1,37 @@
+{
+  "$id": "https://orket.dev/os/contracts/kernel-capability-policy-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KernelCapabilityPolicyV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "policy_id",
+    "policy_source",
+    "policy_version",
+    "default_permissions",
+    "role_task_permissions"
+  ],
+  "properties": {
+    "contract_version": { "const": "kernel_api/v1" },
+    "policy_id": { "const": "kernel_capability_policy_v1" },
+    "policy_source": { "type": "string", "minLength": 1 },
+    "policy_version": { "type": "string", "minLength": 1 },
+    "default_permissions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "role_task_permissions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
