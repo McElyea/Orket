@@ -408,6 +408,54 @@
       "expect_outcome": "FAIL",
       "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
       "expect_mismatch_fields": ["event_codes", "issue_codes", "stage_outcomes"]
+    },
+    {
+      "name": "fail-pointer-and-stage-drift-ordered",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS" }
+        ],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/0",
+            "message": "orphan",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "FAIL" }
+        ],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/1",
+            "message": "orphan",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "expect_outcome": "FAIL",
+      "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
+      "expect_mismatch_fields": ["issue_codes", "stage_outcomes"]
     }
   ]
 }

@@ -152,6 +152,22 @@ def test_kernel_replay_endpoint_real_engine_success_with_full_descriptor(monkeyp
     Draft202012Validator(schema, registry=registry).validate(payload)
 
 
+def test_kernel_replay_endpoint_real_engine_fail_payload_conforms_schema(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.post(
+        "/v1/kernel/replay",
+        headers={"X-API-Key": "test-key"},
+        json={"run_descriptor": {"run_id": "run-r4"}},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["outcome"] == "FAIL"
+    assert payload["issues"][0]["code"] == "E_REPLAY_INPUT_MISSING"
+    schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    registry = _build_registry(schema)
+    Draft202012Validator(schema, registry=registry).validate(payload)
+
+
 def test_kernel_compare_endpoint_real_engine_detects_pointer_drift(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -238,6 +254,60 @@ def test_kernel_compare_endpoint_real_engine_contract_version_drift(monkeypatch)
     assert payload["outcome"] == "FAIL"
     assert payload["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
     assert payload["issues"][0]["details"]["mismatch_fields"] == ["contract_version"]
+
+
+def test_kernel_compare_endpoint_real_engine_pointer_and_stage_drift_ordering(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.post(
+        "/v1/kernel/compare",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_a": {
+                "run_id": "run-a",
+                "contract_version": "kernel_api/v1",
+                "schema_version": "v1",
+                "turn_digests": [],
+                "stage_outcomes": [{"turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS"}],
+                "issues": [
+                    {
+                        "contract_version": "kernel_api/v1",
+                        "level": "FAIL",
+                        "stage": "lsi",
+                        "code": "E_LSI_ORPHAN_TARGET",
+                        "location": "/links/declares/0",
+                        "message": "x",
+                        "details": {},
+                    }
+                ],
+                "events": [],
+            },
+            "run_b": {
+                "run_id": "run-b",
+                "contract_version": "kernel_api/v1",
+                "schema_version": "v1",
+                "turn_digests": [],
+                "stage_outcomes": [{"turn_id": "turn-0001", "stage": "promotion", "outcome": "FAIL"}],
+                "issues": [
+                    {
+                        "contract_version": "kernel_api/v1",
+                        "level": "FAIL",
+                        "stage": "lsi",
+                        "code": "E_LSI_ORPHAN_TARGET",
+                        "location": "/links/declares/1",
+                        "message": "y",
+                        "details": {},
+                    }
+                ],
+                "events": [],
+            },
+            "compare_mode": "structural_parity",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["outcome"] == "FAIL"
+    assert payload["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
+    assert payload["issues"][0]["details"]["mismatch_fields"] == ["issue_codes", "stage_outcomes"]
 
 
 def test_kernel_compare_endpoint_real_engine_passes_mixed_order_normalization(monkeypatch) -> None:

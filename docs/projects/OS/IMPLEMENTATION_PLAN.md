@@ -219,8 +219,10 @@ Completed in current execution slice:
 30. Realistic artifact-derived API compare fixture is active at `tests/interfaces/fixtures/kernel_compare_realistic_fixture.json`.
 31. `/v1/kernel/replay` success path is covered with full descriptor payload (profiles + refs) and schema validation at API boundary.
 32. API-boundary compare parity version drift is covered with deterministic mismatch-field assertion (`["contract_version"]`).
+33. Combined pointer+stage drift ordering is covered in both replay vectors and API-boundary compare tests (`["issue_codes","stage_outcomes"]`).
+34. `/v1/kernel/replay` FAIL payload schema conformance is now enforced at API boundary.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Add kernel compare vector and API test that combine pointer drift + stage drift in one case and assert deterministic mismatch-field ordering.
-3. Add API-level schema contract test for `/v1/kernel/replay` responses (replay-report schema) under both PASS and FAIL payloads.
+2. Add one compare case with realistic mixed issue/event noise and multiple simultaneous mismatch fields, then assert sorted deterministic mismatch-field output.
+3. Add API-boundary negative test for `/v1/kernel/compare` malformed payload shape and confirm deterministic rejection behavior.
