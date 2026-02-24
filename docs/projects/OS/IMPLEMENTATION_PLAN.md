@@ -217,8 +217,10 @@ Completed in current execution slice:
 28. API-boundary replay compare assertions are active (real engine path) for pointer-drift failure and mixed-order pass normalization in `tests/interfaces/test_api_kernel_lifecycle.py`.
 29. `/v1/kernel/compare` response schema contract is enforced against `replay-report.schema.json` at API boundary.
 30. Realistic artifact-derived API compare fixture is active at `tests/interfaces/fixtures/kernel_compare_realistic_fixture.json`.
+31. `/v1/kernel/replay` success path is covered with full descriptor payload (profiles + refs) and schema validation at API boundary.
+32. API-boundary compare parity version drift is covered with deterministic mismatch-field assertion (`["contract_version"]`).
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Add explicit API tests for `/v1/kernel/replay` success path using full descriptor payload (profiles + refs).
-3. Add one kernel-v1 scenario where compare parity fails on contract version drift via API boundary with deterministic mismatch-field reporting.
+2. Add kernel compare vector and API test that combine pointer drift + stage drift in one case and assert deterministic mismatch-field ordering.
+3. Add API-level schema contract test for `/v1/kernel/replay` responses (replay-report schema) under both PASS and FAIL payloads.

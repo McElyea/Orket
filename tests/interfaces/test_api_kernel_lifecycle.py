@@ -124,6 +124,34 @@ def test_kernel_replay_endpoint_routes_to_engine_and_propagates_failure_codes(mo
     assert mismatch.json()["issues"][0]["code"] == "E_REPLAY_VERSION_MISMATCH"
 
 
+def test_kernel_replay_endpoint_real_engine_success_with_full_descriptor(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.post(
+        "/v1/kernel/replay",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_descriptor": {
+                "run_id": "run-r3",
+                "workflow_id": "wf-r3",
+                "policy_profile_ref": "policy:v1",
+                "model_profile_ref": "model:v1",
+                "runtime_profile_ref": "runtime:v1",
+                "trace_ref": "trace://run-r3",
+                "state_ref": "state://run-r3",
+                "contract_version": "kernel_api/v1",
+                "schema_version": "v1",
+            }
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["outcome"] == "PASS"
+    assert payload["mode"] == "replay_run"
+    schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    registry = _build_registry(schema)
+    Draft202012Validator(schema, registry=registry).validate(payload)
+
+
 def test_kernel_compare_endpoint_real_engine_detects_pointer_drift(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -176,6 +204,40 @@ def test_kernel_compare_endpoint_real_engine_detects_pointer_drift(monkeypatch) 
     assert payload["outcome"] == "FAIL"
     assert payload["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
     assert payload["issues"][0]["details"]["mismatch_fields"] == ["issue_codes"]
+
+
+def test_kernel_compare_endpoint_real_engine_contract_version_drift(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.post(
+        "/v1/kernel/compare",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_a": {
+                "run_id": "run-a",
+                "contract_version": "kernel_api/v1",
+                "schema_version": "v1",
+                "turn_digests": [],
+                "stage_outcomes": [],
+                "issues": [],
+                "events": [],
+            },
+            "run_b": {
+                "run_id": "run-b",
+                "contract_version": "kernel_api/v0",
+                "schema_version": "v1",
+                "turn_digests": [],
+                "stage_outcomes": [],
+                "issues": [],
+                "events": [],
+            },
+            "compare_mode": "structural_parity",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["outcome"] == "FAIL"
+    assert payload["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
+    assert payload["issues"][0]["details"]["mismatch_fields"] == ["contract_version"]
 
 
 def test_kernel_compare_endpoint_real_engine_passes_mixed_order_normalization(monkeypatch) -> None:
