@@ -214,8 +214,9 @@ Completed in current execution slice:
 25. Orchestration-facing replay compare API boundary is active at `POST /v1/kernel/compare` and routes to `OrchestrationEngine.kernel_compare_runs(...)`.
 26. Orchestration-facing replay-run API boundary is active at `POST /v1/kernel/replay` and covered for `E_REPLAY_INPUT_MISSING`/`E_REPLAY_VERSION_MISMATCH` propagation.
 27. Replay vectors now include additional pass-normalization case for randomized issue/event input order.
+28. API-boundary replay compare assertions are active (real engine path) for pointer-drift failure and mixed-order pass normalization in `tests/interfaces/test_api_kernel_lifecycle.py`.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets across API boundary (engine path), not just direct validator vectors.
-3. Add one end-to-end orchestration-run artifact to kernel compare API test to validate contract-surface extraction from realistic payloads.
+2. Add one end-to-end orchestration-run artifact to kernel compare API test to validate contract-surface extraction from realistic payloads.
+3. Add a dedicated `/v1/kernel/compare` contract test that validates response schema (`replay-report.schema.json`) at API boundary.
