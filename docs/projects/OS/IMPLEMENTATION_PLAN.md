@@ -201,8 +201,9 @@ Completed in current execution slice:
 12. Capability metadata is now wired to concrete runtime artifact `model/core/contracts/kernel_capability_policy_v1.json` (with context override support), and capability resolution can derive permissions from role/task policy mapping.
 13. Replay vectors now include deterministic mismatch-field assertions (`details.mismatch_fields`) for stage/schema/issue-pointer drift.
 14. Policy artifact contract test is active at `tests/kernel/v1/test_capability_policy_contract.py`.
+15. Explicit kernel API module surface is now available at `orket/kernel/v1/api.py` with stable exported handlers for run lifecycle, capability, and replay.
 
 Next task:
-1. Expose replay/capability handlers through an explicit kernel API module surface for non-validator call sites.
-2. Add richer replay fixtures covering event-code multiset drift and mixed turn-count edge cases.
-3. Add a JSON Schema for `kernel_capability_policy_v1.json` and enforce it in kernel-v1 tests.
+1. Add richer replay fixtures covering event-code multiset drift and mixed turn-count edge cases.
+2. Add a JSON Schema for `kernel_capability_policy_v1.json` and enforce it in kernel-v1 tests.
+3. Wire the explicit kernel API surface into one non-test call site as the canonical import path.
