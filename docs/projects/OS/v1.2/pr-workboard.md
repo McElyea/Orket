@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Execution-ready proposal (non-authoritative until promotion)
+Status: Active (authoritative for v1.2 execution)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -170,7 +170,7 @@ Suggested checks:
 1. `python -m pytest -q tests/kernel/v1/test_replay_vectors.py`
 2. `python -m pytest -q tests/kernel/v1/test_replay_stability.py`
 
-## Final Promotion Step (After PR-07)
-1. Update `docs/projects/OS/contract-index.md` with accepted new artifacts.
-2. Update `docs/projects/OS/test-policy.md` with new mandatory comparator checks.
-3. Move any still-proposal docs that become normative into authoritative references.
+## Closeout Step (After PR-07)
+1. Update `docs/projects/OS/contract-index.md` with completed v1.2 artifacts.
+2. Update `docs/projects/OS/test-policy.md` with mandatory comparator checks.
+3. Archive this execution packet and keep only enduring normative docs.

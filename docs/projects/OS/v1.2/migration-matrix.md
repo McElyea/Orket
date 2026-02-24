@@ -1,7 +1,7 @@
-# v1.2 Migration Matrix (Proposal)
+# v1.2 Migration Matrix
 
 Last updated: 2026-02-24
-Status: Execution-ready proposal (non-authoritative until promotion)
+Status: Active (authoritative for v1.2 execution)
 
 ## Mapping
 

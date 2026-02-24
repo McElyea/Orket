@@ -15,6 +15,10 @@ Anything not listed here is non-authoritative for OS v1.
 | Governance | Versioning Policy | `versioning-policy.md` | os/v1 | Normative |
 | Governance | Test Policy | `test-policy.md` | os/v1 | Normative |
 | Governance | Migration Map | `migration-map-v1.md` | os/v1 | Normative |
+| Governance | v1.2 Locked Decisions | `v1.2/open-decisions.md` | kernel_api/v1 | Normative for v1.2 execution |
+| Governance | v1.2 Sovereign Laws | `v1.2/sovereign-laws.md` | kernel_api/v1 | Normative for v1.2 execution |
+| Governance | v1.2 Implementation Plan | `v1.2/implementation-plan.md` | os/v1 | Normative execution plan |
+| Governance | v1.2 PR Workboard | `v1.2/pr-workboard.md` | os/v1 | Normative execution checklist |
 | Governance | Kernel Requirements Exit | `KERNEL_REQUIREMENTS_EXIT.md` | kernel_api/v1 | Normative closure gate |
 | Governance | Capability + Replay Requirements Exit | `CAPABILITY_REPLAY_REQUIREMENTS_EXIT.md` | kernel_api/v1 | Normative closure gate |
 

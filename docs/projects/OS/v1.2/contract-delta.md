@@ -1,10 +1,10 @@
-# v1.2 Contract Delta (Proposal)
+# v1.2 Contract Delta
 
 Last updated: 2026-02-24
-Status: Execution-ready proposal (non-authoritative until promotion)
+Status: Active (authoritative for v1.2 execution)
 
 ## Purpose
-Define the proposed contract/schema deltas derived from `docs/projects/ideas/Ideas.md`, with explicit compatibility boundaries for `kernel_api/v1` tightening.
+Define the proposed contract/schema deltas for v1.2, with explicit compatibility boundaries for `kernel_api/v1` tightening.
 
 Decision baseline:
 1. `kernel_api/v1` tightening is locked.

@@ -1,7 +1,7 @@
-# v1.2 Implementation Plan (Execution-Ready Proposal)
+# v1.2 Implementation Plan
 
 Last updated: 2026-02-24
-Status: Execution-ready proposal (non-authoritative until promotion)
+Status: Active (authoritative for v1.2 execution)
 Owner: Orket Core
 
 ## Objective

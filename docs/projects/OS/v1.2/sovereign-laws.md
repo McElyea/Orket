@@ -1,9 +1,9 @@
-# v1.2 Sovereign Laws (Proposal)
+# v1.2 Sovereign Laws
 
 Last updated: 2026-02-24
-Status: Execution-ready proposal (non-authoritative until promotion)
+Status: Active (authoritative for v1.2 execution)
 
-These laws are proposed as machine laws for v1.2 normalization.
+These laws are the machine-law baseline for v1.2 execution.
 
 ## 1. Deny Precedence Law
 If multiple deny conditions apply, emitted `deny_code` precedence is:
