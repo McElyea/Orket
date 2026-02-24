@@ -15,6 +15,7 @@ from orket.core.domain.orket_manifest import (
     is_engine_compatible,
     resolve_model_selection,
 )
+from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.refactor_transaction import run_refactor_transaction
 
 
@@ -555,6 +556,18 @@ def _parser() -> argparse.ArgumentParser:
     refactor_parser.add_argument("--dry-run", action="store_true", help="Plan only, no writes.")
     refactor_parser.add_argument("--verify-profile", default="default", help="Verification profile from orket.config.json.")
     refactor_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    api_parser = subparsers.add_parser("api", help="API generation commands.")
+    api_sub = api_parser.add_subparsers(dest="api_command", required=True)
+    api_add = api_sub.add_parser("add", help="Generate one API route/controller/types set (v1 adapter).")
+    api_add.add_argument("route_name", help="Route name (e.g. member).")
+    api_add.add_argument("--schema", required=True, help="Schema fields, e.g. 'id:int,name:string'.")
+    api_add.add_argument("--method", default="get", help="HTTP method.")
+    api_add.add_argument("--scope", action="append", required=True, help="Write scope path (repeatable).")
+    api_add.add_argument("--yes", action="store_true", help="Confirm mutation execution.")
+    api_add.add_argument("--dry-run", action="store_true", help="Plan only, no writes.")
+    api_add.add_argument("--verify-profile", default="default", help="Verification profile from orket.config.json.")
+    api_add.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     return parser
 
 
@@ -599,6 +612,16 @@ def main(argv: List[str] | None = None) -> int:
     elif args.command == "refactor":
         result = run_refactor_transaction(
             instruction=str(args.instruction),
+            scope_inputs=list(args.scope or []),
+            dry_run=bool(args.dry_run),
+            auto_confirm=bool(args.yes),
+            verify_profile=str(args.verify_profile),
+        )
+    elif args.command == "api" and args.api_command == "add":
+        result = run_api_add_transaction(
+            route_name=str(args.route_name),
+            schema_text=str(args.schema),
+            method=str(args.method),
             scope_inputs=list(args.scope or []),
             dry_run=bool(args.dry_run),
             auto_confirm=bool(args.yes),
