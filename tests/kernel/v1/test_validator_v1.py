@@ -143,6 +143,27 @@ def test_authorize_tool_call_v1_is_deny_by_default() -> None:
     assert decision["reason_code"] == "E_CAPABILITY_DENIED"
 
 
+def test_authorize_tool_call_v1_allow_includes_policy_source_and_version_metadata() -> None:
+    response = authorize_tool_call_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "context": {
+                "subject": "agent:one",
+                "capability_enforcement": True,
+                "allow_tool_call": True,
+                "policy_source": "policy://kernel/v1/capability",
+                "policy_version": "2026-02-24",
+            },
+            "tool_request": {"action": "tool.call", "resource": "tool://shell"},
+        }
+    )
+    decision = response["decision"]
+    assert decision["result"] == "GRANT"
+    assert decision["reason_code"] == "I_GATEKEEPER_PASS"
+    assert decision["evidence"]["capability_source"] == "policy://kernel/v1/capability"
+    assert decision["evidence"]["capability_version"] == "2026-02-24"
+
+
 def test_resolve_capability_v1_module_off_returns_skipped_event() -> None:
     response = resolve_capability_v1(
         {
@@ -169,6 +190,11 @@ def test_replay_run_v1_version_mismatch_emits_version_code() -> None:
             "run_descriptor": {
                 "run_id": "run-r2",
                 "workflow_id": "wf-r2",
+                "policy_profile_ref": "policy:v1",
+                "model_profile_ref": "model:v1",
+                "runtime_profile_ref": "runtime:v1",
+                "trace_ref": "trace://run-r2",
+                "state_ref": "state://run-r2",
                 "contract_version": "kernel_api/v0",
                 "schema_version": "v1",
             },

@@ -1,0 +1,117 @@
+{
+  "version": "replay-v1",
+  "vectors": [
+    {
+      "name": "pass-multi-turn-order-normalized-with-host-diff",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [
+          {
+            "turn_id": "turn-0002",
+            "turn_result_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          {
+            "turn_id": "turn-0001",
+            "turn_result_digest": "1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        ],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS" },
+          { "turn_id": "turn-0002", "stage": "promotion", "outcome": "PASS" }
+        ],
+        "issues": [],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] done |"
+        ],
+        "host_path": "C:/tmp/local/a"
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [
+          {
+            "turn_id": "turn-0001",
+            "turn_result_digest": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          {
+            "turn_id": "turn-0002",
+            "turn_result_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        ],
+        "stage_outcomes": [
+          { "turn_id": "turn-0002", "stage": "promotion", "outcome": "PASS" },
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS" }
+        ],
+        "issues": [],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] host path changed |"
+        ],
+        "host_path": "/tmp/local/b"
+      },
+      "expect_outcome": "PASS"
+    },
+    {
+      "name": "fail-stage-outcome-mismatch",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [
+          {
+            "turn_id": "turn-0001",
+            "turn_result_digest": "3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS" }
+        ],
+        "issues": [],
+        "events": []
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [
+          {
+            "turn_id": "turn-0001",
+            "turn_result_digest": "3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "FAIL" }
+        ],
+        "issues": [],
+        "events": []
+      },
+      "expect_outcome": "FAIL",
+      "expect_code": "E_REPLAY_EQUIVALENCE_FAILED"
+    },
+    {
+      "name": "fail-schema-version-mismatch",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [],
+        "events": []
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v2",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [],
+        "events": []
+      },
+      "expect_outcome": "FAIL",
+      "expect_code": "E_REPLAY_EQUIVALENCE_FAILED"
+    }
+  ]
+}

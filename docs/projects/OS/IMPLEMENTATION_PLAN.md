@@ -1,6 +1,6 @@
 # OS Implementation Plan
 
-Last updated: 2026-02-23
+Last updated: 2026-02-24
 Status: Active
 Owner: Orket Core
 
@@ -195,8 +195,11 @@ Completed in current execution slice:
 - `replay_run_v1`
 - `compare_runs_v1`
 8. Kernel-v1 tests now enforce capability/replay closure codes and schema conformance for new response shapes.
+9. Capability allow/deny decisions now include deterministic policy source/version metadata in decision evidence.
+10. Replay parity now compares contract-scoped surfaces (turn digests, stage outcomes, issue/event codes, schema/contract versions), not whole-object equality.
+11. Multi-turn replay vectors are committed at `tests/kernel/v1/vectors/replay-v1.json` and enforced by `tests/kernel/v1/test_replay_vectors.py`.
 
 Next task:
-1. Expand capability policy surface from test scaffold to runtime policy sources and deterministic version metadata.
-2. Add replay fixture vectors and deterministic comparator evidence for multi-turn parity, not single-turn synthetic shape only.
-3. Tighten replay compare semantics from whole-object list equality to contract-scoped field parity rules in `Execution/replay-contract.md`.
+1. Wire capability policy metadata to concrete runtime policy artifacts (instead of context-only values).
+2. Add replay fixture scenarios for pointer/stage/code mismatches at issue granularity and assert deterministic mismatch field attribution.
+3. Expose replay/capability handlers through an explicit kernel API module surface for non-validator call sites.

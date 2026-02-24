@@ -116,6 +116,11 @@ def test_replay_run_v1_response_conforms_to_replay_report_schema() -> None:
             "run_descriptor": {
                 "run_id": "run-schema-replay",
                 "workflow_id": "wf-schema-replay",
+                "policy_profile_ref": "policy:v1",
+                "model_profile_ref": "model:v1",
+                "runtime_profile_ref": "runtime:v1",
+                "trace_ref": "trace://run-schema-replay",
+                "state_ref": "state://run-schema-replay",
                 "contract_version": "kernel_api/v1",
                 "schema_version": "v1",
             },

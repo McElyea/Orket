@@ -11,6 +11,8 @@ from orket.kernel.v1.state.promotion import promote_turn
 CONTRACT_VERSION = "kernel_api/v1"
 DEFAULT_VISIBILITY_MODE = "local_only"
 DEFAULT_WORKSPACE_ROOT = ".orket_kernel"
+DEFAULT_CAPABILITY_POLICY_SOURCE = "policy://orket/kernel/v1/default"
+DEFAULT_CAPABILITY_POLICY_VERSION = "v1"
 
 
 def _issue(*, stage: str, code: str, location: str, message: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -81,6 +83,99 @@ def _capability_decision(*, subject: str, action: str, resource: str, result: st
         "result": result,
         "reason_code": reason_code,
         "evidence": evidence,
+    }
+
+
+def _capability_evidence(context: dict[str, Any]) -> dict[str, Any]:
+    source = context.get("policy_source") or context.get("policy_ref") or DEFAULT_CAPABILITY_POLICY_SOURCE
+    version = context.get("policy_version") or DEFAULT_CAPABILITY_POLICY_VERSION
+    return {
+        "policy_ref": str(context.get("policy_ref", source)),
+        "capability_source": str(source),
+        "capability_version": str(version),
+    }
+
+
+def _normalize_turn_digests(value: Any) -> list[dict[str, str]]:
+    if not isinstance(value, list):
+        return []
+    out: list[dict[str, str]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        turn_id = item.get("turn_id")
+        turn_digest = item.get("turn_result_digest")
+        if not isinstance(turn_id, str) or not turn_id:
+            continue
+        if not isinstance(turn_digest, str) or len(turn_digest) != 64:
+            continue
+        entry: dict[str, str] = {"turn_id": turn_id, "turn_result_digest": turn_digest}
+        evidence_digest = item.get("evidence_digest")
+        if isinstance(evidence_digest, str) and len(evidence_digest) == 64:
+            entry["evidence_digest"] = evidence_digest
+        out.append(entry)
+    return sorted(out, key=lambda item: item["turn_id"])
+
+
+def _normalize_stage_outcomes(run_payload: dict[str, Any]) -> list[dict[str, str]]:
+    items = run_payload.get("stage_outcomes")
+    if not isinstance(items, list):
+        return []
+    out: list[dict[str, str]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        turn_id = item.get("turn_id")
+        stage = item.get("stage")
+        outcome = item.get("outcome")
+        if all(isinstance(v, str) and v for v in (turn_id, stage, outcome)):
+            out.append({"turn_id": turn_id, "stage": stage, "outcome": outcome})
+    return sorted(out, key=lambda item: item["turn_id"])
+
+
+def _normalize_issue_codes(run_payload: dict[str, Any]) -> list[dict[str, str]]:
+    issues = run_payload.get("issues")
+    if not isinstance(issues, list):
+        return []
+    out: list[dict[str, str]] = []
+    for item in issues:
+        if not isinstance(item, dict):
+            continue
+        code = item.get("code")
+        stage = item.get("stage")
+        location = item.get("location")
+        if all(isinstance(v, str) and v for v in (code, stage, location)):
+            out.append({"code": code, "stage": stage, "location": location})
+    return sorted(out, key=lambda item: (item["stage"], item["location"], item["code"]))
+
+
+def _normalize_event_codes(run_payload: dict[str, Any]) -> list[str]:
+    events = run_payload.get("events")
+    if not isinstance(events, list):
+        return []
+    out: list[str] = []
+    for event in events:
+        if not isinstance(event, str):
+            continue
+        code_marker = "[CODE:"
+        start = event.find(code_marker)
+        if start < 0:
+            continue
+        end = event.find("]", start)
+        if end <= start:
+            continue
+        out.append(event[start + len(code_marker) : end])
+    return sorted(out)
+
+
+def _contract_surface(run_payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "contract_version": str(run_payload.get("contract_version", "")),
+        "schema_version": str(run_payload.get("schema_version", "")),
+        "turn_digests": _normalize_turn_digests(run_payload.get("turn_digests")),
+        "stage_outcomes": _normalize_stage_outcomes(run_payload),
+        "issue_codes": _normalize_issue_codes(run_payload),
+        "event_codes": _normalize_event_codes(run_payload),
     }
 
 
@@ -259,7 +354,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_CAPABILITY_NOT_RESOLVED",
-                    evidence={"policy_ref": context.get("policy_ref", "unknown")},
+                    evidence=_capability_evidence(context),
                 )
             elif not side_effects_declared:
                 decision = _capability_decision(
@@ -268,7 +363,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_SIDE_EFFECT_UNDECLARED",
-                    evidence={"policy_ref": context.get("policy_ref", "unknown")},
+                    evidence=_capability_evidence(context),
                 )
             elif isinstance(requested, list) and isinstance(declared, list) and not set(requested).issubset(set(declared)):
                 decision = _capability_decision(
@@ -277,7 +372,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_PERMISSION_DENIED",
-                    evidence={"policy_ref": context.get("policy_ref", "unknown")},
+                    evidence=_capability_evidence(context),
                 )
             elif bool(context.get("allow_tool_call", False)):
                 decision = _capability_decision(
@@ -286,7 +381,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="GRANT",
                     reason_code="I_GATEKEEPER_PASS",
-                    evidence={"policy_ref": context.get("policy_ref", "unknown")},
+                    evidence=_capability_evidence(context),
                 )
             else:
                 decision = _capability_decision(
@@ -295,7 +390,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_CAPABILITY_DENIED",
-                    evidence={"policy_ref": context.get("policy_ref", "unknown")},
+                    evidence=_capability_evidence(context),
                 )
 
             capabilities["decisions"] = [decision]
@@ -488,7 +583,7 @@ def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
             resource=resource,
             result="GRANT",
             reason_code="I_CAPABILITY_SKIPPED",
-            evidence={"policy_ref": context.get("policy_ref", "unknown")},
+            evidence=_capability_evidence(context),
         )
         return {"contract_version": CONTRACT_VERSION, "decision": decision}
 
@@ -518,7 +613,7 @@ def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
         resource=resource,
         result=result,
         reason_code=reason_code,
-        evidence={"policy_ref": context.get("policy_ref", "unknown")},
+        evidence=_capability_evidence(context),
     )
     return {"contract_version": CONTRACT_VERSION, "decision": decision}
 
@@ -530,7 +625,17 @@ def replay_run_v1(request: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(descriptor, dict):
         descriptor = {}
 
-    required = ["run_id", "workflow_id", "contract_version", "schema_version"]
+    required = [
+        "run_id",
+        "workflow_id",
+        "contract_version",
+        "schema_version",
+        "policy_profile_ref",
+        "model_profile_ref",
+        "runtime_profile_ref",
+        "trace_ref",
+        "state_ref",
+    ]
     missing = [field for field in required if not isinstance(descriptor.get(field), str) or not descriptor.get(field)]
     run_id = str(descriptor.get("run_id", "unknown"))
     parity = _default_parity(run_a=run_id, run_b=run_id)
@@ -617,28 +722,35 @@ def compare_runs_v1(request: dict[str, Any]) -> dict[str, Any]:
     run_a_id = str(run_a.get("run_id", "run-a"))
     run_b_id = str(run_b.get("run_id", "run-b"))
     parity = _default_parity(run_a=run_a_id, run_b=run_b_id)
-
-    digests_a = run_a.get("turn_digests")
-    digests_b = run_b.get("turn_digests")
-    if not isinstance(digests_a, list):
-        digests_a = []
-    if not isinstance(digests_b, list):
-        digests_b = []
-
-    sorted_a = sorted(digests_a, key=lambda item: str(item.get("turn_id", "")))
-    sorted_b = sorted(digests_b, key=lambda item: str(item.get("turn_id", "")))
+    surface_a = _contract_surface(run_a)
+    surface_b = _contract_surface(run_b)
+    sorted_a = surface_a["turn_digests"]
+    sorted_b = surface_b["turn_digests"]
     parity["expected"]["turn_digests"] = sorted_a
     parity["actual"]["turn_digests"] = sorted_b
-    parity["matches"] = sum(1 for left, right in zip(sorted_a, sorted_b) if left == right)
-    parity["mismatches"] = abs(len(sorted_a) - len(sorted_b)) + sum(1 for left, right in zip(sorted_a, sorted_b) if left != right)
+    comparisons = {
+        "turn_digests": sorted_a == sorted_b,
+        "stage_outcomes": surface_a["stage_outcomes"] == surface_b["stage_outcomes"],
+        "issue_codes": surface_a["issue_codes"] == surface_b["issue_codes"],
+        "event_codes": surface_a["event_codes"] == surface_b["event_codes"],
+        "contract_version": surface_a["contract_version"] == surface_b["contract_version"],
+        "schema_version": surface_a["schema_version"] == surface_b["schema_version"],
+    }
+    parity["matches"] = sum(1 for value in comparisons.values() if value)
+    parity["mismatches"] = len(comparisons) - parity["matches"]
 
-    if sorted_a != sorted_b:
+    if parity["mismatches"] > 0:
+        mismatch_fields = sorted([field for field, matched in comparisons.items() if not matched])
         issue = _issue(
             stage="replay",
             code="E_REPLAY_EQUIVALENCE_FAILED",
             location="/run_a/turn_digests",
             message="Run parity mismatch.",
-            details={"matches": parity["matches"], "mismatches": parity["mismatches"]},
+            details={
+                "matches": parity["matches"],
+                "mismatches": parity["mismatches"],
+                "mismatch_fields": mismatch_fields,
+            },
         )
         return _build_replay_report(
             mode="compare_runs",
@@ -647,7 +759,7 @@ def compare_runs_v1(request: dict[str, Any]) -> dict[str, Any]:
             events=[_event("FAIL", "replay", "E_REPLAY_EQUIVALENCE_FAILED", "/run_a/turn_digests", "Replay equivalence failed.")],
             parity=parity,
             runs_compared=2,
-            turns_compared=max(len(sorted_a), len(sorted_b)),
+            turns_compared=max(len(surface_a["stage_outcomes"]), len(surface_b["stage_outcomes"]), len(sorted_a), len(sorted_b)),
         )
 
     return _build_replay_report(
