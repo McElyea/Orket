@@ -1,6 +1,6 @@
 # Capability Permission Contract (v1)
 
-Last updated: 2026-02-22
+Last updated: 2026-02-24
 Status: Normative
 
 ## Enforcement Model
@@ -11,6 +11,7 @@ Status: Normative
 ## Audit Requirements
 1. Every deny decision must include deterministic code and location.
 2. Every allow decision must include capability source/version metadata.
+3. Default metadata source for kernel v1 is `model/core/contracts/kernel_capability_policy_v1.json` unless explicit context override is provided.
 
 ## Failure Codes
 1. `E_CAPABILITY_NOT_RESOLVED`

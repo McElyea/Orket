@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from functools import lru_cache
 from pathlib import Path
 from uuid import uuid4
 from typing import Any
@@ -13,6 +15,7 @@ DEFAULT_VISIBILITY_MODE = "local_only"
 DEFAULT_WORKSPACE_ROOT = ".orket_kernel"
 DEFAULT_CAPABILITY_POLICY_SOURCE = "policy://orket/kernel/v1/default"
 DEFAULT_CAPABILITY_POLICY_VERSION = "v1"
+DEFAULT_CAPABILITY_POLICY_PATH = Path("model/core/contracts/kernel_capability_policy_v1.json")
 
 
 def _issue(*, stage: str, code: str, location: str, message: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -87,13 +90,46 @@ def _capability_decision(*, subject: str, action: str, resource: str, result: st
 
 
 def _capability_evidence(context: dict[str, Any]) -> dict[str, Any]:
-    source = context.get("policy_source") or context.get("policy_ref") or DEFAULT_CAPABILITY_POLICY_SOURCE
-    version = context.get("policy_version") or DEFAULT_CAPABILITY_POLICY_VERSION
+    policy = _load_capability_policy()
+    source = context.get("policy_source") or policy.get("policy_source") or context.get("policy_ref") or DEFAULT_CAPABILITY_POLICY_SOURCE
+    version = context.get("policy_version") or policy.get("policy_version") or DEFAULT_CAPABILITY_POLICY_VERSION
     return {
         "policy_ref": str(context.get("policy_ref", source)),
         "capability_source": str(source),
         "capability_version": str(version),
     }
+
+
+@lru_cache(maxsize=1)
+def _load_capability_policy() -> dict[str, Any]:
+    try:
+        payload = json.loads(DEFAULT_CAPABILITY_POLICY_PATH.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return payload
+
+
+def _policy_permissions(role: str, task: str, context: dict[str, Any]) -> list[str]:
+    context_permissions = context.get("permissions")
+    if isinstance(context_permissions, list):
+        return sorted({str(item) for item in context_permissions if str(item)})
+
+    policy = _load_capability_policy()
+    role_task_permissions = policy.get("role_task_permissions")
+    if not isinstance(role_task_permissions, dict):
+        role_task_permissions = {}
+    role_permissions = role_task_permissions.get(role)
+    if not isinstance(role_permissions, dict):
+        role_permissions = {}
+    task_permissions = role_permissions.get(task)
+    if isinstance(task_permissions, list):
+        return sorted({str(item) for item in task_permissions if str(item)})
+    default_permissions = policy.get("default_permissions")
+    if isinstance(default_permissions, list):
+        return sorted({str(item) for item in default_permissions if str(item)})
+    return []
 
 
 def _normalize_turn_digests(value: Any) -> list[dict[str, str]]:
@@ -341,11 +377,15 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
         else:
             capabilities["mode"] = "enabled"
             subject = str(context.get("subject", "unknown"))
+            role = str(context.get("role", ""))
+            task = str(context.get("task", ""))
             action = str(tool_call.get("action", "tool.call"))
             resource = str(tool_call.get("resource", "unknown"))
             requested = tool_call.get("requested_permissions")
             declared = tool_call.get("declared_permissions")
             side_effects_declared = bool(tool_call.get("side_effects_declared", True))
+            evidence = _capability_evidence(context)
+            allowed_permissions = _policy_permissions(role=role, task=task, context=context)
 
             if not bool(context.get("capability_resolved", True)):
                 decision = _capability_decision(
@@ -354,7 +394,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_CAPABILITY_NOT_RESOLVED",
-                    evidence=_capability_evidence(context),
+                    evidence=evidence,
                 )
             elif not side_effects_declared:
                 decision = _capability_decision(
@@ -363,7 +403,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_SIDE_EFFECT_UNDECLARED",
-                    evidence=_capability_evidence(context),
+                    evidence=evidence,
                 )
             elif isinstance(requested, list) and isinstance(declared, list) and not set(requested).issubset(set(declared)):
                 decision = _capability_decision(
@@ -372,16 +412,16 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_PERMISSION_DENIED",
-                    evidence=_capability_evidence(context),
+                    evidence=evidence,
                 )
-            elif bool(context.get("allow_tool_call", False)):
+            elif bool(context.get("allow_tool_call", False)) or action in allowed_permissions:
                 decision = _capability_decision(
                     subject=subject,
                     action=action,
                     resource=resource,
                     result="GRANT",
                     reason_code="I_GATEKEEPER_PASS",
-                    evidence=_capability_evidence(context),
+                    evidence=evidence,
                 )
             else:
                 decision = _capability_decision(
@@ -390,7 +430,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     resource=resource,
                     result="DENY",
                     reason_code="E_CAPABILITY_DENIED",
-                    evidence=_capability_evidence(context),
+                    evidence=evidence,
                 )
 
             capabilities["decisions"] = [decision]
@@ -543,20 +583,31 @@ def resolve_capability_v1(request: dict[str, Any]) -> dict[str, Any]:
         context = {}
 
     enabled = bool(context.get("capability_enforcement", True))
+    evidence = _capability_evidence(context)
     if not enabled:
         return {
             "contract_version": CONTRACT_VERSION,
-            "capability_plan": {"mode": "disabled", "role": role, "task": task, "permissions": []},
+            "capability_plan": {
+                "mode": "disabled",
+                "role": role,
+                "task": task,
+                "permissions": [],
+                "policy_source": evidence["capability_source"],
+                "policy_version": evidence["capability_version"],
+            },
             "events": [_event("INFO", "capability", "I_CAPABILITY_SKIPPED", "/context", "Capability module disabled.")],
         }
-
-    permissions = context.get("permissions")
-    if not isinstance(permissions, list):
-        permissions = []
-    permissions = sorted(str(item) for item in permissions)
+    permissions = _policy_permissions(role=role, task=task, context=context)
     return {
         "contract_version": CONTRACT_VERSION,
-        "capability_plan": {"mode": "enabled", "role": role, "task": task, "permissions": permissions},
+        "capability_plan": {
+            "mode": "enabled",
+            "role": role,
+            "task": task,
+            "permissions": permissions,
+            "policy_source": evidence["capability_source"],
+            "policy_version": evidence["capability_version"],
+        },
         "events": [_event("INFO", "capability", "I_GATEKEEPER_PASS", "/context", "Capability resolved.")],
     }
 
@@ -575,6 +626,12 @@ def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
     subject = str(context.get("subject", "unknown"))
     action = str(tool_request.get("action", "tool.call"))
     resource = str(tool_request.get("resource", "unknown"))
+    evidence = _capability_evidence(context)
+    allowed_permissions = _policy_permissions(
+        role=str(context.get("role", "")),
+        task=str(context.get("task", "")),
+        context=context,
+    )
 
     if not bool(context.get("capability_enforcement", True)):
         decision = _capability_decision(
@@ -583,7 +640,7 @@ def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
             resource=resource,
             result="GRANT",
             reason_code="I_CAPABILITY_SKIPPED",
-            evidence=_capability_evidence(context),
+            evidence=evidence,
         )
         return {"contract_version": CONTRACT_VERSION, "decision": decision}
 
@@ -600,7 +657,7 @@ def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
     elif isinstance(requested, list) and isinstance(declared, list) and not set(requested).issubset(set(declared)):
         reason_code = "E_PERMISSION_DENIED"
         result = "DENY"
-    elif bool(context.get("allow_tool_call", False)):
+    elif bool(context.get("allow_tool_call", False)) or action in allowed_permissions:
         reason_code = "I_GATEKEEPER_PASS"
         result = "GRANT"
     else:
@@ -613,7 +670,7 @@ def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
         resource=resource,
         result=result,
         reason_code=reason_code,
-        evidence=_capability_evidence(context),
+        evidence=evidence,
     )
     return {"contract_version": CONTRACT_VERSION, "decision": decision}
 

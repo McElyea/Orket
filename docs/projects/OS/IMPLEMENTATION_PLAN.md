@@ -198,8 +198,9 @@ Completed in current execution slice:
 9. Capability allow/deny decisions now include deterministic policy source/version metadata in decision evidence.
 10. Replay parity now compares contract-scoped surfaces (turn digests, stage outcomes, issue/event codes, schema/contract versions), not whole-object equality.
 11. Multi-turn replay vectors are committed at `tests/kernel/v1/vectors/replay-v1.json` and enforced by `tests/kernel/v1/test_replay_vectors.py`.
+12. Capability metadata is now wired to concrete runtime artifact `model/core/contracts/kernel_capability_policy_v1.json` (with context override support), and capability resolution can derive permissions from role/task policy mapping.
 
 Next task:
-1. Wire capability policy metadata to concrete runtime policy artifacts (instead of context-only values).
-2. Add replay fixture scenarios for pointer/stage/code mismatches at issue granularity and assert deterministic mismatch field attribution.
-3. Expose replay/capability handlers through an explicit kernel API module surface for non-validator call sites.
+1. Add replay fixture scenarios for pointer/stage/code mismatches at issue granularity and assert deterministic mismatch field attribution.
+2. Expose replay/capability handlers through an explicit kernel API module surface for non-validator call sites.
+3. Add policy artifact schema/contract tests to fail closed on malformed policy metadata or permission maps.

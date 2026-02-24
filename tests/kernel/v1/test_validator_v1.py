@@ -130,6 +130,24 @@ def test_execute_turn_v1_capability_module_off_emits_skipped_info() -> None:
     assert any("I_CAPABILITY_SKIPPED" in event for event in result["events"])
 
 
+def test_execute_turn_v1_capability_can_grant_from_policy_permissions() -> None:
+    result = execute_turn_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_handle": {"contract_version": "kernel_api/v1", "run_id": "run-cap-grant", "visibility_mode": "local_only"},
+            "turn_id": "turn-0001",
+            "turn_input": {
+                "context": {"capability_enforcement": True, "role": "coder", "task": "edit", "subject": "agent:one"},
+                "tool_call": {"action": "tool.call", "resource": "tool://shell"},
+            },
+        }
+    )
+    assert result["outcome"] == "PASS"
+    assert result["stage"] == "capability"
+    assert result["capabilities"]["granted_count"] == 1
+    assert result["capabilities"]["decisions"][0]["evidence"]["capability_source"] == "model/core/contracts/kernel_capability_policy_v1.json"
+
+
 def test_authorize_tool_call_v1_is_deny_by_default() -> None:
     response = authorize_tool_call_v1(
         {
@@ -175,6 +193,36 @@ def test_resolve_capability_v1_module_off_returns_skipped_event() -> None:
     )
     assert response["capability_plan"]["mode"] == "disabled"
     assert any("I_CAPABILITY_SKIPPED" in event for event in response["events"])
+
+
+def test_resolve_capability_v1_reads_permissions_from_policy_artifact() -> None:
+    response = resolve_capability_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "role": "coder",
+            "task": "edit",
+            "context": {"capability_enforcement": True},
+        }
+    )
+    plan = response["capability_plan"]
+    assert plan["mode"] == "enabled"
+    assert plan["permissions"] == ["file.read", "file.write", "tool.call"]
+    assert plan["policy_source"] == "model/core/contracts/kernel_capability_policy_v1.json"
+    assert plan["policy_version"] == "2026-02-24"
+
+
+def test_authorize_tool_call_v1_can_grant_from_policy_permissions() -> None:
+    response = authorize_tool_call_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "context": {"subject": "agent:one", "role": "coder", "task": "edit", "capability_enforcement": True},
+            "tool_request": {"action": "tool.call", "resource": "tool://shell"},
+        }
+    )
+    decision = response["decision"]
+    assert decision["result"] == "GRANT"
+    assert decision["reason_code"] == "I_GATEKEEPER_PASS"
+    assert decision["evidence"]["capability_source"] == "model/core/contracts/kernel_capability_policy_v1.json"
 
 
 def test_replay_run_v1_missing_input_emits_missing_code() -> None:

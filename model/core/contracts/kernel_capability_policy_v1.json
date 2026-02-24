@@ -1,0 +1,16 @@
+{
+  "contract_version": "kernel_api/v1",
+  "policy_id": "kernel_capability_policy_v1",
+  "policy_source": "model/core/contracts/kernel_capability_policy_v1.json",
+  "policy_version": "2026-02-24",
+  "default_permissions": [],
+  "role_task_permissions": {
+    "coder": {
+      "edit": ["tool.call", "file.read", "file.write"],
+      "schema": ["tool.call", "file.read"]
+    },
+    "architect": {
+      "plan": ["tool.call", "file.read"]
+    }
+  }
+}

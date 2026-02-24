@@ -17,7 +17,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| OS | active | P1 | `docs/projects/OS/` | Orket Core | Execute `docs/projects/OS/IMPLEMENTATION_PLAN.md`; kernel-law tests are consolidated under `tests/kernel/v1`, registry audit is strict fail-closed, capability decisions now carry deterministic policy source/version metadata, and replay parity enforces contract-scoped multi-turn vectors; next focus is wiring policy metadata to concrete runtime artifacts and broadening replay mismatch vectors. |
+| OS | active | P1 | `docs/projects/OS/` | Orket Core | Execute `docs/projects/OS/IMPLEMENTATION_PLAN.md`; kernel-law tests are consolidated under `tests/kernel/v1`, registry audit is strict fail-closed, capability metadata is now wired to runtime artifact `model/core/contracts/kernel_capability_policy_v1.json`, and replay parity enforces contract-scoped multi-turn vectors; next focus is replay mismatch depth and policy artifact contract tests. |
 | modularize | completed | n/a | `docs/projects/archive/Modularize/` | Orket Core | Archived and closed. |
 | ideas | queued | P2 | `docs/projects/ideas/` | Orket Core | Input backlog only; promote to active only after roadmap reprioritization. |
 | archive | archive-root | n/a | `docs/projects/archive/` | Orket Core | Completed projects only. |
