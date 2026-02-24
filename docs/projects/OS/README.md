@@ -38,6 +38,7 @@ Tests live under:
 - Test Policy: `test-policy.md`
 - Migration Map: `migration-map-v1.md`
 - Implementation Plan: `IMPLEMENTATION_PLAN.md`
+- Next Part v1 Requirements: `NEXT_PART_V1_REQUIREMENTS.md`
 - Roadmap / Cards: `Roadmap/Cards.md`
 - Closure Checklist: `Roadmap/Closeout-Checklist.md`
 - v1.2 Archive Pack: `../archive/OS-v1.2/README.md`
