@@ -1,12 +1,35 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from fastapi.testclient import TestClient
+from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
 
 from orket.interfaces.api import app
 import orket.interfaces.api as api_module
 
 
 client = TestClient(app)
+
+
+def _load_schema(path: str) -> dict:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _build_registry(root_schema: dict) -> Registry:
+    schema_paths = [
+        "docs/projects/OS/contracts/replay-report.schema.json",
+        "docs/projects/OS/contracts/kernel-issue.schema.json",
+    ]
+    registry = Registry().with_resource(root_schema["$id"], Resource.from_contents(root_schema))
+    for path in schema_paths:
+        schema = _load_schema(path)
+        schema_id = schema.get("$id")
+        if isinstance(schema_id, str) and schema_id:
+            registry = registry.with_resource(schema_id, Resource.from_contents(schema))
+    return registry
 
 
 def test_kernel_lifecycle_endpoint_routes_to_engine(monkeypatch) -> None:
@@ -228,3 +251,20 @@ def test_kernel_compare_endpoint_real_engine_passes_mixed_order_normalization(mo
     )
     assert response.status_code == 200
     assert response.json()["outcome"] == "PASS"
+
+
+def test_kernel_compare_endpoint_response_conforms_to_replay_report_schema(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.post(
+        "/v1/kernel/compare",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_a": {"run_id": "run-a", "contract_version": "kernel_api/v1", "schema_version": "v1", "turn_digests": [], "stage_outcomes": [], "issues": [], "events": []},
+            "run_b": {"run_id": "run-b", "contract_version": "kernel_api/v1", "schema_version": "v1", "turn_digests": [], "stage_outcomes": [], "issues": [], "events": []},
+            "compare_mode": "structural_parity",
+        },
+    )
+    assert response.status_code == 200
+    schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    registry = _build_registry(schema)
+    Draft202012Validator(schema, registry=registry).validate(response.json())
