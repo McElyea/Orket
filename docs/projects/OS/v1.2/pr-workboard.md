@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution, PR-01 in progress)
+Status: Active (authoritative for v1.2 execution, PR-02 in progress)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -12,6 +12,9 @@ This file is the implementation handoff for PR-01 through PR-07.
 4. Do not bundle unrelated refactors into these PRs.
 
 ## PR-01: Add Stage Spine + Registry Wrapper (No Kernel Changes)
+Status:
+1. Complete.
+
 Goal:
 1. Land the anchor artifacts required by comparator and replay contracts.
 
@@ -33,6 +36,9 @@ Suggested checks:
 2. `python -m pytest -q tests/kernel/v1/test_registry.py`
 
 ## PR-02: CapabilityDecisionRecord Schema + Coexistence Wiring
+Status:
+1. In progress.
+
 Goal:
 1. Introduce authoritative decision-record parity shape without breaking existing turn artifacts.
 

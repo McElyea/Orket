@@ -29,6 +29,7 @@ def _build_registry(root_schema: dict) -> Registry:
         "docs/projects/OS/contracts/kernel-issue.schema.json",
         "docs/projects/OS/contracts/replay-report.schema.json",
         "docs/projects/OS/contracts/capability-decision.schema.json",
+        "docs/projects/OS/contracts/capability-decision-record.schema.json",
     ]
     registry = Registry().with_resource(
         root_schema["$id"],

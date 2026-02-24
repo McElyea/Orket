@@ -131,6 +131,11 @@
           "type": "array",
           "items": { "$ref": "https://orket.dev/os/contracts/capability-decision.schema.json" }
         },
+        "decisions_v1_2_1": {
+          "type": "array",
+          "description": "Coexistence parity surface for CapabilityDecisionRecord during v1.2 migration.",
+          "items": { "$ref": "https://orket.dev/os/contracts/capability-decision-record.schema.json" }
+        },
         "denied_count": { "type": "integer", "minimum": 0 },
         "granted_count": { "type": "integer", "minimum": 0 }
       }

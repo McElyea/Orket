@@ -1,0 +1,113 @@
+{
+  "$id": "https://orket.dev/os/contracts/capability-decision-record.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CapabilityDecisionRecord",
+  "description": "Parity decision record emitted per tool-attempt during capability evaluation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "decision_id",
+    "run_id",
+    "turn_id",
+    "tool_name",
+    "action",
+    "ordinal",
+    "outcome",
+    "stage",
+    "deny_code",
+    "info_code",
+    "reason",
+    "provenance"
+  ],
+  "properties": {
+    "contract_version": { "const": "kernel_api/v1" },
+    "decision_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "turn_id": { "type": "string", "minLength": 1 },
+    "tool_name": { "type": "string", "minLength": 1 },
+    "action": { "type": "string", "minLength": 1 },
+    "ordinal": { "type": "integer", "minimum": 0 },
+    "outcome": { "type": "string", "enum": ["allowed", "denied", "skipped", "unresolved"] },
+    "stage": { "const": "capability" },
+    "deny_code": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^E_[A-Z0-9_]+$" }
+      ],
+      "default": null
+    },
+    "info_code": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[EI]_[A-Z0-9_]+$" }
+      ],
+      "default": null
+    },
+    "reason": { "type": "string", "minLength": 1 },
+    "provenance": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": true
+        }
+      ],
+      "default": null
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "outcome": { "const": "allowed" } },
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "deny_code": { "type": "null" },
+          "info_code": { "type": "null" },
+          "provenance": { "type": "object" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "outcome": { "const": "denied" } },
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "deny_code": { "type": "string", "pattern": "^E_[A-Z0-9_]+$" },
+          "info_code": { "type": "null" },
+          "provenance": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "outcome": { "const": "skipped" } },
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "deny_code": { "type": "null" },
+          "info_code": { "const": "I_CAPABILITY_SKIPPED" },
+          "provenance": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "outcome": { "const": "unresolved" } },
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "deny_code": { "const": "E_CAPABILITY_NOT_RESOLVED" },
+          "info_code": { "type": "null" },
+          "provenance": { "type": "null" }
+        }
+      }
+    }
+  ]
+}
