@@ -24,6 +24,8 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmark_scoring_gate.json --require-thresholds",
         "python scripts/check_memory_determinism.py",
         "python scripts/compare_memory_determinism.py",
+        "python -m pytest -q tests/kernel/v1",
+        "python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py",
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]
     assert not missing, "quality workflow missing required architecture gates: " + ", ".join(missing)

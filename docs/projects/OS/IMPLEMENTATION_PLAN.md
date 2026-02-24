@@ -225,8 +225,9 @@ Completed in current execution slice:
 36. Replay vectors now include richer multi-mismatch noise case with sorted deterministic mismatch fields.
 37. Architecture gate now enforces kernel API interface tests via `.gitea/workflows/quality.yml` (`tests/interfaces/test_api_kernel_lifecycle.py`).
 38. Fixture-generation ergonomics are active through `scripts/gen_kernel_compare_fixture.py` with contract test coverage.
+39. Card-006 acceptance `100/100 replay stability` is enforced via deterministic iteration tests in `tests/kernel/v1/test_replay_stability.py`.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
 2. Wire generated fixture output into interface tests as an optional parity source to reduce manual fixture drift.
-3. Evaluate remaining OS cards for closure criteria and identify which card-level acceptance tests are still missing for full roadmap completion.
+3. Produce a card-closure checklist mapping Cards 006/007/008 acceptance to concrete tests/gates and mark any remaining hard gaps.
