@@ -128,6 +128,10 @@ class KernelCompareRequest(BaseModel):
     compare_mode: str = "structural_parity"
 
 
+class KernelReplayRequest(BaseModel):
+    run_descriptor: dict[str, Any]
+
+
 SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
     "architecture_mode": {
         "env_var": "ORKET_ARCHITECTURE_MODE",
@@ -437,6 +441,16 @@ async def kernel_compare(req: KernelCompareRequest):
             "run_a": req.run_a,
             "run_b": req.run_b,
             "compare_mode": req.compare_mode,
+        }
+    )
+
+
+@v1_router.post("/kernel/replay")
+async def kernel_replay(req: KernelReplayRequest):
+    return engine.kernel_replay_run(
+        {
+            "contract_version": "kernel_api/v1",
+            "run_descriptor": req.run_descriptor,
         }
     )
 

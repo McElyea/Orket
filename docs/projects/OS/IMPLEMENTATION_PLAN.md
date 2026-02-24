@@ -212,8 +212,10 @@ Completed in current execution slice:
 23. Production API path adoption is active at `POST /v1/kernel/lifecycle` (`orket/interfaces/api.py`) and routes to `OrchestrationEngine.kernel_run_lifecycle(...)`.
 24. Replay vectors include combined mismatch-case asserting deterministic `mismatch_fields` ordering.
 25. Orchestration-facing replay compare API boundary is active at `POST /v1/kernel/compare` and routes to `OrchestrationEngine.kernel_compare_runs(...)`.
+26. Orchestration-facing replay-run API boundary is active at `POST /v1/kernel/replay` and covered for `E_REPLAY_INPUT_MISSING`/`E_REPLAY_VERSION_MISMATCH` propagation.
+27. Replay vectors now include additional pass-normalization case for randomized issue/event input order.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Add a replay vector with mixed issue ordering plus equal contract surface to prove pass behavior under randomized issue/event input order.
-3. Add API-level endpoint for kernel replay-run boundary (`POST /v1/kernel/replay`) and cover failure paths (`E_REPLAY_INPUT_MISSING`, `E_REPLAY_VERSION_MISMATCH`).
+2. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets across API boundary (engine path), not just direct validator vectors.
+3. Add one end-to-end orchestration-run artifact to kernel compare API test to validate contract-surface extraction from realistic payloads.

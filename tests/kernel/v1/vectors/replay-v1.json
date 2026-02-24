@@ -114,6 +114,72 @@
       "expect_outcome": "PASS"
     },
     {
+      "name": "pass-randomized-issue-event-input-order-normalized",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/2",
+            "message": "x",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/0",
+            "message": "y",
+            "details": {}
+          }
+        ],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_NOOP_PROMOTION] [LOC:/turn-0002] noop |",
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] pass |"
+        ]
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/0",
+            "message": "different",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/2",
+            "message": "different",
+            "details": {}
+          }
+        ],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] pass alt |",
+          "[INFO] [STAGE:promotion] [CODE:I_NOOP_PROMOTION] [LOC:/turn-0002] noop alt |"
+        ]
+      },
+      "expect_outcome": "PASS"
+    },
+    {
       "name": "fail-stage-outcome-mismatch",
       "run_a": {
         "run_id": "run-a",

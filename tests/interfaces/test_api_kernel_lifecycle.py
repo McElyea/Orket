@@ -62,3 +62,40 @@ def test_kernel_compare_endpoint_routes_to_engine(monkeypatch) -> None:
     assert response.json()["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
     assert captured["request"]["contract_version"] == "kernel_api/v1"
     assert captured["request"]["run_a"]["run_id"] == "run-a"
+
+
+def test_kernel_replay_endpoint_routes_to_engine_and_propagates_failure_codes(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    def fake_kernel_replay_run(request):
+        descriptor = request.get("run_descriptor", {})
+        if "workflow_id" not in descriptor:
+            return {"outcome": "FAIL", "issues": [{"code": "E_REPLAY_INPUT_MISSING"}]}
+        if descriptor.get("contract_version") != "kernel_api/v1":
+            return {"outcome": "FAIL", "issues": [{"code": "E_REPLAY_VERSION_MISMATCH"}]}
+        return {"outcome": "PASS", "issues": []}
+
+    monkeypatch.setattr(api_module.engine, "kernel_replay_run", fake_kernel_replay_run)
+
+    missing = client.post(
+        "/v1/kernel/replay",
+        headers={"X-API-Key": "test-key"},
+        json={"run_descriptor": {"run_id": "run-r1"}},
+    )
+    assert missing.status_code == 200
+    assert missing.json()["issues"][0]["code"] == "E_REPLAY_INPUT_MISSING"
+
+    mismatch = client.post(
+        "/v1/kernel/replay",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_descriptor": {
+                "run_id": "run-r2",
+                "workflow_id": "wf-r2",
+                "contract_version": "kernel_api/v0",
+                "schema_version": "v1",
+            }
+        },
+    )
+    assert mismatch.status_code == 200
+    assert mismatch.json()["issues"][0]["code"] == "E_REPLAY_VERSION_MISMATCH"
