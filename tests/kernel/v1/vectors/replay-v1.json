@@ -158,6 +158,78 @@
       "expect_outcome": "FAIL",
       "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
       "expect_mismatch_fields": ["issue_codes"]
+    },
+    {
+      "name": "fail-event-code-multiset-drift",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] ok |",
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0002] ok |"
+        ]
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [],
+        "events": [
+          "[INFO] [STAGE:promotion] [CODE:I_PROMOTION_PASS] [LOC:/turn-0001] ok |"
+        ]
+      },
+      "expect_outcome": "FAIL",
+      "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
+      "expect_mismatch_fields": ["event_codes"]
+    },
+    {
+      "name": "fail-mixed-turn-count-edge",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [
+          {
+            "turn_id": "turn-0001",
+            "turn_result_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "turn_id": "turn-0002",
+            "turn_result_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        ],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS" },
+          { "turn_id": "turn-0002", "stage": "promotion", "outcome": "PASS" }
+        ],
+        "issues": [],
+        "events": []
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [
+          {
+            "turn_id": "turn-0001",
+            "turn_result_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "stage_outcomes": [
+          { "turn_id": "turn-0001", "stage": "promotion", "outcome": "PASS" }
+        ],
+        "issues": [],
+        "events": []
+      },
+      "expect_outcome": "FAIL",
+      "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
+      "expect_mismatch_fields": ["stage_outcomes", "turn_digests"]
     }
   ]
 }

@@ -204,8 +204,9 @@ Completed in current execution slice:
 15. Explicit kernel API module surface is now available at `orket/kernel/v1/api.py` with stable exported handlers for run lifecycle, capability, and replay.
 16. Policy artifact schema is now normative at `docs/projects/OS/contracts/kernel-capability-policy-v1.schema.json` and enforced by kernel-v1 tests.
 17. Non-test adoption of the explicit API surface is active via `orket/application/services/kernel_v1_gateway.py`.
+18. Replay vectors now include event-code multiset drift and mixed turn-count edge cases.
 
 Next task:
-1. Add richer replay fixtures covering event-code multiset drift and mixed turn-count edge cases.
-2. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-3. Define integration path from existing orchestration/session flow into `KernelV1Gateway`.
+1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
+2. Define integration path from existing orchestration/session flow into `KernelV1Gateway`.
+3. Add a replay vector for mixed issue ordering that proves deterministic sort normalization before comparison.
