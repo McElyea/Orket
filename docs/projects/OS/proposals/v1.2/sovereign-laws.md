@@ -1,7 +1,7 @@
 # v1.2 Sovereign Laws (Proposal)
 
 Last updated: 2026-02-24
-Status: Draft proposal (non-authoritative)
+Status: Execution-ready proposal (non-authoritative until promotion)
 
 These laws are proposed as machine laws for v1.2 normalization.
 
@@ -69,7 +69,7 @@ For each decision with outcome in `{denied, unresolved}`, a matching capability-
 1. Same `(run_id, turn_id)`
 2. `issue.stage == "capability"`
 3. `issue.code == decision.deny_code`
-4. `issue.location` points to decision ordinal (e.g. `/capabilities/decisions/<ordinal>`)
+4. `issue.location` points to decision ordinal (e.g. `/capabilities/decisions_v1_2_1/<ordinal>` during coexistence)
 
 ## 12. Report Identity Law
 `report_id` is SHA-256 of canonical report bytes with:

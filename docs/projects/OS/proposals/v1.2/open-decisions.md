@@ -67,3 +67,13 @@ Decision:
 Scope:
 1. TurnResult digest projection.
 2. Replay report ID input projection.
+
+## D9. Coexistence Field Naming
+Decision:
+1. Keep existing `capabilities.decisions` semantics unchanged for v1 compatibility.
+2. Add `capabilities.decisions_v1_2_1` as the DecisionRecord parity surface during coexistence.
+3. Consider rename to `capabilities.decisions` only in the next major after deprecation window.
+
+Why:
+1. Avoids semantic swap on an existing field in `kernel_api/v1`.
+2. Keeps migration explicit and testable.

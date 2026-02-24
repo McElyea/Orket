@@ -41,3 +41,5 @@ Tests live under:
 - Roadmap / Cards: `Roadmap/Cards.md`
 - Closure Checklist: `Roadmap/Closeout-Checklist.md`
 - v1.2 Proposal Pack: `proposals/v1.2/README.md`
+- v1.2 Execution Plan: `proposals/v1.2/implementation-plan.md`
+- v1.2 PR Workboard: `proposals/v1.2/pr-workboard.md`

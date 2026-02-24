@@ -11,3 +11,5 @@ Active roadmap files:
 
 Related proposal material:
 1. `../proposals/v1.2/README.md`
+2. `../proposals/v1.2/implementation-plan.md`
+3. `../proposals/v1.2/pr-workboard.md`
