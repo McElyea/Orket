@@ -226,8 +226,11 @@ Completed in current execution slice:
 37. Architecture gate now enforces kernel API interface tests via `.gitea/workflows/quality.yml` (`tests/interfaces/test_api_kernel_lifecycle.py`).
 38. Fixture-generation ergonomics are active through `scripts/gen_kernel_compare_fixture.py` with contract test coverage.
 39. Card-006 acceptance `100/100 replay stability` is enforced via deterministic iteration tests in `tests/kernel/v1/test_replay_stability.py`.
+40. Card-closure mapping is now documented in `docs/projects/OS/Roadmap/Card-Closure-Checklist.md`.
+41. Card-008 fire-drill governance gap is closed via named suite `scripts/run_kernel_fire_drill.py` and CI enforcement.
+42. Final closure pass is documented in `docs/projects/OS/Roadmap/ClosurePass-2026-02-24.md` (provisional complete pending owner sign-off).
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
 2. Wire generated fixture output into interface tests as an optional parity source to reduce manual fixture drift.
-3. Produce a card-closure checklist mapping Cards 006/007/008 acceptance to concrete tests/gates and mark any remaining hard gaps.
+3. Owner sign-off and closeout workflow decision (active -> closeout/archive).

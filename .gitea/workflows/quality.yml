@@ -38,6 +38,10 @@ jobs:
         run: |
           python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py
 
+      - name: Enforce kernel fire-drill suite
+        run: |
+          python scripts/run_kernel_fire_drill.py
+
       - name: Enforce TS digest parity gate
         run: |
           npm test --prefix conformance/ts
