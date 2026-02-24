@@ -1,7 +1,7 @@
 # OS Next Part - v1 Requirements
 
 Last updated: 2026-02-24
-Status: Active draft
+Status: Paused draft
 Owner: Orket Core
 
 ## Scope

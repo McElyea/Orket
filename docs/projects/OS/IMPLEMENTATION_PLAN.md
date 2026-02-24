@@ -1,7 +1,7 @@
 # OS Implementation Plan
 
 Last updated: 2026-02-24
-Status: Active
+Status: Closeout-ready (Paused)
 Owner: Orket Core
 
 ## Purpose
@@ -233,8 +233,9 @@ Completed in current execution slice:
 41. Card-008 fire-drill governance gap is closed via named suite `scripts/run_kernel_fire_drill.py` and CI enforcement.
 42. Final closure pass is documented in `docs/projects/OS/Roadmap/ClosurePass-2026-02-24.md` (provisional complete pending owner sign-off).
 43. Closeout checklist and roadmap status are updated to `closeout-ready`.
+44. Replay comparator vectors now cover mixed issue-set pointer/code ordering normalization and mixed pointer/code drift.
+45. API lifecycle tests can consume an optional generated compare fixture via `ORKET_KERNEL_COMPARE_FIXTURE_PATH`, reducing manual fixture drift risk.
 
 Next task:
-1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Wire generated fixture output into interface tests as an optional parity source to reduce manual fixture drift.
-3. Owner sign-off and closeout workflow decision (closeout-ready -> completed/archive).
+1. Owner sign-off and closeout workflow decision (closeout-ready -> completed/archive).
+2. Keep `NEXT_PART_V1_REQUIREMENTS.md` paused until pillar-first roadmap reprioritization reactivates OS work.

@@ -15,6 +15,7 @@ from orket.core.domain.orket_manifest import (
     is_engine_compatible,
     resolve_model_selection,
 )
+from orket.interfaces.refactor_transaction import run_refactor_transaction
 
 
 ERROR_MANIFEST_NOT_FOUND = "E_MANIFEST_NOT_FOUND"
@@ -546,10 +547,29 @@ def _parser() -> argparse.ArgumentParser:
     inspect_parser = subparsers.add_parser("inspect", help="Inspect an Orket bundle directory or .orket archive.")
     inspect_parser.add_argument("target", nargs="?", default=".", help="Bundle directory or .orket archive path.")
     inspect_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    refactor_parser = subparsers.add_parser("refactor", help="Run CP-1.1 transactional refactor (rename only).")
+    refactor_parser.add_argument("instruction", help="Refactor instruction. Supported: rename <A> to <B>.")
+    refactor_parser.add_argument("--scope", action="append", required=True, help="Write scope path (repeatable).")
+    refactor_parser.add_argument("--yes", action="store_true", help="Confirm mutation execution.")
+    refactor_parser.add_argument("--dry-run", action="store_true", help="Plan only, no writes.")
+    refactor_parser.add_argument("--verify-profile", default="default", help="Verification profile from orket.config.json.")
+    refactor_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     return parser
 
 
 def _render_human(result: Dict[str, Any]) -> str:
+    if "code" in result and "message" in result:
+        lines: List[str] = []
+        if result.get("plan"):
+            lines.append(str(result["plan"]))
+        status = "OK" if bool(result.get("ok")) else f"FAIL [{result.get('code')}]"
+        lines.append(f"{status}: {result.get('message')}")
+        if result.get("verify_output_tail"):
+            lines.append("")
+            lines.append(str(result["verify_output_tail"]))
+        return "\n".join(lines)
+
     if bool(result.get("ok")):
         return (
             f"OK: {result.get('manifest_name')} {result.get('manifest_version')} "
@@ -576,6 +596,14 @@ def main(argv: List[str] | None = None) -> int:
         result = pack_bundle(Path(args.source), out_path=out)
     elif args.command == "inspect":
         result = inspect_target(Path(args.target))
+    elif args.command == "refactor":
+        result = run_refactor_transaction(
+            instruction=str(args.instruction),
+            scope_inputs=list(args.scope or []),
+            dry_run=bool(args.dry_run),
+            auto_confirm=bool(args.yes),
+            verify_profile=str(args.verify_profile),
+        )
     else:
         print(json.dumps({"ok": False, "error": "unsupported_command"}, ensure_ascii=False))
         return 2

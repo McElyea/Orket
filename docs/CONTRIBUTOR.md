@@ -19,11 +19,17 @@ Orket
 5. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.
 6. No session narrative here. Use temporary scratch notes if needed.
 7. The roadmap has the next steps, no need to journal them here.
+8. Command intent rule:
+   - If the user says "follow roadmap" (or equivalent) without naming a project, execute the highest-priority active item in `docs/ROADMAP.md`.
+   - Do not switch to paused/deferred projects unless the user explicitly requests it.
+   - For `core-pillars`, execute in the exact order defined by `docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`.
 
 ## Current Focus
 1. Keep `docs/ROADMAP.md` active-only (remove completed/obsolete items at each handoff).
 2. Preserve deterministic green gates (`pytest`, dependency direction, volatility boundaries).
 3. Keep pilot evidence artifacts current (`architecture_pilot_matrix*`, `microservices_pilot_stability_check.json`).
+4. Execute `core-pillars` as the default active roadmap lane unless the user redirects.
+5. Execute `core-pillars` by slice (`CP-1.1 -> CP-1.2 -> ...`), not by pillar batch.
 
 ## Quick Setup
 1. Install dependencies: `pip install -r requirements.txt`
@@ -49,6 +55,8 @@ Orket
 
 ## How To Work
 1. Pick one roadmap item.
+   - Default selection: highest-priority active (non-paused) roadmap item.
+   - If that item is `core-pillars`, use `08-DETAILED-SLICE-EXECUTION-PLAN.md` as the implementation source of truth.
 2. Implement the smallest complete slice.
 3. Add/update tests for behavior changed.
 4. Run targeted tests first, then broader tests.
@@ -70,3 +78,4 @@ Orket
 3. Risk/rollback notes for non-trivial changes.
 4. Docs updated where behavior changed.
 5. Workflow changes (if any) are limited to `.gitea/workflows/` unless explicitly approved otherwise.
+6. Boundary/contract breaks include a proposal using `docs/architecture/CONTRACT_DELTA_TEMPLATE.md` with migration and rollback plans.
