@@ -1,7 +1,7 @@
 # v1.2 Sovereign Laws
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution)
+Status: Archived (completed)
 
 These laws are the machine-law baseline for v1.2 execution.
 

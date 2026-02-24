@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution, PR-01..PR-07 complete; closeout step pending)
+Status: Archived (PR-01..PR-07 complete; closeout complete)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -193,7 +193,7 @@ Suggested checks:
 
 ## Closeout Step (After PR-07)
 Status:
-1. In progress.
+1. Complete.
 
 1. Update `docs/projects/OS/contract-index.md` with completed v1.2 artifacts.
 2. Update `docs/projects/OS/test-policy.md` with mandatory comparator checks.

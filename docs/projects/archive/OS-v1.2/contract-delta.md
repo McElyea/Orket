@@ -1,7 +1,7 @@
 # v1.2 Contract Delta
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution)
+Status: Archived (completed)
 
 ## Purpose
 Define the proposed contract/schema deltas for v1.2, with explicit compatibility boundaries for `kernel_api/v1` tightening.

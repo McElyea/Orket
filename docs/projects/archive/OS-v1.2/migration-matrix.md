@@ -1,7 +1,7 @@
 # v1.2 Migration Matrix
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution)
+Status: Archived (completed)
 
 ## Mapping
 
