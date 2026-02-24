@@ -402,6 +402,21 @@ def test_kernel_compare_endpoint_response_conforms_to_replay_report_schema(monke
     Draft202012Validator(schema, registry=registry).validate(response.json())
 
 
+def test_kernel_compare_endpoint_malformed_payload_rejected(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    response = client.post(
+        "/v1/kernel/compare",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_a": {"run_id": "run-a"},
+            "compare_mode": "structural_parity"
+        },
+    )
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["detail"][0]["loc"][-1] == "run_b"
+
+
 def test_kernel_compare_endpoint_realistic_artifact_fixture(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     fixture_path = Path("tests/interfaces/fixtures/kernel_compare_realistic_fixture.json")

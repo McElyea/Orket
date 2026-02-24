@@ -221,8 +221,10 @@ Completed in current execution slice:
 32. API-boundary compare parity version drift is covered with deterministic mismatch-field assertion (`["contract_version"]`).
 33. Combined pointer+stage drift ordering is covered in both replay vectors and API-boundary compare tests (`["issue_codes","stage_outcomes"]`).
 34. `/v1/kernel/replay` FAIL payload schema conformance is now enforced at API boundary.
+35. `/v1/kernel/compare` malformed payload rejection is now covered with deterministic API validation behavior.
+36. Replay vectors now include richer multi-mismatch noise case with sorted deterministic mismatch fields.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
-2. Add one compare case with realistic mixed issue/event noise and multiple simultaneous mismatch fields, then assert sorted deterministic mismatch-field output.
-3. Add API-boundary negative test for `/v1/kernel/compare` malformed payload shape and confirm deterministic rejection behavior.
+2. Add API-boundary kernel replay compare with artifact-derived turn digest payloads produced from a fixture generator script to reduce manual drift.
+3. Add CI workflow gate line(s) ensuring the kernel API interface tests (`tests/interfaces/test_api_kernel_lifecycle.py`) are part of the fast architecture gate.
