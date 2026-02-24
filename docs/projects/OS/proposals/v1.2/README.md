@@ -23,3 +23,6 @@ This pack is not authoritative until changes are accepted and promoted into:
 3. `sovereign-laws.md`
 4. `migration-matrix.md`
 5. `implementation-plan.md`
+
+Current state:
+1. D1-D8 are locked; this pack is ready for promotion slicing.

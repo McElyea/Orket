@@ -7,14 +7,14 @@ Status: Draft proposal (non-authoritative)
 
 | Current Artifact | Proposed Artifact | Change Type | Break Risk | Required Tests/Gates | Notes |
 |---|---|---|---|---|---|
-| `contracts/capability-decision.schema.json` | `contracts/capability-decision-record.schema.json` (new) | Add or replace | Medium/High | validator schema contracts, capability scenario tests, replay parity tests | Replacement vs coexistence is unresolved. |
-| `contracts/replay-report.schema.json` | tightened replay report schema | Tighten existing | High | schema contracts, replay vectors, API compare schema tests | Could require major bump if shape/meaning changes. |
+| `contracts/capability-decision.schema.json` | `contracts/capability-decision-record.schema.json` (new) | Add in parallel | Medium | validator schema contracts, capability scenario tests, replay parity tests | Locked: coexist one minor cycle, then replace in later major. |
+| `contracts/replay-report.schema.json` | tightened replay report schema | Tighten existing | Medium | schema contracts, replay vectors, API compare schema tests | Must preserve v1 semantics; use additive fields if needed. |
 | none | `contracts/replay-bundle.schema.json` | Additive | Low/Medium | bundle validation tests, comparator input tests | New manifest contract for replay input. |
 | none | `contracts/stage-order-v1.json` | Additive | Low | ordering tests, comparator mismatch ordering tests | Becomes authoritative stage spine. |
-| `contracts/turn-result.schema.json` | decisions ref to decision-record schema | Modify existing | High | turn-result schema tests, runtime emission tests | Potential v2 break if existing consumers depend on current shape. |
+| `contracts/turn-result.schema.json` | add parallel decision-record location/ref | Modify existing (additive) | Medium | turn-result schema tests, runtime emission tests | Locked: no semantic swap of existing field meaning under v1 tightening. |
 | `contracts/error-codes-v1.json` | add v1.2 codes | Additive | Low | `scripts/audit_registry.py`, registry tests | No rename/removal allowed in v1. |
-| comparator implementation behavior | canonical parity and report-id derivation laws | Tighten behavior | Medium | replay vector tests, 100-iteration stability, API compare tests | Must lock digest input/exclusion rules. |
-| registry digest rule (implicit) | explicit canonical digest rule | Clarification | Medium | registry lock tests, replay lock mismatch tests | Must define exact digest payload scope. |
+| comparator implementation behavior | canonical parity and report-id derivation laws | Tighten behavior | Medium | replay vector tests, 100-iteration stability, API compare tests | Locked: IssueKey ordering + multiplicity, nullification-over-omission. |
+| registry digest rule (implicit) | explicit canonical digest rule | Clarification | Low/Medium | registry lock tests, replay lock mismatch tests | Locked: full wrapper canonical JSON digest. |
 
 ## Risk Classification Guidance
 1. `Low`: additive + no existing contract interpretation change.

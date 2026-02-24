@@ -7,15 +7,13 @@ Status: Draft proposal (non-authoritative)
 Convert the v1.2 idea dump into enforceable contracts and deterministic runtime behavior with explicit compatibility handling.
 
 ## Phase 0: Decision Freeze
-1. Resolve items in `open-decisions.md`.
-2. Decide whether v1.2 is:
-- `kernel_api/v1` tightening, or
-- `kernel_api/v2` breaking set.
-3. Freeze digest-scope and ordering rules.
+1. Apply locked decision set from `open-decisions.md`.
+2. Enforce `kernel_api/v1` tightening constraints (no semantic swaps on existing fields).
+3. Freeze digest-scope, ordering, multiplicity, and nullification rules.
 
 Exit criteria:
-1. Open decisions are closed.
-2. Versioning classification is explicitly documented.
+1. Locked decisions are reflected in proposal contracts/laws/tests.
+2. Versioning constraints are encoded in migration plan and tests.
 
 ## Phase 1: Additive Contracts First
 1. Add `stage-order-v1.json`.
@@ -46,8 +44,10 @@ Exit criteria:
 2. API replay/compare tests remain deterministic.
 
 ## Phase 4: TurnResult and Schema Integration
-1. If replacing decisions shape, migrate `turn-result.schema.json`.
-2. If coexistence model, keep old shape and add parallel record location.
+1. Use coexistence model for one minor cycle:
+- keep current capability surface
+- add DecisionRecord parity surface in parallel
+2. Ensure comparator prefers DecisionRecord once both are present.
 3. Update schema contracts and interface tests.
 
 Exit criteria:
@@ -70,3 +70,11 @@ Exit criteria:
 4. PR4 Capability decision-record wiring.
 5. PR5 Turn-result/schema integration.
 6. PR6 Authority promotion and cleanup.
+
+## Locked Constraints (Must Hold)
+1. `kernel_api/v1` tightening only.
+2. DecisionRecord coexistence for one cycle before replacement.
+3. Contract-only turn-result digest scope.
+4. Deterministic IssueKey ordering with multiplicity buckets.
+5. Full wrapper registry digest.
+6. Nullification (not omission) for hash projections.

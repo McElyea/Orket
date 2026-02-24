@@ -6,6 +6,10 @@ Status: Draft proposal (non-authoritative)
 ## Purpose
 Define proposed contract/schema deltas derived from `docs/projects/ideas/Ideas.md` before any authoritative promotion.
 
+Decision baseline:
+1. `kernel_api/v1` tightening (locked in `open-decisions.md`).
+2. No semantic swaps of existing fields within v1.
+
 ## Baseline (Current Authority)
 Current authoritative contracts are listed in:
 1. `docs/projects/OS/contract-index.md`
@@ -77,9 +81,7 @@ If desired, keep existing capability decision schema for policy evaluation, and 
 2. `capability-decision-record.schema.json` (replay parity surface)
 
 ## Compatibility Risk Summary
-1. Additive contracts (`stage-order`, `replay-bundle`): likely minor.
-2. Tightening existing replay report: potentially breaking.
-3. Changing `turn-result` decisions item reference: potentially breaking.
+1. Additive contracts (`stage-order`, `replay-bundle`): minor.
+2. Tightening existing replay report: medium; must remain additive/compatible under v1.
+3. DecisionRecord integration: medium; coexistence cycle avoids immediate break.
 4. Expanding error registry: minor if additive only.
-
-Final version classification is blocked by decisions in `open-decisions.md`.

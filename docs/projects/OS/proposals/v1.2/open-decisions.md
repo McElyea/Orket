@@ -1,70 +1,69 @@
-# v1.2 Open Decisions
+# v1.2 Locked Decisions
 
 Last updated: 2026-02-24
-Status: Pending decision
+Status: Locked
 
 ## D1. Version Classification
-Question:
-1. Is this a `kernel_api/v1` tightening or a `kernel_api/v2` break?
+Decision:
+1. `kernel_api/v1` tightening.
 
-Options:
-1. `v1` tightening: only additive/tightening changes with compatibility guards.
-2. `v2` break: allow shape and meaning changes directly.
-
-Recommendation:
-1. Treat as `v2` if `turn-result` decision schema is replaced rather than coexistence.
+Rule:
+1. No silent semantic swaps.
+2. If existing field meaning changes, introduce a new field or parallel schema.
+3. Keep prior meaning stable until removal in a later major.
 
 ## D2. Capability Decision Surface
-Question:
-1. Does `CapabilityDecisionRecord` replace existing `CapabilityDecision` or coexist?
+Decision:
+1. `CapabilityDecisionRecord` coexists with current capability artifact for one minor cycle.
+2. It becomes the sole parity surface in next major or scheduled deprecation window.
 
-Options:
-1. Replace: simpler long-term, higher short-term break risk.
-2. Coexist: safer migration, more temporary complexity.
-
-Recommendation:
-1. Coexist for one minor cycle, then remove in next major.
+Operational rule:
+1. During migration, `TurnResult` may carry both.
+2. Once both are present, comparator parity uses DecisionRecord.
 
 ## D3. `turn_result_digest` Scope
-Question:
-1. Which `TurnResult` fields are digest inputs?
+Decision:
+1. Contract-only digest scope.
 
-Options:
-1. Full object.
-2. Contract-only object (excluding diagnostics like events/message).
-
-Recommendation:
-1. Contract-only digest scope, explicitly documented and test-locked.
+Exclusions:
+1. `TurnResult.events`
+2. `KernelIssue.message`
+3. Any declared narrative/diagnostic-only surfaces.
 
 ## D4. Issue Comparison Ordering
-Question:
-1. Compare issues by array order or normalized key sort?
+Decision:
+1. Deterministic IssueKey ordering (not array order).
 
-Options:
-1. Preserve array order.
-2. Deterministic key sort (`stage_order`, `location`, `code`, details digest).
-
-Recommendation:
-1. Deterministic key sort to avoid host/order noise.
+Order key:
+1. `stage_index`
+2. `location`
+3. `code`
+4. `details_digest`
 
 ## D5. Registry Digest Input Rule
-Question:
-1. Registry digest over full wrapper JSON or codes-only payload?
+Decision:
+1. Digest full wrapper canonical JSON:
+- `{ "contract_version": "...", "codes": { ... } }`
 
-Options:
-1. Full wrapper canonical JSON.
-2. Codes-only canonical payload.
+## D6. `report_id` Diagnostic Handling
+Decision:
+1. Nullify, do not remove:
+- `report_id = null`
+- `mismatches[*].diagnostic = null`
 
-Recommendation:
-1. Full wrapper canonical JSON and lock rule in one place.
+## D7. IssueKey Multiplicity + Normalization Scope
+Decision:
+1. Use multimap buckets (`IssueKey -> list`) with cardinality checks.
+2. Compare normalized items sorted by digest inside each bucket.
 
-## D6. Report ID Input Rule
-Question:
-1. For `report_id`, should diagnostic fields be nullified or removed?
+Normalization:
+1. Remove only `message`.
+2. Keep all parity fields (`contract_version`, `level`, `stage`, `code`, `location`, `details`).
 
-Options:
-1. Set `diagnostic=null`.
-2. Remove `diagnostic` keys.
+## D8. Nullification-over-Omission Consistency
+Decision:
+1. For any normalized surface used for hashing, prefer nullification over key removal.
 
-Recommendation:
-1. Set `diagnostic=null` for stable canonical shape.
+Scope:
+1. TurnResult digest projection.
+2. Replay report ID input projection.

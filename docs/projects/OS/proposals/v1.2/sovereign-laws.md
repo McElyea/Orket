@@ -75,3 +75,17 @@ For each decision with outcome in `{denied, unresolved}`, a matching capability-
 `report_id` is SHA-256 of canonical report bytes with:
 1. `report_id = null`
 2. `mismatches[*].diagnostic = null`
+
+## 13. IssueKey Multiplicity Law
+Issue comparison uses multimap buckets (`IssueKey -> list`) rather than set semantics.
+1. Comparator must compare bucket cardinality.
+2. Within each bucket, normalized issues are sorted by digest before comparison.
+
+## 14. Issue Normalization Scope Law
+Issue normalization for parity removes only `message`.
+1. `contract_version`, `level`, `stage`, `code`, `location`, and `details` remain parity-relevant.
+
+## 15. Nullification-over-Omission Law
+For any canonical surface hashed for identity/digest:
+1. Use nullification for excluded fields, not key removal.
+2. This applies to `turn_result_digest` projections and report-id projections.
