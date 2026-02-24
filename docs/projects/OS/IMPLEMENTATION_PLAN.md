@@ -173,6 +173,9 @@ mutate a committed vector value and confirm parity fails; then run regen+diff an
 run two small PRs (registry-only and base-shape-only) to validate review clarity and deterministic check attachment.
 
 ## Immediate Next Task
+Program state:
+1. OS is closeout-ready pending owner sign-off (`Roadmap/Closeout-Checklist.md`).
+
 Completed in current execution slice:
 1. Phase B ledger/order/no-op law behavior is implemented and green in kernel-law tests.
 2. Baseline Phase F guardrails are landed:
@@ -229,8 +232,9 @@ Completed in current execution slice:
 40. Card-closure mapping is now documented in `docs/projects/OS/Roadmap/Card-Closure-Checklist.md`.
 41. Card-008 fire-drill governance gap is closed via named suite `scripts/run_kernel_fire_drill.py` and CI enforcement.
 42. Final closure pass is documented in `docs/projects/OS/Roadmap/ClosurePass-2026-02-24.md` (provisional complete pending owner sign-off).
+43. Closeout checklist and roadmap status are updated to `closeout-ready`.
 
 Next task:
 1. Add replay comparator tests for staged pointer/code ordering guarantees under mixed issue sets.
 2. Wire generated fixture output into interface tests as an optional parity source to reduce manual fixture drift.
-3. Owner sign-off and closeout workflow decision (active -> closeout/archive).
+3. Owner sign-off and closeout workflow decision (closeout-ready -> completed/archive).
