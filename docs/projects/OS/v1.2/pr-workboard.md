@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution, PR-03 in progress)
+Status: Active (authoritative for v1.2 execution, PR-04 in progress)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -64,7 +64,7 @@ Required acceptance checks:
 
 ## PR-03: ReplayBundle + ReplayReport Schemas
 Status:
-1. In progress.
+1. Complete.
 
 Goal:
 1. Make replay input/output contracts authoritative and deterministic.
@@ -88,6 +88,9 @@ Suggested checks:
 2. `python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py`
 
 ## PR-04: Canonicalization + Digest Rules Documentation
+Status:
+1. In progress.
+
 Goal:
 1. Lock byte-level rules so Python/TypeScript/comparator converge.
 

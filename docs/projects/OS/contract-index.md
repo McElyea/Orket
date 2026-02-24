@@ -16,6 +16,9 @@ Anything not listed here is non-authoritative for OS v1.
 | Governance | Test Policy | `test-policy.md` | os/v1 | Normative |
 | Governance | Migration Map | `migration-map-v1.md` | os/v1 | Normative |
 | Governance | Sovereign Laws v1.2 | `contracts/sovereign-laws.md` | kernel_api/v1 | Normative for replay/capability parity |
+| Governance | Canonicalization Rules v1.2 | `contracts/canonicalization-rules.md` | kernel_api/v1 | Normative canonical byte law |
+| Governance | Decision ID Derivation v1.2 | `contracts/decision-id-derivation.md` | kernel_api/v1 | Normative decision identity derivation |
+| Governance | Digest Surfaces v1.2 | `contracts/digest-surfaces.md` | kernel_api/v1 | Normative hash inclusion/exclusion surfaces |
 | Governance | v1.2 Locked Decisions | `v1.2/open-decisions.md` | kernel_api/v1 | Normative for v1.2 execution |
 | Governance | v1.2 Sovereign Laws | `v1.2/sovereign-laws.md` | kernel_api/v1 | Normative for v1.2 execution |
 | Governance | v1.2 Implementation Plan | `v1.2/implementation-plan.md` | os/v1 | Normative execution plan |

@@ -28,3 +28,4 @@ May differ:
 ## Comparator Output Contract
 1. Replay/compare reports conform to `contracts/replay-report.schema.json`.
 2. `mismatches_detail[*].diagnostic` is nullable and excluded from report-id hashing by nullification.
+3. Canonical digest inputs follow `contracts/canonicalization-rules.md` and `contracts/digest-surfaces.md`.
