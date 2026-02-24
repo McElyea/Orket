@@ -71,6 +71,7 @@ def test_execute_turn_v1_stage_and_promote_path_returns_promotion_stage() -> Non
         assert result["outcome"] == "PASS"
         assert result["stage"] == "promotion"
         assert isinstance(result["events"], list) and result["events"]
+        assert isinstance(result.get("turn_result_digest"), str) and len(result["turn_result_digest"]) == 64
 
 
 def test_finish_run_v1_returns_schema_shape() -> None:

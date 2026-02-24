@@ -7,6 +7,7 @@ from pathlib import Path
 from uuid import uuid4
 from typing import Any
 
+from orket.kernel.v1.canonical import compute_turn_result_digest
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import promote_turn
 
@@ -609,7 +610,7 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
         outcome = promotion.outcome
         stage = "promotion"
 
-    return _base_turn_result(
+    result = _base_turn_result(
         run_id=run_id,
         turn_id=turn_id,
         outcome=outcome,
@@ -618,6 +619,8 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
         events=events,
         capabilities=capabilities,
     )
+    result["turn_result_digest"] = compute_turn_result_digest(result)
+    return result
 
 
 def finish_run_v1(request: dict[str, Any]) -> dict[str, Any]:

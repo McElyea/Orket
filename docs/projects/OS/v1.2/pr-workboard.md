@@ -1,7 +1,7 @@
 # v1.2 PR Workboard (Execution Packet)
 
 Last updated: 2026-02-24
-Status: Active (authoritative for v1.2 execution, PR-06 in progress)
+Status: Active (authoritative for v1.2 execution, PR-07 in progress)
 
 This file is the implementation handoff for PR-01 through PR-07.
 
@@ -145,7 +145,7 @@ Suggested checks:
 
 ## PR-06: Kernel Emission Wiring (DecisionRecords + Correspondence Law)
 Status:
-1. In progress.
+1. Complete.
 
 Goal:
 1. Ensure runtime emits parity decision records deterministically.
@@ -169,6 +169,9 @@ Required acceptance checks:
 3. API boundary behavior remains deterministic.
 
 ## PR-07: TurnResult Digest Surface Implementation (D3)
+Status:
+1. In progress.
+
 Goal:
 1. Compute `turn_result_digest` from contract-only digest surface.
 

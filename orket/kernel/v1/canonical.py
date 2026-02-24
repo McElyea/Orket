@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import copy
 from typing import Any, Iterable, TypeVar
 
 LSI_VERSION_V1 = "lsi/v1"
@@ -152,6 +153,29 @@ def structural_digest(canonical_bytes: bytes) -> str:
 
 def digest_of(obj: Any) -> str:
     return structural_digest(canonical_json_bytes(obj))
+
+
+def normalized_turn_result_surface(turn_result: dict[str, Any]) -> dict[str, Any]:
+    """
+    Build the contract-only digest surface for TurnResult.
+    Diagnostic-only fields are excluded or nullified:
+      - events are excluded
+      - issues[*].message is nullified
+      - turn_result_digest is excluded from digest input
+    """
+    surface = copy.deepcopy(turn_result)
+    surface.pop("events", None)
+    surface.pop("turn_result_digest", None)
+    issues = surface.get("issues")
+    if isinstance(issues, list):
+        for issue in issues:
+            if isinstance(issue, dict):
+                issue["message"] = None
+    return surface
+
+
+def compute_turn_result_digest(turn_result: dict[str, Any]) -> str:
+    return digest_of(normalized_turn_result_surface(turn_result))
 
 
 def fs_token(value: str) -> str:

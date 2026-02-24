@@ -48,6 +48,7 @@
 
     "transition": { "$ref": "#/$defs/TransitionEvidence" },
     "capabilities": { "$ref": "#/$defs/CapabilityAudit" },
+    "turn_result_digest": { "$ref": "#/$defs/StructuralDigest" },
 
     "trace": {
       "anyOf": [
