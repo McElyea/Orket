@@ -45,6 +45,10 @@ Define the CP-4 runtime contract that decouples engine core from fixed card hier
 10. New default workflow profile must be `project_task_v1`.
 11. `project_task_v1` supports 2-level convention with arbitrary depth.
 12. Rock/Epic/Issue migration must preserve IDs, status history, and audit traceability.
+13. Workflow profile selection contract:
+- explicit runtime override: `ORKET_WORKFLOW_PROFILE`
+- default switch path: `ORKET_WORKFLOW_PROFILE_DEFAULT` or process rule `workflow_profile_default`
+14. System-only lifecycle override path (`system_set_status`) is allowed only with a non-empty `reason` payload and must emit deterministic transition metadata.
 
 ## Migration Mapping Contract
 1. `Rock -> WorkItem(kind=initiative, parent_id=null)`
@@ -52,6 +56,8 @@ Define the CP-4 runtime contract that decouples engine core from fixed card hier
 3. `Issue -> WorkItem(kind=task, parent_id=<epic_id>)`
 4. Legacy IDs remain valid aliases only during migration window.
 5. Migration must support dry-run artifact output and deterministic rollback path.
+6. Canonical dry-run command:
+- `python scripts/workitem_migration_dry_run.py --in <legacy_records.json> --out <report.json>`
 
 ## Acceptance Tests
 1. `test_workitem_transition_requires_action_api`
@@ -60,6 +66,7 @@ Define the CP-4 runtime contract that decouples engine core from fixed card hier
 4. `test_legacy_cards_profile_parity`
 5. `test_project_task_profile_core_flow`
 6. `test_migration_rock_epic_issue_mapping_is_lossless`
+7. `test_system_set_status_requires_reason_and_allows_override`
 
 ## Non-Goals
 1. Solving all hierarchy presentation preferences in core runtime.

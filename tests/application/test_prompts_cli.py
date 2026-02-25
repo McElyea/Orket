@@ -69,6 +69,14 @@ def _seed_assets(root: Path) -> None:
     (dialects / "generic.json").write_text(json.dumps(dialect_payload, indent=2), encoding="utf-8")
 
 
+def _force_prompt_updated_at(root: Path, prompt_id: str, updated_at: str) -> None:
+    shown = show_prompt(root, prompt_id)
+    path = Path(str(shown["path"]))
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload.setdefault("prompt_metadata", {})["updated_at"] = updated_at
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
 def test_validate_prompt_assets_core_passes() -> None:
     errors = validate_prompt_assets(Path("."))
     assert errors == []
@@ -244,6 +252,7 @@ def test_find_stale_candidate_prompts_detects_age_threshold(tmp_path: Path) -> N
         notes="candidate cut",
         apply_changes=True,
     )
+    _force_prompt_updated_at(tmp_path, "role.architect", "2026-02-20")
     rows = find_stale_candidate_prompts(
         tmp_path,
         max_candidate_age_days=14,
@@ -265,6 +274,7 @@ def test_enforce_candidate_prompt_sla_auto_deprecates_stale_candidates(tmp_path:
         notes="candidate cut",
         apply_changes=True,
     )
+    _force_prompt_updated_at(tmp_path, "role.architect", "2026-02-20")
     result = enforce_candidate_prompt_sla(
         tmp_path,
         max_candidate_age_days=14,
@@ -288,6 +298,7 @@ def test_enforce_candidate_prompt_sla_renews_explicit_prompt_ids(tmp_path: Path)
         notes="candidate cut",
         apply_changes=True,
     )
+    _force_prompt_updated_at(tmp_path, "role.architect", "2026-02-20")
     result = enforce_candidate_prompt_sla(
         tmp_path,
         max_candidate_age_days=14,
