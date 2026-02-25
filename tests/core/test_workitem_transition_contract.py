@@ -84,3 +84,23 @@ def test_gate_runs_pre_and_post_transition() -> None:
     )
     assert result.ok is True
     assert calls == ["pre", "post"]
+
+
+def test_system_set_status_requires_reason_and_allows_override() -> None:
+    service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
+    missing_reason = service.request_transition(
+        action="system_set_status",
+        current_status=CardStatus.READY,
+        payload={"status": "blocked"},
+    )
+    assert missing_reason.ok is False
+    assert missing_reason.error_code == TransitionErrorCode.INVARIANT_FAILED
+
+    overridden = service.request_transition(
+        action="system_set_status",
+        current_status=CardStatus.READY,
+        payload={"status": "blocked", "reason": "dependency_blocked"},
+    )
+    assert overridden.ok is True
+    assert overridden.new_status == "blocked"
+    assert overridden.metadata.get("policy_override") is True

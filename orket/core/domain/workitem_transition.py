@@ -85,6 +85,39 @@ class WorkItemTransitionService:
                 error="Missing action.",
             )
 
+        if normalized_action == "system_set_status":
+            target = str(payload.get("status", "")).strip().lower()
+            reason = str(payload.get("reason", "")).strip()
+            if not target:
+                return TransitionResult(
+                    ok=False,
+                    action=normalized_action,
+                    error_code=TransitionErrorCode.INVALID_ACTION,
+                    error="Missing status for system_set_status.",
+                )
+            if not reason:
+                return TransitionResult(
+                    ok=False,
+                    action=normalized_action,
+                    error_code=TransitionErrorCode.INVARIANT_FAILED,
+                    error="system_set_status requires a non-empty reason.",
+                )
+            try:
+                requested = CardStatus(target)
+            except ValueError:
+                return TransitionResult(
+                    ok=False,
+                    action=normalized_action,
+                    error_code=TransitionErrorCode.INVALID_ACTION,
+                    error=f"Unknown status: {target}",
+                )
+            return TransitionResult(
+                ok=True,
+                action=normalized_action,
+                new_status=requested.value,
+                metadata={"workflow_profile": self.workflow_profile, "policy_override": True},
+            )
+
         requested = self.profile.resolve_requested_status(normalized_action, payload)
         if requested is None:
             return TransitionResult(

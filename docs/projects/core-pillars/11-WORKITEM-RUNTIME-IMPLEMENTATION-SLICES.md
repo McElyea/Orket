@@ -1,7 +1,7 @@
 # WorkItem Runtime Implementation Slices
 
 Date: 2026-02-24
-Status: active
+Status: completed
 Execution mode: deterministic vertical slices
 
 ## Canonical Sequence
@@ -14,8 +14,14 @@ Execution mode: deterministic vertical slices
 ## Current Progress
 1. CP-4.1: transition API service + deterministic error/result envelope landed with tests.
 2. CP-4.2: workflow profile resolver landed with `legacy_cards_v1` and `project_task_v1`.
-3. CP-4.4: transition boundary pre/post gate hook support landed with tests.
-4. CP-4.5: legacy Rock/Epic/Issue mapping utility landed with lossless fixture test.
+3. CP-4.3: profile default switch path landed (`ORKET_WORKFLOW_PROFILE_DEFAULT` and process-rule override).
+4. CP-4.4: transition boundary pre/post gate hook support landed with tests.
+5. CP-4.5: legacy Rock/Epic/Issue mapping utility, dry-run report script, and lossless fixture landed.
+
+## Completion Evidence
+1. `python scripts/check_dependency_direction.py --legacy-edge-enforcement fail` passes.
+2. `python scripts/check_volatility_boundaries.py` passes.
+3. `python -m pytest -q` passes.
 
 ## CP-4.1 WorkItem Core Contract and Transition API
 Objective:

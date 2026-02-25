@@ -98,6 +98,29 @@ python scripts/run_cli_regression_smoke.py --out benchmarks/results/cli_regressi
 - event list includes: `init`, `api_dry_run`, `api_apply`, `api_noop`, `refactor_dry_run`, `refactor_apply`
 3. This smoke uses isolated temp fixtures and does not mutate repository files.
 
+## WorkItem Profile and Migration Dry-Run
+1. Select workflow profile explicitly (runtime override):
+```bash
+set ORKET_WORKFLOW_PROFILE=legacy_cards_v1
+```
+or
+```bash
+set ORKET_WORKFLOW_PROFILE=project_task_v1
+```
+2. Select default profile without hard override:
+```bash
+set ORKET_WORKFLOW_PROFILE_DEFAULT=project_task_v1
+```
+3. Run deterministic migration dry-run report:
+```bash
+python scripts/workitem_migration_dry_run.py --in benchmarks/results/workitem_migration_input.json --out benchmarks/results/workitem_migration_dry_run.json
+```
+4. Dry-run report is non-mutating and emits:
+- `status`
+- `total_records`
+- `mapped_kind_counts`
+- full mapped record payload
+
 ## Release and Verification Gates
 1. Local smoke:
 ```bash

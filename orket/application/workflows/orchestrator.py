@@ -45,8 +45,9 @@ from orket.core.contracts.repositories import CardRepository, SnapshotRepository
 from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
 from orket.tools import ToolBox, get_tool_map
 from orket.logging import log_event
-from orket.exceptions import ExecutionFailed
+from orket.exceptions import CardNotFound, ExecutionFailed
 from orket.core.domain.state_machine import StateMachine
+from orket.core.domain.workitem_transition import WorkItemTransitionService
 from orket.core.domain.guard_review import GuardReviewPayload
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.verification_scope import build_verification_scope
@@ -150,7 +151,62 @@ class Orchestrator:
             process_raw = str(self.org.process_rules.get("workflow_profile", "")).strip().lower()
         if process_raw in {"legacy_cards_v1", "project_task_v1"}:
             return process_raw
+        default_env = (os.environ.get("ORKET_WORKFLOW_PROFILE_DEFAULT") or "").strip().lower()
+        if default_env in {"legacy_cards_v1", "project_task_v1"}:
+            return default_env
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            default_process = str(self.org.process_rules.get("workflow_profile_default", "")).strip().lower()
+            if default_process in {"legacy_cards_v1", "project_task_v1"}:
+                return default_process
         return "legacy_cards_v1"
+
+    async def _request_issue_transition(
+        self,
+        *,
+        issue: IssueConfig,
+        target_status: CardStatus,
+        reason: str,
+        assignee: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        roles: Optional[List[str]] = None,
+        allow_policy_override: bool = True,
+    ) -> None:
+        current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status).strip().lower())
+        transition_service = WorkItemTransitionService(
+            workflow_profile=self._resolve_workflow_profile(),
+        )
+        payload = {
+            "status": target_status.value,
+            "wait_reason": (metadata or {}).get("wait_reason") if isinstance(metadata, dict) else None,
+        }
+        transition = transition_service.request_transition(
+            action="set_status",
+            current_status=current_status,
+            payload=payload,
+            roles=roles or ["system"],
+        )
+        if not transition.ok and allow_policy_override:
+            transition = transition_service.request_transition(
+                action="system_set_status",
+                current_status=current_status,
+                payload={"status": target_status.value, "reason": reason},
+                roles=["system"],
+            )
+        if not transition.ok:
+            raise ExecutionFailed(
+                "Transition rejected for issue "
+                f"{issue.id}: {transition.error_code.value if transition.error_code else 'UNKNOWN'} "
+                f"{transition.error or ''}".strip()
+            )
+
+        await self.async_cards.update_status(
+            issue.id,
+            target_status,
+            assignee=assignee,
+            reason=reason,
+            metadata=metadata,
+        )
+        issue.status = target_status
 
     def _small_project_issue_threshold(self) -> int:
         raw = 3
@@ -773,13 +829,12 @@ class Orchestrator:
             if not blocked_by:
                 continue
 
-            await self.async_cards.update_status(
-                issue.id,
-                CardStatus.BLOCKED,
+            await self._request_issue_transition(
+                issue=issue,
+                target_status=CardStatus.BLOCKED,
                 reason="dependency_blocked",
                 metadata={"run_id": run_id, "blocked_by": blocked_by},
             )
-            issue.status = CardStatus.BLOCKED
             propagated.append({"issue_id": issue.id, "blocked_by": blocked_by})
 
         if propagated:
@@ -817,9 +872,9 @@ class Orchestrator:
                 if not issue_id:
                     continue
                 try:
-                    await self.async_cards.update_status(
-                        issue_id,
-                        CardStatus.BLOCKED,
+                    await self._request_issue_transition(
+                        issue=issue,
+                        target_status=CardStatus.BLOCKED,
                         reason="team_replan_limit_exceeded",
                         metadata={"run_id": run_id, "replan_count": current_count},
                     )
@@ -976,10 +1031,15 @@ class Orchestrator:
             if not runtime_result.ok:
                 if guard_decision.action == "retry":
                     issue.retry_count = guard_decision.next_retry_count
-                    issue.status = CardStatus.READY
                     issue.note = (
                         "runtime_guard_retry_scheduled: "
                         + " | ".join(runtime_result.errors[:1])
+                    )
+                    await self._request_issue_transition(
+                        issue=issue,
+                        target_status=CardStatus.READY,
+                        reason="runtime_guard_retry_scheduled",
+                        metadata={"run_id": run_id, "retry_count": issue.retry_count},
                     )
                     await self.async_cards.save(issue.model_dump())
                     log_event(
@@ -1003,10 +1063,15 @@ class Orchestrator:
                         )
                     )
                 else:
-                    issue.status = CardStatus.BLOCKED
                     issue.note = (
                         "runtime_guard_terminal_failure: "
                         + (guard_decision.terminal_reason.code if guard_decision.terminal_reason else "unknown")
+                    )
+                    await self._request_issue_transition(
+                        issue=issue,
+                        target_status=CardStatus.BLOCKED,
+                        reason="runtime_guard_terminal_failure",
+                        metadata={"run_id": run_id},
                     )
                     await self.async_cards.save(issue.model_dump())
                     log_event(
@@ -1047,9 +1112,9 @@ class Orchestrator:
 
         seat_obj = team.seats.get(sanitize_name(seat_name))
         if not seat_obj:
-            await self.async_cards.update_status(
-                issue.id,
-                self.loop_policy_node.missing_seat_status(),
+            await self._request_issue_transition(
+                issue=issue,
+                target_status=self.loop_policy_node.missing_seat_status(),
                 reason="missing_seat",
                 metadata={"seat": seat_name, "run_id": run_id},
             )
@@ -1059,18 +1124,34 @@ class Orchestrator:
         turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
         if is_guard_turn:
             turn_status = CardStatus.AWAITING_GUARD_REVIEW
-        await self.async_cards.update_status(
-            issue.id,
-            turn_status,
+        await self._request_issue_transition(
+            issue=issue,
+            target_status=turn_status,
             assignee=seat_name,
             reason="turn_dispatch",
             metadata={"run_id": run_id, "review_turn": is_review_turn},
+            roles=list(seat_obj.roles),
         )
 
         # Prepare Role & Model
         roles_to_load = self.loop_policy_node.role_order_for_turn(list(seat_obj.roles), is_review_turn)
 
-        role_config = self.loader.load_asset("roles", roles_to_load[0], RoleConfig)
+        try:
+            role_config = self.loader.load_asset("roles", roles_to_load[0], RoleConfig)
+        except CardNotFound:
+            await self._request_issue_transition(
+                issue=issue,
+                target_status=CardStatus.IN_PROGRESS,
+                reason="missing_role_asset",
+                metadata={"role": roles_to_load[0], "run_id": run_id},
+                roles=roles_to_load,
+            )
+            log_event(
+                "missing_role_asset",
+                {"run_id": run_id, "issue_id": issue.id, "role": roles_to_load[0]},
+                self.workspace,
+            )
+            return
         selected_model = prompt_strategy_node.select_model(role=roles_to_load[0], asset_config=epic)
         model_selection_decision = {}
         if hasattr(prompt_strategy_node, "model_selector"):
@@ -1330,11 +1411,12 @@ class Orchestrator:
                     await self._trigger_sandbox(epic, run_id=run_id)
                 next_status = self.evaluator_node.next_status_after_success(success_actions)
                 if next_status is not None:
-                    await self.async_cards.update_status(
-                        issue.id,
-                        next_status,
+                    await self._request_issue_transition(
+                        issue=issue,
+                        target_status=next_status,
                         reason="post_success_evaluator",
                         metadata={"run_id": run_id, "seat": seat_name},
+                        roles=roles_to_load,
                     )
             
             await provider.clear_context()
@@ -1776,13 +1858,13 @@ class Orchestrator:
         # Mechanical governance violations are terminal for the issue.
         if action == "governance_violation":
             failure_status = self.evaluator_node.status_for_failure_action(action)
-            await self.async_cards.update_status(
-                issue.id,
-                failure_status,
+            await self._request_issue_transition(
+                issue=issue,
+                target_status=failure_status,
                 reason="governance_violation",
                 metadata={"run_id": run_id, "error": result.error},
+                roles=roles,
             )
-            issue.status = failure_status
             await self.async_cards.save(issue.model_dump())
             message = self.evaluator_node.governance_violation_message(result.error)
             if not self._is_issue_idesign_enabled(issue):
@@ -1799,11 +1881,12 @@ class Orchestrator:
                     "error": result.error
                 }, self.workspace)
             failure_status = self.evaluator_node.status_for_failure_action(action)
-            await self.async_cards.update_status(
-                issue.id,
-                failure_status,
+            await self._request_issue_transition(
+                issue=issue,
+                target_status=failure_status,
                 reason="catastrophic_failure",
                 metadata={"run_id": run_id, "error": result.error},
+                roles=roles,
             )
             await self.async_cards.save(issue.model_dump())
             
@@ -1834,9 +1917,9 @@ class Orchestrator:
                 "error": result.error
             }, self.workspace)
         
-        await self.async_cards.update_status(
-            issue.id,
-            self.evaluator_node.status_for_failure_action(action),
+        await self._request_issue_transition(
+            issue=issue,
+            target_status=self.evaluator_node.status_for_failure_action(action),
             reason="retry_scheduled",
             metadata={
                 "run_id": run_id,
@@ -1844,6 +1927,7 @@ class Orchestrator:
                 "max_retries": issue.max_retries,
                 "error": result.error,
             },
+            roles=roles,
         )
         await self.async_cards.save(issue.model_dump())
 
