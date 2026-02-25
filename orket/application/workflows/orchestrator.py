@@ -141,6 +141,17 @@ class Orchestrator:
         user_raw = str(load_user_settings().get("small_project_builder_variant", "")).strip()
         return resolve_small_project_builder_variant(env_raw, process_raw, user_raw)
 
+    def _resolve_workflow_profile(self) -> str:
+        env_raw = (os.environ.get("ORKET_WORKFLOW_PROFILE") or "").strip().lower()
+        if env_raw in {"legacy_cards_v1", "project_task_v1"}:
+            return env_raw
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("workflow_profile", "")).strip().lower()
+        if process_raw in {"legacy_cards_v1", "project_task_v1"}:
+            return process_raw
+        return "legacy_cards_v1"
+
     def _small_project_issue_threshold(self) -> int:
         raw = 3
         if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
@@ -1617,6 +1628,7 @@ class Orchestrator:
             "frontend_framework_mode": frontend_framework_mode,
             "project_surface_profile": project_surface_profile,
             "small_project_builder_variant": small_project_builder_variant,
+            "workflow_profile": self._resolve_workflow_profile(),
             "architecture_decision_required": bool(is_architect_seat),
             "architecture_decision_path": "agent_output/design.txt",
             "architecture_allowed_patterns": architecture_patterns,

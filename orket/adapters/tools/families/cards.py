@@ -48,7 +48,7 @@ class CardManagementTools(BaseTools):
         return {"ok": True, "issue_id": issue_id}
 
     async def update_issue_status(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        from orket.core.domain.state_machine import StateMachine, StateMachineError
+        from orket.core.domain.workitem_transition import WorkItemTransitionService
         from orket.schema import CardStatus, CardType
 
         context = context or {}
@@ -73,6 +73,10 @@ class CardManagementTools(BaseTools):
             role = context.get("role", "")
             roles = [role] if role else []
 
+        transition_service = WorkItemTransitionService(
+            workflow_profile=str(context.get("workflow_profile") or "legacy_cards_v1"),
+        )
+
         gate_context = {**context, "current_status": current_status.value}
         if self.tool_gate:
             gate_violation = self.tool_gate.validate(
@@ -83,18 +87,21 @@ class CardManagementTools(BaseTools):
             )
             if gate_violation:
                 return {"ok": False, "error": gate_violation}
-        else:
-            wait_reason = args.get("wait_reason")
-            try:
-                StateMachine.validate_transition(
-                    card_type=CardType.ISSUE,
-                    current=current_status,
-                    requested=new_status,
-                    roles=roles,
-                    wait_reason=wait_reason,
-                )
-            except StateMachineError as exc:
-                return {"ok": False, "error": str(exc)}
+
+        transition = transition_service.request_transition(
+            action="set_status",
+            current_status=current_status,
+            payload={"status": new_status.value, "wait_reason": args.get("wait_reason")},
+            roles=roles,
+            card_type=CardType.ISSUE,
+        )
+        if not transition.ok:
+            response: Dict[str, Any] = {"ok": False, "error": transition.error or "Transition rejected."}
+            if transition.error_code is not None:
+                response["error_code"] = transition.error_code.value
+            if transition.metadata:
+                response["metadata"] = transition.metadata
+            return response
 
         await self.cards.update_status(issue_id, new_status)
         return {"ok": True, "issue_id": issue_id, "status": new_status.value}
