@@ -11,6 +11,12 @@ Execution mode: deterministic vertical slices
 4. CP-4.4 Gate boundary consolidation
 5. CP-4.5 Migration and cutover safety
 
+## Current Progress
+1. CP-4.1: transition API service + deterministic error/result envelope landed with tests.
+2. CP-4.2: workflow profile resolver landed with `legacy_cards_v1` and `project_task_v1`.
+3. CP-4.4: transition boundary pre/post gate hook support landed with tests.
+4. CP-4.5: legacy Rock/Epic/Issue mapping utility landed with lossless fixture test.
+
 ## CP-4.1 WorkItem Core Contract and Transition API
 Objective:
 Introduce profile-agnostic lifecycle contract and deterministic transition interface.

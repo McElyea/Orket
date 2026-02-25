@@ -17,6 +17,9 @@ Canonical slice execution detail:
 9. CP-3.3 Local Sovereignty and Offline Matrix: completed.
 10. Core Pillars canonical slice map (CP-1 through CP-3.3): completed.
 11. CP-4 WorkItem Runtime Refactor: active.
+12. CP-4.1 WorkItem core contract and transition API: in progress (transition service + contract tests landed).
+13. CP-4.2 Profile system and legacy freeze: in progress (`legacy_cards_v1` and `project_task_v1` profile scaffolding landed).
+14. CP-4.5 Migration and cutover safety: in progress (deterministic mapper + lossless fixture landed).
 
 ## CP-1 (P1): Safety and API Vertical Slice
 1. Land command transaction shell and safety contracts (`A1`, `A2`, `A4`) first.
