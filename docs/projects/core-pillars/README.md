@@ -15,6 +15,7 @@ Define and execute Orket's near-term product direction around functional pillars
 7. `docs/projects/core-pillars/06-IDEAS-TRIAGE-SPEC-VS-SPECULATION.md`
 8. `docs/projects/core-pillars/07-API-GENERATION-CONTRACT.md`
 9. `docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`
+10. `docs/projects/core-pillars/09-OFFLINE-CAPABILITY-MATRIX.md`
 
 ## Pillar Set
 1. Application Scaffolding

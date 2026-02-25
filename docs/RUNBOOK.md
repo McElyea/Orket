@@ -76,6 +76,17 @@ python -m orket.interfaces.cli --replay-turn <run_id>:<issue_id>:<turn_index>[:r
 python -m orket.interfaces.cli --archive-related <token> --archive-reason "manual archive"
 ```
 
+## Offline Mode (Core Pillars v1)
+1. Default network mode is offline for command surface checks:
+```bash
+python scripts/check_offline_matrix.py --require-default-offline
+```
+2. Supported offline-first v1 mutation commands:
+- `orket init`
+- `orket api add`
+- `orket refactor`
+3. Optional network integrations remain explicit opt-in and outside the v1 offline command guarantee.
+
 ## Release and Verification Gates
 1. Local smoke:
 ```bash

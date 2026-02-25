@@ -10,8 +10,12 @@ Canonical slice execution detail:
 2. CP-1.2 API Generation First Adapter: completed.
 3. CP-1.3 Minimal Scaffolding Hydration: completed.
 4. CP-2.1 Replay Artifact Recorder (Bounded): completed.
-5. CP-2.2 Replay Comparator and Drift Gates: active next.
-6. CP-2+ remaining slices: pending.
+5. CP-2.2 Replay Comparator and Drift Gates: completed.
+6. CP-2.3 Verified Refactor Integration: completed.
+7. CP-3.1 Bucket D Failure Lessons Memory: completed.
+8. CP-3.2 Stateful Memory/Agent Integration (Bounded Expansion): completed.
+9. CP-3.3 Local Sovereignty and Offline Matrix: completed.
+10. Core Pillars canonical slice map (CP-1 through CP-3.3): completed.
 
 ## CP-1 (P1): Safety and API Vertical Slice
 1. Land command transaction shell and safety contracts (`A1`, `A2`, `A4`) first.

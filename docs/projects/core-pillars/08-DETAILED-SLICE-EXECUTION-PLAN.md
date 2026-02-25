@@ -4,6 +4,9 @@ Date: 2026-02-24
 Status: active  
 Execution policy: slice-first, deterministic gates first
 
+## Objective
+Define the canonical, deterministic slice execution order for `core-pillars` with clear DoR/DoD, gates, and bounded scope controls.
+
 ## Purpose
 This file is the canonical implementation sequence for `core-pillars`.
 

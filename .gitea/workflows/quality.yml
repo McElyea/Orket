@@ -24,7 +24,7 @@ jobs:
 
       - name: Enforce dependency direction rules
         run: |
-          python scripts/check_dependency_direction.py
+          python scripts/check_dependency_direction.py --legacy-edge-enforcement fail
 
       - name: Audit OS registry/spec sync
         run: |
@@ -58,6 +58,22 @@ jobs:
       - name: Enforce volatility boundary tests
         run: |
           python -m pytest -q tests/platform/test_architecture_volatility_boundaries.py
+
+      - name: Build retention dry-run plan
+        run: |
+          python scripts/retention_plan.py --out benchmarks/results/retention_plan.json
+
+      - name: Enforce retention policy safety
+        run: |
+          python scripts/check_retention_policy.py --plan benchmarks/results/retention_plan.json --out benchmarks/results/retention_policy_check.json --require-safety
+
+      - name: Enforce offline capability matrix contract
+        run: |
+          python scripts/check_offline_matrix.py --require-default-offline --out benchmarks/results/offline_matrix_check.json
+
+      - name: Enforce docs gate contract
+        run: |
+          python scripts/docs_lint.py --project core-pillars --strict --json
 
       - name: Enforce roadmap metrics (quick gate)
         run: |
@@ -119,11 +135,27 @@ jobs:
 
       - name: Enforce dependency direction rules
         run: |
-          python scripts/check_dependency_direction.py
+          python scripts/check_dependency_direction.py --legacy-edge-enforcement fail
 
       - name: Enforce volatility boundary script
         run: |
           python scripts/check_volatility_boundaries.py
+
+      - name: Build retention dry-run plan
+        run: |
+          python scripts/retention_plan.py --out benchmarks/results/retention_plan.json
+
+      - name: Enforce retention policy safety
+        run: |
+          python scripts/check_retention_policy.py --plan benchmarks/results/retention_plan.json --out benchmarks/results/retention_policy_check.json --require-safety
+
+      - name: Enforce offline capability matrix contract
+        run: |
+          python scripts/check_offline_matrix.py --require-default-offline --out benchmarks/results/offline_matrix_check.json
+
+      - name: Enforce docs gate contract
+        run: |
+          python scripts/docs_lint.py --project core-pillars --strict --json
 
       - name: Enforce roadmap pytest metrics
         run: |
@@ -190,6 +222,39 @@ jobs:
             --left-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
             --right-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
             --out benchmarks/results/memory/memory_determinism_compare.json
+
+      - name: Enforce replay artifact drift comparator smoke
+        run: |
+          mkdir -p benchmarks/results/replay
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          left = {
+              "contract_version": "core_pillars/replay_artifact/v1",
+              "recorded_at": "2026-02-24T00:00:00+00:00",
+              "artifact_id": "a" * 64,
+              "command": "api_add",
+              "request": {"name": "users", "schema_path": "users.yaml"},
+              "result": {"ok": True, "code": "OK", "message": "Applied"},
+          }
+          right = {
+              "contract_version": "core_pillars/replay_artifact/v1",
+              "recorded_at": "2026-02-24T01:00:00+00:00",
+              "artifact_id": "b" * 64,
+              "command": "api_add",
+              "request": {"name": "users", "schema_path": "users.yaml"},
+              "result": {"ok": True, "code": "OK", "message": "Applied"},
+          }
+          left_path = Path("benchmarks/results/replay/replay_left_fixture.json")
+          right_path = Path("benchmarks/results/replay/replay_right_fixture.json")
+          left_path.write_text(json.dumps(left, indent=2) + "\n", encoding="utf-8")
+          right_path.write_text(json.dumps(right, indent=2) + "\n", encoding="utf-8")
+          PY
+          python scripts/compare_replay_artifacts.py \
+            --left benchmarks/results/replay/replay_left_fixture.json \
+            --right benchmarks/results/replay/replay_right_fixture.json \
+            --out benchmarks/results/replay/replay_drift_compare.json
 
       - name: Enforce skill contract smoke
         run: |

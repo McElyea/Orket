@@ -4,6 +4,9 @@ Date: 2026-02-24
 Status: active  
 Source: `docs/projects/ideas/Ideas.md` extraction pass
 
+## Objective
+Capture spec-grade items from ideas intake, separate speculation, and preserve a deterministic promotion record into canonical requirements docs.
+
 ## Spec-Grade Items Promoted
 1. Command safety transaction loop:
 - plan -> snapshot -> execute -> verify -> finalize/revert
