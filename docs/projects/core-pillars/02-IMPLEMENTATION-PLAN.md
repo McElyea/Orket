@@ -34,6 +34,16 @@ Canonical detailed execution ordering and slice DoR/DoD:
 2. Ensure baseline scaffolding, generation, replay, and tests run offline.
 3. Add offline mode gate tests and runbook.
 
+## Phase 5: WorkItem Runtime Refactor (Profile-Driven Lifecycle)
+1. Introduce profile-agnostic `WorkItem` runtime contract and identity invariants.
+2. Implement transition-action API as the sole lifecycle mutation path.
+3. Move gate enforcement to transition boundaries (pre/post), leaving executor runtime outcome-only.
+4. Freeze current behavior into `legacy_cards_v1` profile.
+5. Add `project_task_v1` as default profile (2-level convention, arbitrary depth support).
+6. Implement migration mapping for Rock/Epic/Issue to WorkItem (`kind + parent_id`) with audit preservation.
+7. Add deterministic transition error codes and payload schemas.
+8. Run profile parity tests and migration lossless fixtures before switching defaults.
+
 ## Cross-Cutting Controls
 1. Keep dependency policy contract authoritative.
 2. Enforce no unknown layer classifications.
@@ -41,6 +51,7 @@ Canonical detailed execution ordering and slice DoR/DoD:
 4. Ratchet legacy-edge budget downward only with green full-suite validation.
 5. Keep ideas extraction provenance at `06-IDEAS-TRIAGE-SPEC-VS-SPECULATION.md`.
 6. Keep replay bounded in CP-2 to recording/comparison surfaces only; no cross-feature orchestration coupling.
+7. Keep profile-specific hierarchy and transition rules out of engine-core contracts.
 
 ## Validation Commands
 1. `python scripts/check_dependency_direction.py --legacy-edge-enforcement fail`

@@ -16,6 +16,7 @@ Canonical slice execution detail:
 8. CP-3.2 Stateful Memory/Agent Integration (Bounded Expansion): completed.
 9. CP-3.3 Local Sovereignty and Offline Matrix: completed.
 10. Core Pillars canonical slice map (CP-1 through CP-3.3): completed.
+11. CP-4 WorkItem Runtime Refactor: active.
 
 ## CP-1 (P1): Safety and API Vertical Slice
 1. Land command transaction shell and safety contracts (`A1`, `A2`, `A4`) first.
@@ -43,3 +44,11 @@ Canonical slice execution detail:
 1. Each milestone ends with green `pytest` sweep and architecture gates.
 2. Each milestone updates roadmap status and artifact links.
 3. No milestone is complete without reproducible command-level runbook steps.
+
+## CP-4 (P1): WorkItem Runtime Refactor
+1. Land profile-agnostic WorkItem contract with immutable identifiers and core state classes.
+2. Freeze current hierarchy/flow as `legacy_cards_v1` profile.
+3. Deliver `project_task_v1` profile as default with arbitrary depth support.
+4. Move lifecycle policy to transition boundary gates and remove direct status mutation paths.
+5. Deliver migration mapping and lossless fixture validation (Rock/Epic/Issue -> WorkItem).
+6. Gate completion on deterministic parity and transition contract tests.

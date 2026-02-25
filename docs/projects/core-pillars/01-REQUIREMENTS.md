@@ -72,12 +72,23 @@ Detailed command-level and memory requirements:
 - Support module-level ownership boundaries.
 - Include Bucket D failure-lesson memory as advisory-only retrieval.
 
+9. WorkItem Runtime Modularization (CP-4)
+- Runtime core must use a profile-agnostic `WorkItem` contract instead of a hard-wired Rock/Epic/Issue hierarchy.
+- Legacy card behavior must remain available as `legacy_cards_v1` workflow profile during migration.
+- New default workflow profile must be `project_task_v1` with 2-level convention and arbitrary depth support.
+- State mutation must occur only through deterministic transition actions (no direct status writes).
+- Gate policy evaluation must run at transition boundaries (pre and post), not scattered in executor internals.
+- Transition responses must emit deterministic result/error payloads with stable error codes.
+- Migration from Rock/Epic/Issue to `WorkItem` must preserve identity, audit history, and status traceability.
+
 ## Non-Functional Requirements
 1. All pillar capabilities must be modularized behind engine-first contracts.
 2. No new dependency-direction violations.
 3. New features require deterministic tests and report artifacts.
 4. CI quality workflow runs all required pillar gates in quick/full jobs where applicable.
 5. Failure-memory behavior remains advisory and cannot bypass transaction safety rules.
+6. Workflow profiles may add states, but all profile states must map to core state classes.
+7. WorkItem IDs are immutable workspace-global identifiers.
 
 ## Acceptance Criteria
 1. At least one end-to-end vertical slice for Build Layer is runnable via one CLI command.
@@ -86,3 +97,6 @@ Detailed command-level and memory requirements:
 4. Generated artifacts and replay outputs are retained under policy controls.
 5. Refactor/API mutation commands demonstrate deterministic revert on verify failure.
 6. Bucket D lessons are recorded/retrieved with D1-D4 acceptance behavior.
+7. WorkItem transition API is the only legal lifecycle mutation path in runtime flows.
+8. Legacy and new workflow profiles pass side-by-side deterministic parity and core-flow tests.
+9. Migration mapping fixtures prove lossless mapping for identifiers and lifecycle history fields.

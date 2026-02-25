@@ -293,6 +293,136 @@ Exit criteria:
 1. Offline matrix tests pass.
 2. Default run path requires no remote dependency.
 
+---
+
+### CP-4.1 WorkItem Core Contract and Transition API
+Objective:
+Replace hard-wired card hierarchy assumptions with a profile-agnostic lifecycle contract.
+
+In scope:
+1. Introduce canonical `WorkItem` contract (`id`, `kind`, `parent_id`, `status`, `depends_on`, ownership, refs, metadata, audit fields).
+2. Immutable workspace-global string identity contract.
+3. Transition API contract as sole lifecycle mutation path.
+4. Deterministic transition result envelope and error code schema.
+
+Out of scope:
+1. Profile-specific hierarchy semantics.
+2. UI-level board/tree presentation choices.
+
+Implementation tasks:
+1. Define core `WorkItem` schema and invariants.
+2. Define `request_transition(item_id, action, actor, payload)` runtime contract.
+3. Define deterministic error set:
+- `INVALID_ACTION`
+- `DEPENDENCY_UNRESOLVED`
+- `APPROVAL_REQUIRED`
+- `POLICY_VIOLATION`
+- `INVARIANT_FAILED`
+4. Add contract tests:
+- `test_workitem_transition_requires_action_api`
+- `test_executor_cannot_set_status_directly`
+
+Exit criteria:
+1. No runtime path mutates lifecycle state outside transition API.
+2. Transition errors are deterministic and code-stable.
+
+---
+
+### CP-4.2 Profile System and Legacy Freeze
+Objective:
+Decouple engine core from hierarchy semantics while preserving current behavior in a profile.
+
+In scope:
+1. Freeze existing Rock/Epic/Issue behavior as `legacy_cards_v1`.
+2. Introduce profile resolver and runtime binding.
+3. Ensure profile state maps to core state classes.
+
+Out of scope:
+1. Deleting legacy behavior in this slice.
+
+Implementation tasks:
+1. Extract legacy transition/hierarchy rules into `legacy_cards_v1`.
+2. Add profile contract interface for hierarchy rules and transition mapping.
+3. Add parity tests:
+- `test_legacy_cards_profile_parity`
+
+Exit criteria:
+1. `legacy_cards_v1` reproduces current lifecycle behavior under existing fixtures.
+2. Engine core no longer hardcodes Rock/Epic/Issue assumptions.
+
+---
+
+### CP-4.3 New Default Profile (`project_task_v1`)
+Objective:
+Ship a simpler default profile with 2-level convention and arbitrary depth support.
+
+In scope:
+1. `project_task_v1` profile.
+2. Minimal default flow (`new -> ready -> in_progress -> blocked|done -> archived`).
+3. Arbitrary depth supported through `parent_id` without core depth limits.
+
+Out of scope:
+1. Perfect hierarchy optimization for every team pattern.
+
+Implementation tasks:
+1. Implement profile transitions and core-state mapping.
+2. Add blocked-transition reason requirement.
+3. Add profile tests:
+- `test_project_task_profile_core_flow`
+
+Exit criteria:
+1. Default profile executes deterministic core flow.
+2. Blocked path enforces deterministic reason payload.
+
+---
+
+### CP-4.4 Gate Boundary Consolidation
+Objective:
+Make lifecycle gates authoritative at transition boundaries.
+
+In scope:
+1. Pre-transition gate checks (authorization/dependency/policy).
+2. Post-transition checks (invariant/audit).
+3. Gate request creation at transition boundary outcomes only.
+
+Out of scope:
+1. Executor-level policy branching that changes lifecycle semantics.
+
+Implementation tasks:
+1. Move approval and guard lifecycle checks into transition boundary evaluators.
+2. Keep executor outcome reporting only.
+3. Add boundary tests:
+- `test_gate_runs_pre_and_post_transition`
+
+Exit criteria:
+1. Gate decisions are enforced at transition boundaries only.
+2. Executor no longer owns lifecycle authorization.
+
+---
+
+### CP-4.5 Migration and Cutover Safety
+Objective:
+Provide deterministic migration from Rock/Epic/Issue artifacts to WorkItem model.
+
+In scope:
+1. Mapping rules:
+- `Rock -> kind=initiative, parent_id=null`
+- `Epic -> kind=project, parent_id=<rock>`
+- `Issue -> kind=task, parent_id=<epic>`
+2. Audit/history preservation contract.
+3. Rollback-safe migration execution with dry-run output.
+
+Implementation tasks:
+1. Add migration mapper and dry-run artifact output.
+2. Add migration fixtures and lossless assertions.
+3. Add migration tests:
+- `test_migration_rock_epic_issue_mapping_is_lossless`
+
+Exit criteria:
+1. Migration preserves identity and lifecycle history fields.
+2. Rollback path is deterministic and documented.
+3. Profile switch to `project_task_v1` gated by green parity/migration suite.
+
 ## Definition of Ready (Per Slice)
 1. Slice objective and scope are explicit.
 2. Required contracts/spec docs are present.

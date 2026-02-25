@@ -87,6 +87,17 @@ python scripts/check_offline_matrix.py --require-default-offline
 - `orket refactor`
 3. Optional network integrations remain explicit opt-in and outside the v1 offline command guarantee.
 
+## CLI Regression Smoke
+1. Run deterministic CLI regression for `init`, `api add`, and `refactor`:
+```bash
+python scripts/run_cli_regression_smoke.py --out benchmarks/results/cli_regression_smoke.json
+```
+2. Expected output:
+- process exits with `0`
+- artifact JSON contains `"status": "PASS"`
+- event list includes: `init`, `api_dry_run`, `api_apply`, `api_noop`, `refactor_dry_run`, `refactor_apply`
+3. This smoke uses isolated temp fixtures and does not mutate repository files.
+
 ## Release and Verification Gates
 1. Local smoke:
 ```bash
