@@ -7,6 +7,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+from orket.interfaces.failure_lessons import (
+    ERROR_PREFLIGHT_FAILED,
+    lookup_relevant_lessons,
+    record_failure_lesson,
+    run_preflight_checks,
+    strict_preflight_enabled,
+)
 from orket.interfaces.replay_artifacts import write_replay_artifact
 
 ERROR_SCOPE_REQUIRED = "E_SCOPE_REQUIRED"
@@ -63,7 +70,16 @@ def _is_repo_git(repo_root: Path) -> bool:
 
 def _is_clean_worktree(repo_root: Path) -> bool:
     status = _run(["git", "status", "--porcelain"], cwd=repo_root)
-    return status.returncode == 0 and status.stdout.strip() == ""
+    if status.returncode != 0:
+        return False
+    for line in [row.rstrip() for row in status.stdout.splitlines() if row.strip()]:
+        path_spec = line[3:] if len(line) >= 4 else line
+        candidates = [segment.strip() for segment in path_spec.split("->")]
+        normalized = [segment.replace("\\", "/") for segment in candidates]
+        if all(item.startswith(".orket/") for item in normalized if item):
+            continue
+        return False
+    return True
 
 
 def _load_verify_commands(repo_root: Path, profile_name: str) -> List[str]:
@@ -230,13 +246,47 @@ def run_api_add_transaction(
             return result
 
     plan_text = _render_plan(route_name, scope_inputs, [path.relative_to(repo_root) for path in touch_set], verify_commands)
+    touch_rel = [path.relative_to(repo_root).as_posix() for path in touch_set]
+    advisories = lookup_relevant_lessons(
+        repo_root=repo_root,
+        command_name="api_add",
+        scope_inputs=scope_inputs,
+        touch_set=touch_rel,
+        verify_profile=verify_profile,
+    )
+    preflight_warnings = run_preflight_checks(repo_root=repo_root, advisories=advisories)
+    if preflight_warnings and strict_preflight_enabled():
+        result = {
+            "ok": False,
+            "code": ERROR_PREFLIGHT_FAILED,
+            "message": "Preflight checks failed in strict mode.",
+            "plan": plan_text,
+            "advisories": advisories,
+            "preflight_warnings": preflight_warnings,
+        }
+        write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+        return result
 
     if dry_run:
-        result = {"ok": True, "code": "OK", "message": "Dry run only.", "plan": plan_text}
+        result = {
+            "ok": True,
+            "code": "OK",
+            "message": "Dry run only.",
+            "plan": plan_text,
+            "advisories": advisories,
+            "preflight_warnings": preflight_warnings,
+        }
         write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
         return result
     if not auto_confirm:
-        result = {"ok": False, "code": ERROR_SCOPE_REQUIRED, "message": "Mutation requires --yes confirmation.", "plan": plan_text}
+        result = {
+            "ok": False,
+            "code": ERROR_SCOPE_REQUIRED,
+            "message": "Mutation requires --yes confirmation.",
+            "plan": plan_text,
+            "advisories": advisories,
+            "preflight_warnings": preflight_warnings,
+        }
         write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
         return result
 
@@ -293,11 +343,33 @@ def run_api_add_transaction(
                     "verify_exit_code": verify.returncode,
                     "verify_output_tail": _tail((verify.stdout or "") + "\n" + (verify.stderr or "")),
                     "plan": plan_text,
+                    "advisories": advisories,
+                    "preflight_warnings": preflight_warnings,
                 }
+                post_head = _run(["git", "rev-parse", "HEAD"], cwd=repo_root).stdout.strip()
+                lesson_id = record_failure_lesson(
+                    repo_root=repo_root,
+                    command_name="api_add",
+                    request=request_payload,
+                    result=result,
+                    touch_set=touch_rel,
+                    head_pre=head_sha,
+                    head_post=post_head,
+                    verify_commands=verify_commands,
+                    failed_verify_command=verify_command,
+                )
+                result["failure_lesson_id"] = lesson_id
                 write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
                 return result
 
-        result = {"ok": True, "code": "OK", "message": "API route generated.", "plan": plan_text}
+        result = {
+            "ok": True,
+            "code": "OK",
+            "message": "API route generated.",
+            "plan": plan_text,
+            "advisories": advisories,
+            "preflight_warnings": preflight_warnings,
+        }
         write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
         return result
     except OSError as exc:

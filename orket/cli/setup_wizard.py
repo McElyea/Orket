@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from orket.schema import OrganizationConfig, BrandingConfig, ArchitecturePrescription
+from orket.settings import load_user_settings, save_user_settings
 
 
 def run_wizard():
@@ -28,6 +29,10 @@ def run_wizard():
     # 2. Path Setup
     workspace_path = input("Workspace Path [./workspace]: ") or "./workspace"
     model_path = input("Model/Asset Path [./model]: ") or "./model"
+    module_profile = (
+        input("Module Profile [developer-local] (engine-only/developer-local/api-runtime/api-webhook-runtime): ")
+        or "developer-local"
+    ).strip().lower()
 
     config = OrganizationConfig(
         name=org_name,
@@ -54,6 +59,10 @@ def run_wizard():
     org_file = config_dir / "organization.json"
     with org_file.open("w", encoding="utf-8") as f:
         f.write(config.model_dump_json(indent=4))
+
+    settings = load_user_settings().copy()
+    settings["module_profile"] = module_profile
+    save_user_settings(settings)
 
     print("\n✅ Initialization complete!")
     print(f"   Config saved to: {org_file}")

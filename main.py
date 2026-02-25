@@ -1,10 +1,11 @@
 # main.py
 import asyncio
 import sys
-from orket.interfaces.cli import run_cli
+from orket.runtime import create_cli_runtime
 
 if __name__ == "__main__":
     try:
+        run_cli = create_cli_runtime()
         asyncio.run(run_cli())
     except KeyboardInterrupt:
         pass
@@ -16,4 +17,3 @@ if __name__ == "__main__":
         log_crash(e, traceback.format_exc())
         print("A detailed crash log has been saved to 'orket_crash.log'.")
         sys.exit(1)
-

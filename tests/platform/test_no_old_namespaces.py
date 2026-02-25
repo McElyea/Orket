@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 # Patterns that must NOT appear anywhere in core code
 # (We use more specific patterns to avoid false positives like 'score' in metrics)
@@ -26,6 +26,7 @@ IGNORE_DIRS = {
 
 def test_no_old_namespaces():
     failures = []
+    assert (ROOT / "orket").exists(), f"Expected repo root at {ROOT}"
 
     for path in ROOT.rglob("*"):
         # Skip ignored directories

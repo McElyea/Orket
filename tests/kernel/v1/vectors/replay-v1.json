@@ -180,6 +180,84 @@
       "expect_outcome": "PASS"
     },
     {
+      "name": "pass-mixed-issue-set-pointer-code-order-normalized",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/2",
+            "message": "a1",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/9",
+            "message": "a2",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_ALREADY_APPLIED",
+            "location": "/turns/1",
+            "message": "a3",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_ALREADY_APPLIED",
+            "location": "/turns/1",
+            "message": "b1",
+            "details": {"diagnostic": "ignored"}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/2",
+            "message": "b2",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/9",
+            "message": "b3",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "expect_outcome": "PASS"
+    },
+    {
       "name": "fail-stage-outcome-mismatch",
       "run_a": {
         "run_id": "run-a",
@@ -276,6 +354,68 @@
             "code": "E_LSI_ORPHAN_TARGET",
             "location": "/links/declares/1",
             "message": "orphan",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "expect_outcome": "FAIL",
+      "expect_code": "E_REPLAY_EQUIVALENCE_FAILED",
+      "expect_mismatch_fields": ["issue_codes"]
+    },
+    {
+      "name": "fail-mixed-issue-set-pointer-code-drift",
+      "run_a": {
+        "run_id": "run-a",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_ALREADY_APPLIED",
+            "location": "/turns/1",
+            "message": "a1",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/2",
+            "message": "a2",
+            "details": {}
+          }
+        ],
+        "events": []
+      },
+      "run_b": {
+        "run_id": "run-b",
+        "contract_version": "kernel_api/v1",
+        "schema_version": "v1",
+        "turn_digests": [],
+        "stage_outcomes": [],
+        "issues": [
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "promotion",
+            "code": "E_PROMOTION_OUT_OF_ORDER",
+            "location": "/turns/1",
+            "message": "b1",
+            "details": {}
+          },
+          {
+            "contract_version": "kernel_api/v1",
+            "level": "FAIL",
+            "stage": "lsi",
+            "code": "E_LSI_ORPHAN_TARGET",
+            "location": "/links/declares/3",
+            "message": "b2",
             "details": {}
           }
         ],

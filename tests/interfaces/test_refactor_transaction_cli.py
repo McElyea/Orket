@@ -104,3 +104,53 @@ def test_refactor_dry_run_lists_touch_set_and_does_not_modify_repo(tmp_path: Pat
     assert "src/auth/index.js" in out
     assert _git(repo, "rev-parse", "HEAD").stdout.strip() == head_before
     assert _git(repo, "status", "--porcelain").stdout.strip() == ""
+
+
+def test_refactor_success_emits_parity_summary_and_artifact_when_enabled(tmp_path: Path, capsys, monkeypatch) -> None:
+    repo = _init_repo(tmp_path)
+    monkeypatch.chdir(repo)
+    monkeypatch.setenv("ORKET_REPLAY_ARTIFACTS", "1")
+
+    code = main(["refactor", "rename User to Member", "--scope", "./src/auth", "--yes", "--json"])
+    out = capsys.readouterr().out
+    payload = json.loads(out)
+
+    assert code == 0
+    assert payload["ok"] is True
+    assert payload["parity"]["status"] == "verified"
+    assert payload["parity"]["changed_file_count"] == 2
+    artifact_path = str(payload["parity"]["artifact_path"])
+    assert artifact_path.startswith(".orket/replay_artifacts/refactor_parity/")
+    artifact = json.loads((repo / artifact_path).read_text(encoding="utf-8"))
+    assert artifact["contract_version"] == "core_pillars/refactor_parity/v1"
+    assert artifact["status"] == "verified"
+    assert artifact["changed_file_count"] == 2
+
+
+def test_refactor_verify_failure_reports_revert_parity(tmp_path: Path, capsys, monkeypatch) -> None:
+    repo = _init_repo(tmp_path)
+    (repo / "tests" / "SHOULD_FAIL").write_text("force fail\n", encoding="utf-8")
+    _git(repo, "add", "tests/SHOULD_FAIL")
+    _git(repo, "commit", "-m", "force verify fail marker")
+    monkeypatch.chdir(repo)
+
+    code = main(["refactor", "rename User to Member", "--scope", "./src/auth", "--yes", "--json"])
+    out = capsys.readouterr().out
+    payload = json.loads(out)
+
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["code"] == "E_VERIFY_FAILED_REVERTED"
+    assert payload["parity"]["status"] == "reverted_after_verify_failure"
+    assert payload["parity"]["revert_verified"] is True
+
+
+def test_refactor_human_output_includes_parity_summary(tmp_path: Path, capsys, monkeypatch) -> None:
+    repo = _init_repo(tmp_path)
+    monkeypatch.chdir(repo)
+
+    code = main(["refactor", "rename User to Member", "--scope", "./src/auth", "--yes"])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "PARITY: status=verified, changed_files=2" in out

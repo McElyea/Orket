@@ -36,7 +36,9 @@ Trade-offs:
 ## Enforcement
 1. Architecture boundary tests in `tests/platform/test_architecture_volatility_boundaries.py`.
 2. Dependency-direction script: `scripts/check_dependency_direction.py`.
-3. CI workflow must run these checks before quality/test jobs.
+3. Canonical dependency policy contract: `model/core/contracts/dependency_direction_policy.json`.
+4. CI workflow must run these checks before quality/test jobs.
+5. Legacy migration uses a ratcheting budget (`legacy_edge_budget`) that is enforced as non-regression in CI.
 
 ## Migration Notes
 1. Move low-volatility modules first (`state_machine`, `records`, repository contracts, tool gate).

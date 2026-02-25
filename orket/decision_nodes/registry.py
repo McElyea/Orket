@@ -110,6 +110,51 @@ class DecisionNodeRegistry:
     def register_model_client(self, name: str, node: ModelClientPolicyNode) -> None:
         self._model_client_nodes[name] = node
 
+    def register_module_nodes(self, module_id: str, registrations: Dict[str, Any]) -> None:
+        """
+        Register a module-provided set of decision nodes using explicit keys.
+        Supported keys:
+        planner, router, prompt_strategy, evaluator, tool_strategy, api_runtime,
+        sandbox_policy, engine_runtime, loader_strategy, execution_runtime,
+        pipeline_wiring, orchestration_loop, model_client.
+        """
+        key = str(module_id or "").strip()
+        if not key:
+            raise ValueError("module_id is required for module node registration")
+        if not isinstance(registrations, dict):
+            raise TypeError("registrations must be a mapping")
+
+        for node_type, node in registrations.items():
+            slot = str(node_type or "").strip().lower()
+            if slot == "planner":
+                self.register_planner(key, node)
+            elif slot == "router":
+                self.register_router(key, node)
+            elif slot == "prompt_strategy":
+                self.register_prompt_strategy(key, node)
+            elif slot == "evaluator":
+                self.register_evaluator(key, node)
+            elif slot == "tool_strategy":
+                self.register_tool_strategy(key, node)
+            elif slot == "api_runtime":
+                self.register_api_runtime(key, node)
+            elif slot == "sandbox_policy":
+                self.register_sandbox_policy(key, node)
+            elif slot == "engine_runtime":
+                self.register_engine_runtime(key, node)
+            elif slot == "loader_strategy":
+                self.register_loader_strategy(key, node)
+            elif slot == "execution_runtime":
+                self.register_execution_runtime(key, node)
+            elif slot == "pipeline_wiring":
+                self.register_pipeline_wiring(key, node)
+            elif slot == "orchestration_loop":
+                self.register_orchestration_loop(key, node)
+            elif slot == "model_client":
+                self.register_model_client(key, node)
+            else:
+                raise ValueError(f"Unsupported decision node registration type '{node_type}'")
+
     def resolve_planner(self, organization: Any = None) -> PlannerNode:
         planner_name = "default"
         if organization and getattr(organization, "process_rules", None):

@@ -2,8 +2,10 @@
 import uvicorn
 import sys
 import os
-from orket.interfaces.api import app
+from orket.runtime import create_api_app
 from orket.utils import get_reload_excludes
+
+app = create_api_app()
 
 if __name__ == "__main__":
     try:
@@ -21,4 +23,3 @@ if __name__ == "__main__":
         log_crash(e, traceback.format_exc())
         traceback.print_exc()
         sys.exit(1)
-

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from orket.logging import log_event
+from orket.logging import get_member_metrics, log_event
 
 
 def _load_last_log_record(path: Path) -> dict:
@@ -54,3 +54,53 @@ def test_log_event_runtime_artifact_skips_when_session_missing(tmp_path: Path) -
     log_event("generic_event", {"role": "system"}, workspace=tmp_path)
     runtime_events_path = tmp_path / "agent_output" / "observability" / "runtime_events.jsonl"
     assert not runtime_events_path.exists()
+
+
+def test_log_event_isolated_per_workspace(tmp_path: Path) -> None:
+    workspace_a = tmp_path / "workspace-a"
+    workspace_b = tmp_path / "workspace-b"
+
+    log_event("event_a", {"role": "coder"}, workspace=workspace_a)
+    log_event("event_b", {"role": "reviewer"}, workspace=workspace_b)
+
+    lines_a = (workspace_a / "orket.log").read_text(encoding="utf-8").strip().splitlines()
+    lines_b = (workspace_b / "orket.log").read_text(encoding="utf-8").strip().splitlines()
+
+    assert lines_a and lines_b
+    assert any('"event": "event_a"' in line for line in lines_a)
+    assert not any('"event": "event_b"' in line for line in lines_a)
+    assert any('"event": "event_b"' in line for line in lines_b)
+    assert not any('"event": "event_a"' in line for line in lines_b)
+
+
+def test_get_member_metrics_returns_aggregated_roles(tmp_path: Path) -> None:
+    log_path = tmp_path / "orket.log"
+    log_path.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "event": "model_usage",
+                        "role": "coder",
+                        "data": {"total_tokens": 13},
+                    }
+                ),
+                json.dumps(
+                    {
+                        "event": "tool_call",
+                        "role": "coder",
+                        "data": {
+                            "tool": "write_file",
+                            "args": {"path": "app.py", "content": "a\nb"},
+                        },
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    metrics = get_member_metrics(tmp_path)
+    assert metrics["coder"]["tokens"] == 13
+    assert metrics["coder"]["lines_written"] == 2

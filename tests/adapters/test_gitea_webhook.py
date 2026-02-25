@@ -1,5 +1,7 @@
-﻿import pytest
+import asyncio
+
 import aiosqlite
+import pytest
 
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 from orket.adapters.vcs.webhook_db import WebhookDatabase
@@ -87,3 +89,53 @@ async def test_auto_reject_after_4_cycles(monkeypatch, tmp_path):
 
     await handler.close()
 
+
+@pytest.mark.asyncio
+async def test_pr_opened_updates_status_with_cardstatus_enum(monkeypatch, tmp_path):
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    from orket.schema import CardStatus
+    import orket.orchestration.engine as engine_module
+
+    captured = {"status": None, "issue_id": None}
+    scheduled: list[asyncio.Task] = []
+    real_create_task = asyncio.create_task
+
+    class _FakeCards:
+        async def update_status(self, issue_id, status):
+            captured["issue_id"] = issue_id
+            captured["status"] = status
+
+    class _FakeEngine:
+        def __init__(self, _workspace):
+            self.cards = _FakeCards()
+
+        async def run_card(self, _issue_id):
+            return None
+
+    def _fake_create_task(coro):
+        task = real_create_task(coro)
+        scheduled.append(task)
+        return task
+
+    monkeypatch.setattr(engine_module, "OrchestrationEngine", _FakeEngine)
+    monkeypatch.setattr(asyncio, "create_task", _fake_create_task)
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    payload = {
+        "action": "opened",
+        "pull_request": {
+            "number": 12,
+            "title": "[ISSUE-ABC123] add validation",
+        },
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    result = await handler.handle_webhook("pull_request", payload)
+    await handler.close()
+    if scheduled:
+        await asyncio.gather(*scheduled)
+
+    assert result["status"] == "success"
+    assert captured["issue_id"] == "ISSUE-ABC123"
+    assert captured["status"] == CardStatus.CODE_REVIEW

@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0.0",
+  "policy_id": "dependency_direction_policy",
+  "scan_roots": [
+    "orket"
+  ],
+  "top_level_to_layer": {
+    "__init__": "legacy",
+    "adapters": "adapters",
+    "agents": "agents",
+    "application": "application",
+    "board": "platform",
+    "cli": "interfaces",
+    "core": "core",
+    "decision_nodes": "decision_nodes",
+    "discovery": "platform",
+    "domain": "domain",
+    "driver": "platform",
+    "events": "platform",
+    "exceptions": "platform",
+    "hardware": "platform",
+    "infrastructure": "infrastructure",
+    "interfaces": "interfaces",
+    "kernel": "kernel",
+    "logging": "platform",
+    "naming": "platform",
+    "orchestration": "orchestration",
+    "organization_loop": "platform",
+    "orket": "legacy",
+    "platform": "platform",
+    "policy": "platform",
+    "preview": "platform",
+    "repositories": "platform",
+    "runtime": "runtime",
+    "runtime_paths": "platform",
+    "schema": "platform",
+    "services": "services",
+    "session": "platform",
+    "settings": "platform",
+    "state": "platform",
+    "time_utils": "platform",
+    "tool_families": "adapters",
+    "tool_runtime": "adapters",
+    "tool_strategy": "adapters",
+    "tools": "platform",
+    "utils": "platform",
+    "vendors": "vendors",
+    "webhook_server": "interfaces"
+  },
+  "forbidden_edges": [
+    {
+      "source_layer": "core",
+      "target_layer": "application"
+    },
+    {
+      "source_layer": "core",
+      "target_layer": "adapters"
+    },
+    {
+      "source_layer": "core",
+      "target_layer": "interfaces"
+    },
+    {
+      "source_layer": "application",
+      "target_layer": "interfaces"
+    },
+    {
+      "source_layer": "adapters",
+      "target_layer": "interfaces"
+    },
+    {
+      "source_layer": "domain",
+      "target_layer": "orchestration"
+    },
+    {
+      "source_layer": "domain",
+      "target_layer": "interfaces"
+    },
+    {
+      "source_layer": "decision_nodes",
+      "target_layer": "interfaces"
+    },
+    {
+      "source_layer": "infrastructure",
+      "target_layer": "services"
+    },
+    {
+      "source_layer": "infrastructure",
+      "target_layer": "orchestration"
+    },
+    {
+      "source_layer": "infrastructure",
+      "target_layer": "interfaces"
+    },
+    {
+      "source_layer": "infrastructure",
+      "target_layer": "decision_nodes"
+    }
+  ],
+  "legacy_edge_budget": {
+    "max_edges": 10
+  },
+  "policy_decisions": {
+    "application_to_adapters": "allowed_with_port_migration_followup"
+  }
+}

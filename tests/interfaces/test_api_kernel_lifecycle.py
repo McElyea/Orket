@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 
 from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator
@@ -12,6 +15,7 @@ import orket.interfaces.api as api_module
 
 
 client = TestClient(app)
+DEFAULT_COMPARE_FIXTURE_PATH = Path("tests/interfaces/fixtures/kernel_compare_realistic_fixture.json")
 
 
 def _load_schema(path: str) -> dict:
@@ -30,6 +34,12 @@ def _build_registry(root_schema: dict) -> Registry:
         if isinstance(schema_id, str) and schema_id:
             registry = registry.with_resource(schema_id, Resource.from_contents(schema))
     return registry
+
+
+def _load_compare_fixture_payload() -> dict:
+    override = os.getenv("ORKET_KERNEL_COMPARE_FIXTURE_PATH")
+    fixture_path = Path(override) if override else DEFAULT_COMPARE_FIXTURE_PATH
+    return json.loads(fixture_path.read_text(encoding="utf-8"))
 
 
 def test_kernel_lifecycle_endpoint_routes_to_engine(monkeypatch) -> None:
@@ -419,9 +429,34 @@ def test_kernel_compare_endpoint_malformed_payload_rejected(monkeypatch) -> None
 
 def test_kernel_compare_endpoint_realistic_artifact_fixture(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    fixture_path = Path("tests/interfaces/fixtures/kernel_compare_realistic_fixture.json")
-    fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+    fixture = _load_compare_fixture_payload()
 
+    response = client.post(
+        "/v1/kernel/compare",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "run_a": fixture["run_a"],
+            "run_b": fixture["run_b"],
+            "compare_mode": fixture["compare_mode"],
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["outcome"] == fixture["expect_outcome"]
+
+
+def test_kernel_compare_endpoint_generated_fixture_optional_parity_source(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    generated_fixture = tmp_path / "kernel_compare_generated_fixture.json"
+    result = subprocess.run(
+        [sys.executable, "scripts/gen_kernel_compare_fixture.py", "--out", str(generated_fixture)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    monkeypatch.setenv("ORKET_KERNEL_COMPARE_FIXTURE_PATH", str(generated_fixture))
+
+    fixture = _load_compare_fixture_payload()
     response = client.post(
         "/v1/kernel/compare",
         headers={"X-API-Key": "test-key"},

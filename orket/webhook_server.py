@@ -29,20 +29,47 @@ app = FastAPI(
     version=__version__
 )
 
-# Initialize webhook handler
-webhook_handler = GiteaWebhookHandler(
-    gitea_url=os.getenv("GITEA_URL", "http://localhost:3000"),
-    workspace=Path.cwd()
-)
+WEBHOOK_SECRET: bytes | None = None
 
-# Webhook secret for HMAC validation (set in Gitea webhook config)
-_webhook_secret_raw = os.getenv("GITEA_WEBHOOK_SECRET", "")
-if not _webhook_secret_raw.strip():
-    raise RuntimeError(
-        "GITEA_WEBHOOK_SECRET environment variable is not set. "
-        "Configure it before starting the webhook server."
-    )
-WEBHOOK_SECRET = _webhook_secret_raw.encode()
+
+class _WebhookHandlerProxy:
+    def __init__(self):
+        self._handler: GiteaWebhookHandler | None = None
+
+    def _create_handler(self) -> GiteaWebhookHandler:
+        return GiteaWebhookHandler(
+            gitea_url=os.getenv("GITEA_URL", "http://localhost:3000"),
+            workspace=Path.cwd(),
+        )
+
+    def _get(self) -> GiteaWebhookHandler:
+        if self._handler is None:
+            self._handler = self._create_handler()
+        return self._handler
+
+    def reset(self) -> None:
+        self._handler = None
+
+    def __getattr__(self, item):
+        return getattr(self._get(), item)
+
+
+webhook_handler = _WebhookHandlerProxy()
+
+
+def _resolve_webhook_secret(required: bool = False) -> bytes | None:
+    global WEBHOOK_SECRET
+    raw = os.getenv("GITEA_WEBHOOK_SECRET", "")
+    if raw.strip():
+        WEBHOOK_SECRET = raw.encode()
+        return WEBHOOK_SECRET
+    WEBHOOK_SECRET = None
+    if required:
+        raise RuntimeError(
+            "GITEA_WEBHOOK_SECRET environment variable is not set. "
+            "Configure it before starting the webhook server."
+        )
+    return None
 
 
 def _is_truthy(value: str | None) -> bool:
@@ -112,7 +139,8 @@ def validate_signature(payload: bytes, signature: str) -> bool:
     Returns:
         True if signature is valid, False otherwise
     """
-    if not WEBHOOK_SECRET:
+    secret = _resolve_webhook_secret(required=False)
+    if not secret:
         log_event(
             "webhook",
             {"message": "GITEA_WEBHOOK_SECRET not set. Authentication disabled.", "level": "error"},
@@ -121,7 +149,7 @@ def validate_signature(payload: bytes, signature: str) -> bool:
         return False  # Reject if not configured
 
     expected_signature = hmac.new(
-        WEBHOOK_SECRET,
+        secret,
         payload,
         hashlib.sha256
     ).hexdigest()
@@ -263,6 +291,7 @@ def start_server(host: str = "0.0.0.0", port: int = 8080):
         port: Port to bind to (default: 8080)
     """
     log_event("webhook_server", {"message": f"Starting webhook server on {host}:{port}", "level": "info"}, workspace=Path.cwd())
+    create_webhook_app(require_config=True)
 
     uvicorn.run(
         app,
@@ -270,6 +299,13 @@ def start_server(host: str = "0.0.0.0", port: int = 8080):
         port=port,
         log_level="info"
     )
+
+
+def create_webhook_app(require_config: bool = False) -> FastAPI:
+    if require_config:
+        _resolve_webhook_secret(required=True)
+        webhook_handler._get()
+    return app
 
 
 # Startup posture logging for operator visibility.

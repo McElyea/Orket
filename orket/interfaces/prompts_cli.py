@@ -223,7 +223,7 @@ def find_stale_candidate_prompts(
             )
             continue
         age_days = (anchor - updated_at).days
-        is_stale = age_days > int(max_candidate_age_days)
+        is_stale = age_days >= int(max_candidate_age_days)
         stale_rows.append(
             {
                 **row,

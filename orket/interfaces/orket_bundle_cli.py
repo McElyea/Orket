@@ -594,8 +594,32 @@ def _render_human(result: Dict[str, Any]) -> str:
         lines: List[str] = []
         if result.get("plan"):
             lines.append(str(result["plan"]))
+        advisories = result.get("advisories")
+        if isinstance(advisories, list) and advisories:
+            lines.append("FAILURE LESSON ADVISORIES:")
+            for item in advisories:
+                if not isinstance(item, dict):
+                    continue
+                lines.append(
+                    f"  - [{item.get('score', '')}] {item.get('lesson_id', '')}: "
+                    f"{item.get('summary', '')}"
+                )
+        preflight_warnings = result.get("preflight_warnings")
+        if isinstance(preflight_warnings, list) and preflight_warnings:
+            lines.append("PREFLIGHT WARNINGS:")
+            for warning in preflight_warnings:
+                lines.append(f"  - {warning}")
         status = "OK" if bool(result.get("ok")) else f"FAIL [{result.get('code')}]"
         lines.append(f"{status}: {result.get('message')}")
+        parity = result.get("parity")
+        if isinstance(parity, dict):
+            lines.append(
+                "PARITY: "
+                + f"status={parity.get('status', '')}, "
+                + f"changed_files={parity.get('changed_file_count', '')}"
+            )
+            if str(parity.get("artifact_path", "")).strip():
+                lines.append(f"PARITY ARTIFACT: {parity['artifact_path']}")
         if result.get("verify_output_tail"):
             lines.append("")
             lines.append(str(result["verify_output_tail"]))

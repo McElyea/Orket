@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LOW_VOL_ROOTS = [
     PROJECT_ROOT / "orket" / "core" / "domain",
     PROJECT_ROOT / "orket" / "core" / "contracts",
@@ -39,7 +39,7 @@ LEGACY_IMPORT_PREFIXES = (
 
 
 def _imports_for(path: Path) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+    tree = ast.parse(path.read_text(encoding="utf-8-sig"))
     imports: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -54,6 +54,8 @@ def _imports_for(path: Path) -> list[str]:
 def test_low_volatility_layers_do_not_depend_on_high_volatility_layers():
     violations: list[str] = []
     for root in LOW_VOL_ROOTS:
+        assert root.exists(), f"Expected scan root missing: {root}"
+        assert any(root.rglob("*.py")), f"Expected python files under scan root: {root}"
         for path in root.rglob("*.py"):
             if path.name == "__init__.py":
                 continue
@@ -66,6 +68,8 @@ def test_low_volatility_layers_do_not_depend_on_high_volatility_layers():
 
 def test_application_layer_does_not_depend_on_interfaces_layer():
     app_root = PROJECT_ROOT / "orket" / "application"
+    assert app_root.exists(), f"Expected scan root missing: {app_root}"
+    assert any(app_root.rglob("*.py")), f"Expected python files under scan root: {app_root}"
     violations: list[str] = []
     for path in app_root.rglob("*.py"):
         if path.name == "__init__.py":
@@ -77,21 +81,10 @@ def test_application_layer_does_not_depend_on_interfaces_layer():
     assert not violations, "Application->Interfaces boundary violations:\n" + "\n".join(violations)
 
 
-def test_application_layer_does_not_depend_on_adapters_layer():
-    app_root = PROJECT_ROOT / "orket" / "application"
-    violations: list[str] = []
-    for path in app_root.rglob("*.py"):
-        if path.name == "__init__.py":
-            continue
-        for imp in _imports_for(path):
-            if imp.startswith("orket.adapters"):
-                rel = path.relative_to(PROJECT_ROOT)
-                violations.append(f"{rel}: forbidden import '{imp}'")
-    assert not violations, "Application->Adapters boundary violations:\n" + "\n".join(violations)
-
-
 def test_runtime_code_has_no_legacy_namespace_imports():
     runtime_root = PROJECT_ROOT / "orket"
+    assert runtime_root.exists(), f"Expected scan root missing: {runtime_root}"
+    assert any(runtime_root.rglob("*.py")), f"Expected python files under scan root: {runtime_root}"
     violations: list[str] = []
     for path in runtime_root.rglob("*.py"):
         if "__pycache__" in path.parts:

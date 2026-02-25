@@ -520,10 +520,6 @@ class ExecutionPipeline:
             )
             raise
 
-        root_log = Path("workspace/default/orket.log")
-        if root_log.exists():
-            await self.loader.file_tools.write_file("workspace/default/orket.log", "")
-
         return legacy_transcript
 
     def _run_artifact_refs(self, run_id: str) -> Dict[str, str]:

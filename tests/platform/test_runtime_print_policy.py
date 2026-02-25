@@ -7,8 +7,9 @@ def test_runtime_print_usage_is_whitelisted():
     Guardrail: runtime/library modules should use structured logging.
     `print()` is only allowed in explicitly interactive/intentional files.
     """
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parents[2]
     orket_root = repo_root / "orket"
+    assert orket_root.exists(), f"Expected runtime package root at {orket_root}"
 
     allowed_files = {
         "orket/interfaces/cli.py",
@@ -18,6 +19,9 @@ def test_runtime_print_usage_is_whitelisted():
         "orket/domain/verification.py",
         # Standalone utility script with direct console output.
         "orket/orchestration/project_dumper_small.py",
+        # Explicit command-line surfaces with direct user output.
+        "orket/interfaces/orket_bundle_cli.py",
+        "orket/interfaces/prompts_cli.py",
     }
 
     violations = []

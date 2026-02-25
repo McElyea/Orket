@@ -1,10 +1,71 @@
 {
-  "generated_at": "2026-02-13T04:29:05.815004+00:00",
-  "module_count": 106,
+  "generated_at": "2026-02-24T19:28:36.687539+00:00",
+  "module_count": 157,
+  "scan": {
+    "files_scanned": 157,
+    "roots": [
+      "orket"
+    ]
+  },
+  "policy": {
+    "path": "model\\core\\contracts\\dependency_direction_policy.json",
+    "policy_id": "dependency_direction_policy",
+    "schema_version": "1.0.0",
+    "forbidden_edges": [
+      {
+        "source_layer": "adapters",
+        "target_layer": "interfaces"
+      },
+      {
+        "source_layer": "application",
+        "target_layer": "interfaces"
+      },
+      {
+        "source_layer": "core",
+        "target_layer": "adapters"
+      },
+      {
+        "source_layer": "core",
+        "target_layer": "application"
+      },
+      {
+        "source_layer": "core",
+        "target_layer": "interfaces"
+      },
+      {
+        "source_layer": "decision_nodes",
+        "target_layer": "interfaces"
+      },
+      {
+        "source_layer": "domain",
+        "target_layer": "interfaces"
+      },
+      {
+        "source_layer": "domain",
+        "target_layer": "orchestration"
+      },
+      {
+        "source_layer": "infrastructure",
+        "target_layer": "decision_nodes"
+      },
+      {
+        "source_layer": "infrastructure",
+        "target_layer": "interfaces"
+      },
+      {
+        "source_layer": "infrastructure",
+        "target_layer": "orchestration"
+      },
+      {
+        "source_layer": "infrastructure",
+        "target_layer": "services"
+      }
+    ]
+  },
   "modules": {
     "orket.board": {
       "path": "orket\\board.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": [
         "orket.exceptions",
         "orket.orket",
@@ -13,24 +74,16 @@
     },
     "orket.discovery": {
       "path": "orket\\discovery.py",
-      "layer": "root",
-      "imports": [
-        "orket.domain.reconciler",
-        "orket.hardware",
-        "orket.infrastructure.async_file_tools",
-        "orket.logging",
-        "orket.orket",
-        "orket.schema",
-        "orket.settings"
-      ]
+      "layer": "platform",
+      "imports": []
     },
     "orket.driver": {
       "path": "orket\\driver.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": [
+        "orket.adapters.llm.local_model_provider",
+        "orket.adapters.storage.async_file_tools",
         "orket.exceptions",
-        "orket.infrastructure.async_file_tools",
-        "orket.llm",
         "orket.logging",
         "orket.orchestration.models",
         "orket.orket",
@@ -39,30 +92,22 @@
     },
     "orket.events": {
       "path": "orket\\events.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
     },
     "orket.exceptions": {
       "path": "orket\\exceptions.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
     },
     "orket.hardware": {
       "path": "orket\\hardware.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
-    },
-    "orket.llm": {
-      "path": "orket\\llm.py",
-      "layer": "root",
-      "imports": [
-        "orket.exceptions",
-        "orket.logging"
-      ]
     },
     "orket.logging": {
       "path": "orket\\logging.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": [
         "orket.naming",
         "orket.time_utils"
@@ -70,57 +115,46 @@
     },
     "orket.naming": {
       "path": "orket\\naming.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
     },
     "orket.organization_loop": {
       "path": "orket\\organization_loop.py",
-      "layer": "root",
-      "imports": [
-        "orket.domain.critical_path",
-        "orket.infrastructure.async_file_tools",
-        "orket.logging",
-        "orket.orket",
-        "orket.schema"
-      ]
+      "layer": "platform",
+      "imports": []
     },
     "orket.orket": {
       "path": "orket\\orket.py",
-      "layer": "root",
+      "layer": "legacy",
       "imports": [
         "orket.runtime"
       ]
     },
     "orket.policy": {
       "path": "orket\\policy.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
     },
     "orket.preview": {
       "path": "orket\\preview.py",
-      "layer": "root",
-      "imports": [
-        "orket.agents.agent",
-        "orket.exceptions",
-        "orket.infrastructure.async_file_tools",
-        "orket.llm",
-        "orket.logging",
-        "orket.orchestration.models",
-        "orket.orket",
-        "orket.schema",
-        "orket.utils"
-      ]
+      "layer": "platform",
+      "imports": []
     },
     "orket.repositories": {
       "path": "orket\\repositories.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": [
         "orket.core.contracts.repositories"
       ]
     },
+    "orket.runtime_paths": {
+      "path": "orket\\runtime_paths.py",
+      "layer": "platform",
+      "imports": []
+    },
     "orket.schema": {
       "path": "orket\\schema.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": [
         "orket.core.bottlenecks",
         "orket.core.types"
@@ -128,41 +162,35 @@
     },
     "orket.session": {
       "path": "orket\\session.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
     },
     "orket.settings": {
       "path": "orket\\settings.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": [
-        "orket.infrastructure.async_file_tools"
+        "orket.adapters.storage.async_file_tools",
+        "orket.runtime_paths"
       ]
     },
     "orket.state": {
       "path": "orket\\state.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
     },
     "orket.time_utils": {
       "path": "orket\\time_utils.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": []
     },
     "orket.tools": {
       "path": "orket\\tools.py",
-      "layer": "root",
-      "imports": [
-        "orket.core.policies.tool_gate",
-        "orket.decision_nodes.registry",
-        "orket.infrastructure.async_card_repository",
-        "orket.schema",
-        "orket.tool_families",
-        "orket.tool_runtime"
-      ]
+      "layer": "platform",
+      "imports": []
     },
     "orket.utils": {
       "path": "orket\\utils.py",
-      "layer": "root",
+      "layer": "platform",
       "imports": [
         "orket.logging",
         "orket.naming",
@@ -171,15 +199,15 @@
     },
     "orket.webhook_server": {
       "path": "orket\\webhook_server.py",
-      "layer": "root",
+      "layer": "interfaces",
       "imports": [
-        "orket.logging",
-        "orket.services.gitea_webhook_handler"
+        "orket.adapters.vcs.gitea_webhook_handler",
+        "orket.logging"
       ]
     },
     "orket.__init__": {
       "path": "orket\\__init__.py",
-      "layer": "root",
+      "layer": "legacy",
       "imports": []
     },
     "orket.adapters.__init__": {
@@ -190,26 +218,12 @@
     "orket.agents.agent": {
       "path": "orket\\agents\\agent.py",
       "layer": "agents",
-      "imports": [
-        "orket.domain.execution",
-        "orket.exceptions",
-        "orket.llm",
-        "orket.logging",
-        "orket.orket",
-        "orket.schema",
-        "orket.services.prompt_compiler",
-        "orket.services.tool_parser",
-        "orket.utils"
-      ]
+      "imports": []
     },
     "orket.agents.agent_factory": {
       "path": "orket\\agents\\agent_factory.py",
       "layer": "agents",
-      "imports": [
-        "orket.agents.agent",
-        "orket.llm",
-        "orket.tools"
-      ]
+      "imports": []
     },
     "orket.application.__init__": {
       "path": "orket\\application\\__init__.py",
@@ -218,9 +232,10 @@
     },
     "orket.cli.setup_wizard": {
       "path": "orket\\cli\\setup_wizard.py",
-      "layer": "root",
+      "layer": "interfaces",
       "imports": [
-        "orket.schema"
+        "orket.schema",
+        "orket.settings"
       ]
     },
     "orket.core.bottlenecks": {
@@ -246,26 +261,7 @@
     "orket.decision_nodes.builtins": {
       "path": "orket\\decision_nodes\\builtins.py",
       "layer": "decision_nodes",
-      "imports": [
-        "orket.board",
-        "orket.decision_nodes.contracts",
-        "orket.domain.bug_fix_phase",
-        "orket.driver",
-        "orket.exceptions",
-        "orket.infrastructure.async_file_tools",
-        "orket.llm",
-        "orket.logging",
-        "orket.orchestration.engine",
-        "orket.orchestration.orchestrator",
-        "orket.orket",
-        "orket.preview",
-        "orket.schema",
-        "orket.services.sandbox_orchestrator",
-        "orket.services.webhook_db",
-        "orket.settings",
-        "orket.tool_strategy.default",
-        "orket.utils"
-      ]
+      "imports": []
     },
     "orket.decision_nodes.contracts": {
       "path": "orket\\decision_nodes\\contracts.py",
@@ -325,12 +321,7 @@
     "orket.domain.reconciler": {
       "path": "orket\\domain\\reconciler.py",
       "layer": "domain",
-      "imports": [
-        "orket.infrastructure.async_file_tools",
-        "orket.logging",
-        "orket.orket",
-        "orket.schema"
-      ]
+      "imports": []
     },
     "orket.domain.records": {
       "path": "orket\\domain\\records.py",
@@ -360,47 +351,16 @@
         "orket.schema"
       ]
     },
-    "orket.infrastructure.async_card_repository": {
-      "path": "orket\\infrastructure\\async_card_repository.py",
-      "layer": "infrastructure",
-      "imports": [
-        "orket.core.contracts.repositories",
-        "orket.core.domain.records",
-        "orket.schema"
-      ]
-    },
-    "orket.infrastructure.async_file_tools": {
-      "path": "orket\\infrastructure\\async_file_tools.py",
-      "layer": "infrastructure",
-      "imports": []
-    },
-    "orket.infrastructure.async_repositories": {
-      "path": "orket\\infrastructure\\async_repositories.py",
-      "layer": "infrastructure",
-      "imports": [
-        "orket.core.contracts.repositories"
-      ]
-    },
-    "orket.infrastructure.command_runner": {
-      "path": "orket\\infrastructure\\command_runner.py",
-      "layer": "infrastructure",
-      "imports": []
-    },
-    "orket.infrastructure.sqlite_repositories": {
-      "path": "orket\\infrastructure\\sqlite_repositories.py",
-      "layer": "infrastructure",
-      "imports": [
-        "orket.core.contracts.repositories",
-        "orket.schema"
-      ]
-    },
     "orket.interfaces.api": {
       "path": "orket\\interfaces\\api.py",
       "layer": "interfaces",
       "imports": [
+        "orket.application.services.runtime_policy",
         "orket.decision_nodes.registry",
         "orket.hardware",
         "orket.logging",
+        "orket.orchestration.models",
+        "orket.settings",
         "orket.state",
         "orket.time_utils"
       ]
@@ -415,16 +375,45 @@
         "orket.organization_loop"
       ]
     },
+    "orket.interfaces.coordinator_api": {
+      "path": "orket\\interfaces\\coordinator_api.py",
+      "layer": "interfaces",
+      "imports": [
+        "orket.application.services.coordinator_store",
+        "orket.core.domain.coordinator_card"
+      ]
+    },
+    "orket.interfaces.orket_bundle_cli": {
+      "path": "orket\\interfaces\\orket_bundle_cli.py",
+      "layer": "interfaces",
+      "imports": [
+        "orket.core.domain.orket_manifest"
+      ]
+    },
+    "orket.interfaces.prompts_cli": {
+      "path": "orket\\interfaces\\prompts_cli.py",
+      "layer": "interfaces",
+      "imports": [
+        "orket.application.services.prompt_linter",
+        "orket.application.services.prompt_resolver",
+        "orket.schema"
+      ]
+    },
     "orket.orchestration.engine": {
       "path": "orket\\orchestration\\engine.py",
       "layer": "orchestration",
       "imports": [
+        "orket.adapters.storage.async_card_repository",
+        "orket.adapters.storage.async_repositories",
+        "orket.application.services.gitea_state_pilot",
+        "orket.application.services.kernel_v1_gateway",
+        "orket.application.services.runtime_policy",
         "orket.board",
         "orket.decision_nodes.registry",
-        "orket.infrastructure.async_card_repository",
-        "orket.infrastructure.async_repositories",
         "orket.logging",
         "orket.orket",
+        "orket.runtime_paths",
+        "orket.settings",
         "orket.state"
       ]
     },
@@ -451,89 +440,54 @@
       "layer": "orchestration",
       "imports": []
     },
-    "orket.orchestration.orchestrator": {
-      "path": "orket\\orchestration\\orchestrator.py",
-      "layer": "orchestration",
-      "imports": [
-        "orket.core.domain.state_machine",
-        "orket.core.policies.tool_gate",
-        "orket.decision_nodes.contracts",
-        "orket.decision_nodes.registry",
-        "orket.domain.failure_reporter",
-        "orket.domain.sandbox",
-        "orket.domain.verification",
-        "orket.exceptions",
-        "orket.infrastructure.async_card_repository",
-        "orket.infrastructure.async_file_tools",
-        "orket.infrastructure.async_repositories",
-        "orket.logging",
-        "orket.orchestration.models",
-        "orket.orchestration.notes",
-        "orket.orchestration.turn_executor",
-        "orket.policy",
-        "orket.schema",
-        "orket.services.memory_store",
-        "orket.services.prompt_compiler",
-        "orket.settings",
-        "orket.state",
-        "orket.tools",
-        "orket.utils"
-      ]
-    },
     "orket.orchestration.project_dumper_small": {
       "path": "orket\\orchestration\\project_dumper_small.py",
       "layer": "orchestration",
       "imports": []
-    },
-    "orket.orchestration.turn_executor": {
-      "path": "orket\\orchestration\\turn_executor.py",
-      "layer": "orchestration",
-      "imports": [
-        "orket.core.domain.state_machine",
-        "orket.core.policies.tool_gate",
-        "orket.domain.execution",
-        "orket.logging",
-        "orket.naming",
-        "orket.schema",
-        "orket.services.tool_parser"
-      ]
     },
     "orket.platform.__init__": {
       "path": "orket\\platform\\__init__.py",
       "layer": "platform",
       "imports": []
     },
+    "orket.runtime.composition": {
+      "path": "orket\\runtime\\composition.py",
+      "layer": "runtime",
+      "imports": [
+        "orket.interfaces",
+        "orket.interfaces.cli",
+        "orket.orchestration.engine",
+        "orket.runtime.module_registry"
+      ]
+    },
     "orket.runtime.config_loader": {
       "path": "orket\\runtime\\config_loader.py",
       "layer": "runtime",
-      "imports": [
-        "orket.decision_nodes.registry",
-        "orket.exceptions",
-        "orket.infrastructure.async_file_tools",
-        "orket.logging",
-        "orket.schema",
-        "orket.settings"
-      ]
+      "imports": []
     },
     "orket.runtime.execution_pipeline": {
       "path": "orket\\runtime\\execution_pipeline.py",
       "layer": "runtime",
+      "imports": []
+    },
+    "orket.runtime.module_registry": {
+      "path": "orket\\runtime\\module_registry.py",
+      "layer": "runtime",
       "imports": [
-        "orket.decision_nodes.registry",
-        "orket.exceptions",
-        "orket.infrastructure.async_card_repository",
-        "orket.infrastructure.async_repositories",
-        "orket.logging",
-        "orket.orchestration.notes",
-        "orket.runtime.config_loader",
-        "orket.schema",
-        "orket.utils"
+        "orket.core.domain.module_manifest",
+        "orket.settings"
       ]
+    },
+    "orket.runtime.retention_policy": {
+      "path": "orket\\runtime\\retention_policy.py",
+      "layer": "runtime",
+      "imports": []
     },
     "orket.runtime.__init__": {
       "path": "orket\\runtime\\__init__.py",
       "layer": "runtime",
       "imports": [
+        "orket.runtime.composition",
         "orket.runtime.config_loader",
         "orket.runtime.execution_pipeline"
       ]
@@ -552,11 +506,7 @@
       "path": "orket\\services\\gitea_webhook_handler.py",
       "layer": "services",
       "imports": [
-        "orket.domain.sandbox",
-        "orket.logging",
-        "orket.orchestration.engine",
-        "orket.services.sandbox_orchestrator",
-        "orket.services.webhook_db"
+        "orket.adapters.vcs.gitea_webhook_handler"
       ]
     },
     "orket.services.idesign_validator": {
@@ -571,24 +521,10 @@
       "layer": "services",
       "imports": []
     },
-    "orket.services.prompt_compiler": {
-      "path": "orket\\services\\prompt_compiler.py",
-      "layer": "services",
-      "imports": [
-        "orket.schema"
-      ]
-    },
     "orket.services.sandbox_orchestrator": {
       "path": "orket\\services\\sandbox_orchestrator.py",
       "layer": "services",
-      "imports": [
-        "orket.decision_nodes.registry",
-        "orket.domain.sandbox",
-        "orket.domain.verification",
-        "orket.infrastructure.async_file_tools",
-        "orket.infrastructure.command_runner",
-        "orket.logging"
-      ]
+      "imports": []
     },
     "orket.services.tool_gate": {
       "path": "orket\\services\\tool_gate.py",
@@ -597,105 +533,11 @@
         "orket.core.policies.tool_gate"
       ]
     },
-    "orket.services.tool_parser": {
-      "path": "orket\\services\\tool_parser.py",
-      "layer": "services",
-      "imports": []
-    },
     "orket.services.webhook_db": {
       "path": "orket\\services\\webhook_db.py",
       "layer": "services",
       "imports": [
-        "orket.domain.bug_fix_phase",
-        "orket.logging"
-      ]
-    },
-    "orket.tool_families.academy": {
-      "path": "orket\\tool_families\\academy.py",
-      "layer": "root",
-      "imports": [
-        "orket.infrastructure.async_file_tools",
-        "orket.time_utils",
-        "orket.tool_families.base",
-        "orket.utils"
-      ]
-    },
-    "orket.tool_families.base": {
-      "path": "orket\\tool_families\\base.py",
-      "layer": "root",
-      "imports": []
-    },
-    "orket.tool_families.cards": {
-      "path": "orket\\tool_families\\cards.py",
-      "layer": "root",
-      "imports": [
-        "orket.core.domain.state_machine",
-        "orket.core.policies.tool_gate",
-        "orket.infrastructure.async_card_repository",
-        "orket.schema",
-        "orket.tool_families.base"
-      ]
-    },
-    "orket.tool_families.filesystem": {
-      "path": "orket\\tool_families\\filesystem.py",
-      "layer": "root",
-      "imports": [
-        "orket.infrastructure.async_file_tools",
-        "orket.tool_families.base"
-      ]
-    },
-    "orket.tool_families.governance": {
-      "path": "orket\\tool_families\\governance.py",
-      "layer": "root",
-      "imports": [
-        "orket.core.types",
-        "orket.logging",
-        "orket.tool_families.base"
-      ]
-    },
-    "orket.tool_families.vision": {
-      "path": "orket\\tool_families\\vision.py",
-      "layer": "root",
-      "imports": [
-        "orket.logging",
-        "orket.settings",
-        "orket.tool_families.base"
-      ]
-    },
-    "orket.tool_families.__init__": {
-      "path": "orket\\tool_families\\__init__.py",
-      "layer": "root",
-      "imports": [
-        "orket.tool_families.academy",
-        "orket.tool_families.base",
-        "orket.tool_families.cards",
-        "orket.tool_families.filesystem",
-        "orket.tool_families.governance",
-        "orket.tool_families.vision"
-      ]
-    },
-    "orket.tool_runtime.runtime": {
-      "path": "orket\\tool_runtime\\runtime.py",
-      "layer": "root",
-      "imports": []
-    },
-    "orket.tool_runtime.__init__": {
-      "path": "orket\\tool_runtime\\__init__.py",
-      "layer": "root",
-      "imports": [
-        "orket.tool_runtime.runtime"
-      ]
-    },
-    "orket.tool_strategy.default": {
-      "path": "orket\\tool_strategy\\default.py",
-      "layer": "root",
-      "imports": []
-    },
-    "orket.tool_strategy.__init__": {
-      "path": "orket\\tool_strategy\\__init__.py",
-      "layer": "root",
-      "imports": [
-        "orket.tool_strategy.default"
+        "orket.adapters.vcs.webhook_db"
       ]
     },
     "orket.vendors.base": {
@@ -723,12 +565,7 @@
     "orket.vendors.local": {
       "path": "orket\\vendors\\local.py",
       "layer": "vendors",
-      "imports": [
-        "orket.infrastructure.async_card_repository",
-        "orket.orket",
-        "orket.schema",
-        "orket.vendors.base"
-      ]
+      "imports": []
     },
     "orket.platform.config.__init__": {
       "path": "orket\\platform\\config\\__init__.py",
@@ -745,6 +582,71 @@
       "layer": "platform",
       "imports": []
     },
+    "orket.kernel.v1.api": {
+      "path": "orket\\kernel\\v1\\api.py",
+      "layer": "kernel",
+      "imports": []
+    },
+    "orket.kernel.v1.canonical": {
+      "path": "orket\\kernel\\v1\\canonical.py",
+      "layer": "kernel",
+      "imports": []
+    },
+    "orket.kernel.v1.contracts": {
+      "path": "orket\\kernel\\v1\\contracts.py",
+      "layer": "kernel",
+      "imports": []
+    },
+    "orket.kernel.v1.validator": {
+      "path": "orket\\kernel\\v1\\validator.py",
+      "layer": "kernel",
+      "imports": [
+        "orket.kernel.v1.canonical",
+        "orket.kernel.v1.state.lsi",
+        "orket.kernel.v1.state.promotion"
+      ]
+    },
+    "orket.kernel.v1.__init__": {
+      "path": "orket\\kernel\\v1\\__init__.py",
+      "layer": "kernel",
+      "imports": []
+    },
+    "orket.kernel.v1.plugins.orphan_links": {
+      "path": "orket\\kernel\\v1\\plugins\\orphan_links.py",
+      "layer": "kernel",
+      "imports": []
+    },
+    "orket.kernel.v1.plugins.related_stems": {
+      "path": "orket\\kernel\\v1\\plugins\\related_stems.py",
+      "layer": "kernel",
+      "imports": []
+    },
+    "orket.kernel.v1.state.lsi": {
+      "path": "orket\\kernel\\v1\\state\\lsi.py",
+      "layer": "kernel",
+      "imports": [
+        "orket.kernel.v1.canonical",
+        "orket.kernel.v1.contracts"
+      ]
+    },
+    "orket.kernel.v1.state.promotion": {
+      "path": "orket\\kernel\\v1\\state\\promotion.py",
+      "layer": "kernel",
+      "imports": [
+        "orket.kernel.v1.canonical",
+        "orket.kernel.v1.contracts"
+      ]
+    },
+    "orket.kernel.v1.state.__init__": {
+      "path": "orket\\kernel\\v1\\state\\__init__.py",
+      "layer": "kernel",
+      "imports": []
+    },
+    "orket.core.contracts.memory_models": {
+      "path": "orket\\core\\contracts\\memory_models.py",
+      "layer": "core",
+      "imports": []
+    },
     "orket.core.contracts.repositories": {
       "path": "orket\\core\\contracts\\repositories.py",
       "layer": "core",
@@ -752,8 +654,48 @@
         "orket.schema"
       ]
     },
+    "orket.core.contracts.skills_models": {
+      "path": "orket\\core\\contracts\\skills_models.py",
+      "layer": "core",
+      "imports": []
+    },
+    "orket.core.contracts.state_backend": {
+      "path": "orket\\core\\contracts\\state_backend.py",
+      "layer": "core",
+      "imports": []
+    },
     "orket.core.contracts.__init__": {
       "path": "orket\\core\\contracts\\__init__.py",
+      "layer": "core",
+      "imports": []
+    },
+    "orket.core.domain.coordinator_card": {
+      "path": "orket\\core\\domain\\coordinator_card.py",
+      "layer": "core",
+      "imports": []
+    },
+    "orket.core.domain.guard_contract": {
+      "path": "orket\\core\\domain\\guard_contract.py",
+      "layer": "core",
+      "imports": []
+    },
+    "orket.core.domain.guard_review": {
+      "path": "orket\\core\\domain\\guard_review.py",
+      "layer": "core",
+      "imports": []
+    },
+    "orket.core.domain.guard_rule_catalog": {
+      "path": "orket\\core\\domain\\guard_rule_catalog.py",
+      "layer": "core",
+      "imports": []
+    },
+    "orket.core.domain.module_manifest": {
+      "path": "orket\\core\\domain\\module_manifest.py",
+      "layer": "core",
+      "imports": []
+    },
+    "orket.core.domain.orket_manifest": {
+      "path": "orket\\core\\domain\\orket_manifest.py",
       "layer": "core",
       "imports": []
     },
@@ -770,6 +712,11 @@
       "imports": [
         "orket.schema"
       ]
+    },
+    "orket.core.domain.verification_scope": {
+      "path": "orket\\core\\domain\\verification_scope.py",
+      "layer": "core",
+      "imports": []
     },
     "orket.core.domain.__init__": {
       "path": "orket\\core\\domain\\__init__.py",
@@ -792,8 +739,138 @@
       "layer": "core",
       "imports": []
     },
+    "orket.application.middleware.hooks": {
+      "path": "orket\\application\\middleware\\hooks.py",
+      "layer": "application",
+      "imports": []
+    },
     "orket.application.middleware.__init__": {
       "path": "orket\\application\\middleware\\__init__.py",
+      "layer": "application",
+      "imports": [
+        "orket.application.middleware.hooks"
+      ]
+    },
+    "orket.application.services.canonical_role_templates": {
+      "path": "orket\\application\\services\\canonical_role_templates.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.coordinator_store": {
+      "path": "orket\\application\\services\\coordinator_store.py",
+      "layer": "application",
+      "imports": [
+        "orket.core.domain.coordinator_card"
+      ]
+    },
+    "orket.application.services.dependency_manager": {
+      "path": "orket\\application\\services\\dependency_manager.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.deployment_planner": {
+      "path": "orket\\application\\services\\deployment_planner.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.gitea_state_pilot": {
+      "path": "orket\\application\\services\\gitea_state_pilot.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.gitea_state_worker": {
+      "path": "orket\\application\\services\\gitea_state_worker.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.gitea_state_worker_coordinator": {
+      "path": "orket\\application\\services\\gitea_state_worker_coordinator.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.guard_agent": {
+      "path": "orket\\application\\services\\guard_agent.py",
+      "layer": "application",
+      "imports": [
+        "orket.core.domain.guard_contract"
+      ]
+    },
+    "orket.application.services.kernel_v1_gateway": {
+      "path": "orket\\application\\services\\kernel_v1_gateway.py",
+      "layer": "application",
+      "imports": [
+        "orket.kernel.v1"
+      ]
+    },
+    "orket.application.services.memory_commit_buffer": {
+      "path": "orket\\application\\services\\memory_commit_buffer.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.prompt_compiler": {
+      "path": "orket\\application\\services\\prompt_compiler.py",
+      "layer": "application",
+      "imports": [
+        "orket.schema"
+      ]
+    },
+    "orket.application.services.prompt_linter": {
+      "path": "orket\\application\\services\\prompt_linter.py",
+      "layer": "application",
+      "imports": [
+        "orket.application.services.canonical_role_templates",
+        "orket.schema"
+      ]
+    },
+    "orket.application.services.prompt_resolver": {
+      "path": "orket\\application\\services\\prompt_resolver.py",
+      "layer": "application",
+      "imports": [
+        "orket.application.services.prompt_compiler",
+        "orket.core.domain.guard_rule_catalog",
+        "orket.schema"
+      ]
+    },
+    "orket.application.services.runtime_policy": {
+      "path": "orket\\application\\services\\runtime_policy.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.runtime_verifier": {
+      "path": "orket\\application\\services\\runtime_verifier.py",
+      "layer": "application",
+      "imports": [
+        "orket.core.domain.guard_contract"
+      ]
+    },
+    "orket.application.services.scaffolder": {
+      "path": "orket\\application\\services\\scaffolder.py",
+      "layer": "application",
+      "imports": []
+    },
+    "orket.application.services.skills_validator": {
+      "path": "orket\\application\\services\\skills_validator.py",
+      "layer": "application",
+      "imports": [
+        "orket.core.contracts"
+      ]
+    },
+    "orket.application.services.skill_adapter": {
+      "path": "orket\\application\\services\\skill_adapter.py",
+      "layer": "application",
+      "imports": [
+        "orket.application.services.skill_loader"
+      ]
+    },
+    "orket.application.services.skill_loader": {
+      "path": "orket\\application\\services\\skill_loader.py",
+      "layer": "application",
+      "imports": [
+        "orket.application.services.skills_validator"
+      ]
+    },
+    "orket.application.services.tool_parser": {
+      "path": "orket\\application\\services\\tool_parser.py",
       "layer": "application",
       "imports": []
     },
@@ -802,132 +879,333 @@
       "layer": "application",
       "imports": []
     },
+    "orket.application.workflows.orchestrator": {
+      "path": "orket\\application\\workflows\\orchestrator.py",
+      "layer": "application",
+      "imports": [
+        "orket.adapters.storage.async_file_tools",
+        "orket.adapters.storage.async_repositories",
+        "orket.application.services.dependency_manager",
+        "orket.application.services.deployment_planner",
+        "orket.application.services.guard_agent",
+        "orket.application.services.prompt_compiler",
+        "orket.application.services.prompt_resolver",
+        "orket.application.services.runtime_policy",
+        "orket.application.services.runtime_verifier",
+        "orket.application.services.scaffolder",
+        "orket.application.services.skill_adapter",
+        "orket.application.workflows.turn_executor",
+        "orket.core.contracts.repositories",
+        "orket.core.domain.guard_review",
+        "orket.core.domain.guard_rule_catalog",
+        "orket.core.domain.state_machine",
+        "orket.core.domain.verification_scope",
+        "orket.core.policies.tool_gate",
+        "orket.decision_nodes.contracts",
+        "orket.decision_nodes.registry",
+        "orket.domain.failure_reporter",
+        "orket.domain.sandbox",
+        "orket.domain.verification",
+        "orket.exceptions",
+        "orket.logging",
+        "orket.orchestration.models",
+        "orket.orchestration.notes",
+        "orket.policy",
+        "orket.schema",
+        "orket.services.memory_store",
+        "orket.settings",
+        "orket.state",
+        "orket.tools",
+        "orket.utils"
+      ]
+    },
+    "orket.application.workflows.turn_executor": {
+      "path": "orket\\application\\workflows\\turn_executor.py",
+      "layer": "application",
+      "imports": [
+        "orket.application.middleware",
+        "orket.application.services.tool_parser",
+        "orket.core.domain.state_machine",
+        "orket.core.domain.verification_scope",
+        "orket.core.policies.tool_gate",
+        "orket.domain.execution",
+        "orket.logging",
+        "orket.naming",
+        "orket.schema"
+      ]
+    },
     "orket.application.workflows.__init__": {
       "path": "orket\\application\\workflows\\__init__.py",
       "layer": "application",
       "imports": []
+    },
+    "orket.adapters.execution.worker_client": {
+      "path": "orket\\adapters\\execution\\worker_client.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.execution.__init__": {
+      "path": "orket\\adapters\\execution\\__init__.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.llm.local_model_provider": {
+      "path": "orket\\adapters\\llm\\local_model_provider.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.exceptions",
+        "orket.logging"
+      ]
     },
     "orket.adapters.llm.__init__": {
       "path": "orket\\adapters\\llm\\__init__.py",
       "layer": "adapters",
       "imports": []
     },
+    "orket.adapters.storage.async_card_repository": {
+      "path": "orket\\adapters\\storage\\async_card_repository.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.core.contracts.repositories",
+        "orket.core.domain.records",
+        "orket.schema"
+      ]
+    },
+    "orket.adapters.storage.async_file_tools": {
+      "path": "orket\\adapters\\storage\\async_file_tools.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.storage.async_repositories": {
+      "path": "orket\\adapters\\storage\\async_repositories.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.core.contracts.repositories"
+      ]
+    },
+    "orket.adapters.storage.command_runner": {
+      "path": "orket\\adapters\\storage\\command_runner.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.storage.gitea_state_adapter": {
+      "path": "orket\\adapters\\storage\\gitea_state_adapter.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.adapters.storage.gitea_state_models",
+        "orket.core.contracts.state_backend",
+        "orket.core.domain.state_machine",
+        "orket.schema"
+      ]
+    },
+    "orket.adapters.storage.gitea_state_models": {
+      "path": "orket\\adapters\\storage\\gitea_state_models.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.storage.sqlite_repositories": {
+      "path": "orket\\adapters\\storage\\sqlite_repositories.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.core.contracts.repositories",
+        "orket.schema"
+      ]
+    },
     "orket.adapters.storage.__init__": {
       "path": "orket\\adapters\\storage\\__init__.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.default_strategy": {
+      "path": "orket\\adapters\\tools\\default_strategy.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.runtime": {
+      "path": "orket\\adapters\\tools\\runtime.py",
       "layer": "adapters",
       "imports": []
     },
     "orket.adapters.tools.__init__": {
       "path": "orket\\adapters\\tools\\__init__.py",
       "layer": "adapters",
-      "imports": []
+      "imports": [
+        "orket.adapters.tools.default_strategy",
+        "orket.adapters.tools.families.academy",
+        "orket.adapters.tools.families.base",
+        "orket.adapters.tools.families.cards",
+        "orket.adapters.tools.families.filesystem",
+        "orket.adapters.tools.families.governance",
+        "orket.adapters.tools.families.vision",
+        "orket.adapters.tools.runtime"
+      ]
+    },
+    "orket.adapters.vcs.gitea_artifact_exporter": {
+      "path": "orket\\adapters\\vcs\\gitea_artifact_exporter.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.runtime_paths"
+      ]
+    },
+    "orket.adapters.vcs.gitea_webhook_handler": {
+      "path": "orket\\adapters\\vcs\\gitea_webhook_handler.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.adapters.vcs.webhook_db",
+        "orket.domain.sandbox",
+        "orket.logging",
+        "orket.orchestration.engine",
+        "orket.schema",
+        "orket.services.sandbox_orchestrator"
+      ]
+    },
+    "orket.adapters.vcs.webhook_db": {
+      "path": "orket\\adapters\\vcs\\webhook_db.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.domain.bug_fix_phase",
+        "orket.logging",
+        "orket.runtime_paths"
+      ]
     },
     "orket.adapters.vcs.__init__": {
       "path": "orket\\adapters\\vcs\\__init__.py",
       "layer": "adapters",
       "imports": []
+    },
+    "orket.adapters.tools.families.academy": {
+      "path": "orket\\adapters\\tools\\families\\academy.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.families.base": {
+      "path": "orket\\adapters\\tools\\families\\base.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.families.cards": {
+      "path": "orket\\adapters\\tools\\families\\cards.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.families.filesystem": {
+      "path": "orket\\adapters\\tools\\families\\filesystem.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.families.governance": {
+      "path": "orket\\adapters\\tools\\families\\governance.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.families.vision": {
+      "path": "orket\\adapters\\tools\\families\\vision.py",
+      "layer": "adapters",
+      "imports": []
+    },
+    "orket.adapters.tools.families.__init__": {
+      "path": "orket\\adapters\\tools\\families\\__init__.py",
+      "layer": "adapters",
+      "imports": [
+        "orket.adapters.tools.families.academy",
+        "orket.adapters.tools.families.base",
+        "orket.adapters.tools.families.cards",
+        "orket.adapters.tools.families.filesystem",
+        "orket.adapters.tools.families.governance",
+        "orket.adapters.tools.families.vision"
+      ]
     }
   },
   "layer_edges": [
     {
-      "source_layer": "root",
-      "target_layer": "root",
-      "count": 60
+      "source_layer": "application",
+      "target_layer": "application",
+      "count": 18
     },
     {
-      "source_layer": "orchestration",
-      "target_layer": "root",
-      "count": 22
+      "source_layer": "adapters",
+      "target_layer": "adapters",
+      "count": 16
     },
     {
-      "source_layer": "decision_nodes",
-      "target_layer": "root",
-      "count": 12
+      "source_layer": "application",
+      "target_layer": "platform",
+      "count": 16
     },
     {
-      "source_layer": "root",
-      "target_layer": "infrastructure",
-      "count": 10
-    },
-    {
-      "source_layer": "domain",
-      "target_layer": "root",
-      "count": 9
-    },
-    {
-      "source_layer": "runtime",
-      "target_layer": "root",
-      "count": 9
-    },
-    {
-      "source_layer": "agents",
-      "target_layer": "root",
-      "count": 8
-    },
-    {
-      "source_layer": "services",
-      "target_layer": "domain",
-      "count": 8
+      "source_layer": "application",
+      "target_layer": "core",
+      "count": 14
     },
     {
       "source_layer": "interfaces",
-      "target_layer": "root",
-      "count": 7
+      "target_layer": "platform",
+      "count": 12
     },
     {
-      "source_layer": "root",
-      "target_layer": "core",
-      "count": 7
+      "source_layer": "platform",
+      "target_layer": "platform",
+      "count": 12
+    },
+    {
+      "source_layer": "adapters",
+      "target_layer": "platform",
+      "count": 10
     },
     {
       "source_layer": "orchestration",
-      "target_layer": "domain",
+      "target_layer": "platform",
+      "count": 9
+    },
+    {
+      "source_layer": "kernel",
+      "target_layer": "kernel",
+      "count": 7
+    },
+    {
+      "source_layer": "adapters",
+      "target_layer": "core",
       "count": 6
+    },
+    {
+      "source_layer": "domain",
+      "target_layer": "platform",
+      "count": 6
+    },
+    {
+      "source_layer": "application",
+      "target_layer": "domain",
+      "count": 5
+    },
+    {
+      "source_layer": "core",
+      "target_layer": "platform",
+      "count": 4
     },
     {
       "source_layer": "decision_nodes",
       "target_layer": "decision_nodes",
-      "count": 5
+      "count": 4
     },
     {
-      "source_layer": "orchestration",
-      "target_layer": "core",
-      "count": 5
+      "source_layer": "interfaces",
+      "target_layer": "application",
+      "count": 4
     },
     {
-      "source_layer": "orchestration",
-      "target_layer": "infrastructure",
-      "count": 5
+      "source_layer": "runtime",
+      "target_layer": "runtime",
+      "count": 4
     },
     {
       "source_layer": "vendors",
       "target_layer": "vendors",
-      "count": 5
-    },
-    {
-      "source_layer": "core",
-      "target_layer": "root",
       "count": 4
     },
     {
-      "source_layer": "infrastructure",
-      "target_layer": "core",
-      "count": 4
-    },
-    {
-      "source_layer": "orchestration",
+      "source_layer": "application",
       "target_layer": "orchestration",
-      "count": 4
-    },
-    {
-      "source_layer": "services",
-      "target_layer": "root",
-      "count": 4
-    },
-    {
-      "source_layer": "vendors",
-      "target_layer": "root",
-      "count": 4
+      "count": 3
     },
     {
       "source_layer": "domain",
@@ -936,87 +1214,92 @@
     },
     {
       "source_layer": "orchestration",
-      "target_layer": "decision_nodes",
+      "target_layer": "application",
       "count": 3
     },
     {
-      "source_layer": "orchestration",
-      "target_layer": "services",
+      "source_layer": "platform",
+      "target_layer": "adapters",
       "count": 3
     },
     {
-      "source_layer": "runtime",
-      "target_layer": "infrastructure",
+      "source_layer": "platform",
+      "target_layer": "core",
       "count": 3
     },
     {
-      "source_layer": "runtime",
-      "target_layer": "runtime",
+      "source_layer": "platform",
+      "target_layer": "legacy",
       "count": 3
     },
     {
-      "source_layer": "agents",
-      "target_layer": "services",
-      "count": 2
-    },
-    {
-      "source_layer": "core",
-      "target_layer": "services",
-      "count": 2
-    },
-    {
-      "source_layer": "decision_nodes",
-      "target_layer": "orchestration",
-      "count": 2
-    },
-    {
-      "source_layer": "decision_nodes",
-      "target_layer": "services",
-      "count": 2
-    },
-    {
-      "source_layer": "infrastructure",
-      "target_layer": "root",
-      "count": 2
-    },
-    {
-      "source_layer": "root",
+      "source_layer": "adapters",
       "target_layer": "domain",
       "count": 2
     },
     {
-      "source_layer": "root",
-      "target_layer": "orchestration",
+      "source_layer": "application",
+      "target_layer": "adapters",
       "count": 2
     },
     {
-      "source_layer": "runtime",
+      "source_layer": "application",
       "target_layer": "decision_nodes",
       "count": 2
     },
     {
-      "source_layer": "services",
-      "target_layer": "infrastructure",
-      "count": 2
-    },
-    {
-      "source_layer": "services",
+      "source_layer": "core",
       "target_layer": "services",
       "count": 2
     },
     {
-      "source_layer": "vendors",
-      "target_layer": "infrastructure",
+      "source_layer": "interfaces",
+      "target_layer": "core",
       "count": 2
     },
     {
-      "source_layer": "agents",
-      "target_layer": "agents",
+      "source_layer": "interfaces",
+      "target_layer": "orchestration",
+      "count": 2
+    },
+    {
+      "source_layer": "orchestration",
+      "target_layer": "adapters",
+      "count": 2
+    },
+    {
+      "source_layer": "orchestration",
+      "target_layer": "legacy",
+      "count": 2
+    },
+    {
+      "source_layer": "runtime",
+      "target_layer": "interfaces",
+      "count": 2
+    },
+    {
+      "source_layer": "services",
+      "target_layer": "adapters",
+      "count": 2
+    },
+    {
+      "source_layer": "adapters",
+      "target_layer": "orchestration",
       "count": 1
     },
     {
-      "source_layer": "agents",
-      "target_layer": "domain",
+      "source_layer": "adapters",
+      "target_layer": "services",
+      "count": 1
+    },
+    {
+      "source_layer": "application",
+      "target_layer": "kernel",
+      "count": 1
+    },
+    {
+      "source_layer": "application",
+      "target_layer": "services",
       "count": 1
     },
     {
@@ -1031,12 +1314,7 @@
     },
     {
       "source_layer": "decision_nodes",
-      "target_layer": "domain",
-      "count": 1
-    },
-    {
-      "source_layer": "decision_nodes",
-      "target_layer": "infrastructure",
+      "target_layer": "platform",
       "count": 1
     },
     {
@@ -1045,8 +1323,8 @@
       "count": 1
     },
     {
-      "source_layer": "domain",
-      "target_layer": "infrastructure",
+      "source_layer": "interfaces",
+      "target_layer": "adapters",
       "count": 1
     },
     {
@@ -1055,33 +1333,43 @@
       "count": 1
     },
     {
-      "source_layer": "interfaces",
-      "target_layer": "orchestration",
-      "count": 1
-    },
-    {
-      "source_layer": "root",
-      "target_layer": "agents",
-      "count": 1
-    },
-    {
-      "source_layer": "root",
-      "target_layer": "decision_nodes",
-      "count": 1
-    },
-    {
-      "source_layer": "root",
+      "source_layer": "legacy",
       "target_layer": "runtime",
       "count": 1
     },
     {
-      "source_layer": "root",
-      "target_layer": "services",
+      "source_layer": "orchestration",
+      "target_layer": "core",
+      "count": 1
+    },
+    {
+      "source_layer": "orchestration",
+      "target_layer": "decision_nodes",
+      "count": 1
+    },
+    {
+      "source_layer": "orchestration",
+      "target_layer": "domain",
+      "count": 1
+    },
+    {
+      "source_layer": "platform",
+      "target_layer": "orchestration",
+      "count": 1
+    },
+    {
+      "source_layer": "runtime",
+      "target_layer": "core",
       "count": 1
     },
     {
       "source_layer": "runtime",
       "target_layer": "orchestration",
+      "count": 1
+    },
+    {
+      "source_layer": "runtime",
+      "target_layer": "platform",
       "count": 1
     },
     {
@@ -1091,31 +1379,22 @@
     },
     {
       "source_layer": "services",
-      "target_layer": "decision_nodes",
+      "target_layer": "domain",
       "count": 1
     },
     {
-      "source_layer": "services",
-      "target_layer": "orchestration",
+      "source_layer": "vendors",
+      "target_layer": "platform",
       "count": 1
     }
   ],
+  "forbidden_edge_hits": [],
+  "legacy_edge_budget": {
+    "actual_edges": 6,
+    "max_edges": 10,
+    "exceeded": false
+  },
   "top_module_edges": [
-    {
-      "source_module": "orket.services.sandbox_orchestrator",
-      "target_module": "orket.domain.verification",
-      "count": 4
-    },
-    {
-      "source_module": "orket.discovery",
-      "target_module": "orket.hardware",
-      "count": 3
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.schema",
-      "count": 3
-    },
     {
       "source_module": "orket.driver",
       "target_module": "orket.orket",
@@ -1132,48 +1411,28 @@
       "count": 2
     },
     {
-      "source_module": "orket.orchestration.orchestrator",
+      "source_module": "orket.application.workflows.orchestrator",
       "target_module": "orket.orchestration.models",
       "count": 2
     },
     {
-      "source_module": "orket.orchestration.orchestrator",
+      "source_module": "orket.application.workflows.orchestrator",
       "target_module": "orket.exceptions",
       "count": 2
     },
     {
-      "source_module": "orket.orchestration.orchestrator",
+      "source_module": "orket.application.workflows.orchestrator",
       "target_module": "orket.domain.sandbox",
       "count": 2
     },
     {
-      "source_module": "orket.orchestration.turn_executor",
+      "source_module": "orket.application.workflows.turn_executor",
       "target_module": "orket.schema",
       "count": 2
     },
     {
-      "source_module": "orket.runtime.config_loader",
-      "target_module": "orket.schema",
-      "count": 2
-    },
-    {
-      "source_module": "orket.tool_families.cards",
-      "target_module": "orket.infrastructure.async_card_repository",
-      "count": 2
-    },
-    {
-      "source_module": "orket.tool_families.governance",
-      "target_module": "orket.logging",
-      "count": 2
-    },
-    {
-      "source_module": "orket.vendors.local",
-      "target_module": "orket.schema",
-      "count": 2
-    },
-    {
-      "source_module": "orket.vendors.local",
-      "target_module": "orket.infrastructure.async_card_repository",
+      "source_module": "orket.application.workflows.turn_executor",
+      "target_module": "orket.application.services.tool_parser",
       "count": 2
     },
     {
@@ -1192,43 +1451,13 @@
       "count": 1
     },
     {
-      "source_module": "orket.discovery",
-      "target_module": "orket.infrastructure.async_file_tools",
-      "count": 1
-    },
-    {
-      "source_module": "orket.discovery",
-      "target_module": "orket.orket",
-      "count": 1
-    },
-    {
-      "source_module": "orket.discovery",
-      "target_module": "orket.schema",
-      "count": 1
-    },
-    {
-      "source_module": "orket.discovery",
-      "target_module": "orket.logging",
-      "count": 1
-    },
-    {
-      "source_module": "orket.discovery",
-      "target_module": "orket.settings",
-      "count": 1
-    },
-    {
-      "source_module": "orket.discovery",
-      "target_module": "orket.domain.reconciler",
+      "source_module": "orket.driver",
+      "target_module": "orket.adapters.storage.async_file_tools",
       "count": 1
     },
     {
       "source_module": "orket.driver",
-      "target_module": "orket.infrastructure.async_file_tools",
-      "count": 1
-    },
-    {
-      "source_module": "orket.driver",
-      "target_module": "orket.llm",
+      "target_module": "orket.adapters.llm.local_model_provider",
       "count": 1
     },
     {
@@ -1244,16 +1473,6 @@
     {
       "source_module": "orket.driver",
       "target_module": "orket.orchestration.models",
-      "count": 1
-    },
-    {
-      "source_module": "orket.llm",
-      "target_module": "orket.exceptions",
-      "count": 1
-    },
-    {
-      "source_module": "orket.llm",
-      "target_module": "orket.logging",
       "count": 1
     },
     {
@@ -1267,73 +1486,8 @@
       "count": 1
     },
     {
-      "source_module": "orket.organization_loop",
-      "target_module": "orket.infrastructure.async_file_tools",
-      "count": 1
-    },
-    {
-      "source_module": "orket.organization_loop",
-      "target_module": "orket.orket",
-      "count": 1
-    },
-    {
-      "source_module": "orket.organization_loop",
-      "target_module": "orket.schema",
-      "count": 1
-    },
-    {
-      "source_module": "orket.organization_loop",
-      "target_module": "orket.domain.critical_path",
-      "count": 1
-    },
-    {
-      "source_module": "orket.organization_loop",
-      "target_module": "orket.logging",
-      "count": 1
-    },
-    {
       "source_module": "orket.orket",
       "target_module": "orket.runtime",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.infrastructure.async_file_tools",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.orket",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.agents.agent",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.utils",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.exceptions",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.logging",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.orchestration.models",
-      "count": 1
-    },
-    {
-      "source_module": "orket.preview",
-      "target_module": "orket.llm",
       "count": 1
     },
     {
@@ -1353,37 +1507,12 @@
     },
     {
       "source_module": "orket.settings",
-      "target_module": "orket.infrastructure.async_file_tools",
+      "target_module": "orket.adapters.storage.async_file_tools",
       "count": 1
     },
     {
-      "source_module": "orket.tools",
-      "target_module": "orket.decision_nodes.registry",
-      "count": 1
-    },
-    {
-      "source_module": "orket.tools",
-      "target_module": "orket.tool_families",
-      "count": 1
-    },
-    {
-      "source_module": "orket.tools",
-      "target_module": "orket.tool_runtime",
-      "count": 1
-    },
-    {
-      "source_module": "orket.tools",
-      "target_module": "orket.infrastructure.async_card_repository",
-      "count": 1
-    },
-    {
-      "source_module": "orket.tools",
-      "target_module": "orket.schema",
-      "count": 1
-    },
-    {
-      "source_module": "orket.tools",
-      "target_module": "orket.core.policies.tool_gate",
+      "source_module": "orket.settings",
+      "target_module": "orket.runtime_paths",
       "count": 1
     },
     {
@@ -1403,7 +1532,7 @@
     },
     {
       "source_module": "orket.webhook_server",
-      "target_module": "orket.services.gitea_webhook_handler",
+      "target_module": "orket.adapters.vcs.gitea_webhook_handler",
       "count": 1
     },
     {
@@ -1412,158 +1541,13 @@
       "count": 1
     },
     {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.llm",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.logging",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.utils",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.schema",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.exceptions",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.domain.execution",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.services.prompt_compiler",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.services.tool_parser",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent",
-      "target_module": "orket.orket",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent_factory",
-      "target_module": "orket.agents.agent",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent_factory",
-      "target_module": "orket.llm",
-      "count": 1
-    },
-    {
-      "source_module": "orket.agents.agent_factory",
-      "target_module": "orket.tools",
-      "count": 1
-    },
-    {
       "source_module": "orket.cli.setup_wizard",
       "target_module": "orket.schema",
       "count": 1
     },
     {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.decision_nodes.contracts",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.schema",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.tool_strategy.default",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.exceptions",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.utils",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.preview",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.driver",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.logging",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.orket",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.orchestration.engine",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.infrastructure.async_file_tools",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.board",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
+      "source_module": "orket.cli.setup_wizard",
       "target_module": "orket.settings",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.services.sandbox_orchestrator",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.services.webhook_db",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.domain.bug_fix_phase",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.orchestration.orchestrator",
-      "count": 1
-    },
-    {
-      "source_module": "orket.decision_nodes.builtins",
-      "target_module": "orket.llm",
       "count": 1
     },
     {
@@ -1599,6 +1583,316 @@
     {
       "source_module": "orket.domain.critical_path",
       "target_module": "orket.schema",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.critical_path",
+      "target_module": "orket.core.critical_path",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.failure_reporter",
+      "target_module": "orket.logging",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.failure_reporter",
+      "target_module": "orket.domain.verification",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.records",
+      "target_module": "orket.core.domain.records",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.state_machine",
+      "target_module": "orket.core.domain.state_machine",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.state_machine",
+      "target_module": "orket.schema",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.verification",
+      "target_module": "orket.schema",
+      "count": 1
+    },
+    {
+      "source_module": "orket.domain.verification",
+      "target_module": "orket.logging",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.logging",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.state",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.hardware",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.decision_nodes.registry",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.time_utils",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.settings",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.orchestration.models",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.api",
+      "target_module": "orket.application.services.runtime_policy",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.cli",
+      "target_module": "orket.orchestration.engine",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.cli",
+      "target_module": "orket.discovery",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.cli",
+      "target_module": "orket.organization_loop",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.cli",
+      "target_module": "orket.driver",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.coordinator_api",
+      "target_module": "orket.application.services.coordinator_store",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.coordinator_api",
+      "target_module": "orket.core.domain.coordinator_card",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.orket_bundle_cli",
+      "target_module": "orket.core.domain.orket_manifest",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.prompts_cli",
+      "target_module": "orket.application.services.prompt_resolver",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.prompts_cli",
+      "target_module": "orket.application.services.prompt_linter",
+      "count": 1
+    },
+    {
+      "source_module": "orket.interfaces.prompts_cli",
+      "target_module": "orket.schema",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.adapters.storage.async_repositories",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.adapters.storage.async_card_repository",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.application.services.gitea_state_pilot",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.application.services.runtime_policy",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.application.services.kernel_v1_gateway",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.decision_nodes.registry",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.logging",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.runtime_paths",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.settings",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.board",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.engine",
+      "target_module": "orket.state",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.governance_auditor",
+      "target_module": "orket.domain.execution",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.governance_auditor",
+      "target_module": "orket.core.domain.state_machine",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.governance_auditor",
+      "target_module": "orket.schema",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.governance_auditor",
+      "target_module": "orket.logging",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.models",
+      "target_module": "orket.schema",
+      "count": 1
+    },
+    {
+      "source_module": "orket.orchestration.models",
+      "target_module": "orket.settings",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.composition",
+      "target_module": "orket.runtime.module_registry",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.composition",
+      "target_module": "orket.orchestration.engine",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.composition",
+      "target_module": "orket.interfaces",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.composition",
+      "target_module": "orket.interfaces.cli",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.module_registry",
+      "target_module": "orket.core.domain.module_manifest",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.module_registry",
+      "target_module": "orket.settings",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.__init__",
+      "target_module": "orket.runtime.config_loader",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.__init__",
+      "target_module": "orket.runtime.execution_pipeline",
+      "count": 1
+    },
+    {
+      "source_module": "orket.runtime.__init__",
+      "target_module": "orket.runtime.composition",
+      "count": 1
+    },
+    {
+      "source_module": "orket.services.gitea_webhook_handler",
+      "target_module": "orket.adapters.vcs.gitea_webhook_handler",
+      "count": 1
+    },
+    {
+      "source_module": "orket.services.idesign_validator",
+      "target_module": "orket.domain.execution",
+      "count": 1
+    },
+    {
+      "source_module": "orket.services.tool_gate",
+      "target_module": "orket.core.policies.tool_gate",
+      "count": 1
+    },
+    {
+      "source_module": "orket.services.webhook_db",
+      "target_module": "orket.adapters.vcs.webhook_db",
+      "count": 1
+    },
+    {
+      "source_module": "orket.vendors.factory",
+      "target_module": "orket.settings",
+      "count": 1
+    },
+    {
+      "source_module": "orket.vendors.factory",
+      "target_module": "orket.vendors.base",
+      "count": 1
+    },
+    {
+      "source_module": "orket.vendors.factory",
+      "target_module": "orket.vendors.local",
+      "count": 1
+    },
+    {
+      "source_module": "orket.vendors.factory",
+      "target_module": "orket.vendors.gitea",
+      "count": 1
+    },
+    {
+      "source_module": "orket.vendors.gitea",
+      "target_module": "orket.vendors.base",
+      "count": 1
+    },
+    {
+      "source_module": "orket.kernel.v1.validator",
+      "target_module": "orket.kernel.v1.canonical",
       "count": 1
     }
   ]

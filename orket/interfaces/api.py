@@ -36,6 +36,23 @@ from pydantic import BaseModel
 
 api_runtime_node = DecisionNodeRegistry().resolve_api_runtime()
 
+class _EngineProxy:
+    def __init__(self, factory):
+        self._factory = factory
+        self._engine = None
+
+    def _get_engine(self):
+        if self._engine is None:
+            self._engine = self._factory()
+        return self._engine
+
+    def reset(self, factory):
+        self._factory = factory
+        self._engine = None
+
+    def __getattr__(self, item):
+        return getattr(self._get_engine(), item)
+
 
 def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
     method_name = invocation["method_name"]
@@ -409,7 +426,7 @@ app.add_middleware(
 )
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
-engine = api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT))
+engine = _EngineProxy(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
 
 # --- System Endpoints ---
 
@@ -1757,6 +1774,14 @@ async def archive_cards(req: ArchiveCardsRequest):
     )
 
 app.include_router(v1_router)
+
+
+def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
+    global PROJECT_ROOT, engine
+    if project_root is not None:
+        PROJECT_ROOT = Path(project_root).resolve()
+    engine.reset(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
+    return app
 
 # --- WS ---
 

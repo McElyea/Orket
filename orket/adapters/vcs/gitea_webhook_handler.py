@@ -20,6 +20,7 @@ from orket.logging import log_event
 from orket.adapters.vcs.webhook_db import WebhookDatabase
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from orket.domain.sandbox import TechStack, SandboxRegistry
+from orket.schema import CardStatus
 
 
 class GiteaWebhookHandler:
@@ -113,7 +114,7 @@ class GiteaWebhookHandler:
         
         # We run the card, and the engine's traction loop will find it in READY or CODE_REVIEW
         # We must ensure the card is in CODE_REVIEW state
-        await engine.cards.update_status(issue_id, "code_review")
+        await engine.cards.update_status(issue_id, CardStatus.CODE_REVIEW)
         
         # Start execution
         import asyncio

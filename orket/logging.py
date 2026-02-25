@@ -1,5 +1,4 @@
 import json
-import os
 import logging
 import logging.handlers
 from pathlib import Path
@@ -10,21 +9,10 @@ from orket.time_utils import now_local
 _logger = logging.getLogger("orket")
 _logger.setLevel(logging.INFO)
 
-def setup_logging(workspace: Path):
-    """Configures rotating file handlers for the workspace."""
-    log_file = workspace / "orket.log"
+def setup_logging(workspace: Path) -> Path:
+    """Ensures workspace log directory exists and returns the target log file."""
     workspace.mkdir(parents=True, exist_ok=True)
-    
-    # Rotating handler: 10MB per file, keep 5 backups
-    handler = logging.handlers.RotatingFileHandler(
-        log_file, maxBytes=10*1024*1024, backupCount=5, encoding="utf-8"
-    )
-    # Structured JSON format for machine parsing
-    formatter = logging.Formatter('%(message)s')
-    handler.setFormatter(formatter)
-    
-    if not any(isinstance(h, logging.handlers.RotatingFileHandler) and h.baseFilename == str(log_file.resolve()) for h in _logger.handlers):
-        _logger.addHandler(handler)
+    return workspace / "orket.log"
 
 # Global list of event subscribers (e.g. for WebSockets)
 _subscribers: List[Callable[[Dict[str, Any]], None]] = []
@@ -142,11 +130,12 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
         "data": full_data,
     }
     
-    # 1. Ensure logging is set up for this workspace
-    setup_logging(workspace)
-    
-    # 2. Emit JSON record
-    _logger.info(json.dumps(record, ensure_ascii=False))
+    # 1. Ensure workspace log path exists
+    log_file = setup_logging(workspace)
+
+    # 2. Emit JSON record to this workspace only.
+    with log_file.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     try:
         _append_runtime_event_artifact(workspace, runtime_event)
     except (RuntimeError, ValueError, TypeError, OSError):
@@ -163,7 +152,8 @@ def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path]
                 "event": "logging_subscriber_failed",
                 "data": {"error": str(e)},
             }
-            _logger.error(json.dumps(failure_record, ensure_ascii=False))
+            with log_file.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(failure_record, ensure_ascii=False) + "\n")
 
 
 def log_model_selected(role: str, model: str, temperature: float, seed, epic: str, workspace: Path) -> None:
@@ -230,6 +220,7 @@ def get_member_metrics(workspace: Path) -> Dict[str, Any]:
                     metrics[role]["detail"] = f"Persisted {data.get('path')}"
             except (json.JSONDecodeError, KeyError):
                 continue
+    return metrics
 
 def log_crash(exception: Exception, traceback_str: str, workspace: Optional[Path] = None):
     """
