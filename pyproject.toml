@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.3.9"
+version = "0.3.16"
 description = "Local-first multi-agent LLM automation platform"
 authors = [
     { name = "Jonathan McElyea" }
