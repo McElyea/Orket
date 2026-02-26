@@ -106,6 +106,14 @@ jobs:
             --right-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
             --out benchmarks/results/nightly_memory_determinism_compare.json
 
+      - name: Enforce ODR determinism gate (nightly tier)
+        env:
+          ODR_GATE_NIGHTLY: "1"
+          ODR_PERMUTATIONS: "50"
+          ODR_REPEATS: "20"
+        run: |
+          python -m pytest -q tests/kernel/v1/test_odr_determinism_gate.py -k gate_nightly
+
       - name: Build Trend Report
         run: >
           python scripts/report_benchmark_trends.py

@@ -34,6 +34,13 @@ jobs:
         run: |
           python -m pytest -q tests/kernel/v1
 
+      - name: Enforce ODR determinism gate (PR tier)
+        env:
+          ODR_PERMUTATIONS: "10"
+          ODR_REPEATS: "5"
+        run: |
+          python -m pytest -q tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr
+
       - name: Enforce kernel API interface boundary tests
         run: |
           python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py

@@ -1,0 +1,31 @@
+{
+  "id": "odr_near_miss_v1",
+  "graph": {
+    "nodes": [
+      {"raw_id": "node-1", "dto_type": "req", "id": "N1", "name": "User"},
+      {"raw_id": "node-2", "dto_type": "policy", "id": "N1", "name": "User"}
+    ],
+    "edges": [
+      {"from": "node-1", "label": "owns", "to": "asset-1"},
+      {"from": "node-2", "label": "governs", "to": "asset-1"}
+    ],
+    "meta": {
+      "run_id": "near-miss-run",
+      "timestamp": "2026-02-26T00:00:00Z"
+    }
+  },
+  "rounds": [
+    {
+      "architect_raw": "### REQUIREMENT\nStore all user data locally on the device and never upload it.\n\n### CHANGELOG\n- baseline\n\n### ASSUMPTIONS\n- local-first\n\n### OPEN_QUESTIONS\n- none\n",
+      "auditor_raw": "### CRITIQUE\n- c1\n\n### PATCHES\n- p1\n\n### EDGE_CASES\n- e1\n\n### TEST_GAPS\n- t1\n"
+    },
+    {
+      "architect_raw": "### REQUIREMENT\nUpload user data to remote servers for analysis and sharing.\n\n### CHANGELOG\n- pivot\n\n### ASSUMPTIONS\n- cloud\n\n### OPEN_QUESTIONS\n- none\n",
+      "auditor_raw": "### CRITIQUE\n- c2\n\n### PATCHES\n- p2\n\n### EDGE_CASES\n- e2\n\n### TEST_GAPS\n- t2\n"
+    },
+    {
+      "architect_raw": "### REQUIREMENT\nStore all user data locally on the device and do not upload it.\n\n### CHANGELOG\n- return local\n\n### ASSUMPTIONS\n- local-first\n\n### OPEN_QUESTIONS\n- none\n",
+      "auditor_raw": "### CRITIQUE\n- c3\n\n### PATCHES\n- p3\n\n### EDGE_CASES\n- e3\n\n### TEST_GAPS\n- t3\n"
+    }
+  ]
+}
