@@ -16,15 +16,15 @@ Current default target: none (non-OS/non-ideas lanes are complete).
 1. Non-OS/non-ideas roadmap lanes: complete.
 2. `OS`: paused/deferred while pillar-first path is validated (`docs/projects/OS/NEXT_PART_V1_REQUIREMENTS.md`).
 3. `ideas`: intake-only backlog (must be promoted to dedicated project folder before execution).
-4. `docs-gate`: completed and archived (`docs/projects/archive/Docs-Gate-2026-02-25/`).
-5. `modularity-refactor`: completed and archived (`docs/projects/archive/Modularity-Refactor-2026-02-24/`).
+4. `odr`: completed and archived (`docs/projects/archive/ODR-2026-02-26/`).
+5. `docs-gate`: completed and archived (`docs/projects/archive/Docs-Gate-2026-02-25/`).
+6. `modularity-refactor`: completed and archived (`docs/projects/archive/Modularity-Refactor-2026-02-24/`).
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| odr | completed | P1-complete | `docs/projects/odr/` | Orket Core | ODR v1 steel-thread deterministic loop delivered with parser/metric/core/schema tests. |
 | core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |
 | OS | queued | P2 | `docs/projects/OS/` | Orket Core | Paused/deferred while core-pillars track establishes near-term use-case fit. |
 | ideas | queued | P3 | `docs/projects/ideas/` | Orket Core | Intake-only. Keep empty except pointer/index notes. |
