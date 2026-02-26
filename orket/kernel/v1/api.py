@@ -11,6 +11,7 @@ from .validator import (
     resolve_capability_v1,
     start_run_v1,
 )
+from .experiments.runner import run_experiment_v1
 
 
 def start_run(request: dict[str, Any]) -> dict[str, Any]:
@@ -41,6 +42,10 @@ def compare_runs(request: dict[str, Any]) -> dict[str, Any]:
     return compare_runs_v1(request)
 
 
+def run_experiment(request: dict[str, Any]) -> dict[str, Any]:
+    return run_experiment_v1(request)
+
+
 __all__ = [
     "authorize_tool_call",
     "compare_runs",
@@ -48,5 +53,6 @@ __all__ = [
     "finish_run",
     "replay_run",
     "resolve_capability",
+    "run_experiment",
     "start_run",
 ]

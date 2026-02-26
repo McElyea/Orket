@@ -7,6 +7,7 @@ from .api import (
     finish_run,
     replay_run,
     resolve_capability,
+    run_experiment,
     start_run,
 )
 
@@ -17,5 +18,6 @@ __all__ = [
     "finish_run",
     "replay_run",
     "resolve_capability",
+    "run_experiment",
     "start_run",
 ]

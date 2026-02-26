@@ -7,6 +7,7 @@ from orket.kernel.v1 import (
     finish_run,
     replay_run,
     resolve_capability,
+    run_experiment,
     start_run,
 )
 
@@ -19,6 +20,7 @@ def test_kernel_v1_api_exports_are_callable() -> None:
     assert callable(authorize_tool_call)
     assert callable(replay_run)
     assert callable(compare_runs)
+    assert callable(run_experiment)
 
 
 def test_kernel_v1_api_resolve_capability_round_trip() -> None:
