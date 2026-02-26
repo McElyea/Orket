@@ -10,11 +10,14 @@ from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round
 from orket.kernel.v1.odr.refinement import (
     auditor_incorporation_gaps,
     carry_forward_gaps,
+    decision_required_ids,
     extract_constraints_ledger,
     forbidden_pattern_hits,
     missing_required_sections,
+    numeric_day_values,
     non_increasing,
     reopened_issues,
+    strip_constraints_block,
     unresolved_issue_count,
 )
 
@@ -31,6 +34,34 @@ def _read_markdown(scenario_path: str, name: str) -> str:
 
 def _read_issues(scenario_path: str, name: str) -> List[Dict[str, Any]]:
     return json.loads((FIXTURE_ROOT / scenario_path / name).read_text(encoding="utf-8"))
+
+
+def _read_seed(scenario: Dict[str, Any]) -> Dict[str, Any]:
+    seed_file = str(scenario.get("seed_file") or "").strip()
+    if not seed_file:
+        return {}
+    return json.loads((FIXTURE_ROOT / scenario["path"] / seed_file).read_text(encoding="utf-8"))
+
+
+def _decision_id_for_key(key: str) -> str:
+    return f"DEC-{str(key).strip().replace('_', '-').upper()}"
+
+
+def _ledger_text_blob(ledger: Dict[str, Any]) -> str:
+    chunks: List[str] = []
+    for row in ledger.get("must_have", []):
+        if isinstance(row, dict):
+            chunks.append(str(row.get("text") or ""))
+    for row in ledger.get("acceptance_checks", []):
+        if isinstance(row, dict):
+            chunks.append(str(row.get("text") or ""))
+    for row in ledger.get("decision_required", []):
+        if isinstance(row, dict):
+            chunks.append(str(row.get("text") or ""))
+    definitions = ledger.get("definitions", {})
+    if isinstance(definitions, dict):
+        chunks.extend(str(value or "") for value in definitions.values())
+    return "\n".join(chunks)
 
 
 def _architect_payload(requirement: str, round_index: int) -> str:
@@ -99,6 +130,34 @@ def test_refinement_structural_checklist(scenario: Dict[str, Any]) -> None:
     r1 = _read_markdown(scenario["path"], "R1.md")
     missing = missing_required_sections(r1)
     assert missing == [], f"missing required sections: {missing}"
+
+
+@pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])
+def test_refinement_missing_seed_values_require_decisions(scenario: Dict[str, Any]) -> None:
+    required = scenario.get("require_decision_required_for_missing_values", [])
+    if not required:
+        pytest.skip("scenario has no missing-seed decision requirement assertions")
+
+    seed = _read_seed(scenario)
+    decisions = seed.get("decisions", {}) if isinstance(seed, dict) else {}
+    r1 = _read_markdown(scenario["path"], "R1.md")
+    r1_ledger = extract_constraints_ledger(r1)
+    decision_ids = set(decision_required_ids(r1_ledger))
+
+    for key in required:
+        value = decisions.get(key)
+        if value is not None:
+            continue
+        expected = _decision_id_for_key(str(key))
+        assert expected in decision_ids, f"missing decision_required id for unset seed value: {expected}"
+
+    narrative = strip_constraints_block(r1)
+    assert numeric_day_values(narrative) == [], (
+        "narrative includes numeric day value with unset seed decision"
+    )
+    assert numeric_day_values(_ledger_text_blob(r1_ledger)) == [], (
+        "ledger text includes numeric day value with unset seed decision"
+    )
 
 
 @pytest.mark.parametrize("scenario", _load_scenarios(), ids=lambda row: row["id"])

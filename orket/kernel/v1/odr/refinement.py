@@ -48,6 +48,7 @@ def auditor_incorporation_gaps(auditor_issues: Sequence[Dict[str, Any]], next_le
             resolution_by_issue[issue_id] = row
 
     must_have = _must_have_ids(next_ledger)
+    decision_required = _decision_required_ids(next_ledger)
     missing: List[str] = []
     for issue in auditor_issues:
         issue_id = str(issue.get("id") or "").strip()
@@ -58,12 +59,16 @@ def auditor_incorporation_gaps(auditor_issues: Sequence[Dict[str, Any]], next_le
             missing.append(issue_id)
             continue
         status = str(resolution.get("status") or "").strip().lower()
-        if status not in {"addressed", "declined"}:
+        if status not in {"addressed", "declined", "decision_required"}:
             missing.append(issue_id)
             continue
         if status == "addressed":
             clause_id = str(resolution.get("clause_id") or "").strip()
             if not clause_id or clause_id not in must_have:
+                missing.append(issue_id)
+        if status == "decision_required":
+            decision_id = str(resolution.get("decision_id") or "").strip()
+            if not decision_id or decision_id not in decision_required:
                 missing.append(issue_id)
         if status == "declined":
             rationale = str(resolution.get("rationale") or "").strip()
@@ -73,8 +78,7 @@ def auditor_incorporation_gaps(auditor_issues: Sequence[Dict[str, Any]], next_le
 
 
 def forbidden_pattern_hits(requirement_markdown: str, forbidden_patterns: Iterable[str]) -> List[str]:
-    text = str(requirement_markdown or "")
-    text = CONSTRAINTS_BLOCK_RE.sub("", text)
+    text = strip_constraints_block(requirement_markdown)
     hits: List[str] = []
     for pattern in forbidden_patterns:
         if re.search(pattern, text, re.IGNORECASE) is not None:
@@ -117,6 +121,18 @@ def non_increasing(values: Sequence[int]) -> bool:
     return True
 
 
+def strip_constraints_block(requirement_markdown: str) -> str:
+    return CONSTRAINTS_BLOCK_RE.sub("", str(requirement_markdown or ""))
+
+
+def decision_required_ids(ledger: Dict[str, Any]) -> List[str]:
+    return sorted(_decision_required_ids(ledger))
+
+
+def numeric_day_values(text: str) -> List[str]:
+    return sorted(set(re.findall(r"\b\d+\s*days?\b", str(text or ""), flags=re.IGNORECASE)))
+
+
 def _must_have_ids(ledger: Dict[str, Any]) -> set[str]:
     identifiers: set[str] = set()
     for row in _as_list(ledger.get("must_have")):
@@ -142,3 +158,13 @@ def _as_list(value: Any) -> List[Any]:
     if isinstance(value, list):
         return value
     return []
+
+
+def _decision_required_ids(ledger: Dict[str, Any]) -> set[str]:
+    identifiers: set[str] = set()
+    for row in _as_list(ledger.get("decision_required")):
+        if isinstance(row, dict):
+            value = str(row.get("id") or "").strip()
+            if value:
+                identifiers.add(value)
+    return identifiers

@@ -3,7 +3,9 @@
     "id": "missing_constraint",
     "path": "missing_constraint",
     "forbidden_patterns": ["upload\\s+profile\\s+data\\s+to\\s+external", "third-party\\s+analytics"],
-    "expected_unresolved": [2, 1, 0]
+    "expected_unresolved": [2, 1, 0],
+    "seed_file": "seed.json",
+    "require_decision_required_for_missing_values": ["retention_days"]
   },
   {
     "id": "contradiction",
