@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from typing import Any, Dict
 
 
@@ -63,6 +64,13 @@ def canonical_bytes(obj: Any) -> bytes:
     return text.encode("utf-8")
 
 
+def raw_signature(obj: Any) -> str:
+    stream: list[str] = []
+    _walk_raw(obj, stream)
+    digest = hashlib.sha256("\n".join(stream).encode("utf-8")).hexdigest()
+    return digest
+
+
 def first_diff_path(a: bytes, b: bytes) -> str:
     try:
         left = json.loads(a.decode("utf-8"))
@@ -105,3 +113,25 @@ def _first_diff_path_obj(left: Any, right: Any, path: str) -> str:
 
 def _escape_key(key: str) -> str:
     return str(key).replace("~", "~0").replace("/", "~1")
+
+
+def _walk_raw(value: Any, stream: list[str], path: str = "$") -> None:
+    if isinstance(value, dict):
+        stream.append(f"{path}|dict|{len(value)}")
+        for key, item in value.items():
+            key_text = str(key)
+            stream.append(f"{path}|key|{key_text}")
+            _walk_raw(item, stream, f"{path}/{_escape_key(key_text)}")
+        return
+
+    if isinstance(value, list):
+        stream.append(f"{path}|list|{len(value)}")
+        for index, item in enumerate(value):
+            _walk_raw(item, stream, f"{path}/{index}")
+        return
+
+    if isinstance(value, str):
+        stream.append(f"{path}|str|{_normalize_string(value)}")
+        return
+
+    stream.append(f"{path}|{type(value).__name__}|{value!r}")

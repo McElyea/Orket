@@ -3,14 +3,16 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import random
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict
 
 import pytest
 
-from orket.kernel.v1.canon import canonical_bytes, first_diff_path
+from orket.kernel.v1.canon import canonical_bytes, first_diff_path, raw_signature
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round
 
 SEED = 1729
@@ -28,8 +30,6 @@ def _load_fixture(name: str) -> Dict[str, Any]:
 
 
 def _permute_fixture(fixture: Dict[str, Any], seed: int, perm_index: int) -> Dict[str, Any]:
-    import random
-
     payload = json.loads(json.dumps(fixture))
     rng = random.Random(seed + (perm_index * 7919))
     graph = payload.get("graph", {})
@@ -40,12 +40,11 @@ def _permute_fixture(fixture: Dict[str, Any], seed: int, perm_index: int) -> Dic
     return payload
 
 
-def _run_fixture(name: str, *, seed: int, perm_index: int, rounds: int = 0) -> Dict[str, Any]:
-    fixture = _permute_fixture(_load_fixture(name), seed, perm_index)
+def _run_fixture_payload(payload: Dict[str, Any], *, rounds: int = 0) -> Dict[str, Any]:
     cfg = ReactorConfig()
     state = ReactorState()
 
-    all_rounds = fixture.get("rounds", [])
+    all_rounds = payload.get("rounds", [])
     for idx, round_payload in enumerate(all_rounds):
         if rounds > 0 and idx >= rounds:
             break
@@ -59,12 +58,17 @@ def _run_fixture(name: str, *, seed: int, perm_index: int, rounds: int = 0) -> D
             break
 
     return {
-        "fixture_id": fixture.get("id"),
-        "graph": fixture.get("graph", {}),
+        "fixture_id": payload.get("id"),
+        "graph": payload.get("graph", {}),
         "history_v": list(state.history_v),
         "history_rounds": list(state.history_rounds),
         "stop_reason": state.stop_reason,
     }
+
+
+def _run_fixture(name: str, *, seed: int, perm_index: int, rounds: int = 0) -> Dict[str, Any]:
+    fixture = _permute_fixture(_load_fixture(name), seed, perm_index)
+    return _run_fixture_payload(fixture, rounds=rounds)
 
 
 def _sha256(data: bytes) -> str:
@@ -125,8 +129,158 @@ def _shape_violation_output() -> Dict[str, Any]:
     }
 
 
-def _run_gate(permutations: int, repeats: int) -> None:
+def _semantic_node_key(node: Dict[str, Any]) -> str:
+    if node.get("dto_type") is not None and node.get("id") is not None:
+        return f"{node.get('dto_type')}::{node.get('id')}"
+    if node.get("raw_id") is not None:
+        return f"raw::{node.get('raw_id')}"
+    return json.dumps(node, sort_keys=True, separators=(",", ":"))
+
+
+def _dedupe_metrics(graph: Dict[str, Any]) -> Dict[str, Any]:
+    nodes = graph.get("nodes", [])
+    edges = graph.get("edges", [])
+    pre = len(nodes)
+    post = len({_semantic_node_key(node) for node in nodes if isinstance(node, dict)})
+    reduction_pct = ((pre - post) / max(1, pre)) if pre else 0.0
+    return {
+        "nodes_pre": pre,
+        "nodes_post": post,
+        "edges_post": len(edges),
+        "reduction_pct": reduction_pct,
+    }
+
+
+def _print_metrics_line(fixture_id: str, metrics: Dict[str, Any]) -> None:
+    print(
+        f"fixture={fixture_id} nodes_pre={metrics['nodes_pre']} nodes_post={metrics['nodes_post']} "
+        f"edges_post={metrics['edges_post']} reduction_pct={metrics['reduction_pct']:.6f}"
+    )
+
+
+def _parse_repro_output(text: str) -> Dict[str, str]:
+    parsed: Dict[str, str] = {}
+    for line in text.splitlines():
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        parsed[key.strip()] = value.strip()
+    return parsed
+
+
+def _generated_fixture_deep_chain(size: int) -> Dict[str, Any]:
+    architect_raw = (
+        "### REQUIREMENT\nscale deep fixture\n\n"
+        "### CHANGELOG\n- baseline\n\n"
+        "### ASSUMPTIONS\n- deterministic\n\n"
+        "### OPEN_QUESTIONS\n- none\n"
+    )
+    auditor_raw = (
+        "### CRITIQUE\n- c\n\n"
+        "### PATCHES\n- p\n\n"
+        "### EDGE_CASES\n- e\n\n"
+        "### TEST_GAPS\n- t\n"
+    )
+    nodes = [{"raw_id": f"N{i}", "dto_type": "req", "id": f"N{i}", "name": f"Node {i}"} for i in range(size)]
+    edges = [
+        {"from": f"N{i}", "label": "depends_on", "to": f"N{i+1}"}
+        for i in range(max(0, size - 1))
+    ]
+    return {
+        "id": f"generated_deep_chain_{size}",
+        "graph": {"nodes": nodes, "edges": edges},
+        "rounds": [
+            {
+                "architect_raw": architect_raw,
+                "auditor_raw": auditor_raw,
+            }
+        ],
+    }
+
+
+def _generated_fixture_wide_fan(size: int) -> Dict[str, Any]:
+    architect_raw = (
+        "### REQUIREMENT\nscale wide fixture\n\n"
+        "### CHANGELOG\n- baseline\n\n"
+        "### ASSUMPTIONS\n- deterministic\n\n"
+        "### OPEN_QUESTIONS\n- none\n"
+    )
+    auditor_raw = (
+        "### CRITIQUE\n- c\n\n"
+        "### PATCHES\n- p\n\n"
+        "### EDGE_CASES\n- e\n\n"
+        "### TEST_GAPS\n- t\n"
+    )
+    nodes = [{"raw_id": "HUB", "dto_type": "req", "id": "HUB", "name": "Hub"}]
+    nodes.extend(
+        {"raw_id": f"L{i}", "dto_type": "req", "id": f"L{i}", "name": f"Leaf {i}"}
+        for i in range(size)
+    )
+    edges = [{"from": f"L{i}", "label": "points_to", "to": "HUB"} for i in range(size)]
+    return {
+        "id": f"generated_wide_fan_{size}",
+        "graph": {"nodes": nodes, "edges": edges},
+        "rounds": [
+            {
+                "architect_raw": architect_raw,
+                "auditor_raw": auditor_raw,
+            }
+        ],
+    }
+
+
+def _run_scale_checks() -> None:
+    deep_size = int(os.getenv("ODR_SCALE_DEEP", "2000"))
+    wide_size = int(os.getenv("ODR_SCALE_WIDE", "5000"))
+    scale_permutations = int(os.getenv("ODR_SCALE_PERMUTATIONS", "5"))
+    timeout_seconds = float(os.getenv("ODR_SCALE_TIMEOUT_SECONDS", "60"))
+
+    for fixture in (_generated_fixture_deep_chain(deep_size), _generated_fixture_wide_fan(wide_size)):
+        start = time.monotonic()
+        base_payload = _permute_fixture(fixture, SEED, 0)
+        base_output = _run_fixture_payload(base_payload)
+        base_bytes = canonical_bytes(base_output)
+
+        for perm_index in range(scale_permutations):
+            output = _run_fixture_payload(_permute_fixture(fixture, SEED, perm_index))
+            _assert_bytes_equal(
+                expected=base_bytes,
+                actual=canonical_bytes(output),
+                seed=SEED,
+                perm_index=perm_index,
+                round_index=1,
+                stop_reason=str(output.get("stop_reason") or "NONE"),
+                reason="PERMUTATION_DEPENDENT",
+            )
+
+        reparsed = json.loads(base_bytes.decode("utf-8"))
+        _assert_bytes_equal(
+            expected=base_bytes,
+            actual=canonical_bytes(reparsed),
+            seed=SEED,
+            perm_index=0,
+            round_index=1,
+            stop_reason=str(base_output.get("stop_reason") or "NONE"),
+            reason="NOT_IDEMPOTENT",
+        )
+
+        elapsed = time.monotonic() - start
+        if elapsed > timeout_seconds:
+            pytest.fail(
+                _fail_line(
+                    seed=SEED,
+                    perm_index=0,
+                    round_index=1,
+                    path="$",
+                    stop_reason=str(base_output.get("stop_reason") or "NONE"),
+                    reason="CANON_MISMATCH",
+                )
+            )
+
+
+def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -> None:
     base_output = _run_fixture("odr_torture_pack.json", seed=SEED, perm_index=0)
+    base_raw_signature = raw_signature(base_output)
     base_bytes = canonical_bytes(base_output)
     base_hash = _sha256(base_bytes)
     if base_hash != EXPECTED_TORTURE_SHA256:
@@ -137,21 +291,20 @@ def _run_gate(permutations: int, repeats: int) -> None:
                 round_index=1,
                 path="$",
                 stop_reason=str(base_output.get("stop_reason") or "NONE"),
-                reason="GOLDEN_HASH_MISMATCH",
+                reason="CANON_MISMATCH",
             )
         )
 
     for perm_index in range(permutations):
         output = _run_fixture("odr_torture_pack.json", seed=SEED, perm_index=perm_index)
-        actual = canonical_bytes(output)
         _assert_bytes_equal(
             expected=base_bytes,
-            actual=actual,
+            actual=canonical_bytes(output),
             seed=SEED,
             perm_index=perm_index,
             round_index=max(1, len(output.get("history_rounds", []))),
             stop_reason=str(output.get("stop_reason") or "NONE"),
-            reason="CANON_MISMATCH",
+            reason="PERMUTATION_DEPENDENT",
         )
 
     reparsed = json.loads(base_bytes.decode("utf-8"))
@@ -166,6 +319,20 @@ def _run_gate(permutations: int, repeats: int) -> None:
         reason="NOT_IDEMPOTENT",
     )
 
+    torture_metrics = _dedupe_metrics(base_output["graph"])
+    _print_metrics_line("odr_torture_pack", torture_metrics)
+    if torture_metrics["reduction_pct"] <= 0.0:
+        pytest.fail(
+            _fail_line(
+                seed=SEED,
+                perm_index=0,
+                round_index=1,
+                path="$/graph/nodes",
+                stop_reason=str(base_output.get("stop_reason") or "NONE"),
+                reason="CANON_MISMATCH",
+            )
+        )
+
     near_output = _run_fixture("odr_near_miss.json", seed=SEED, perm_index=0)
     near_bytes = canonical_bytes(near_output)
     near_hash = _sha256(near_bytes)
@@ -177,13 +344,13 @@ def _run_gate(permutations: int, repeats: int) -> None:
                 round_index=1,
                 path="$",
                 stop_reason=str(near_output.get("stop_reason") or "NONE"),
-                reason="NEAR_MISS_GOLDEN_HASH_MISMATCH",
+                reason="CANON_MISMATCH",
             )
         )
 
-    nodes = near_output["graph"].get("nodes", [])
-    identities = {(str(node.get("raw_id")), str(node.get("dto_type")), str(node.get("id"))) for node in nodes}
-    if len(identities) != 2:
+    near_metrics = _dedupe_metrics(near_output["graph"])
+    _print_metrics_line("odr_near_miss", near_metrics)
+    if near_metrics["reduction_pct"] != 0.0:
         pytest.fail(
             _fail_line(
                 seed=SEED,
@@ -191,7 +358,7 @@ def _run_gate(permutations: int, repeats: int) -> None:
                 round_index=1,
                 path="$/graph/nodes",
                 stop_reason=str(near_output.get("stop_reason") or "NONE"),
-                reason="NEAR_MISS_COLLAPSED",
+                reason="NEAR_MISS_DEDUPED",
             )
         )
 
@@ -206,7 +373,7 @@ def _run_gate(permutations: int, repeats: int) -> None:
         perm_index=0,
         round_index=1,
         stop_reason=str(shape_one.get("stop_reason") or "NONE"),
-        reason="NONDETERMINISTIC_ERROR",
+        reason="SHAPE_VIOLATION_NONDETERMINISTIC",
     )
     if _sha256(shape_one_bytes) != EXPECTED_SHAPE_SHA256:
         pytest.fail(
@@ -216,13 +383,14 @@ def _run_gate(permutations: int, repeats: int) -> None:
                 round_index=1,
                 path="$",
                 stop_reason=str(shape_one.get("stop_reason") or "NONE"),
-                reason="SHAPE_GOLDEN_HASH_MISMATCH",
+                reason="SHAPE_VIOLATION_NONDETERMINISTIC",
             )
         )
 
     script = Path("tools/repro_odr_gate.py")
     fixture = _fixture_path("odr_torture_pack.json")
     seen_hashes = set()
+    seen_raw_signatures = set()
     for repeat_idx in range(repeats):
         cmd = [
             sys.executable,
@@ -238,13 +406,16 @@ def _run_gate(permutations: int, repeats: int) -> None:
             "--mode",
             "pr",
             "--print-canon-hash",
+            "--print-raw-signature",
         ]
         proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
         if proc.returncode != 0:
             pytest.fail(proc.stdout.strip() or proc.stderr.strip() or "repro_odr_gate failed")
-        value = proc.stdout.strip().splitlines()[-1].strip()
-        seen_hashes.add(value)
-        if value != EXPECTED_TORTURE_SHA256:
+
+        parsed = _parse_repro_output(proc.stdout)
+        hash_value = parsed.get("canon_hash", "")
+        raw_value = parsed.get("raw_signature", "")
+        if not hash_value or not raw_value:
             pytest.fail(
                 _fail_line(
                     seed=SEED,
@@ -252,7 +423,31 @@ def _run_gate(permutations: int, repeats: int) -> None:
                     round_index=repeat_idx + 1,
                     path="$",
                     stop_reason=str(base_output.get("stop_reason") or "NONE"),
-                    reason="REPEAT_RUN_HASH_MISMATCH",
+                    reason="REPEAT_RUN_NONDETERMINISM",
+                )
+            )
+        seen_hashes.add(hash_value)
+        seen_raw_signatures.add(raw_value)
+        if hash_value != EXPECTED_TORTURE_SHA256:
+            pytest.fail(
+                _fail_line(
+                    seed=SEED,
+                    perm_index=0,
+                    round_index=repeat_idx + 1,
+                    path="$",
+                    stop_reason=str(base_output.get("stop_reason") or "NONE"),
+                    reason="REPEAT_RUN_NONDETERMINISM",
+                )
+            )
+        if raw_value != base_raw_signature:
+            pytest.fail(
+                _fail_line(
+                    seed=SEED,
+                    perm_index=0,
+                    round_index=repeat_idx + 1,
+                    path="$",
+                    stop_reason=str(base_output.get("stop_reason") or "NONE"),
+                    reason="RAW_SIGNATURE_MISMATCH",
                 )
             )
 
@@ -264,9 +459,24 @@ def _run_gate(permutations: int, repeats: int) -> None:
                 round_index=1,
                 path="$",
                 stop_reason=str(base_output.get("stop_reason") or "NONE"),
-                reason="REPEAT_RUN_NONDETERMINISTIC",
+                reason="REPEAT_RUN_NONDETERMINISM",
             )
         )
+
+    if len(seen_raw_signatures) != 1:
+        pytest.fail(
+            _fail_line(
+                seed=SEED,
+                perm_index=0,
+                round_index=1,
+                path="$",
+                stop_reason=str(base_output.get("stop_reason") or "NONE"),
+                reason="RAW_SIGNATURE_MISMATCH",
+            )
+        )
+
+    if include_scale:
+        _run_scale_checks()
 
 
 def test_odr_determinism_gate_pr() -> None:
@@ -280,4 +490,4 @@ def test_odr_determinism_gate_nightly() -> None:
         pytest.skip("nightly ODR gate disabled")
     permutations = int(os.getenv("ODR_PERMUTATIONS", "50"))
     repeats = int(os.getenv("ODR_REPEATS", "20"))
-    _run_gate(permutations=permutations, repeats=repeats)
+    _run_gate(permutations=permutations, repeats=repeats, include_scale=True)

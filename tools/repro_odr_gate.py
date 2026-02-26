@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.kernel.v1.canon import canonical_bytes, first_diff_path  # noqa: E402
+from orket.kernel.v1.canon import canonical_bytes, first_diff_path, raw_signature  # noqa: E402
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round  # noqa: E402
 
 
@@ -85,7 +85,9 @@ def main() -> int:
     parser.add_argument("--rounds", type=int, default=0)
     parser.add_argument("--mode", choices=("pr", "nightly"), default="pr")
     parser.add_argument("--print-canon-hash", action="store_true")
+    parser.add_argument("--print-raw-signature", action="store_true")
     parser.add_argument("--expected-hash", type=str, default="")
+    parser.add_argument("--expected-raw-signature", type=str, default="")
     parser.add_argument("--expected-stop-reason", type=str, default="")
     args = parser.parse_args()
 
@@ -94,6 +96,7 @@ def main() -> int:
     output = _run_fixture_rounds(permuted, args.rounds)
     canon = canonical_bytes(output)
     canon_hash = _hash_bytes(canon)
+    raw_sig = raw_signature(output)
 
     stop_reason = str(output.get("stop_reason") or "NONE")
     if args.expected_stop_reason and stop_reason != args.expected_stop_reason:
@@ -119,8 +122,20 @@ def main() -> int:
             reason="CANON_MISMATCH",
         )
 
+    if args.expected_raw_signature and raw_sig != args.expected_raw_signature:
+        return _print_failure(
+            seed=args.seed,
+            perm_index=args.perm_index,
+            round_index=max(1, len(output.get("history_rounds", []))),
+            diff_path="$",
+            stop_reason=stop_reason,
+            reason="RAW_SIGNATURE_MISMATCH",
+        )
+
     if args.print_canon_hash:
-        print(canon_hash)
+        print(f"canon_hash={canon_hash}")
+    if args.print_raw_signature:
+        print(f"raw_signature={raw_sig}")
     return 0
 
 
