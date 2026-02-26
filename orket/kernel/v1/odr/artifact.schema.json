@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ODR Condenser Artifact v1",
+  "type": "object",
+  "required": [
+    "artifact_v",
+    "intent",
+    "constraints",
+    "edge_cases",
+    "frozen_spec",
+    "unresolved"
+  ],
+  "properties": {
+    "artifact_v": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "intent": {
+      "type": "string"
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "edge_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "frozen_spec": {
+      "type": "string"
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
