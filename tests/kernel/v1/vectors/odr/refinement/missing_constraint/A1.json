@@ -1,0 +1,5 @@
+[
+  {"id": "AUD-001", "status": "resolved"},
+  {"id": "AUD-002", "status": "resolved"},
+  {"id": "AUD-003", "status": "open", "required_action": "Add recovery validation"}
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "missing_constraint",
+    "path": "missing_constraint",
+    "forbidden_patterns": ["upload\\s+profile\\s+data\\s+to\\s+external", "third-party\\s+analytics"],
+    "expected_unresolved": [2, 1, 0]
+  },
+  {
+    "id": "contradiction",
+    "path": "contradiction",
+    "forbidden_patterns": ["mirror\\s+records\\s+to\\s+remote\\s+storage"],
+    "expected_unresolved": [1, 1, 0]
+  },
+  {
+    "id": "overfitting",
+    "path": "overfitting",
+    "forbidden_patterns": ["third-party\\s+analytics", "auto-post\\s+updates\\s+to\\s+social"],
+    "expected_unresolved": [1, 1, 0]
+  }
+]
