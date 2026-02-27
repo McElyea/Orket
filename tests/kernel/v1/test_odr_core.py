@@ -125,3 +125,29 @@ def test_trace_completeness_and_noop_after_stop() -> None:
     state2 = run_round(state, _architect("ignored"), _auditor(), cfg)
     assert state2 is state
     assert len(state2.history_rounds) == 1
+
+
+def test_leading_preface_before_header_is_shape_violation() -> None:
+    state = ReactorState()
+    cfg = ReactorConfig()
+    preface_auditor = (
+        "Note: quick preface before sections.\n\n"
+        "### CRITIQUE\n"
+        "- c1\n\n"
+        "### PATCHES\n"
+        "- p1\n\n"
+        "### EDGE_CASES\n"
+        "- e1\n\n"
+        "### TEST_GAPS\n"
+        "- t1\n"
+    )
+    state = run_round(state, _architect("v1"), preface_auditor, cfg)
+    assert state.stop_reason == "SHAPE_VIOLATION"
+    record = state.history_rounds[-1]
+    assert record["auditor_parsed"] is None
+    assert any(
+        err["source"] == "auditor"
+        and err["code"] in {"HEADER_OUT_OF_ORDER", "MISSING_HEADER"}
+        and "out of order" in str(err["message"]).lower()
+        for err in record["parse_errors"]
+    )

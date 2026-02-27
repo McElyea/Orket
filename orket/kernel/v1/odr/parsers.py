@@ -66,6 +66,15 @@ def _extract_sections(text: str, required_headers: List[str]) -> Tuple[Dict[str,
             f"expected={required_headers} found={found_sequence}",
         )
 
+    # Contract lock: no prose/prefix before the first required header.
+    first_header_pos = found_by_position[0][0]
+    preface_lines = [line for line in lines[:first_header_pos] if line.strip()]
+    if preface_lines:
+        return {}, _err(
+            "HEADER_OUT_OF_ORDER",
+            "Required headers are out of order. out of order: non-header text appears before first required header.",
+        )
+
     sections: Dict[str, str] = {}
     for idx, header in enumerate(required_headers):
         start = positions[header][0] + 1

@@ -1,0 +1,123 @@
+{
+  "index_v": "1.0.0",
+  "generated_at": "2026-02-27T05:44:11.150886+00:00",
+  "root": "benchmarks/published/ODR",
+  "run_count": 5,
+  "runs": [
+    {
+      "file": "odr_live_role_matrix.qwen14b_gemma27b.json",
+      "generated_at": "2026-02-26T03:29:16.108325+00:00",
+      "architect_model": "qwen2.5:14b",
+      "auditor_model": "gemma3:27b",
+      "scenarios": [
+        {
+          "scenario_id": "contradiction",
+          "stop_reason": "CODE_LEAK",
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "missing_constraint",
+          "stop_reason": null,
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "overfitting",
+          "stop_reason": null,
+          "rounds_used": 3
+        }
+      ]
+    },
+    {
+      "file": "odr_live_role_matrix.qwen14b_r1_32b.json",
+      "generated_at": "2026-02-26T02:36:26.369997+00:00",
+      "architect_model": "qwen2.5:14b",
+      "auditor_model": "deepseek-r1:32b",
+      "scenarios": [
+        {
+          "scenario_id": "contradiction",
+          "stop_reason": "CODE_LEAK",
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "missing_constraint",
+          "stop_reason": null,
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "overfitting",
+          "stop_reason": null,
+          "rounds_used": 3
+        }
+      ]
+    },
+    {
+      "file": "odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
+      "generated_at": "2026-02-27T05:44:11.067369+00:00",
+      "architect_model": "qwen2.5:14b",
+      "auditor_model": "deepseek-r1:32b",
+      "scenarios": [
+        {
+          "scenario_id": "contradiction",
+          "stop_reason": "CODE_LEAK",
+          "rounds_used": 2
+        },
+        {
+          "scenario_id": "missing_constraint",
+          "stop_reason": "DIFF_FLOOR",
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "overfitting",
+          "stop_reason": null,
+          "rounds_used": 3
+        }
+      ]
+    },
+    {
+      "file": "odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+      "generated_at": "2026-02-27T05:30:48.213072+00:00",
+      "architect_model": "qwen2.5:14b",
+      "auditor_model": "gemma3:27b",
+      "scenarios": [
+        {
+          "scenario_id": "contradiction",
+          "stop_reason": "CODE_LEAK",
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "missing_constraint",
+          "stop_reason": null,
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "overfitting",
+          "stop_reason": null,
+          "rounds_used": 3
+        }
+      ]
+    },
+    {
+      "file": "odr_live_role_matrix.qwen2_5_coder_14b_deepseek_r1_32b.json",
+      "generated_at": "2026-02-27T05:23:39.540738+00:00",
+      "architect_model": "qwen2.5-coder:14b",
+      "auditor_model": "deepseek-r1:32b",
+      "scenarios": [
+        {
+          "scenario_id": "contradiction",
+          "stop_reason": "SHAPE_VIOLATION",
+          "rounds_used": 1
+        },
+        {
+          "scenario_id": "missing_constraint",
+          "stop_reason": null,
+          "rounds_used": 3
+        },
+        {
+          "scenario_id": "overfitting",
+          "stop_reason": "SHAPE_VIOLATION",
+          "rounds_used": 3
+        }
+      ]
+    }
+  ]
+}
