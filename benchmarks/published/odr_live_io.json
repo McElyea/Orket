@@ -1,0 +1,421 @@
+{
+  "live_run": {
+    "command": "ODR_GATE_NIGHTLY=1 ODR_PERMUTATIONS=50 ODR_REPEATS=20 pytest tests/kernel/v1/test_odr_determinism_gate.py tests/kernel/v1/test_odr_refinement_behavior.py",
+    "result": {
+      "passed": 18,
+      "skipped": 2,
+      "failed": 0
+    }
+  },
+  "determinism_tests": {
+    "torture_pack": {
+      "input": {
+        "id": "odr_torture_pack_v1",
+        "rounds": [
+          {
+            "architect_raw": "### REQUIREMENT\nAlpha beta gamma delta epsilon.\n\n### CHANGELOG\n- baseline\n\n### ASSUMPTIONS\n- deterministic\n\n### OPEN_QUESTIONS\n- none\n",
+            "auditor_raw": "### CRITIQUE\n- c1\n\n### PATCHES\n- p1\n\n### EDGE_CASES\n- e1\n\n### TEST_GAPS\n- t1\n"
+          },
+          {
+            "architect_raw": "### REQUIREMENT\nAlpha beta gamma delta epsilon!\n\n### CHANGELOG\n- punctuation\n\n### ASSUMPTIONS\n- deterministic\n\n### OPEN_QUESTIONS\n- none\n",
+            "auditor_raw": "### CRITIQUE\n- c2\n\n### PATCHES\n- p2\n\n### EDGE_CASES\n- e2\n\n### TEST_GAPS\n- t2\n"
+          },
+          {
+            "architect_raw": "### REQUIREMENT\nAlpha beta gamma delta epsilon?\n\n### CHANGELOG\n- punctuation2\n\n### ASSUMPTIONS\n- deterministic\n\n### OPEN_QUESTIONS\n- none\n",
+            "auditor_raw": "### CRITIQUE\n- c3\n\n### PATCHES\n- p3\n\n### EDGE_CASES\n- e3\n\n### TEST_GAPS\n- t3\n"
+          }
+        ]
+      },
+      "output": {
+        "stop_reason": "DIFF_FLOOR",
+        "history_v": [
+          "Alpha beta gamma delta epsilon.",
+          "Alpha beta gamma delta epsilon!",
+          "Alpha beta gamma delta epsilon?"
+        ],
+        "history_round_count": 3,
+        "last_round": {
+          "round": 3,
+          "run_config": {
+            "max_rounds": 8,
+            "diff_floor_pct": 0.05,
+            "stable_rounds": 2,
+            "shingle_k": 3,
+            "margin": 0.02,
+            "min_loop_sim": 0.65,
+            "code_leak_patterns": [
+              "(?s)```.*?```",
+              "\\b(def|class|import|fn|let|const|interface|type)\\b",
+              "\\b(npm|pip|cargo|docker|venv|node_modules)\\b"
+            ]
+          },
+          "architect_raw": "### REQUIREMENT\nAlpha beta gamma delta epsilon?\n\n### CHANGELOG\n- punctuation2\n\n### ASSUMPTIONS\n- deterministic\n\n### OPEN_QUESTIONS\n- none\n",
+          "auditor_raw": "### CRITIQUE\n- c3\n\n### PATCHES\n- p3\n\n### EDGE_CASES\n- e3\n\n### TEST_GAPS\n- t3\n",
+          "architect_parsed": {
+            "requirement": "Alpha beta gamma delta epsilon?",
+            "changelog": [
+              "punctuation2"
+            ],
+            "assumptions": [
+              "deterministic"
+            ],
+            "open_questions": [
+              "none"
+            ]
+          },
+          "auditor_parsed": {
+            "critique": [
+              "c3"
+            ],
+            "patches": [
+              "p3"
+            ],
+            "edge_cases": [
+              "e3"
+            ],
+            "test_gaps": [
+              "t3"
+            ]
+          },
+          "parse_errors": [],
+          "metrics": {
+            "code_leak_hit": false,
+            "n": 3,
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "stable_count": 2
+          },
+          "stop_reason": "DIFF_FLOOR"
+        }
+      }
+    },
+    "near_miss": {
+      "input": {
+        "id": "odr_near_miss_v1",
+        "rounds": [
+          {
+            "architect_raw": "### REQUIREMENT\nStore all user data locally on the device and never upload it.\n\n### CHANGELOG\n- baseline\n\n### ASSUMPTIONS\n- local-first\n\n### OPEN_QUESTIONS\n- none\n",
+            "auditor_raw": "### CRITIQUE\n- c1\n\n### PATCHES\n- p1\n\n### EDGE_CASES\n- e1\n\n### TEST_GAPS\n- t1\n"
+          },
+          {
+            "architect_raw": "### REQUIREMENT\nUpload user data to remote servers for analysis and sharing.\n\n### CHANGELOG\n- pivot\n\n### ASSUMPTIONS\n- cloud\n\n### OPEN_QUESTIONS\n- none\n",
+            "auditor_raw": "### CRITIQUE\n- c2\n\n### PATCHES\n- p2\n\n### EDGE_CASES\n- e2\n\n### TEST_GAPS\n- t2\n"
+          },
+          {
+            "architect_raw": "### REQUIREMENT\nStore all user data locally on the device and do not upload it.\n\n### CHANGELOG\n- return local\n\n### ASSUMPTIONS\n- local-first\n\n### OPEN_QUESTIONS\n- none\n",
+            "auditor_raw": "### CRITIQUE\n- c3\n\n### PATCHES\n- p3\n\n### EDGE_CASES\n- e3\n\n### TEST_GAPS\n- t3\n"
+          }
+        ]
+      },
+      "output": {
+        "stop_reason": null,
+        "history_v": [
+          "Store all user data locally on the device and never upload it.",
+          "Upload user data to remote servers for analysis and sharing.",
+          "Store all user data locally on the device and do not upload it."
+        ],
+        "history_round_count": 3,
+        "last_round": {
+          "round": 3,
+          "run_config": {
+            "max_rounds": 8,
+            "diff_floor_pct": 0.05,
+            "stable_rounds": 2,
+            "shingle_k": 3,
+            "margin": 0.02,
+            "min_loop_sim": 0.65,
+            "code_leak_patterns": [
+              "(?s)```.*?```",
+              "\\b(def|class|import|fn|let|const|interface|type)\\b",
+              "\\b(npm|pip|cargo|docker|venv|node_modules)\\b"
+            ]
+          },
+          "architect_raw": "### REQUIREMENT\nStore all user data locally on the device and do not upload it.\n\n### CHANGELOG\n- return local\n\n### ASSUMPTIONS\n- local-first\n\n### OPEN_QUESTIONS\n- none\n",
+          "auditor_raw": "### CRITIQUE\n- c3\n\n### PATCHES\n- p3\n\n### EDGE_CASES\n- e3\n\n### TEST_GAPS\n- t3\n",
+          "architect_parsed": {
+            "requirement": "Store all user data locally on the device and do not upload it.",
+            "changelog": [
+              "return local"
+            ],
+            "assumptions": [
+              "local-first"
+            ],
+            "open_questions": [
+              "none"
+            ]
+          },
+          "auditor_parsed": {
+            "critique": [
+              "c3"
+            ],
+            "patches": [
+              "p3"
+            ],
+            "edge_cases": [
+              "e3"
+            ],
+            "test_gaps": [
+              "t3"
+            ]
+          },
+          "parse_errors": [],
+          "metrics": {
+            "code_leak_hit": false,
+            "n": 3,
+            "diff_ratio": 0.05,
+            "sim_prev": 0.0,
+            "sim_loop": 0.5,
+            "stable_count": 0
+          },
+          "stop_reason": null
+        }
+      }
+    },
+    "shape_violation": {
+      "input": {
+        "architect_raw": "### REQUIREMENT\nX\n\n### ASSUMPTIONS\n- a\n\n### CHANGELOG\n- c\n\n### OPEN_QUESTIONS\n- q\n",
+        "auditor_raw": "### CRITIQUE\n- c\n\n### PATCHES\n- p\n\n### EDGE_CASES\n- e\n\n### TEST_GAPS\n- t\n"
+      },
+      "output": {
+        "stop_reason": "SHAPE_VIOLATION",
+        "history_round_count": 1,
+        "trace": {
+          "round": 1,
+          "run_config": {
+            "max_rounds": 8,
+            "diff_floor_pct": 0.05,
+            "stable_rounds": 2,
+            "shingle_k": 3,
+            "margin": 0.02,
+            "min_loop_sim": 0.65,
+            "code_leak_patterns": [
+              "(?s)```.*?```",
+              "\\b(def|class|import|fn|let|const|interface|type)\\b",
+              "\\b(npm|pip|cargo|docker|venv|node_modules)\\b"
+            ]
+          },
+          "architect_raw": "### REQUIREMENT\nX\n\n### ASSUMPTIONS\n- a\n\n### CHANGELOG\n- c\n\n### OPEN_QUESTIONS\n- q\n",
+          "auditor_raw": "### CRITIQUE\n- c\n\n### PATCHES\n- p\n\n### EDGE_CASES\n- e\n\n### TEST_GAPS\n- t\n",
+          "architect_parsed": null,
+          "auditor_parsed": null,
+          "parse_errors": [
+            {
+              "source": "architect",
+              "code": "HEADER_OUT_OF_ORDER",
+              "message": "Required headers are out of order. expected=['### REQUIREMENT', '### CHANGELOG', '### ASSUMPTIONS', '### OPEN_QUESTIONS'] found=['### REQUIREMENT', '### ASSUMPTIONS', '### CHANGELOG', '### OPEN_QUESTIONS']"
+            }
+          ],
+          "metrics": {
+            "code_leak_hit": false,
+            "n": 1,
+            "diff_ratio": null,
+            "sim_prev": null,
+            "sim_loop": null,
+            "stable_count": 0
+          },
+          "stop_reason": "SHAPE_VIOLATION"
+        }
+      }
+    }
+  },
+  "refinement_behavior_tests": [
+    {
+      "scenario": "missing_constraint",
+      "input": {
+        "A0": [
+          {
+            "id": "AUD-001",
+            "status": "open",
+            "required_action": "Add retention policy"
+          },
+          {
+            "id": "AUD-002",
+            "status": "open",
+            "required_action": "Add encryption requirement"
+          }
+        ],
+        "R0_must_have": [
+          {
+            "id": "MH-LOCAL-001",
+            "text": "Store user profile data locally."
+          }
+        ],
+        "forbidden_patterns": [
+          "upload\\s+profile\\s+data\\s+to\\s+external",
+          "third-party\\s+analytics"
+        ],
+        "expected_unresolved": [
+          2,
+          1,
+          0
+        ]
+      },
+      "output": {
+        "R1_must_have": [
+          {
+            "id": "MH-LOCAL-001",
+            "text": "Store user profile data locally."
+          },
+          {
+            "id": "MH-RETENTION-001",
+            "text": "Retain profile audit logs for DEC-RETENTION-DAYS days."
+          },
+          {
+            "id": "MH-ENC-001",
+            "text": "Encrypt audit logs at rest."
+          }
+        ],
+        "carry_forward_gaps": [],
+        "auditor_incorporation_gaps": [],
+        "forbidden_hits": [],
+        "missing_required_sections": [],
+        "unresolved_counts": [
+          2,
+          1,
+          0
+        ],
+        "non_increasing": true,
+        "reopened_issues": [],
+        "replay_stop_reason": null,
+        "replay_history_round_count": 3,
+        "anti_hallucination": {
+          "executed": true,
+          "seed_decisions": {
+            "retention_days": null
+          },
+          "decision_required_ids": [
+            "DEC-RETENTION-DAYS"
+          ],
+          "narrative_numeric_day_values": [],
+          "ledger_numeric_day_values": []
+        }
+      }
+    },
+    {
+      "scenario": "contradiction",
+      "input": {
+        "A0": [
+          {
+            "id": "AUD-101",
+            "status": "open",
+            "required_action": "Resolve deletion contradiction"
+          }
+        ],
+        "R0_must_have": [
+          {
+            "id": "MH-LOCAL-001",
+            "text": "Store records locally only."
+          },
+          {
+            "id": "MH-DELETE-IMMEDIATE",
+            "text": "Delete records immediately after use."
+          },
+          {
+            "id": "MH-DELETE-30D",
+            "text": "Retain records for 30 days before deletion."
+          }
+        ],
+        "forbidden_patterns": [
+          "mirror\\s+records\\s+to\\s+remote\\s+storage"
+        ],
+        "expected_unresolved": [
+          1,
+          1,
+          0
+        ]
+      },
+      "output": {
+        "R1_must_have": [
+          {
+            "id": "MH-LOCAL-001",
+            "text": "Store records locally only."
+          },
+          {
+            "id": "MH-DELETE-30D",
+            "text": "Retain records for 30 days before deletion."
+          }
+        ],
+        "carry_forward_gaps": [],
+        "auditor_incorporation_gaps": [],
+        "forbidden_hits": [],
+        "missing_required_sections": [],
+        "unresolved_counts": [
+          1,
+          1,
+          0
+        ],
+        "non_increasing": true,
+        "reopened_issues": [],
+        "replay_stop_reason": null,
+        "replay_history_round_count": 3,
+        "anti_hallucination": {
+          "executed": false,
+          "seed_decisions": {},
+          "decision_required_ids": [],
+          "narrative_numeric_day_values": [],
+          "ledger_numeric_day_values": []
+        }
+      }
+    },
+    {
+      "scenario": "overfitting",
+      "input": {
+        "A0": [
+          {
+            "id": "AUD-201",
+            "status": "open",
+            "required_action": "Add deterministic index integrity clause"
+          }
+        ],
+        "R0_must_have": [
+          {
+            "id": "MH-OFFLINE-001",
+            "text": "Runtime must operate offline."
+          }
+        ],
+        "forbidden_patterns": [
+          "third-party\\s+analytics",
+          "auto-post\\s+updates\\s+to\\s+social"
+        ],
+        "expected_unresolved": [
+          1,
+          1,
+          0
+        ]
+      },
+      "output": {
+        "R1_must_have": [
+          {
+            "id": "MH-OFFLINE-001",
+            "text": "Runtime must operate offline."
+          },
+          {
+            "id": "MH-INDEX-001",
+            "text": "Local vector index rebuild must be deterministic."
+          }
+        ],
+        "carry_forward_gaps": [],
+        "auditor_incorporation_gaps": [],
+        "forbidden_hits": [],
+        "missing_required_sections": [],
+        "unresolved_counts": [
+          1,
+          1,
+          0
+        ],
+        "non_increasing": true,
+        "reopened_issues": [],
+        "replay_stop_reason": null,
+        "replay_history_round_count": 3,
+        "anti_hallucination": {
+          "executed": false,
+          "seed_decisions": {},
+          "decision_required_ids": [],
+          "narrative_numeric_day_values": [],
+          "ledger_numeric_day_values": []
+        }
+      }
+    }
+  ]
+}

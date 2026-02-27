@@ -1,0 +1,449 @@
+{
+  "experiment_v": "1.0.0",
+  "spec_hash": "1062615d8f08624bbc366285f7a97708a6097ab7529f0ae63aef46cf508fe0ac",
+  "spec": {
+    "experiment_id": "role_matrix_v1_pilot_qwen_architect",
+    "task": "refinement_behavior_live_pilot",
+    "matrix": {
+      "architect": [
+        "qwen2.5:14b"
+      ],
+      "integrity_guard": [
+        "deepseek-r1:32b",
+        "gemma3:27b"
+      ]
+    },
+    "scenarios": [
+      {
+        "scenario_id": "contradiction"
+      },
+      {
+        "scenario_id": "missing_constraint"
+      },
+      {
+        "scenario_id": "overfitting"
+      }
+    ],
+    "seeds": [
+      0
+    ],
+    "repeats_per_run": 1,
+    "run_config": {},
+    "scoring": {}
+  },
+  "run_count": 6,
+  "runs": [
+    {
+      "run_id": "419a8c4cb5ba99bce8bbc0463c773232f2eebbfc0286acc4e83ec088daaccb4e",
+      "scenario_id": "contradiction",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "deepseek-r1:32b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "2ef7920b462b67e79088386735a09ba47c747028dee5590258650ab0692e228a",
+      "scenario_id": "contradiction",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "gemma3:27b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "f6227c6dfe114ab3a99ea52933937a1bf39c5fa9df9332af89efa7dfc09384fc",
+      "scenario_id": "missing_constraint",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "deepseek-r1:32b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 1,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": true,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 30,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 1100.0
+    },
+    {
+      "run_id": "88c83875109e964d83909df50fef83154282d32bf41e131bcc16d5374541938d",
+      "scenario_id": "missing_constraint",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "gemma3:27b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "c44bfd17cf29bffab7e2bc546aad643810616124401c5a80750c08895844049c",
+      "scenario_id": "overfitting",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "deepseek-r1:32b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "9a849a9803ef5a5a9f4fd8ac5cad7488e79cf9c124f6cfcb27bc007b8441abe6",
+      "scenario_id": "overfitting",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "gemma3:27b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    }
+  ],
+  "ranking": [
+    {
+      "run_id": "419a8c4cb5ba99bce8bbc0463c773232f2eebbfc0286acc4e83ec088daaccb4e",
+      "scenario_id": "contradiction",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "deepseek-r1:32b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "2ef7920b462b67e79088386735a09ba47c747028dee5590258650ab0692e228a",
+      "scenario_id": "contradiction",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "gemma3:27b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "88c83875109e964d83909df50fef83154282d32bf41e131bcc16d5374541938d",
+      "scenario_id": "missing_constraint",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "gemma3:27b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "c44bfd17cf29bffab7e2bc546aad643810616124401c5a80750c08895844049c",
+      "scenario_id": "overfitting",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "deepseek-r1:32b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "9a849a9803ef5a5a9f4fd8ac5cad7488e79cf9c124f6cfcb27bc007b8441abe6",
+      "scenario_id": "overfitting",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "gemma3:27b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 0,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": false,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 0,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 70.0
+    },
+    {
+      "run_id": "f6227c6dfe114ab3a99ea52933937a1bf39c5fa9df9332af89efa7dfc09384fc",
+      "scenario_id": "missing_constraint",
+      "seed": 0,
+      "repeat_index": 0,
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "deepseek-r1:32b"
+      },
+      "result": {
+        "forbidden_hits": 0,
+        "anti_hallucination_hits": 1,
+        "reopened_issues": 0,
+        "missing_required_sections": 7,
+        "unresolved_counts": [],
+        "rounds_to_zero": 0,
+        "oscillation_hits": 0
+      },
+      "hard_fail": true,
+      "penalties": {
+        "forbidden": 0,
+        "anti_hallucination": 30,
+        "reopened": 0,
+        "missing_sections": 70,
+        "unresolved_last": 0,
+        "oscillation": 0
+      },
+      "bonuses": {
+        "converged": 0.0
+      },
+      "score_total": 1100.0
+    }
+  ],
+  "aggregates_by_model_map": [
+    {
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "gemma3:27b"
+      },
+      "aggregate": {
+        "run_count": 3,
+        "mean_score": 70.0,
+        "variance_score": 0.0,
+        "hard_fail_rate": 0.0
+      }
+    },
+    {
+      "model_map": {
+        "architect": "qwen2.5:14b",
+        "integrity_guard": "deepseek-r1:32b"
+      },
+      "aggregate": {
+        "run_count": 3,
+        "mean_score": 413.3333333333333,
+        "variance_score": 235755.55555555556,
+        "hard_fail_rate": 0.3333333333333333
+      }
+    }
+  ]
+}

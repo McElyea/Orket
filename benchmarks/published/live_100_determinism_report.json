@@ -1,0 +1,2018 @@
+{
+  "generated_at_utc": "2026-02-18T00:38:45.578468+00:00",
+  "task_bank": "benchmarks/task_bank/v1/tasks.json",
+  "venue": "local-hardware",
+  "flow": "live",
+  "runs_per_task": 1,
+  "runner_template": "python scripts/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}",
+  "artifact_globs": [],
+  "task_id_min": 1,
+  "task_id_max": 100,
+  "total_tasks": 100,
+  "deterministic_tasks": 100,
+  "determinism_rate": 1.0,
+  "avg_latency_ms": 70.461,
+  "avg_cost_usd": 0.0,
+  "details": {
+    "001": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 71.158,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "26b3de8477c49490565018c7ce7b8663c9ccec2f537125f251ef7badba07ec05"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "26b3de8477c49490565018c7ce7b8663c9ccec2f537125f251ef7badba07ec05",
+          "duration_ms": 71.158,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"001\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "002": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.072,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "cba0b3f07875249c80a67f9310423506f23bfc4696c52a60cf8f5f41a77a6766"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "cba0b3f07875249c80a67f9310423506f23bfc4696c52a60cf8f5f41a77a6766",
+          "duration_ms": 70.072,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"002\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "003": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.084,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "5ca5f17fcfd9c67d2cd10b100a61b832c667d0bfba0c4ee88077fd758612173c"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "5ca5f17fcfd9c67d2cd10b100a61b832c667d0bfba0c4ee88077fd758612173c",
+          "duration_ms": 69.084,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"003\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "004": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.859,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "2c0773ef2722bf2742e0c8e40879a072937cee3b4db371225695b812c7101c17"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "2c0773ef2722bf2742e0c8e40879a072937cee3b4db371225695b812c7101c17",
+          "duration_ms": 68.859,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"004\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "005": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.184,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "7b30df0bc7d83c37aaa662abe9b29019d66a21f0f66f20a7252528935364a184"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "7b30df0bc7d83c37aaa662abe9b29019d66a21f0f66f20a7252528935364a184",
+          "duration_ms": 69.184,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"005\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "006": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 72.923,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "432b9131a7225b239b0fdf28b8432d9655a3bd8b8a5a9a082672d50a11393f6f"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "432b9131a7225b239b0fdf28b8432d9655a3bd8b8a5a9a082672d50a11393f6f",
+          "duration_ms": 72.923,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"006\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "007": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.794,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "f095663504bc3d6a175241e58116acf69bf95be516f6345a2cb122867e283726"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "f095663504bc3d6a175241e58116acf69bf95be516f6345a2cb122867e283726",
+          "duration_ms": 68.794,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"007\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "008": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 67.784,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "affbce70a401bbe4fdc900546b3bca6f5cb71131b0089c4d32d5782f382e4bcc"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "affbce70a401bbe4fdc900546b3bca6f5cb71131b0089c4d32d5782f382e4bcc",
+          "duration_ms": 67.784,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"008\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "009": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 72.245,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "ef2d6102ff708ae71ae4125854b0627ef5999b7ea3cd79e65b4d7078d6509d99"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "ef2d6102ff708ae71ae4125854b0627ef5999b7ea3cd79e65b4d7078d6509d99",
+          "duration_ms": 72.245,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"009\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "010": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.578,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "901737cbf285083dad359012c73508e2512b35868995d82dbd069d9aa84ed3e9"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "901737cbf285083dad359012c73508e2512b35868995d82dbd069d9aa84ed3e9",
+          "duration_ms": 68.578,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"010\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "011": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.809,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "902a4b1c974a239546768d82c7837a2aa1dd925fd030c0d5c8d62deb5176c06d"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "902a4b1c974a239546768d82c7837a2aa1dd925fd030c0d5c8d62deb5176c06d",
+          "duration_ms": 69.809,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"011\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "012": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.234,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "0c4806ef6ad1a612c45f8493f8b8f19756b0953788e856f03bee19b2ef0d6f46"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "0c4806ef6ad1a612c45f8493f8b8f19756b0953788e856f03bee19b2ef0d6f46",
+          "duration_ms": 69.234,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"012\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "013": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 72.184,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "b13cca6ee23fb966d31db91652982a4cde17bec072ea770189231ab7bb2f279c"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "b13cca6ee23fb966d31db91652982a4cde17bec072ea770189231ab7bb2f279c",
+          "duration_ms": 72.184,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"013\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "014": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.78,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "e172dbc4bbe6654869d961e0491873ca66a19ee7560e33425ace20dc5919b9fb"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "e172dbc4bbe6654869d961e0491873ca66a19ee7560e33425ace20dc5919b9fb",
+          "duration_ms": 68.78,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"014\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "015": {
+      "tier": 1,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.012,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "527cf34ca1393af90d5e0ae32b1bea74bfea753de9953d76029eaa541772d6b2"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "527cf34ca1393af90d5e0ae32b1bea74bfea753de9953d76029eaa541772d6b2",
+          "duration_ms": 69.012,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"015\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "016": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.537,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "00c6a82f60d30ff7ed717fb34d74857ebbace3308189205b1c8dd538c335138e"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "00c6a82f60d30ff7ed717fb34d74857ebbace3308189205b1c8dd538c335138e",
+          "duration_ms": 68.537,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"016\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "017": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.254,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "35b033f083372d4a97b0626d23a2aea75487f00b7c5f0afcb6c777a7817a7c3c"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "35b033f083372d4a97b0626d23a2aea75487f00b7c5f0afcb6c777a7817a7c3c",
+          "duration_ms": 70.254,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"017\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "018": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.296,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "39ea81eb6b9a3cdf51da493e552e1ec1d247e7111ee77a1df11e19a2725c06ff"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "39ea81eb6b9a3cdf51da493e552e1ec1d247e7111ee77a1df11e19a2725c06ff",
+          "duration_ms": 69.296,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"018\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "019": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.164,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "744c4c0dcb9546abe7ee3f49088b2a00d52439da85e3a461320d245f0c1ce43b"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "744c4c0dcb9546abe7ee3f49088b2a00d52439da85e3a461320d245f0c1ce43b",
+          "duration_ms": 68.164,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"019\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "020": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.367,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "d5a9c4f00282f85b58b3d52c29e487fff280fdb7eaca5b176619a032b74112c7"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "d5a9c4f00282f85b58b3d52c29e487fff280fdb7eaca5b176619a032b74112c7",
+          "duration_ms": 69.367,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"020\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "021": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.327,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "ce99d335b3a36e0415972ffc6787bce7ea4256473565311e3946a2d81d66363d"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "ce99d335b3a36e0415972ffc6787bce7ea4256473565311e3946a2d81d66363d",
+          "duration_ms": 70.327,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"021\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "022": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.641,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "b58257ca13749a5415dcc391dae2a2d655cdc4c58b4043631e83e558111f9a79"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "b58257ca13749a5415dcc391dae2a2d655cdc4c58b4043631e83e558111f9a79",
+          "duration_ms": 68.641,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"022\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "023": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.146,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "96637b82b061309f39df146d31914a2946ab1a753ddb1ebc51119185681fa0c5"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "96637b82b061309f39df146d31914a2946ab1a753ddb1ebc51119185681fa0c5",
+          "duration_ms": 69.146,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"023\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "024": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.263,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "707d8d05e26389f072c62fd97946a1ed9e5e6d632b276f5e93f5223d588fe454"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "707d8d05e26389f072c62fd97946a1ed9e5e6d632b276f5e93f5223d588fe454",
+          "duration_ms": 69.263,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"024\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "025": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.34,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "52d8235796249a0df25218288397d0f927bb365a88bf38c22a92ba65e3692fa5"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "52d8235796249a0df25218288397d0f927bb365a88bf38c22a92ba65e3692fa5",
+          "duration_ms": 69.34,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"025\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "026": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 75.492,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "2e400815f1e770b9e616e42b9136c6227cace002c8498409e043d4a4bc75b7b0"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "2e400815f1e770b9e616e42b9136c6227cace002c8498409e043d4a4bc75b7b0",
+          "duration_ms": 75.492,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"026\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "027": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 73.926,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "7f0ea32ef3935b10eb7a03da7482bb4b12e81f343aa2341c1510015f2dc0f2da"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "7f0ea32ef3935b10eb7a03da7482bb4b12e81f343aa2341c1510015f2dc0f2da",
+          "duration_ms": 73.926,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"027\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "028": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 73.669,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "46402f346c9df2c6e09c9631ff9625f4c6ee1914dc9cb651b5b27d4b0b4e2138"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "46402f346c9df2c6e09c9631ff9625f4c6ee1914dc9cb651b5b27d4b0b4e2138",
+          "duration_ms": 73.669,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"028\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "029": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 72.658,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "d62b2d1a50d964525eb496a97d077632de65f3b96a4c4251522dc36c1d91aaac"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "d62b2d1a50d964525eb496a97d077632de65f3b96a4c4251522dc36c1d91aaac",
+          "duration_ms": 72.658,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"029\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "030": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 74.714,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "ae9cd8354e11f058d72583bfbabc70ac14f088c2bdb90c1ed115bcc4387476fb"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "ae9cd8354e11f058d72583bfbabc70ac14f088c2bdb90c1ed115bcc4387476fb",
+          "duration_ms": 74.714,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"030\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "031": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 74.181,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "1bb37958ff758a4020f2d34eaf955668c0b832d3ff58d71ff8157c0aae2b7bed"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "1bb37958ff758a4020f2d34eaf955668c0b832d3ff58d71ff8157c0aae2b7bed",
+          "duration_ms": 74.181,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"031\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "032": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 72.661,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "a8f502c7b751e8bd2b322ea28e35fab069028c92ae06d177a82da5003d28d3c6"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "a8f502c7b751e8bd2b322ea28e35fab069028c92ae06d177a82da5003d28d3c6",
+          "duration_ms": 72.661,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"032\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "033": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.216,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "d98b390b271660e53b71c24baf6ce197dc3277c4668b59ac9cb89f0062493ff2"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "d98b390b271660e53b71c24baf6ce197dc3277c4668b59ac9cb89f0062493ff2",
+          "duration_ms": 69.216,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"033\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "034": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.523,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "afbbed7ec4c012cce1e003cb3a10ccb5b89ac7ec7c11f3126b9bbe84ff80ea21"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "afbbed7ec4c012cce1e003cb3a10ccb5b89ac7ec7c11f3126b9bbe84ff80ea21",
+          "duration_ms": 69.523,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"034\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "035": {
+      "tier": 2,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.651,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "300337a29c813e6053fa8422d6f5c04eef059877546df9e2052e287699836e46"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "300337a29c813e6053fa8422d6f5c04eef059877546df9e2052e287699836e46",
+          "duration_ms": 68.651,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"035\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "036": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.556,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "86386519c0457b06eb40a7351bcdcb80526d36767a6c005cc5afeae3e96bd77c"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "86386519c0457b06eb40a7351bcdcb80526d36767a6c005cc5afeae3e96bd77c",
+          "duration_ms": 69.556,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"036\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "037": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.087,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "b358e2b618be5be4d51d76bc24255707d7c9c89d288d71230b94f39bd484d2c6"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "b358e2b618be5be4d51d76bc24255707d7c9c89d288d71230b94f39bd484d2c6",
+          "duration_ms": 69.087,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"037\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "038": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.804,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "51bc12127877873c6556e47f467469d4376192b9e22a2bdc5919239efb3e0ffb"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "51bc12127877873c6556e47f467469d4376192b9e22a2bdc5919239efb3e0ffb",
+          "duration_ms": 68.804,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"038\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "039": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.524,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "920b58dbe523f39113b869ce78bac10ab4588848b7f7ab5d7102bbfa31125b48"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "920b58dbe523f39113b869ce78bac10ab4588848b7f7ab5d7102bbfa31125b48",
+          "duration_ms": 69.524,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"039\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "040": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.427,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "23f171fe8c56df023c3258baeb2be6f95758f55d03871b33df0e4c1365abd921"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "23f171fe8c56df023c3258baeb2be6f95758f55d03871b33df0e4c1365abd921",
+          "duration_ms": 69.427,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"040\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "041": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.373,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "4c8d47ff9688525b29b39864315179c321f5fc737aa77be568d5aa08a8178a40"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "4c8d47ff9688525b29b39864315179c321f5fc737aa77be568d5aa08a8178a40",
+          "duration_ms": 69.373,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"041\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "042": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.21,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "ce042cfb1587f79be0ff2346c7e1cbfa554a2295cd06366f72d77320d7a6952e"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "ce042cfb1587f79be0ff2346c7e1cbfa554a2295cd06366f72d77320d7a6952e",
+          "duration_ms": 70.21,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"042\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "043": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.152,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "c8de44ed7252ee4dce45483f844bfdefc3ccc14dea127a38519ed96dbc39ae87"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "c8de44ed7252ee4dce45483f844bfdefc3ccc14dea127a38519ed96dbc39ae87",
+          "duration_ms": 69.152,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"043\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "044": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.36,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "d8de158ffbf9be2449ac95f505b1522d24ac96a4f335d36a1063896c4d732e17"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "d8de158ffbf9be2449ac95f505b1522d24ac96a4f335d36a1063896c4d732e17",
+          "duration_ms": 70.36,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"044\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "045": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.498,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "fa82938c25d8ebf5098640eb7fa9757511df0ea4a1f86c8a5ab92c49ab584d8b"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "fa82938c25d8ebf5098640eb7fa9757511df0ea4a1f86c8a5ab92c49ab584d8b",
+          "duration_ms": 69.498,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"045\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "046": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.616,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "cfdc45f78afb6f81b27f627e80948847e79da7db98618801dd5d9dde9687156b"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "cfdc45f78afb6f81b27f627e80948847e79da7db98618801dd5d9dde9687156b",
+          "duration_ms": 68.616,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"046\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "047": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 81.892,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "fa502c371c445239440d34eec7c3064cbf7f95a75712cc07b471fd53f6a0a00d"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "fa502c371c445239440d34eec7c3064cbf7f95a75712cc07b471fd53f6a0a00d",
+          "duration_ms": 81.892,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"047\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "048": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 76.279,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "8fa2d3c607801c061bae4085ce4e0828c5be23d86f7223e2cfa4dad6e92b1e70"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "8fa2d3c607801c061bae4085ce4e0828c5be23d86f7223e2cfa4dad6e92b1e70",
+          "duration_ms": 76.279,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"048\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "049": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 72.579,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "ee6b0e257c823c693ae5e22275c99fdfe91192a36de77d48403bf45da3c319ec"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "ee6b0e257c823c693ae5e22275c99fdfe91192a36de77d48403bf45da3c319ec",
+          "duration_ms": 72.579,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"049\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "050": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.261,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "0ba0274d23907802e2d6d3d130eed9eb7cf85a83759577a344fb98cfc5b4744f"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "0ba0274d23907802e2d6d3d130eed9eb7cf85a83759577a344fb98cfc5b4744f",
+          "duration_ms": 69.261,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"050\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "051": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.253,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "b3a227e41d97795aba185441ed746817fbd6168409ab94f4dba16ed98648aeeb"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "b3a227e41d97795aba185441ed746817fbd6168409ab94f4dba16ed98648aeeb",
+          "duration_ms": 70.253,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"051\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "052": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 71.267,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "74ce43270f9d90d7394d05ff5375a821e2c45351066fd058446fcb963552ce6d"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "74ce43270f9d90d7394d05ff5375a821e2c45351066fd058446fcb963552ce6d",
+          "duration_ms": 71.267,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"052\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "053": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.856,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "c71fa3bdb245b6008749f9c5334d75256331528071eaa8f0e10bf5ee0ca225c1"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "c71fa3bdb245b6008749f9c5334d75256331528071eaa8f0e10bf5ee0ca225c1",
+          "duration_ms": 70.856,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"053\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "054": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.62,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "eb122eecbee04d603daaab25519a9c1eb6b72de1625adc6b8359570440dd07e4"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "eb122eecbee04d603daaab25519a9c1eb6b72de1625adc6b8359570440dd07e4",
+          "duration_ms": 69.62,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"054\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "055": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.699,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "4b5440e73838a510e43d1e566ed525cb34bcc09d23c8a4744da25821dd33bf91"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "4b5440e73838a510e43d1e566ed525cb34bcc09d23c8a4744da25821dd33bf91",
+          "duration_ms": 69.699,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"055\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "056": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.639,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "c149feec5853f860143057542ba750312a3a2ab6748c857ba293094cd088224e"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "c149feec5853f860143057542ba750312a3a2ab6748c857ba293094cd088224e",
+          "duration_ms": 69.639,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"056\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "057": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.287,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "6b0e704b7b3c157faf7f694887c7e1bb8f7ceedc63304fd450448e6dd97811d1"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "6b0e704b7b3c157faf7f694887c7e1bb8f7ceedc63304fd450448e6dd97811d1",
+          "duration_ms": 69.287,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"057\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "058": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.441,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "a77cfa5cbdecf0c13703a37835425afe2e87b747b322989671ea4793ca501840"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "a77cfa5cbdecf0c13703a37835425afe2e87b747b322989671ea4793ca501840",
+          "duration_ms": 70.441,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"058\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "059": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.389,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "8c68bbb4547a0d5d42b087e591a5421dc3f0779752c253c92a87c85890bbd69c"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "8c68bbb4547a0d5d42b087e591a5421dc3f0779752c253c92a87c85890bbd69c",
+          "duration_ms": 68.389,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"059\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "060": {
+      "tier": 3,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.532,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "9e376c11dd94516ae9d0fd2d44b45c562a9d898b514f451b572cefe495611225"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "9e376c11dd94516ae9d0fd2d44b45c562a9d898b514f451b572cefe495611225",
+          "duration_ms": 68.532,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"060\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "061": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.079,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "2b6ab1a39e8caba307cebee0d83ff4e8346a460c79733469ff47d2c35b04ef97"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "2b6ab1a39e8caba307cebee0d83ff4e8346a460c79733469ff47d2c35b04ef97",
+          "duration_ms": 69.079,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"061\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "062": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 76.567,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "5776b97d638bf2c385bdd375bc18f128609763ea29eb6fa8d33fa2c3b2a6f75f"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "5776b97d638bf2c385bdd375bc18f128609763ea29eb6fa8d33fa2c3b2a6f75f",
+          "duration_ms": 76.567,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"062\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "063": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.179,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "d6bc85b164bddb6491335a977cc21600e1cffb4351e4cab7e235767934fc1a9c"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "d6bc85b164bddb6491335a977cc21600e1cffb4351e4cab7e235767934fc1a9c",
+          "duration_ms": 70.179,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"063\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "064": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.916,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "95bf3a7dc785aeabb8646263db1d0db069c23717e1ca10b22f5e69109babfc19"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "95bf3a7dc785aeabb8646263db1d0db069c23717e1ca10b22f5e69109babfc19",
+          "duration_ms": 68.916,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"064\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "065": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.661,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "f239f8f9e2c897bc3a6d1225c4ea1a1ab180be50c70c4d325ccfdbf731934965"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "f239f8f9e2c897bc3a6d1225c4ea1a1ab180be50c70c4d325ccfdbf731934965",
+          "duration_ms": 68.661,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"065\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "066": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.264,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "21c4ac638d6c36635e261e1b5e1d315117f5e1fcbe37d5f1c0bb10a8042a4227"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "21c4ac638d6c36635e261e1b5e1d315117f5e1fcbe37d5f1c0bb10a8042a4227",
+          "duration_ms": 70.264,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"066\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "067": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 75.586,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "573e78d411e39769754f80abe77db8c094117c93c185b5d5be9cbc27ef77a653"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "573e78d411e39769754f80abe77db8c094117c93c185b5d5be9cbc27ef77a653",
+          "duration_ms": 75.586,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"067\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "068": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.603,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "d6bb5cf66900dc0ebc5833fe69b8d0bc76fbab27a1645078b7b8d9f571f25cd6"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "d6bb5cf66900dc0ebc5833fe69b8d0bc76fbab27a1645078b7b8d9f571f25cd6",
+          "duration_ms": 69.603,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"068\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "069": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 82.485,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "6f521982d66367b5f972effde8032d8a24bd02bedd558749592d7ad4296519f5"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "6f521982d66367b5f972effde8032d8a24bd02bedd558749592d7ad4296519f5",
+          "duration_ms": 82.485,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"069\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "070": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 76.673,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "623a9ddf123c93fe2b295aa3cadf5720e477d892355bb045a15128ee34a0b853"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "623a9ddf123c93fe2b295aa3cadf5720e477d892355bb045a15128ee34a0b853",
+          "duration_ms": 76.673,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"070\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "071": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.905,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "7d5d090cf3f9f88439c8a6cbe6daac4b91ccce617bb8a5da0178e664477ceeab"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "7d5d090cf3f9f88439c8a6cbe6daac4b91ccce617bb8a5da0178e664477ceeab",
+          "duration_ms": 68.905,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"071\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "072": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.446,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "75487db69b173b19f65723db790c48cd2d97afbf913445d018969370890f53a4"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "75487db69b173b19f65723db790c48cd2d97afbf913445d018969370890f53a4",
+          "duration_ms": 69.446,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"072\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "073": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.699,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "2814998788e786812948265db2d028a9c6429dfa494ab349da6a46aa01e4e9fa"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "2814998788e786812948265db2d028a9c6429dfa494ab349da6a46aa01e4e9fa",
+          "duration_ms": 68.699,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"073\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "074": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.241,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "fefe10f5027089ff35230103ba14ffe1c64b9de5bd37238087039d746a24d473"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "fefe10f5027089ff35230103ba14ffe1c64b9de5bd37238087039d746a24d473",
+          "duration_ms": 69.241,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"074\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "075": {
+      "tier": 4,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 79.405,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "828ed970d8822fe4c14d534ce20961bff14508a635b23870a56e9cc4c517bc65"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "828ed970d8822fe4c14d534ce20961bff14508a635b23870a56e9cc4c517bc65",
+          "duration_ms": 79.405,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"075\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "076": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.49,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "741e2e82abdb9f2454858470cb97378012963efa9513b8bc0415b9c0ec210220"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "741e2e82abdb9f2454858470cb97378012963efa9513b8bc0415b9c0ec210220",
+          "duration_ms": 69.49,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"076\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "077": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.224,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "1efb310a66f285d2bede058d502bd5f172dc29c4de209bbd123aa1768c112549"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "1efb310a66f285d2bede058d502bd5f172dc29c4de209bbd123aa1768c112549",
+          "duration_ms": 69.224,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"077\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "078": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 71.431,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "c68170a72c44ae59f6f678bdde60646520f35043785ddf546051efe7e0d4da26"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "c68170a72c44ae59f6f678bdde60646520f35043785ddf546051efe7e0d4da26",
+          "duration_ms": 71.431,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"078\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "079": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.306,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "557c79937e00dac8c8170575b1266bc8d9e741a330b74021c451a564a0bc041f"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "557c79937e00dac8c8170575b1266bc8d9e741a330b74021c451a564a0bc041f",
+          "duration_ms": 68.306,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"079\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "080": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.046,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "9cdfa27606b021dffbee4ea83102e398c9bc6077db5b3064b1a02f66a386a74b"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "9cdfa27606b021dffbee4ea83102e398c9bc6077db5b3064b1a02f66a386a74b",
+          "duration_ms": 70.046,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"080\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "081": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.481,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "ea303b70a7e6572602b6d9d466b54886fab795331690f14a0d60c20f7a12ed49"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "ea303b70a7e6572602b6d9d466b54886fab795331690f14a0d60c20f7a12ed49",
+          "duration_ms": 69.481,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"081\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "082": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.638,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "f25f4c8ddbb43685b4bb5af25b1aa1a6f5c70b3184eb8afd6ec14e1a3164453d"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "f25f4c8ddbb43685b4bb5af25b1aa1a6f5c70b3184eb8afd6ec14e1a3164453d",
+          "duration_ms": 68.638,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"082\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "083": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.827,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "79718636800e92aa79dc9b3ed9f53c9ed0453e056f59c776cd2b495eba4ba293"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "79718636800e92aa79dc9b3ed9f53c9ed0453e056f59c776cd2b495eba4ba293",
+          "duration_ms": 69.827,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"083\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "084": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.797,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "b882f9da984789105b5153dafa2c8d832b2be75ff72e4f3a2258fa3312e4a297"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "b882f9da984789105b5153dafa2c8d832b2be75ff72e4f3a2258fa3312e4a297",
+          "duration_ms": 68.797,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"084\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "085": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.616,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "cb7381a335e5d56c1c1e51a6096658d41edc1a2b708d12c3aa68b2b7fdd686b5"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "cb7381a335e5d56c1c1e51a6096658d41edc1a2b708d12c3aa68b2b7fdd686b5",
+          "duration_ms": 68.616,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"085\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "086": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.537,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "727ae999304093017d3a9708211b319c21290a49f33701eb0dfac2c9712c457e"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "727ae999304093017d3a9708211b319c21290a49f33701eb0dfac2c9712c457e",
+          "duration_ms": 68.537,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"086\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "087": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.721,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "0ad7e189641238cc7b490be265876621ffac33154400b23a2488c56efce7e72f"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "0ad7e189641238cc7b490be265876621ffac33154400b23a2488c56efce7e72f",
+          "duration_ms": 69.721,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"087\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "088": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.554,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "dc2eef4563b8923d5cf328081add8ab8d37a56c80e305c51d1dd9c9220efd6d2"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "dc2eef4563b8923d5cf328081add8ab8d37a56c80e305c51d1dd9c9220efd6d2",
+          "duration_ms": 68.554,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"088\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "089": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.621,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "a38538313122dbcb7e26d81bf28a7433ec6001acc24a4ae179b71b5dde5c5b8b"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "a38538313122dbcb7e26d81bf28a7433ec6001acc24a4ae179b71b5dde5c5b8b",
+          "duration_ms": 68.621,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"089\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "090": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 71.092,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "5db297dae7280e91d917ea4e1d2cdb90e9da9ed59bc5f9d3cdbdd943acc5f178"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "5db297dae7280e91d917ea4e1d2cdb90e9da9ed59bc5f9d3cdbdd943acc5f178",
+          "duration_ms": 71.092,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"090\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "091": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.173,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "bb127b4fc8debef6ed3f03e199efaad7a368b50121de999f44a8cce02f47e97e"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "bb127b4fc8debef6ed3f03e199efaad7a368b50121de999f44a8cce02f47e97e",
+          "duration_ms": 70.173,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"091\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "092": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.336,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "7b76a20e4dc0a1bd7a9285edd82b7d7a8b87402589f53f5cec64c24e3340e372"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "7b76a20e4dc0a1bd7a9285edd82b7d7a8b87402589f53f5cec64c24e3340e372",
+          "duration_ms": 69.336,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"092\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "093": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.084,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "25e1d88af6168ab2ae7b00712faca4c19f2713ad957cea289035852d8e5c16e4"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "25e1d88af6168ab2ae7b00712faca4c19f2713ad957cea289035852d8e5c16e4",
+          "duration_ms": 69.084,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"093\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "094": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.761,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "08b2828897b4344902776dc2c32b2bfa1e7b6d04a0f6f5c3a6a60f5d3bf2e953"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "08b2828897b4344902776dc2c32b2bfa1e7b6d04a0f6f5c3a6a60f5d3bf2e953",
+          "duration_ms": 68.761,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"094\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "095": {
+      "tier": 5,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.874,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "10e8ff1f01880a041b07edb1d53d86f4476c7e3bea9bfa8721590dbd5d6ff9cc"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "10e8ff1f01880a041b07edb1d53d86f4476c7e3bea9bfa8721590dbd5d6ff9cc",
+          "duration_ms": 68.874,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"095\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "096": {
+      "tier": 6,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 70.605,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "858c53d1b3f17c36334d10595eda9b3ef3b1cd72c9383ebdf0beba0025dfbb20"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "858c53d1b3f17c36334d10595eda9b3ef3b1cd72c9383ebdf0beba0025dfbb20",
+          "duration_ms": 70.605,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"096\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "097": {
+      "tier": 6,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.945,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "142e548fde50950feca3b7f7cfec10bb72d3e1c6cdd73bbcdb67d5960276052b"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "142e548fde50950feca3b7f7cfec10bb72d3e1c6cdd73bbcdb67d5960276052b",
+          "duration_ms": 69.945,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"097\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "098": {
+      "tier": 6,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 69.37,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "c6b45b4b1068b034d21113e93f816941f0eec2ae7ba330cf7448094d01006cf3"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "c6b45b4b1068b034d21113e93f816941f0eec2ae7ba330cf7448094d01006cf3",
+          "duration_ms": 69.37,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"098\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "099": {
+      "tier": 6,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 68.258,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "a6e078d0f6bb5b541ab0d6421fded4dd783787da9a77c70c5322c07422b11c48"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "a6e078d0f6bb5b541ab0d6421fded4dd783787da9a77c70c5322c07422b11c48",
+          "duration_ms": 68.258,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"099\\\"}\\n\\n\"}\n"
+        }
+      ]
+    },
+    "100": {
+      "tier": 6,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 71.296,
+      "avg_cost_usd": 0.0,
+      "hashes": [
+        "60a61a7c70b1815e7f70926fa9a967cd5cfec72676488866c5f0117584b87ab0"
+      ],
+      "runs": [
+        {
+          "run_index": 1,
+          "exit_code": 0,
+          "hash": "60a61a7c70b1815e7f70926fa9a967cd5cfec72676488866c5f0117584b87ab0",
+          "duration_ms": 71.296,
+          "cost_usd": 0.0,
+          "normalized_output_preview": "{\"artifacts\": [], \"exit_code\": 0, \"stdout_stderr\": \"{\\\"status\\\": \\\"pass\\\", \\\"task_id\\\": \\\"100\\\"}\\n\\n\"}\n"
+        }
+      ]
+    }
+  }
+}

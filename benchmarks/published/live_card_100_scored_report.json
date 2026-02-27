@@ -1,0 +1,1650 @@
+{
+  "schema_version": "v1",
+  "policy_version": "v1",
+  "input_report": "benchmarks/task_bank/v1/tasks.json",
+  "venue": "local-hardware",
+  "flow": "live-card",
+  "runs_per_task": 1,
+  "determinism_rate": 1.0,
+  "avg_latency_ms": 3855.918,
+  "avg_cost_usd": 0.0,
+  "overall_avg_score": 4.97,
+  "per_task_scores": {
+    "001": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3944.79,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "002": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3640.869,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "003": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3429.995,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "004": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3476.623,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "005": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3663.368,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "006": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3387.539,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "007": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3772.162,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "008": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3398.963,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "009": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3630.286,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "010": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3678.301,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "011": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3435.04,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "012": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3646.377,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "013": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3467.922,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "014": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3437.772,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "015": {
+      "tier": 1,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3497.83,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "016": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3726.379,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "017": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3654.974,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "018": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3385.827,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "019": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3764.862,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "020": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3651.802,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "021": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3683.004,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "022": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3817.944,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "023": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3725.959,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "024": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3691.231,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "025": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3736.719,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "026": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3681.29,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "027": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3579.755,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "028": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3940.863,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "029": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 0.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 5233.32,
+      "avg_cost_usd": 0.0,
+      "score": 2.0,
+      "band": 2,
+      "min_required_band": 4,
+      "passed": false,
+      "reason_codes": [
+        "non_zero_exit_detected",
+        "deterministic_output"
+      ]
+    },
+    "030": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 5573.005,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "031": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3705.106,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "032": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3643.137,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "033": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3735.856,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "034": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3960.514,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "035": {
+      "tier": 2,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4126.09,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 4,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "036": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3819.374,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "037": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4058.718,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "038": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3815.691,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "039": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4452.149,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "040": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4251.191,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "041": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4143.855,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "042": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4123.486,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "043": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3940.682,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "044": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4091.662,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "045": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4189.624,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "046": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4192.606,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "047": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4352.35,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "048": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4105.341,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "049": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4169.855,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "050": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4046.99,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "051": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3888.925,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "052": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3828.503,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "053": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3879.18,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "054": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4213.238,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "055": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3805.847,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "056": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3887.676,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "057": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3641.59,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "058": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3769.495,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "059": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3768.001,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "060": {
+      "tier": 3,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3459.788,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "061": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3684.195,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "062": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3687.196,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "063": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3759.911,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "064": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3718.258,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "065": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3728.723,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "066": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3811.624,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "067": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3758.545,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "068": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3665.247,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "069": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3789.51,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "070": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3719.867,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "071": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3735.008,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "072": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3851.193,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "073": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3768.99,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "074": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3848.218,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "075": {
+      "tier": 4,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3814.855,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "076": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3777.451,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "077": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3718.663,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "078": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3480.666,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "079": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3729.375,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "080": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 5847.327,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "081": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3746.888,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "082": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3771.969,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "083": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3644.814,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "084": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3736.185,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "085": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3773.547,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "086": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3780.937,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "087": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3527.595,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "088": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3817.519,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "089": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3669.213,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "090": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3784.149,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "091": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3778.857,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "092": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3682.393,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "093": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 4049.392,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "094": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 6322.2,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "095": {
+      "tier": 5,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3753.066,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 3,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "096": {
+      "tier": 6,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3703.024,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 2,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "097": {
+      "tier": 6,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3713.231,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 2,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "098": {
+      "tier": 6,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3771.796,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 2,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "099": {
+      "tier": 6,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3761.786,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 2,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    },
+    "100": {
+      "tier": 6,
+      "run_count": 1,
+      "success_rate": 1.0,
+      "unique_hashes": 1,
+      "deterministic": true,
+      "avg_latency_ms": 3487.11,
+      "avg_cost_usd": 0.0,
+      "score": 5.0,
+      "band": 5,
+      "min_required_band": 2,
+      "passed": true,
+      "reason_codes": [
+        "deterministic_output"
+      ]
+    }
+  },
+  "aggregate_tier_scores": {
+    "1": {
+      "task_count": 15,
+      "avg_score": 5.0,
+      "avg_band": 5.0
+    },
+    "2": {
+      "task_count": 20,
+      "avg_score": 4.85,
+      "avg_band": 4.85
+    },
+    "3": {
+      "task_count": 25,
+      "avg_score": 5.0,
+      "avg_band": 5.0
+    },
+    "4": {
+      "task_count": 15,
+      "avg_score": 5.0,
+      "avg_band": 5.0
+    },
+    "5": {
+      "task_count": 20,
+      "avg_score": 5.0,
+      "avg_band": 5.0
+    },
+    "6": {
+      "task_count": 5,
+      "avg_score": 5.0,
+      "avg_band": 5.0
+    }
+  },
+  "failing_tasks": [
+    "029"
+  ]
+}
