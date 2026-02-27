@@ -1,0 +1,921 @@
+{
+  "schema_version": "odr.gold_labels.v1",
+  "generated_at": "2026-02-27T22:23:30.930848+00:00",
+  "runs": [
+    {
+      "run_id": "bad_format_sabotage_01",
+      "scenario_id": "format_sabotage",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "bad_oscillation_01",
+      "scenario_id": "oscillation_loop_a",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "bad_oscillation_02",
+      "scenario_id": "oscillation_loop_b",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:14b",
+        "auditor": "gemma3:27b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "bad_paraphrase_thrash_01",
+      "scenario_id": "paraphrase_thrash",
+      "model_matrix": {
+        "architect": "llama3.1:8b",
+        "auditor": "qwen2.5-coder:7b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "bad_scope_creep_01",
+      "scenario_id": "scope_creep_ratchet",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "good_resolved_01",
+      "scenario_id": "good_resolved_seeded_01",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "good_resolved_02",
+      "scenario_id": "good_resolved_seeded_02",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "good_resolved_03",
+      "scenario_id": "good_resolved_seeded_03",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "good_resolved_04",
+      "scenario_id": "good_resolved_seeded_04",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "good_resolved_05",
+      "scenario_id": "good_resolved_seeded_05",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "stable_unresolved_01",
+      "scenario_id": "missing_decision_pressure_01",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 4,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "stable_unresolved_02",
+      "scenario_id": "missing_decision_pressure_02",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 4,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "stable_unresolved_03",
+      "scenario_id": "missing_decision_pressure_03",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 4,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "stable_unresolved_04",
+      "scenario_id": "missing_decision_pressure_04",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 4,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    },
+    {
+      "run_id": "stable_unresolved_05",
+      "scenario_id": "missing_decision_pressure_05",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 2,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 3,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        },
+        {
+          "t": 4,
+          "delta_type_round": null,
+          "delta_type_by_section": {
+            "REQUIREMENT": null,
+            "CHANGELOG": null,
+            "ASSUMPTIONS": null,
+            "OPEN_QUESTIONS": null
+          },
+          "conflict_active_gold": null,
+          "conflict_ids_gold": [],
+          "resolved_decisions_gold": {},
+          "resolved_issues_gold": {},
+          "good_enough_gold": null
+        }
+      ],
+      "first_good_enough_round": null,
+      "final_outcome_gold": null
+    }
+  ]
+}

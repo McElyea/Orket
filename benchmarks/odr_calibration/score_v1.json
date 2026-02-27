@@ -1,0 +1,185 @@
+{
+  "schema_version": "odr.calibration.score.v1",
+  "generated_at": "2026-02-27T22:27:51.652646+00:00",
+  "counts": {
+    "shared_runs": 15,
+    "counted_false_stop": 0,
+    "counted_overrun": 0,
+    "counted_loop": 0,
+    "counted_format": 0
+  },
+  "rates": {
+    "false_stop_rate": 0.0,
+    "overrun_rate": 0.0,
+    "loop_miss_rate": 0.0,
+    "format_miss_rate": 0.0
+  },
+  "loss": 0.0,
+  "details": [
+    {
+      "run_id": "bad_format_sabotage_01",
+      "eval_outcome": "FORMAT_VIOLATION",
+      "gold_outcome": null,
+      "eval_stop_round": 2,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "bad_oscillation_01",
+      "eval_outcome": "LOOP_DETECTED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "bad_oscillation_02",
+      "eval_outcome": "LOOP_DETECTED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "bad_paraphrase_thrash_01",
+      "eval_outcome": "CONVERGED_UNRESOLVED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "bad_scope_creep_01",
+      "eval_outcome": "CONVERGED_UNRESOLVED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "good_resolved_01",
+      "eval_outcome": "MAX_ROUNDS",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "good_resolved_02",
+      "eval_outcome": "MAX_ROUNDS",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "good_resolved_03",
+      "eval_outcome": "MAX_ROUNDS",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "good_resolved_04",
+      "eval_outcome": "MAX_ROUNDS",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "good_resolved_05",
+      "eval_outcome": "MAX_ROUNDS",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "stable_unresolved_01",
+      "eval_outcome": "LOOP_DETECTED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "stable_unresolved_02",
+      "eval_outcome": "LOOP_DETECTED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "stable_unresolved_03",
+      "eval_outcome": "LOOP_DETECTED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "stable_unresolved_04",
+      "eval_outcome": "LOOP_DETECTED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    },
+    {
+      "run_id": "stable_unresolved_05",
+      "eval_outcome": "LOOP_DETECTED",
+      "gold_outcome": null,
+      "eval_stop_round": 3,
+      "first_good_enough_round": null,
+      "false_stop": false,
+      "overrun": false,
+      "loop_miss": false,
+      "format_miss": false
+    }
+  ]
+}

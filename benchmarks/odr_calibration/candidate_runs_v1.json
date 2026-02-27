@@ -1,0 +1,1305 @@
+{
+  "schema_version": "odr.calibration.bundle.v1",
+  "generated_at": "2026-02-27T22:23:30.930817+00:00",
+  "config": {
+    "max_rounds": 8,
+    "temperature": 0.1,
+    "timeout": 180,
+    "notes": "Deterministic candidate set for first-pass human labeling."
+  },
+  "distribution": {
+    "good_resolved": 5,
+    "stable_unresolved": 5,
+    "bad": 5
+  },
+  "runs": [
+    {
+      "run_id": "bad_format_sabotage_01",
+      "category": "bad",
+      "scenario_id": "format_sabotage",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally and enforce retention for 30 days.",
+            "CHANGELOG": [
+              "Baseline."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENTS": "Must store profile data locally.",
+            "CHANGELOG": [
+              "Introduced malformed header and inline pseudo code: def retain(x): pass"
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": false,
+          "code_leak_hit": true,
+          "notes": [
+            "format_violation",
+            "code_leak"
+          ]
+        }
+      ],
+      "final_stop_reason": "FORMAT_VIOLATION",
+      "final_outcome_candidate": "FORMAT_VIOLATION"
+    },
+    {
+      "run_id": "bad_oscillation_01",
+      "category": "bad",
+      "scenario_id": "oscillation_loop_a",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": null
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must retain logs for forensic audits for 180 days.",
+            "CHANGELOG": [
+              "Add long retention requirement."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must delete logs quickly for privacy; maximum retention 7 days.",
+            "CHANGELOG": [
+              "Flip retention to short horizon."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_conflict"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must retain logs for forensic audits for 180 days.",
+            "CHANGELOG": [
+              "Revert to long retention."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_conflict",
+            "loop_signature:period_2"
+          ]
+        }
+      ],
+      "final_stop_reason": "LOOP_DETECTED",
+      "final_outcome_candidate": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "bad_oscillation_02",
+      "category": "bad",
+      "scenario_id": "oscillation_loop_b",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:14b",
+        "auditor": "gemma3:27b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "encryption_algo": null
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must keep keys only on device; no remote backup.",
+            "CHANGELOG": [
+              "Add local-key-only policy."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: key_backup_policy"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must back up keys remotely for recovery.",
+            "CHANGELOG": [
+              "Replace local-only with remote backup requirement."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: key_backup_policy"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_conflict"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must keep keys only on device; no remote backup.",
+            "CHANGELOG": [
+              "Revert requirement."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: key_backup_policy"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_conflict",
+            "loop_signature:period_2"
+          ]
+        }
+      ],
+      "final_stop_reason": "LOOP_DETECTED",
+      "final_outcome_candidate": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "bad_paraphrase_thrash_01",
+      "category": "bad",
+      "scenario_id": "paraphrase_thrash",
+      "model_matrix": {
+        "architect": "llama3.1:8b",
+        "auditor": "qwen2.5-coder:7b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally and never upload it to external services.",
+            "CHANGELOG": [
+              "Baseline."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Profile records are required to remain on-device only; outbound transfer is prohibited.",
+            "CHANGELOG": [
+              "Rewrite for clarity."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "high_diff_surface_low_semantic_delta"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "User profile artifacts shall persist solely on local storage, and external transmission must not occur.",
+            "CHANGELOG": [
+              "Rewrite for readability."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "high_diff_surface_low_semantic_delta"
+          ]
+        }
+      ],
+      "final_stop_reason": "MAX_ROUNDS",
+      "final_outcome_candidate": "MAX_ROUNDS"
+    },
+    {
+      "run_id": "bad_scope_creep_01",
+      "category": "bad",
+      "scenario_id": "scope_creep_ratchet",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profiles locally and block outbound profile export.",
+            "CHANGELOG": [
+              "Baseline local-first policy."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profiles locally, block outbound export, add cloud sync for backups, add multi-user sharing controls.",
+            "CHANGELOG": [
+              "Add cloud sync and multi-user requirements."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "scope_creep",
+            "new_domain_entities:cloud sync,multi-user"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profiles locally, block outbound export, add cloud sync, multi-user sharing, telemetry analytics, and notification workflows.",
+            "CHANGELOG": [
+              "Add telemetry and notifications."
+            ],
+            "ASSUMPTIONS": [],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "scope_creep",
+            "new_domain_entities:telemetry,analytics,notifications"
+          ]
+        }
+      ],
+      "final_stop_reason": "MAX_ROUNDS",
+      "final_outcome_candidate": "MAX_ROUNDS"
+    },
+    {
+      "run_id": "good_resolved_01",
+      "category": "good_resolved",
+      "scenario_id": "good_resolved_seeded_01",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30,
+        "encryption_algo": "AES-256"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days.",
+            "CHANGELOG": [
+              "Add retention and encryption constraints."
+            ],
+            "ASSUMPTIONS": [
+              "Environment supports local encrypted storage."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_resolved:retention_days"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "Add explicit outbound block acceptance constraint."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "issue_closed:AUD-OUTBOUND"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE",
+      "final_outcome_candidate": "CONVERGED_RESOLVED"
+    },
+    {
+      "run_id": "good_resolved_02",
+      "category": "good_resolved",
+      "scenario_id": "good_resolved_seeded_02",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30,
+        "encryption_algo": "AES-256"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days.",
+            "CHANGELOG": [
+              "Add retention and encryption constraints."
+            ],
+            "ASSUMPTIONS": [
+              "Environment supports local encrypted storage."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_resolved:retention_days"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "Add explicit outbound block acceptance constraint."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "issue_closed:AUD-OUTBOUND"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE",
+      "final_outcome_candidate": "CONVERGED_RESOLVED"
+    },
+    {
+      "run_id": "good_resolved_03",
+      "category": "good_resolved",
+      "scenario_id": "good_resolved_seeded_03",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30,
+        "encryption_algo": "AES-256"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days.",
+            "CHANGELOG": [
+              "Add retention and encryption constraints."
+            ],
+            "ASSUMPTIONS": [
+              "Environment supports local encrypted storage."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_resolved:retention_days"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "Add explicit outbound block acceptance constraint."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "issue_closed:AUD-OUTBOUND"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE",
+      "final_outcome_candidate": "CONVERGED_RESOLVED"
+    },
+    {
+      "run_id": "good_resolved_04",
+      "category": "good_resolved",
+      "scenario_id": "good_resolved_seeded_04",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30,
+        "encryption_algo": "AES-256"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days.",
+            "CHANGELOG": [
+              "Add retention and encryption constraints."
+            ],
+            "ASSUMPTIONS": [
+              "Environment supports local encrypted storage."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_resolved:retention_days"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "Add explicit outbound block acceptance constraint."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "issue_closed:AUD-OUTBOUND"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE",
+      "final_outcome_candidate": "CONVERGED_RESOLVED"
+    },
+    {
+      "run_id": "good_resolved_05",
+      "category": "good_resolved",
+      "scenario_id": "good_resolved_seeded_05",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": 30,
+        "encryption_algo": "AES-256"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days.",
+            "CHANGELOG": [
+              "Add retention and encryption constraints."
+            ],
+            "ASSUMPTIONS": [
+              "Environment supports local encrypted storage."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_resolved:retention_days"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "Add explicit outbound block acceptance constraint."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "issue_closed:AUD-OUTBOUND"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must enforce AES-256 at rest. Retention must be 30 days. Must block outbound profile export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Audit logger available."
+            ],
+            "OPEN_QUESTIONS": []
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE",
+      "final_outcome_candidate": "CONVERGED_RESOLVED"
+    },
+    {
+      "run_id": "stable_unresolved_01",
+      "category": "stable_unresolved",
+      "scenario_id": "missing_decision_pressure_01",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": null,
+        "encryption_algo": null
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Baseline constraints captured."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_required_count:2"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Clarify unresolved decisions remain external."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 4,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stop_candidate_stable_but_unresolved_decision"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE_CANDIDATE_BLOCKED",
+      "final_outcome_candidate": "CONVERGED_UNRESOLVED"
+    },
+    {
+      "run_id": "stable_unresolved_02",
+      "category": "stable_unresolved",
+      "scenario_id": "missing_decision_pressure_02",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": null,
+        "encryption_algo": null
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Baseline constraints captured."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_required_count:2"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Clarify unresolved decisions remain external."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 4,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stop_candidate_stable_but_unresolved_decision"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE_CANDIDATE_BLOCKED",
+      "final_outcome_candidate": "CONVERGED_UNRESOLVED"
+    },
+    {
+      "run_id": "stable_unresolved_03",
+      "category": "stable_unresolved",
+      "scenario_id": "missing_decision_pressure_03",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": null,
+        "encryption_algo": null
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Baseline constraints captured."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_required_count:2"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Clarify unresolved decisions remain external."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 4,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stop_candidate_stable_but_unresolved_decision"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE_CANDIDATE_BLOCKED",
+      "final_outcome_candidate": "CONVERGED_UNRESOLVED"
+    },
+    {
+      "run_id": "stable_unresolved_04",
+      "category": "stable_unresolved",
+      "scenario_id": "missing_decision_pressure_04",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": null,
+        "encryption_algo": null
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Baseline constraints captured."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_required_count:2"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Clarify unresolved decisions remain external."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 4,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stop_candidate_stable_but_unresolved_decision"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE_CANDIDATE_BLOCKED",
+      "final_outcome_candidate": "CONVERGED_UNRESOLVED"
+    },
+    {
+      "run_id": "stable_unresolved_05",
+      "category": "stable_unresolved",
+      "scenario_id": "missing_decision_pressure_05",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "config": {
+        "max_rounds": 8,
+        "temperature": 0.1,
+        "timeout": 180
+      },
+      "seed_decisions": {
+        "retention_days": null,
+        "encryption_algo": null
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Baseline constraints captured."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "constraint_add",
+            "decision_required_count:2"
+          ]
+        },
+        {
+          "t": 2,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "Clarify unresolved decisions remain external."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 3,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stable_but_unresolved"
+          ]
+        },
+        {
+          "t": 4,
+          "sections": {
+            "REQUIREMENT": "Must store profile data locally. Must block outbound export.",
+            "CHANGELOG": [
+              "No semantic change."
+            ],
+            "ASSUMPTIONS": [
+              "Encryption required but algorithm undecided."
+            ],
+            "OPEN_QUESTIONS": [
+              "DECISION_REQUIRED: retention_days",
+              "DECISION_REQUIRED: encryption_algo"
+            ]
+          },
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "notes": [
+            "rewrite_same_semantics",
+            "stop_candidate_stable_but_unresolved_decision"
+          ]
+        }
+      ],
+      "final_stop_reason": "STABLE_CANDIDATE_BLOCKED",
+      "final_outcome_candidate": "CONVERGED_UNRESOLVED"
+    }
+  ]
+}

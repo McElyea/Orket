@@ -1,0 +1,1537 @@
+{
+  "schema_version": "odr.calibration.eval.v1",
+  "generated_at": "2026-02-27T22:27:08.514367+00:00",
+  "run_count": 15,
+  "runs": [
+    {
+      "run_id": "bad_format_sabotage_01",
+      "scenario_id": "format_sabotage",
+      "category": "bad",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "formatting_only",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_remove",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_remove",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": false,
+          "code_leak_hit": true,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "FORMAT_VIOLATION"
+    },
+    {
+      "run_id": "bad_oscillation_01",
+      "scenario_id": "oscillation_loop_a",
+      "category": "bad",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "formatting_only",
+            "OPEN_QUESTIONS": "constraint_modify"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 1
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_modify",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.5398230088495575,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 1
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_modify",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.5398230088495575,
+            "sim_prev": 0.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 1
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "bad_oscillation_02",
+      "scenario_id": "oscillation_loop_b",
+      "category": "bad",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:14b",
+        "auditor": "gemma3:27b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_add",
+            "ASSUMPTIONS": "formatting_only",
+            "OPEN_QUESTIONS": "constraint_modify"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 1
+          },
+          "resolved_decisions": {
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_modify",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.5,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 1
+          },
+          "resolved_decisions": {
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_modify",
+            "CHANGELOG": "constraint_remove",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_remove",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.5,
+            "sim_prev": 0.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 1
+          },
+          "resolved_decisions": {
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "bad_paraphrase_thrash_01",
+      "scenario_id": "paraphrase_thrash",
+      "category": "bad",
+      "model_matrix": {
+        "architect": "llama3.1:8b",
+        "auditor": "qwen2.5-coder:7b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "formatting_only",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_modify",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.7125,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_modify",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.6631578947368422,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "CONVERGED_UNRESOLVED"
+    },
+    {
+      "run_id": "bad_scope_creep_01",
+      "scenario_id": "scope_creep_ratchet",
+      "category": "bad",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "formatting_only",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.4252873563218391,
+            "sim_prev": 0.1,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.24193548387096775,
+            "sim_prev": 0.4090909090909091,
+            "sim_loop": 0.4090909090909091,
+            "argmax_loop_index": 1,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 1,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "CONVERGED_UNRESOLVED"
+    },
+    {
+      "run_id": "good_resolved_01",
+      "scenario_id": "good_resolved_seeded_01",
+      "category": "good_resolved",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.16822429906542058,
+            "sim_prev": 0.7368421052631579,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 1,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "MAX_ROUNDS"
+    },
+    {
+      "run_id": "good_resolved_02",
+      "scenario_id": "good_resolved_seeded_02",
+      "category": "good_resolved",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.16822429906542058,
+            "sim_prev": 0.7368421052631579,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 1,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "MAX_ROUNDS"
+    },
+    {
+      "run_id": "good_resolved_03",
+      "scenario_id": "good_resolved_seeded_03",
+      "category": "good_resolved",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.16822429906542058,
+            "sim_prev": 0.7368421052631579,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 1,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "MAX_ROUNDS"
+    },
+    {
+      "run_id": "good_resolved_04",
+      "scenario_id": "good_resolved_seeded_04",
+      "category": "good_resolved",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.16822429906542058,
+            "sim_prev": 0.7368421052631579,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 1,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "MAX_ROUNDS"
+    },
+    {
+      "run_id": "good_resolved_05",
+      "scenario_id": "good_resolved_seeded_05",
+      "category": "good_resolved",
+      "model_matrix": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "llama3.1:8b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "formatting_only"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "scope_creep",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_modify",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "scope_creep",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.16822429906542058,
+            "sim_prev": 0.7368421052631579,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": false,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 1,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 0,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 0
+          },
+          "resolved_decisions": {
+            "retention_days": true,
+            "encryption_algo": true
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "MAX_ROUNDS"
+    },
+    {
+      "run_id": "stable_unresolved_01",
+      "scenario_id": "missing_decision_pressure_01",
+      "category": "stable_unresolved",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_add",
+            "OPEN_QUESTIONS": "constraint_modify"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 2,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "stable_unresolved_02",
+      "scenario_id": "missing_decision_pressure_02",
+      "category": "stable_unresolved",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_add",
+            "OPEN_QUESTIONS": "constraint_modify"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 2,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "stable_unresolved_03",
+      "scenario_id": "missing_decision_pressure_03",
+      "category": "stable_unresolved",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_add",
+            "OPEN_QUESTIONS": "constraint_modify"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 2,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "stable_unresolved_04",
+      "scenario_id": "missing_decision_pressure_04",
+      "category": "stable_unresolved",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_add",
+            "OPEN_QUESTIONS": "constraint_modify"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 2,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "LOOP_DETECTED"
+    },
+    {
+      "run_id": "stable_unresolved_05",
+      "scenario_id": "missing_decision_pressure_05",
+      "category": "stable_unresolved",
+      "model_matrix": {
+        "architect": "qwen2.5:14b",
+        "auditor": "deepseek-r1:32b"
+      },
+      "rounds": [
+        {
+          "t": 1,
+          "delta_type_by_section": {
+            "REQUIREMENT": "constraint_add",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "constraint_add",
+            "OPEN_QUESTIONS": "constraint_modify"
+          },
+          "delta_type_round": "constraint_add",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 1.0,
+            "sim_prev": 0.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 0,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 2,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 0.0,
+            "argmax_loop_index": null,
+            "stable_run_length": 1,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        },
+        {
+          "t": 3,
+          "delta_type_by_section": {
+            "REQUIREMENT": "no_change",
+            "CHANGELOG": "constraint_modify",
+            "ASSUMPTIONS": "no_change",
+            "OPEN_QUESTIONS": "no_change"
+          },
+          "delta_type_round": "constraint_modify",
+          "conflict_active": false,
+          "conflict_ids": [],
+          "warnings": [],
+          "parse_ok": true,
+          "code_leak_hit": false,
+          "assumption_constraint_violation": true,
+          "metrics": {
+            "diff_ratio": 0.0,
+            "sim_prev": 1.0,
+            "sim_loop": 1.0,
+            "argmax_loop_index": 0,
+            "stable_run_length": 2,
+            "unresolved_decision_count": 2,
+            "unresolved_issue_count": 0,
+            "decision_required_count": 2
+          },
+          "resolved_decisions": {
+            "retention_days": false,
+            "encryption_algo": false
+          },
+          "stop_candidate": null
+        }
+      ],
+      "final_outcome_eval": "LOOP_DETECTED"
+    }
+  ]
+}
