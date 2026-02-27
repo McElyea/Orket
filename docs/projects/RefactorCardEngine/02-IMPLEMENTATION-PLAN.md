@@ -12,11 +12,13 @@ Objective: one shared execution shell for Cards and ODR.
 1. Add shared workload contract schema/spec doc under `docs/projects/RefactorCardEngine/`.
 2. Map current ODR plan fields and card plan fields to this shape.
 3. Add explicit version field and required key checks.
+Status: completed (2026-02-27)
 
 ### Slice 1.2 - ODR Adapter
 1. Implement ODR adapter that emits shared contract without changing ODR round semantics.
 2. Keep current ODR tooling outputs stable (`index.json`, `provenance.json`, run JSON).
 3. Add tests for contract emission shape.
+Status: completed (2026-02-27)
 
 ### Slice 1.3 - Card Adapter
 1. Implement card adapter that emits shared contract for existing card workflows.

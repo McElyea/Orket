@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, parse_workload_contract
+
 
 ERROR_PREFLIGHT = "E_ARB_PREFLIGHT_MISSING_MATERIAL"
 ERROR_EXECUTION = "E_ARB_EXECUTION_FAILED"
@@ -95,6 +97,20 @@ class RunArbiter:
         expected_artifacts.append(str(index_out.as_posix()))
         if require_provenance and provenance_out is not None:
             expected_artifacts.append(str(provenance_out.as_posix()))
+        summary_targets = [str(index_out.as_posix())]
+        provenance_targets = [str(provenance_out.as_posix())] if require_provenance and provenance_out is not None else []
+        workload_contract = parse_workload_contract(
+            {
+                "workload_contract_version": WORKLOAD_CONTRACT_VERSION_V1,
+                "workload_type": "odr",
+                "units": list(run_pairs),
+                "required_materials": [item.as_dict() for item in materials],
+                "expected_artifacts": sorted(expected_artifacts),
+                "validators": ["shape", "leak", "trace"],
+                "summary_targets": summary_targets,
+                "provenance_targets": provenance_targets,
+            }
+        ).model_dump()
 
         return {
             "schema_version": "odr.run_arbiter.plan.v1",
@@ -102,6 +118,7 @@ class RunArbiter:
             "required_materials": [item.as_dict() for item in materials],
             "run_pairs": run_pairs,
             "expected_artifacts": sorted(expected_artifacts),
+            "workload_contract": workload_contract,
         }
 
     def write_plan(self, plan: dict[str, Any]) -> None:

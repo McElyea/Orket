@@ -1,7 +1,7 @@
 {
   "code": "E_ARB_VALIDATOR_LEAK",
   "context": {
-    "artifact": "benchmarks/published/ODR/odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json"
+    "artifact": "benchmarks/published/ODR/odr_live_role_matrix.qwen2_5_coder_14b_deepseek_r1_32b.json"
   },
   "failures": [
     "results:0:scenarios:0:code_leak_metric",

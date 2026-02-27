@@ -164,6 +164,10 @@ def test_run_odr_quant_sweep_arbiter_passes_and_checks_postflight(monkeypatch, t
     assert plan["schema_version"] == "odr.run_arbiter.plan.v1"
     assert str(Path(args.index_out).as_posix()) in plan["expected_artifacts"]
     assert str(Path(args.provenance_out).as_posix()) in plan["expected_artifacts"]
+    assert plan["workload_contract"]["workload_contract_version"] == "workload.contract.v1"
+    assert plan["workload_contract"]["workload_type"] == "odr"
+    assert isinstance(plan["workload_contract"]["units"], list)
+    assert isinstance(plan["workload_contract"]["required_materials"], list)
     assert not Path(args.arbiter_error_out).exists()
 
 
