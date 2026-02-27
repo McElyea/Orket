@@ -86,6 +86,10 @@ python scripts/security_canary.py
 ```bash
 python scripts/check_volatility_boundaries.py
 ```
+7. Published artifact sync check:
+```bash
+python scripts/sync_published_index.py --check
+```
 
 ## Runtime Profiles and Migration
 1. Set workflow profile:
@@ -130,3 +134,4 @@ python scripts/report_failure_modes.py --log workspace/default/orket.log --out b
 3. `docs/API_FRONTEND_CONTRACT.md`
 4. `docs/GITEA_WEBHOOK_SETUP.md`
 5. `docs/ROADMAP.md`
+6. `docs/PUBLISHED_ARTIFACTS_POLICY.md`

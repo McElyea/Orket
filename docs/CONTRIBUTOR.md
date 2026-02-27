@@ -23,6 +23,12 @@ Orket
    - If the user says "follow roadmap" (or equivalent) without naming a project, execute the highest-priority active item in `docs/ROADMAP.md`.
    - Do not switch to paused/deferred projects unless the user explicitly requests it.
    - For `core-pillars`, execute in the exact order defined by `docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`.
+9. Published artifacts rule:
+   - `benchmarks/published/index.json` is canonical.
+   - After any published artifact change, run:
+     1) `python scripts/sync_published_index.py --write`
+     2) `python scripts/sync_published_index.py --check`
+   - Commit `index.json`, generated `README.md`, and artifact files together.
 
 ## Current Focus
 1. Keep `docs/ROADMAP.md` active-only (remove completed/obsolete items at each handoff).
@@ -79,3 +85,4 @@ Orket
 4. Docs updated where behavior changed.
 5. Workflow changes (if any) are limited to `.gitea/workflows/` unless explicitly approved otherwise.
 6. Boundary/contract breaks include a proposal using `docs/architecture/CONTRACT_DELTA_TEMPLATE.md` with migration and rollback plans.
+7. Published artifact updates include synchronized `benchmarks/published/index.json` and `benchmarks/published/README.md`.

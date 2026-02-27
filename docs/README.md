@@ -30,6 +30,7 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 1. `docs/CONTRIBUTOR.md` is the process source of truth.
 2. `docs/PR_REVIEW_POLICY.md` defines PR review cycle policy.
 3. Active project plans live under `docs/projects/<project>/` and must be indexed in `docs/ROADMAP.md`.
+4. `docs/PUBLISHED_ARTIFACTS_POLICY.md` defines the canonical publish workflow for `benchmarks/published/`.
 
 ## Historical / Context
 1. `docs/PROJECT.md`

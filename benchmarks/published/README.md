@@ -1,35 +1,44 @@
-﻿# Published Benchmark Highlights
+# Published Benchmark Index
 
 Last updated: 2026-02-27
 
-This folder contains curated benchmark artifacts suitable for sharing.
+This directory is the curated, share-safe benchmark lane.
 
-## Start Here
-1. `odr_live_io.json`
-   - Best single-file walkthrough of ODR behavior with concrete inputs/outputs.
-2. `odr_experiment_role_matrix_v1_pilot.json`
-   - Best model-role pairing snapshot with explicit scoring and hard-fail visibility.
-3. `live_card_100_scored_report.json`
-   - Best quality-at-scale summary.
-4. `live_100_determinism_report.json`
-   - Best determinism-at-scale summary.
+## Folder Layout
+1. `General/`
+2. `ODR/`
+3. `index.json`
+   - Machine-readable catalog for automation and dashboards.
 
-## Highlights
+## Latest Highlight
+1. `ODR/odr_live_io.json` (`PUB-ODR-001`)
+   - Compact ODR live test artifact with explicit input/output and stop reason traces.
 
-| Artifact | Why it matters | Key signal |
-|---|---|---|
-| `odr_live_io.json` | Demonstrates real ODR stop logic and parser behavior with trace payloads | Includes `DIFF_FLOOR` and `SHAPE_VIOLATION` examples with full round records |
-| `odr_experiment_role_matrix_v1_pilot.json` | Shows role-level model evaluation using objective scoring | Captures both normal runs (`score_total: 70`) and hard-fail case (`score_total: 1100`, `anti_hallucination_hits: 1`) |
-| `live_card_100_scored_report.json` | Shows production-style quality scoring across 100 tasks | `overall_avg_score: 4.97`, deterministic per-task scoring bands |
-| `live_100_determinism_report.json` | Verifies deterministic behavior across broad task surface | `total_tasks: 100`, `deterministic_tasks: 100`, `determinism_rate: 1.0` |
-| `odr_live_role_matrix.qwen14b_r1_32b.json` | Full live role matrix trace for one pairing | Round-level architect/auditor outputs + ODR trace records |
-| `odr_live_role_matrix.qwen14b_gemma27b.json` | Full live role matrix trace for alternate auditor pairing | Useful for side-by-side pairing comparisons |
+## Artifact Directory
 
-## Suggested Use
-1. External demo: start with `odr_live_io.json` then `live_card_100_scored_report.json`.
-2. Technical review: start with `odr_experiment_role_matrix_v1_pilot.json` then inspect the two full role-matrix traces.
-3. Stability proof: pair `live_100_determinism_report.json` with the ODR artifacts.
+| ID | Category | File | Title | What it proves | Key signals |
+|---|---|---|---|---|---|
+| PUB-ODR-001 | ODR | `ODR/odr_live_io.json` | ODR Live IO Core Evidence | Compact ODR live test artifact with explicit input/output and stop reason traces. | `DIFF_FLOOR`, `SHAPE_VIOLATION`, `trace_record_examples` |
+| PUB-ODR-002 | ODR | `ODR/odr_experiment_role_matrix_v1_pilot.json` | ODR Role Matrix Pilot Scoring | Pilot role-matrix experiment report with scoring and hard-fail visibility. | `score_total`, `anti_hallucination_hits`, `hard_fail` |
+| PUB-ODR-003 | ODR | `ODR/odr_live_role_matrix.qwen14b_r1_32b.json` | Live Role Matrix Trace (Qwen14b + R1-32b) | Full round-level live run for architect/auditor pairing A. | `round_level_io`, `odr_trace`, `live_model_pairing` |
+| PUB-ODR-004 | ODR | `ODR/odr_live_role_matrix.qwen14b_gemma27b.json` | Live Role Matrix Trace (Qwen14b + Gemma27b) | Full round-level live run for architect/auditor pairing B. | `round_level_io`, `odr_trace`, `live_model_pairing` |
+| PUB-GEN-001 | General | `General/live_card_100_scored_report.json` | Live Card 100 Scored Report | Quality scoring summary across 100 live-card tasks. | `overall_avg_score`, `per_task_score_bands`, `pass_rate` |
+| PUB-GEN-002 | General | `General/live_100_determinism_report.json` | Live 100 Determinism Report | Determinism evidence across 100 tasks using hash-based repeatability checks. | `determinism_rate`, `deterministic_tasks`, `unique_hashes` |
 
-## Notes
-1. These are curated copies from `benchmarks/results/`.
-2. Keep sensitive/local-only paths out of public artifacts when adding new files.
+## Reading Paths
+1. Product walkthrough: `PUB-ODR-001` -> `PUB-GEN-001` -> `PUB-GEN-002`
+2. Model-role science: `PUB-ODR-002` -> `PUB-ODR-003` -> `PUB-ODR-004`
+
+## Publish Workflow
+1. Copy curated artifact(s) into the correct category folder.
+2. Add/update artifact rows in `index.json`.
+3. Regenerate this README:
+```bash
+python scripts/sync_published_index.py --write
+```
+4. Validate before commit:
+```bash
+python scripts/sync_published_index.py --check
+```
+5. Do not overwrite prior published artifacts; add versioned files instead.
+

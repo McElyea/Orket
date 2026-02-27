@@ -1,0 +1,110 @@
+﻿{
+  "catalog_v": "1.0.0",
+  "updated_on": "2026-02-27",
+  "root": "benchmarks/published",
+  "highlight_id": "PUB-ODR-001",
+  "reading_paths": [
+    {
+      "name": "Product walkthrough",
+      "artifact_ids": [
+        "PUB-ODR-001",
+        "PUB-GEN-001",
+        "PUB-GEN-002"
+      ]
+    },
+    {
+      "name": "Model-role science",
+      "artifact_ids": [
+        "PUB-ODR-002",
+        "PUB-ODR-003",
+        "PUB-ODR-004"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "PUB-ODR-001",
+      "category": "ODR",
+      "path": "ODR/odr_live_io.json",
+      "title": "ODR Live IO Core Evidence",
+      "summary": "Compact ODR live test artifact with explicit input/output and stop reason traces.",
+      "signals": [
+        "DIFF_FLOOR",
+        "SHAPE_VIOLATION",
+        "trace_record_examples"
+      ],
+      "source_path": "benchmarks/results/odr_live_io.json",
+      "publish_reviewed": true
+    },
+    {
+      "id": "PUB-ODR-002",
+      "category": "ODR",
+      "path": "ODR/odr_experiment_role_matrix_v1_pilot.json",
+      "title": "ODR Role Matrix Pilot Scoring",
+      "summary": "Pilot role-matrix experiment report with scoring and hard-fail visibility.",
+      "signals": [
+        "score_total",
+        "anti_hallucination_hits",
+        "hard_fail"
+      ],
+      "source_path": "benchmarks/results/odr_experiment_role_matrix_v1_pilot.json",
+      "publish_reviewed": true
+    },
+    {
+      "id": "PUB-ODR-003",
+      "category": "ODR",
+      "path": "ODR/odr_live_role_matrix.qwen14b_r1_32b.json",
+      "title": "Live Role Matrix Trace (Qwen14b + R1-32b)",
+      "summary": "Full round-level live run for architect/auditor pairing A.",
+      "signals": [
+        "round_level_io",
+        "odr_trace",
+        "live_model_pairing"
+      ],
+      "source_path": "benchmarks/results/odr_live_role_matrix.qwen14b_r1_32b.json",
+      "publish_reviewed": true
+    },
+    {
+      "id": "PUB-ODR-004",
+      "category": "ODR",
+      "path": "ODR/odr_live_role_matrix.qwen14b_gemma27b.json",
+      "title": "Live Role Matrix Trace (Qwen14b + Gemma27b)",
+      "summary": "Full round-level live run for architect/auditor pairing B.",
+      "signals": [
+        "round_level_io",
+        "odr_trace",
+        "live_model_pairing"
+      ],
+      "source_path": "benchmarks/results/odr_live_role_matrix.qwen14b_gemma27b.json",
+      "publish_reviewed": true
+    },
+    {
+      "id": "PUB-GEN-001",
+      "category": "General",
+      "path": "General/live_card_100_scored_report.json",
+      "title": "Live Card 100 Scored Report",
+      "summary": "Quality scoring summary across 100 live-card tasks.",
+      "signals": [
+        "overall_avg_score",
+        "per_task_score_bands",
+        "pass_rate"
+      ],
+      "source_path": "benchmarks/results/live_card_100_scored_report.json",
+      "publish_reviewed": true
+    },
+    {
+      "id": "PUB-GEN-002",
+      "category": "General",
+      "path": "General/live_100_determinism_report.json",
+      "title": "Live 100 Determinism Report",
+      "summary": "Determinism evidence across 100 tasks using hash-based repeatability checks.",
+      "signals": [
+        "determinism_rate",
+        "deterministic_tasks",
+        "unique_hashes"
+      ],
+      "source_path": "benchmarks/results/live_100_determinism_report.json",
+      "publish_reviewed": true
+    }
+  ]
+}
