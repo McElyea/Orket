@@ -87,3 +87,4 @@ orket_storage/
 .ruff_cache/
 benchmarks/results/*
 !benchmarks/results/prompt_promotion_thresholds.json
+docs/internal/
