@@ -120,6 +120,19 @@ def run_sweep(args: argparse.Namespace) -> int:
     index_out = Path(args.index_out)
     payload = odr_index.generate_index(input_dir=out_dir, output_path=index_out)
     print(f"Wrote {index_out} (runs={payload['run_count']})")
+
+    if args.provenance_out.strip():
+        prov_cmd = [
+            args.python_bin,
+            "scripts/generate_odr_provenance.py",
+            "--input-dir",
+            str(out_dir),
+            "--out",
+            str(Path(args.provenance_out)),
+        ]
+        if args.no_provenance_probes:
+            prov_cmd.append("--no-probes")
+        subprocess.run(prov_cmd, check=True)
     return 0
 
 
@@ -140,6 +153,8 @@ def main() -> int:
     )
     parser.add_argument("--out-dir", default="benchmarks/published/ODR")
     parser.add_argument("--index-out", default="benchmarks/published/ODR/index.json")
+    parser.add_argument("--provenance-out", default="benchmarks/published/ODR/provenance.json")
+    parser.add_argument("--no-provenance-probes", action="store_true")
     parser.add_argument("--python-bin", default=sys.executable)
     args = parser.parse_args()
     return run_sweep(args)

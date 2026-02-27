@@ -1,0 +1,223 @@
+{
+  "prov_v": "1.0.0",
+  "generated_at_utc": "2026-02-27T16:00:50.456253+00:00",
+  "root": "benchmarks/published/ODR",
+  "run_count": 5,
+  "runs": [
+    {
+      "file": "odr_live_role_matrix.qwen14b_gemma27b.json",
+      "generated_at_utc": "2026-02-26T03:29:16.108325+00:00",
+      "started_at_utc": "2026-02-26T03:25:38.891140+00:00",
+      "ended_at_utc": "2026-02-26T03:29:16.107734+00:00",
+      "duration_ms": 217216,
+      "runner_round_budget": 3,
+      "host": {
+        "os": "Windows",
+        "os_release": "11",
+        "os_version": "10.0.26200",
+        "arch": "AMD64",
+        "cpu_model": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "cpu_logical_cores": 32,
+        "cpu_physical_cores": 24,
+        "ram_total_gb": 63.77,
+        "gpu_model": "NVIDIA GeForce RTX 4090",
+        "vram_total_gb": 23.99,
+        "driver_version": "591.74"
+      },
+      "runtime": {
+        "ollama_version": "ollama version is 0.17.4",
+        "orket_git_commit": "503eaf4",
+        "git_dirty": true,
+        "git_branch": "main"
+      },
+      "models": [
+        {
+          "name": "qwen2.5:14b",
+          "ollama_id": "7cdf5a0187d5",
+          "quantization": "Q4_K_M"
+        },
+        {
+          "name": "gemma3:27b",
+          "ollama_id": "a418f5838eaf",
+          "quantization": "Q4_K_M"
+        }
+      ],
+      "gen_params": {
+        "temperature": 0.1,
+        "timeout": 180
+      }
+    },
+    {
+      "file": "odr_live_role_matrix.qwen14b_r1_32b.json",
+      "generated_at_utc": "2026-02-26T02:36:26.369997+00:00",
+      "started_at_utc": "2026-02-26T02:23:46.969130+00:00",
+      "ended_at_utc": "2026-02-26T02:36:26.369966+00:00",
+      "duration_ms": 759400,
+      "runner_round_budget": 3,
+      "host": {
+        "os": "Windows",
+        "os_release": "11",
+        "os_version": "10.0.26200",
+        "arch": "AMD64",
+        "cpu_model": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "cpu_logical_cores": 32,
+        "cpu_physical_cores": 24,
+        "ram_total_gb": 63.77,
+        "gpu_model": "NVIDIA GeForce RTX 4090",
+        "vram_total_gb": 23.99,
+        "driver_version": "591.74"
+      },
+      "runtime": {
+        "ollama_version": "ollama version is 0.17.4",
+        "orket_git_commit": "503eaf4",
+        "git_dirty": true,
+        "git_branch": "main"
+      },
+      "models": [
+        {
+          "name": "qwen2.5:14b",
+          "ollama_id": "7cdf5a0187d5",
+          "quantization": "Q4_K_M"
+        },
+        {
+          "name": "deepseek-r1:32b",
+          "ollama_id": "edba8017331d",
+          "quantization": "Q4_K_M"
+        }
+      ],
+      "gen_params": {
+        "temperature": 0.1,
+        "timeout": 180
+      }
+    },
+    {
+      "file": "odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
+      "generated_at_utc": "2026-02-27T05:44:11.067369+00:00",
+      "started_at_utc": "2026-02-27T05:30:49.369728+00:00",
+      "ended_at_utc": "2026-02-27T05:44:11.067339+00:00",
+      "duration_ms": 801697,
+      "runner_round_budget": 3,
+      "host": {
+        "os": "Windows",
+        "os_release": "11",
+        "os_version": "10.0.26200",
+        "arch": "AMD64",
+        "cpu_model": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "cpu_logical_cores": 32,
+        "cpu_physical_cores": 24,
+        "ram_total_gb": 63.77,
+        "gpu_model": "NVIDIA GeForce RTX 4090",
+        "vram_total_gb": 23.99,
+        "driver_version": "591.74"
+      },
+      "runtime": {
+        "ollama_version": "ollama version is 0.17.4",
+        "orket_git_commit": "503eaf4",
+        "git_dirty": true,
+        "git_branch": "main"
+      },
+      "models": [
+        {
+          "name": "qwen2.5:14b",
+          "ollama_id": "7cdf5a0187d5",
+          "quantization": "Q4_K_M"
+        },
+        {
+          "name": "deepseek-r1:32b",
+          "ollama_id": "edba8017331d",
+          "quantization": "Q4_K_M"
+        }
+      ],
+      "gen_params": {
+        "temperature": 0.1,
+        "timeout": 180
+      }
+    },
+    {
+      "file": "odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+      "generated_at_utc": "2026-02-27T05:30:48.213072+00:00",
+      "started_at_utc": "2026-02-27T05:27:09.919908+00:00",
+      "ended_at_utc": "2026-02-27T05:30:48.212355+00:00",
+      "duration_ms": 218292,
+      "runner_round_budget": 3,
+      "host": {
+        "os": "Windows",
+        "os_release": "11",
+        "os_version": "10.0.26200",
+        "arch": "AMD64",
+        "cpu_model": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "cpu_logical_cores": 32,
+        "cpu_physical_cores": 24,
+        "ram_total_gb": 63.77,
+        "gpu_model": "NVIDIA GeForce RTX 4090",
+        "vram_total_gb": 23.99,
+        "driver_version": "591.74"
+      },
+      "runtime": {
+        "ollama_version": "ollama version is 0.17.4",
+        "orket_git_commit": "503eaf4",
+        "git_dirty": true,
+        "git_branch": "main"
+      },
+      "models": [
+        {
+          "name": "qwen2.5:14b",
+          "ollama_id": "7cdf5a0187d5",
+          "quantization": "Q4_K_M"
+        },
+        {
+          "name": "gemma3:27b",
+          "ollama_id": "a418f5838eaf",
+          "quantization": "Q4_K_M"
+        }
+      ],
+      "gen_params": {
+        "temperature": 0.1,
+        "timeout": 180
+      }
+    },
+    {
+      "file": "odr_live_role_matrix.qwen2_5_coder_14b_deepseek_r1_32b.json",
+      "generated_at_utc": "2026-02-27T05:23:39.540738+00:00",
+      "started_at_utc": "2026-02-27T05:12:27.544263+00:00",
+      "ended_at_utc": "2026-02-27T05:23:39.540712+00:00",
+      "duration_ms": 671996,
+      "runner_round_budget": 3,
+      "host": {
+        "os": "Windows",
+        "os_release": "11",
+        "os_version": "10.0.26200",
+        "arch": "AMD64",
+        "cpu_model": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+        "cpu_logical_cores": 32,
+        "cpu_physical_cores": 24,
+        "ram_total_gb": 63.77,
+        "gpu_model": "NVIDIA GeForce RTX 4090",
+        "vram_total_gb": 23.99,
+        "driver_version": "591.74"
+      },
+      "runtime": {
+        "ollama_version": "ollama version is 0.17.4",
+        "orket_git_commit": "503eaf4",
+        "git_dirty": true,
+        "git_branch": "main"
+      },
+      "models": [
+        {
+          "name": "qwen2.5-coder:14b",
+          "ollama_id": "9ec8897f747e",
+          "quantization": "Q4_K_M"
+        },
+        {
+          "name": "deepseek-r1:32b",
+          "ollama_id": "edba8017331d",
+          "quantization": "Q4_K_M"
+        }
+      ],
+      "gen_params": {
+        "temperature": 0.1,
+        "timeout": 180
+      }
+    }
+  ]
+}

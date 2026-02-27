@@ -101,6 +101,8 @@ def _extract_runs_from_file(path: Path) -> list[dict[str, Any]]:
     results = payload.get("results")
     if not isinstance(results, list):
         return []
+    config = payload.get("config") if isinstance(payload.get("config"), dict) else {}
+    runner_round_budget = config.get("rounds") if isinstance(config.get("rounds"), int) else None
 
     rows: list[dict[str, Any]] = []
     for result in results:
@@ -136,6 +138,8 @@ def _extract_runs_from_file(path: Path) -> list[dict[str, Any]]:
                 "auditor_model": auditor_model,
                 "run_key": run_key,
                 "is_latest_for_key": False,
+                "runner_round_budget": runner_round_budget,
+                "provenance_ref": f"provenance.json::{path.name}",
                 "scenarios": sorted(scenario_rows, key=lambda item: str(item.get("scenario_id") or "")),
             }
         )
@@ -172,6 +176,7 @@ def generate_index(input_dir: Path, output_path: Path) -> dict[str, Any]:
         "index_v": "1.0.0",
         "generated_at": datetime.now(UTC).isoformat(),
         "root": str(input_dir).replace("\\", "/"),
+        "provenance_file": "provenance.json",
         "run_count": len(run_rows),
         "runs": run_rows,
     }

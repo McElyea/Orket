@@ -13,6 +13,7 @@ def test_generate_odr_role_matrix_index(tmp_path: Path) -> None:
     run_payload = {
         "run_v": "1.0.0",
         "generated_at": "2026-02-27T00:00:00+00:00",
+        "config": {"rounds": 3},
         "results": [
             {
                 "architect_model": "qwen2.5:14b:q8",
@@ -56,6 +57,8 @@ def test_generate_odr_role_matrix_index(tmp_path: Path) -> None:
     assert run["auditor_model"] == "gemma3:27b"
     assert run["run_key"] == "qwen2.5:14b:q8__gemma3:27b"
     assert run["is_latest_for_key"] is True
+    assert run["runner_round_budget"] == 3 or run["runner_round_budget"] is None
+    assert run["provenance_ref"] == "provenance.json::odr_live_role_matrix.test.json"
     scenarios = {row["scenario_id"]: row for row in run["scenarios"]}
     assert scenarios["missing_constraint"]["stop_reason"] == "DIFF_FLOOR"
     assert scenarios["missing_constraint"]["rounds_used"] == 2

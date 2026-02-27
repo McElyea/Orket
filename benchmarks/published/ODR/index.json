@@ -1,7 +1,8 @@
 {
   "index_v": "1.0.0",
-  "generated_at": "2026-02-27T05:57:55.261612+00:00",
+  "generated_at": "2026-02-27T16:00:48.322464+00:00",
   "root": "benchmarks/published/ODR",
+  "provenance_file": "provenance.json",
   "run_count": 5,
   "runs": [
     {
@@ -11,6 +12,8 @@
       "auditor_model": "gemma3:27b",
       "run_key": "qwen2.5:14b__gemma3:27b",
       "is_latest_for_key": false,
+      "runner_round_budget": 3,
+      "provenance_ref": "provenance.json::odr_live_role_matrix.qwen14b_gemma27b.json",
       "scenarios": [
         {
           "scenario_id": "contradiction",
@@ -39,6 +42,8 @@
       "auditor_model": "deepseek-r1:32b",
       "run_key": "qwen2.5:14b__deepseek-r1:32b",
       "is_latest_for_key": false,
+      "runner_round_budget": 3,
+      "provenance_ref": "provenance.json::odr_live_role_matrix.qwen14b_r1_32b.json",
       "scenarios": [
         {
           "scenario_id": "contradiction",
@@ -67,6 +72,8 @@
       "auditor_model": "deepseek-r1:32b",
       "run_key": "qwen2.5:14b__deepseek-r1:32b",
       "is_latest_for_key": true,
+      "runner_round_budget": 3,
+      "provenance_ref": "provenance.json::odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
       "scenarios": [
         {
           "scenario_id": "contradiction",
@@ -95,6 +102,8 @@
       "auditor_model": "gemma3:27b",
       "run_key": "qwen2.5:14b__gemma3:27b",
       "is_latest_for_key": true,
+      "runner_round_budget": 3,
+      "provenance_ref": "provenance.json::odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
       "scenarios": [
         {
           "scenario_id": "contradiction",
@@ -123,6 +132,8 @@
       "auditor_model": "deepseek-r1:32b",
       "run_key": "qwen2.5-coder:14b__deepseek-r1:32b",
       "is_latest_for_key": true,
+      "runner_round_budget": 3,
+      "provenance_ref": "provenance.json::odr_live_role_matrix.qwen2_5_coder_14b_deepseek_r1_32b.json",
       "scenarios": [
         {
           "scenario_id": "contradiction",
