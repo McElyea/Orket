@@ -1,6 +1,6 @@
 {
   "index_v": "1.0.0",
-  "generated_at": "2026-02-27T05:44:11.150886+00:00",
+  "generated_at": "2026-02-27T05:57:55.261612+00:00",
   "root": "benchmarks/published/ODR",
   "run_count": 5,
   "runs": [
@@ -9,21 +9,26 @@
       "generated_at": "2026-02-26T03:29:16.108325+00:00",
       "architect_model": "qwen2.5:14b",
       "auditor_model": "gemma3:27b",
+      "run_key": "qwen2.5:14b__gemma3:27b",
+      "is_latest_for_key": false,
       "scenarios": [
         {
           "scenario_id": "contradiction",
           "stop_reason": "CODE_LEAK",
-          "rounds_used": 3
+          "rounds_used": 3,
+          "failure_detail": "code_leak_hit=true"
         },
         {
           "scenario_id": "missing_constraint",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         },
         {
           "scenario_id": "overfitting",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         }
       ]
     },
@@ -32,21 +37,26 @@
       "generated_at": "2026-02-26T02:36:26.369997+00:00",
       "architect_model": "qwen2.5:14b",
       "auditor_model": "deepseek-r1:32b",
+      "run_key": "qwen2.5:14b__deepseek-r1:32b",
+      "is_latest_for_key": false,
       "scenarios": [
         {
           "scenario_id": "contradiction",
           "stop_reason": "CODE_LEAK",
-          "rounds_used": 3
+          "rounds_used": 3,
+          "failure_detail": "code_leak_hit=true"
         },
         {
           "scenario_id": "missing_constraint",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         },
         {
           "scenario_id": "overfitting",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         }
       ]
     },
@@ -55,21 +65,26 @@
       "generated_at": "2026-02-27T05:44:11.067369+00:00",
       "architect_model": "qwen2.5:14b",
       "auditor_model": "deepseek-r1:32b",
+      "run_key": "qwen2.5:14b__deepseek-r1:32b",
+      "is_latest_for_key": true,
       "scenarios": [
         {
           "scenario_id": "contradiction",
           "stop_reason": "CODE_LEAK",
-          "rounds_used": 2
+          "rounds_used": 2,
+          "failure_detail": "code_leak_hit=true"
         },
         {
           "scenario_id": "missing_constraint",
           "stop_reason": "DIFF_FLOOR",
-          "rounds_used": 3
+          "rounds_used": 3,
+          "failure_detail": "diff_ratio=0.0000 < floor=0.0500"
         },
         {
           "scenario_id": "overfitting",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         }
       ]
     },
@@ -78,21 +93,26 @@
       "generated_at": "2026-02-27T05:30:48.213072+00:00",
       "architect_model": "qwen2.5:14b",
       "auditor_model": "gemma3:27b",
+      "run_key": "qwen2.5:14b__gemma3:27b",
+      "is_latest_for_key": true,
       "scenarios": [
         {
           "scenario_id": "contradiction",
           "stop_reason": "CODE_LEAK",
-          "rounds_used": 3
+          "rounds_used": 3,
+          "failure_detail": "code_leak_hit=true"
         },
         {
           "scenario_id": "missing_constraint",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         },
         {
           "scenario_id": "overfitting",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         }
       ]
     },
@@ -101,21 +121,26 @@
       "generated_at": "2026-02-27T05:23:39.540738+00:00",
       "architect_model": "qwen2.5-coder:14b",
       "auditor_model": "deepseek-r1:32b",
+      "run_key": "qwen2.5-coder:14b__deepseek-r1:32b",
+      "is_latest_for_key": true,
       "scenarios": [
         {
           "scenario_id": "contradiction",
           "stop_reason": "SHAPE_VIOLATION",
-          "rounds_used": 1
+          "rounds_used": 1,
+          "failure_detail": "auditor:MISSING_HEADER"
         },
         {
           "scenario_id": "missing_constraint",
-          "stop_reason": null,
-          "rounds_used": 3
+          "stop_reason": "MAX_SCRIPT_ROUNDS",
+          "rounds_used": 3,
+          "failure_detail": "odr_not_stopped_within_runner_round_budget"
         },
         {
           "scenario_id": "overfitting",
           "stop_reason": "SHAPE_VIOLATION",
-          "rounds_used": 3
+          "rounds_used": 3,
+          "failure_detail": "architect:MISSING_HEADER"
         }
       ]
     }

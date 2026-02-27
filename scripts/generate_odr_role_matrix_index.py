@@ -19,6 +19,75 @@ def _safe_rounds_used(scenario: dict[str, Any]) -> int:
     return 0
 
 
+def _latest_trace_record(scenario: dict[str, Any]) -> dict[str, Any]:
+    final_state = scenario.get("final_state")
+    if isinstance(final_state, dict):
+        history_rounds = final_state.get("history_rounds")
+        if isinstance(history_rounds, list) and history_rounds:
+            last = history_rounds[-1]
+            if isinstance(last, dict):
+                return last
+    rounds = scenario.get("rounds")
+    if isinstance(rounds, list) and rounds:
+        last_round = rounds[-1]
+        if isinstance(last_round, dict):
+            trace = last_round.get("odr_trace_record")
+            if isinstance(trace, dict):
+                return trace
+    return {}
+
+
+def _normalized_stop_reason(scenario: dict[str, Any], rounds_used: int) -> str:
+    final_state = scenario.get("final_state")
+    if isinstance(final_state, dict):
+        raw = final_state.get("stop_reason")
+        if isinstance(raw, str) and raw.strip():
+            return raw.strip()
+    if rounds_used > 0:
+        # The live runner stops after configured round budget when ODR has not stopped.
+        return "MAX_SCRIPT_ROUNDS"
+    return "UNKNOWN"
+
+
+def _failure_detail(stop_reason: str, scenario: dict[str, Any]) -> str | None:
+    trace = _latest_trace_record(scenario)
+    metrics = trace.get("metrics") if isinstance(trace.get("metrics"), dict) else {}
+    parse_errors = trace.get("parse_errors") if isinstance(trace.get("parse_errors"), list) else []
+    run_cfg = trace.get("run_config") if isinstance(trace.get("run_config"), dict) else {}
+
+    if stop_reason == "CODE_LEAK":
+        return "code_leak_hit=true"
+    if stop_reason == "SHAPE_VIOLATION":
+        if parse_errors:
+            first = parse_errors[0]
+            if isinstance(first, dict):
+                src = first.get("source")
+                code = first.get("code")
+                return f"{src}:{code}"
+        return "parse_error"
+    if stop_reason == "DIFF_FLOOR":
+        diff_ratio = metrics.get("diff_ratio")
+        floor = run_cfg.get("diff_floor_pct")
+        if isinstance(diff_ratio, (int, float)) and isinstance(floor, (int, float)):
+            return f"diff_ratio={diff_ratio:.4f} < floor={floor:.4f}"
+        return "stable_rounds_threshold_reached"
+    if stop_reason == "CIRCULARITY":
+        sim_prev = metrics.get("sim_prev")
+        sim_loop = metrics.get("sim_loop")
+        if isinstance(sim_prev, (int, float)) and isinstance(sim_loop, (int, float)):
+            return f"sim_loop={sim_loop:.4f} sim_prev={sim_prev:.4f}"
+        return "loop_similarity_triggered"
+    if stop_reason == "MAX_ROUNDS":
+        n = metrics.get("n")
+        max_rounds = run_cfg.get("max_rounds")
+        if isinstance(n, int) and isinstance(max_rounds, int):
+            return f"n={n} max_rounds={max_rounds}"
+        return "max_rounds_reached"
+    if stop_reason == "MAX_SCRIPT_ROUNDS":
+        return "odr_not_stopped_within_runner_round_budget"
+    return None
+
+
 def _extract_runs_from_file(path: Path) -> list[dict[str, Any]]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -47,22 +116,26 @@ def _extract_runs_from_file(path: Path) -> list[dict[str, Any]]:
         for scenario in scenarios:
             if not isinstance(scenario, dict):
                 continue
+            rounds_used = _safe_rounds_used(scenario)
+            stop_reason = _normalized_stop_reason(scenario, rounds_used=rounds_used)
             scenario_rows.append(
                 {
                     "scenario_id": scenario.get("scenario_id"),
-                    "stop_reason": (scenario.get("final_state") or {}).get("stop_reason")
-                    if isinstance(scenario.get("final_state"), dict)
-                    else None,
-                    "rounds_used": _safe_rounds_used(scenario),
+                    "stop_reason": stop_reason,
+                    "rounds_used": rounds_used,
+                    "failure_detail": _failure_detail(stop_reason, scenario=scenario),
                 }
             )
 
+        run_key = f"{architect_model}__{auditor_model}"
         rows.append(
             {
                 "file": path.name,
                 "generated_at": generated_at,
                 "architect_model": architect_model,
                 "auditor_model": auditor_model,
+                "run_key": run_key,
+                "is_latest_for_key": False,
                 "scenarios": sorted(scenario_rows, key=lambda item: str(item.get("scenario_id") or "")),
             }
         )
@@ -83,6 +156,17 @@ def generate_index(input_dir: Path, output_path: Path) -> dict[str, Any]:
             str(item.get("auditor_model") or ""),
         )
     )
+
+    latest_by_key: dict[str, tuple[str, int]] = {}
+    for idx, row in enumerate(run_rows):
+        key = str(row.get("run_key") or "")
+        ts = str(row.get("generated_at") or "")
+        current = latest_by_key.get(key)
+        if current is None or ts >= current[0]:
+            latest_by_key[key] = (ts, idx)
+    for idx, row in enumerate(run_rows):
+        key = str(row.get("run_key") or "")
+        row["is_latest_for_key"] = idx == latest_by_key.get(key, ("", -1))[1]
 
     payload = {
         "index_v": "1.0.0",

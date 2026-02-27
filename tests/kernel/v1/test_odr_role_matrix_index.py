@@ -54,8 +54,14 @@ def test_generate_odr_role_matrix_index(tmp_path: Path) -> None:
     run = index_payload["runs"][0]
     assert run["architect_model"] == "qwen2.5:14b:q8"
     assert run["auditor_model"] == "gemma3:27b"
+    assert run["run_key"] == "qwen2.5:14b:q8__gemma3:27b"
+    assert run["is_latest_for_key"] is True
     scenarios = {row["scenario_id"]: row for row in run["scenarios"]}
     assert scenarios["missing_constraint"]["stop_reason"] == "DIFF_FLOOR"
     assert scenarios["missing_constraint"]["rounds_used"] == 2
-    assert scenarios["contradiction"]["stop_reason"] is None
+    assert scenarios["missing_constraint"]["failure_detail"] in {
+        "stable_rounds_threshold_reached",
+    } or "diff_ratio=" in str(scenarios["missing_constraint"]["failure_detail"])
+    assert scenarios["contradiction"]["stop_reason"] == "MAX_SCRIPT_ROUNDS"
     assert scenarios["contradiction"]["rounds_used"] == 1
+    assert scenarios["contradiction"]["failure_detail"] == "odr_not_stopped_within_runner_round_budget"
