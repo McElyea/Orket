@@ -1,40 +1,47 @@
 # Orket Docs Index
 
-This index maps each document to a single purpose to reduce duplication.
+Last reviewed: 2026-02-27
 
-## Start Here
-1. `docs/ROADMAP.md`: single active roadmap and project-priority index.
-2. `docs/RUNBOOK.md`: operational commands and incident handling.
-3. `docs/SECURITY.md`: auth, webhook trust boundary, and security posture.
-4. `docs/ARCHITECTURE.md`: runtime layering and dependency direction.
-5. `docs/QUANT_SWEEP_RUNBOOK.md`: quant sweep and diagnostics workflow.
+This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
-## Contracts and Specs
-1. `docs/API_FRONTEND_CONTRACT.md`: API payload contracts.
-2. `docs/specs/EXPLORER_SCHEMA_POLICY.md`: explorer schema policy.
-3. `docs/specs/EXPLORER_FRONTIER_SCHEMA.md`: frontier artifact fields.
-4. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`: context artifact fields.
-5. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`: thermal artifact fields.
-6. `docs/specs/SIDECAR_PARSE_SCHEMA.md`: canonical sidecar parse schema and status contract.
-7. `docs/projects/archive/Skills/`: archived Skill plan and schema contracts.
-8. `docs/projects/archive/MemoryPersistence/`: archived deterministic memory persistence plan and related schema contracts.
+## Primary Documents
+1. `docs/ROADMAP.md`
+   - Active execution priority and project index.
+2. `docs/ARCHITECTURE.md`
+   - Runtime layers, dependency direction, and decision-node boundaries.
+3. `docs/RUNBOOK.md`
+   - Operator startup, health checks, and incident response.
+4. `docs/SECURITY.md`
+   - API/webhook trust boundary and required posture.
+5. `docs/TESTING_POLICY.md`
+   - Test lanes and required command set.
+6. `docs/API_FRONTEND_CONTRACT.md`
+   - Implemented API and websocket surface expected by UI clients.
 
-## Implementation Plans
-1. Active project plans live under `docs/projects/<ProjectName>/` and must be indexed in `docs/ROADMAP.md`.
-2. Completed plan/spec artifacts should move to `docs/projects/archive/<ProjectName>/`.
+## Operational Extensions
+1. `docs/GITEA_WEBHOOK_SETUP.md`
+2. `docs/GITEA_STATE_OPERATIONAL_GUIDE.md`
+3. `docs/GITEA_BACKUP_STRATEGY.md`
+4. `docs/QUANT_SWEEP_RUNBOOK.md`
+5. `docs/PRODUCT_PUBLISHING.md`
+6. `docs/LOCAL_CLEANUP_POLICY.md`
 
-## Engineering Policy
-1. `docs/TESTING_POLICY.md`: test-lane policy (`unit`/`integration`/`acceptance`/`live`).
-2. `docs/PR_REVIEW_POLICY.md`: review requirements.
-3. `docs/LOCAL_CLEANUP_POLICY.md`: local artifact cleanup policy.
+## Governance and Process
+1. `docs/CONTRIBUTOR.md` is the process source of truth.
+2. `docs/PR_REVIEW_POLICY.md` defines PR review cycle policy.
+3. Active project plans live under `docs/projects/<project>/` and must be indexed in `docs/ROADMAP.md`.
 
-## Historical / Reference
-1. `docs/PROJECT.md`: stable project framing.
-2. `docs/VOLATILITY_BASELINE.md`: volatility baseline context.
-3. `docs/architecture/`: ADR and dependency snapshots.
+## Historical / Context
+1. `docs/PROJECT.md`
+2. `docs/VOLATILITY_BASELINE.md`
+3. `docs/BENCHMARK_DETERMINISM.md`
+4. `docs/BENCHMARK_FAILURE_LEDGER.md`
+5. `docs/architecture/` snapshots and ADR materials.
 
-## Ownership Rule
-If content appears in more than one doc:
-1. Keep one canonical source.
-2. Replace duplicates with a link.
-3. Update this index when canonical ownership changes.
+## Deprecated or Transitional Docs
+These files are retained for context but are not execution sources:
+1. `docs/PROGRAM_LEVEL_TASK_001_PROMPT_AND_RUBRIC.md`
+2. `docs/examples.md`
+3. `docs/bottleneck_thresholds.md`
+
+When content is promoted into a canonical doc, remove duplication from transitional files.

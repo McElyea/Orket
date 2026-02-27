@@ -1,105 +1,94 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-02-21
+Last reviewed: 2026-02-27
 
 ## Purpose
-This document is the operator path for starting, validating, troubleshooting, and maintaining Orket.
+Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
 
-## Fast Path (5 Minutes)
+## Quick Start
 1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-2. Configure env file:
+2. Configure environment:
 ```bash
-cp .env.example .env
+copy .env.example .env
 ```
-3. Start local CLI conversation mode:
+3. CLI runtime:
 ```bash
 python main.py
 ```
-4. Start API server (separate shell):
+4. API runtime (default `http://localhost:8082`):
 ```bash
 python server.py
 ```
-5. Optional webhook server (separate shell):
+5. Webhook runtime (default `http://localhost:8080`):
 ```bash
 python -m orket.webhook_server
 ```
-6. Health checks:
-- API: `GET /health`
-- Webhook: `GET /health`
 
-## First-Time Setup
-1. Clone:
+## Health Endpoints
+1. API:
 ```bash
-git clone https://github.com/McElyea/Orket.git
-cd Orket
+curl http://localhost:8082/health
 ```
-2. Create `.env` from template and fill required values used by your runtime path.
-3. If using Gitea integration, start Gitea:
+2. Webhook server:
 ```bash
-cd infrastructure
-docker-compose -f docker-compose.gitea.yml up -d
-```
-4. Run baseline validation:
-```bash
-python -m pytest tests/test_golden_flow.py -v
+curl http://localhost:8080/health
 ```
 
-## Runtime Entry Points
-1. `python main.py`
-- CLI runtime.
-- With no `--epic`, `--card`, or `--rock`, this enters interactive driver mode.
+## CLI Commands
+Use `python main.py` for runtime commands.
 
-2. `python server.py`
-- Starts FastAPI API service.
-
-3. `python -m orket.webhook_server`
-- Starts webhook receiver with signature validation.
-
-## Core Operator Commands
-1. Show board:
+1. Help:
 ```bash
-python -m orket.interfaces.cli --board
+python main.py --help
 ```
-2. Run an epic:
+2. Show board:
 ```bash
-python -m orket.interfaces.cli --epic <epic_name>
+python main.py --board
 ```
-3. Replay one turn:
+3. Run an epic:
 ```bash
-python -m orket.interfaces.cli --replay-turn <run_id>:<issue_id>:<turn_index>[:role]
+python main.py --epic <epic_name>
 ```
-4. Archive related cards:
+4. Replay one turn:
 ```bash
-python -m orket.interfaces.cli --archive-related <token> --archive-reason "manual archive"
+python main.py --replay-turn <session_id>:<issue_id>:<turn_index>[:role]
+```
+5. Archive related cards:
+```bash
+python main.py --archive-related <token> --archive-reason "manual archive"
 ```
 
-## Offline Mode (Core Pillars v1)
-1. Default network mode is offline for command surface checks:
+## Core Validation Commands
+1. Full test sweep:
 ```bash
-python scripts/check_offline_matrix.py --require-default-offline
+python -m pytest -q
 ```
-2. Supported offline-first v1 mutation commands:
-- `orket init`
-- `orket api add`
-- `orket refactor`
-3. Optional network integrations remain explicit opt-in and outside the v1 offline command guarantee.
-
-## CLI Regression Smoke
-1. Run deterministic CLI regression for `init`, `api add`, and `refactor`:
+2. Kernel ODR determinism gate (PR tier):
+```bash
+python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr -q
+```
+3. CLI regression smoke:
 ```bash
 python scripts/run_cli_regression_smoke.py --out benchmarks/results/cli_regression_smoke.json
 ```
-2. Expected output:
-- process exits with `0`
-- artifact JSON contains `"status": "PASS"`
-- event list includes: `init`, `api_dry_run`, `api_apply`, `api_noop`, `refactor_dry_run`, `refactor_apply`
-3. This smoke uses isolated temp fixtures and does not mutate repository files.
+4. Release smoke:
+```bash
+python scripts/release_smoke.py
+```
+5. Security canary:
+```bash
+python scripts/security_canary.py
+```
+6. Volatility boundary gate:
+```bash
+python scripts/check_volatility_boundaries.py
+```
 
-## WorkItem Profile and Migration Dry-Run
-1. Select workflow profile explicitly (runtime override):
+## Runtime Profiles and Migration
+1. Set workflow profile:
 ```bash
 set ORKET_WORKFLOW_PROFILE=legacy_cards_v1
 ```
@@ -107,118 +96,37 @@ or
 ```bash
 set ORKET_WORKFLOW_PROFILE=project_task_v1
 ```
-2. Select default profile without hard override:
-```bash
-set ORKET_WORKFLOW_PROFILE_DEFAULT=project_task_v1
-```
-3. Run deterministic migration dry-run report:
+2. Migration dry-run:
 ```bash
 python scripts/workitem_migration_dry_run.py --in benchmarks/results/workitem_migration_input.json --out benchmarks/results/workitem_migration_dry_run.json
 ```
-4. Dry-run report is non-mutating and emits:
-- `status`
-- `total_records`
-- `mapped_kind_counts`
-- full mapped record payload
 
-## Release and Verification Gates
-1. Local smoke:
-```bash
-python scripts/release_smoke.py
-```
-2. Security canary:
-```bash
-python scripts/security_canary.py
-```
-3. Volatility boundary gate:
-```bash
-python scripts/check_volatility_boundaries.py
-```
-4. Failure/non-progress report:
+## Storage Paths
+Default durable state:
+1. `.orket/durable/db/orket_persistence.db`
+2. `.orket/durable/db/webhook.db`
+3. `.orket/durable/config/user_settings.json`
+
+Workspace/log paths:
+1. `workspace/default/orket.log`
+2. `workspace/default/observability/`
+
+## Incident Triage
+1. API failures:
+   - Check `workspace/default/orket.log`.
+   - Verify `ORKET_API_KEY` posture and `/health`.
+2. Webhook failures:
+   - Verify `GITEA_WEBHOOK_SECRET`.
+   - Verify `X-Gitea-Signature` is present.
+   - Confirm webhook receiver is on `:8080`.
+3. Stalled run:
 ```bash
 python scripts/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/failure_modes.json
 ```
 
-## Migrations and Storage
-1. Run migrations:
-```bash
-python scripts/run_migrations.py
-```
-2. Optional DB path overrides:
-```bash
-python scripts/run_migrations.py --runtime-db /data/orket_persistence.db --webhook-db /data/webhook.db
-```
-3. Default durable DB paths:
-- `.orket/durable/db/orket_persistence.db`
-- `.orket/durable/db/webhook.db`
-
-## Incident Triage
-1. API errors / 5xx:
-- Check `workspace/default/orket.log`.
-- Validate DB paths and permissions.
-- Restart service and re-check `/health`.
-
-2. Webhook failures:
-- Verify `GITEA_WEBHOOK_SECRET`.
-- Verify webhook signature header is present.
-- Confirm rate limit behavior (`429`) when expected.
-
-3. Stalled execution:
-- Generate report:
-```bash
-python scripts/report_failure_modes.py --out benchmarks/results/failure_modes.json
-```
-- Inspect checkpoints under:
-`workspace/default/observability/<run_id>/<issue_id>/<turn_index>_<role>/checkpoint.json`
-- Replay problematic turn (see command above).
-
-## Skill Contract Troubleshooting
-1. Validate a Skill manifest directly:
-```bash
-python scripts/check_skill_contracts.py --manifest <path_to_skill_manifest.json>
-```
-2. Common loader error codes:
-- `ERR_SCHEMA_INVALID`: missing/invalid required contract fields.
-- `ERR_CONTRACT_UNSUPPORTED_VERSION`: unsupported `skill_contract_version`.
-- `ERR_RUNTIME_UNPINNED`: entrypoint runtime missing `runtime_version`.
-- `ERR_FINGERPRINT_INCOMPLETE`: required argument/result fingerprint fields missing.
-- `ERR_PERMISSION_UNDECLARED`: required permissions are not declared in requested permissions.
-- `ERR_SIDE_EFFECT_UNDECLARED`: side-effect categories declared without fingerprint coverage.
-3. For runtime tool failures in enforced skill mode, inspect:
-`workspace/default/observability/<run_id>/<issue_id>/<turn_index>_<role>/memory_trace.json`
-4. If runtime-limit violations occur, check orchestrator process rules:
-- `skill_max_execution_time`
-- `skill_max_memory`
-
-## Security and Secrets
-1. Keep secrets in `.env` only.
-2. Do not commit `.env`, DB files, or local runtime state.
-3. Rotate leaked credentials immediately.
-
-## Policy Knobs (Advanced)
-These are optional runtime controls.
-
-1. Architecture mode: `ORKET_ARCHITECTURE_MODE`
-- `force_monolith`
-- `force_microservices`
-- `architect_decides`
-
-2. Frontend framework mode: `ORKET_FRONTEND_FRAMEWORK_MODE`
-- `force_vue`
-- `force_react`
-- `force_angular`
-- `architect_decides`
-
-3. Legacy structural governance mode: `ORKET_IDESIGN_MODE`
-- `force_idesign`
-- `force_none`
-- `architect_decides`
-
-Repo default behavior keeps legacy structural governance disabled unless explicitly enabled.
-
 ## Related Docs
-1. `docs/README.md` (docs index)
-2. `docs/SECURITY.md`
-3. `docs/QUANT_SWEEP_RUNBOOK.md`
-4. `docs/TESTING_POLICY.md`
+1. `docs/SECURITY.md`
+2. `docs/TESTING_POLICY.md`
+3. `docs/API_FRONTEND_CONTRACT.md`
+4. `docs/GITEA_WEBHOOK_SETUP.md`
 5. `docs/ROADMAP.md`

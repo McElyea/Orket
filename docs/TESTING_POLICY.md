@@ -1,48 +1,64 @@
-# Orket Testing Policy: "Real-World First"
+﻿# Orket Testing Policy
 
-## Philosophy: No-Mock Testing
-We believe that mocks are often "liars"—they confirm that code *calls* something, but not that the code *works*. Orket favors **Sociable Tests** over **Isolated Tests**.
+Last reviewed: 2026-02-27
 
-### 1. Don't Mock the Database
-Use `aiosqlite` with a temporary file or `:memory:`. If a repository cannot handle a real SQLite connection in a test, the repository is broken.
-*   **Bad**: `mock_repo.get_card.return_value = Card(...)`
-*   **Good**: Create a real card in a temporary DB and retrieve it.
+## Test Philosophy
+1. Prefer real system behavior over heavy mocking.
+2. Favor deterministic assertions and machine-readable artifacts.
+3. Keep policy/mechanics split clear:
+   - Kernel tests validate deterministic mechanics.
+   - Live tests validate model-in-loop behavior and quality trends.
 
-### 2. Don't Mock the Filesystem
-Use pytest's `tmp_path` fixture. Tests should actually write bytes to disk and read them back. This catches permission issues, path traversal bugs, and encoding errors that mocks miss.
+## Mocking Rules
+Mocks are allowed only when one of these applies:
+1. External service failure injection (`timeout`, `500`, connection drop).
+2. Cost/safety boundaries (no real billing/email side effects).
+3. Clock control for deterministic time-window testing.
 
-### 3. Use Simulators for External APIs
-If we need to test Gitea integration, we hit a real Gitea instance (or a containerized simulator). If we must intercept HTTP, use `respx` or `httpx.ASGITransport` to route requests to a real (but local) FastAPI instance, rather than mocking the `requests.get` call.
+Use real local storage/filesystem where practical:
+1. `tmp_path` for filesystem tests.
+2. `sqlite` temp DB for repository behavior.
 
-### 4. LLM "Warm" Testing
-While we don't hit paid APIs for every unit test, we should use a local, small model (like `phi3` or `tinyllama`) to verify that the `TurnExecutor` can actually parse a real response, rather than feeding it a hardcoded string.
+## Required Test Lanes
+1. `unit` lane:
+```bash
+python -m pytest tests/core tests/application tests/adapters tests/interfaces tests/platform -q
+```
+2. `integration` lane:
+```bash
+python -m pytest tests/integration tests/runtime tests/contracts -q
+```
+3. `acceptance` lane:
+```bash
+python -m pytest tests/acceptance tests/kernel/v1/test_odr_refinement_behavior.py -q
+```
+4. `live` lane (opt-in):
+```bash
+python -m pytest tests/live -q
+```
 
-### 5. When are Mocks allowed?
-Mocks are a **last resort**, permitted ONLY for:
-*   **Triggering Edge Cases**: Simulating a `500 Internal Server Error` from a 3rd party or a `TimeoutError`.
-*   **Clock/Time**: Using `freezegun` to simulate time passing.
-*   **Cost/Safety**: Preventing actual credit card charges or sending real emails to customers.
+## Determinism Gates
+1. ODR determinism gate (required for kernel ODR changes):
+```bash
+python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr -q
+```
+2. Nightly tier:
+```bash
+python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_nightly -q
+```
 
-## Goal
-A passing test suite should give us 95% confidence that the code is ready for production. Mock-heavy suites rarely exceed 50% confidence.
+## CLI and Security Smoke
+1. CLI regression smoke:
+```bash
+python scripts/run_cli_regression_smoke.py --out benchmarks/results/cli_regression_smoke.json
+```
+2. Security canary:
+```bash
+python scripts/security_canary.py
+```
 
-## CI Lane Policy
-Use explicit lanes with fixed budgets.
-
-1. `unit`
-   - Command: `npm run ci:unit`
-   - Scope: `tests/core`, `tests/application`, `tests/adapters`, `tests/interfaces`, `tests/platform`
-   - Budget: <= 6 minutes
-2. `integration`
-   - Command: `npm run ci:integration`
-   - Scope: `tests/integration`
-   - Budget: <= 10 minutes
-3. `acceptance`
-   - Command: `npm run ci:acceptance`
-   - Scope: acceptance-style integration + pipeline tests
-   - Budget: <= 12 minutes
-4. `live`
-   - Command: `npm run ci:live`
-   - Scope: `tests/live`
-   - Budget: <= 20 minutes
-   - Policy: opt-in only, excluded from default CI.
+## Completion Standard
+A change is test-complete when:
+1. Relevant lane tests pass.
+2. Determinism gates pass for affected deterministic subsystems.
+3. Any new behavior has direct assertions (not only log inspection).

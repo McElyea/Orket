@@ -1,49 +1,42 @@
-# PR Review Policy
+﻿# PR Review Policy
+
+Last reviewed: 2026-02-27
 
 ## Policy
-- Required reviewer: `integrity_guard`
-- Maximum review cycles: 4
-- Escalation threshold: 3 rejected cycles
-- Auto-reject threshold: 4 rejected cycles
+1. Required reviewer role: `integrity_guard`.
+2. Maximum review cycles per PR: `4`.
+3. Escalation on cycle `3` to `lead_architect`.
+4. Auto-reject on cycle `4` with follow-up requirements issue.
 
-## Review Flow
-1. PR created.
+## Review Cycle Flow
+1. PR opened.
 2. `integrity_guard` reviews.
-3. If changes requested, developer updates and re-requests review.
-4. On third rejection, escalate approach review to `lead_architect`.
-5. On fourth rejection, close PR and open a requirements issue.
+3. If changes requested, PR returns to author.
+4. Third failed cycle triggers escalation review.
+5. Fourth failed cycle closes PR and records failure context.
 
 ## Webhook Integration
-Configure Gitea webhook:
-1. Repository Settings -> Webhooks -> Add Gitea webhook.
-2. Target URL: `http://localhost:5000/webhook/gitea`
-3. Secret: `.env` value `GITEA_WEBHOOK_SECRET`
-4. Trigger events: pull request review and pull request updates.
+1. Webhook endpoint: `POST /webhook/gitea`.
+2. Default receiver URL: `http://localhost:8080/webhook/gitea`.
+3. Signature header required: `X-Gitea-Signature`.
+4. Secret source: `GITEA_WEBHOOK_SECRET`.
 
-Handler location: `orket/services/gitea_webhook_handler.py`
+Implementation locations:
+1. Handler: `orket/adapters/vcs/gitea_webhook_handler.py`
+2. Persistence: `orket/adapters/vcs/webhook_db.py`
+3. Server: `orket/webhook_server.py`
 
 ## Approval Behavior
-When required review approves:
-1. PR is merged.
-2. Branch is deleted.
-3. Deployment hook is triggered if enabled.
+When required review is approved:
+1. PR may be merged by automation flow.
+2. Follow-on deployment/sandbox behavior depends on enabled runtime policies.
+3. Events are logged into webhook DB tables for audit.
 
 ## Configuration
-`.env`:
+Environment:
 ```bash
-GITEA_WEBHOOK_SECRET=your-webhook-secret
+GITEA_WEBHOOK_SECRET=<secret>
+GITEA_URL=http://localhost:3000
 ```
 
-`config/organization.json`:
-```json
-{
-  "pr_review_policy": {
-    "max_review_cycles": 4,
-    "escalation_cycle": 3,
-    "required_approvals": 1,
-    "required_reviewer": "integrity_guard",
-    "auto_merge": true,
-    "auto_deploy": true
-  }
-}
-```
+Organizational policy fields can be represented in JSON config as needed, but runtime behavior is enforced by webhook handler policy and cycle tracking.

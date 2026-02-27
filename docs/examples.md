@@ -1,61 +1,35 @@
-# Orket Examples
+﻿# Orket Examples (Transitional)
 
-Configuration examples for the Orket engine.
+Last reviewed: 2026-02-27
 
-## 1. Environment Secrets (`.env`)
+This file is intentionally minimal. Canonical operational examples live in:
+1. `docs/RUNBOOK.md`
+2. `docs/API_FRONTEND_CONTRACT.md`
+3. `docs/QUANT_SWEEP_RUNBOOK.md`
 
-```env
-DASHBOARD_PASSWORD=your-secure-password
-DASHBOARD_SECRET_KEY=your-secret-key
-SD_MODEL=runwayml/stable-diffusion-v1-5
+## Useful Quick Examples
+
+### CLI help
+```bash
+python main.py --help
 ```
 
-## 2. Issue Configuration Example
-
-```json
-{
-  "id": "ISSUE-1234",
-  "summary": "Implement price scraper",
-  "seat": "coder",
-  "requirements": "Create a robust scraper for target retail sites.",
-  "verification": {
-    "fixture_path": "tests/fixtures/scraper_test.py",
-    "scenarios": [
-      {
-        "description": "Scrape valid URL",
-        "input_data": {"url": "https://example.com"},
-        "expected_output": {"price": 10.99}
-      }
-    ]
-  },
-  "metrics": {
-    "shippability_threshold": 8.0
-  }
-}
+### API health
+```bash
+curl http://localhost:8082/health
 ```
 
-## 3. Role Configuration Example
-
-```json
-{
-  "id": "CODER-ROLE",
-  "summary": "senior_developer",
-  "type": "utility",
-  "description": "Expert Python developer specializing in async I/O.",
-  "prompt": "You are a Senior Developer. Write clean, PEP8 compliant code.",
-  "tools": ["read_file", "write_file", "list_directory"]
-}
+### Webhook health
+```bash
+curl http://localhost:8080/health
 ```
 
-## 4. Configuration Priority
+### Kernel ODR determinism gate
+```bash
+python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr -q
+```
 
-1. `config/epics/my_epic.json`
-2. `model/marketing/epics/my_epic.json`
-3. `model/core/epics/my_epic.json`
-
-## 5. Model Provider Usage
-
-```python
-provider = LocalModelProvider(model="qwen2.5-coder", timeout=60)
-response = await provider.complete(messages)
+### Live ODR role matrix (model-in-loop)
+```bash
+python scripts/run_odr_live_role_matrix.py --out benchmarks/results/odr_live_role_matrix.json
 ```
