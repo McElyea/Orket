@@ -447,7 +447,7 @@ def _bundle(runs: list[dict[str, Any]]) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate ODR calibration candidate run bundle and gold labels scaffold.")
-    parser.add_argument("--out-dir", default="benchmarks/odr_calibration")
+    parser.add_argument("--out-dir", default="benchmarks/results/odr_calibration")
     parser.add_argument("--bundle-out", default="candidate_runs_v1.json")
     parser.add_argument("--labels-out", default="gold_labels_v1.json")
     args = parser.parse_args()

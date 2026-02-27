@@ -1,0 +1,19 @@
+﻿{
+  "code": "E_ARB_VALIDATOR_LEAK",
+  "context": {
+    "artifact": "benchmarks/results/odr_calibration/live_pilot_pair2/odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json"
+  },
+  "failures": [
+    "results:0:scenarios:0:code_leak_metric",
+    "results:0:scenarios:0:code_leak_stop",
+    "results:0:scenarios:1:code_leak_metric",
+    "results:0:scenarios:1:code_leak_stop",
+    "results:0:scenarios:2:code_leak_metric",
+    "results:0:scenarios:2:code_leak_stop"
+  ],
+  "message": "Leak validation failed.",
+  "phase": "execution",
+  "schema_version": "odr.run_arbiter.error.v1",
+  "status": "FAIL"
+}
+

@@ -109,9 +109,9 @@ def score(eval_payload: dict[str, Any], gold_payload: dict[str, Any]) -> dict[st
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Score ODR calibration evaluation against gold labels.")
-    parser.add_argument("--eval", default="benchmarks/odr_calibration/evaluation_v1.json")
-    parser.add_argument("--gold", default="benchmarks/odr_calibration/gold_labels_v1.json")
-    parser.add_argument("--out", default="benchmarks/odr_calibration/score_v1.json")
+    parser.add_argument("--eval", default="benchmarks/results/odr_calibration/evaluation_v1.json")
+    parser.add_argument("--gold", default="benchmarks/results/odr_calibration/gold_labels_v1.json")
+    parser.add_argument("--out", default="benchmarks/results/odr_calibration/score_v1.json")
     args = parser.parse_args()
 
     eval_payload = json.loads(Path(args.eval).read_text(encoding="utf-8"))

@@ -525,8 +525,8 @@ def evaluate_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Evaluate ODR calibration bundle with telemetry-first convergence diagnostics.")
-    parser.add_argument("--bundle", default="benchmarks/odr_calibration/candidate_runs_v1.json")
-    parser.add_argument("--out", default="benchmarks/odr_calibration/evaluation_v1.json")
+    parser.add_argument("--bundle", default="benchmarks/results/odr_calibration/candidate_runs_v1.json")
+    parser.add_argument("--out", default="benchmarks/results/odr_calibration/evaluation_v1.json")
     args = parser.parse_args()
 
     bundle_path = Path(args.bundle)

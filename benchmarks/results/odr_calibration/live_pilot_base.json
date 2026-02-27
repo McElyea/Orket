@@ -1,0 +1,21 @@
+﻿{
+  "config": {
+    "rounds": 8,
+    "scenario_ids": ["missing_constraint", "contradiction", "overfitting"],
+    "temperature": 0.1,
+    "timeout": 180,
+    "odr_config": {
+      "max_rounds": 8,
+      "diff_floor_pct": 0.05,
+      "stable_rounds": 2,
+      "shingle_k": 3,
+      "margin": 0.02,
+      "min_loop_sim": 0.65,
+      "code_leak_patterns": [
+        "(?s)```.*?```",
+        "\\b(def|class|import|fn|let|const|interface|type)\\b",
+        "\\b(npm|pip|cargo|docker|venv|node_modules)\\b"
+      ]
+    }
+  }
+}

@@ -1,0 +1,128 @@
+﻿{
+  "expected_artifacts": [
+    "benchmarks/results/odr_calibration/live_pilot_pair2/index.json",
+    "benchmarks/results/odr_calibration/live_pilot_pair2/odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+    "benchmarks/results/odr_calibration/live_pilot_pair2/provenance.json"
+  ],
+  "required_materials": [
+    {
+      "kind": "tool",
+      "required": true,
+      "value": "C:\\Python314\\python.exe"
+    },
+    {
+      "kind": "tool",
+      "required": true,
+      "value": "ollama"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "benchmarks/results/odr_calibration/live_pilot_base.json"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "scripts/run_odr_live_role_matrix.py"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "scripts/generate_odr_role_matrix_index.py"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "scripts/generate_odr_provenance.py"
+    },
+    {
+      "kind": "model",
+      "required": true,
+      "value": "gemma3:27b"
+    },
+    {
+      "kind": "model",
+      "required": true,
+      "value": "qwen2.5:14b"
+    }
+  ],
+  "run_pairs": [
+    {
+      "architect_model": "qwen2.5:14b",
+      "artifact": "benchmarks/results/odr_calibration/live_pilot_pair2/odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+      "auditor_model": "gemma3:27b"
+    }
+  ],
+  "runner": "run_odr_quant_sweep.py",
+  "schema_version": "odr.run_arbiter.plan.v1",
+  "workload_contract": {
+    "expected_artifacts": [
+      "benchmarks/results/odr_calibration/live_pilot_pair2/index.json",
+      "benchmarks/results/odr_calibration/live_pilot_pair2/odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+      "benchmarks/results/odr_calibration/live_pilot_pair2/provenance.json"
+    ],
+    "provenance_targets": [
+      "benchmarks/results/odr_calibration/live_pilot_pair2/provenance.json"
+    ],
+    "required_materials": [
+      {
+        "kind": "tool",
+        "required": true,
+        "value": "C:\\Python314\\python.exe"
+      },
+      {
+        "kind": "tool",
+        "required": true,
+        "value": "ollama"
+      },
+      {
+        "kind": "file",
+        "required": true,
+        "value": "benchmarks/results/odr_calibration/live_pilot_base.json"
+      },
+      {
+        "kind": "file",
+        "required": true,
+        "value": "scripts/run_odr_live_role_matrix.py"
+      },
+      {
+        "kind": "file",
+        "required": true,
+        "value": "scripts/generate_odr_role_matrix_index.py"
+      },
+      {
+        "kind": "file",
+        "required": true,
+        "value": "scripts/generate_odr_provenance.py"
+      },
+      {
+        "kind": "model",
+        "required": true,
+        "value": "gemma3:27b"
+      },
+      {
+        "kind": "model",
+        "required": true,
+        "value": "qwen2.5:14b"
+      }
+    ],
+    "summary_targets": [
+      "benchmarks/results/odr_calibration/live_pilot_pair2/index.json"
+    ],
+    "units": [
+      {
+        "architect_model": "qwen2.5:14b",
+        "artifact": "benchmarks/results/odr_calibration/live_pilot_pair2/odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+        "auditor_model": "gemma3:27b"
+      }
+    ],
+    "validators": [
+      "shape",
+      "leak",
+      "trace"
+    ],
+    "workload_contract_version": "workload.contract.v1",
+    "workload_type": "odr"
+  }
+}
+
