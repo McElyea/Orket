@@ -61,6 +61,16 @@ def _parse_ollama_list() -> dict[str, dict[str, Any]]:
     return rows
 
 
+def _normalize_ollama_version(raw: str) -> str | None:
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    match = re.search(r"(\d+\.\d+\.\d+(?:[-+._a-zA-Z0-9]*)?)", text)
+    if match is not None:
+        return match.group(1)
+    return text
+
+
 def _extract_quantization(show_output: str) -> str | None:
     if not show_output:
         return None
@@ -235,7 +245,8 @@ def _load_runs(input_dir: Path) -> list[dict[str, Any]]:
 
 def generate_provenance(input_dir: Path, output_path: Path, enable_probes: bool = True) -> dict[str, Any]:
     runs = _load_runs(input_dir)
-    ollama_version = _run_text(["ollama", "--version"]) if enable_probes else ""
+    ollama_version_raw = _run_text(["ollama", "--version"]) if enable_probes else ""
+    ollama_version = _normalize_ollama_version(ollama_version_raw)
     ollama_rows = _parse_ollama_list() if enable_probes else {}
     host = _host_snapshot(enable_probes=enable_probes)
     git = _git_snapshot(enable_probes=enable_probes)

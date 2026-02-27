@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import generate_odr_role_matrix_index as odr_index
+from run_arbiter import ArbiterFailure, RunArbiter
 
 
 def _parse_list(raw: str) -> list[str]:
@@ -79,6 +80,9 @@ def _build_command(
             value = odr_config.get(key)
             if isinstance(value, (int, float)):
                 cmd.extend([flag, str(value)])
+        patterns = odr_config.get("code_leak_patterns")
+        if isinstance(patterns, list):
+            cmd.extend(["--code-leak-patterns-json", json.dumps(patterns)])
 
     return cmd
 
@@ -99,41 +103,90 @@ def run_sweep(args: argparse.Namespace) -> int:
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-
-    total = len(architects) * len(auditors)
-    run_index = 0
-    for architect in architects:
-        for auditor in auditors:
-            run_index += 1
-            file_name = f"odr_live_role_matrix.{_slug_model(architect)}_{_slug_model(auditor)}.json"
-            out_path = out_dir / file_name
-            cmd = _build_command(
-                python_bin=args.python_bin,
-                architect_model=architect,
-                auditor_model=auditor,
-                out_path=out_path,
-                config=base_config,
-            )
-            print(f"[{run_index}/{total}] {architect} x {auditor}")
-            subprocess.run(cmd, check=True)
-
     index_out = Path(args.index_out)
-    payload = odr_index.generate_index(input_dir=out_dir, output_path=index_out)
-    print(f"Wrote {index_out} (runs={payload['run_count']})")
+    provenance_requested = bool(args.provenance_out.strip())
+    provenance_out = Path(args.provenance_out) if provenance_requested else None
+    arbiter_plan_out = Path(args.arbiter_plan_out.strip()) if args.arbiter_plan_out.strip() else out_dir / "arbiter_plan.json"
+    arbiter_error_out = (
+        Path(args.arbiter_error_out.strip()) if args.arbiter_error_out.strip() else out_dir / "arbiter_error.json"
+    )
+    arbiter = RunArbiter(plan_out=arbiter_plan_out, error_out=arbiter_error_out)
+    plan = arbiter.compile_plan(
+        python_bin=args.python_bin,
+        base_spec=Path(args.base_spec),
+        out_dir=out_dir,
+        index_out=index_out,
+        provenance_out=provenance_out,
+        require_provenance=provenance_requested,
+        require_clean_git=bool(args.require_clean_git),
+        architects=architects,
+        auditors=auditors,
+    )
+    arbiter.write_plan(plan)
 
-    if args.provenance_out.strip():
-        prov_cmd = [
-            args.python_bin,
-            "scripts/generate_odr_provenance.py",
-            "--input-dir",
-            str(out_dir),
-            "--out",
-            str(Path(args.provenance_out)),
-        ]
-        if args.no_provenance_probes:
-            prov_cmd.append("--no-probes")
-        subprocess.run(prov_cmd, check=True)
-    return 0
+    try:
+        arbiter.preflight(plan)
+
+        total = len(architects) * len(auditors)
+        run_index = 0
+        for architect in architects:
+            for auditor in auditors:
+                run_index += 1
+                file_name = f"odr_live_role_matrix.{_slug_model(architect)}_{_slug_model(auditor)}.json"
+                out_path = out_dir / file_name
+                cmd = _build_command(
+                    python_bin=args.python_bin,
+                    architect_model=architect,
+                    auditor_model=auditor,
+                    out_path=out_path,
+                    config=base_config,
+                )
+                print(f"[{run_index}/{total}] {architect} x {auditor}")
+                result = subprocess.run(cmd, check=False)
+                if result.returncode != 0:
+                    raise ArbiterFailure(
+                        phase="execution",
+                        code="E_ARB_EXECUTION_FAILED",
+                        message="ODR live matrix command failed.",
+                        failures=[f"subprocess_exit:{result.returncode}"],
+                        context={
+                            "architect_model": architect,
+                            "auditor_model": auditor,
+                            "artifact": out_path.as_posix(),
+                        },
+                    )
+                arbiter.validate_run_output(path=out_path, architect_model=architect, auditor_model=auditor)
+
+        payload = odr_index.generate_index(input_dir=out_dir, output_path=index_out)
+        print(f"Wrote {index_out} (runs={payload['run_count']})")
+
+        if provenance_requested and provenance_out is not None:
+            prov_cmd = [
+                args.python_bin,
+                "scripts/generate_odr_provenance.py",
+                "--input-dir",
+                str(out_dir),
+                "--out",
+                str(provenance_out),
+            ]
+            if args.no_provenance_probes:
+                prov_cmd.append("--no-probes")
+            result = subprocess.run(prov_cmd, check=False)
+            if result.returncode != 0:
+                raise ArbiterFailure(
+                    phase="execution",
+                    code="E_ARB_EXECUTION_FAILED",
+                    message="ODR provenance generation failed.",
+                    failures=[f"subprocess_exit:{result.returncode}"],
+                    context={"artifact": provenance_out.as_posix()},
+                )
+
+        arbiter.postflight(plan)
+        return 0
+    except ArbiterFailure as failure:
+        arbiter.emit_error_artifact(failure)
+        print(f"{failure.code} {failure.message}")
+        return 2
 
 
 def main() -> int:
@@ -155,6 +208,21 @@ def main() -> int:
     parser.add_argument("--index-out", default="benchmarks/published/ODR/index.json")
     parser.add_argument("--provenance-out", default="benchmarks/published/ODR/provenance.json")
     parser.add_argument("--no-provenance-probes", action="store_true")
+    parser.add_argument(
+        "--require-clean-git",
+        action="store_true",
+        help="Fail arbiter preflight if git worktree is dirty.",
+    )
+    parser.add_argument(
+        "--arbiter-plan-out",
+        default="",
+        help="Optional path for deterministic run plan artifact (defaults to <out-dir>/arbiter_plan.json).",
+    )
+    parser.add_argument(
+        "--arbiter-error-out",
+        default="",
+        help="Optional path for deterministic arbiter error artifact (defaults to <out-dir>/arbiter_error.json).",
+    )
     parser.add_argument("--python-bin", default=sys.executable)
     args = parser.parse_args()
     return run_sweep(args)

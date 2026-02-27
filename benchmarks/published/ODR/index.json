@@ -1,6 +1,6 @@
 {
   "index_v": "1.0.0",
-  "generated_at": "2026-02-27T16:00:48.322464+00:00",
+  "generated_at": "2026-02-27T19:21:14.044670+00:00",
   "root": "benchmarks/published/ODR",
   "provenance_file": "provenance.json",
   "run_count": 5,
@@ -67,13 +67,43 @@
     },
     {
       "file": "odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
-      "generated_at": "2026-02-27T05:44:11.067369+00:00",
+      "generated_at": "2026-02-27T19:17:53.793524+00:00",
       "architect_model": "qwen2.5:14b",
       "auditor_model": "deepseek-r1:32b",
       "run_key": "qwen2.5:14b__deepseek-r1:32b",
       "is_latest_for_key": true,
-      "runner_round_budget": 3,
+      "runner_round_budget": 8,
       "provenance_ref": "provenance.json::odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
+      "scenarios": [
+        {
+          "scenario_id": "contradiction",
+          "stop_reason": "DIFF_FLOOR",
+          "rounds_used": 6,
+          "failure_detail": "diff_ratio=0.0000 < floor=0.0500"
+        },
+        {
+          "scenario_id": "missing_constraint",
+          "stop_reason": "CODE_LEAK",
+          "rounds_used": 4,
+          "failure_detail": "code_leak_hit=true"
+        },
+        {
+          "scenario_id": "overfitting",
+          "stop_reason": "DIFF_FLOOR",
+          "rounds_used": 6,
+          "failure_detail": "diff_ratio=0.0000 < floor=0.0500"
+        }
+      ]
+    },
+    {
+      "file": "odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+      "generated_at": "2026-02-27T19:20:31.929418+00:00",
+      "architect_model": "qwen2.5:14b",
+      "auditor_model": "gemma3:27b",
+      "run_key": "qwen2.5:14b__gemma3:27b",
+      "is_latest_for_key": true,
+      "runner_round_budget": 8,
+      "provenance_ref": "provenance.json::odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
       "scenarios": [
         {
           "scenario_id": "contradiction",
@@ -83,45 +113,15 @@
         },
         {
           "scenario_id": "missing_constraint",
-          "stop_reason": "DIFF_FLOOR",
-          "rounds_used": 3,
-          "failure_detail": "diff_ratio=0.0000 < floor=0.0500"
-        },
-        {
-          "scenario_id": "overfitting",
-          "stop_reason": "MAX_SCRIPT_ROUNDS",
-          "rounds_used": 3,
-          "failure_detail": "odr_not_stopped_within_runner_round_budget"
-        }
-      ]
-    },
-    {
-      "file": "odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
-      "generated_at": "2026-02-27T05:30:48.213072+00:00",
-      "architect_model": "qwen2.5:14b",
-      "auditor_model": "gemma3:27b",
-      "run_key": "qwen2.5:14b__gemma3:27b",
-      "is_latest_for_key": true,
-      "runner_round_budget": 3,
-      "provenance_ref": "provenance.json::odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
-      "scenarios": [
-        {
-          "scenario_id": "contradiction",
           "stop_reason": "CODE_LEAK",
-          "rounds_used": 3,
+          "rounds_used": 1,
           "failure_detail": "code_leak_hit=true"
         },
         {
-          "scenario_id": "missing_constraint",
-          "stop_reason": "MAX_SCRIPT_ROUNDS",
-          "rounds_used": 3,
-          "failure_detail": "odr_not_stopped_within_runner_round_budget"
-        },
-        {
           "scenario_id": "overfitting",
-          "stop_reason": "MAX_SCRIPT_ROUNDS",
-          "rounds_used": 3,
-          "failure_detail": "odr_not_stopped_within_runner_round_budget"
+          "stop_reason": "CODE_LEAK",
+          "rounds_used": 1,
+          "failure_detail": "code_leak_hit=true"
         }
       ]
     },

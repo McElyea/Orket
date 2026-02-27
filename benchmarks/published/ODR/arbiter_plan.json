@@ -1,0 +1,69 @@
+{
+  "expected_artifacts": [
+    "benchmarks/published/ODR/index.json",
+    "benchmarks/published/ODR/odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
+    "benchmarks/published/ODR/odr_live_role_matrix.qwen2_5_coder_14b_deepseek_r1_32b.json",
+    "benchmarks/published/ODR/provenance.json"
+  ],
+  "required_materials": [
+    {
+      "kind": "tool",
+      "required": true,
+      "value": "C:\\Python314\\python.exe"
+    },
+    {
+      "kind": "tool",
+      "required": true,
+      "value": "ollama"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "benchmarks/published/ODR/odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "scripts/run_odr_live_role_matrix.py"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "scripts/generate_odr_role_matrix_index.py"
+    },
+    {
+      "kind": "file",
+      "required": true,
+      "value": "scripts/generate_odr_provenance.py"
+    },
+    {
+      "kind": "model",
+      "required": true,
+      "value": "deepseek-r1:32b"
+    },
+    {
+      "kind": "model",
+      "required": true,
+      "value": "qwen2.5-coder:14b"
+    },
+    {
+      "kind": "model",
+      "required": true,
+      "value": "qwen2.5:14b"
+    }
+  ],
+  "run_pairs": [
+    {
+      "architect_model": "qwen2.5:14b",
+      "artifact": "benchmarks/published/ODR/odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
+      "auditor_model": "deepseek-r1:32b"
+    },
+    {
+      "architect_model": "qwen2.5-coder:14b",
+      "artifact": "benchmarks/published/ODR/odr_live_role_matrix.qwen2_5_coder_14b_deepseek_r1_32b.json",
+      "auditor_model": "deepseek-r1:32b"
+    }
+  ],
+  "runner": "run_odr_quant_sweep.py",
+  "schema_version": "odr.run_arbiter.plan.v1"
+}

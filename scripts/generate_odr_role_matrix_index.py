@@ -2,9 +2,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+DEFAULT_CODE_LEAK_PATTERNS = [
+    r"(?s)```.*?```",
+    r"\b(def|class|import|fn|let|const|interface|type)\b",
+    r"\b(npm|pip|cargo|docker|venv|node_modules)\b",
+]
+DEFAULT_CODE_LEAK_RULE_KEYS = {
+    DEFAULT_CODE_LEAK_PATTERNS[0]: "fenced_code_block",
+    DEFAULT_CODE_LEAK_PATTERNS[1]: "source_keyword",
+    DEFAULT_CODE_LEAK_PATTERNS[2]: "tooling_keyword",
+}
 
 
 def _safe_rounds_used(scenario: dict[str, Any]) -> int:
@@ -56,7 +68,8 @@ def _failure_detail(stop_reason: str, scenario: dict[str, Any]) -> str | None:
     run_cfg = trace.get("run_config") if isinstance(trace.get("run_config"), dict) else {}
 
     if stop_reason == "CODE_LEAK":
-        return "code_leak_hit=true"
+        rule_key = _code_leak_rule_key(trace, run_cfg)
+        return f"code_leak_rule={rule_key}"
     if stop_reason == "SHAPE_VIOLATION":
         if parse_errors:
             first = parse_errors[0]
@@ -86,6 +99,20 @@ def _failure_detail(stop_reason: str, scenario: dict[str, Any]) -> str | None:
     if stop_reason == "MAX_SCRIPT_ROUNDS":
         return "odr_not_stopped_within_runner_round_budget"
     return None
+
+
+def _code_leak_rule_key(trace: dict[str, Any], run_cfg: dict[str, Any]) -> str:
+    patterns = run_cfg.get("code_leak_patterns")
+    configured_patterns = [str(item) for item in patterns] if isinstance(patterns, list) and patterns else list(DEFAULT_CODE_LEAK_PATTERNS)
+    normalized = f"{str(trace.get('architect_raw') or '')}\n{str(trace.get('auditor_raw') or '')}"
+    for index, pattern in enumerate(configured_patterns):
+        if re.search(pattern, normalized) is None:
+            continue
+        default_key = DEFAULT_CODE_LEAK_RULE_KEYS.get(pattern)
+        if default_key:
+            return default_key
+        return f"custom_pattern_{index}"
+    return "unknown"
 
 
 def _extract_runs_from_file(path: Path) -> list[dict[str, Any]]:

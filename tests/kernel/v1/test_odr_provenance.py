@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import importlib.util
 from pathlib import Path
 
 
@@ -47,3 +48,12 @@ def test_generate_odr_provenance_no_probes(tmp_path: Path) -> None:
     assert row["runner_round_budget"] == 3
     assert row["runtime"]["ollama_version"] is None
     assert row["runtime"]["orket_git_commit"] is None
+
+
+def test_normalize_ollama_version_returns_machine_parseable_value() -> None:
+    module_path = Path("scripts/generate_odr_provenance.py")
+    spec = importlib.util.spec_from_file_location("odr_provenance_module_test", module_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module._normalize_ollama_version("ollama version is 0.17.4") == "0.17.4"

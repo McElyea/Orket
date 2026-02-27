@@ -273,6 +273,13 @@ async def _main_async(args: argparse.Namespace) -> int:
     scenario_inputs = [_load_scenario_inputs(row) for row in scenarios]
 
     pairings = [Pairing(a, b) for a, b in itertools.product(architects, auditors)]
+    code_leak_patterns = None
+    raw_patterns = str(args.code_leak_patterns_json or "").strip()
+    if raw_patterns:
+        parsed = json.loads(raw_patterns)
+        if isinstance(parsed, list):
+            code_leak_patterns = [str(item) for item in parsed]
+
     odr_cfg = ReactorConfig(
         max_rounds=args.max_rounds,
         diff_floor_pct=args.diff_floor_pct,
@@ -280,6 +287,7 @@ async def _main_async(args: argparse.Namespace) -> int:
         shingle_k=args.shingle_k,
         margin=args.margin,
         min_loop_sim=args.min_loop_sim,
+        code_leak_patterns=code_leak_patterns,
     )
 
     results: List[Dict[str, Any]] = []
@@ -336,6 +344,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--shingle-k", type=int, default=3)
     parser.add_argument("--margin", type=float, default=0.02)
     parser.add_argument("--min-loop-sim", type=float, default=0.65)
+    parser.add_argument(
+        "--code-leak-patterns-json",
+        default="",
+        help="Optional JSON array override for ODR code leak regex patterns.",
+    )
     parser.add_argument("--temperature", type=float, default=0.1)
     parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--out", default="benchmarks/results/odr_live_role_matrix.json")
