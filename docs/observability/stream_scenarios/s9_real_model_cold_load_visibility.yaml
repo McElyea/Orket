@@ -1,0 +1,14 @@
+scenario_id: s9_real_model_cold_load_visibility
+runtime_env:
+  ORKET_MODEL_STREAM_PROVIDER: stub
+turn:
+  workload_id: model_stream_v1
+  input_config:
+    seed: 135
+    mode: basic
+    force_cold_model_load: true
+finalize_explicit: false
+expect:
+  outcome: ok
+  require_commit_final: true
+  min_token_deltas: 1

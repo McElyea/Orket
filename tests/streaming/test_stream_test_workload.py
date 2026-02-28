@@ -121,3 +121,44 @@ async def test_model_stream_v1_stub_path_commits_ok(tmp_path, monkeypatch):
     assert StreamEventType.TOKEN_DELTA in event_types
     commit_final = next(event for event in events if event.event_type == StreamEventType.COMMIT_FINAL)
     assert commit_final.payload["commit_outcome"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_model_stream_v1_stub_cancel_before_first_token_interrupts(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "stub")
+    manager = InteractionManager(
+        bus=StreamBus(),
+        commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+        project_root=tmp_path,
+    )
+    session_id = await manager.start({})
+    queue = await manager.subscribe(session_id)
+    turn_id = await manager.begin_turn(session_id, {"seed": 5}, {})
+    context = await manager.create_context(session_id, turn_id)
+    await queue.get()  # turn_accepted
+
+    task = asyncio.create_task(
+        run_builtin_workload(
+            workload_id="model_stream_v1",
+            input_config={"seed": 5, "mode": "basic", "first_token_delay_ms": 100},
+            turn_params={},
+            interaction_context=context,
+        )
+    )
+
+    seen = []
+    while True:
+        event = await queue.get()
+        seen.append(event)
+        if event.event_type == StreamEventType.MODEL_LOADING:
+            await manager.cancel(turn_id)
+            break
+
+    await task
+    await manager.finalize(session_id, turn_id)
+    seen.extend(await _drain_until_commit(queue))
+
+    terminal_events = [event for event in seen if event.event_type in {StreamEventType.TURN_FINAL, StreamEventType.TURN_INTERRUPTED}]
+    assert len(terminal_events) == 1
+    assert terminal_events[0].event_type == StreamEventType.TURN_INTERRUPTED
+    assert all(event.event_type != StreamEventType.TURN_FINAL for event in seen)

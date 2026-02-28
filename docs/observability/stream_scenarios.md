@@ -28,6 +28,8 @@ python scripts/run_stream_scenario.py --scenario <scenario-yaml-path> --timeout 
 | `s5_backpressure_drop_ranges` | Backpressure cap + dropped ranges surfaced + must-deliver terminal event (and commit if emitted) | `R0`, `R9b` |
 | `s6_finalize_cancel_noop` | Cancel after `commit_final` is a noop: no further events and no terminal-state reopening | `R3`, `R1b` |
 | `s7_real_model_happy_path` | Provider seam happy-path with `model_stream_v1` and `ORKET_MODEL_STREAM_PROVIDER=stub` | Provider-event mapping + terminal/commit flow |
+| `s8_real_model_cancel_mid_gen` | Provider seam cancel behavior on `model_stream_v1` (`stub`) before first token emission | Cancel semantics + terminality |
+| `s9_real_model_cold_load_visibility` | Provider seam cold-load visibility on `model_stream_v1` (`stub` with `force_cold_model_load`) | Model loading/ready sequencing |
 
 ## Notes
 - `s5_backpressure_drop_ranges` validates stream semantics and does not require `commit_outcome=ok`; it accepts `outcome: any`.
