@@ -50,6 +50,11 @@ def main() -> int:
         action="store_true",
         help="Skip real-provider preflight checks.",
     )
+    parser.add_argument(
+        "--preflight-smoke-stream",
+        action="store_true",
+        help="Include a minimal real streaming smoke check during real-provider preflight.",
+    )
     args = parser.parse_args()
 
     os.environ["ORKET_MODEL_STREAM_PROVIDER"] = args.provider_mode
@@ -58,6 +63,8 @@ def main() -> int:
 
     if args.provider_mode == "real" and not args.skip_preflight:
         cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "check_model_provider_preflight.py")]
+        if args.preflight_smoke_stream:
+            cmd.append("--smoke-stream")
         preflight = subprocess.run(cmd, cwd=PROJECT_ROOT)
         if preflight.returncode != 0:
             print("MODEL_STREAMING_GATE=FAIL")

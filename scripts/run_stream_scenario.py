@@ -111,6 +111,27 @@ def _mono_delta_ms(start: dict[str, Any] | None, end: dict[str, Any] | None) -> 
     return delta if delta >= 0 else None
 
 
+def _provider_identity() -> dict[str, Any]:
+    mode = str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
+    if mode == "real":
+        model_id = str(os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
+        base_url = str(os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).strip()
+        if base_url and "://" not in base_url:
+            base_url = f"http://{base_url}"
+        return {
+            "provider_mode": "real",
+            "provider_name": "ollama",
+            "provider_model_id": model_id or None,
+            "provider_base_url": base_url or None,
+        }
+    return {
+        "provider_mode": mode or "stub",
+        "provider_name": "stub",
+        "provider_model_id": None,
+        "provider_base_url": None,
+    }
+
+
 def _receive_json_with_timeout(ws: Any, timeout_s: float) -> dict[str, Any] | None:
     out: queue.Queue = queue.Queue(maxsize=1)
 
@@ -427,6 +448,7 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
         "model_loading_to_model_ready": _mono_delta_ms(model_loading_event, model_ready_event),
         "model_ready_to_first_token_delta": _mono_delta_ms(model_ready_event, token_delta_event),
     }
+    provider_identity = _provider_identity()
 
     verdict_status = "PASS" if not violations else "FAIL"
     verdict = {
@@ -447,6 +469,7 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
             "dropped_seq_ranges_count": dropped_seq_ranges_count,
             "stream_digest": _stream_digest(events),
             "latency_ms": latency_ms,
+            **provider_identity,
         },
         "law_checker_passed": law_checker_passed,
         "law_checker_violations_count": law_checker_violations_count,

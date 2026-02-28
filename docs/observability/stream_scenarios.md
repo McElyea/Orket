@@ -24,6 +24,16 @@ python scripts/run_model_streaming_gate.py --provider-mode real --timeout 20
 ```powershell
 python scripts/check_model_provider_preflight.py
 ```
+```powershell
+python scripts/check_model_provider_preflight.py --smoke-stream
+```
+
+## Provider Identity In Verdicts
+- `verdict.json -> observed` now includes:
+  - `provider_mode`
+  - `provider_name`
+  - `provider_model_id`
+  - `provider_base_url`
 
 ## PASS/FAIL Meaning
 - `PASS`: stream laws hold and scenario expectations hold.
