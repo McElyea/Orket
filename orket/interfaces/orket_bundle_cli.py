@@ -18,6 +18,7 @@ from orket.core.domain.orket_manifest import (
 from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.refactor_transaction import run_refactor_transaction
 from orket.interfaces.scaffold_init import run_scaffold_init
+from orket.reforger.cli import add_reforge_subparser, handle_reforge
 
 
 ERROR_MANIFEST_NOT_FOUND = "E_MANIFEST_NOT_FOUND"
@@ -577,6 +578,8 @@ def _parser() -> argparse.ArgumentParser:
     init_parser.add_argument("--vars", default="", help="Comma-separated key=value variables.")
     init_parser.add_argument("--no-verify", action="store_true", help="Skip post-generation verify commands.")
     init_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    add_reforge_subparser(subparsers)
     return parser
 
 
@@ -677,6 +680,8 @@ def main(argv: List[str] | None = None) -> int:
             variable_overrides=_parse_vars(str(args.vars or "")),
             verify_enabled=not bool(args.no_verify),
         )
+    elif args.command == "reforge":
+        return handle_reforge(args)
     else:
         print(json.dumps({"ok": False, "error": "unsupported_command"}, ensure_ascii=False))
         return 2
