@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -23,7 +24,7 @@ PROVIDER_SCENARIOS = [
 ]
 
 
-def _run_checked_scenario(path: Path, timeout_s: float) -> bool:
+def _run_checked_scenario(path: Path, timeout_s: float, *, gate_run_id: str, loop_index: int) -> bool:
     scenario_name = path.name.lower()
     direct_provider_scenario = scenario_name in {
         "s7_real_model_happy_path.yaml",
@@ -40,7 +41,10 @@ def _run_checked_scenario(path: Path, timeout_s: float) -> bool:
         "--timeout",
         str(timeout_s),
     ]
-    proc = subprocess.run(cmd, cwd=PROJECT_ROOT)
+    env = dict(os.environ)
+    env["ORKET_STREAM_GATE_RUN_ID"] = gate_run_id
+    env["ORKET_STREAM_GATE_LOOP_INDEX"] = str(loop_index)
+    proc = subprocess.run(cmd, cwd=PROJECT_ROOT, env=env)
     return proc.returncode == 0
 
 
@@ -74,6 +78,12 @@ def main() -> int:
         choices=["ollama", "openai_compat", "lmstudio"],
         help="Real provider backend to use when --provider-mode real.",
     )
+    parser.add_argument(
+        "--stability-loops",
+        type=int,
+        default=1,
+        help="Run the full gate this many times and fail fast on first failing loop.",
+    )
     args = parser.parse_args()
 
     os.environ["ORKET_MODEL_STREAM_PROVIDER"] = args.provider_mode
@@ -81,6 +91,8 @@ def main() -> int:
         os.environ["ORKET_MODEL_STREAM_REAL_PROVIDER"] = args.real_provider
     root = Path(args.scenarios_root).resolve()
     scenario_names = BASELINE_SCENARIOS + PROVIDER_SCENARIOS
+    stability_loops = max(1, int(args.stability_loops))
+    gate_run_id = f"gate-{uuid4().hex[:12]}"
 
     if args.provider_mode == "real" and not args.skip_preflight:
         cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "check_model_provider_preflight.py")]
@@ -95,14 +107,24 @@ def main() -> int:
             return preflight.returncode
 
     failures: list[str] = []
-    for name in scenario_names:
-        scenario_path = root / name
-        if not scenario_path.exists():
-            failures.append(f"{name} (missing scenario file)")
-            print(f"FAIL scenario={name} reason=missing_file")
-            continue
-        if not _run_checked_scenario(scenario_path, timeout_s=args.timeout):
-            failures.append(name)
+    for loop_index in range(1, stability_loops + 1):
+        print(f"STABILITY_LOOP={loop_index}/{stability_loops} gate_run_id={gate_run_id}")
+        for name in scenario_names:
+            scenario_path = root / name
+            if not scenario_path.exists():
+                failures.append(f"loop={loop_index}:{name} (missing scenario file)")
+                print(f"FAIL scenario={name} loop={loop_index} reason=missing_file")
+                continue
+            if not _run_checked_scenario(
+                scenario_path,
+                timeout_s=args.timeout,
+                gate_run_id=gate_run_id,
+                loop_index=loop_index,
+            ):
+                failures.append(f"loop={loop_index}:{name}")
+                break
+        if failures:
+            break
 
     if failures:
         print("MODEL_STREAMING_GATE=FAIL")
@@ -110,6 +132,7 @@ def main() -> int:
             print(f"FAILURE {item}")
         return 1
 
+    print(f"GATE_RUN_ID={gate_run_id}")
     print("MODEL_STREAMING_GATE=PASS")
     return 0
 

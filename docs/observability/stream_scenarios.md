@@ -19,6 +19,14 @@ python scripts/run_model_streaming_gate.py --provider-mode stub --timeout 20
 ```powershell
 python scripts/run_model_streaming_gate.py --provider-mode real --timeout 20
 ```
+```powershell
+python scripts/run_model_streaming_gate.py --provider-mode real --real-provider lmstudio --stability-loops 5 --preflight-smoke-stream --timeout 30
+```
+
+## Intentional Two-Gate Design
+- Provider Gate (direct): provider scenarios (`s7`, `s8`, `s9`) run through `scripts/run_provider_scenario_direct.py` in real mode. This validates provider streaming, cancel behavior, and lifecycle mapping without WS/API transport noise.
+- Runtime Gate (WS/API): baseline scenarios (`s0`, `s5`, `s6`) run through `scripts/run_stream_scenario.py`. This validates interaction-plane transport, stream laws, and authority boundaries.
+- Both gates are required. They cover different failure classes and should not be collapsed into one path.
 
 ## Real Provider Preflight
 ```powershell
@@ -34,6 +42,7 @@ python scripts/check_model_provider_preflight.py --smoke-stream
   - `provider_name`
   - `provider_model_id`
   - `provider_base_url`
+  - direct provider runs also include: `provider`, `base_url`, `model_id`, `streaming`, `openai_compat`
 
 ## PASS/FAIL Meaning
 - `PASS`: stream laws hold and scenario expectations hold.
@@ -50,9 +59,9 @@ python scripts/check_model_provider_preflight.py --smoke-stream
 | `s0_unknown_workload_400` | API fail-fast for unknown workload IDs (no async turn side effects) | API contract + no-stream side effect assertion |
 | `s5_backpressure_drop_ranges` | Backpressure cap + dropped ranges surfaced + must-deliver terminal event (and commit if emitted) | `R0`, `R9b` |
 | `s6_finalize_cancel_noop` | Cancel after `commit_final` is a noop: no further events and no terminal-state reopening | `R3`, `R1b` |
-| `s7_real_model_happy_path` | Provider seam happy-path with `model_stream_v1` and `ORKET_MODEL_STREAM_PROVIDER=stub` | Provider-event mapping + terminal/commit flow |
-| `s8_real_model_cancel_mid_gen` | Provider seam cancel behavior on `model_stream_v1` (`stub`) before first token emission | Cancel semantics + terminality |
-| `s9_real_model_cold_load_visibility` | Provider seam cold-load visibility on `model_stream_v1` (`stub` with `force_cold_model_load`) | Model loading/ready sequencing |
+| `s7_real_model_happy_path` | Provider seam happy-path with `model_stream_v1` and `ORKET_MODEL_STREAM_PROVIDER=real` | Provider-event mapping + terminal/commit flow |
+| `s8_real_model_cancel_mid_gen` | Provider seam cancel behavior on `model_stream_v1` (`real`) before first token emission | Cancel semantics + terminality |
+| `s9_real_model_cold_load_visibility` | Provider seam cold-load visibility on `model_stream_v1` (`real` with `force_cold_model_load`) | Model loading/ready sequencing |
 
 ## Notes
 - `s5_backpressure_drop_ranges` validates stream semantics and does not require `commit_outcome=ok`; it accepts `outcome: any`.

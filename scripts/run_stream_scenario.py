@@ -36,6 +36,13 @@ def _parse_payload(path: Path) -> dict[str, Any]:
 
 
 def _observability_root(project_root: Path, scenario_id: str, run_id: str) -> Path:
+    gate_run_id = str(os.getenv("ORKET_STREAM_GATE_RUN_ID", "")).strip()
+    loop_index = str(os.getenv("ORKET_STREAM_GATE_LOOP_INDEX", "")).strip()
+    if gate_run_id:
+        base = project_root / "workspace" / "observability" / "stream_scenarios" / scenario_id / gate_run_id
+        if loop_index:
+            return base / f"loop-{loop_index}" / run_id
+        return base / run_id
     return project_root / "workspace" / "observability" / "stream_scenarios" / scenario_id / run_id
 
 
