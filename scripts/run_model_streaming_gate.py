@@ -55,14 +55,24 @@ def main() -> int:
         action="store_true",
         help="Include a minimal real streaming smoke check during real-provider preflight.",
     )
+    parser.add_argument(
+        "--real-provider",
+        default=None,
+        choices=["ollama", "openai_compat", "lmstudio"],
+        help="Real provider backend to use when --provider-mode real.",
+    )
     args = parser.parse_args()
 
     os.environ["ORKET_MODEL_STREAM_PROVIDER"] = args.provider_mode
+    if args.provider_mode == "real" and args.real_provider:
+        os.environ["ORKET_MODEL_STREAM_REAL_PROVIDER"] = args.real_provider
     root = Path(args.scenarios_root).resolve()
     scenario_names = BASELINE_SCENARIOS + PROVIDER_SCENARIOS
 
     if args.provider_mode == "real" and not args.skip_preflight:
         cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "check_model_provider_preflight.py")]
+        if args.real_provider:
+            cmd.extend(["--provider", args.real_provider])
         if args.preflight_smoke_stream:
             cmd.append("--smoke-stream")
         preflight = subprocess.run(cmd, cwd=PROJECT_ROOT)

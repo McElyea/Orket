@@ -8,6 +8,7 @@ from orket.streaming.contracts import CommitIntent, StreamEventType
 from orket.streaming.manager import InteractionContext
 from orket.streaming.model_provider import (
     ModelStreamProvider,
+    OpenAICompatModelStreamProvider,
     OllamaModelStreamProvider,
     ProviderEvent,
     ProviderEventType,
@@ -28,6 +29,14 @@ def _real_model_id(input_config: dict[str, Any], turn_params: dict[str, Any]) ->
     ).strip()
 
 
+def _real_provider_name() -> str:
+    return str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
+
+
+def _openai_base_url() -> str:
+    return str(os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
+
+
 def _build_provider(*, input_config: dict[str, Any], turn_params: dict[str, Any]) -> ModelStreamProvider:
     mode = _provider_mode()
     if mode == "stub":
@@ -36,12 +45,31 @@ def _build_provider(*, input_config: dict[str, Any], turn_params: dict[str, Any]
         model_id = _real_model_id(input_config, turn_params)
         if not model_id:
             raise ValueError("ORKET_MODEL_STREAM_PROVIDER=real requires a model_id.")
-        timeout_s_raw = os.getenv("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", "60")
+        timeout_s_raw = os.getenv("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", "20")
         try:
             timeout_s = float(timeout_s_raw)
         except ValueError:
             timeout_s = 60.0
-        return OllamaModelStreamProvider(model_id=model_id, timeout_s=timeout_s)
+        provider_name = _real_provider_name()
+        if provider_name == "ollama":
+            return OllamaModelStreamProvider(model_id=model_id, timeout_s=timeout_s)
+        if provider_name in {"openai_compat", "lmstudio"}:
+            base_url = _openai_base_url()
+            if not base_url:
+                raise ValueError(
+                    "ORKET_MODEL_STREAM_REAL_PROVIDER=openai_compat requires ORKET_MODEL_STREAM_OPENAI_BASE_URL."
+                )
+            api_key = str(os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None
+            return OpenAICompatModelStreamProvider(
+                model_id=model_id,
+                base_url=base_url,
+                api_key=api_key,
+                timeout_s=timeout_s,
+            )
+        raise ValueError(
+            f"Unsupported ORKET_MODEL_STREAM_REAL_PROVIDER='{provider_name}'. "
+            "Expected: ollama|openai_compat|lmstudio."
+        )
     raise ValueError(f"Unsupported ORKET_MODEL_STREAM_PROVIDER='{mode}'. Expected: stub|real.")
 
 

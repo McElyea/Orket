@@ -114,13 +114,19 @@ def _mono_delta_ms(start: dict[str, Any] | None, end: dict[str, Any] | None) -> 
 def _provider_identity() -> dict[str, Any]:
     mode = str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
     if mode == "real":
+        provider_name = str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
+        if provider_name == "lmstudio":
+            provider_name = "openai_compat"
         model_id = str(os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
-        base_url = str(os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).strip()
+        if provider_name == "ollama":
+            base_url = str(os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).strip()
+        else:
+            base_url = str(os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
         if base_url and "://" not in base_url:
             base_url = f"http://{base_url}"
         return {
             "provider_mode": "real",
-            "provider_name": "ollama",
+            "provider_name": provider_name,
             "provider_model_id": model_id or None,
             "provider_base_url": base_url or None,
         }
@@ -290,7 +296,10 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
                     kind="expectation",
                 )
                 break
-            event = ws.receive_json()
+            wait_budget_s = max(0.01, min(0.5, timeout_s - elapsed))
+            event = _receive_json_with_timeout(ws, wait_budget_s)
+            if event is None:
+                continue
             events.append(event)
             try:
                 checker.consume(event)
