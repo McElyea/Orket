@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import hashlib
 import importlib
 from importlib.metadata import entry_points
@@ -311,6 +312,7 @@ class ExtensionManager:
             raise FileNotFoundError(f"Extension path missing: {extension.path}")
         module_name = extension.module
         register_name = extension.register_callable
+        self._validate_extension_imports(extension_path, module_name)
 
         added_path = False
         if str(extension_path) not in sys.path:
@@ -334,6 +336,45 @@ class ExtensionManager:
                     sys.path.remove(str(extension_path))
                 except ValueError:
                     pass
+
+    def _validate_extension_imports(self, extension_path: Path, module_name: str) -> None:
+        module_path = extension_path / Path(*module_name.split("."))
+        file_path = module_path.with_suffix(".py")
+        package_init_path = module_path / "__init__.py"
+        if file_path.exists():
+            source_path = file_path
+        elif package_init_path.exists():
+            source_path = package_init_path
+        else:
+            raise FileNotFoundError(f"Extension module source not found for '{module_name}' under {extension_path}")
+
+        source = source_path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(source_path))
+        blocked_prefixes = (
+            "orket.orchestration",
+            "orket.decision_nodes",
+            "orket.runtime",
+            "orket.application",
+            "orket.adapters",
+            "orket.interfaces",
+            "orket.services",
+            "orket.kernel",
+            "orket.core",
+            "orket.webhook_server",
+            "orket.orket",
+        )
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    name = str(alias.name or "")
+                    if name.startswith("orket.") and not name.startswith("orket.extensions"):
+                        if any(name.startswith(prefix) for prefix in blocked_prefixes):
+                            raise ValueError(f"Extension import blocked by isolation policy: {name}")
+            elif isinstance(node, ast.ImportFrom):
+                module = str(node.module or "")
+                if module.startswith("orket.") and not module.startswith("orket.extensions"):
+                    if any(module.startswith(prefix) for prefix in blocked_prefixes):
+                        raise ValueError(f"Extension import blocked by isolation policy: {module}")
 
     def _artifact_root(
         self,
