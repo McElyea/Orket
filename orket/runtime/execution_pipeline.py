@@ -31,6 +31,8 @@ from orket.application.services.runtime_policy import (
 )
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
+from orket.runtime.workload_adapters import build_cards_workload_contract
+from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.schema import (
     CardStatus,
@@ -107,6 +109,7 @@ class ExecutionPipeline:
             loader=self.loader,
             sandbox_orchestrator=self.sandbox_orchestrator,
         )
+        self.workload_shell = SharedWorkloadShell()
 
     def _resolve_state_backend_mode(self) -> str:
         env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()
@@ -318,6 +321,13 @@ class ExecutionPipeline:
 
         run_id = self.execution_runtime_node.select_run_id(session_id)
         active_build = self.execution_runtime_node.select_epic_build_id(build_id, epic_name, sanitize_name)
+        cards_workload_contract = build_cards_workload_contract(
+            epic=epic,
+            run_id=run_id,
+            build_id=active_build,
+            workspace=self.workspace,
+            department=self.department,
+        )
 
         if not await self.sessions.get_session(run_id):
             await self.sessions.start_session(
@@ -389,14 +399,21 @@ class ExecutionPipeline:
         session_status = "failed"
 
         try:
-            await self.orchestrator.execute_epic(
-                active_build=active_build,
-                run_id=run_id,
-                epic=epic,
-                team=team,
-                env=env,
-                target_issue_id=target_issue_id,
-                resume_mode=resume_mode,
+            async def _execute_cards_workload(_contract):
+                await self.orchestrator.execute_epic(
+                    active_build=active_build,
+                    run_id=run_id,
+                    epic=epic,
+                    team=team,
+                    env=env,
+                    target_issue_id=target_issue_id,
+                    resume_mode=resume_mode,
+                )
+                return None
+
+            await self.workload_shell.execute(
+                contract_payload=cards_workload_contract,
+                execute_fn=_execute_cards_workload,
             )
 
             self.transcript = self.orchestrator.transcript
