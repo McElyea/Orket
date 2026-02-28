@@ -1,8 +1,9 @@
 scenario_id: happy_path
 turn:
-  workload_id: mystery_v1
+  workload_id: stream_test_v1
   input_config:
     seed: 123
+    mode: basic
   turn_params:
     persona: npc_default
 finalize_explicit: false

@@ -67,17 +67,8 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
     os.environ["ORKET_API_KEY"] = api_key
     os.environ["ORKET_STREAM_EVENTS_V1"] = "true"
 
-    app = api_module.create_api_app(project_root=Path.cwd())
-    client = TestClient(app)
-    checker = StreamLawChecker()
-    events: list[dict[str, Any]] = []
-    violation: str | None = None
-    terminal_event: str | None = None
-    commit_outcome: str | None = None
-    commit_digest: str | None = None
-
     turn_spec = scenario.get("turn") if isinstance(scenario.get("turn"), dict) else {}
-    workload_id = str(turn_spec.get("workload_id", "mystery_v1"))
+    workload_id = str(turn_spec.get("workload_id", "stream_test_v1"))
     input_config = turn_spec.get("input_config")
     if not isinstance(input_config, dict):
         input_text = turn_spec.get("input")
@@ -87,6 +78,18 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
     finalize_explicit = bool(scenario.get("finalize_explicit", False))
     expected = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
     expected_outcome = str(expected.get("outcome", "")).strip() or None
+    runtime_env = scenario.get("runtime_env") if isinstance(scenario.get("runtime_env"), dict) else {}
+    for key, value in runtime_env.items():
+        os.environ[str(key)] = str(value)
+
+    app = api_module.create_api_app(project_root=Path.cwd())
+    client = TestClient(app)
+    checker = StreamLawChecker()
+    events: list[dict[str, Any]] = []
+    violation: str | None = None
+    terminal_event: str | None = None
+    commit_outcome: str | None = None
+    commit_digest: str | None = None
 
     start_resp = client.post(
         "/v1/interactions/sessions",
@@ -125,7 +128,8 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
         seen_event_counts: dict[str, int] = {}
 
         while True:
-            if (time.time() - start_wall) > timeout_s:
+            elapsed = time.time() - start_wall
+            if elapsed > timeout_s:
                 violation = f"timeout waiting for commit_final after {timeout_s}s"
                 break
             event = ws.receive_json()

@@ -1,8 +1,9 @@
 scenario_id: cold_model_load_visibility
 turn:
-  workload_id: mystery_v1
+  workload_id: stream_test_v1
   input_config:
     seed: 456
+    mode: basic
     force_cold_model_load: true
   turn_params:
     profile: cold_load_probe

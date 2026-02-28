@@ -1,14 +1,14 @@
-scenario_id: cancel_during_tool
+scenario_id: finalize_cancel_noop
 turn:
   workload_id: stream_test_v1
   input_config:
-    seed: 321
+    seed: 987
     mode: finalize_then_wait
     wait_ms: 60
   cancel_at:
     event_type: turn_final
     after_count: 1
     after_ms: 0
-finalize_explicit: false
+finalize_explicit: true
 expect:
   outcome: ok

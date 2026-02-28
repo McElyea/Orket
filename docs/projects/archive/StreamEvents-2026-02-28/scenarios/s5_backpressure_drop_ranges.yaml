@@ -1,11 +1,13 @@
 scenario_id: backpressure_drop_ranges
+runtime_env:
+  ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN: 12
 turn:
-  workload_id: mystery_v1
+  workload_id: stream_test_v1
   input_config:
     seed: 654
-    force_many_deltas: true
-  turn_params:
-    best_effort_pressure: high
+    mode: spam_deltas
+    delta_count: 120
+    chunk_size: 2
 finalize_explicit: false
 expect:
   outcome: ok

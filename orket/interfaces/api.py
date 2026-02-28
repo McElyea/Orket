@@ -26,6 +26,7 @@ from orket.streaming import (
     StreamBus,
     StreamBusConfig,
 )
+from orket.workloads import is_builtin_workload, run_builtin_workload
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -468,6 +469,16 @@ interaction_manager = InteractionManager(
     project_root=PROJECT_ROOT,
 )
 extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
+
+
+def _build_stream_bus_from_env() -> StreamBus:
+    return StreamBus(
+        StreamBusConfig(
+            best_effort_max_events_per_turn=int(os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN", "256")),
+            bounded_max_events_per_turn=int(os.getenv("ORKET_STREAM_BOUNDED_MAX_EVENTS_PER_TURN", "128")),
+            max_bytes_per_turn_queue=int(os.getenv("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
+        )
+    )
 
 # --- System Endpoints ---
 
@@ -1827,6 +1838,15 @@ async def start_interaction_session(req: InteractionSessionStartRequest):
 async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
     if not interaction_manager.stream_enabled():
         raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
+    workload_id = str(req.workload_id or "").strip()
+    if not workload_id:
+        raise HTTPException(status_code=400, detail="workload_id is required")
+    extension_match = extension_manager.resolve_workload(workload_id)
+    if not is_builtin_workload(workload_id) and extension_match is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown workload '{workload_id}'. Built-in workloads: stream_test_v1.",
+        )
     try:
         turn_id = await interaction_manager.begin_turn(
             session_id=session_id,
@@ -1840,14 +1860,26 @@ async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
 
     async def _run_turn():
         try:
-            await extension_manager.run_workload(
-                workload_id=req.workload_id,
-                input_config=req.input_config,
-                workspace=workspace,
-                department=req.department,
-                interaction_context=context,
-            )
-            await interaction_manager.finalize(session_id, turn_id)
+            if is_builtin_workload(workload_id):
+                hints = await run_builtin_workload(
+                    workload_id=workload_id,
+                    input_config=req.input_config,
+                    turn_params=req.turn_params,
+                    interaction_context=context,
+                )
+                await interaction_manager.finalize(session_id, turn_id)
+                post_finalize_wait_ms = int(hints.get("post_finalize_wait_ms", 0))
+                if post_finalize_wait_ms > 0:
+                    await asyncio.sleep(post_finalize_wait_ms / 1000.0)
+            else:
+                await extension_manager.run_workload(
+                    workload_id=workload_id,
+                    input_config=req.input_config,
+                    workspace=workspace,
+                    department=req.department,
+                    interaction_context=context,
+                )
+                await interaction_manager.finalize(session_id, turn_id)
         except Exception as exc:
             await interaction_manager.cancel(turn_id)
             await context.request_commit(CommitIntent(type="decision", ref=f"fail_closed:{str(exc)}"))
@@ -1883,10 +1915,11 @@ app.include_router(v1_router)
 
 
 def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
-    global PROJECT_ROOT, engine, interaction_manager, extension_manager
+    global PROJECT_ROOT, engine, interaction_manager, extension_manager, stream_bus
     if project_root is not None:
         PROJECT_ROOT = Path(project_root).resolve()
     engine.reset(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
+    stream_bus = _build_stream_bus_from_env()
     interaction_manager = InteractionManager(
         bus=stream_bus,
         commit_orchestrator=CommitOrchestrator(project_root=PROJECT_ROOT),
