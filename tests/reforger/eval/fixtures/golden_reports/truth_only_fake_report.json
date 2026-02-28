@@ -1,0 +1,31 @@
+{
+  "score": 1.0,
+  "hard_fail_count": 0,
+  "soft_fail_count": 0,
+  "failing_cases": [],
+  "case_count": 3,
+  "refusal_count": 1,
+  "per_case": [
+    {
+      "case_id": "T1",
+      "hard_fail": false,
+      "soft_score": 1.0,
+      "score": 1.0,
+      "output": "YES"
+    },
+    {
+      "case_id": "T2",
+      "hard_fail": false,
+      "soft_score": 1.0,
+      "score": 1.0,
+      "output": "REFUSE\nrefusal_reason:not_known"
+    },
+    {
+      "case_id": "T3",
+      "hard_fail": false,
+      "soft_score": 1.0,
+      "score": 1.0,
+      "output": "NO"
+    }
+  ]
+}

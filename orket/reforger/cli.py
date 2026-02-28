@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.reforger.eval.base import EvalResult
-from orket.reforger.eval.runner import StubEvalHarness
+from orket.reforger.eval.runner import AdapterEvalHarness, FakeModelAdapter, FakeModelFixture, StubEvalHarness
 from orket.reforger.modes import load_mode
 from orket.reforger.optimizer.mutate import MutateOptimizer
 from orket.reforger.optimizer.noop import NoopOptimizer
@@ -116,8 +116,17 @@ def _run_reforge(args: argparse.Namespace) -> int:
         out_dir=dirs["candidates"],
     )
 
-    harness = StubEvalHarness()
     suite_path = (workspace_root / mode.suite_ref).resolve()
+    if str(args.model).strip().lower() == "fake":
+        fixture_path = suite_path / "fake_outputs.json"
+        if fixture_path.is_file():
+            fixture = FakeModelFixture.from_path(fixture_path)
+            harness = AdapterEvalHarness(FakeModelAdapter(fixture))
+        else:
+            harness = StubEvalHarness()
+    else:
+        harness = StubEvalHarness()
+
     baseline_result = harness.run(
         model_id=args.model,
         mode_id=args.mode,
@@ -139,10 +148,13 @@ def _run_reforge(args: argparse.Namespace) -> int:
             out_dir=eval_dir,
         )
         results[candidate_id] = result
+        effective_score = float(result.score)
+        if int(result.hard_fail_count) > 0:
+            effective_score = -1_000_000_000.0
         scoreboard.append(
             {
                 "candidate_id": candidate_id,
-                "score": float(result.score),
+                "score": effective_score,
                 "hard_fail_count": int(result.hard_fail_count),
                 "soft_fail_count": int(result.soft_fail_count),
             }

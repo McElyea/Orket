@@ -5,6 +5,20 @@ from pathlib import Path
 from typing import Protocol
 
 
+class ModelAdapter(Protocol):
+    def generate(
+        self,
+        *,
+        model_id: str,
+        mode_id: str,
+        case_id: str,
+        prompt: str,
+        pack_digest: str,
+        pack_path: Path,
+    ) -> str:
+        ...
+
+
 @dataclass(frozen=True)
 class FailingCase:
     case_id: str
@@ -33,4 +47,3 @@ class EvalHarness(Protocol):
         out_dir: Path,
     ) -> EvalResult:
         ...
-

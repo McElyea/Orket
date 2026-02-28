@@ -1,0 +1,5 @@
+{
+  "truth_only:T1": "YES",
+  "truth_only:T2": "REFUSE\nrefusal_reason:not_known",
+  "truth_only:T3": "NO"
+}

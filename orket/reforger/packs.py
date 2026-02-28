@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,6 +14,10 @@ _REQUIRED_FILENAMES = ("pack.json", "constraints.yaml")
 
 class PackValidationError(ValueError):
     """Deterministic pack validation error."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 @dataclass(frozen=True)
@@ -26,26 +31,26 @@ def _read_json(path: Path) -> dict[str, object]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise PackValidationError(f"Invalid JSON file: {path}") from exc
+        raise PackValidationError("E_PACK_JSON_INVALID", f"Invalid JSON file: {path}") from exc
     if not isinstance(payload, dict):
-        raise PackValidationError(f"Expected object in JSON file: {path}")
+        raise PackValidationError("E_PACK_JSON_NOT_OBJECT", f"Expected object in JSON file: {path}")
     return payload
 
 
 def _resolve_system_file(pack_dir: Path) -> str:
     existing = [name for name in _SYSTEM_CANDIDATES if (pack_dir / name).is_file()]
     if not existing:
-        raise PackValidationError(f"Missing required system prompt file in pack: {pack_dir}")
+        raise PackValidationError("E_PACK_SYSTEM_MISSING", f"Missing required system prompt file in pack: {pack_dir}")
     return sorted(existing)[0]
 
 
 def _validate_pack_dir(pack_dir: Path) -> None:
     if not pack_dir.is_dir():
-        raise PackValidationError(f"Pack path is not a directory: {pack_dir}")
+        raise PackValidationError("E_PACK_NOT_DIRECTORY", f"Pack path is not a directory: {pack_dir}")
     missing = [name for name in _REQUIRED_FILENAMES if not (pack_dir / name).is_file()]
     if missing:
         joined = ", ".join(sorted(missing))
-        raise PackValidationError(f"Missing required pack files ({joined}) in: {pack_dir}")
+        raise PackValidationError("E_PACK_REQUIRED_MISSING", f"Missing required pack files ({joined}) in: {pack_dir}")
     _resolve_system_file(pack_dir)
 
 
@@ -56,9 +61,9 @@ def _load_pack_metadata(pack_dir: Path) -> PackMetadata:
     extends_raw = payload.get("extends")
     extends = str(extends_raw).strip() if extends_raw is not None else None
     if not pack_id:
-        raise PackValidationError(f"pack.json missing non-empty 'id' in: {pack_dir}")
+        raise PackValidationError("E_PACK_ID_MISSING", f"pack.json missing non-empty 'id' in: {pack_dir}")
     if not pack_version:
-        raise PackValidationError(f"pack.json missing non-empty 'version' in: {pack_dir}")
+        raise PackValidationError("E_PACK_VERSION_MISSING", f"pack.json missing non-empty 'version' in: {pack_dir}")
     return PackMetadata(pack_id=pack_id, pack_version=pack_version, extends=extends or None, path=pack_dir)
 
 
@@ -70,6 +75,7 @@ def _resolve_extends_path(*, extends: str, current_path: Path, packs_root: Path 
         return (current_path.parent / candidate).resolve()
     if packs_root is None:
         raise PackValidationError(
+            "E_PACK_EXTENDS_ROOT_REQUIRED",
             f"Pack extends value '{extends}' requires packs_root for id-based resolution: {current_path}"
         )
     return (packs_root / extends).resolve()
@@ -92,7 +98,7 @@ def resolve_pack(pack_path: Path, *, packs_root: Path | None = None) -> Resolved
 
     def _walk(current: Path) -> None:
         if current in seen:
-            raise PackValidationError(f"Detected cyclic pack inheritance at: {current}")
+            raise PackValidationError("E_PACK_INHERITANCE_CYCLE", f"Detected cyclic pack inheritance at: {current}")
         seen.add(current)
         _validate_pack_dir(current)
         metadata = _load_pack_metadata(current)
@@ -120,7 +126,7 @@ def resolve_pack(pack_path: Path, *, packs_root: Path | None = None) -> Resolved
                     merged_files.pop(other, None)
 
     if last_metadata is None:
-        raise PackValidationError(f"Unable to resolve pack: {pack_path}")
+        raise PackValidationError("E_PACK_RESOLVE_FAILED", f"Unable to resolve pack: {pack_path}")
 
     normalized = {name: merged_files[name] for name in sorted(merged_files)}
     return ResolvedPack(metadata=last_metadata, inheritance_chain=tuple(chain), resolved_files=normalized)
@@ -143,3 +149,17 @@ def write_resolved_pack(resolved: ResolvedPack, out_dir: Path) -> Path:
     }
     (target / "pack.json").write_text(json.dumps(pack_payload, indent=2) + "\n", encoding="utf-8")
     return target
+
+
+def resolved_pack_digest(resolved: ResolvedPack) -> str:
+    payload: list[bytes] = []
+    for name in sorted(resolved.resolved_files):
+        payload.append(name.encode("utf-8"))
+        payload.append(b"\n")
+        payload.append(hashlib.sha256(resolved.resolved_files[name].encode("utf-8")).hexdigest().encode("utf-8"))
+        payload.append(b"\n")
+    payload.append(resolved.metadata.pack_id.encode("utf-8"))
+    payload.append(b"\n")
+    payload.append(resolved.metadata.pack_version.encode("utf-8"))
+    payload.append(b"\n")
+    return hashlib.sha256(b"".join(payload)).hexdigest()
