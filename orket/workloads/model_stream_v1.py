@@ -109,8 +109,8 @@ async def run_model_stream_v1(
         if provider_turn_id:
             await provider.cancel(provider_turn_id)
 
-    cancel_task = asyncio.create_task(_cancel_watch())
-    try:
+    async def _consume_provider() -> None:
+        nonlocal provider_turn_id, provider_error, stop_reason
         async for provider_event in provider.start_turn(req):
             provider_turn_id = provider_event.provider_turn_id
             if provider_event.event_type == ProviderEventType.ERROR:
@@ -126,6 +126,19 @@ async def run_model_stream_v1(
                 await provider.cancel(provider_turn_id)
                 break
             await interaction_context.emit_event(stream_mapping, payload)
+
+    turn_timeout_raw = str(os.getenv("ORKET_MODEL_STREAM_TURN_TIMEOUT_S", "12")).strip()
+    try:
+        turn_timeout_s = max(1.0, float(turn_timeout_raw))
+    except ValueError:
+        turn_timeout_s = 12.0
+
+    cancel_task = asyncio.create_task(_cancel_watch())
+    try:
+        try:
+            await asyncio.wait_for(_consume_provider(), timeout=turn_timeout_s)
+        except asyncio.TimeoutError:
+            provider_error = f"provider_turn_timeout:{turn_timeout_s}s"
     finally:
         cancel_task.cancel()
         try:

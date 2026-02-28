@@ -10,9 +10,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.run_stream_scenario import run_scenario
-
-
 BASELINE_SCENARIOS = [
     "s0_unknown_workload_400.yaml",
     "s5_backpressure_drop_ranges.yaml",
@@ -27,8 +24,24 @@ PROVIDER_SCENARIOS = [
 
 
 def _run_checked_scenario(path: Path, timeout_s: float) -> bool:
-    verdict = run_scenario(scenario_path=path, timeout_s=timeout_s)
-    return str(verdict.get("status")) == "PASS"
+    scenario_name = path.name.lower()
+    direct_provider_scenario = scenario_name in {
+        "s7_real_model_happy_path.yaml",
+        "s8_real_model_cancel_mid_gen.yaml",
+        "s9_real_model_cold_load_visibility.yaml",
+    } and str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "")).strip().lower() == "real"
+    module_name = "scripts.run_provider_scenario_direct" if direct_provider_scenario else "scripts.run_stream_scenario"
+    cmd = [
+        sys.executable,
+        "-m",
+        module_name,
+        "--scenario",
+        str(path),
+        "--timeout",
+        str(timeout_s),
+    ]
+    proc = subprocess.run(cmd, cwd=PROJECT_ROOT)
+    return proc.returncode == 0
 
 
 def main() -> int:

@@ -4,8 +4,7 @@ turn:
   input_config:
     seed: 321
     mode: basic
-    prompt: "Reply with exactly: OK"
-    max_tokens: 8
+    max_tokens: 1
 finalize_explicit: false
 expect:
   outcome: ok

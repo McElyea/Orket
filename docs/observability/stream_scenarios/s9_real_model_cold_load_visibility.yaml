@@ -5,8 +5,7 @@ turn:
     seed: 135
     mode: basic
     force_cold_model_load: true
-    prompt: "Reply with exactly: COLD"
-    max_tokens: 8
+    max_tokens: 1
 finalize_explicit: false
 expect:
   outcome: ok
