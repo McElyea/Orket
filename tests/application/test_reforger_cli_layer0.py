@@ -130,3 +130,73 @@ def test_reforge_open_last_best_effort(tmp_path: Path, monkeypatch) -> None:
     (tmp_path / "reforge" / "runs").mkdir(parents=True, exist_ok=True)
     rc = main(["reforge", "open", "last"])
     assert rc == 0
+
+
+def test_reforge_run_exit_code_hard_fail_and_artifact_completeness(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    reforge_root = tmp_path / "reforge"
+    mode_id = "lies_only"
+    model_id = "gemma3"
+    _seed_mode_and_suite(reforge_root, mode_id)
+    base_pack = reforge_root / "packs" / "base" / mode_id
+    _seed_base_pack(base_pack)
+
+    # Force deterministic hard failure by requiring a missing token.
+    suites = reforge_root / "suites" / mode_id
+    (suites / "cases.jsonl").write_text(
+        json.dumps(
+            {
+                "case_id": "HF1",
+                "prompt": "force hard fail",
+                "expectations": {"hard": ["must_include:NON_EXISTENT_TOKEN"], "soft": []},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert (
+        main(
+            [
+                "reforge",
+                "init",
+                "--mode",
+                mode_id,
+                "--model",
+                model_id,
+                "--from",
+                str(base_pack),
+            ]
+        )
+        == 0
+    )
+
+    rc = main(
+        [
+            "reforge",
+            "run",
+            "--mode",
+            mode_id,
+            "--model",
+            model_id,
+            "--seed",
+            "11",
+            "--budget",
+            "2",
+            "--baseline",
+            str(reforge_root / "packs" / "model" / model_id / mode_id),
+            "--save-best",
+            "false",
+        ]
+    )
+    assert rc == 1
+
+    runs = sorted([item for item in (reforge_root / "runs").iterdir() if item.is_dir()], key=lambda p: p.name)
+    assert runs
+    bundle = runs[-1]
+    assert (bundle / "manifest.json").is_file()
+    assert (bundle / "summary.txt").is_file()
+    assert (bundle / "eval" / "scoreboard.csv").is_file()
+    assert (bundle / "diff" / "best_vs_baseline.md").is_file()
+    assert (bundle / "candidates" / "0001_pack_resolved" / "mutation.json").is_file()
+    assert (bundle / "candidates" / "0002_pack_resolved" / "mutation.json").is_file()
