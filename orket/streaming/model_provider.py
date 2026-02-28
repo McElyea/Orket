@@ -180,6 +180,8 @@ class OllamaModelStreamProvider(ModelStreamProvider):
                     options["temperature"] = float(req.input_config.get("temperature"))
                 except (TypeError, ValueError):
                     pass
+            # Bound generation by default to keep stream scenarios deterministic and fast.
+            options["num_predict"] = _int_value(req.input_config.get("max_tokens"), 64, minimum=1)
             yield ProviderEvent(
                 provider_turn_id=provider_turn_id,
                 event_type=ProviderEventType.SELECTED,
@@ -253,14 +255,21 @@ class OllamaModelStreamProvider(ModelStreamProvider):
 
     @staticmethod
     def _extract_delta(chunk: Any) -> str:
-        if not isinstance(chunk, dict):
+        if isinstance(chunk, dict):
+            message = chunk.get("message")
+            if isinstance(message, dict):
+                content = message.get("content")
+                if isinstance(content, str):
+                    return content
+            response = chunk.get("response")
+            if isinstance(response, str):
+                return response
             return ""
-        message = chunk.get("message")
-        if isinstance(message, dict):
-            content = message.get("content")
-            if isinstance(content, str):
-                return content
-        response = chunk.get("response")
-        if isinstance(response, str):
-            return response
+        message_obj = getattr(chunk, "message", None)
+        content_obj = getattr(message_obj, "content", None)
+        if isinstance(content_obj, str):
+            return content_obj
+        response_obj = getattr(chunk, "response", None)
+        if isinstance(response_obj, str):
+            return response_obj
         return ""

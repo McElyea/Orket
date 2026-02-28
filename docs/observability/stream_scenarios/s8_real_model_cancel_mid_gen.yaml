@@ -1,6 +1,4 @@
 scenario_id: s8_real_model_cancel_mid_gen
-runtime_env:
-  ORKET_MODEL_STREAM_PROVIDER: stub
 turn:
   workload_id: model_stream_v1
   input_config:

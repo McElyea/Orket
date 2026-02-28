@@ -16,6 +16,14 @@ python scripts/run_stream_scenario.py --scenario <scenario-yaml-path> --timeout 
 ```powershell
 python scripts/run_model_streaming_gate.py --provider-mode stub --timeout 20
 ```
+```powershell
+python scripts/run_model_streaming_gate.py --provider-mode real --timeout 20
+```
+
+## Real Provider Preflight
+```powershell
+python scripts/check_model_provider_preflight.py
+```
 
 ## PASS/FAIL Meaning
 - `PASS`: stream laws hold and scenario expectations hold.

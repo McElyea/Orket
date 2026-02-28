@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -44,11 +45,24 @@ def main() -> int:
         choices=["stub", "real"],
         help="Provider mode for provider-enabled scenarios.",
     )
+    parser.add_argument(
+        "--skip-preflight",
+        action="store_true",
+        help="Skip real-provider preflight checks.",
+    )
     args = parser.parse_args()
 
     os.environ["ORKET_MODEL_STREAM_PROVIDER"] = args.provider_mode
     root = Path(args.scenarios_root).resolve()
     scenario_names = BASELINE_SCENARIOS + PROVIDER_SCENARIOS
+
+    if args.provider_mode == "real" and not args.skip_preflight:
+        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "check_model_provider_preflight.py")]
+        preflight = subprocess.run(cmd, cwd=PROJECT_ROOT)
+        if preflight.returncode != 0:
+            print("MODEL_STREAMING_GATE=FAIL")
+            print("FAILURE real_provider_preflight")
+            return preflight.returncode
 
     failures: list[str] = []
     for name in scenario_names:
