@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+from importlib.metadata import entry_points
 import json
 import os
 import shutil
@@ -82,8 +83,10 @@ class ExtensionManager:
 
     def list_extensions(self) -> list[ExtensionRecord]:
         payload = self._load_catalog_payload()
+        rows = list(payload.get("extensions", [])) + self._discover_entry_point_rows()
         records: list[ExtensionRecord] = []
-        for row in payload.get("extensions", []):
+        seen_ids: set[str] = set()
+        for row in rows:
             extension_id = str(row.get("extension_id", "")).strip()
             extension_version = str(row.get("extension_version", "")).strip() or "0.0.0"
             source = str(row.get("source", "")).strip() or "unknown"
@@ -91,8 +94,9 @@ class ExtensionManager:
             path = str(row.get("path", "")).strip()
             module = str(row.get("module", "")).strip()
             register_callable = str(row.get("register_callable", "")).strip() or "register"
-            if not extension_id:
+            if not extension_id or extension_id in seen_ids:
                 continue
+            seen_ids.add(extension_id)
 
             workloads: list[WorkloadRecord] = []
             for item in row.get("workloads", []):
@@ -444,3 +448,27 @@ class ExtensionManager:
             raise RuntimeError(
                 f"Command failed: {' '.join(command)}\nstdout={result.stdout.strip()}\nstderr={result.stderr.strip()}"
             )
+
+    def _discover_entry_point_rows(self) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        try:
+            group = entry_points().select(group="orket.extensions")
+        except Exception:
+            return rows
+
+        for ep in group:
+            try:
+                loader = ep.load()
+                if not callable(loader):
+                    continue
+                descriptor = loader()
+                if not isinstance(descriptor, dict):
+                    continue
+                if "source" not in descriptor:
+                    descriptor["source"] = f"entrypoint:{ep.name}"
+                if "register_callable" not in descriptor:
+                    descriptor["register_callable"] = "register"
+                rows.append(descriptor)
+            except Exception:
+                continue
+        return rows

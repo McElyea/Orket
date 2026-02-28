@@ -134,6 +134,30 @@ def test_install_from_repo_registers_extension(tmp_path):
     assert manager.resolve_workload("mystery_v1") is not None
 
 
+def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    monkeypatch.setattr(
+        manager,
+        "_discover_entry_point_rows",
+        lambda: [
+            {
+                "extension_id": "entrypoint.extension",
+                "extension_version": "2.0.0",
+                "extension_api_version": "1.0.0",
+                "source": "entrypoint:demo",
+                "path": str(tmp_path),
+                "module": "demo_module",
+                "register_callable": "register",
+                "workloads": [{"workload_id": "demo_v1", "workload_version": "2.0.0"}],
+            }
+        ],
+    )
+    rows = manager.list_extensions()
+    assert len(rows) == 1
+    assert rows[0].extension_id == "entrypoint.extension"
+    assert rows[0].workloads[0].workload_id == "demo_v1"
+
+
 @pytest.mark.asyncio
 async def test_run_workload_emits_provenance(tmp_path):
     repo = tmp_path / "ext_repo"
