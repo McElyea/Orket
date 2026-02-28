@@ -10,3 +10,4 @@ turn:
 finalize_explicit: false
 expect:
   outcome: ok
+  require_commit_final: true

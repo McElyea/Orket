@@ -1,0 +1,34 @@
+# Stream Scenarios
+
+This document defines how to run live stream scenarios and what they prove.
+
+## Runtime and Transport
+- Canonical publisher/subscriber: in-proc stream bus.
+- External transport under test: WebSocket.
+- WebSocket adapter forwards canonical bus events without mutating ordering or payloads.
+
+## Run a Scenario
+```powershell
+python scripts/run_stream_scenario.py --scenario <scenario-yaml-path> --timeout 20
+```
+
+## PASS/FAIL Meaning
+- `PASS`: stream laws hold and scenario expectations hold.
+- `FAIL`: either a stream law violation or a scenario expectation violation.
+- Verdict artifact path is printed at run end (`verdict.json` plus `events.jsonl`).
+- `require_commit_final` defaults to `false`; scenarios that validate authority completion should set `require_commit_final: true`.
+
+## Dropped Range Convention (v1)
+- When best-effort drops occur, runtime surfaces `dropped_seq_ranges` on the next emitted event for the same turn, and at latest on the terminal interaction event.
+
+## Scenario Matrix
+| Scenario | Purpose | Primary Laws |
+|---|---|---|
+| `s0_unknown_workload_400` | API fail-fast for unknown workload IDs (no async turn side effects) | API contract + no-stream side effect assertion |
+| `s5_backpressure_drop_ranges` | Backpressure cap + dropped ranges surfaced + must-deliver terminal event (and commit if emitted) | `R0`, `R9b` |
+| `s6_finalize_cancel_noop` | Cancel after `commit_final` is a noop: no further events and no terminal-state reopening | `R3`, `R1b` |
+
+## Notes
+- `s5_backpressure_drop_ranges` validates stream semantics and does not require `commit_outcome=ok`; it accepts `outcome: any`.
+- `s5_backpressure_drop_ranges` requires a minimum number of `token_delta` events and observed `dropped_seq_ranges` to ensure real backpressure was exercised.
+- `s5_backpressure_drop_ranges` may additionally enforce `min_dropped_seq_ranges_count` to prove at least one drop range surfaced.
