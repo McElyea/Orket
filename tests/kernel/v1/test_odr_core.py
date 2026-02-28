@@ -48,7 +48,7 @@ def test_diff_floor_triggers_with_stable_rounds() -> None:
     state = run_round(state, _architect("Alpha beta gamma delta epsilon!"), _auditor(), cfg)
     assert state.stop_reason is None
     state = run_round(state, _architect("Alpha beta gamma delta epsilon?"), _auditor(), cfg)
-    assert state.stop_reason == "DIFF_FLOOR"
+    assert state.stop_reason == "STABLE_DIFF_FLOOR"
 
 
 def test_circularity_triggers_and_metrics_present() -> None:
@@ -72,7 +72,7 @@ def test_circularity_triggers_and_metrics_present() -> None:
         _auditor(),
         cfg,
     )
-    assert state.stop_reason == "CIRCULARITY"
+    assert state.stop_reason == "LOOP_DETECTED"
     metrics = state.history_rounds[-1]["metrics"]
     assert metrics["sim_prev"] is not None
     assert metrics["sim_loop"] is not None
@@ -87,7 +87,7 @@ def test_shape_violation_emits_parse_errors_and_null_parsed_fields() -> None:
         "### OPEN_QUESTIONS\n- q\n"
     )
     state = run_round(state, broken_architect, _auditor(), cfg)
-    assert state.stop_reason == "SHAPE_VIOLATION"
+    assert state.stop_reason == "FORMAT_VIOLATION"
     record = state.history_rounds[-1]
     assert record["architect_parsed"] is None
     assert record["auditor_parsed"] is None
@@ -142,7 +142,7 @@ def test_leading_preface_before_header_is_shape_violation() -> None:
         "- t1\n"
     )
     state = run_round(state, _architect("v1"), preface_auditor, cfg)
-    assert state.stop_reason == "SHAPE_VIOLATION"
+    assert state.stop_reason == "FORMAT_VIOLATION"
     record = state.history_rounds[-1]
     assert record["auditor_parsed"] is None
     assert any(

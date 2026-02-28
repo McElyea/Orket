@@ -4,15 +4,14 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from .leak_policy import (
+    DEFAULT_CODE_LEAK_PATTERNS,
+    DEFAULT_LEAK_GATE_MODE,
+    LeakDetection,
+    detect_code_leak,
+)
 from .metrics import diff_ratio, jaccard_sim
 from .parsers import normalize_newlines, parse_architect, parse_auditor
-
-
-DEFAULT_CODE_LEAK_PATTERNS = [
-    r"(?s)```.*?```",
-    r"\b(def|class|import|fn|let|const|interface|type)\b",
-    r"\b(npm|pip|cargo|docker|venv|node_modules)\b",
-]
 
 
 @dataclass
@@ -24,6 +23,7 @@ class ReactorConfig:
     margin: float = 0.02
     min_loop_sim: float = 0.65
     code_leak_patterns: List[str] = field(default_factory=lambda: list(DEFAULT_CODE_LEAK_PATTERNS))
+    leak_gate_mode: str = DEFAULT_LEAK_GATE_MODE
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -34,6 +34,7 @@ class ReactorConfig:
             "margin": float(self.margin),
             "min_loop_sim": float(self.min_loop_sim),
             "code_leak_patterns": list(self.code_leak_patterns),
+            "leak_gate_mode": str(self.leak_gate_mode),
         }
 
 
@@ -80,14 +81,17 @@ def run_round(
     attempted_n = len(state.history_v) + 1
     run_config = cfg.as_dict()
 
-    code_leak_hit = check_code_leak(normalized_architect_raw, cfg.code_leak_patterns) or check_code_leak(
-        normalized_auditor_raw,
-        cfg.code_leak_patterns,
+    leak_detection: LeakDetection = detect_code_leak(
+        architect_raw=normalized_architect_raw,
+        auditor_raw=normalized_auditor_raw,
+        mode=str(cfg.leak_gate_mode or DEFAULT_LEAK_GATE_MODE),
+        patterns=cfg.code_leak_patterns,
     )
-    if code_leak_hit:
+    if leak_detection.hard_leak:
         record = {
             "round": round_idx,
             "run_config": run_config,
+            "code_leak_gate_mode": str(cfg.leak_gate_mode or DEFAULT_LEAK_GATE_MODE),
             "architect_raw": normalized_architect_raw,
             "auditor_raw": normalized_auditor_raw,
             "architect_parsed": None,
@@ -96,6 +100,7 @@ def run_round(
             "metrics": _base_metrics(n=attempted_n, code_leak_hit=True, stable_count=state.stable_count),
             "stop_reason": "CODE_LEAK",
         }
+        record.update(leak_detection.as_trace_fields())
         state.history_rounds.append(record)
         state.stop_reason = "CODE_LEAK"
         return state
@@ -123,16 +128,18 @@ def run_round(
         record = {
             "round": round_idx,
             "run_config": run_config,
+            "code_leak_gate_mode": str(cfg.leak_gate_mode or DEFAULT_LEAK_GATE_MODE),
             "architect_raw": normalized_architect_raw,
             "auditor_raw": normalized_auditor_raw,
             "architect_parsed": None,
             "auditor_parsed": None,
             "parse_errors": parse_errors,
             "metrics": _base_metrics(n=attempted_n, code_leak_hit=False, stable_count=state.stable_count),
-            "stop_reason": "SHAPE_VIOLATION",
+            "stop_reason": "FORMAT_VIOLATION",
         }
+        record.update(leak_detection.as_trace_fields())
         state.history_rounds.append(record)
-        state.stop_reason = "SHAPE_VIOLATION"
+        state.stop_reason = "FORMAT_VIOLATION"
         return state
 
     architect_data = dict(architect_parse["data"])
@@ -164,16 +171,17 @@ def run_round(
 
     max_hit = n == int(cfg.max_rounds)
     stop_reason: Optional[str] = None
-    if max_hit:
-        stop_reason = "MAX_ROUNDS"
+    if circ_hit:
+        stop_reason = "LOOP_DETECTED"
     elif diff_hit:
-        stop_reason = "DIFF_FLOOR"
-    elif circ_hit:
-        stop_reason = "CIRCULARITY"
+        stop_reason = "STABLE_DIFF_FLOOR"
+    elif max_hit:
+        stop_reason = "MAX_ROUNDS"
 
     record = {
         "round": round_idx,
         "run_config": run_config,
+        "code_leak_gate_mode": str(cfg.leak_gate_mode or DEFAULT_LEAK_GATE_MODE),
         "architect_raw": normalized_architect_raw,
         "auditor_raw": normalized_auditor_raw,
         "architect_parsed": architect_data,
@@ -182,6 +190,7 @@ def run_round(
         "metrics": metrics,
         "stop_reason": stop_reason,
     }
+    record.update(leak_detection.as_trace_fields())
     state.history_rounds.append(record)
     if stop_reason is not None:
         state.stop_reason = stop_reason

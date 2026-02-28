@@ -85,8 +85,5 @@ orket_storage/
 .pytest_live_loop/
 .pytest_live_tmp/
 .ruff_cache/
-benchmarks/results/*
-!benchmarks/results/prompt_promotion_thresholds.json
-!benchmarks/results/odr_calibration/
-!benchmarks/results/odr_calibration/**
+benchmarks/results/**
 docs/internal/

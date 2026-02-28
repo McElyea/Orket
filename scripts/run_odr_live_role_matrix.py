@@ -15,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
-from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round  # noqa: E402
+from orket.kernel.v1.odr.core import DEFAULT_CODE_LEAK_PATTERNS, ReactorConfig, ReactorState, run_round  # noqa: E402
 
 
 DEFAULT_ARCHITECTS = [
@@ -163,6 +163,7 @@ async def _run_scenario_live(
     current_requirement = str(scenario_input.get("R0") or "")
     prior_auditor_output = ""
     round_rows: List[Dict[str, Any]] = []
+    code_leak_rounds = 0
 
     for round_index in range(1, rounds + 1):
         architect_messages = _architect_messages(
@@ -185,6 +186,12 @@ async def _run_scenario_live(
         pre_round_count = len(state.history_rounds)
         state = run_round(state, architect_raw, auditor_raw, odr_cfg)
         trace_record = state.history_rounds[-1] if len(state.history_rounds) > pre_round_count else None
+        if (
+            isinstance(trace_record, dict)
+            and isinstance(trace_record.get("metrics"), dict)
+            and bool(trace_record["metrics"].get("code_leak_hit")) is True
+        ):
+            code_leak_rounds += 1
 
         if trace_record is not None and isinstance(trace_record.get("architect_parsed"), dict):
             current_requirement = str(trace_record["architect_parsed"].get("requirement") or current_requirement)
@@ -209,12 +216,14 @@ async def _run_scenario_live(
     return {
         "scenario_id": scenario_input["id"],
         "original_input": scenario_input,
+        "code_leak_rounds": code_leak_rounds,
         "rounds": round_rows,
         "final_state": {
             "history_v": list(state.history_v),
             "history_round_count": len(state.history_rounds),
             "stable_count": state.stable_count,
             "stop_reason": state.stop_reason,
+            "code_leak_rounds": code_leak_rounds,
             "history_rounds": _json_safe(list(state.history_rounds)),
         },
     }
@@ -287,7 +296,8 @@ async def _main_async(args: argparse.Namespace) -> int:
         shingle_k=args.shingle_k,
         margin=args.margin,
         min_loop_sim=args.min_loop_sim,
-        code_leak_patterns=code_leak_patterns,
+        code_leak_patterns=list(code_leak_patterns) if code_leak_patterns is not None else list(DEFAULT_CODE_LEAK_PATTERNS),
+        leak_gate_mode=str(args.leak_gate_mode or "balanced_v1"),
     )
 
     results: List[Dict[str, Any]] = []
@@ -351,6 +361,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--temperature", type=float, default=0.1)
     parser.add_argument("--timeout", type=int, default=180)
+    parser.add_argument(
+        "--leak-gate-mode",
+        choices=["strict", "balanced_v1"],
+        default="balanced_v1",
+        help="Leak gate policy mode.",
+    )
     parser.add_argument("--out", default="benchmarks/results/odr_live_role_matrix.json")
     return parser
 

@@ -342,11 +342,11 @@ class RunArbiter:
                     trace = round_row.get("odr_trace_record")
                     if not isinstance(trace, dict):
                         continue
-                    if str(trace.get("stop_reason") or "") == "CODE_LEAK":
-                        failures.append(f"results:{r_index}:scenarios:{s_index}:code_leak_stop")
                     metrics = trace.get("metrics")
-                    if isinstance(metrics, dict) and bool(metrics.get("code_leak_hit")) is True:
-                        failures.append(f"results:{r_index}:scenarios:{s_index}:code_leak_metric")
+                    leak_stop = str(trace.get("stop_reason") or "") == "CODE_LEAK"
+                    leak_metric = isinstance(metrics, dict) and bool(metrics.get("code_leak_hit")) is True
+                    if leak_stop and leak_metric:
+                        failures.append(f"results:{r_index}:scenarios:{s_index}:code_leak_hard")
         return sorted(set(failures))
 
     @staticmethod
@@ -374,6 +374,19 @@ class RunArbiter:
                         failures.append(f"results:{r_index}:scenarios:{s_index}:rounds:{q_index}:trace_metrics_missing")
                     if "stop_reason" not in trace:
                         failures.append(f"results:{r_index}:scenarios:{s_index}:rounds:{q_index}:trace_stop_reason_missing")
+                    metrics = trace.get("metrics") if isinstance(trace.get("metrics"), dict) else {}
+                    leak_stop = str(trace.get("stop_reason") or "") == "CODE_LEAK"
+                    leak_metric = bool(metrics.get("code_leak_hit")) is True
+                    if leak_stop != leak_metric:
+                        failures.append(
+                            f"results:{r_index}:scenarios:{s_index}:rounds:{q_index}:code_leak_propagation_mismatch"
+                        )
+                    if leak_stop:
+                        hard = trace.get("code_leak_matches_hard")
+                        if not isinstance(hard, list) or not hard:
+                            failures.append(
+                                f"results:{r_index}:scenarios:{s_index}:rounds:{q_index}:code_leak_matches_hard_missing"
+                            )
                 final_state = scenario.get("final_state")
                 if not isinstance(final_state, dict):
                     continue

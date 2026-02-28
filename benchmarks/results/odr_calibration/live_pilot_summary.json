@@ -1,37 +1,51 @@
-﻿{
-  "schema_version": "odr.calibration.live_pilot.summary.v1",
-  "pairs": [
-    {
-      "architect": "qwen2.5:14b",
-      "auditor": "deepseek-r1:32b",
-      "run_file": "benchmarks/results/odr_calibration/live_pilot/odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
-      "scenario_count": 3,
-      "total_rounds": 12,
-      "code_leak_rounds": 1,
-      "arbiter_status": "FAIL",
-      "arbiter_code": "E_ARB_VALIDATOR_LEAK",
-      "arbiter_failures": [
-        "results:0:scenarios:1:code_leak_metric",
-        "results:0:scenarios:1:code_leak_stop"
-      ]
+{
+  "pairs": {
+    "qwen2.5:14b__deepseek-r1:32b": {
+      "before_artifact": "benchmarks/results/odr_calibration/live_pilot/odr_live_role_matrix.qwen2_5_14b_deepseek_r1_32b.json",
+      "after_artifact": "benchmarks/results/odr_calibration/live_pilot_balanced.qwen2_5_14b_deepseek_r1_32b.json",
+      "before": {
+        "scenario_count": 3,
+        "hard_leak_fail_rate": 0.3333333333333333,
+        "weak_warning_rate": 0.0,
+        "completion_rate": 0.6666666666666666,
+        "round_count": 12
+      },
+      "after": {
+        "scenario_count": 3,
+        "hard_leak_fail_rate": 0.0,
+        "weak_warning_rate": 0.15789473684210525,
+        "completion_rate": 1.0,
+        "round_count": 19
+      },
+      "delta": {
+        "hard_leak_fail_rate": -0.3333333333333333,
+        "weak_warning_rate": 0.15789473684210525,
+        "completion_rate": 0.33333333333333337
+      }
     },
-    {
-      "architect": "qwen2.5:14b",
-      "auditor": "gemma3:27b",
-      "run_file": "benchmarks/results/odr_calibration/live_pilot_pair2/odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
-      "scenario_count": 3,
-      "total_rounds": 15,
-      "code_leak_rounds": 3,
-      "arbiter_status": "FAIL",
-      "arbiter_code": "E_ARB_VALIDATOR_LEAK",
-      "arbiter_failures": [
-        "results:0:scenarios:0:code_leak_metric",
-        "results:0:scenarios:0:code_leak_stop",
-        "results:0:scenarios:1:code_leak_metric",
-        "results:0:scenarios:1:code_leak_stop",
-        "results:0:scenarios:2:code_leak_metric",
-        "results:0:scenarios:2:code_leak_stop"
-      ]
+    "qwen2.5:14b__gemma3:27b": {
+      "before_artifact": "benchmarks/results/odr_calibration/live_pilot_pair2/odr_live_role_matrix.qwen2_5_14b_gemma3_27b.json",
+      "after_artifact": "benchmarks/results/odr_calibration/live_pilot_balanced.qwen2_5_14b_gemma3_27b.json",
+      "before": {
+        "scenario_count": 3,
+        "hard_leak_fail_rate": 1.0,
+        "weak_warning_rate": 0.0,
+        "completion_rate": 0.0,
+        "round_count": 15
+      },
+      "after": {
+        "scenario_count": 3,
+        "hard_leak_fail_rate": 0.0,
+        "weak_warning_rate": 0.2222222222222222,
+        "completion_rate": 1.0,
+        "round_count": 9
+      },
+      "delta": {
+        "hard_leak_fail_rate": -1.0,
+        "weak_warning_rate": 0.2222222222222222,
+        "completion_rate": 1.0
+      }
     }
-  ]
+  },
+  "curated_fixture_gate_pass_rate": 1.0
 }

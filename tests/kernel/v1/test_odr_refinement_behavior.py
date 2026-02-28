@@ -92,7 +92,7 @@ def _auditor_payload(round_index: int) -> str:
 
 def _run_requirement_rounds(requirements: List[str]) -> ReactorState:
     state = ReactorState()
-    cfg = ReactorConfig(max_rounds=8, diff_floor_pct=0.0, stable_rounds=99, code_leak_patterns=[])
+    cfg = ReactorConfig(max_rounds=8, diff_floor_pct=0.0, stable_rounds=99, code_leak_patterns=[], leak_gate_mode="strict")
     for idx, requirement in enumerate(requirements):
         state = run_round(state, _architect_payload(requirement, idx), _auditor_payload(idx), cfg)
         if state.stop_reason is not None:
@@ -185,5 +185,5 @@ def test_refinement_convergence_monotonic(scenario: Dict[str, Any]) -> None:
 
     state = _run_requirement_rounds(requirements)
     assert len(state.history_v) >= 2
-    assert state.stop_reason in {None, "DIFF_FLOOR", "CIRCULARITY", "MAX_ROUNDS"}
-    assert state.stop_reason != "SHAPE_VIOLATION"
+    assert state.stop_reason in {None, "STABLE_DIFF_FLOOR", "LOOP_DETECTED", "MAX_ROUNDS"}
+    assert state.stop_reason != "FORMAT_VIOLATION"

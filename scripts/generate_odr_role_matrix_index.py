@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_CODE_LEAK_PATTERNS = [
-    r"(?s)```.*?```",
+    r"(?s)```(?:[^\n]*)\n.*?\n```",
     r"\b(def|class|import|fn|let|const|interface|type)\b",
     r"\b(npm|pip|cargo|docker|venv|node_modules)\b",
 ]
@@ -70,7 +70,7 @@ def _failure_detail(stop_reason: str, scenario: dict[str, Any]) -> str | None:
     if stop_reason == "CODE_LEAK":
         rule_key = _code_leak_rule_key(trace, run_cfg)
         return f"code_leak_rule={rule_key}"
-    if stop_reason == "SHAPE_VIOLATION":
+    if stop_reason in {"FORMAT_VIOLATION", "SHAPE_VIOLATION"}:
         if parse_errors:
             first = parse_errors[0]
             if isinstance(first, dict):
@@ -78,13 +78,13 @@ def _failure_detail(stop_reason: str, scenario: dict[str, Any]) -> str | None:
                 code = first.get("code")
                 return f"{src}:{code}"
         return "parse_error"
-    if stop_reason == "DIFF_FLOOR":
+    if stop_reason in {"STABLE_DIFF_FLOOR", "DIFF_FLOOR"}:
         diff_ratio = metrics.get("diff_ratio")
         floor = run_cfg.get("diff_floor_pct")
         if isinstance(diff_ratio, (int, float)) and isinstance(floor, (int, float)):
             return f"diff_ratio={diff_ratio:.4f} < floor={floor:.4f}"
         return "stable_rounds_threshold_reached"
-    if stop_reason == "CIRCULARITY":
+    if stop_reason in {"LOOP_DETECTED", "CIRCULARITY"}:
         sim_prev = metrics.get("sim_prev")
         sim_loop = metrics.get("sim_loop")
         if isinstance(sim_prev, (int, float)) and isinstance(sim_loop, (int, float)):
@@ -102,6 +102,19 @@ def _failure_detail(stop_reason: str, scenario: dict[str, Any]) -> str | None:
 
 
 def _code_leak_rule_key(trace: dict[str, Any], run_cfg: dict[str, Any]) -> str:
+    hard_matches = trace.get("code_leak_matches_hard")
+    if isinstance(hard_matches, list) and hard_matches:
+        token = str(hard_matches[0] or "")
+        if token.startswith("fence_block"):
+            return "fenced_code_block"
+        if token.startswith("tooling_context:"):
+            return "tooling_context"
+        if token.startswith("python_struct:") or token.startswith("js_ts_struct:"):
+            return "source_structural"
+        if token.startswith("fallback_structural_signals"):
+            return "pseudo_code_structural"
+        return "hard_signal"
+
     patterns = run_cfg.get("code_leak_patterns")
     configured_patterns = [str(item) for item in patterns] if isinstance(patterns, list) and patterns else list(DEFAULT_CODE_LEAK_PATTERNS)
     normalized = f"{str(trace.get('architect_raw') or '')}\n{str(trace.get('auditor_raw') or '')}"

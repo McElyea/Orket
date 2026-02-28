@@ -38,6 +38,7 @@ def _build_command(
     auditor_model: str,
     out_path: Path,
     config: dict[str, Any],
+    leak_gate_mode: str,
 ) -> list[str]:
     cmd = [
         python_bin,
@@ -48,6 +49,8 @@ def _build_command(
         auditor_model,
         "--out",
         str(out_path),
+        "--leak-gate-mode",
+        str(leak_gate_mode or "balanced_v1"),
     ]
 
     rounds = config.get("rounds")
@@ -110,6 +113,11 @@ def run_sweep(args: argparse.Namespace) -> int:
     arbiter_error_out = (
         Path(args.arbiter_error_out.strip()) if args.arbiter_error_out.strip() else out_dir / "arbiter_error.json"
     )
+    configured_leak_mode = str(base_config.get("leak_gate_mode") or "").strip()
+    leak_gate_mode = str(args.leak_gate_mode or configured_leak_mode or "balanced_v1").strip()
+    if leak_gate_mode not in {"strict", "balanced_v1"}:
+        raise SystemExit(f"E_LEAK_GATE_MODE_INVALID unsupported leak gate mode: {leak_gate_mode}")
+
     arbiter = RunArbiter(plan_out=arbiter_plan_out, error_out=arbiter_error_out)
     plan = arbiter.compile_plan(
         python_bin=args.python_bin,
@@ -140,6 +148,7 @@ def run_sweep(args: argparse.Namespace) -> int:
                     auditor_model=auditor,
                     out_path=out_path,
                     config=base_config,
+                    leak_gate_mode=leak_gate_mode,
                 )
                 print(f"[{run_index}/{total}] {architect} x {auditor}")
                 result = subprocess.run(cmd, check=False)
@@ -224,6 +233,11 @@ def main() -> int:
         help="Optional path for deterministic arbiter error artifact (defaults to <out-dir>/arbiter_error.json).",
     )
     parser.add_argument("--python-bin", default=sys.executable)
+    parser.add_argument(
+        "--leak-gate-mode",
+        default="",
+        help="Leak gate mode override passed to live role-matrix runner (strict|balanced_v1).",
+    )
     args = parser.parse_args()
     return run_sweep(args)
 

@@ -22,7 +22,7 @@ def test_generate_odr_role_matrix_index(tmp_path: Path) -> None:
                     {
                         "scenario_id": "missing_constraint",
                         "rounds": [{"round": 1}, {"round": 2}],
-                        "final_state": {"history_round_count": 2, "stop_reason": "DIFF_FLOOR"},
+                        "final_state": {"history_round_count": 2, "stop_reason": "STABLE_DIFF_FLOOR"},
                     },
                     {
                         "scenario_id": "contradiction",
@@ -60,7 +60,7 @@ def test_generate_odr_role_matrix_index(tmp_path: Path) -> None:
     assert run["runner_round_budget"] == 3 or run["runner_round_budget"] is None
     assert run["provenance_ref"] == "provenance.json::odr_live_role_matrix.test.json"
     scenarios = {row["scenario_id"]: row for row in run["scenarios"]}
-    assert scenarios["missing_constraint"]["stop_reason"] == "DIFF_FLOOR"
+    assert scenarios["missing_constraint"]["stop_reason"] == "STABLE_DIFF_FLOOR"
     assert scenarios["missing_constraint"]["rounds_used"] == 2
     assert scenarios["missing_constraint"]["failure_detail"] in {
         "stable_rounds_threshold_reached",

@@ -34,6 +34,7 @@ def _args(tmp_path: Path, *, base_spec: Path, provenance_out: str = "") -> argpa
         arbiter_error_out=str(tmp_path / "out" / "arbiter_error.json"),
         require_clean_git=False,
         python_bin="python",
+        leak_gate_mode="",
     )
 
 
