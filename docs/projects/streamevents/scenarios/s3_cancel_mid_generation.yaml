@@ -1,0 +1,12 @@
+scenario_id: cancel_mid_generation
+turn:
+  workload_id: mystery_v1
+  input_config:
+    seed: 789
+  cancel_at:
+    event_type: model_loading
+    after_count: 1
+    after_ms: 10
+finalize_explicit: false
+expect:
+  outcome: ok

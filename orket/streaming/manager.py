@@ -26,6 +26,7 @@ class TurnState:
     turn_id: str
     canceled: asyncio.Event
     terminal_event: str | None = None
+    commit_started: bool = False
 
 
 class InteractionContext:
@@ -201,6 +202,9 @@ class InteractionManager:
                 emit_turn_final = True
             else:
                 emit_turn_final = False
+            start_commit = not turn_state.commit_started
+            if start_commit:
+                turn_state.commit_started = True
 
         if emit_turn_final:
             await self.bus.publish(
@@ -215,7 +219,8 @@ class InteractionManager:
             turn_id=turn_id,
             requested_at_mono_ts_ms=mono_ts_ms_now(),
         )
-        asyncio.create_task(self._run_commit(session_id=session_id, turn_id=turn_id))
+        if start_commit:
+            asyncio.create_task(self._run_commit(session_id=session_id, turn_id=turn_id))
         return handle
 
     async def close(self, session_id: str) -> None:

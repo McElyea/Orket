@@ -1,0 +1,11 @@
+scenario_id: backpressure_drop_ranges
+turn:
+  workload_id: mystery_v1
+  input_config:
+    seed: 654
+    force_many_deltas: true
+  turn_params:
+    best_effort_pressure: high
+finalize_explicit: false
+expect:
+  outcome: ok

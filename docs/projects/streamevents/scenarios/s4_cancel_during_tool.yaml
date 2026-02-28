@@ -1,0 +1,13 @@
+scenario_id: cancel_during_tool
+turn:
+  workload_id: mystery_v1
+  input_config:
+    seed: 321
+    require_tool: true
+  cancel_at:
+    event_type: tool_call_started
+    after_count: 1
+    after_ms: 50
+finalize_explicit: false
+expect:
+  outcome: fail_closed

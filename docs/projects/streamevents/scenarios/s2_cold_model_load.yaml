@@ -1,0 +1,11 @@
+scenario_id: cold_model_load_visibility
+turn:
+  workload_id: mystery_v1
+  input_config:
+    seed: 456
+    force_cold_model_load: true
+  turn_params:
+    profile: cold_load_probe
+finalize_explicit: false
+expect:
+  outcome: ok
