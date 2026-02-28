@@ -26,7 +26,7 @@ from orket.streaming import (
     StreamBus,
     StreamBusConfig,
 )
-from orket.workloads import is_builtin_workload, run_builtin_workload
+from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -1847,6 +1847,17 @@ async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
             status_code=400,
             detail=f"Unknown workload '{workload_id}'. Built-in workloads: stream_test_v1, model_stream_v1.",
         )
+    if is_builtin_workload(workload_id):
+        try:
+            validate_builtin_workload_start(
+                workload_id=workload_id,
+                input_config=req.input_config,
+                turn_params=req.turn_params,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
     try:
         turn_id = await interaction_manager.begin_turn(
             session_id=session_id,

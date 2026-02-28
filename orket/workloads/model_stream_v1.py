@@ -6,11 +6,48 @@ from typing import Any
 
 from orket.streaming.contracts import CommitIntent, StreamEventType
 from orket.streaming.manager import InteractionContext
-from orket.streaming.model_provider import ProviderEvent, ProviderEventType, ProviderTurnRequest, StubModelStreamProvider
+from orket.streaming.model_provider import (
+    ModelStreamProvider,
+    OllamaModelStreamProvider,
+    ProviderEvent,
+    ProviderEventType,
+    ProviderTurnRequest,
+    StubModelStreamProvider,
+)
 
 
 def _provider_mode() -> str:
     return str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
+
+
+def _real_model_id(input_config: dict[str, Any], turn_params: dict[str, Any]) -> str:
+    return str(
+        input_config.get("model_id")
+        or turn_params.get("model_id")
+        or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")
+    ).strip()
+
+
+def _build_provider(*, input_config: dict[str, Any], turn_params: dict[str, Any]) -> ModelStreamProvider:
+    mode = _provider_mode()
+    if mode == "stub":
+        return StubModelStreamProvider()
+    if mode == "real":
+        model_id = _real_model_id(input_config, turn_params)
+        if not model_id:
+            raise ValueError("ORKET_MODEL_STREAM_PROVIDER=real requires a model_id.")
+        timeout_s_raw = os.getenv("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", "60")
+        try:
+            timeout_s = float(timeout_s_raw)
+        except ValueError:
+            timeout_s = 60.0
+        return OllamaModelStreamProvider(model_id=model_id, timeout_s=timeout_s)
+    raise ValueError(f"Unsupported ORKET_MODEL_STREAM_PROVIDER='{mode}'. Expected: stub|real.")
+
+
+def validate_model_stream_v1_start(*, input_config: dict[str, Any], turn_params: dict[str, Any]) -> None:
+    # Build-time validation is used by the API for fail-fast diagnostics before turn execution.
+    _build_provider(input_config=input_config, turn_params=turn_params)
 
 
 def _event_mapping(event: ProviderEvent) -> tuple[StreamEventType | None, dict[str, Any]]:
@@ -33,13 +70,7 @@ async def run_model_stream_v1(
     turn_params: dict[str, Any],
     interaction_context: InteractionContext,
 ) -> dict[str, int]:
-    mode = _provider_mode()
-    if mode == "real":
-        raise ValueError("ORKET_MODEL_STREAM_PROVIDER=real is not available yet.")
-    if mode != "stub":
-        raise ValueError(f"Unsupported ORKET_MODEL_STREAM_PROVIDER='{mode}'. Expected: stub|real.")
-
-    provider = StubModelStreamProvider()
+    provider = _build_provider(input_config=input_config, turn_params=turn_params)
     req = ProviderTurnRequest(input_config=input_config, turn_params=turn_params)
     provider_turn_id: str | None = None
 

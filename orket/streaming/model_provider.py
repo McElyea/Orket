@@ -136,3 +136,121 @@ class StubModelStreamProvider(ModelStreamProvider):
     async def _is_canceled(self, provider_turn_id: str) -> asyncio.Event:
         async with self._lock:
             return self._canceled.setdefault(provider_turn_id, asyncio.Event())
+
+
+class OllamaModelStreamProvider(ModelStreamProvider):
+    def __init__(self, *, model_id: str, timeout_s: float = 60.0) -> None:
+        try:
+            import ollama  # type: ignore
+        except ModuleNotFoundError as exc:  # pragma: no cover - environment-dependent
+            raise RuntimeError("Real model provider requires 'ollama' python package.") from exc
+        self._ollama = ollama
+        self._client = ollama.AsyncClient()
+        self._model_id = model_id
+        self._timeout_s = max(1.0, float(timeout_s))
+        self._canceled: dict[str, asyncio.Event] = {}
+        self._lock = asyncio.Lock()
+
+    async def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
+        provider_turn_id = f"provider-turn-{uuid.uuid4().hex[:12]}"
+        async with self._lock:
+            self._canceled[provider_turn_id] = asyncio.Event()
+        try:
+            messages = req.input_config.get("messages")
+            if not isinstance(messages, list):
+                prompt = str(req.input_config.get("prompt") or req.input_config.get("input") or "").strip()
+                if not prompt:
+                    prompt = "Continue."
+                messages = [{"role": "user", "content": prompt}]
+            options: dict[str, Any] = {}
+            if "seed" in req.input_config:
+                options["seed"] = _int_value(req.input_config.get("seed"), 0)
+            if "temperature" in req.input_config:
+                try:
+                    options["temperature"] = float(req.input_config.get("temperature"))
+                except (TypeError, ValueError):
+                    pass
+            yield ProviderEvent(
+                provider_turn_id=provider_turn_id,
+                event_type=ProviderEventType.SELECTED,
+                payload={"model_id": self._model_id, "reason": "real_provider"},
+            )
+            yield ProviderEvent(
+                provider_turn_id=provider_turn_id,
+                event_type=ProviderEventType.LOADING,
+                payload={"cold_start": False, "progress": 0.0},
+            )
+            yield ProviderEvent(
+                provider_turn_id=provider_turn_id,
+                event_type=ProviderEventType.READY,
+                payload={"model_id": self._model_id, "warm_state": "unknown", "load_ms": 0},
+            )
+            stream = await asyncio.wait_for(
+                self._client.chat(
+                    model=self._model_id,
+                    messages=messages,
+                    options=options,
+                    stream=True,
+                ),
+                timeout=self._timeout_s,
+            )
+            index = 0
+            async for chunk in stream:
+                canceled = await self._is_canceled(provider_turn_id)
+                if canceled.is_set():
+                    yield ProviderEvent(
+                        provider_turn_id=provider_turn_id,
+                        event_type=ProviderEventType.STOPPED,
+                        payload={"stop_reason": "canceled"},
+                    )
+                    return
+                delta = self._extract_delta(chunk)
+                if not delta:
+                    continue
+                yield ProviderEvent(
+                    provider_turn_id=provider_turn_id,
+                    event_type=ProviderEventType.TOKEN_DELTA,
+                    payload={"delta": delta, "index": index},
+                )
+                index += 1
+            yield ProviderEvent(
+                provider_turn_id=provider_turn_id,
+                event_type=ProviderEventType.STOPPED,
+                payload={"stop_reason": "completed"},
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # pragma: no cover - provider/runtime variability
+            yield ProviderEvent(
+                provider_turn_id=provider_turn_id,
+                event_type=ProviderEventType.ERROR,
+                payload={"error": str(exc)},
+            )
+        finally:
+            async with self._lock:
+                self._canceled.pop(provider_turn_id, None)
+
+    async def cancel(self, provider_turn_id: str) -> None:
+        canceled = await self._is_canceled(provider_turn_id)
+        canceled.set()
+
+    async def health(self) -> dict[str, Any]:
+        return {"ok": True, "provider": "ollama", "model_id": self._model_id}
+
+    async def _is_canceled(self, provider_turn_id: str) -> asyncio.Event:
+        async with self._lock:
+            return self._canceled.setdefault(provider_turn_id, asyncio.Event())
+
+    @staticmethod
+    def _extract_delta(chunk: Any) -> str:
+        if not isinstance(chunk, dict):
+            return ""
+        message = chunk.get("message")
+        if isinstance(message, dict):
+            content = message.get("content")
+            if isinstance(content, str):
+                return content
+        response = chunk.get("response")
+        if isinstance(response, str):
+            return response
+        return ""

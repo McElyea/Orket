@@ -4,7 +4,7 @@ from typing import Any
 
 from orket.streaming.manager import InteractionContext
 
-from .model_stream_v1 import run_model_stream_v1
+from .model_stream_v1 import run_model_stream_v1, validate_model_stream_v1_start
 from .stream_test_v1 import run_stream_test_v1
 
 
@@ -33,3 +33,14 @@ async def run_builtin_workload(
 
 def is_builtin_workload(workload_id: str) -> bool:
     return str(workload_id or "").strip() in {"stream_test_v1", "model_stream_v1"}
+
+
+def validate_builtin_workload_start(
+    *,
+    workload_id: str,
+    input_config: dict[str, Any],
+    turn_params: dict[str, Any],
+) -> None:
+    normalized = str(workload_id or "").strip()
+    if normalized == "model_stream_v1":
+        validate_model_stream_v1_start(input_config=input_config, turn_params=turn_params)

@@ -92,3 +92,52 @@ def test_interaction_turn_unknown_workload_fails_clearly(monkeypatch):
     assert turn.status_code == 400
     assert "Unknown workload 'unknown_workload_v1'" in turn.text
     assert "model_stream_v1" in turn.text
+
+
+def test_interaction_model_stream_invalid_provider_mode_fails_fast(monkeypatch):
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "invalid")
+
+    start = client.post(
+        "/v1/interactions/sessions",
+        headers={"X-API-Key": "test-key"},
+        json={"session_params": {"npc": "innkeeper"}},
+    )
+    assert start.status_code == 200
+    session_id = start.json()["session_id"]
+
+    turn = client.post(
+        f"/v1/interactions/{session_id}/turns",
+        headers={"X-API-Key": "test-key"},
+        json={"workload_id": "model_stream_v1", "input_config": {"seed": 1}},
+    )
+    assert turn.status_code == 400
+    assert "Unsupported ORKET_MODEL_STREAM_PROVIDER='invalid'" in turn.text
+
+
+def test_interaction_model_stream_preflight_runtime_error_maps_to_503(monkeypatch):
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "real")
+
+    def _raise_runtime_error(*, workload_id, input_config, turn_params):
+        raise RuntimeError("Real model provider unavailable.")
+
+    monkeypatch.setattr(api_module, "validate_builtin_workload_start", _raise_runtime_error)
+
+    start = client.post(
+        "/v1/interactions/sessions",
+        headers={"X-API-Key": "test-key"},
+        json={"session_params": {"npc": "innkeeper"}},
+    )
+    assert start.status_code == 200
+    session_id = start.json()["session_id"]
+
+    turn = client.post(
+        f"/v1/interactions/{session_id}/turns",
+        headers={"X-API-Key": "test-key"},
+        json={"workload_id": "model_stream_v1", "input_config": {"seed": 1}},
+    )
+    assert turn.status_code == 503
+    assert "Real model provider unavailable." in turn.text
