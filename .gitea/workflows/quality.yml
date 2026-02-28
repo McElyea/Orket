@@ -86,6 +86,10 @@ jobs:
         run: |
           python scripts/check_roadmap_metrics.py --quick
 
+      - name: Enforce model-streaming scenario gate
+        run: |
+          python scripts/run_model_streaming_gate.py --provider-mode stub --timeout 20
+
       - name: Validate prompt assets
         run: |
           python -m orket.interfaces.prompts_cli --root . validate --json

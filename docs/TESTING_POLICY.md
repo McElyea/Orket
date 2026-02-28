@@ -56,6 +56,10 @@ python scripts/run_cli_regression_smoke.py --out benchmarks/results/cli_regressi
 ```bash
 python scripts/security_canary.py
 ```
+3. Model-streaming scenario gate:
+```bash
+python scripts/run_model_streaming_gate.py --provider-mode stub --timeout 20
+```
 
 ## Completion Standard
 A change is test-complete when:

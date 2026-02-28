@@ -1,0 +1,12 @@
+scenario_id: unknown_workload_400
+turn:
+  workload_id: does_not_exist
+  input_config:
+    seed: 1
+    mode: spam_deltas
+finalize_explicit: false
+expect:
+  http_status: 400
+  error_contains: "unknown workload"
+  require_commit_final: false
+  require_no_stream_events: true

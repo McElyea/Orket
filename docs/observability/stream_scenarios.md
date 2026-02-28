@@ -12,6 +12,11 @@ This document defines how to run live stream scenarios and what they prove.
 python scripts/run_stream_scenario.py --scenario <scenario-yaml-path> --timeout 20
 ```
 
+## Run Full Model-Streaming Gate
+```powershell
+python scripts/run_model_streaming_gate.py --provider-mode stub --timeout 20
+```
+
 ## PASS/FAIL Meaning
 - `PASS`: stream laws hold and scenario expectations hold.
 - `FAIL`: either a stream law violation or a scenario expectation violation.

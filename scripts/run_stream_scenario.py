@@ -92,6 +92,25 @@ def _stream_digest(events: list[dict[str, Any]]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _first_event(events: list[dict[str, Any]], event_type: str) -> dict[str, Any] | None:
+    for event in events:
+        if str(event.get("event_type")) == event_type:
+            return event
+    return None
+
+
+def _mono_delta_ms(start: dict[str, Any] | None, end: dict[str, Any] | None) -> int | None:
+    if not isinstance(start, dict) or not isinstance(end, dict):
+        return None
+    try:
+        start_ms = int(start.get("mono_ts_ms"))
+        end_ms = int(end.get("mono_ts_ms"))
+    except (TypeError, ValueError):
+        return None
+    delta = end_ms - start_ms
+    return delta if delta >= 0 else None
+
+
 def _receive_json_with_timeout(ws: Any, timeout_s: float) -> dict[str, Any] | None:
     out: queue.Queue = queue.Queue(maxsize=1)
 
@@ -166,6 +185,8 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
     session_id = str(start_resp.json()["session_id"])
 
     with client.websocket_connect(f"/ws/interactions/{session_id}?api_key={api_key}") as ws:
+        turn_request_started_epoch_ms = int(time.time() * 1000)
+        turn_accepted_received_epoch_ms: int | None = None
         turn_resp = client.post(
             f"/v1/interactions/{session_id}/turns",
             headers={"X-API-Key": api_key},
@@ -258,6 +279,8 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
 
             event_type = str(event.get("event_type", ""))
             seen_event_counts[event_type] = seen_event_counts.get(event_type, 0) + 1
+            if event_type == "turn_accepted" and turn_accepted_received_epoch_ms is None:
+                turn_accepted_received_epoch_ms = int(time.time() * 1000)
 
             if cancel_at and not cancel_issued and event_type == cancel_event_type:
                 if seen_event_counts[event_type] >= cancel_after_count:
@@ -390,6 +413,20 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
 
     law_checker_violations_count = sum(1 for item in violations if item.get("kind") == "law")
     law_checker_passed = law_checker_violations_count == 0
+    turn_accepted_event = _first_event(events, "turn_accepted")
+    model_selected_event = _first_event(events, "model_selected")
+    model_loading_event = _first_event(events, "model_loading")
+    model_ready_event = _first_event(events, "model_ready")
+    token_delta_event = _first_event(events, "token_delta")
+    input_to_turn_accepted_ms = None
+    if isinstance(turn_accepted_event, dict) and turn_accepted_received_epoch_ms is not None:
+        input_to_turn_accepted_ms = max(0, turn_accepted_received_epoch_ms - turn_request_started_epoch_ms)
+    latency_ms = {
+        "input_to_turn_accepted": input_to_turn_accepted_ms,
+        "model_selected_to_model_loading": _mono_delta_ms(model_selected_event, model_loading_event),
+        "model_loading_to_model_ready": _mono_delta_ms(model_loading_event, model_ready_event),
+        "model_ready_to_first_token_delta": _mono_delta_ms(model_ready_event, token_delta_event),
+    }
 
     verdict_status = "PASS" if not violations else "FAIL"
     verdict = {
@@ -409,6 +446,7 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
             "has_dropped_seq_ranges": has_dropped_seq_ranges,
             "dropped_seq_ranges_count": dropped_seq_ranges_count,
             "stream_digest": _stream_digest(events),
+            "latency_ms": latency_ms,
         },
         "law_checker_passed": law_checker_passed,
         "law_checker_violations_count": law_checker_violations_count,

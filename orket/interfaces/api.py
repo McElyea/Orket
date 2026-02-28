@@ -1878,6 +1878,8 @@ async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
                     turn_params=req.turn_params,
                     interaction_context=context,
                 )
+                if int(hints.get("request_cancel_turn", 0) or 0) > 0:
+                    await interaction_manager.cancel(turn_id)
                 await interaction_manager.finalize(session_id, turn_id)
                 post_finalize_wait_ms = int(hints.get("post_finalize_wait_ms", 0))
                 if post_finalize_wait_ms > 0:

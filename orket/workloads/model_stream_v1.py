@@ -73,6 +73,8 @@ async def run_model_stream_v1(
     provider = _build_provider(input_config=input_config, turn_params=turn_params)
     req = ProviderTurnRequest(input_config=input_config, turn_params=turn_params)
     provider_turn_id: str | None = None
+    stop_reason = ""
+    provider_error = ""
 
     async def _cancel_watch() -> None:
         await interaction_context.await_cancel()
@@ -83,10 +85,14 @@ async def run_model_stream_v1(
     try:
         async for provider_event in provider.start_turn(req):
             provider_turn_id = provider_event.provider_turn_id
+            if provider_event.event_type == ProviderEventType.ERROR:
+                provider_error = str(provider_event.payload.get("error") or "provider_error")
+                break
+            if provider_event.event_type == ProviderEventType.STOPPED:
+                stop_reason = str(provider_event.payload.get("stop_reason") or "").strip().lower()
+                break
             stream_mapping, payload = _event_mapping(provider_event)
             if stream_mapping is None:
-                if provider_event.event_type in {ProviderEventType.STOPPED, ProviderEventType.ERROR}:
-                    break
                 continue
             if interaction_context.is_canceled():
                 await provider.cancel(provider_turn_id)
@@ -98,6 +104,15 @@ async def run_model_stream_v1(
             await cancel_task
         except asyncio.CancelledError:
             pass
+
+    if provider_error:
+        await interaction_context.request_commit(
+            CommitIntent(type="decision", ref=f"fail_closed:provider_error:{provider_error}")
+        )
+        return {"post_finalize_wait_ms": 0, "request_cancel_turn": 1}
+
+    if stop_reason == "canceled" or interaction_context.is_canceled():
+        return {"post_finalize_wait_ms": 0, "request_cancel_turn": 1}
 
     if interaction_context.is_canceled():
         return {"post_finalize_wait_ms": 0}

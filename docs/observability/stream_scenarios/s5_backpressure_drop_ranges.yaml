@@ -1,0 +1,17 @@
+scenario_id: backpressure_drop_ranges
+runtime_env:
+  ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN: 35
+turn:
+  workload_id: stream_test_v1
+  input_config:
+    seed: 654
+    mode: spam_deltas
+    delta_count: 120
+    chunk_size: 2
+finalize_explicit: false
+expect:
+  outcome: any
+  require_commit_final: false
+  min_token_deltas: 30
+  require_dropped_seq_ranges: true
+  min_dropped_seq_ranges_count: 1

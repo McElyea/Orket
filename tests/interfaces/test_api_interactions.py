@@ -141,3 +141,35 @@ def test_interaction_model_stream_preflight_runtime_error_maps_to_503(monkeypatc
     )
     assert turn.status_code == 503
     assert "Real model provider unavailable." in turn.text
+
+
+def test_builtin_hint_request_cancel_turn_emits_turn_interrupted(monkeypatch):
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def _hints_cancel(*, workload_id, input_config, turn_params, interaction_context):
+        return {"request_cancel_turn": 1, "post_finalize_wait_ms": 0}
+
+    monkeypatch.setattr(api_module, "run_builtin_workload", _hints_cancel)
+
+    start = client.post(
+        "/v1/interactions/sessions",
+        headers={"X-API-Key": "test-key"},
+        json={"session_params": {"npc": "innkeeper"}},
+    )
+    assert start.status_code == 200
+    session_id = start.json()["session_id"]
+
+    with client.websocket_connect(f"/ws/interactions/{session_id}?api_key=test-key") as ws:
+        turn = client.post(
+            f"/v1/interactions/{session_id}/turns",
+            headers={"X-API-Key": "test-key"},
+            json={"workload_id": "stream_test_v1", "input_config": {"seed": 123, "mode": "basic"}},
+        )
+        assert turn.status_code == 200
+        events = [ws.receive_json() for _ in range(3)]
+        event_types = [item["event_type"] for item in events]
+        assert "turn_accepted" in event_types
+        assert "turn_interrupted" in event_types
+        assert "commit_final" in event_types
+        assert "turn_final" not in event_types
