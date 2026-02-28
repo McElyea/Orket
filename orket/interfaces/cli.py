@@ -6,9 +6,14 @@ import json
 from pathlib import Path
 from orket.orchestration.engine import OrchestrationEngine
 from orket.discovery import print_orket_manifest, perform_first_run_setup
+from orket.extensions import ExtensionManager
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run an Orket Card (Rock, Epic, or Issue).")
+    parser.add_argument("command", nargs="?", help="Optional command group (e.g. extensions, run).")
+    parser.add_argument("subcommand", nargs="?", help="Optional subcommand (e.g. list, <workload_id>).")
+    parser.add_argument("target", nargs="?", help="Optional target argument.")
+    parser.add_argument("--seed", type=int, default=None, help="Optional deterministic seed for extension workloads.")
     parser.add_argument("--epic", type=str, default=None, help="Name of the epic to run.")
     parser.add_argument("--card", type=str, default=None, help="ID or summary of a specific Card to run.")
     parser.add_argument("--rock", type=str, default=None, help="Name of the rock to run.")
@@ -28,6 +33,40 @@ def parse_args():
     parser.add_argument("--archive-reason", type=str, default="manual archive", help="Reason stored with archive transaction.")
     parser.add_argument("--replay-turn", type=str, default=None, help="Replay diagnostics for one turn: <session_id>:<issue_id>:<turn_index>[:role].")
     return parser.parse_args()
+
+
+def _print_extensions_list(manager: ExtensionManager) -> None:
+    extensions = manager.list_extensions()
+    if not extensions:
+        print("No extensions installed.")
+        return
+
+    print("Installed extensions:")
+    for ext in extensions:
+        print(f"- {ext.extension_id} ({ext.extension_version}) [{ext.source}]")
+        if ext.workloads:
+            for workload in ext.workloads:
+                print(f"  workload: {workload.workload_id} ({workload.workload_version})")
+        else:
+            print("  workload: <none>")
+
+
+def _run_extension_workload(args, manager: ExtensionManager) -> None:
+    workload_id = (args.subcommand or "").strip()
+    if not workload_id:
+        raise ValueError("run command requires a workload id (e.g. 'orket run mystery_v1 --seed 123').")
+
+    resolved = manager.resolve_workload(workload_id)
+    if resolved is None:
+        raise ValueError(f"Unknown workload '{workload_id}'. Run 'orket extensions list' to inspect installed workloads.")
+
+    extension, workload = resolved
+    seed_value = "none" if args.seed is None else str(args.seed)
+    raise RuntimeError(
+        "Extension workload runner not implemented yet. "
+        f"Resolved {workload.workload_id} ({workload.workload_version}) from "
+        f"{extension.extension_id} ({extension.extension_version}), seed={seed_value}."
+    )
 
 def print_board(hierarchy: dict):
     print(f"\n{'='*60}\n ORKET PROJECT BOARD (The Card Hierarchy)\n{'='*60}")
@@ -52,6 +91,18 @@ async def run_cli():
     try:
         perform_first_run_setup()
         args = parse_args()
+        extension_manager = ExtensionManager()
+
+        if args.command == "extensions":
+            if args.subcommand != "list":
+                raise ValueError("Supported extensions command: 'orket extensions list'")
+            _print_extensions_list(extension_manager)
+            return
+
+        if args.command == "run":
+            _run_extension_workload(args, extension_manager)
+            return
+
         workspace = Path(args.workspace).resolve()
         engine = OrchestrationEngine(workspace, args.department)
 
