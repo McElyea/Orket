@@ -4,6 +4,7 @@ import ast
 import hashlib
 import importlib
 from importlib.metadata import entry_points
+import inspect
 import json
 import os
 import shutil
@@ -18,6 +19,7 @@ from orket.runtime_paths import durable_root
 
 from .contracts import ExtensionRegistry, RunPlan, Workload
 from .runtime import ExtensionEngineAdapter, RunContext
+from orket.streaming.contracts import CommitIntent, StreamEventType
 
 RELIABLE_MODE_ENV = "ORKET_RELIABLE_MODE"
 RELIABLE_REQUIRE_CLEAN_GIT_ENV = "ORKET_RELIABLE_REQUIRE_CLEAN_GIT"
@@ -167,13 +169,22 @@ class ExtensionManager:
         input_config: dict[str, Any],
         workspace: Path,
         department: str,
+        interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
         resolved = self.resolve_workload(workload_id)
         if resolved is None:
             raise ValueError(f"Unknown workload '{workload_id}'")
         extension, _ = resolved
         workload = self._load_workload(extension, workload_id)
-        run_plan = workload.compile(dict(input_config))
+        compile_input = dict(input_config)
+        compile_fn = workload.compile
+        compile_sig = inspect.signature(compile_fn)
+        if "interaction_context" in compile_sig.parameters:
+            run_plan = compile_fn(compile_input, interaction_context=interaction_context)
+        elif len(compile_sig.parameters) >= 2:
+            run_plan = compile_fn(compile_input, interaction_context)
+        else:
+            run_plan = compile_fn(compile_input)
         if not isinstance(run_plan, RunPlan):
             raise TypeError("compile(input_config) must return RunPlan")
         if run_plan.workload_id != workload_id:
@@ -189,6 +200,19 @@ class ExtensionManager:
         artifact_root.mkdir(parents=True, exist_ok=True)
 
         action_results: list[dict[str, Any]] = []
+        if interaction_context is not None:
+            await interaction_context.emit_event(
+                StreamEventType.MODEL_SELECTED,
+                {"model_id": "extension-default", "reason": "workload_compile", "authoritative": False},
+            )
+            await interaction_context.emit_event(
+                StreamEventType.MODEL_LOADING,
+                {"cold_start": False, "progress": 1.0, "authoritative": False},
+            )
+            await interaction_context.emit_event(
+                StreamEventType.MODEL_READY,
+                {"model_id": "extension-default", "warm_state": "warm", "load_ms": 0, "authoritative": False},
+            )
         if run_plan.actions:
             adapter = ExtensionEngineAdapter(RunContext(workspace=workspace, department=department))
             for action in run_plan.actions:
@@ -207,6 +231,12 @@ class ExtensionManager:
         summary = workload.summarize({"run_result": run_result, "artifact_root": str(artifact_root)})
         if not isinstance(summary, dict):
             raise TypeError("summarize(run_artifacts) must return a dict")
+        if interaction_context is not None:
+            await interaction_context.emit_event(
+                StreamEventType.TURN_FINAL,
+                {"authoritative": False, "summary": summary},
+            )
+            await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload_id))
 
         artifact_manifest = self._build_artifact_manifest(artifact_root)
         manifest_path = artifact_root / "artifact_manifest.json"

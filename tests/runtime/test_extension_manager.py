@@ -243,3 +243,36 @@ async def test_run_workload_rejects_private_orket_imports(tmp_path):
             workspace=tmp_path / "workspace" / "default",
             department="core",
         )
+
+
+@pytest.mark.asyncio
+async def test_run_workload_with_interaction_context_emits_events_and_commit(tmp_path):
+    repo = tmp_path / "ext_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_test_extension_repo(repo)
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    class _FakeContext:
+        def __init__(self):
+            self.events = []
+            self.commits = []
+
+        async def emit_event(self, event_type, payload):
+            self.events.append((getattr(event_type, "value", str(event_type)), payload))
+
+        async def request_commit(self, intent):
+            self.commits.append(intent)
+
+    ctx = _FakeContext()
+    result = await manager.run_workload(
+        workload_id="mystery_v1",
+        input_config={"seed": 1},
+        workspace=tmp_path / "workspace" / "default",
+        department="core",
+        interaction_context=ctx,
+    )
+    assert result.workload_id == "mystery_v1"
+    assert any(name == "model_selected" for name, _ in ctx.events)
+    assert any(name == "turn_final" for name, _ in ctx.events)
+    assert len(ctx.commits) == 1

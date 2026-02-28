@@ -14,12 +14,13 @@ Current default target: `extensions`.
 
 ## Priority Now
 1. `extensions`: active (`docs/projects/extensions/01-REQUIREMENTS.md`, `docs/projects/extensions/02-IMPLEMENTATION-PLAN.md`).
-2. `RefactorCardEngine`: active (`docs/projects/RefactorCardEngine/`).
-3. `OS`: paused/deferred while pillar-first path is validated (`docs/projects/OS/NEXT_PART_V1_REQUIREMENTS.md`).
-4. `ideas`: intake-only backlog (must be promoted to dedicated project folder before execution).
-5. `odr`: completed and archived (`docs/projects/archive/ODR-2026-02-26/`).
-6. `docs-gate`: completed and archived (`docs/projects/archive/Docs-Gate-2026-02-25/`).
-7. `modularity-refactor`: completed and archived (`docs/projects/archive/Modularity-Refactor-2026-02-24/`).
+2. `streamevents`: active (`docs/projects/streamevents/01-REQUIREMENTS.md`, `docs/projects/streamevents/02-IMPLEMENTATION-PLAN.md`).
+3. `RefactorCardEngine`: active (`docs/projects/RefactorCardEngine/`).
+4. `OS`: paused/deferred while pillar-first path is validated (`docs/projects/OS/NEXT_PART_V1_REQUIREMENTS.md`).
+5. `ideas`: intake-only backlog (must be promoted to dedicated project folder before execution).
+6. `odr`: completed and archived (`docs/projects/archive/ODR-2026-02-26/`).
+7. `docs-gate`: completed and archived (`docs/projects/archive/Docs-Gate-2026-02-25/`).
+8. `modularity-refactor`: completed and archived (`docs/projects/archive/Modularity-Refactor-2026-02-24/`).
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
@@ -27,6 +28,7 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | extensions | active | P1 | `docs/projects/extensions/` | Orket Core | Unify public extension surface around ExtensionManager + Workload contract; keep DecisionNodeRegistry internal-only. |
+| streamevents | active | P1 | `docs/projects/streamevents/` | Orket Core | Implement two-plane runtime: streamed interaction events + deterministic authority boundary commits. |
 | RefactorCardEngine | active | P1 | `docs/projects/RefactorCardEngine/` | Orket Core | Unify Cards+ODR under shared workload contract, then migrate card hierarchy to parent-tree profiles. |
 | core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |
 | OS | queued | P2 | `docs/projects/OS/` | Orket Core | Paused/deferred while core-pillars track establishes near-term use-case fit. |

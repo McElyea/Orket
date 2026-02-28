@@ -17,7 +17,15 @@ from orket.hardware import get_metrics_snapshot
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.time_utils import now_local
 from orket.settings import load_user_settings, save_user_settings, load_user_preferences
+from orket.extensions import ExtensionManager
 from orket.orchestration.models import ModelSelector
+from orket.streaming import (
+    CommitIntent,
+    CommitOrchestrator,
+    InteractionManager,
+    StreamBus,
+    StreamBusConfig,
+)
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -32,7 +40,7 @@ from orket.application.services.runtime_policy import (
 )
 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 api_runtime_node = DecisionNodeRegistry().resolve_api_runtime()
 
@@ -219,6 +227,26 @@ SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
 }
 
 SETTINGS_ORDER = tuple(SETTINGS_SCHEMA.keys())
+
+
+class InteractionSessionStartRequest(BaseModel):
+    session_params: dict[str, Any] = Field(default_factory=dict)
+
+
+class InteractionTurnRequest(BaseModel):
+    workload_id: str
+    input_config: dict[str, Any] = Field(default_factory=dict)
+    department: str = "core"
+    workspace: str = "workspace/default"
+    turn_params: dict[str, Any] = Field(default_factory=dict)
+
+
+class InteractionFinalizeRequest(BaseModel):
+    turn_id: str
+
+
+class InteractionCancelRequest(BaseModel):
+    turn_id: Optional[str] = None
 
 
 def _normalize_role_name(value: Any) -> str:
@@ -427,6 +455,19 @@ app.add_middleware(
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 engine = _EngineProxy(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
+stream_bus = StreamBus(
+    StreamBusConfig(
+        best_effort_max_events_per_turn=int(os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN", "256")),
+        bounded_max_events_per_turn=int(os.getenv("ORKET_STREAM_BOUNDED_MAX_EVENTS_PER_TURN", "128")),
+        max_bytes_per_turn_queue=int(os.getenv("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
+    )
+)
+interaction_manager = InteractionManager(
+    bus=stream_bus,
+    commit_orchestrator=CommitOrchestrator(project_root=PROJECT_ROOT),
+    project_root=PROJECT_ROOT,
+)
+extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
 
 # --- System Endpoints ---
 
@@ -1773,14 +1814,85 @@ async def archive_cards(req: ArchiveCardsRequest):
         archived_count=archived_count,
     )
 
+
+@v1_router.post("/interactions/sessions")
+async def start_interaction_session(req: InteractionSessionStartRequest):
+    if not interaction_manager.stream_enabled():
+        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
+    session_id = await interaction_manager.start(req.session_params)
+    return {"session_id": session_id}
+
+
+@v1_router.post("/interactions/{session_id}/turns")
+async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
+    if not interaction_manager.stream_enabled():
+        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
+    try:
+        turn_id = await interaction_manager.begin_turn(
+            session_id=session_id,
+            input_payload=req.input_config,
+            turn_params=req.turn_params,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    context = await interaction_manager.create_context(session_id, turn_id)
+    workspace = Path(req.workspace).resolve()
+
+    async def _run_turn():
+        try:
+            await extension_manager.run_workload(
+                workload_id=req.workload_id,
+                input_config=req.input_config,
+                workspace=workspace,
+                department=req.department,
+                interaction_context=context,
+            )
+            await interaction_manager.finalize(session_id, turn_id)
+        except Exception as exc:
+            await interaction_manager.cancel(turn_id)
+            await context.request_commit(CommitIntent(type="decision", ref=f"fail_closed:{str(exc)}"))
+            await interaction_manager.finalize(session_id, turn_id)
+
+    asyncio.create_task(_run_turn())
+    return {"session_id": session_id, "turn_id": turn_id}
+
+
+@v1_router.post("/interactions/{session_id}/finalize")
+async def finalize_interaction_turn(session_id: str, req: InteractionFinalizeRequest):
+    if not interaction_manager.stream_enabled():
+        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
+    try:
+        handle = await interaction_manager.finalize(session_id, req.turn_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return handle.model_dump()
+
+
+@v1_router.post("/interactions/{session_id}/cancel")
+async def cancel_interaction(session_id: str, req: InteractionCancelRequest):
+    if not interaction_manager.stream_enabled():
+        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
+    target = req.turn_id or session_id
+    try:
+        await interaction_manager.cancel(target)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True, "target": target}
+
 app.include_router(v1_router)
 
 
 def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
-    global PROJECT_ROOT, engine
+    global PROJECT_ROOT, engine, interaction_manager, extension_manager
     if project_root is not None:
         PROJECT_ROOT = Path(project_root).resolve()
     engine.reset(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
+    interaction_manager = InteractionManager(
+        bus=stream_bus,
+        commit_orchestrator=CommitOrchestrator(project_root=PROJECT_ROOT),
+        project_root=PROJECT_ROOT,
+    )
+    extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
     return app
 
 # --- WS ---
@@ -1810,3 +1922,27 @@ async def websocket_endpoint(websocket: WebSocket):
         while True: await websocket.receive_text()
     except WebSocketDisconnect:
         await runtime_state.remove_websocket(websocket)
+
+
+@app.websocket("/ws/interactions/{session_id}")
+async def websocket_interactions(session_id: str, websocket: WebSocket):
+    expected_key = os.getenv("ORKET_API_KEY")
+    header_key = websocket.headers.get(API_KEY_NAME) or websocket.headers.get(API_KEY_NAME.lower())
+    query_key = websocket.query_params.get("api_key")
+    supplied_key = header_key or query_key
+    if not api_runtime_node.is_api_key_valid(expected_key, supplied_key):
+        await websocket.close(code=4403)
+        return
+    if not interaction_manager.stream_enabled():
+        await websocket.close(code=4400)
+        return
+    await websocket.accept()
+    queue = await interaction_manager.subscribe(session_id)
+    try:
+        while True:
+            event = await queue.get()
+            await websocket.send_json(event.model_dump())
+    except WebSocketDisconnect:
+        pass
+    finally:
+        await stream_bus.unsubscribe(session_id, queue)
