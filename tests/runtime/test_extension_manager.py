@@ -1,8 +1,67 @@
 from __future__ import annotations
 
 import json
+import subprocess
+from pathlib import Path
+
+import pytest
 
 from orket.extensions.manager import ExtensionManager
+
+
+def _init_test_extension_repo(repo_root):
+    manifest = {
+        "extension_id": "mystery.extension",
+        "extension_version": "1.0.0",
+        "extension_api_version": "1.0.0",
+        "module": "mystery_extension",
+        "register_callable": "register",
+        "workloads": [{"workload_id": "mystery_v1", "workload_version": "1.0.0"}],
+    }
+    (repo_root / "orket_extension.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (repo_root / "mystery_extension.py").write_text(
+        "\n".join(
+            [
+                "from __future__ import annotations",
+                "from orket.extensions import RunPlan, RunAction",
+                "",
+                "class MysteryWorkload:",
+                "    workload_id = 'mystery_v1'",
+                "    workload_version = '1.0.0'",
+                "",
+                "    def compile(self, input_config):",
+                "        _ = dict(input_config or {})",
+                "        return RunPlan(",
+                "            workload_id='mystery_v1',",
+                "            workload_version='1.0.0',",
+                "            actions=(),",
+                "            metadata={'policy': 'truth-or-silence'},",
+                "        )",
+                "",
+                "    def validators(self):",
+                "        return []",
+                "",
+                "    def summarize(self, run_artifacts):",
+                "        return {'ok': True, 'artifacts': sorted(run_artifacts.keys())}",
+                "",
+                "    def required_materials(self):",
+                "        return []",
+                "",
+                "def register(registry):",
+                "    registry.register_workload(MysteryWorkload())",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init"], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "add", "."], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "init"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_list_extensions_from_catalog(tmp_path):
@@ -60,3 +119,39 @@ def test_resolve_workload_returns_extension_and_workload(tmp_path):
     extension, workload = resolved
     assert extension.extension_id == "mystery.extension"
     assert workload.workload_id == "mystery_v1"
+
+
+def test_install_from_repo_registers_extension(tmp_path):
+    repo = tmp_path / "ext_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_test_extension_repo(repo)
+
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    record = manager.install_from_repo(str(repo))
+
+    assert record.extension_id == "mystery.extension"
+    assert record.workloads[0].workload_id == "mystery_v1"
+    assert manager.resolve_workload("mystery_v1") is not None
+
+
+@pytest.mark.asyncio
+async def test_run_workload_emits_provenance(tmp_path):
+    repo = tmp_path / "ext_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_test_extension_repo(repo)
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+    result = await manager.run_workload(
+        workload_id="mystery_v1",
+        input_config={"seed": 123},
+        workspace=workspace,
+        department="core",
+    )
+
+    assert result.workload_id == "mystery_v1"
+    assert "provenance.json" in result.provenance_path
+    assert Path(result.provenance_path).exists()
+    assert (Path(result.artifact_root) / "artifact_manifest.json").exists()

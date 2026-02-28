@@ -11,9 +11,10 @@ from orket.extensions import ExtensionManager
 def parse_args():
     parser = argparse.ArgumentParser(description="Run an Orket Card (Rock, Epic, or Issue).")
     parser.add_argument("command", nargs="?", help="Optional command group (e.g. extensions, run).")
-    parser.add_argument("subcommand", nargs="?", help="Optional subcommand (e.g. list, <workload_id>).")
-    parser.add_argument("target", nargs="?", help="Optional target argument.")
+    parser.add_argument("subcommand", nargs="?", help="Optional subcommand (e.g. list, install, <workload_id>).")
+    parser.add_argument("target", nargs="?", help="Optional target argument (e.g. repo URL for install).")
     parser.add_argument("--seed", type=int, default=None, help="Optional deterministic seed for extension workloads.")
+    parser.add_argument("--ref", type=str, default=None, help="Optional git ref for extension install.")
     parser.add_argument("--epic", type=str, default=None, help="Name of the epic to run.")
     parser.add_argument("--card", type=str, default=None, help="ID or summary of a specific Card to run.")
     parser.add_argument("--rock", type=str, default=None, help="Name of the rock to run.")
@@ -51,22 +52,34 @@ def _print_extensions_list(manager: ExtensionManager) -> None:
             print("  workload: <none>")
 
 
-def _run_extension_workload(args, manager: ExtensionManager) -> None:
+def _install_extension(args, manager: ExtensionManager) -> None:
+    repo = str(args.target or "").strip()
+    if not repo:
+        raise ValueError("extensions install requires a repo path/URL (e.g. 'orket extensions install <repo>').")
+    record = manager.install_from_repo(repo=repo, ref=args.ref)
+    print(f"Installed extension: {record.extension_id} ({record.extension_version})")
+    if record.workloads:
+        print("Registered workloads:")
+        for workload in record.workloads:
+            print(f"- {workload.workload_id} ({workload.workload_version})")
+
+
+async def _run_extension_workload(args, manager: ExtensionManager) -> None:
     workload_id = (args.subcommand or "").strip()
     if not workload_id:
         raise ValueError("run command requires a workload id (e.g. 'orket run mystery_v1 --seed 123').")
-
-    resolved = manager.resolve_workload(workload_id)
-    if resolved is None:
-        raise ValueError(f"Unknown workload '{workload_id}'. Run 'orket extensions list' to inspect installed workloads.")
-
-    extension, workload = resolved
-    seed_value = "none" if args.seed is None else str(args.seed)
-    raise RuntimeError(
-        "Extension workload runner not implemented yet. "
-        f"Resolved {workload.workload_id} ({workload.workload_version}) from "
-        f"{extension.extension_id} ({extension.extension_version}), seed={seed_value}."
+    workspace = Path(args.workspace).resolve()
+    result = await manager.run_workload(
+        workload_id=workload_id,
+        input_config={"seed": args.seed},
+        workspace=workspace,
+        department=args.department,
     )
+    print(f"Executed workload: {result.workload_id} ({result.workload_version})")
+    print(f"Extension: {result.extension_id} ({result.extension_version})")
+    print(f"Plan hash: {result.plan_hash}")
+    print(f"Artifact root: {result.artifact_root}")
+    print(f"Provenance: {result.provenance_path}")
 
 def print_board(hierarchy: dict):
     print(f"\n{'='*60}\n ORKET PROJECT BOARD (The Card Hierarchy)\n{'='*60}")
@@ -94,13 +107,16 @@ async def run_cli():
         extension_manager = ExtensionManager()
 
         if args.command == "extensions":
-            if args.subcommand != "list":
-                raise ValueError("Supported extensions command: 'orket extensions list'")
-            _print_extensions_list(extension_manager)
-            return
+            if args.subcommand == "list":
+                _print_extensions_list(extension_manager)
+                return
+            if args.subcommand == "install":
+                _install_extension(args, extension_manager)
+                return
+            raise ValueError("Supported extensions commands: 'orket extensions list' and 'orket extensions install <repo> [--ref <ref>]'.")
 
         if args.command == "run":
-            _run_extension_workload(args, extension_manager)
+            await _run_extension_workload(args, extension_manager)
             return
 
         workspace = Path(args.workspace).resolve()
