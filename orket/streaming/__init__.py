@@ -2,6 +2,7 @@ from .bus import StreamBus, StreamBusConfig
 from .contracts import CommitHandle, CommitIntent, StreamEvent, StreamEventType
 from .law_checker import StreamLawChecker, StreamLawViolation
 from .manager import CommitOrchestrator, InteractionContext, InteractionManager
+from .model_provider import ModelStreamProvider, ProviderEvent, ProviderEventType, ProviderTurnRequest, StubModelStreamProvider
 
 __all__ = [
     "CommitHandle",
@@ -15,4 +16,9 @@ __all__ = [
     "StreamEventType",
     "StreamLawChecker",
     "StreamLawViolation",
+    "ModelStreamProvider",
+    "ProviderEvent",
+    "ProviderEventType",
+    "ProviderTurnRequest",
+    "StubModelStreamProvider",
 ]

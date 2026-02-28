@@ -4,6 +4,7 @@ from typing import Any
 
 from orket.streaming.manager import InteractionContext
 
+from .model_stream_v1 import run_model_stream_v1
 from .stream_test_v1 import run_stream_test_v1
 
 
@@ -21,8 +22,14 @@ async def run_builtin_workload(
             turn_params=turn_params,
             interaction_context=interaction_context,
         )
+    if normalized == "model_stream_v1":
+        return await run_model_stream_v1(
+            input_config=input_config,
+            turn_params=turn_params,
+            interaction_context=interaction_context,
+        )
     raise ValueError(f"Unknown workload '{workload_id}'")
 
 
 def is_builtin_workload(workload_id: str) -> bool:
-    return str(workload_id or "").strip() == "stream_test_v1"
+    return str(workload_id or "").strip() in {"stream_test_v1", "model_stream_v1"}

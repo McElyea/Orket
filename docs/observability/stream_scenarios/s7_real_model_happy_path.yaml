@@ -1,0 +1,13 @@
+scenario_id: s7_real_model_happy_path
+runtime_env:
+  ORKET_MODEL_STREAM_PROVIDER: stub
+turn:
+  workload_id: model_stream_v1
+  input_config:
+    seed: 321
+    mode: basic
+finalize_explicit: false
+expect:
+  outcome: ok
+  require_commit_final: true
+  min_token_deltas: 1

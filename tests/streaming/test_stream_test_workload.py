@@ -89,3 +89,35 @@ async def test_stream_test_finalize_then_wait_cancel_after_final_is_noop(tmp_pat
     assert len(terminal_events) == 1
     assert terminal_events[0].event_type == StreamEventType.TURN_FINAL
     assert all(event.event_type != StreamEventType.TURN_INTERRUPTED for event in buffered)
+
+
+@pytest.mark.asyncio
+async def test_model_stream_v1_stub_path_commits_ok(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "stub")
+    manager = InteractionManager(
+        bus=StreamBus(),
+        commit_orchestrator=CommitOrchestrator(project_root=tmp_path),
+        project_root=tmp_path,
+    )
+    session_id = await manager.start({})
+    queue = await manager.subscribe(session_id)
+    turn_id = await manager.begin_turn(session_id, {"seed": 5}, {})
+    context = await manager.create_context(session_id, turn_id)
+    await queue.get()  # turn_accepted
+
+    await run_builtin_workload(
+        workload_id="model_stream_v1",
+        input_config={"seed": 5, "mode": "basic"},
+        turn_params={},
+        interaction_context=context,
+    )
+    await manager.finalize(session_id, turn_id)
+    events = await _drain_until_commit(queue)
+
+    event_types = [event.event_type for event in events]
+    assert StreamEventType.MODEL_SELECTED in event_types
+    assert StreamEventType.MODEL_LOADING in event_types
+    assert StreamEventType.MODEL_READY in event_types
+    assert StreamEventType.TOKEN_DELTA in event_types
+    commit_final = next(event for event in events if event.event_type == StreamEventType.COMMIT_FINAL)
+    assert commit_final.payload["commit_outcome"] == "ok"
