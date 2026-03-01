@@ -6,6 +6,7 @@ import math
 import os
 import platform
 import re
+import shlex
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -414,9 +415,12 @@ def _run_sidecar(
         execution_mode=execution_mode,
         out_file=str(out_file).replace("\\", "/"),
     )
+    argv = shlex.split(command, posix=os.name != "nt")
+    if not argv:
+        raise SystemExit("hardware sidecar template resolved to an empty command")
     result = subprocess.run(
-        command,
-        shell=True,
+        argv,
+        shell=False,
         check=False,
         capture_output=True,
         text=True,

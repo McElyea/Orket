@@ -26,6 +26,6 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| techdebt | active | P1 | `docs/projects/techdebt/` | Orket Core | Active roadmap lane; Phase 1 security slice in progress (`TD-SEC-1a/b/c` and `TD-SEC-2` complete). |
+| techdebt | active | P1 | `docs/projects/techdebt/` | Orket Core | Active roadmap lane; Phase 1 security and Phase 2 async slices complete. Phase 3 exception narrowing in progress. |
 | core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |
 | archive | archive-root | n/a | `docs/projects/archive/` | Orket Core | Completed projects only. |

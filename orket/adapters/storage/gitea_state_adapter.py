@@ -7,6 +7,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import httpx
+from pydantic import ValidationError
 
 from orket.adapters.storage.gitea_state_models import (
     CardSnapshot,
@@ -204,7 +205,7 @@ class GiteaStateAdapter(StateBackendContract):
             body = str(issue.get("body") or "")
             try:
                 snapshot = decode_snapshot(body)
-            except Exception:
+            except (ValueError, ValidationError):
                 # Ignore non-Orket issues even if they have a ready label.
                 continue
             cards.append(
@@ -234,7 +235,7 @@ class GiteaStateAdapter(StateBackendContract):
 
         try:
             snapshot = decode_snapshot(str(issue.get("body") or ""))
-        except Exception:
+        except (ValueError, ValidationError):
             return None
         etag = issue_response.headers.get("ETag")
         now = self._now_utc()
@@ -303,7 +304,7 @@ class GiteaStateAdapter(StateBackendContract):
             return None
         try:
             snapshot = decode_snapshot(str(issue.get("body") or ""))
-        except Exception:
+        except (ValueError, ValidationError):
             return None
         current_owner = str(snapshot.lease.owner_id or "").strip()
         if current_owner != owner_id:
@@ -530,7 +531,7 @@ class GiteaStateAdapter(StateBackendContract):
                 continue
             try:
                 event = parse_event_comment(body)
-            except Exception:
+            except (ValueError, ValidationError):
                 continue
             if str(event.idempotency_key or "").strip() == idempotency_key:
                 return True

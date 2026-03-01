@@ -1,6 +1,6 @@
 # Tech Debt Implementation Plan
 
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 Source: `01-REQUIREMENTS.md`
 
 ## Strategy
@@ -13,7 +13,7 @@ Do not block SDK or Meta Breaker work for structural cleanup. Security and corre
 
 ## Phase 1: Security Fixes
 
-Status: **in progress**
+Status: **complete**
 Priority: **do first -- these are real vulnerabilities**
 Estimated scope: ~2 hours focused work
 
@@ -24,13 +24,13 @@ Estimated scope: ~2 hours focused work
 | TD-SEC-1a | Replace shell=True in scaffold_init.py | `orket/interfaces/scaffold_init.py` | complete |
 | TD-SEC-1b | Replace shell=True in refactor_transaction.py | `orket/interfaces/refactor_transaction.py` | complete |
 | TD-SEC-1c | Replace shell=True in api_generation.py | `orket/interfaces/api_generation.py` | complete |
-| TD-SEC-1d | Audit scripts for shell=True (keep if hardcoded, fix if parameterized) | `scripts/` | pending |
+| TD-SEC-1d | Audit scripts for shell=True (keep if hardcoded, fix if parameterized) | `scripts/` | complete |
 | TD-SEC-2 | Add asyncio.Lock to GlobalState.interventions | `orket/state.py` | complete |
-| TD-SEC-3a | Delete filesystem.py | `orket/adapters/storage/filesystem.py` | pending |
-| TD-SEC-3b | Delete conductor.py | find and delete | pending |
-| TD-SEC-3c | Delete persistence.py | find and delete | pending |
-| TD-SEC-3d | Delete CardRepositoryAdapter | find and delete | pending |
-| TD-SEC-3e | Fix policy.py imports after filesystem.py deletion | `orket/core/policies/policy.py` | pending |
+| TD-SEC-3a | Delete filesystem.py | `orket/adapters/storage/filesystem.py` | complete |
+| TD-SEC-3b | Delete conductor.py | find and delete | complete |
+| TD-SEC-3c | Delete persistence.py | find and delete | complete |
+| TD-SEC-3d | Delete CardRepositoryAdapter | find and delete | complete |
+| TD-SEC-3e | Fix policy.py imports after filesystem.py deletion | `orket/core/policies/policy.py` | complete |
 
 Exit criteria:
 - Zero `shell=True` in production code with user-controlled input
@@ -60,18 +60,31 @@ Progress update (2026-03-01):
 - Validation:
   - `python -m pytest -q tests/interfaces/test_scaffold_init_cli.py tests/interfaces/test_refactor_transaction_cli.py tests/interfaces/test_api_add_transaction_cli.py tests/interfaces/test_replay_artifact_recording.py`
   - result: `16 passed`
+- Completed `TD-SEC-1d` by replacing parameterized `shell=True` usage in scripts:
+  - `scripts/context_ceiling_finder.py`
+  - `scripts/run_determinism_harness.py`
+  - `scripts/run_quant_sweep.py`
+- Validation:
+  - `python -m pytest -q tests/application/test_context_ceiling_finder.py tests/application/test_benchmark_task_id_filters.py tests/application/test_benchmark_telemetry_manifest.py tests/application/test_quant_sweep_runner.py`
+  - result: `16 passed`
+  - `rg -n "shell=True" scripts` -> no matches
+  - `rg -n "shell=True" orket` -> no matches
 - Completed `TD-SEC-2` by exposing lock-protected intervention APIs on `GlobalState`:
   - `set_intervention`, `get_intervention`, `remove_intervention`, `get_interventions`
   - all methods guard shared intervention state via `_interventions_lock`
 - Added coverage:
   - `tests/application/test_runtime_state_interventions.py`
   - validation run included API state lifecycle tests (`92 passed` in combined run)
+- Completed `TD-SEC-3a/b/c/d/e` verification sweep:
+  - legacy targets are absent (already removed): `orket/adapters/storage/filesystem.py`, `conductor.py`, `persistence.py`, and `CardRepositoryAdapter`
+  - policy import path has already been migrated to `orket/policy.py` (`FilesystemPolicy` lives there)
+  - validation run: `python -m pytest -q tests/adapters tests/application/test_runtime_state_interventions.py` (`83 passed`)
 
 ---
 
 ## Phase 2: Async Correctness
 
-Status: **not started**
+Status: **complete**
 Priority: **fix when touching async code, or in next focused sprint**
 Estimated scope: ~1 hour
 
@@ -79,8 +92,8 @@ Estimated scope: ~1 hour
 
 | ID | Task | File(s) | Status |
 |---|---|---|---|
-| TD-ASYNC-1 | Replace time.sleep() with await asyncio.sleep() | `orket/adapters/execution/worker_client.py:139` | pending |
-| TD-ASYNC-2 | Document or eliminate nested event loop workaround | `orket/adapters/storage/async_file_tools.py:29-36` | pending |
+| TD-ASYNC-1 | Replace time.sleep() with await asyncio.sleep() | `orket/adapters/execution/worker_client.py:139` | complete |
+| TD-ASYNC-2 | Document or eliminate nested event loop workaround | `orket/adapters/storage/async_file_tools.py:29-36` | complete |
 
 Exit criteria:
 - Zero blocking `time.sleep()` in async functions
@@ -96,6 +109,16 @@ grep -rn "time\.sleep" orket/ --include="*.py"
 python -m pytest tests -q
 ```
 
+Progress update (2026-03-01):
+- Completed `TD-ASYNC-1` via codebase verification:
+  - `rg -n "time\\.sleep\\(" orket`
+  - result: only `orket/adapters/execution/worker_client.py:139`, which is in a synchronous helper (`make_random_delay`) and not inside an `async def`.
+- Completed `TD-ASYNC-2` by documenting the nested-loop compatibility bridge in:
+  - `orket/adapters/storage/async_file_tools.py` (`AsyncFileTools._run_async`)
+  - docstring now explains why a dedicated thread/loop bridge exists, where it is used, and that it is an interim model.
+- Validation:
+  - `python -m pytest -q tests/application/test_dependency_manager_service.py tests/application/test_deployment_planner_service.py tests/application/test_driver_cli.py tests/platform/test_leases.py tests/platform/test_hedged.py`
+
 ---
 
 ## Phase 3: Exception Narrowing
@@ -108,10 +131,10 @@ Estimated scope: ~2-3 hours (15 instances, each needs investigation)
 
 | ID | Task | File(s) | Status |
 |---|---|---|---|
-| TD-EXC-1a | Narrow 4 broad catches in gitea_state_adapter | `orket/adapters/storage/gitea_state_adapter.py` | pending |
-| TD-EXC-1b | Narrow 8 broad catches in orket_sentinel | `orket/tools/ci/orket_sentinel.py` | pending |
-| TD-EXC-1c | Narrow 1 broad catch in main | `orket/main.py` | pending |
-| TD-EXC-1d | Sweep remaining except Exception catches | grep across codebase | pending |
+| TD-EXC-1a | Narrow 4 broad catches in gitea_state_adapter | `orket/adapters/storage/gitea_state_adapter.py` | complete |
+| TD-EXC-1b | Narrow 8 broad catches in orket_sentinel | `orket/tools/ci/orket_sentinel.py` | complete |
+| TD-EXC-1c | Narrow 1 broad catch in main | `orket/main.py` | complete |
+| TD-EXC-1d | Sweep remaining except Exception catches | grep across codebase | in progress |
 
 Approach for each instance:
 1. Read the try block
@@ -130,6 +153,17 @@ Exit criteria:
 grep -rn "except Exception" orket/ --include="*.py" | wc -l
 # Target: 0
 ```
+
+Progress update (2026-03-01):
+- Completed `TD-EXC-1a` by narrowing broad catches in `orket/adapters/storage/gitea_state_adapter.py`:
+  - replaced `except Exception` with `except (ValueError, ValidationError)` where snapshot/event parse failures are expected.
+- Validation:
+  - `python -m pytest -q tests/adapters/test_gitea_state_adapter.py tests/adapters/test_gitea_state_adapter_contention.py tests/adapters/test_gitea_state_multi_runner_simulation.py tests/application/test_execution_pipeline_gitea_state_loop.py tests/application/test_run_gitea_state_worker_coordinator_script.py`
+  - result: `35 passed`
+- Marked `TD-EXC-1b` and `TD-EXC-1c` complete because their referenced files no longer exist in the codebase:
+  - `orket/tools/ci/orket_sentinel.py`
+  - `orket/main.py`
+- Remaining Phase 3 work is tracked under `TD-EXC-1d` (repository-wide sweep of remaining broad catches).
 
 ---
 

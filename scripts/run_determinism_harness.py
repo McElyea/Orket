@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 import time
@@ -327,9 +328,12 @@ def _run_once(
         env["ORKET_BENCH_AFFINITY_POLICY"] = str(affinity_policy)
         env["ORKET_BENCH_WARMUP_STEPS"] = str(warmup_steps)
         started = time.perf_counter()
+        argv = shlex.split(command, posix=os.name != "nt")
+        if not argv:
+            raise ValueError("runner-template resolved to an empty command")
         result = subprocess.run(
-            command,
-            shell=True,
+            argv,
+            shell=False,
             capture_output=True,
             text=True,
             cwd=repo_root,

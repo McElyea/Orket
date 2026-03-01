@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shlex
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -148,7 +150,10 @@ def main() -> int:
         summary_out = Path(str(args.summary_template).format(context=context))
         if str(args.run_template or "").strip():
             command = str(args.run_template).format(context=context, summary_out=str(summary_out).replace("\\", "/"))
-            result = subprocess.run(command, shell=True, check=False, capture_output=True, text=True)
+            argv = shlex.split(command, posix=os.name != "nt")
+            if not argv:
+                raise SystemExit(f"context {context} run-template resolved to an empty command")
+            result = subprocess.run(argv, shell=False, check=False, capture_output=True, text=True)
             if result.returncode != 0:
                 raise SystemExit(
                     f"context {context} run-template failed with code {result.returncode}: {result.stdout}\n{result.stderr}"
