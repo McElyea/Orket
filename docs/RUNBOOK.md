@@ -91,6 +91,22 @@ python scripts/check_volatility_boundaries.py
 python scripts/sync_published_index.py --check
 ```
 
+## Gitea CI Helper
+Requires `ORKET_GITEA_URL`, `ORKET_GITEA_OWNER`, `ORKET_GITEA_REPO`, and `ORKET_GITEA_TOKEN` in environment or `.env`.
+
+1. Show latest runs:
+```bash
+python scripts/ci/gitea_ci_easy.py status --limit 10
+```
+2. Trigger workflow and wait for result:
+```bash
+python scripts/ci/gitea_ci_easy.py trigger --workflow quality.yml --ref main --wait
+```
+3. Watch a known run:
+```bash
+python scripts/ci/gitea_ci_easy.py watch --run-id <run_id>
+```
+
 ## Runtime Profiles and Migration
 1. Set workflow profile:
 ```bash
