@@ -10,6 +10,8 @@ from pathlib import Path
 
 CODE_RE = re.compile(r"`([EI]_[A-Z0-9_]+)`")
 TOKEN_RE = re.compile(r"^[EI]_[A-Z0-9_]+$")
+CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
+DOCS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28")
 
 
 def _canonical_json_bytes(payload: dict) -> bytes:
@@ -49,8 +51,8 @@ def _extract_doc_codes(path: Path) -> set[str]:
 
 
 def main() -> int:
-    registry_path = Path("docs/projects/OS/contracts/error-codes-v1.json")
-    docs_paths = sorted(Path("docs/projects/OS").rglob("*.md"))
+    registry_path = CONTRACTS_ROOT / "error-codes-v1.json"
+    docs_paths = sorted(DOCS_ROOT.rglob("*.md"))
 
     registry_codes, registry_wrapper = _load_registry(registry_path)
     registry_set = set(registry_codes)

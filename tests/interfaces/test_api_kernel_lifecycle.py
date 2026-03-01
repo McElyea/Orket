@@ -16,6 +16,7 @@ import orket.interfaces.api as api_module
 
 client = TestClient(app)
 DEFAULT_COMPARE_FIXTURE_PATH = Path("tests/interfaces/fixtures/kernel_compare_realistic_fixture.json")
+CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
 
 
 def _load_schema(path: str) -> dict:
@@ -24,8 +25,8 @@ def _load_schema(path: str) -> dict:
 
 def _build_registry(root_schema: dict) -> Registry:
     schema_paths = [
-        "docs/projects/OS/contracts/replay-report.schema.json",
-        "docs/projects/OS/contracts/kernel-issue.schema.json",
+        str(CONTRACTS_ROOT / "replay-report.schema.json"),
+        str(CONTRACTS_ROOT / "kernel-issue.schema.json"),
     ]
     registry = Registry().with_resource(root_schema["$id"], Resource.from_contents(root_schema))
     for path in schema_paths:
@@ -157,7 +158,7 @@ def test_kernel_replay_endpoint_real_engine_success_with_full_descriptor(monkeyp
     payload = response.json()
     assert payload["outcome"] == "PASS"
     assert payload["mode"] == "replay_run"
-    schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    schema = _load_schema(str(CONTRACTS_ROOT / "replay-report.schema.json"))
     registry = _build_registry(schema)
     Draft202012Validator(schema, registry=registry).validate(payload)
 
@@ -173,7 +174,7 @@ def test_kernel_replay_endpoint_real_engine_fail_payload_conforms_schema(monkeyp
     payload = response.json()
     assert payload["outcome"] == "FAIL"
     assert payload["issues"][0]["code"] == "E_REPLAY_INPUT_MISSING"
-    schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    schema = _load_schema(str(CONTRACTS_ROOT / "replay-report.schema.json"))
     registry = _build_registry(schema)
     Draft202012Validator(schema, registry=registry).validate(payload)
 
@@ -407,7 +408,7 @@ def test_kernel_compare_endpoint_response_conforms_to_replay_report_schema(monke
         },
     )
     assert response.status_code == 200
-    schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    schema = _load_schema(str(CONTRACTS_ROOT / "replay-report.schema.json"))
     registry = _build_registry(schema)
     Draft202012Validator(schema, registry=registry).validate(response.json())
 

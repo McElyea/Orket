@@ -10,6 +10,7 @@ from typing import Any
 
 
 CONTRACT_VERSION = "kernel_api/v1"
+DEFAULT_STAGE_ORDER_PATH = "docs/projects/archive/OS-Stale-2026-02-28/contracts/stage-order-v1.json"
 
 
 def _canonical_json_bytes(payload: Any) -> bytes:
@@ -142,7 +143,7 @@ def _compare_turn(
 def compare_payload(
     *,
     payload: dict[str, Any],
-    stage_order_path: str = "docs/projects/OS/contracts/stage-order-v1.json",
+    stage_order_path: str = DEFAULT_STAGE_ORDER_PATH,
 ) -> dict[str, Any]:
     stage_order = _load_stage_order(Path(stage_order_path))
 
@@ -276,7 +277,7 @@ def main() -> int:
     parser.add_argument(
         "--stage-order",
         dest="stage_order_path",
-        default="docs/projects/OS/contracts/stage-order-v1.json",
+        default=DEFAULT_STAGE_ORDER_PATH,
         help="Path to stage-order contract JSON.",
     )
     args = parser.parse_args()
