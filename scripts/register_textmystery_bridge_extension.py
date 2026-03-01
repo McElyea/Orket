@@ -28,7 +28,7 @@ def _manifest_payload() -> dict[str, Any]:
             {
                 "workload_id": WORKLOAD_ID,
                 "entrypoint": "textmystery_bridge_extension:run_workload",
-                "required_capabilities": [],
+                "required_capabilities": ["tts.speak"],
             }
         ],
     }
@@ -86,12 +86,33 @@ def run_workload(ctx, input_payload: dict[str, Any]) -> WorkloadResult:
                 )
             )
 
+    speech_text = _build_speech_text(operation=operation, response_payload=response_payload)
+    tts = ctx.capabilities.tts()
+    clip = tts.synthesize(text=speech_text, voice_id="textmystery_bridge", emotion_hint="neutral", speed=1.0)
+    clip_path = Path(ctx.output_dir) / "bridge_tts_clip.pcm"
+    clip_path.write_bytes(clip.samples)
+    clip_digest = hashlib.sha256(clip_path.read_bytes()).hexdigest()
+    artifacts.append(
+        ArtifactRef(
+            path="bridge_tts_clip.pcm",
+            digest_sha256=clip_digest,
+            kind="bridge_tts_pcm",
+        )
+    )
+
     return WorkloadResult(
         ok=True,
         output={
             "bridge_operation": operation,
             "textmystery_root": textmystery_root,
             "contract_response": response_payload,
+            "audio": {
+                "voice_id": "textmystery_bridge",
+                "format": clip.format,
+                "sample_rate": clip.sample_rate,
+                "channels": clip.channels,
+                "bytes": len(clip.samples),
+            },
             "trace_events": [
                 {"phase": "contract_call_start", "operation": operation},
                 {"phase": "contract_call_complete", "operation": operation},
@@ -116,6 +137,17 @@ def _run_contract_operation(*, operation: str, textmystery_root: str, request_pa
     if not isinstance(response, dict):
         raise RuntimeError("textmystery contract returned non-object response")
     return response
+
+
+def _build_speech_text(*, operation: str, response_payload: dict[str, Any]) -> str:
+    if operation == "parity-check":
+        turns = response_payload.get("turn_results")
+        if isinstance(turns, list):
+            return f"Parity check complete with {len(turns)} turns."
+    if operation == "leak-check":
+        ok = bool(response_payload.get("ok"))
+        return "Leak check passed." if ok else "Leak check reported violations."
+    return "TextMystery bridge run complete."
 """
 
 
@@ -143,7 +175,8 @@ def main() -> int:
                 "workloads:",
                 f"  - workload_id: {manifest['workloads'][0]['workload_id']}",
                 f"    entrypoint: {manifest['workloads'][0]['entrypoint']}",
-                "    required_capabilities: []",
+                "    required_capabilities:",
+                "      - tts.speak",
             ]
         ),
         encoding="utf-8",
@@ -168,7 +201,7 @@ def main() -> int:
                     "workload_id": WORKLOAD_ID,
                     "workload_version": "2.0.0",
                     "entrypoint": "textmystery_bridge_extension:run_workload",
-                    "required_capabilities": [],
+                    "required_capabilities": ["tts.speak"],
                     "contract_style": "sdk_v0",
                 }
             ],

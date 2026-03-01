@@ -32,6 +32,7 @@ def test_register_textmystery_bridge_extension_writes_sdk_manifest_and_catalog(t
     manifest_text = manifest_path.read_text(encoding="utf-8")
     assert "manifest_version: v0" in manifest_text
     assert "entrypoint: textmystery_bridge_extension:run_workload" in manifest_text
+    assert "tts.speak" in manifest_text
 
     catalog_path = durable_root / "config" / "extensions_catalog.json"
     payload = json.loads(catalog_path.read_text(encoding="utf-8"))
@@ -43,3 +44,4 @@ def test_register_textmystery_bridge_extension_writes_sdk_manifest_and_catalog(t
     assert row["contract_style"] == "sdk_v0"
     assert row["workloads"][0]["workload_id"] == module.WORKLOAD_ID
     assert row["workloads"][0]["entrypoint"] == "textmystery_bridge_extension:run_workload"
+    assert row["workloads"][0]["required_capabilities"] == ["tts.speak"]

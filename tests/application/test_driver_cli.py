@@ -38,12 +38,23 @@ def _seed_textmystery_inputs(root: Path) -> None:
     }
     npcs = {
         "version": 1,
-        "npcs": {"NICK": {"archetype": "TERSE", "display_name": "Nick", "refusal_style_id": "REF_STYLE_STEEL"}},
+        "npcs": {
+            "NICK": {
+                "archetype": "TERSE",
+                "display_name": "Nick",
+                "refusal_style_id": "REF_STYLE_STEEL",
+                "voice_profile_id": "NICK_VOICE",
+            }
+        },
     }
     styles = [{"id": "REF_STYLE_STEEL", "templates": ["No comment."]}]
+    voices = {"version": 1, "profiles": {"NICK_VOICE": {"voice_id": "male_low_clipped", "emotion_map": {"neutral": {}}}}}
     (prompts / "archetypes.yaml").write_text(yaml.safe_dump(archetypes, sort_keys=True), encoding="utf-8")
     (prompts / "npcs.yaml").write_text(yaml.safe_dump(npcs, sort_keys=True), encoding="utf-8")
     (root / "content" / "refusal_styles.yaml").write_text(yaml.safe_dump(styles, sort_keys=True), encoding="utf-8")
+    voices_dir = root / "content" / "voices"
+    voices_dir.mkdir(parents=True, exist_ok=True)
+    (voices_dir / "profiles.yaml").write_text(yaml.safe_dump(voices, sort_keys=True), encoding="utf-8")
     scenario = root / "reforge" / "scenario_packs"
     scenario.mkdir(parents=True, exist_ok=True)
     (scenario / "truth_only_v0.json").write_text(

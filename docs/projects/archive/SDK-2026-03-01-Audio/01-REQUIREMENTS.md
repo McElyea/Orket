@@ -15,7 +15,7 @@ WorkloadResult returns: ok, output, artifacts (with SHA digests), issues, metric
 
 ## R2: Capability System
 
-**Status: implemented (core), needs typed providers**
+**Status: implemented (core + typed providers)**
 
 Workloads declare `required_capabilities` in manifest. At runtime, the capability registry is built and preflight-checked before execution. Missing capabilities fail fast with `E_SDK_CAPABILITY_MISSING`.
 
@@ -55,7 +55,7 @@ ReproducibilityEnforcer checks git-clean state when `ORKET_RELIABLE_MODE` is set
 
 ## R6: Audio Capability - Typed Provider
 
-**Status: implemented (SDK layer)**
+**Status: implemented (SDK layer + Piper backend integration in Orket)**
 
 ### Motivation
 
@@ -88,6 +88,7 @@ class TTSProvider(Protocol):
 **R6.4**: The SDK provides a `NullTTSProvider` that returns silence. Extensions degrade gracefully when no real TTS backend is configured.
 
 **R6.5**: Orket registers a real `TTSProvider` implementation when a TTS backend is available (Piper, Coqui XTTS, or other local engine). The choice of backend is an Orket-level configuration, not an extension decision.
+Implemented with Piper backend selection via workload/env config (`tts_backend=piper`, model path + executable). Falls back to `NullTTSProvider` if unavailable.
 
 **R6.6**: Extensions access TTS via the capability registry:
 ```python
@@ -136,7 +137,7 @@ This mapping is extension logic, not SDK logic.
 
 ## R7: Audio Playback Capability
 
-**Status: implemented (SDK contracts + null provider); real platform backend not started**
+**Status: implemented (SDK contracts + null provider + sounddevice backend registration)**
 
 **R7.1**: Define an `AudioPlayer` protocol:
 ```python
@@ -152,6 +153,7 @@ class AudioPlayer(Protocol):
 **R7.3**: `NullAudioPlayer` discards clips silently (for CI, tests, headless runs).
 
 **R7.4**: Real implementation uses platform audio (e.g., sounddevice, pyaudio). Orket-level config, not extension choice.
+Implemented with optional `sounddevice` backend (`audio_backend=sounddevice`), with automatic fallback to `NullAudioPlayer` if backend deps are unavailable.
 
 ## R8: Environment Audio Capability
 

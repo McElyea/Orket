@@ -6,8 +6,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from orket.capabilities.audio_player import build_audio_player
+from orket.capabilities.tts_piper import build_tts_provider
 from orket_extension_sdk.capabilities import CapabilityRegistry
-from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
+from orket_extension_sdk.audio import NullAudioPlayer
 from orket_extension_sdk.result import WorkloadResult
 
 from .contracts import RunPlan, Workload
@@ -40,9 +42,9 @@ class WorkloadArtifacts:
                     continue
                 registry.register(capability_id, provider)
         if not registry.has("tts.speak"):
-            registry.register("tts.speak", NullTTSProvider())
+            registry.register("tts.speak", build_tts_provider(input_config=input_config))
         if not registry.has("audio.play"):
-            registry.register("audio.play", NullAudioPlayer())
+            registry.register("audio.play", build_audio_player(input_config=input_config))
         if not registry.has("speech.play_clip"):
             registry.register("speech.play_clip", NullAudioPlayer())
         return registry

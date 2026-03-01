@@ -498,6 +498,9 @@ def run_compile_pipeline(
         "inputs_manifest_digest": _json_sha({"inputs": inputs_manifest}),
         "outputs_manifest_digest": _json_sha({"outputs": outputs_manifest}),
         "canonical_blob_digest": _json_sha(best_blob),
+        "voice_profiles_digest": _json_sha(
+            {"voice_profiles": best_blob.get("banks", {}).get("voice_profiles", {})}
+        ),
         "route_id": route_id,
         "scenario_pack_id": scenario_pack["pack_id"],
         "scenario_pack_version": scenario_pack["version"],

@@ -66,6 +66,11 @@ docs = [
     "pymupdf>=1.23.0",
     "python-docx>=1.1.0",
 ]
+audio = [
+    "piper-tts>=1.3.0,<2.0.0",
+    "sounddevice>=0.4.6,<1.0.0",
+    "numpy>=1.26.0,<3.0.0",
+]
 profile_engine_only = []
 profile_developer_local = []
 profile_api_runtime = [

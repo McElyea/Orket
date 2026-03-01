@@ -37,6 +37,24 @@ Orket integration (`orket/extensions/`):
 - `models.py` - Data classes (ExtensionRecord, WorkloadRecord, etc.)
 - `reproducibility.py` - Git-clean enforcement for reliable mode
 
+Audio integration additions:
+- `orket_extension_sdk/audio.py` - `TTSProvider`, `AudioPlayer`, `AudioClip`, `VoiceInfo`, null implementations
+- `orket/capabilities/tts_piper.py` - optional Piper-backed `TTSProvider`
+- `orket/capabilities/audio_player.py` - optional `sounddevice` `AudioPlayer`
+- `orket/reforger/routes/textmystery_persona_v0.py` - voice-profile normalization + validation
+
+## Current Completion State
+
+Completed in this repository:
+- Phase 1 (typed capability providers)
+- Phase 2 (Piper backend + fallback registration)
+- Phase 3 bridge-path integration (`textmystery_bridge_v1`) with audio artifact output
+- Phase 4 backend registration for audio playback (`sounddevice` + null fallback)
+- Phase 5 reforger voice profile validation and digesting
+
+Remaining scope is external:
+- Direct TextMystery upstream repo content/render changes listed in `02-PLAN.md` remain out-of-tree from this repo.
+
 ## Canonical Docs
 
 1. `docs/projects/SDK/README.md` (this file)

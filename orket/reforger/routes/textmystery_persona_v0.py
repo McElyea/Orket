@@ -33,6 +33,7 @@ class TextMysteryPersonaRouteV0:
         "content/prompts/archetypes.yaml",
         "content/prompts/npcs.yaml",
         "content/refusal_styles.yaml",
+        "content/voices/profiles.yaml",
     )
 
     def inspect(self, input_dir: Path) -> RoutePlan:
@@ -79,6 +80,7 @@ class TextMysteryPersonaRouteV0:
         archetypes = self._load_yaml(input_dir / "content" / "prompts" / "archetypes.yaml")
         npcs = self._load_yaml(input_dir / "content" / "prompts" / "npcs.yaml")
         refusal_styles = self._load_yaml(input_dir / "content" / "refusal_styles.yaml")
+        voice_profiles = self._load_yaml(input_dir / "content" / "voices" / "profiles.yaml")
 
         defaults = archetypes.get("defaults") if isinstance(archetypes, dict) else {}
         arche_map = archetypes.get("archetypes") if isinstance(archetypes, dict) else {}
@@ -105,12 +107,23 @@ class TextMysteryPersonaRouteV0:
                     cleaned = []
                 style_map[style_id] = {"templates": cleaned}
 
+        voice_map: dict[str, dict[str, Any]] = {}
+        if isinstance(voice_profiles, dict):
+            profiles = voice_profiles.get("profiles")
+            if isinstance(profiles, dict):
+                for profile_id, row in profiles.items():
+                    pid = str(profile_id or "").strip()
+                    if not pid or not isinstance(row, dict):
+                        continue
+                    voice_map[pid] = self._normalize_object(row)
+
         canonical = {
             "version": "persona_blob.v0",
             "route_id": self.route_id,
             "banks": {
                 "archetypes": self._normalize_archetypes(arche_map),
                 "refusal_styles": {key: style_map[key] for key in sorted(style_map)},
+                "voice_profiles": {key: voice_map[key] for key in sorted(voice_map)},
             },
             "entities": {
                 "npcs": self._normalize_npcs(npc_map),
@@ -163,6 +176,16 @@ class TextMysteryPersonaRouteV0:
         style_path = content / "refusal_styles.yaml"
         style_path.write_text(yaml.safe_dump(styles_rows, sort_keys=True), encoding="utf-8")
         outputs.append(str(style_path.relative_to(out_dir)).replace("\\", "/"))
+
+        voices_dir = content / "voices"
+        voices_dir.mkdir(parents=True, exist_ok=True)
+        profiles_payload = {
+            "version": 1,
+            "profiles": blob["banks"]["voice_profiles"],
+        }
+        profiles_path = voices_dir / "profiles.yaml"
+        profiles_path.write_text(yaml.safe_dump(profiles_payload, sort_keys=True), encoding="utf-8")
+        outputs.append(str(profiles_path.relative_to(out_dir)).replace("\\", "/"))
         return tuple(sorted(outputs))
 
     def validate_blob(self, blob: dict[str, Any]) -> None:
@@ -177,9 +200,15 @@ class TextMysteryPersonaRouteV0:
             raise ValueError("blob missing banks/entities/rules objects")
         archetypes = banks.get("archetypes")
         refusal_styles = banks.get("refusal_styles")
+        voice_profiles = banks.get("voice_profiles")
         npcs = entities.get("npcs")
-        if not isinstance(archetypes, dict) or not isinstance(refusal_styles, dict) or not isinstance(npcs, dict):
-            raise ValueError("blob missing archetypes/refusal_styles/npcs objects")
+        if (
+            not isinstance(archetypes, dict)
+            or not isinstance(refusal_styles, dict)
+            or not isinstance(voice_profiles, dict)
+            or not isinstance(npcs, dict)
+        ):
+            raise ValueError("blob missing archetypes/refusal_styles/voice_profiles/npcs objects")
 
         for npc_id in sorted(npcs):
             npc = npcs[npc_id]
@@ -191,6 +220,19 @@ class TextMysteryPersonaRouteV0:
             style_id = str(npc.get("refusal_style_id") or "").strip()
             if style_id and style_id not in refusal_styles:
                 raise ValueError(f"npc '{npc_id}' references unknown refusal_style_id '{style_id}'")
+            profile_id = str(npc.get("voice_profile_id") or "").strip()
+            if not profile_id:
+                raise ValueError(f"npc '{npc_id}' missing voice_profile_id")
+            if profile_id not in voice_profiles:
+                raise ValueError(f"npc '{npc_id}' references unknown voice_profile_id '{profile_id}'")
+
+        for profile_id in sorted(voice_profiles):
+            profile = voice_profiles[profile_id]
+            if not isinstance(profile, dict):
+                raise ValueError(f"voice profile '{profile_id}' must be object")
+            voice_id = str(profile.get("voice_id") or "").strip()
+            if not voice_id:
+                raise ValueError(f"voice profile '{profile_id}' missing voice_id")
 
     @staticmethod
     def canonical_json(blob: dict[str, Any]) -> str:

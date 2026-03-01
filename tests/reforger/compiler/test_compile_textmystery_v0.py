@@ -41,14 +41,24 @@ def _seed_textmystery_inputs(root: Path, *, invalid_npc_archetype: bool = False)
                 "archetype": ("MISSING_ARCH" if invalid_npc_archetype else "TERSE"),
                 "display_name": "Nick",
                 "refusal_style_id": "REF_STYLE_STEEL",
+                "voice_profile_id": "NICK_VOICE",
             }
         },
     }
     refusal_styles = [{"id": "REF_STYLE_STEEL", "templates": ["No comment."]}]
+    voices = {
+        "version": 1,
+        "profiles": {
+            "NICK_VOICE": {"voice_id": "male_low_clipped", "base_speed": 1.1, "emotion_map": {"neutral": {}}}
+        },
+    }
 
     (prompts / "archetypes.yaml").write_text(yaml.safe_dump(archetypes, sort_keys=True), encoding="utf-8")
     (prompts / "npcs.yaml").write_text(yaml.safe_dump(npcs, sort_keys=True), encoding="utf-8")
     (root / "content" / "refusal_styles.yaml").write_text(yaml.safe_dump(refusal_styles, sort_keys=True), encoding="utf-8")
+    voices_dir = root / "content" / "voices"
+    voices_dir.mkdir(parents=True, exist_ok=True)
+    (voices_dir / "profiles.yaml").write_text(yaml.safe_dump(voices, sort_keys=True), encoding="utf-8")
 
 
 def _json(path: Path) -> dict:

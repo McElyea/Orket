@@ -29,7 +29,14 @@ def _seed_textmystery_inputs(root: Path) -> None:
         yaml.safe_dump(
             {
                 "version": 1,
-                "npcs": {"NICK": {"archetype": "TERSE", "display_name": "Nick", "refusal_style_id": "REF_STYLE_STEEL"}},
+                "npcs": {
+                    "NICK": {
+                        "archetype": "TERSE",
+                        "display_name": "Nick",
+                        "refusal_style_id": "REF_STYLE_STEEL",
+                        "voice_profile_id": "NICK_VOICE",
+                    }
+                },
             },
             sort_keys=True,
         ),
@@ -37,6 +44,15 @@ def _seed_textmystery_inputs(root: Path) -> None:
     )
     (root / "content" / "refusal_styles.yaml").write_text(
         yaml.safe_dump([{"id": "REF_STYLE_STEEL", "templates": ["No comment."]}], sort_keys=True),
+        encoding="utf-8",
+    )
+    voices = root / "content" / "voices"
+    voices.mkdir(parents=True, exist_ok=True)
+    (voices / "profiles.yaml").write_text(
+        yaml.safe_dump(
+            {"version": 1, "profiles": {"NICK_VOICE": {"voice_id": "male_low_clipped", "emotion_map": {"neutral": {}}}}},
+            sort_keys=True,
+        ),
         encoding="utf-8",
     )
     scenario = root / "reforge" / "scenario_packs"

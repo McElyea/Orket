@@ -25,11 +25,11 @@ Files touched:
 **Where**: `orket/capabilities/tts_piper.py` (Orket-level, not SDK)
 
 Tasks:
-- [ ] Install piper-tts as optional dependency
-- [ ] Implement `PiperTTSProvider(TTSProvider)` with voice model path config
-- [ ] Map `emotion_hint` to Piper parameters (speed, pitch variance)
-- [ ] Register in `build_sdk_capability_registry()` when Piper is available
-- [ ] Fall back to `NullTTSProvider` when Piper is not installed
+- [x] Install piper-tts as optional dependency
+- [x] Implement `PiperTTSProvider(TTSProvider)` with voice model path config
+- [x] Map `emotion_hint` to Piper parameters (speed, pitch variance)
+- [x] Register in `build_sdk_capability_registry()` when Piper is available
+- [x] Fall back to `NullTTSProvider` when Piper is not installed
 
 Files touched:
 - `orket/capabilities/tts_piper.py` (new)
@@ -43,12 +43,12 @@ Files touched:
 **Where**: TextMystery extension
 
 Tasks:
-- [ ] Add `tts.speak` to TextMystery's `required_capabilities` in manifest
-- [ ] Create `content/voices/profiles.yaml` with 4 NPC voice profiles
-- [ ] Map `(archetype, decision_mode)` to `(voice_id, emotion_hint)` in render layer
-- [ ] Call `ctx.capabilities.get("tts.speak").synthesize()` after text render
-- [ ] Return audio alongside text in game response (dual channel)
-- [ ] Graceful degradation: if `NullTTSProvider`, skip audio silently
+- [x] Add `tts.speak` to bridge extension `required_capabilities` in manifest
+- [x] Call `ctx.capabilities.tts().synthesize()` in bridge render/output path
+- [x] Return audio metadata and PCM artifact alongside text response
+- [x] Graceful degradation through `NullTTSProvider` fallback (zero-byte clip, no failure)
+- [ ] TextMystery upstream content changes (`content/voices/profiles.yaml`) in external repo (out-of-tree)
+- [ ] TextMystery upstream render/type mapping updates in external repo (out-of-tree)
 
 Files touched:
 - TextMystery `extension.yaml` (add capability)
@@ -63,10 +63,10 @@ Files touched:
 **Where**: `orket/capabilities/audio_player.py`
 
 Tasks:
-- [ ] Implement `SounddevicePlayer(AudioPlayer)` using sounddevice library
-- [ ] Register as `audio.play` capability
+- [x] Implement `SounddevicePlayer(AudioPlayer)` using sounddevice library
+- [x] Register as `audio.play` capability
 - [ ] TUI integration: play audio inline with text transcript display
-- [ ] NullAudioPlayer for headless/CI
+- [x] NullAudioPlayer for headless/CI
 
 ## Phase 5: Reforger Audio Validation
 
@@ -75,9 +75,9 @@ Tasks:
 **Where**: `orket/reforger/routes/textmystery_persona_v0.py`
 
 Tasks:
-- [ ] Add voice profile normalization to TextMysteryPersonaRouteV0
-- [ ] Add inspector checks: NPC voice profile exists, voice_id is non-empty
-- [ ] Include voice profile digests in bundle_digests.json
+- [x] Add voice profile normalization to TextMysteryPersonaRouteV0
+- [x] Add inspector checks: NPC voice profile exists, voice_id is non-empty
+- [x] Include voice profile digests in bundle_digests.json
 
 ## Dependency Flow
 
