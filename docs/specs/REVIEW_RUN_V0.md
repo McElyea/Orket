@@ -45,6 +45,13 @@ Precedence:
 
 `policy_digest` is computed from the resolved canonical policy payload.
 
+### Input Scope Policy (Locked)
+`input_scope.mode` controls what files are included in snapshots:
+1. `code_only` (default): include only files with configured code extensions.
+2. `all_files`: include all changed files.
+
+Default behavior for v0 is `code_only` to avoid non-code drift in review inputs.
+
 ## Lanes
 Deterministic lane:
 1. Path policy checks
@@ -87,4 +94,3 @@ Files:
 6. `model_lane_contract_version: review_critique_v0` (if enabled)
 7. bounds and truncation summary
 8. `auth_source: token_flag|token_env|none`
-

@@ -10,6 +10,33 @@ from orket.settings import load_user_settings
 
 DEFAULT_POLICY: Dict[str, Any] = {
     "policy_version": "review_policy_v0",
+    "input_scope": {
+        "mode": "code_only",
+        "code_extensions": [
+            ".py",
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx",
+            ".go",
+            ".rs",
+            ".java",
+            ".kt",
+            ".rb",
+            ".php",
+            ".cs",
+            ".c",
+            ".cc",
+            ".cpp",
+            ".h",
+            ".hpp",
+            ".swift",
+            ".scala",
+            ".sh",
+            ".ps1",
+            ".sql",
+        ],
+    },
     "lanes": {"enabled": ["deterministic"]},
     "bounds": {
         "max_files": 200,
@@ -72,4 +99,3 @@ def resolve_review_policy(
 
     digest = digest_sha256_prefixed(to_canonical_json_bytes(merged))
     return ResolvedPolicy(payload=merged, policy_digest=digest)
-

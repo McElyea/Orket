@@ -1,8 +1,7 @@
 # Agent Instructions
 
 ## Response Formatting
-1. Do not use clickable markdown file links for local paths.
-2. When referencing files, use plain backticked paths only (for example: `docs/ROADMAP.md`).
+1. When referencing files, use plain backticked paths only (for example: `docs/ROADMAP.md`).
 
 ## CI Failure Delta Check (Required Each Run)
 Before any implementation work, the agent must perform a CI failure delta check against Gitea and update local records.

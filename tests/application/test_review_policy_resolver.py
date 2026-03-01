@@ -29,6 +29,7 @@ def test_review_policy_precedence_cli_repo_user_defaults(tmp_path: Path) -> None
     assert payload["bounds"]["max_files"] == 10
     assert payload["bounds"]["max_diff_bytes"] == 99
     assert payload["policy_version"] == "review_policy_v0"
+    assert payload["input_scope"]["mode"] == "code_only"
     assert resolved.policy_digest.startswith("sha256:")
 
 
@@ -39,3 +40,9 @@ def test_review_policy_digest_stable_for_identical_payload(tmp_path: Path) -> No
     second = resolve_review_policy(repo_root=repo_root)
     assert first.policy_digest == second.policy_digest
 
+
+def test_review_policy_scope_override_all_files(tmp_path: Path) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir(parents=True)
+    resolved = resolve_review_policy(repo_root=repo_root, cli_overrides={"input_scope": {"mode": "all_files"}})
+    assert resolved.payload["input_scope"]["mode"] == "all_files"

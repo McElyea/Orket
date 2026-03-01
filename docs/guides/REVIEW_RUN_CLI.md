@@ -27,10 +27,14 @@ Token values are never persisted in ReviewRun artifacts.
 1. `--policy <path>`: override default repo policy file.
 2. `--max-files|--max-diff-bytes|--max-blob-bytes|--max-file-bytes`: snapshot bounds.
 3. `--enable-model-assisted`: advisory model lane.
-4. `--fail-on-blocked`: non-zero exit only when deterministic decision is `blocked`.
-5. `--workspace <path>`: base workspace root.
-6. `--json`: JSON output.
-7. `--verbose`: include digest lines in human output.
+4. `--code-only`: force code-only input scope.
+5. `--all-files`: force all-files input scope.
+6. `--fail-on-blocked`: non-zero exit only when deterministic decision is `blocked`.
+7. `--workspace <path>`: base workspace root.
+8. `--json`: JSON output.
+9. `--verbose`: include digest lines in human output.
+
+Default scope is `code_only` unless policy or CLI override sets `all_files`.
 
 ## Output
 Each run prints:
@@ -40,4 +44,3 @@ Each run prints:
 
 Default artifact root:
 `workspace/default/review_runs/<run_id>/`
-

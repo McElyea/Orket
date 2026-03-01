@@ -14,6 +14,41 @@ from orket.application.review.models import (
 SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 
 
+def _added_diff_lines(diff_unified: str) -> List[Dict[str, Any]]:
+    lines = diff_unified.splitlines()
+    out: List[Dict[str, Any]] = []
+    current_path = ""
+    in_hunk = False
+    new_line = 0
+
+    for line in lines:
+        if line.startswith("+++ "):
+            rhs = line[4:].strip()
+            if rhs.startswith("b/"):
+                rhs = rhs[2:]
+            current_path = rhs
+            continue
+        if line.startswith("@@ "):
+            in_hunk = True
+            match = re.search(r"\+(\d+)(?:,(\d+))?", line)
+            if match:
+                new_line = int(match.group(1))
+            continue
+        if not in_hunk:
+            continue
+        if line.startswith("+") and not line.startswith("+++"):
+            out.append({"path": current_path, "line": new_line, "text": line[1:]})
+            new_line += 1
+            continue
+        if line.startswith("-") and not line.startswith("---"):
+            continue
+        if line.startswith("\\ No newline at end of file"):
+            continue
+        new_line += 1
+
+    return out
+
+
 def _stable_sort_findings(findings: List[DeterministicFinding]) -> List[DeterministicFinding]:
     def key(item: DeterministicFinding) -> tuple[Any, ...]:
         path_key = item.path if item.path else "\uffff"
@@ -62,6 +97,7 @@ def run_deterministic_lane(
     patterns = [str(item) for item in list(checks.get("forbidden_patterns") or [])]
     if patterns:
         executed_checks.append("forbidden_patterns")
+        added_lines = _added_diff_lines(snapshot.diff_unified)
         for pattern in patterns:
             try:
                 regex = re.compile(pattern, re.MULTILINE)
@@ -75,6 +111,24 @@ def run_deterministic_lane(
                     )
                 )
                 continue
+            location = None
+            for entry in added_lines:
+                if regex.search(str(entry.get("text") or "")):
+                    location = entry
+                    break
+            if location is not None:
+                findings.append(
+                    DeterministicFinding(
+                        code="PATTERN_MATCHED",
+                        severity="high",
+                        message=f"Forbidden pattern matched: {pattern}",
+                        path=str(location.get("path") or ""),
+                        span={"start": int(location.get("line") or 0), "end": int(location.get("line") or 0)},
+                        details={"pattern": pattern},
+                    )
+                )
+                continue
+
             if regex.search(snapshot.diff_unified):
                 findings.append(
                     DeterministicFinding(
@@ -138,4 +192,3 @@ def run_deterministic_lane(
         policy_digest=policy_digest,
         run_id=run_id,
     )
-

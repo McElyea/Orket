@@ -58,3 +58,23 @@ def test_review_replay_cli_requires_inputs(tmp_path: Path, capsys) -> None:
     assert code == 2
     assert payload["ok"] is False
 
+
+def test_review_cli_rejects_conflicting_scope_flags(tmp_path: Path, capsys) -> None:
+    code = main(
+        [
+            "review",
+            "files",
+            "--repo-root",
+            str(tmp_path),
+            "--ref",
+            "HEAD",
+            "--paths",
+            "app/a.py",
+            "--code-only",
+            "--all-files",
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 2
+    assert payload["ok"] is False

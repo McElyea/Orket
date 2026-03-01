@@ -49,6 +49,10 @@ ERROR_REVIEW_ARGUMENTS = "E_REVIEW_ARGUMENTS"
 ERROR_REVIEW_RUN_FAILED = "E_REVIEW_RUN_FAILED"
 
 
+def _default_review_workspace() -> str:
+    return str((Path(__file__).resolve().parents[2] / "workspace" / "default").resolve())
+
+
 def _resolve_manifest_path(target: Path) -> Tuple[Path | None, Path]:
     if target.is_file():
         return target, target.parent
@@ -754,12 +758,14 @@ def _parser() -> argparse.ArgumentParser:
     review_pr.add_argument("--token", default="", help="Gitea token override.")
     review_pr.add_argument("--repo-root", default=".", help="Repo root for local policy resolution.")
     review_pr.add_argument("--policy", default="", help="Optional policy JSON file path.")
-    review_pr.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_pr.add_argument("--workspace", default=_default_review_workspace(), help="Workspace root.")
     review_pr.add_argument("--max-files", type=int, default=None)
     review_pr.add_argument("--max-diff-bytes", type=int, default=None)
     review_pr.add_argument("--max-blob-bytes", type=int, default=None)
     review_pr.add_argument("--max-file-bytes", type=int, default=None)
     review_pr.add_argument("--enable-model-assisted", action="store_true")
+    review_pr.add_argument("--code-only", action="store_true", help="Review code files only.")
+    review_pr.add_argument("--all-files", action="store_true", help="Review all changed files.")
     review_pr.add_argument("--fail-on-blocked", action="store_true")
     review_pr.add_argument("--verbose", action="store_true")
     review_pr.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
@@ -769,12 +775,14 @@ def _parser() -> argparse.ArgumentParser:
     review_diff.add_argument("--base", required=True, help="Base ref.")
     review_diff.add_argument("--head", required=True, help="Head ref.")
     review_diff.add_argument("--policy", default="", help="Optional policy JSON file path.")
-    review_diff.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_diff.add_argument("--workspace", default=_default_review_workspace(), help="Workspace root.")
     review_diff.add_argument("--max-files", type=int, default=None)
     review_diff.add_argument("--max-diff-bytes", type=int, default=None)
     review_diff.add_argument("--max-blob-bytes", type=int, default=None)
     review_diff.add_argument("--max-file-bytes", type=int, default=None)
     review_diff.add_argument("--enable-model-assisted", action="store_true")
+    review_diff.add_argument("--code-only", action="store_true", help="Review code files only.")
+    review_diff.add_argument("--all-files", action="store_true", help="Review all changed files.")
     review_diff.add_argument("--fail-on-blocked", action="store_true")
     review_diff.add_argument("--verbose", action="store_true")
     review_diff.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
@@ -784,12 +792,14 @@ def _parser() -> argparse.ArgumentParser:
     review_files.add_argument("--ref", required=True, help="Git ref to read file contents from.")
     review_files.add_argument("--paths", nargs="+", required=True, help="File paths.")
     review_files.add_argument("--policy", default="", help="Optional policy JSON file path.")
-    review_files.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_files.add_argument("--workspace", default=_default_review_workspace(), help="Workspace root.")
     review_files.add_argument("--max-files", type=int, default=None)
     review_files.add_argument("--max-diff-bytes", type=int, default=None)
     review_files.add_argument("--max-blob-bytes", type=int, default=None)
     review_files.add_argument("--max-file-bytes", type=int, default=None)
     review_files.add_argument("--enable-model-assisted", action="store_true")
+    review_files.add_argument("--code-only", action="store_true", help="Review code files only.")
+    review_files.add_argument("--all-files", action="store_true", help="Review all changed files.")
     review_files.add_argument("--fail-on-blocked", action="store_true")
     review_files.add_argument("--verbose", action="store_true")
     review_files.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
@@ -799,7 +809,7 @@ def _parser() -> argparse.ArgumentParser:
     review_replay.add_argument("--snapshot", default="", help="Path to snapshot.json.")
     review_replay.add_argument("--policy", default="", help="Path to policy_resolved.json.")
     review_replay.add_argument("--repo-root", default=".", help="Repo root for policy context.")
-    review_replay.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_replay.add_argument("--workspace", default=_default_review_workspace(), help="Workspace root.")
     review_replay.add_argument("--fail-on-blocked", action="store_true")
     review_replay.add_argument("--verbose", action="store_true")
     review_replay.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
@@ -959,6 +969,34 @@ def main(argv: List[str] | None = None) -> int:
         policy_override = {}
         if bool(getattr(args, "enable_model_assisted", False)):
             policy_override = {"model_assisted": {"enabled": True}, "lanes": {"enabled": ["deterministic", "model_assisted"]}}
+        if bool(getattr(args, "code_only", False)) and bool(getattr(args, "all_files", False)):
+            result = {
+                "ok": False,
+                "error_count": 1,
+                "errors": [
+                    {
+                        "code": ERROR_REVIEW_ARGUMENTS,
+                        "location": "review.scope",
+                        "message": "Use only one of --code-only or --all-files.",
+                    }
+                ],
+                "exit_code": 2,
+            }
+            if bool(getattr(args, "json", False)):
+                print(json.dumps(result, indent=2, ensure_ascii=False))
+            else:
+                print(_render_human(result))
+            return 2
+        if bool(getattr(args, "code_only", False)):
+            policy_override = {
+                **policy_override,
+                "input_scope": {"mode": "code_only"},
+            }
+        if bool(getattr(args, "all_files", False)):
+            policy_override = {
+                **policy_override,
+                "input_scope": {"mode": "all_files"},
+            }
         policy_path = Path(args.policy).resolve() if str(getattr(args, "policy", "")).strip() else None
         service = ReviewRunService(workspace=Path(str(args.workspace)).resolve())
         review_command = str(getattr(args, "review_command", "")).strip()

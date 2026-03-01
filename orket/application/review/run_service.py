@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import secrets
+import subprocess
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
@@ -38,6 +39,38 @@ def _decision_exit_code(decision: str, fail_on_blocked: bool) -> int:
     if fail_on_blocked and decision == "blocked":
         return 2
     return 0
+
+
+def _git_paths(repo_root: Path, base_ref: str, head_ref: str) -> List[str]:
+    proc = subprocess.run(
+        ["git", "diff", "--name-only", base_ref, head_ref],
+        cwd=str(repo_root),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return [line.strip().replace("\\", "/") for line in proc.stdout.splitlines() if line.strip()]
+
+
+def _normalize_extensions(values: List[str]) -> set[str]:
+    out = set()
+    for item in values:
+        token = str(item or "").strip().lower()
+        if not token:
+            continue
+        out.add(token if token.startswith(".") else f".{token}")
+    return out
+
+
+def _filter_code_paths(paths: List[str], extensions: set[str]) -> List[str]:
+    if not extensions:
+        return list(paths)
+    keep: List[str] = []
+    for path in paths:
+        suffix = Path(path).suffix.lower()
+        if suffix in extensions:
+            keep.append(path)
+    return keep
 
 
 def _resolve_token(cli_token: str) -> tuple[str, Literal["token_flag", "token_env", "none"]]:
@@ -78,6 +111,9 @@ class ReviewRunService:
             repo_root=repo_root,
             policy_path=policy_path,
         )
+        scope = dict(resolved_policy.payload.get("input_scope") or {})
+        scope_mode = str(scope.get("mode") or "code_only").strip().lower()
+        ext_set = _normalize_extensions(list(scope.get("code_extensions") or []))
         resolved_token, auth_source = _resolve_token(token)
         snapshot = load_from_pr(
             remote=remote,
@@ -87,6 +123,17 @@ class ReviewRunService:
             token=resolved_token,
             metadata={"pr_number": int(pr)},
         )
+        if scope_mode == "code_only":
+            code_paths = _filter_code_paths([item.path for item in snapshot.changed_files], ext_set)
+            snapshot = load_from_pr(
+                remote=remote,
+                repo=repo,
+                pr_number=pr,
+                bounds=bounds,
+                token=resolved_token,
+                include_paths=set(code_paths),
+                metadata={"pr_number": int(pr)},
+            )
         return self._execute(
             snapshot=snapshot,
             resolved_policy=resolved_policy,
@@ -112,11 +159,18 @@ class ReviewRunService:
             repo_root=repo_root,
             policy_path=policy_path,
         )
+        scope = dict(resolved_policy.payload.get("input_scope") or {})
+        scope_mode = str(scope.get("mode") or "code_only").strip().lower()
+        ext_set = _normalize_extensions(list(scope.get("code_extensions") or []))
+        include_paths = None
+        if scope_mode == "code_only":
+            include_paths = set(_filter_code_paths(_git_paths(repo_root, base_ref, head_ref), ext_set))
         snapshot = load_from_diff(
             repo_root=repo_root,
             base_ref=base_ref,
             head_ref=head_ref,
             bounds=bounds,
+            include_paths=include_paths,
             metadata={},
         )
         return self._execute(
@@ -144,10 +198,16 @@ class ReviewRunService:
             repo_root=repo_root,
             policy_path=policy_path,
         )
+        scope = dict(resolved_policy.payload.get("input_scope") or {})
+        scope_mode = str(scope.get("mode") or "code_only").strip().lower()
+        ext_set = _normalize_extensions(list(scope.get("code_extensions") or []))
+        effective_paths = list(paths)
+        if scope_mode == "code_only":
+            effective_paths = _filter_code_paths(effective_paths, ext_set)
         snapshot = load_from_files(
             repo_root=repo_root,
             ref=ref,
-            paths=paths,
+            paths=effective_paths,
             bounds=bounds,
             metadata={},
         )
@@ -244,4 +304,3 @@ class ReviewRunService:
             manifest=manifest.to_dict(),
             exit_code=exit_code,
         )
-

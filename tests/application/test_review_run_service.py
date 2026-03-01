@@ -74,3 +74,27 @@ def test_token_resolution_precedence(monkeypatch) -> None:
     token, source = _resolve_token("")
     assert token == "alias"
     assert source == "token_env"
+
+
+def test_run_diff_defaults_to_code_only_scope(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    (repo / "app").mkdir(parents=True, exist_ok=True)
+    (repo / "app" / "x.py").write_text("print('x')\n", encoding="utf-8")
+    (repo / "README.md").write_text("base\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "init")
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+    (repo / "app" / "x.py").write_text("print('y')\n", encoding="utf-8")
+    (repo / "README.md").write_text("changed readme\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "change")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
+
+    workspace = tmp_path / "workspace" / "default"
+    service = ReviewRunService(workspace=workspace)
+    run = service.run_diff(repo_root=repo, base_ref=base, head_ref=head, bounds=SnapshotBounds())
+    snapshot = json.loads((Path(run.artifact_dir) / "snapshot.json").read_text(encoding="utf-8"))
+    changed_paths = [row["path"] for row in snapshot.get("changed_files", [])]
+    assert "README.md" not in changed_paths
+    assert "app/x.py" in changed_paths

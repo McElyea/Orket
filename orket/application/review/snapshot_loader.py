@@ -35,6 +35,36 @@ def _truncate_bytes(text: str, max_bytes: int) -> Tuple[str, int, int, bool]:
     return truncated, original, len(kept), True
 
 
+def _split_unified_diff_sections(diff_unified: str) -> List[tuple[str, str]]:
+    lines = diff_unified.splitlines(keepends=True)
+    sections: List[tuple[str, str]] = []
+    current: List[str] = []
+    current_path = ""
+    for line in lines:
+        if line.startswith("diff --git "):
+            if current:
+                sections.append((current_path, "".join(current)))
+                current = []
+            current_path = ""
+        if line.startswith("+++ "):
+            rhs = line[4:].strip()
+            if rhs.startswith("b/"):
+                rhs = rhs[2:]
+            current_path = rhs
+        current.append(line)
+    if current:
+        sections.append((current_path, "".join(current)))
+    return sections
+
+
+def _filter_diff_to_paths(diff_unified: str, include_paths: set[str]) -> str:
+    if not include_paths:
+        return ""
+    chunks = _split_unified_diff_sections(diff_unified)
+    filtered = [chunk for path, chunk in chunks if path in include_paths]
+    return "".join(filtered)
+
+
 def _apply_bounds(
     *,
     changed_files: List[ChangedFile],
@@ -150,6 +180,7 @@ def load_from_diff(
     base_ref: str,
     head_ref: str,
     bounds: SnapshotBounds,
+    include_paths: Optional[set[str]] = None,
     metadata: Optional[Dict[str, object]] = None,
 ) -> ReviewSnapshot:
     name_status = _run_git(repo_root, ["diff", "--name-status", base_ref, head_ref])
@@ -159,6 +190,8 @@ def load_from_diff(
     status_map = _parse_name_status(name_status)
     numstat_map = _parse_numstat(numstat)
     all_paths = sorted(set(status_map.keys()) | set(numstat_map.keys()))
+    if include_paths is not None:
+        all_paths = [path for path in all_paths if path in include_paths]
     changed_files = [
         ChangedFile(
             path=path,
@@ -168,6 +201,8 @@ def load_from_diff(
         )
         for path in all_paths
     ]
+    if include_paths is not None:
+        unified = _filter_diff_to_paths(unified, include_paths)
     bounded_files, bounded_diff, bounded_blobs, truncation = _apply_bounds(
         changed_files=changed_files,
         diff_unified=unified,
@@ -197,12 +232,16 @@ def load_from_files(
     ref: str,
     paths: List[str],
     bounds: SnapshotBounds,
+    include_paths: Optional[set[str]] = None,
     metadata: Optional[Dict[str, object]] = None,
 ) -> ReviewSnapshot:
     changed_files: List[ChangedFile] = []
     context_blobs: List[ContextBlob] = []
     diff_blocks: List[str] = []
-    for raw_path in sorted(set(paths)):
+    selected_paths = sorted(set(paths))
+    if include_paths is not None:
+        selected_paths = [path for path in selected_paths if path in include_paths]
+    for raw_path in selected_paths:
         path = raw_path.strip().replace("\\", "/")
         if not path:
             continue
@@ -244,6 +283,7 @@ def load_from_pr(
     pr_number: int,
     bounds: SnapshotBounds,
     token: str = "",
+    include_paths: Optional[set[str]] = None,
     metadata: Optional[Dict[str, object]] = None,
 ) -> ReviewSnapshot:
     base = remote.rstrip("/")
@@ -279,10 +319,13 @@ def load_from_pr(
                 deletions=int(item.get("deletions") or 0),
             )
         )
+    if include_paths is not None:
+        changed_files = [row for row in changed_files if row.path in include_paths]
+        unified = _filter_diff_to_paths(unified, include_paths)
 
     if not changed_files:
         # keep the snapshot contract valid even if the endpoint is empty.
-        changed_files.append(ChangedFile(path="", status="unknown", additions=0, deletions=0))
+        changed_files = []
 
     bounded_files, bounded_diff, bounded_blobs, truncation = _apply_bounds(
         changed_files=changed_files,
@@ -316,4 +359,3 @@ def load_from_pr(
     )
     snapshot.compute_snapshot_digest()
     return snapshot
-
