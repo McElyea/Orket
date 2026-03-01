@@ -183,6 +183,10 @@ Progress update (2026-02-28):
 - Added SDK runtime hardening tests in `tests/runtime/test_extension_manager.py`:
   - artifact path escape attempt rejected (`E_SDK_ARTIFACT_ESCAPE`)
   - artifact digest mismatch rejected (`E_SDK_ARTIFACT_DIGEST_MISMATCH`)
+- Added workload execution latency baseline runner:
+  - script: `scripts/run_extension_workload_baseline.py`
+  - report schema includes min/max/mean/p50/p95 latency and per-run provenance roots
+  - coverage: `tests/application/test_run_extension_workload_baseline.py`
 
 ---
 
