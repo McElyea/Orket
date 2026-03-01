@@ -127,6 +127,83 @@ def test_port_allocation():
     print(f"  Sandbox 2: API={ports2.api}, Frontend={ports2.frontend}, DB={ports2.database}")
 
 
+def test_csharp_razor_ef_compose():
+    """Test C# Razor + SQL Server compose generation."""
+    orchestrator = SandboxOrchestrator(
+        workspace_root=Path.cwd(),
+        registry=SandboxRegistry()
+    )
+
+    from orket.domain.sandbox import Sandbox, PortAllocation
+
+    ports = PortAllocation(
+        api=8010,
+        frontend=3010,
+        database=5442,
+        admin_tool=8090
+    )
+
+    sandbox = Sandbox(
+        id="test-sandbox-csharp",
+        rock_id="test-rock-csharp",
+        project_name="CSharp Project",
+        tech_stack=TechStack.CSHARP_RAZOR_EF,
+        ports=ports,
+        compose_project="orket-test-sandbox-csharp",
+        workspace_path=str(Path.cwd() / "test_workspace_csharp"),
+        api_url=f"http://localhost:{ports.api}",
+        frontend_url=f"http://localhost:{ports.frontend}",
+        database_url=f"Server=localhost,{ports.database};Database=appdb;User=sa;Password=test-password",
+        admin_url=f"http://localhost:{ports.admin_tool}"
+    )
+
+    compose_content = orchestrator._generate_compose_file(sandbox, db_password="test-password")
+
+    assert "mcr.microsoft.com/mssql/server:2022-latest" in compose_content
+    assert "ConnectionStrings__DefaultConnection" in compose_content
+    assert "SA_PASSWORD=test-password" in compose_content
+    assert f"{ports.database}:1433" in compose_content
+
+
+@pytest.mark.asyncio
+async def test_create_sandbox_uses_generated_password_in_database_url_and_compose(tmp_path, monkeypatch):
+    orchestrator = SandboxOrchestrator(
+        workspace_root=tmp_path,
+        registry=SandboxRegistry()
+    )
+
+    generated = iter(["db-pass-123", "admin-pass-456"])
+
+    def _fake_token_urlsafe(_length: int) -> str:
+        return next(generated)
+
+    captured = {"path": None, "content": None}
+
+    async def _fake_write_file(path: str, content: str):
+        captured["path"] = path
+        captured["content"] = content
+        return path
+
+    async def _fake_deploy(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr("orket.services.sandbox_orchestrator.secrets.token_urlsafe", _fake_token_urlsafe)
+    monkeypatch.setattr(orchestrator.fs, "write_file", _fake_write_file)
+    monkeypatch.setattr(orchestrator, "_deploy_sandbox", _fake_deploy)
+
+    sandbox = await orchestrator.create_sandbox(
+        rock_id="rock-password",
+        project_name="Password Test",
+        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+        workspace_path=str(tmp_path),
+    )
+
+    assert "db-pass-123" in sandbox.database_url
+    assert captured["content"] is not None
+    assert "POSTGRES_PASSWORD=db-pass-123" in str(captured["content"])
+    assert "PGADMIN_DEFAULT_PASSWORD=admin-pass-456" in str(captured["content"])
+
+
 if __name__ == "__main__":
     test_fastapi_react_postgres_compose()
     test_fastapi_vue_mongo_compose()

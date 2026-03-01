@@ -188,7 +188,7 @@ Progress update (2026-03-01):
 
 ## Phase 4: Test Coverage
 
-Status: **in progress**
+Status: **complete**
 Priority: **write tests when modifying the module, or in focused test sprint**
 Estimated scope: ~4-6 hours total
 
@@ -196,11 +196,11 @@ Estimated scope: ~4-6 hours total
 
 | ID | Task | Target Tests | Status |
 |---|---|---|---|
-| TD-TEST-1 | Webhook handler tests | 8+ tests: PR cycles, escalation, auto-merge/reject, sandbox trigger | pending |
-| TD-TEST-2 | Sandbox orchestrator tests | 6+ tests: Compose generation (3 stacks), port allocation, password gen | pending |
-| TD-TEST-3 | API concurrency tests | 5+ tests: concurrent requests, WebSocket isolation, session cleanup | pending |
+| TD-TEST-1 | Webhook handler tests | 8+ tests: PR cycles, escalation, auto-merge/reject, sandbox trigger | complete |
+| TD-TEST-2 | Sandbox orchestrator tests | 6+ tests: Compose generation (3 stacks), port allocation, password gen | complete |
+| TD-TEST-3 | API concurrency tests | 5+ tests: concurrent requests, WebSocket isolation, session cleanup | complete |
 | TD-TEST-4 | Verification path security test | 2 tests: valid path, malicious path | complete |
-| TD-TEST-5 | Driver tests | 10+ tests: command routing, errors, edge cases | pending |
+| TD-TEST-5 | Driver tests | 10+ tests: command routing, errors, edge cases | complete |
 
 Exit criteria:
 - Each module listed above has meaningful test coverage
@@ -214,12 +214,31 @@ Progress update (2026-03-01):
 - Validation:
   - `python -m pytest -q tests/adapters/test_verification_subprocess.py`
   - result: `8 passed`
+- Coverage audit run:
+  - `python -m pytest -q tests/adapters/test_gitea_webhook.py tests/interfaces/test_webhook_factory.py tests/interfaces/test_webhook_rate_limit.py tests/adapters/test_sandbox_compose_generation.py tests/adapters/test_sandbox_command_runner.py tests/interfaces/test_api_task_lifecycle.py tests/interfaces/test_api_interactions.py tests/interfaces/test_api.py tests/application/test_driver_cli.py tests/application/test_driver_conversation.py`
+  - result: `135 passed`
+- Marked complete from existing validated coverage:
+  - `TD-TEST-3` (API concurrency/websocket/task lifecycle coverage)
+  - `TD-TEST-5` (driver command routing/conversation/error-path coverage; >10 tests)
+- Completed `TD-TEST-2` by extending sandbox test coverage:
+  - added `test_csharp_razor_ef_compose`
+  - added `test_create_sandbox_uses_generated_password_in_database_url_and_compose`
+  - validated compose generation across three stacks, port allocation uniqueness, and password propagation.
+- Validation:
+  - `python -m pytest -q tests/adapters/test_sandbox_compose_generation.py tests/adapters/test_sandbox_command_runner.py`
+  - result: `6 passed`
+- Completed `TD-TEST-1` by expanding webhook handler coverage to 8 scenarios in:
+  - `tests/adapters/test_gitea_webhook.py`
+  - includes review-cycle tracking, escalation, auto-reject, requirements issue creation, approval auto-merge, merge-triggered sandbox flow, and ignored-state paths.
+- Validation:
+  - `python -m pytest -q tests/adapters/test_gitea_webhook.py`
+  - result: `8 passed`
 
 ---
 
 ## Phase 5: Structural Simplification
 
-Status: **not started**
+Status: **in progress**
 Priority: **lowest -- do only when it directly supports SDK or Meta Breaker work**
 Estimated scope: ~4-6 hours total
 
@@ -229,12 +248,17 @@ Estimated scope: ~4-6 hours total
 |---|---|---|
 | TD-STRUCT-1 | Split driver.py into CommandParser + ResourceManager + DriverShell | pending |
 | TD-STRUCT-2 | Inline trivial decision node methods in DefaultApiRuntimeStrategyNode | pending |
-| TD-STRUCT-3 | Write mental model guide for contributors | pending |
+| TD-STRUCT-3 | Write mental model guide for contributors | complete |
 
 Exit criteria:
 - Driver path has no single file > 400 lines
 - builtins.py reduced by ~200 lines
 - Mental model guide exists and is accurate
+
+Progress update (2026-03-01):
+- Completed `TD-STRUCT-3` by adding contributor control-flow guide:
+  - `docs/guides/CONTRIBUTOR-MENTAL-MODEL.md`
+  - covers Driver -> ExecutionPipeline -> Orchestrator -> TurnExecutor flow and debugging order.
 
 ---
 
