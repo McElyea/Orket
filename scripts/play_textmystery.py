@@ -32,8 +32,12 @@ def main() -> int:
         return 1
 
     env = dict(os.environ)
+    orket_root = str(Path(__file__).resolve().parents[1])
     existing = str(env.get("PYTHONPATH", "")).strip()
-    env["PYTHONPATH"] = f"{src_path}{os.pathsep}{existing}" if existing else str(src_path)
+    paths = [str(src_path), orket_root]
+    if existing:
+        paths.append(existing)
+    env["PYTHONPATH"] = os.pathsep.join(paths)
 
     cmd = [
         sys.executable,

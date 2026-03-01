@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple
 import zipfile
 import tomllib
 
+import httpx
 from pydantic import ValidationError
 from orket_extension_sdk.capabilities import load_capability_vocab, validate_capabilities
 from orket_extension_sdk import __version__ as sdk_version
@@ -22,6 +23,8 @@ from orket.core.domain.orket_manifest import (
 from orket.interfaces.api_generation import run_api_add_transaction
 from orket.interfaces.refactor_transaction import run_refactor_transaction
 from orket.interfaces.scaffold_init import run_scaffold_init
+from orket.application.review.models import ReviewSnapshot, SnapshotBounds
+from orket.application.review.run_service import ReviewRunService
 from orket.reforger.cli import add_reforge_subparser, handle_reforge
 
 
@@ -42,6 +45,8 @@ ERROR_SDK_COMMAND_REQUIRED = "E_SDK_COMMAND_REQUIRED"
 ERROR_SDK_MANIFEST_NOT_FOUND = "E_SDK_MANIFEST_NOT_FOUND"
 ERROR_SDK_ENTRYPOINT_INVALID = "E_SDK_ENTRYPOINT_INVALID"
 ERROR_SDK_ENTRYPOINT_MISSING = "E_SDK_ENTRYPOINT_MISSING"
+ERROR_REVIEW_ARGUMENTS = "E_REVIEW_ARGUMENTS"
+ERROR_REVIEW_RUN_FAILED = "E_REVIEW_RUN_FAILED"
 
 
 def _resolve_manifest_path(target: Path) -> Tuple[Path | None, Path]:
@@ -739,6 +744,66 @@ def _parser() -> argparse.ArgumentParser:
     init_parser.add_argument("--no-verify", action="store_true", help="Skip post-generation verify commands.")
     init_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
+    review_parser = subparsers.add_parser("review", help="Manual ReviewRun commands.")
+    review_sub = review_parser.add_subparsers(dest="review_command", required=True)
+
+    review_pr = review_sub.add_parser("pr", help="Run review from a pull request snapshot.")
+    review_pr.add_argument("--remote", required=True, help="Gitea host URL (e.g. http://localhost:3000).")
+    review_pr.add_argument("--repo", required=True, help="Repository id in owner/name format.")
+    review_pr.add_argument("--pr", required=True, type=int, help="Pull request number.")
+    review_pr.add_argument("--token", default="", help="Gitea token override.")
+    review_pr.add_argument("--repo-root", default=".", help="Repo root for local policy resolution.")
+    review_pr.add_argument("--policy", default="", help="Optional policy JSON file path.")
+    review_pr.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_pr.add_argument("--max-files", type=int, default=None)
+    review_pr.add_argument("--max-diff-bytes", type=int, default=None)
+    review_pr.add_argument("--max-blob-bytes", type=int, default=None)
+    review_pr.add_argument("--max-file-bytes", type=int, default=None)
+    review_pr.add_argument("--enable-model-assisted", action="store_true")
+    review_pr.add_argument("--fail-on-blocked", action="store_true")
+    review_pr.add_argument("--verbose", action="store_true")
+    review_pr.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    review_diff = review_sub.add_parser("diff", help="Run review from a local diff snapshot.")
+    review_diff.add_argument("--repo-root", default=".", help="Local git repository root.")
+    review_diff.add_argument("--base", required=True, help="Base ref.")
+    review_diff.add_argument("--head", required=True, help="Head ref.")
+    review_diff.add_argument("--policy", default="", help="Optional policy JSON file path.")
+    review_diff.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_diff.add_argument("--max-files", type=int, default=None)
+    review_diff.add_argument("--max-diff-bytes", type=int, default=None)
+    review_diff.add_argument("--max-blob-bytes", type=int, default=None)
+    review_diff.add_argument("--max-file-bytes", type=int, default=None)
+    review_diff.add_argument("--enable-model-assisted", action="store_true")
+    review_diff.add_argument("--fail-on-blocked", action="store_true")
+    review_diff.add_argument("--verbose", action="store_true")
+    review_diff.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    review_files = review_sub.add_parser("files", help="Run review from selected files at a ref.")
+    review_files.add_argument("--repo-root", default=".", help="Local git repository root.")
+    review_files.add_argument("--ref", required=True, help="Git ref to read file contents from.")
+    review_files.add_argument("--paths", nargs="+", required=True, help="File paths.")
+    review_files.add_argument("--policy", default="", help="Optional policy JSON file path.")
+    review_files.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_files.add_argument("--max-files", type=int, default=None)
+    review_files.add_argument("--max-diff-bytes", type=int, default=None)
+    review_files.add_argument("--max-blob-bytes", type=int, default=None)
+    review_files.add_argument("--max-file-bytes", type=int, default=None)
+    review_files.add_argument("--enable-model-assisted", action="store_true")
+    review_files.add_argument("--fail-on-blocked", action="store_true")
+    review_files.add_argument("--verbose", action="store_true")
+    review_files.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    review_replay = review_sub.add_parser("replay", help="Replay a ReviewRun offline from saved artifacts.")
+    review_replay.add_argument("--run-dir", default="", help="Review run directory containing snapshot/policy artifacts.")
+    review_replay.add_argument("--snapshot", default="", help="Path to snapshot.json.")
+    review_replay.add_argument("--policy", default="", help="Path to policy_resolved.json.")
+    review_replay.add_argument("--repo-root", default=".", help="Repo root for policy context.")
+    review_replay.add_argument("--workspace", default="workspace/default", help="Workspace root.")
+    review_replay.add_argument("--fail-on-blocked", action="store_true")
+    review_replay.add_argument("--verbose", action="store_true")
+    review_replay.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
     add_reforge_subparser(subparsers)
     return parser
 
@@ -753,6 +818,17 @@ def _parse_vars(raw: str) -> Dict[str, str]:
 
 
 def _render_human(result: Dict[str, Any]) -> str:
+    if "deterministic_decision" in result and "artifact_dir" in result:
+        lines = [
+            f"run_id: {result.get('run_id', '')}",
+            f"deterministic decision: {result.get('deterministic_decision', '')}",
+            f"artifact path: {result.get('artifact_dir', '')}",
+        ]
+        if bool(result.get("verbose")):
+            lines.append(f"snapshot_digest: {result.get('snapshot_digest', '')}")
+            lines.append(f"policy_digest: {result.get('policy_digest', '')}")
+        return "\n".join(lines)
+
     if "extension_id" in result and "workload_count" in result:
         if bool(result.get("ok")):
             return (
@@ -873,6 +949,129 @@ def main(argv: List[str] | None = None) -> int:
             variable_overrides=_parse_vars(str(args.vars or "")),
             verify_enabled=not bool(args.no_verify),
         )
+    elif args.command == "review":
+        bounds = SnapshotBounds(
+            max_files=int(getattr(args, "max_files", 200) or 200),
+            max_diff_bytes=int(getattr(args, "max_diff_bytes", 1_000_000) or 1_000_000),
+            max_blob_bytes=int(getattr(args, "max_blob_bytes", 200_000) or 200_000),
+            max_file_bytes=int(getattr(args, "max_file_bytes", 100_000) or 100_000),
+        )
+        policy_override = {}
+        if bool(getattr(args, "enable_model_assisted", False)):
+            policy_override = {"model_assisted": {"enabled": True}, "lanes": {"enabled": ["deterministic", "model_assisted"]}}
+        policy_path = Path(args.policy).resolve() if str(getattr(args, "policy", "")).strip() else None
+        service = ReviewRunService(workspace=Path(str(args.workspace)).resolve())
+        review_command = str(getattr(args, "review_command", "")).strip()
+        try:
+            if review_command == "pr":
+                run_result = service.run_pr(
+                    remote=str(args.remote),
+                    repo=str(args.repo),
+                    pr=int(args.pr),
+                    repo_root=Path(str(args.repo_root)).resolve(),
+                    bounds=bounds,
+                    cli_policy_overrides=policy_override,
+                    policy_path=policy_path,
+                    fail_on_blocked=bool(args.fail_on_blocked),
+                    token=str(args.token or ""),
+                )
+            elif review_command == "diff":
+                run_result = service.run_diff(
+                    repo_root=Path(str(args.repo_root)).resolve(),
+                    base_ref=str(args.base),
+                    head_ref=str(args.head),
+                    bounds=bounds,
+                    cli_policy_overrides=policy_override,
+                    policy_path=policy_path,
+                    fail_on_blocked=bool(args.fail_on_blocked),
+                )
+            elif review_command == "files":
+                run_result = service.run_files(
+                    repo_root=Path(str(args.repo_root)).resolve(),
+                    ref=str(args.ref),
+                    paths=[str(item) for item in list(args.paths or [])],
+                    bounds=bounds,
+                    cli_policy_overrides=policy_override,
+                    policy_path=policy_path,
+                    fail_on_blocked=bool(args.fail_on_blocked),
+                )
+            elif review_command == "replay":
+                run_dir_raw = str(args.run_dir or "").strip()
+                if run_dir_raw:
+                    run_dir = Path(run_dir_raw).resolve()
+                    snapshot_path = run_dir / "snapshot.json"
+                    policy_source_path = run_dir / "policy_resolved.json"
+                else:
+                    snapshot_path = Path(str(args.snapshot)).resolve() if str(args.snapshot).strip() else None
+                    policy_source_path = Path(str(args.policy)).resolve() if str(args.policy).strip() else None
+                if not snapshot_path or not policy_source_path:
+                    result = {
+                        "ok": False,
+                        "error_count": 1,
+                        "errors": [
+                            {
+                                "code": ERROR_REVIEW_ARGUMENTS,
+                                "location": "review.replay",
+                                "message": "Provide --run-dir or both --snapshot and --policy.",
+                            }
+                        ],
+                        "exit_code": 2,
+                    }
+                    if bool(getattr(args, "json", False)):
+                        print(json.dumps(result, indent=2, ensure_ascii=False))
+                    else:
+                        print(_render_human(result))
+                    return 2
+                snapshot_payload = json.loads(Path(snapshot_path).read_text(encoding="utf-8"))
+                policy_payload = json.loads(Path(policy_source_path).read_text(encoding="utf-8"))
+                snapshot = ReviewSnapshot.from_dict(snapshot_payload)
+                policy_only = dict(policy_payload)
+                policy_only.pop("policy_digest", None)
+                run_result = service.replay(
+                    repo_root=Path(str(args.repo_root)).resolve(),
+                    snapshot=snapshot,
+                    resolved_policy_payload=policy_only,
+                    fail_on_blocked=bool(args.fail_on_blocked),
+                )
+            else:
+                result = {
+                    "ok": False,
+                    "error_count": 1,
+                    "errors": [
+                        {
+                            "code": ERROR_REVIEW_ARGUMENTS,
+                            "location": "review",
+                            "message": "Unsupported review command.",
+                        }
+                    ],
+                    "exit_code": 2,
+                }
+                if bool(getattr(args, "json", False)):
+                    print(json.dumps(result, indent=2, ensure_ascii=False))
+                else:
+                    print(_render_human(result))
+                return 2
+        except (RuntimeError, ValueError, TypeError, OSError, json.JSONDecodeError, httpx.HTTPError) as exc:
+            result = {
+                "ok": False,
+                "error_count": 1,
+                "errors": [
+                    {
+                        "code": ERROR_REVIEW_RUN_FAILED,
+                        "location": f"review.{review_command or 'unknown'}",
+                        "message": str(exc),
+                    }
+                ],
+                "exit_code": 1,
+            }
+            if bool(getattr(args, "json", False)):
+                print(json.dumps(result, indent=2, ensure_ascii=False))
+            else:
+                print(_render_human(result))
+            return 1
+
+        result = run_result.to_dict()
+        result["verbose"] = bool(getattr(args, "verbose", False))
     elif args.command == "reforge":
         return handle_reforge(args)
     else:

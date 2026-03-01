@@ -58,3 +58,15 @@ Stable runtime flow remains in orchestrators and services.
 ## Notes on Gitea Artifact Export
 `.orket/durable/gitea_artifacts/` is local staging/cache for export payloads and a local git mirror used by the exporter.  
 It is not the Gitea server's own storage location.
+
+## ReviewRun Primitive (v0)
+Orket includes a manual `ReviewRun` primitive in `orket/application/review/`.
+
+Properties:
+1. Snapshot-first input contract (`ReviewSnapshot`).
+2. Deterministic policy resolution with canonical digesting.
+3. Deterministic review lane is authoritative.
+4. Model-assisted lane is optional and advisory-only.
+5. Replay is offline and artifact-driven (`snapshot.json` + `policy_resolved.json`).
+
+`ReviewRun` is deliberately not a webhook or auto-trigger pipeline in v0.
