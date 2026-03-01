@@ -101,8 +101,10 @@ def main() -> int:
     textmystery_root = str(textmystery_src.parent)
     summaries = asyncio.run(_run_bridge(textmystery_root))
 
-    parity_contract = summaries.get("parity", {}).get("contract_response", {})
-    leak_contract = summaries.get("leak", {}).get("contract_response", {})
+    parity_output = summaries.get("parity", {}).get("output", {})
+    leak_output = summaries.get("leak", {}).get("output", {})
+    parity_contract = parity_output.get("contract_response", {}) if isinstance(parity_output, dict) else {}
+    leak_contract = leak_output.get("contract_response", {}) if isinstance(leak_output, dict) else {}
     ok_parity = isinstance(parity_contract, dict) and "world_digest" in parity_contract
     ok_leak = isinstance(leak_contract, dict) and bool(leak_contract.get("ok")) is True
 

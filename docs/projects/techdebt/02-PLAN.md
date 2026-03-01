@@ -13,7 +13,7 @@ Do not block SDK or Meta Breaker work for structural cleanup. Security and corre
 
 ## Phase 1: Security Fixes
 
-Status: **not started**
+Status: **in progress**
 Priority: **do first -- these are real vulnerabilities**
 Estimated scope: ~2 hours focused work
 
@@ -21,9 +21,9 @@ Estimated scope: ~2 hours focused work
 
 | ID | Task | File(s) | Status |
 |---|---|---|---|
-| TD-SEC-1a | Replace shell=True in scaffold_init.py | `orket/interfaces/scaffold_init.py` | pending |
-| TD-SEC-1b | Replace shell=True in refactor_transaction.py | `orket/interfaces/refactor_transaction.py` | pending |
-| TD-SEC-1c | Replace shell=True in api_generation.py | `orket/interfaces/api_generation.py` | pending |
+| TD-SEC-1a | Replace shell=True in scaffold_init.py | `orket/interfaces/scaffold_init.py` | complete |
+| TD-SEC-1b | Replace shell=True in refactor_transaction.py | `orket/interfaces/refactor_transaction.py` | complete |
+| TD-SEC-1c | Replace shell=True in api_generation.py | `orket/interfaces/api_generation.py` | complete |
 | TD-SEC-1d | Audit scripts for shell=True (keep if hardcoded, fix if parameterized) | `scripts/` | pending |
 | TD-SEC-2 | Add asyncio.Lock to GlobalState.interventions | `orket/state.py` | pending |
 | TD-SEC-3a | Delete filesystem.py | `orket/adapters/storage/filesystem.py` | pending |
@@ -50,6 +50,16 @@ test ! -f orket/adapters/storage/filesystem.py
 # Run tests
 python -m pytest tests -q
 ```
+
+Progress update (2026-03-01):
+- Completed `TD-SEC-1a/b/c` by removing `shell=True` from:
+  - `orket/interfaces/scaffold_init.py`
+  - `orket/interfaces/refactor_transaction.py`
+  - `orket/interfaces/api_generation.py`
+- Replaced shell execution with explicit argv parsing (`shlex.split(..., posix=True)`) and direct `subprocess.run(argv, shell=False)`
+- Validation:
+  - `python -m pytest -q tests/interfaces/test_scaffold_init_cli.py tests/interfaces/test_refactor_transaction_cli.py tests/interfaces/test_api_add_transaction_cli.py tests/interfaces/test_replay_artifact_recording.py`
+  - result: `16 passed`
 
 ---
 

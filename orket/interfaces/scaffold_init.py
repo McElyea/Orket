@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -52,7 +53,8 @@ def _render_template(raw: str, variables: Dict[str, str]) -> str:
 
 
 def _run_shell(command: str, *, cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, shell=True)
+    argv = shlex.split(command, posix=True)
+    return subprocess.run(argv, cwd=cwd, capture_output=True, text=True, check=False)
 
 
 def _tail(text: str, *, max_lines: int = 200, max_bytes: int = 32768) -> str:

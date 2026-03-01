@@ -46,5 +46,8 @@ async def test_run_meta_breaker_workload_is_deterministic_for_same_seed(tmp_path
     assert result_b.workload_id == "meta_breaker_v1"
     assert result_a.plan_hash == result_b.plan_hash
     assert result_a.summary["output"] == result_b.summary["output"]
+    output = result_a.summary["output"]
+    assert output["card_pool_size"] == 30
+    assert output["card_counts"] == {"aggro": 10, "combo": 10, "control": 10}
     assert Path(result_a.provenance_path).exists()
     assert Path(result_b.provenance_path).exists()

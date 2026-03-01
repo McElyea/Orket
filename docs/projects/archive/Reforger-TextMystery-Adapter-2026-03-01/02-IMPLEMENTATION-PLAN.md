@@ -1,7 +1,7 @@
 # Reforger v0 - Implementation Plan
 
 Date: 2026-02-28  
-Status: planned  
+Status: complete  
 Project: `docs/projects/reforger-textmystery-adapter/`
 
 ## 0. Scope
@@ -150,3 +150,6 @@ Exit checks:
 ## 10. Done Definition
 
 v0 is complete when all requirements in `01-REQUIREMENTS.md` section 18 and lock addendum checks are satisfied by passing tests in `03-TEST-MATRIX.md`.
+
+Validation snapshot (2026-03-01):
+- `python -m pytest -q tests/reforger` -> `18 passed`

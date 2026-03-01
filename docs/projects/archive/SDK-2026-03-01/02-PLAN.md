@@ -38,7 +38,7 @@ All gameplay-kernel foundational work is substantially complete:
 
 ### Phase 1: SDK Package Bootstrap (next)
 
-Status: **in progress**
+Status: **complete**
 
 Deliverables:
 1. Create `c:\Source\OrketSDK` with package structure
@@ -69,6 +69,7 @@ Progress update (2026-02-28):
   - `test_result.py`
   - `test_testing.py`
 - Validation: `python -m pytest -q tests/sdk` -> `16 passed`
+- Latest validation: `python -m pytest -q tests/sdk` -> `16 passed` (still green after runtime/bridge expansion)
 
 ### Phase 2: Runtime Dual-Path Bridge
 
@@ -108,7 +109,7 @@ Progress update (2026-02-28):
 
 ### Phase 3: TextMystery SDK Integration
 
-Status: **in progress** (bridge-side SDK wiring started; full TextMystery SDK workload migration pending)
+Status: **complete**
 
 Deliverables:
 1. Add `extension.yaml` to TextMystery using SDK manifest schema
@@ -135,10 +136,13 @@ Progress update (2026-02-28):
   - output includes trace-phase markers for contract-call start/complete
 - Added deterministic replay coverage for bridge SDK workload:
   - `tests/application/test_textmystery_bridge_sdk_runtime.py`
+- Added real local smoke evidence through Orket SDK path:
+  - `python scripts/run_textmystery_easy_smoke.py --textmystery-root C:/Source/Orket-Extensions/TextMystery`
+  - latest run result: `RESULT=PASS`
 
 ### Phase 4: Meta Breaker Route (proves SDK is generic)
 
-Status: **in progress**
+Status: **complete**
 
 Deliverables:
 1. Define Meta Breaker as a reforger route (rule validation for card games)
@@ -168,6 +172,9 @@ Progress update (2026-02-28):
   - `tests/application/test_register_meta_breaker_extension.py`
   - `tests/application/test_run_meta_breaker_workload.py`
   - `tests/application/test_run_meta_breaker_scenarios.py`
+- Expanded toy TCG workload model:
+  - 30-card deterministic pool (10 per archetype: aggro/control/combo)
+  - dominance + loop-risk checks and scenario-pack execution
 
 ### Phase 5: Documentation and Deprecation Gates
 

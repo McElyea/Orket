@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import shlex
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,7 +39,8 @@ def _run(command: List[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
 
 
 def _run_shell(command: str, *, cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, shell=True)
+    argv = shlex.split(command, posix=True)
+    return subprocess.run(argv, cwd=cwd, capture_output=True, text=True, check=False)
 
 
 def _tail(text: str, *, max_lines: int = 200, max_bytes: int = 32768) -> str:
