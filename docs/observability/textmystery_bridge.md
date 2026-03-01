@@ -27,6 +27,7 @@ python scripts/run_textmystery_easy_smoke.py --textmystery-root <path-to-TextMys
 ```
 
 This writes:
+- SDK manifest under `workspace/live_ext/textmystery_bridge/extension.yaml`
 - extension module under `workspace/live_ext/textmystery_bridge`
 - extension catalog entry under `.orket/durable/config/extensions_catalog.json`
 
