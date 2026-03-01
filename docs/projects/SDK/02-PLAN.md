@@ -159,7 +159,7 @@ Progress update (2026-02-28):
 
 ### Phase 6: Hardening
 
-Status: **not started**
+Status: **in progress**
 
 Deliverables:
 1. Deterministic hint/disambiguation policy conformance tests (TextMystery-specific)
@@ -170,6 +170,11 @@ Exit criteria:
 - Demo workloads do not exhibit repeated suggestion loops
 - Artifact path traversal blocked
 - Execution latency baselined
+
+Progress update (2026-02-28):
+- Added SDK runtime hardening tests in `tests/runtime/test_extension_manager.py`:
+  - artifact path escape attempt rejected (`E_SDK_ARTIFACT_ESCAPE`)
+  - artifact digest mismatch rejected (`E_SDK_ARTIFACT_DIGEST_MISMATCH`)
 
 ---
 

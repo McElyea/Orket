@@ -208,6 +208,68 @@ def _init_sdk_extension_repo_json_manifest(repo_root):
     )
 
 
+def _init_sdk_bad_artifact_repo(repo_root, *, mode):
+    module_name = f"sdk_bad_extension_{mode}"
+    manifest = {
+        "manifest_version": "v0",
+        "extension_id": f"sdk.bad.{mode}",
+        "extension_version": "0.3.0",
+        "workloads": [
+            {
+                "workload_id": f"sdk_bad_{mode}_v1",
+                "entrypoint": f"{module_name}:run_workload",
+                "required_capabilities": [],
+            }
+        ],
+    }
+    (repo_root / "extension.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    module_lines = [
+        "from __future__ import annotations",
+        "from pathlib import Path",
+        "import hashlib",
+        "from orket_extension_sdk import ArtifactRef, WorkloadResult",
+        "",
+        "def run_workload(ctx, payload):",
+    ]
+    if mode == "escape":
+        module_lines.extend(
+            [
+                "    out_path = Path(ctx.output_dir) / 'inside.txt'",
+                "    out_path.write_text('ok', encoding='utf-8')",
+                "    digest = hashlib.sha256(out_path.read_bytes()).hexdigest()",
+                "    return WorkloadResult(",
+                "        ok=True,",
+                "        output={'mode': 'escape'},",
+                "        artifacts=[ArtifactRef(path='../outside.txt', digest_sha256=digest, kind='text')],",
+                "    )",
+            ]
+        )
+    elif mode == "digest":
+        module_lines.extend(
+            [
+                "    out_path = Path(ctx.output_dir) / 'result.txt'",
+                "    out_path.write_text('real-content', encoding='utf-8')",
+                "    return WorkloadResult(",
+                "        ok=True,",
+                "        output={'mode': 'digest'},",
+                "        artifacts=[ArtifactRef(path='result.txt', digest_sha256='0' * 64, kind='text')],",
+                "    )",
+            ]
+        )
+    else:
+        raise ValueError(f"unsupported mode: {mode}")
+    (repo_root / f"{module_name}.py").write_text("\n".join(module_lines), encoding="utf-8")
+    subprocess.run(["git", "init"], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "add", "."], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "init"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def test_list_extensions_from_catalog(tmp_path):
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
@@ -479,3 +541,41 @@ async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
     assert sdk_result.workload_id == "sdk_json_v1"
     assert Path(legacy_result.provenance_path).exists()
     assert Path(sdk_result.provenance_path).exists()
+
+
+@pytest.mark.asyncio
+async def test_run_sdk_workload_blocks_artifact_path_escape(tmp_path):
+    repo = tmp_path / "sdk_bad_escape_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_bad_artifact_repo(repo, mode="escape")
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+    with pytest.raises(ValueError, match="E_SDK_ARTIFACT_ESCAPE"):
+        await manager.run_workload(
+            workload_id="sdk_bad_escape_v1",
+            input_config={"seed": 99},
+            workspace=workspace,
+            department="core",
+        )
+
+
+@pytest.mark.asyncio
+async def test_run_sdk_workload_rejects_artifact_digest_mismatch(tmp_path):
+    repo = tmp_path / "sdk_bad_digest_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_bad_artifact_repo(repo, mode="digest")
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+    with pytest.raises(ValueError, match="E_SDK_ARTIFACT_DIGEST_MISMATCH"):
+        await manager.run_workload(
+            workload_id="sdk_bad_digest_v1",
+            input_config={"seed": 100},
+            workspace=workspace,
+            department="core",
+        )
