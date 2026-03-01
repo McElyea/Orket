@@ -151,9 +151,13 @@ Progress update (2026-02-28):
   - `scripts/register_meta_breaker_extension.py`
   - `scripts/run_meta_breaker_workload.py`
 - Added deterministic non-TextMystery SDK workload implementation (archetype matchup analysis + digest artifact output)
+- Added scenario pack runner for balance checks:
+  - `scripts/run_meta_breaker_scenarios.py`
+  - predefined scenarios for first-player advantage and strict balance threshold
 - Added coverage:
   - `tests/application/test_register_meta_breaker_extension.py`
   - `tests/application/test_run_meta_breaker_workload.py`
+  - `tests/application/test_run_meta_breaker_scenarios.py`
 
 ### Phase 5: Documentation and Deprecation Gates
 
