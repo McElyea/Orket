@@ -9,8 +9,10 @@ import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
-from urllib import error, parse, request
+from typing import Any
+from urllib import parse
+
+import httpx
 from orket.runtime_paths import resolve_gitea_artifact_cache_root
 
 
@@ -23,12 +25,6 @@ def _safe_slug(value: str, fallback: str = "value") -> str:
     return normalized or fallback
 
 
-def _b64(raw: str) -> str:
-    import base64
-
-    return base64.b64encode(raw.encode("utf-8")).decode("ascii")
-
-
 @dataclass
 class _GiteaClient:
     base_url: str
@@ -36,21 +32,18 @@ class _GiteaClient:
     password: str
     timeout_sec: int = 30
 
-    def _request(self, method: str, path: str, payload: Dict[str, Any] | None = None) -> tuple[int, str]:
+    def _request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> tuple[int, str]:
         url = f"{self.base_url.rstrip('/')}{path}"
-        body = None
-        headers = {"Content-Type": "application/json"}
-        if payload is not None:
-            body = json.dumps(payload).encode("utf-8")
-        req = request.Request(url=url, method=method, headers=headers, data=body)
-        creds = parse.quote(self.username, safe="") + ":" + parse.quote(self.password, safe="")
-        req.add_header("Authorization", "Basic " + _b64(creds))
         try:
-            with request.urlopen(req, timeout=self.timeout_sec) as resp:
-                return int(resp.status), (resp.read() or b"").decode("utf-8", errors="replace")
-        except error.HTTPError as exc:
-            payload = (exc.read() or b"").decode("utf-8", errors="replace")
-            return int(exc.code), payload
+            with httpx.Client(
+                timeout=self.timeout_sec,
+                auth=(self.username, self.password),
+                headers={"Content-Type": "application/json"},
+            ) as client:
+                resp = client.request(method=method, url=url, json=payload)
+                return int(resp.status_code), resp.text
+        except httpx.HTTPError as exc:
+            return 0, str(exc)
 
     def repo_exists(self, owner: str, repo: str) -> bool:
         status, _ = self._request("GET", f"/api/v1/repos/{owner}/{repo}")
@@ -85,7 +78,7 @@ class GiteaArtifactExporter:
         summary: Dict[str, Any],
         failure_class: str | None = None,
         failure_reason: str | None = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         if not _env_enabled("ORKET_GITEA_ARTIFACT_EXPORT", "0"):
             return None
 
@@ -159,7 +152,7 @@ class GiteaArtifactExporter:
         run_name: str,
         build_id: str,
         session_status: str,
-        summary: Dict[str, Any],
+        summary: dict[str, Any],
         failure_class: str | None,
         failure_reason: str | None,
     ) -> None:
