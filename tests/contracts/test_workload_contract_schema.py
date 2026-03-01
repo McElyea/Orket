@@ -8,7 +8,7 @@ def _read(path: Path) -> str:
 
 
 def test_refactor_card_engine_workload_contract_doc_exists_and_contains_required_tokens() -> None:
-    path = Path("docs/projects/RefactorCardEngine/03-WORKLOAD-CONTRACT.md")
+    path = Path("docs/specs/WORKLOAD_CONTRACT_V1.md")
     assert path.exists(), f"Missing workload contract doc: {path}"
     text = _read(path)
 
@@ -30,5 +30,5 @@ def test_refactor_card_engine_workload_contract_doc_exists_and_contains_required
 
 
 def test_refactor_card_engine_workload_contract_schema_file_exists() -> None:
-    path = Path("docs/projects/RefactorCardEngine/workload-contract-v1.schema.json")
+    path = Path("docs/specs/workload-contract-v1.schema.json")
     assert path.exists(), f"Missing workload contract schema: {path}"

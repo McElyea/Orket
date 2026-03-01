@@ -10,10 +10,12 @@ Orket
    - `docs/ARCHITECTURE.md`
 2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
    - If a project is complete, move its plan/spec docs to `docs/projects/archive/<ProjectName>/` and update links.
+   - Project-owned docs that become long-lived contracts/specifications must move to `docs/specs/` when the project is archived.
    - Keep `docs/ROADMAP.md` as the only active roadmap source; do not create parallel active backlog docs.
    - Run anti-orphan checks at handoff:
      1) every non-archive folder in `docs/projects/` appears in roadmap Project Index
      2) every active/queued roadmap entry points to an existing path
+     3) run `python scripts/check_docs_project_hygiene.py` and fix all failures before handoff
 3. Keep runtime paths in `orket/` async-safe and governance mechanical.
 4. Do not scan dependency/vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
 5. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.

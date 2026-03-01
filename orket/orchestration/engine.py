@@ -7,19 +7,12 @@ from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository, AsyncRunLedgerRepository
 )
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
-from orket.application.services.gitea_state_pilot import (
-    collect_gitea_state_pilot_inputs,
-    evaluate_gitea_state_pilot_readiness,
-)
-from orket.application.services.runtime_policy import (
-    resolve_gitea_state_pilot_enabled,
-    resolve_state_backend_mode,
-)
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.logging import log_event
 from orket.runtime_paths import resolve_runtime_db_path
-from orket.settings import load_user_settings
+from orket.orchestration.kernel_gateway_proxy import KernelGatewayProxy
+from orket.orchestration.orchestration_config import OrchestrationConfig
 
 class OrchestrationEngine:
     """
@@ -52,9 +45,13 @@ class OrchestrationEngine:
         
         # Load Organization (Global Policy)
         self.org = self.loader.load_organization()
-        self.state_backend_mode = self._resolve_state_backend_mode()
-        self.gitea_state_pilot_enabled = self._resolve_gitea_state_pilot_enabled()
-        self._validate_state_backend_mode()
+        self.orchestration_config = OrchestrationConfig(self.org)
+        self.state_backend_mode = self.orchestration_config.resolve_state_backend_mode()
+        self.gitea_state_pilot_enabled = self.orchestration_config.resolve_gitea_state_pilot_enabled()
+        self.orchestration_config.validate_state_backend_mode(
+            self.state_backend_mode,
+            self.gitea_state_pilot_enabled,
+        )
 
         # Repositories (Accessors)
         self.cards = cards_repo or AsyncCardRepository(self.db_path)
@@ -63,6 +60,7 @@ class OrchestrationEngine:
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
         self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
+        self.kernel_proxy = KernelGatewayProxy(self.kernel_gateway)
 
         
         # PERSISTENT PIEPELINE (Avoid rebuilds)
@@ -80,44 +78,16 @@ class OrchestrationEngine:
         )
 
     def _resolve_state_backend_mode(self) -> str:
-        env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("state_backend_mode", "")).strip()
-        user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
-        return resolve_state_backend_mode(env_raw, process_raw, user_raw)
+        return self.orchestration_config.resolve_state_backend_mode()
 
     def _validate_state_backend_mode(self) -> None:
-        if self.state_backend_mode != "gitea":
-            return
-        # When backend mode is explicitly forced through env, require explicit env pilot
-        # enablement as well to avoid hidden host/user setting leakage.
-        env_mode = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip().lower()
-        env_pilot_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
-        if env_mode == "gitea" and not env_pilot_raw:
-            raise NotImplementedError(
-                "State backend mode 'gitea' requires pilot enablement "
-                "(set ORKET_ENABLE_GITEA_STATE_PILOT=true or runtime policy gitea_state_pilot_enabled=true)."
-            )
-        if not self.gitea_state_pilot_enabled:
-            raise NotImplementedError(
-                "State backend mode 'gitea' requires pilot enablement "
-                "(set ORKET_ENABLE_GITEA_STATE_PILOT=true or runtime policy gitea_state_pilot_enabled=true)."
-            )
-        readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs())
-        if not bool(readiness.get("ready")):
-            failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
-            raise NotImplementedError(
-                f"State backend mode 'gitea' pilot readiness failed: {failures}"
-            )
+        self.orchestration_config.validate_state_backend_mode(
+            self.state_backend_mode,
+            self.gitea_state_pilot_enabled,
+        )
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
-        env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("gitea_state_pilot_enabled", "")).strip()
-        user_raw = str(load_user_settings().get("gitea_state_pilot_enabled", "")).strip()
-        return bool(resolve_gitea_state_pilot_enabled(env_raw, process_raw, user_raw))
+        return self.orchestration_config.resolve_gitea_state_pilot_enabled()
 
 
     async def run_card(self, card_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, target_issue_id: str = None) -> Dict[str, Any]:
@@ -271,25 +241,25 @@ class OrchestrationEngine:
         }
 
     def kernel_start_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_gateway.start_run(request)
+        return self.kernel_proxy.start_run(request)
 
     def kernel_execute_turn(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_gateway.execute_turn(request)
+        return self.kernel_proxy.execute_turn(request)
 
     def kernel_finish_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_gateway.finish_run(request)
+        return self.kernel_proxy.finish_run(request)
 
     def kernel_resolve_capability(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_gateway.resolve_capability(request)
+        return self.kernel_proxy.resolve_capability(request)
 
     def kernel_authorize_tool_call(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_gateway.authorize_tool_call(request)
+        return self.kernel_proxy.authorize_tool_call(request)
 
     def kernel_replay_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_gateway.replay_run(request)
+        return self.kernel_proxy.replay_run(request)
 
     def kernel_compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_gateway.compare_runs(request)
+        return self.kernel_proxy.compare_runs(request)
 
     def kernel_run_lifecycle(
         self,
@@ -299,7 +269,7 @@ class OrchestrationEngine:
         finish_outcome: str = "PASS",
         start_request: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        return self.kernel_gateway.run_lifecycle(
+        return self.kernel_proxy.run_lifecycle(
             workflow_id=workflow_id,
             execute_turn_requests=execute_turn_requests,
             finish_outcome=finish_outcome,

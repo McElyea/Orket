@@ -41,6 +41,12 @@ Before any implementation work, the agent must perform a CI failure delta check 
 2. The agent may continue non-release work after reporting, but must not hide or skip `P0`.
 3. Preferred command:
    - `python scripts/ci/ci_failure_delta.py`
+4. Docs hygiene auto-remediation:
+   - If failures are in docs project hygiene or contract-path checks, the agent must auto-fix in the same run.
+   - Required fix flow: archive/move/update references, rerun the failing checks, then report outcomes.
+   - Preferred checks:
+     - `python scripts/check_docs_project_hygiene.py`
+     - `python -m pytest tests/contracts/test_workload_contract_schema.py -q`
 
 ## Live Integration Verification (Required)
 For any new or changed integration/automation (CI, APIs, webhooks, runners, external services), the agent must verify behavior with a live run against the real configured system before declaring completion.

@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 
 ## Canonical Rule
 `docs/ROADMAP.md` is the only active roadmap source.
@@ -13,10 +13,13 @@ If the user requests "follow roadmap" without naming a project, execute the high
 Current default target: none (no active projects).
 
 ## Priority Now
-1. `techdebt` (completed): archived at `docs/projects/archive/TechDebt-2026-02-28/`.
-2. `SDK` (completed): archived at `docs/projects/archive/SDK-2026-03-01/`.
-3. `reforger-textmystery-adapter` (completed): archived at `docs/projects/archive/Reforger-TextMystery-Adapter-2026-03-01/`.
-4. `reforger` (completed): archived at `docs/projects/archive/Reforger-2026-02-28/`.
+1. `resize` (completed): archived at `docs/projects/archive/Resize-2026-03-01/`.
+2. `refactor` (completed): archived at `docs/projects/archive/Refactor-2026-03-01/`.
+3. `RefactorCardEngine` (completed): archived at `docs/projects/archive/RefactorCardEngine-2026-02-28/`; contract spec retained at `docs/specs/WORKLOAD_CONTRACT_V1.md`.
+4. `techdebt` (completed): archived at `docs/projects/archive/TechDebt-2026-02-28/`.
+5. `SDK` (completed): archived at `docs/projects/archive/SDK-2026-03-01/`.
+6. `reforger-textmystery-adapter` (completed): archived at `docs/projects/archive/Reforger-TextMystery-Adapter-2026-03-01/`.
+7. `reforger` (completed): archived at `docs/projects/archive/Reforger-2026-02-28/`.
 
 ## Active Execution
 1. No active roadmap lanes.
