@@ -132,7 +132,7 @@ Progress update (2026-02-28):
 
 ### Phase 4: Meta Breaker Route (proves SDK is generic)
 
-Status: **not started**
+Status: **in progress**
 
 Deliverables:
 1. Define Meta Breaker as a reforger route (rule validation for card games)
@@ -145,6 +145,15 @@ Exit criteria:
 - Meta Breaker runs as an SDK workload
 - Reforger can mutate game rules and score balance outcomes
 - SDK required zero game-specific changes to support this
+
+Progress update (2026-02-28):
+- Added Meta Breaker SDK extension bootstrap scripts:
+  - `scripts/register_meta_breaker_extension.py`
+  - `scripts/run_meta_breaker_workload.py`
+- Added deterministic non-TextMystery SDK workload implementation (archetype matchup analysis + digest artifact output)
+- Added coverage:
+  - `tests/application/test_register_meta_breaker_extension.py`
+  - `tests/application/test_run_meta_breaker_workload.py`
 
 ### Phase 5: Documentation and Deprecation Gates
 
@@ -164,6 +173,7 @@ Progress update (2026-02-28):
 - Added extension author quickstart guide: `05-AUTHOR-GUIDE.md`
 - Updated `README.md` SDK document index to include author guide
 - `TurnResult` internal-only policy remains explicit in SDK README and migration docs
+- Added explicit legacy migration note and checklist: `06-LEGACY-MIGRATION-NOTE.md`
 
 ### Phase 6: Hardening
 
