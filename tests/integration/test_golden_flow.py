@@ -204,9 +204,9 @@ async def test_session_resumption(tmp_path, monkeypatch):
         ]
     }))
 
-    from orket.adapters.storage.sqlite_repositories import SQLiteCardRepository
-    cards = SQLiteCardRepository(db_path)
-    cards.save({"id": "I1", "summary": "Done already", "seat": "lead_architect", "type": "issue", "priority": "Low", "status": "done", "build_id": "build-resume_epic"})
+    from orket.adapters.storage.async_card_repository import AsyncCardRepository
+    cards = AsyncCardRepository(db_path)
+    await cards.save({"id": "I1", "summary": "Done already", "seat": "lead_architect", "type": "issue", "priority": "Low", "status": "done", "build_id": "build-resume_epic"})
     
     dummy_provider = GoldenFlowDummyProvider()
     def mock_init(self, *a, **k):
