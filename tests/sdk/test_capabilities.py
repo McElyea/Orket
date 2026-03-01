@@ -2,6 +2,7 @@
 
 import pytest
 
+from orket_extension_sdk.audio import AudioClip, NullAudioPlayer, NullTTSProvider
 from orket_extension_sdk.capabilities import CapabilityRegistry, validate_capabilities
 
 
@@ -54,3 +55,21 @@ def test_validate_capabilities_errors_in_strict_mode() -> None:
     errors, warnings = validate_capabilities(["unknown.cap"], strict=True)
     assert warnings == []
     assert errors == ["E_SDK_CAPABILITY_UNKNOWN: unknown.cap"]
+
+
+def test_registry_typed_accessors() -> None:
+    registry = CapabilityRegistry()
+    registry.register("tts.speak", NullTTSProvider())
+    registry.register("audio.play", NullAudioPlayer())
+    registry.register("speech.play_clip", NullAudioPlayer())
+    clip = registry.tts().synthesize(text="hello", voice_id="null")
+    assert isinstance(clip, AudioClip)
+    registry.audio_player().play(clip, blocking=False)
+    registry.speech_player().stop()
+
+
+def test_preflight_rejects_invalid_typed_provider() -> None:
+    registry = CapabilityRegistry()
+    registry.register("tts.speak", object())
+    with pytest.raises(ValueError, match="E_SDK_CAPABILITY_PROVIDER_INVALID"):
+        registry.preflight(["tts.speak"])

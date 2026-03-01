@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from orket_extension_sdk.capabilities import CapabilityRegistry
+from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
 from orket_extension_sdk.result import WorkloadResult
 
 from .contracts import RunPlan, Workload
@@ -38,6 +39,12 @@ class WorkloadArtifacts:
                 if not capability_id or registry.has(capability_id):
                     continue
                 registry.register(capability_id, provider)
+        if not registry.has("tts.speak"):
+            registry.register("tts.speak", NullTTSProvider())
+        if not registry.has("audio.play"):
+            registry.register("audio.play", NullAudioPlayer())
+        if not registry.has("speech.play_clip"):
+            registry.register("speech.play_clip", NullAudioPlayer())
         return registry
 
     @staticmethod

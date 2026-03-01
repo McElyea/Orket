@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
+
 from orket.extensions.catalog import ExtensionCatalog
 from orket.extensions.manifest_parser import ManifestParser
 from orket.extensions.models import CONTRACT_STYLE_LEGACY, ExtensionRecord, WorkloadRecord
@@ -86,6 +88,18 @@ def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
 
     assert manifest["files"][0]["path"] == "a.txt"
     assert len(manifest["manifest_sha256"]) == 64
+
+
+def test_workload_artifacts_build_sdk_capability_registry_registers_audio_defaults(tmp_path: Path) -> None:
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+    registry = artifacts.build_sdk_capability_registry(
+        workspace=tmp_path / "workspace",
+        artifact_root=tmp_path / "artifacts",
+        input_config={},
+    )
+    assert isinstance(registry.tts(), NullTTSProvider)
+    assert isinstance(registry.audio_player(), NullAudioPlayer)
+    assert isinstance(registry.speech_player(), NullAudioPlayer)
 
 
 def test_workload_executor_compile_workload() -> None:

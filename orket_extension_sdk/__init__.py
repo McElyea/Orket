@@ -1,4 +1,5 @@
 from .__version__ import __version__
+from .audio import AudioClip, AudioPlayer, NullAudioPlayer, NullTTSProvider, TTSProvider, VoiceInfo
 from .capabilities import (
     CapabilityId,
     CapabilityProvider,
@@ -13,6 +14,12 @@ from .workload import Workload, WorkloadContext
 
 __all__ = [
     "__version__",
+    "AudioClip",
+    "VoiceInfo",
+    "TTSProvider",
+    "AudioPlayer",
+    "NullTTSProvider",
+    "NullAudioPlayer",
     "CapabilityId",
     "CapabilityProvider",
     "CapabilityRegistry",

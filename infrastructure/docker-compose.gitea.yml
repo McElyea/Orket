@@ -6,7 +6,7 @@ networks:
 
 services:
   gitea:
-    image: gitea/gitea:1.22
+    image: gitea/gitea:1.25
     container_name: vibe-rail-gitea
     environment:
       - USER_UID=1000

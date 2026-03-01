@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from .audio import AudioPlayer, TTSProvider
+
 CapabilityId = str
 
 
@@ -54,8 +56,43 @@ class CapabilityRegistry:
             raise ValueError(f"E_SDK_CAPABILITY_MISSING: {capability_id}")
         return self._providers[capability_id]
 
+    def tts(self) -> TTSProvider:
+        provider = self.get("tts.speak")
+        if not isinstance(provider, TTSProvider):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: tts.speak -> TTSProvider")
+        return provider
+
+    def audio_player(self) -> AudioPlayer:
+        provider = self.get("audio.play")
+        if not isinstance(provider, AudioPlayer):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: audio.play -> AudioPlayer")
+        return provider
+
+    def speech_player(self) -> AudioPlayer:
+        provider = self.get("speech.play_clip")
+        if not isinstance(provider, AudioPlayer):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: speech.play_clip -> AudioPlayer")
+        return provider
+
     def preflight(self, required_capabilities: list[CapabilityId]) -> list[CapabilityId]:
         missing = [cap for cap in required_capabilities if cap not in self._providers]
+        expected: dict[str, type[Any]] = {
+            "tts.speak": TTSProvider,
+            "audio.play": AudioPlayer,
+            "speech.play_clip": AudioPlayer,
+        }
+        invalid: list[str] = []
+        for capability_id in sorted(set(required_capabilities)):
+            if capability_id in missing:
+                continue
+            provider = self._providers.get(capability_id)
+            expected_type = expected.get(capability_id)
+            if expected_type is None:
+                continue
+            if not isinstance(provider, expected_type):
+                invalid.append(f"{capability_id} -> {expected_type.__name__}")
+        if invalid:
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: " + ", ".join(invalid))
         return sorted(set(missing))
 
 
