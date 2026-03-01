@@ -804,7 +804,7 @@ class DefaultOrchestrationLoopPolicyNode:
         issue = _kwargs.get("issue")
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
         seat_requirements = {
-            "requirements_analyst": ["write_file", "update_issue_status"],
+            "requirements_analyst": ["write_file", "update_issue_status", "reforger_inspect"],
             "architect": ["write_file", "update_issue_status"],
             "coder": ["write_file", "update_issue_status"],
             "developer": ["write_file", "update_issue_status"],

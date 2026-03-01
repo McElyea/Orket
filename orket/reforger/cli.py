@@ -10,6 +10,7 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any
 
+from orket.reforger.compiler import run_compile_pipeline
 from orket.reforger.eval.base import EvalResult
 from orket.reforger.eval.runner import AdapterEvalHarness, FakeModelAdapter, FakeModelFixture, StubEvalHarness
 from orket.reforger.modes import load_mode
@@ -307,6 +308,16 @@ def add_reforge_subparser(subparsers: argparse._SubParsersAction[argparse.Argume
     open_cmd = reforge_sub.add_parser("open", help="Open run reports.")
     open_cmd.add_argument("which", choices=["last"])
 
+    compile_cmd = reforge_sub.add_parser("compile", help="Normalize -> reforge -> materialize compiler loop.")
+    compile_cmd.add_argument("route_id")
+    compile_cmd.add_argument("--in", dest="input_dir", required=True)
+    compile_cmd.add_argument("--out", dest="output_dir", required=True)
+    compile_cmd.add_argument("--mode", required=True)
+    compile_cmd.add_argument("--model", default="fake")
+    compile_cmd.add_argument("--seed", type=int, default=123)
+    compile_cmd.add_argument("--max-iters", type=int, default=4)
+    compile_cmd.add_argument("--scenario-pack", required=True)
+
 
 def handle_reforge(args: argparse.Namespace) -> int:
     if args.reforge_command == "run":
@@ -315,5 +326,23 @@ def handle_reforge(args: argparse.Namespace) -> int:
         return _init_reforge(args)
     if args.reforge_command == "open" and args.which == "last":
         return _open_last_reforge()
+    if args.reforge_command == "compile":
+        result = run_compile_pipeline(
+            route_id=str(args.route_id),
+            input_dir=Path(str(args.input_dir)).resolve(),
+            out_dir=Path(str(args.output_dir)).resolve(),
+            mode=str(args.mode),
+            model_id=str(args.model),
+            seed=int(args.seed),
+            max_iters=int(args.max_iters),
+            scenario_pack_path=Path(str(args.scenario_pack)).resolve(),
+        )
+        print(f"ok={result.ok}")
+        print(f"hard_fail_count={result.hard_fail_count}")
+        print(f"best_candidate_id={result.best_candidate_id}")
+        print(f"best_score={result.best_score:.6f}")
+        print(f"artifact_root={result.artifact_root}")
+        print(f"materialized_root={result.materialized_root}")
+        return 0 if result.ok else 1
     print("unsupported reforge command")
     return 2

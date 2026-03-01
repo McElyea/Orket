@@ -1,34 +1,44 @@
 # Orket Extension SDK v0
 
-This folder is the active project spec for the Orket Extension SDK v0 surface.
+Last updated: 2026-02-28
 
 ## Purpose
 
 Define one clear public extension seam for deterministic workloads with explicit capability injection.
 
-Planning mode:
-- Gameplay implementation may pause temporarily.
-- SDK seam and migration decisions continue from this folder as source of truth.
-- Term lock: use `deterministic runtime policy` to refer to hint + disambiguation behavior.
+## North Star
 
-Public seam lock:
-- `Workload.run(ctx, input) -> WorkloadResult`
+Orket is a rule laboratory. The SDK is how workloads (games, simulations, rule auditors) plug into it. The SDK must be workload-agnostic -- it doesn't care whether the workload is a mystery game, a TCG meta breaker, or a policy simulator.
 
-Non-promise:
-- Engine-internal turn orchestration types, including `TurnResult`, are private and may change without public compatibility guarantees.
+## Public Seam (Locked)
+
+```
+Workload.run(ctx, input) -> WorkloadResult
+```
+
+Engine-internal types (including `TurnResult`) are private and may change without compatibility guarantees.
 
 ## Documents
 
-- `00-IMPLEMENTATION-PLAN-SDK-LAYER-0.md`: Layer-0 lock, gameplay-kernel alignment constraints, and stop/resume checkpoint.
-- `01-REQUIREMENTS.md`: Product and contract requirements for SDK v0.
-- `02-IMPLEMENTATION-PLAN.md`: Execution phases, tasks, ownership slices, and test strategy.
-- `03-MIGRATION-AND-COMPAT.md`: Migration policy, compatibility guarantees, and deprecation criteria.
+| File | Purpose |
+|---|---|
+| `01-REQUIREMENTS.md` | Unified requirements and SDK module contracts |
+| `02-PLAN.md` | Implementation phases, status, and remaining work |
+| `03-MIGRATION-AND-COMPAT.md` | Migration policy, compatibility guarantees, deprecation criteria |
+| `04-TEXTMYSTERY-LAYER0.md` | TextMystery-specific gameplay decisions and checkpoint (reference workload) |
 
-## Scope Summary
+## SDK Modules (v0)
 
-- v0 includes minimal SDK modules: `manifest`, `capabilities`, `workload`, `result`, `testing`.
-- v0 demo extension target is external: `orket-extension-mystery-game-demo`.
-- Legacy extension path remains temporarily supported during migration via dual-path runtime bridging.
-- Near-term execution adds:
-  - `Phase 0` lock-and-extract sequencing
-  - deterministic runtime policy hardening (`Phase 5`) for hint/disambiguation loop quality without expanding SDK public API.
+1. `orket_extension_sdk.manifest` -- extension declaration and validation
+2. `orket_extension_sdk.capabilities` -- capability injection contracts
+3. `orket_extension_sdk.workload` -- execution context and workload protocol
+4. `orket_extension_sdk.result` -- structured outcomes and artifacts
+5. `orket_extension_sdk.testing` -- determinism harness and test helpers
+
+## SDK Location (Locked)
+
+- Standalone repo: `c:\Source\OrketSDK`
+- Package name: `orket-extension-sdk`
+- Version policy: `0.y.z` during layer-0 stabilization
+- Local dev: `pip install -e c:\Source\OrketSDK`
+- Publish: deferred until layer-0 exit criteria met

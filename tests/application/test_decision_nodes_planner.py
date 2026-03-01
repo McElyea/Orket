@@ -748,7 +748,11 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.turn_status_for_issue(False) == CardStatus.IN_PROGRESS
     assert node.role_order_for_turn(["coder"], is_review_turn=False) == ["coder"]
     assert node.role_order_for_turn(["coder"], is_review_turn=True) == ["integrity_guard", "coder"]
-    assert node.required_action_tools_for_seat("requirements_analyst") == ["write_file", "update_issue_status"]
+    assert node.required_action_tools_for_seat("requirements_analyst") == [
+        "write_file",
+        "update_issue_status",
+        "reforger_inspect",
+    ]
     assert node.required_action_tools_for_seat("coder") == ["write_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("code_reviewer") == ["read_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("integrity_guard") == ["update_issue_status"]

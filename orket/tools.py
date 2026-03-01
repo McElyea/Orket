@@ -10,6 +10,7 @@ from orket.adapters.tools.families import (
     CardManagementTools,
     FileSystemTools,
     GovernanceTools,
+    ReforgerTools,
     VisionTools,
 )
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
@@ -52,6 +53,7 @@ class ToolBox:
         )
         self.governance = GovernanceTools(self.root, self.refs, cards=self.cards)
         self.academy = AcademyTools(self.root, self.refs)
+        self.reforger = ReforgerTools(self.root, self.refs)
 
     async def execute(self, tool_name: str, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         tool_map = get_tool_map(self)
@@ -85,6 +87,7 @@ __all__ = [
     "CardManagementTools",
     "GovernanceTools",
     "AcademyTools",
+    "ReforgerTools",
     "ToolBox",
     "get_tool_map",
 ]

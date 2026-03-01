@@ -39,6 +39,8 @@ def test_tool_map_default_parity(tmp_path):
         "request_excuse",
         "archive_eval",
         "promote_prompt",
+        "reforger_inspect",
+        "reforger_run",
     ])
 
 

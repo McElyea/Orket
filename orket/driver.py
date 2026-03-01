@@ -10,6 +10,7 @@ from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig, SkillConfig, DialectConfig
 from orket.logging import log_event
 from orket.exceptions import CardNotFound
+from orket.adapters.tools.families.reforger_tools import ReforgerTools
 
 class OrketDriver:
     """
@@ -18,6 +19,7 @@ class OrketDriver:
     """
     def __init__(self, model: str = None):
         self.fs = AsyncFileTools(Path("."))
+        self.reforger_tools = ReforgerTools(Path("workspace/default"), [Path(".")])
         # 1. Load Organization context
         from orket.schema import OrganizationConfig
         org_path = Path("model/organization.json")
@@ -357,6 +359,8 @@ Do not include commentary outside the JSON.
             return self._cli_handle_show(args)
         if verb == "create":
             return self._cli_handle_create(args)
+        if verb == "reforge":
+            return await self._cli_handle_reforge(args)
         if verb in {"add-card", "add_card"}:
             return self._cli_handle_add_card(args)
         if verb in {"list-cards", "list_cards"}:
@@ -373,6 +377,113 @@ Do not include commentary outside the JSON.
 
         return None
 
+    async def _cli_handle_reforge(self, args: List[str]) -> str:
+        if not args:
+            return "Usage: /reforge <inspect|run> [options]"
+        sub = str(args[0]).strip().lower()
+        flags = self._parse_reforge_flags(args[1:])
+        if sub == "inspect":
+            input_dir = flags.get("in") or flags.get("input") or "."
+            payload = {
+                "route_id": flags.get("route"),
+                "input_dir": input_dir,
+                "mode": flags.get("mode"),
+                "scenario_pack": flags.get("scenario-pack") or flags.get("scenario_pack"),
+            }
+            result = self.reforger_tools.inspect(payload)
+            if not result.get("ok"):
+                return (
+                    "Reforger inspect failed.\n"
+                    + f"route_id={result.get('route_id')}\n"
+                    + f"errors={result.get('errors')}\n"
+                    + f"artifact_root={result.get('artifact_root')}"
+                )
+            return (
+                "Reforger inspect ok.\n"
+                + f"route_id={result.get('route_id')}\n"
+                + f"runnable={result.get('runnable')}\n"
+                + f"suite_ready={result.get('suite_ready')}\n"
+                + f"missing_inputs={result.get('missing_inputs')}\n"
+                + f"suite_requirements={result.get('suite_requirements')}\n"
+                + f"artifact_root={result.get('artifact_root')}"
+            )
+        if sub == "run":
+            route_id = flags.get("route")
+            input_dir = flags.get("in") or flags.get("input")
+            output_dir = flags.get("out") or flags.get("output")
+            if not route_id or not input_dir or not output_dir:
+                return (
+                    "Usage: /reforge run --route <id> --in <dir> --out <dir> "
+                    "[--mode truth_only] [--scenario-pack <id|path>] [--seed N] [--max-iters K]"
+                )
+            inspect_payload = {
+                "route_id": route_id,
+                "input_dir": input_dir,
+                "mode": flags.get("mode", "truth_only"),
+                "scenario_pack": flags.get("scenario-pack") or flags.get("scenario_pack"),
+            }
+            inspect_result = self.reforger_tools.inspect(inspect_payload)
+            if not inspect_result.get("ok"):
+                return (
+                    "Reforger inspect failed before run.\n"
+                    + f"errors={inspect_result.get('errors')}\n"
+                    + f"artifact_root={inspect_result.get('artifact_root')}"
+                )
+            if inspect_result.get("suite_ready") is False and not self._flag_enabled(flags, "force"):
+                return (
+                    "Reforger run blocked: suite_ready=false.\n"
+                    + f"missing_inputs={inspect_result.get('missing_inputs')}\n"
+                    + f"errors={inspect_result.get('errors')}\n"
+                    + f"suite_requirements={inspect_result.get('suite_requirements')}\n"
+                    + "Use --force to run anyway."
+                )
+            forced = bool(inspect_result.get("suite_ready") is False and self._flag_enabled(flags, "force"))
+            run_payload = {
+                "route_id": route_id,
+                "input_dir": input_dir,
+                "output_dir": output_dir,
+                "mode": flags.get("mode", "truth_only"),
+                "scenario_pack": flags.get("scenario-pack") or flags.get("scenario_pack") or "truth_only_v0",
+                "seed": int(flags.get("seed", "0")),
+                "max_iters": int(flags.get("max-iters", flags.get("max_iters", "10"))),
+                "model_id": flags.get("model", "fake"),
+                "forced": forced,
+                "force_reason": ("suite_ready_false" if forced else ""),
+            }
+            result = self.reforger_tools.run(run_payload)
+            return (
+                f"Reforger run ok={result.get('ok')}\n"
+                + f"hard_fail_count={result.get('hard_fail_count')}\n"
+                + f"best_candidate_id={result.get('best_candidate_id')}\n"
+                + f"best_score={result.get('best_score')}\n"
+                + f"forced={result.get('forced')}\n"
+                + f"force_reason={result.get('force_reason')}\n"
+                + f"artifact_root={result.get('artifact_root')}\n"
+                + f"materialized_output_dir={result.get('materialized_output_dir')}"
+            )
+        return "Usage: /reforge <inspect|run> [options]"
+
+    def _parse_reforge_flags(self, tokens: List[str]) -> Dict[str, str]:
+        flags: Dict[str, str] = {}
+        i = 0
+        while i < len(tokens):
+            token = str(tokens[i]).strip()
+            if token.startswith("--"):
+                key = token[2:].strip().lower()
+                if i + 1 < len(tokens) and not str(tokens[i + 1]).strip().startswith("--"):
+                    flags[key] = str(tokens[i + 1]).strip()
+                    i += 2
+                    continue
+                flags[key] = "true"
+                i += 1
+                continue
+            i += 1
+        return flags
+
+    def _flag_enabled(self, flags: Dict[str, str], name: str) -> bool:
+        value = str(flags.get(name, "")).strip().lower()
+        return value in {"1", "true", "yes", "on"}
+
     def _cli_help_text(self) -> str:
         return "\n".join(
             [
@@ -384,6 +495,8 @@ Do not include commentary outside the JSON.
                 "- /create <team|environment|epic|rock> <name> [department]",
                 "- /list-cards <epic> [department]",
                 "- /add-card <epic> <seat> <priority> <summary...> [--department <department>]",
+                "- /reforge inspect [--route <id>] [--in <dir>] [--mode truth_only] [--scenario-pack <id|path>]",
+                "- /reforge run --route <id> --in <dir> --out <dir> [--mode truth_only] [--scenario-pack <id|path>] [--seed N] [--max-iters K] [--force]",
                 "- /capabilities",
             ]
         )

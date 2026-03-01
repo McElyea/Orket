@@ -1,0 +1,175 @@
+# Extension SDK v0 Implementation Plan
+
+Last updated: 2026-02-28
+
+## Strategy
+
+1. SDK contracts and helpers first (standalone package).
+2. Runtime adapter path for SDK workloads (dual-path bridge).
+3. Legacy `RunPlan` extension execution preserved during transition.
+4. Reference workload (TextMystery) proves the seam works.
+5. Second workload (Meta Breaker) proves the seam is generic.
+
+---
+
+## What's Done
+
+### Gameplay Kernel (TextMystery -- see `04-TEXTMYSTERY-LAYER0.md`)
+
+All gameplay-kernel foundational work is substantially complete:
+- Typed facts with `kind` for all 7 payload shapes
+- Discovery/unlock model with namespaced keys
+- Resolver dynamic-first deterministic matching
+- Companion policy upgrades (repeat suppression, NPC-aware routing, witness-chain-first)
+- Disambiguation UX seam
+- First-person render for speaker-owned facts
+- Local deterministic test suite green
+
+### Reforger Compiler
+
+- Normalize > mutate > evaluate > score > materialize pipeline complete
+- TextMystery route (`TextMysteryPersonaRouteV0`) implemented
+- Scenario pack format, patch surface enforcement, SHA manifests
+- Determinism tests passing
+
+---
+
+## What Remains
+
+### Phase 1: SDK Package Bootstrap (next)
+
+Status: **not started**
+
+Deliverables:
+1. Create `c:\Source\OrketSDK` with package structure
+2. Implement `orket_extension_sdk.manifest` -- Manifest model, load, validate
+3. Implement `orket_extension_sdk.capabilities` -- CapabilityId, CapabilityProvider, CapabilityRegistry, interfaces
+4. Implement `orket_extension_sdk.workload` -- WorkloadContext, Workload protocol
+5. Implement `orket_extension_sdk.result` -- WorkloadResult, ArtifactRef, Issue
+6. Implement `orket_extension_sdk.testing` -- FakeCapabilities, DeterminismHarness, GoldenArtifact
+7. Unit tests for each module
+
+Exit criteria:
+- SDK package imports cleanly with minimal surface
+- Contract models and validation tests pass
+- `pip install -e c:\Source\OrketSDK` works in both Orket and TextMystery environments
+
+### Phase 2: Runtime Dual-Path Bridge
+
+Status: **not started**
+
+Deliverables:
+1. Runtime detection of extension contract style (legacy vs SDK v0)
+2. SDK run path: manifest parse > capability preflight > WorkloadContext construction > workload invocation > WorkloadResult validation
+3. Internal mapping from WorkloadResult into engine runtime internals
+4. Legacy RunPlan path unchanged
+
+Exit criteria:
+- SDK workload runs end-to-end in Orket runtime
+- Legacy workload runs unchanged
+- Missing capability errors are deterministic and actionable
+
+### Phase 3: TextMystery SDK Integration
+
+Status: **not started** (gameplay kernel is done, SDK wiring is not)
+
+Deliverables:
+1. Add `extension.yaml` to TextMystery using SDK manifest schema
+2. Replace direct provider creation with capability-based retrieval
+3. Write transcript and summary through SDK artifact writer
+4. Emit trace events for key phases
+5. Verify deterministic replay through SDK harness
+
+Exit criteria:
+- TextMystery runs as an SDK workload under Orket
+- All existing parity/leak/determinism tests remain green
+- Artifacts include digest metadata
+
+### Phase 4: Meta Breaker Route (proves SDK is generic)
+
+Status: **not started**
+
+Deliverables:
+1. Define Meta Breaker as a reforger route (rule validation for card games)
+2. Build toy TCG rule system (30-50 cards, 3 archetypes, simple mana/combat)
+3. Meta Breaker workload: `run(ctx, input) -> WorkloadResult` with win rate analysis
+4. Scenario packs for balance validation (first-player advantage, dominant strategies, infinite loops)
+5. Prove SDK contracts work for a non-TextMystery workload
+
+Exit criteria:
+- Meta Breaker runs as an SDK workload
+- Reforger can mutate game rules and score balance outcomes
+- SDK required zero game-specific changes to support this
+
+### Phase 5: Documentation and Deprecation Gates
+
+Status: **not started**
+
+Deliverables:
+1. Public docs updated to SDK v0 seam language
+2. Extension author guide ("build a workload in 10 minutes")
+3. Migration note for legacy path with deprecation readiness criteria
+4. Explicit statement: TurnResult is internal-only
+
+Exit criteria:
+- Single clear public extension story in docs
+- No public docs instruct direct engine/turn internals usage
+
+### Phase 6: Hardening
+
+Status: **not started**
+
+Deliverables:
+1. Deterministic hint/disambiguation policy conformance tests (TextMystery-specific)
+2. Security audit of artifact write confinement
+3. Performance baseline for workload execution
+
+Exit criteria:
+- Demo workloads do not exhibit repeated suggestion loops
+- Artifact path traversal blocked
+- Execution latency baselined
+
+---
+
+## Remaining TextMystery Polish (can run in parallel)
+
+These are gameplay quality items, not SDK blockers:
+1. Companion quality pass (cross-suspect handoff, ranking)
+2. Clarify UX quality (place-scoped access clarifications)
+3. Tone/variation pass (DONT_KNOW/REFUSE phrase pools)
+
+See `04-TEXTMYSTERY-LAYER0.md` for details.
+
+---
+
+## Test Strategy
+
+### SDK contract tests
+- Manifest parse/validate (YAML and JSON)
+- Required field errors with stable issue codes
+- Capability registry behavior and preflight
+- WorkloadResult model validation
+- Artifact path confinement
+
+### SDK determinism tests
+- DeterminismHarness stable output + artifact digest comparisons
+- GoldenArtifact snapshot assertions
+
+### Integration tests
+- TextMystery as SDK workload via Orket bridge
+- Meta Breaker as SDK workload via Orket bridge
+- Legacy extension path still works
+- Mixed catalog execution (legacy + v0)
+
+### Workload-specific tests
+- TextMystery: parity, leak, transcript quality (owned by TextMystery project)
+- Meta Breaker: balance detection, loop detection, dominance detection (owned by Meta Breaker project)
+
+---
+
+## Risks
+
+1. **Dual-surface confusion during transition** -- mitigate by routing all docs to SDK seam first
+2. **Determinism drift from environment-specific output** -- mitigate with digest-based checks and noise normalization
+3. **SDK over-extraction** -- mitigate by requiring two workloads (TextMystery + Meta Breaker) before generalizing
+4. **Scope creep into game design** -- mitigate by keeping gameplay decisions in workload projects, not SDK

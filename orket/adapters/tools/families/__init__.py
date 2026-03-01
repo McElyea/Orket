@@ -4,6 +4,7 @@ from orket.adapters.tools.families.vision import VisionTools
 from orket.adapters.tools.families.cards import CardManagementTools
 from orket.adapters.tools.families.governance import GovernanceTools
 from orket.adapters.tools.families.academy import AcademyTools
+from orket.adapters.tools.families.reforger_tools import ReforgerTools
 
 __all__ = [
     "BaseTools",
@@ -12,5 +13,5 @@ __all__ = [
     "CardManagementTools",
     "GovernanceTools",
     "AcademyTools",
+    "ReforgerTools",
 ]
-

@@ -20,4 +20,6 @@ def compose_default_tool_map(toolbox: Any) -> Dict[str, Callable]:
         "request_excuse": toolbox.governance.request_excuse,
         "archive_eval": toolbox.academy.archive_eval,
         "promote_prompt": toolbox.academy.promote_prompt,
+        "reforger_inspect": toolbox.reforger.inspect,
+        "reforger_run": toolbox.reforger.run,
     }
