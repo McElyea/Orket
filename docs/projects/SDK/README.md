@@ -26,6 +26,7 @@ Engine-internal types (including `TurnResult`) are private and may change withou
 | `02-PLAN.md` | Implementation phases, status, and remaining work |
 | `03-MIGRATION-AND-COMPAT.md` | Migration policy, compatibility guarantees, deprecation criteria |
 | `04-TEXTMYSTERY-LAYER0.md` | TextMystery-specific gameplay decisions and checkpoint (reference workload) |
+| `05-AUTHOR-GUIDE.md` | Quickstart author guide to build and run an SDK workload in minutes |
 
 ## SDK Modules (v0)
 

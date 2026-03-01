@@ -160,6 +160,54 @@ def _init_sdk_extension_repo(repo_root, *, required_capabilities=None):
     )
 
 
+def _init_sdk_extension_repo_json_manifest(repo_root):
+    manifest = {
+        "manifest_version": "v0",
+        "extension_id": "sdk.json.extension",
+        "extension_version": "0.2.0",
+        "workloads": [
+            {
+                "workload_id": "sdk_json_v1",
+                "entrypoint": "sdk_json_extension:JsonWorkload",
+                "required_capabilities": [],
+            }
+        ],
+    }
+    (repo_root / "extension.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (repo_root / "sdk_json_extension.py").write_text(
+        "\n".join(
+            [
+                "from __future__ import annotations",
+                "import hashlib",
+                "from pathlib import Path",
+                "from orket_extension_sdk import ArtifactRef, WorkloadResult",
+                "",
+                "class JsonWorkload:",
+                "    def run(self, ctx, payload):",
+                "        out_path = Path(ctx.output_dir) / 'json_result.txt'",
+                "        text = f\"seed={ctx.seed};label={payload.get('label', 'none')}\"",
+                "        out_path.write_text(text, encoding='utf-8')",
+                "        digest = hashlib.sha256(out_path.read_bytes()).hexdigest()",
+                "        return WorkloadResult(",
+                "            ok=True,",
+                "            output={'seed': ctx.seed, 'label': payload.get('label', 'none')},",
+                "            artifacts=[ArtifactRef(path='json_result.txt', digest_sha256=digest, kind='text')],",
+                "        )",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init"], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "add", "."], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "init"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def test_list_extensions_from_catalog(tmp_path):
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
@@ -242,6 +290,20 @@ def test_install_from_repo_registers_sdk_extension(tmp_path):
     assert record.contract_style == "sdk_v0"
     assert record.workloads[0].workload_id == "sdk_v1"
     assert record.workloads[0].entrypoint == "sdk_extension:run_workload"
+
+
+def test_install_from_repo_registers_sdk_json_manifest_extension(tmp_path):
+    repo = tmp_path / "sdk_json_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo_json_manifest(repo)
+
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    record = manager.install_from_repo(str(repo))
+
+    assert record.extension_id == "sdk.json.extension"
+    assert record.contract_style == "sdk_v0"
+    assert record.workloads[0].workload_id == "sdk_json_v1"
+    assert record.workloads[0].entrypoint == "sdk_json_extension:JsonWorkload"
 
 
 def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
@@ -381,3 +443,39 @@ async def test_run_sdk_workload_missing_required_capability_fails_closed(tmp_pat
             workspace=workspace,
             department="core",
         )
+
+
+@pytest.mark.asyncio
+async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
+    legacy_repo = tmp_path / "legacy_repo"
+    legacy_repo.mkdir(parents=True, exist_ok=True)
+    _init_test_extension_repo(legacy_repo)
+
+    sdk_repo = tmp_path / "sdk_repo"
+    sdk_repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo_json_manifest(sdk_repo)
+
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(legacy_repo))
+    manager.install_from_repo(str(sdk_repo))
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+
+    legacy_result = await manager.run_workload(
+        workload_id="mystery_v1",
+        input_config={"seed": 11},
+        workspace=workspace,
+        department="core",
+    )
+    sdk_result = await manager.run_workload(
+        workload_id="sdk_json_v1",
+        input_config={"seed": 12, "label": "mixed"},
+        workspace=workspace,
+        department="core",
+    )
+
+    assert legacy_result.workload_id == "mystery_v1"
+    assert sdk_result.workload_id == "sdk_json_v1"
+    assert Path(legacy_result.provenance_path).exists()
+    assert Path(sdk_result.provenance_path).exists()

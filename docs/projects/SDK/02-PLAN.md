@@ -72,7 +72,7 @@ Progress update (2026-02-28):
 
 ### Phase 2: Runtime Dual-Path Bridge
 
-Status: **in progress**
+Status: **complete**
 
 Deliverables:
 1. Runtime detection of extension contract style (legacy vs SDK v0)
@@ -101,8 +101,10 @@ Progress update (2026-02-28):
   - SDK provenance emission and artifact manifest emission
 - Added runtime coverage in `tests/runtime/test_extension_manager.py`:
   - SDK install/registration
+  - SDK JSON-manifest install coverage
   - SDK workload execution with artifacts + provenance
   - missing-capability deterministic failure
+  - mixed-catalog execution (legacy + SDK v0)
 
 ### Phase 3: TextMystery SDK Integration
 
@@ -138,7 +140,7 @@ Exit criteria:
 
 ### Phase 5: Documentation and Deprecation Gates
 
-Status: **not started**
+Status: **in progress**
 
 Deliverables:
 1. Public docs updated to SDK v0 seam language
@@ -149,6 +151,11 @@ Deliverables:
 Exit criteria:
 - Single clear public extension story in docs
 - No public docs instruct direct engine/turn internals usage
+
+Progress update (2026-02-28):
+- Added extension author quickstart guide: `05-AUTHOR-GUIDE.md`
+- Updated `README.md` SDK document index to include author guide
+- `TurnResult` internal-only policy remains explicit in SDK README and migration docs
 
 ### Phase 6: Hardening
 
