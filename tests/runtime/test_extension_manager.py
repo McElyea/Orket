@@ -111,6 +111,55 @@ def _init_blocked_import_extension_repo(repo_root):
     )
 
 
+def _init_sdk_extension_repo(repo_root, *, required_capabilities=None):
+    required_capabilities = list(required_capabilities or [])
+    (repo_root / "extension.yaml").write_text(
+        "\n".join(
+            [
+                "manifest_version: v0",
+                "extension_id: sdk.extension",
+                "extension_version: 0.1.0",
+                "workloads:",
+                "  - workload_id: sdk_v1",
+                "    entrypoint: sdk_extension:run_workload",
+                f"    required_capabilities: {json.dumps(required_capabilities)}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo_root / "sdk_extension.py").write_text(
+        "\n".join(
+            [
+                "from __future__ import annotations",
+                "import hashlib",
+                "from pathlib import Path",
+                "from orket_extension_sdk import ArtifactRef, WorkloadResult",
+                "",
+                "def run_workload(ctx, payload):",
+                "    out_path = Path(ctx.output_dir) / 'result.txt'",
+                "    text = f\"seed={ctx.seed};mode={payload.get('mode', 'na')}\"",
+                "    out_path.write_text(text, encoding='utf-8')",
+                "    digest = hashlib.sha256(out_path.read_bytes()).hexdigest()",
+                "    return WorkloadResult(",
+                "        ok=True,",
+                "        output={'seed': ctx.seed, 'mode': payload.get('mode', 'na')},",
+                "        artifacts=[ArtifactRef(path='result.txt', digest_sha256=digest, kind='text')],",
+                "    )",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init"], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "add", "."], cwd=repo_root, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "init"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def test_list_extensions_from_catalog(tmp_path):
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
@@ -179,6 +228,20 @@ def test_install_from_repo_registers_extension(tmp_path):
     assert record.extension_id == "mystery.extension"
     assert record.workloads[0].workload_id == "mystery_v1"
     assert manager.resolve_workload("mystery_v1") is not None
+
+
+def test_install_from_repo_registers_sdk_extension(tmp_path):
+    repo = tmp_path / "sdk_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo(repo)
+
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    record = manager.install_from_repo(str(repo))
+
+    assert record.extension_id == "sdk.extension"
+    assert record.contract_style == "sdk_v0"
+    assert record.workloads[0].workload_id == "sdk_v1"
+    assert record.workloads[0].entrypoint == "sdk_extension:run_workload"
 
 
 def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
@@ -276,3 +339,45 @@ async def test_run_workload_with_interaction_context_emits_events_and_commit(tmp
     assert any(name == "model_selected" for name, _ in ctx.events)
     assert any(name == "turn_final" for name, _ in ctx.events)
     assert len(ctx.commits) == 1
+
+
+@pytest.mark.asyncio
+async def test_run_sdk_workload_emits_provenance(tmp_path):
+    repo = tmp_path / "sdk_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo(repo)
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+    result = await manager.run_workload(
+        workload_id="sdk_v1",
+        input_config={"seed": 321, "mode": "basic"},
+        workspace=workspace,
+        department="core",
+    )
+
+    assert result.workload_id == "sdk_v1"
+    assert Path(result.provenance_path).exists()
+    assert (Path(result.artifact_root) / "result.txt").exists()
+    assert (Path(result.artifact_root) / "artifact_manifest.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_run_sdk_workload_missing_required_capability_fails_closed(tmp_path):
+    repo = tmp_path / "sdk_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo(repo, required_capabilities=["clock.now"])
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+    with pytest.raises(ValueError, match="E_SDK_CAPABILITY_MISSING"):
+        await manager.run_workload(
+            workload_id="sdk_v1",
+            input_config={"seed": 5},
+            workspace=workspace,
+            department="core",
+        )

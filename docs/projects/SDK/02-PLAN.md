@@ -72,7 +72,7 @@ Progress update (2026-02-28):
 
 ### Phase 2: Runtime Dual-Path Bridge
 
-Status: **not started**
+Status: **in progress**
 
 Deliverables:
 1. Runtime detection of extension contract style (legacy vs SDK v0)
@@ -84,6 +84,25 @@ Exit criteria:
 - SDK workload runs end-to-end in Orket runtime
 - Legacy workload runs unchanged
 - Missing capability errors are deterministic and actionable
+
+Progress update (2026-02-28):
+- Added contract-style routing in `orket/extensions/manager.py`:
+  - legacy `RunPlan` path preserved
+  - SDK v0 `run(ctx, input) -> WorkloadResult` path added
+- Added manifest-style detection at install time:
+  - legacy `orket_extension.json`
+  - SDK `extension.yaml` / `extension.yml` / `extension.json`
+- Added SDK workload metadata support in extension catalog/runtime records:
+  - `contract_style`, `entrypoint`, `required_capabilities`, `manifest_path`
+- Added SDK preflight and execution mechanics:
+  - capability preflight (`E_SDK_CAPABILITY_MISSING`, fail-closed)
+  - SDK context construction
+  - artifact path confinement + digest checks for declared artifacts
+  - SDK provenance emission and artifact manifest emission
+- Added runtime coverage in `tests/runtime/test_extension_manager.py`:
+  - SDK install/registration
+  - SDK workload execution with artifacts + provenance
+  - missing-capability deterministic failure
 
 ### Phase 3: TextMystery SDK Integration
 

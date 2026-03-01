@@ -15,6 +15,13 @@ from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any
 
+from orket_extension_sdk.capabilities import CapabilityRegistry
+from orket_extension_sdk.manifest import load_manifest as load_sdk_manifest
+from orket_extension_sdk.result import WorkloadResult
+from orket_extension_sdk.workload import Workload as SDKWorkload
+from orket_extension_sdk.workload import WorkloadContext as SDKWorkloadContext
+from orket_extension_sdk.workload import run_workload as run_sdk_workload
+
 from orket.runtime_paths import durable_root
 
 from .contracts import ExtensionRegistry, RunPlan, Workload
@@ -23,7 +30,10 @@ from orket.streaming.contracts import CommitIntent, StreamEventType
 
 RELIABLE_MODE_ENV = "ORKET_RELIABLE_MODE"
 RELIABLE_REQUIRE_CLEAN_GIT_ENV = "ORKET_RELIABLE_REQUIRE_CLEAN_GIT"
-MANIFEST_FILENAME = "orket_extension.json"
+LEGACY_MANIFEST_FILENAME = "orket_extension.json"
+SDK_MANIFEST_FILENAMES = ("extension.yaml", "extension.yml", "extension.json")
+CONTRACT_STYLE_LEGACY = "legacy_v1"
+CONTRACT_STYLE_SDK_V0 = "sdk_v0"
 
 
 def default_extensions_catalog_path() -> Path:
@@ -37,6 +47,9 @@ def default_extensions_catalog_path() -> Path:
 class WorkloadRecord:
     workload_id: str
     workload_version: str
+    entrypoint: str = ""
+    required_capabilities: tuple[str, ...] = ()
+    contract_style: str = CONTRACT_STYLE_LEGACY
 
 
 @dataclass(frozen=True)
@@ -49,6 +62,8 @@ class ExtensionRecord:
     module: str
     register_callable: str
     workloads: tuple[WorkloadRecord, ...]
+    contract_style: str = CONTRACT_STYLE_LEGACY
+    manifest_path: str = ""
 
 
 @dataclass(frozen=True)
@@ -61,6 +76,13 @@ class ExtensionRunResult:
     artifact_root: str
     provenance_path: str
     summary: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class _LoadedManifest:
+    payload: dict[str, Any]
+    manifest_path: Path
+    contract_style: str
 
 
 class _WorkloadRegistry(ExtensionRegistry):
@@ -97,6 +119,8 @@ class ExtensionManager:
             path = str(row.get("path", "")).strip()
             module = str(row.get("module", "")).strip()
             register_callable = str(row.get("register_callable", "")).strip() or "register"
+            contract_style = str(row.get("contract_style", "")).strip() or CONTRACT_STYLE_LEGACY
+            manifest_path = str(row.get("manifest_path", "")).strip()
             if not extension_id or extension_id in seen_ids:
                 continue
             seen_ids.add(extension_id)
@@ -106,10 +130,16 @@ class ExtensionManager:
                 workload_id = str(item.get("workload_id", "")).strip()
                 if not workload_id:
                     continue
+                required_capabilities = tuple(
+                    str(cap).strip() for cap in item.get("required_capabilities", []) if str(cap).strip()
+                )
                 workloads.append(
                     WorkloadRecord(
                         workload_id=workload_id,
                         workload_version=str(item.get("workload_version", "")).strip() or "0.0.0",
+                        entrypoint=str(item.get("entrypoint", "")).strip(),
+                        required_capabilities=required_capabilities,
+                        contract_style=str(item.get("contract_style", "")).strip() or contract_style,
                     )
                 )
 
@@ -123,6 +153,8 @@ class ExtensionManager:
                     module=module,
                     register_callable=register_callable,
                     workloads=tuple(workloads),
+                    contract_style=contract_style,
+                    manifest_path=manifest_path,
                 )
             )
         return records
@@ -154,8 +186,14 @@ class ExtensionManager:
         if ref_value:
             self._run_command(["git", "checkout", ref_value], cwd=destination)
 
-        manifest = self._load_manifest(destination)
-        record = self._record_from_manifest(manifest, source=repo_value, path=destination)
+        loaded = self._load_manifest(destination)
+        record = self._record_from_manifest(
+            loaded.payload,
+            source=repo_value,
+            path=destination,
+            contract_style=loaded.contract_style,
+            manifest_path=loaded.manifest_path,
+        )
         payload = self._load_catalog_payload()
         rows = [row for row in payload.get("extensions", []) if str(row.get("extension_id", "")).strip() != record.extension_id]
         rows.append(self._row_from_record(record))
@@ -174,8 +212,36 @@ class ExtensionManager:
         resolved = self.resolve_workload(workload_id)
         if resolved is None:
             raise ValueError(f"Unknown workload '{workload_id}'")
-        extension, _ = resolved
-        workload = self._load_workload(extension, workload_id)
+        extension, workload_record = resolved
+        if workload_record.contract_style == CONTRACT_STYLE_SDK_V0 or extension.contract_style == CONTRACT_STYLE_SDK_V0:
+            return await self._run_sdk_workload(
+                extension=extension,
+                workload=workload_record,
+                input_config=input_config,
+                workspace=workspace,
+                department=department,
+                interaction_context=interaction_context,
+            )
+        return await self._run_legacy_workload(
+            extension=extension,
+            workload_id=workload_id,
+            input_config=input_config,
+            workspace=workspace,
+            department=department,
+            interaction_context=interaction_context,
+        )
+
+    async def _run_legacy_workload(
+        self,
+        *,
+        extension: ExtensionRecord,
+        workload_id: str,
+        input_config: dict[str, Any],
+        workspace: Path,
+        department: str,
+        interaction_context: Any | None = None,
+    ) -> ExtensionRunResult:
+        workload = self._load_legacy_workload(extension, workload_id)
         compile_input = dict(input_config)
         compile_fn = workload.compile
         compile_sig = inspect.signature(compile_fn)
@@ -267,6 +333,109 @@ class ExtensionManager:
             summary=summary,
         )
 
+    async def _run_sdk_workload(
+        self,
+        *,
+        extension: ExtensionRecord,
+        workload: WorkloadRecord,
+        input_config: dict[str, Any],
+        workspace: Path,
+        department: str,
+        interaction_context: Any | None = None,
+    ) -> ExtensionRunResult:
+        sdk_workload = self._load_sdk_workload(extension, workload)
+        input_digest = hashlib.sha256(
+            json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        artifact_root = self._artifact_root(extension.extension_id, workload.workload_id, input_digest, input_config)
+        artifact_root.mkdir(parents=True, exist_ok=True)
+        capability_registry = self._build_sdk_capability_registry(
+            workspace=workspace, artifact_root=artifact_root, input_config=input_config
+        )
+        missing_capabilities = capability_registry.preflight(list(workload.required_capabilities))
+        if missing_capabilities:
+            raise ValueError("E_SDK_CAPABILITY_MISSING: " + ", ".join(missing_capabilities))
+
+        ctx = SDKWorkloadContext(
+            extension_id=extension.extension_id,
+            workload_id=workload.workload_id,
+            run_id=f"sdk-{input_digest[:16]}",
+            workspace_root=workspace,
+            input_dir=workspace,
+            output_dir=artifact_root,
+            capabilities=capability_registry,
+            seed=int(input_config.get("seed", 0) or 0),
+            config=dict(input_config),
+        )
+
+        if interaction_context is not None:
+            await interaction_context.emit_event(
+                StreamEventType.MODEL_SELECTED,
+                {"model_id": "extension-sdk-v0", "reason": "sdk_workload_run", "authoritative": False},
+            )
+            await interaction_context.emit_event(
+                StreamEventType.MODEL_LOADING,
+                {"cold_start": False, "progress": 1.0, "authoritative": False},
+            )
+            await interaction_context.emit_event(
+                StreamEventType.MODEL_READY,
+                {"model_id": "extension-sdk-v0", "warm_state": "warm", "load_ms": 0, "authoritative": False},
+            )
+
+        result = run_sdk_workload(sdk_workload, ctx, dict(input_config))
+        self._validate_sdk_artifacts(result, artifact_root)
+
+        run_result: dict[str, Any] = {
+            "status": "ok" if result.ok else "error",
+            "output": result.output,
+            "issues": [issue.model_dump(mode="json") for issue in result.issues],
+            "artifacts": [artifact.model_dump(mode="json") for artifact in result.artifacts],
+            "metrics": result.metrics,
+        }
+        summary = {
+            "ok": result.ok,
+            "status": run_result["status"],
+            "output": result.output,
+            "issue_count": len(result.issues),
+            "artifact_count": len(result.artifacts),
+        }
+
+        if interaction_context is not None:
+            await interaction_context.emit_event(
+                StreamEventType.TURN_FINAL,
+                {"authoritative": False, "summary": summary},
+            )
+            await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload.workload_id))
+
+        artifact_manifest = self._build_artifact_manifest(artifact_root)
+        manifest_path = artifact_root / "artifact_manifest.json"
+        manifest_path.write_text(json.dumps(artifact_manifest, indent=2, sort_keys=True), encoding="utf-8")
+
+        provenance = self._build_sdk_provenance(
+            extension=extension,
+            workload=workload,
+            input_config=input_config,
+            input_digest=input_digest,
+            run_result=run_result,
+            summary=summary,
+            artifact_manifest=artifact_manifest,
+            artifact_root=artifact_root,
+            department=department,
+        )
+        provenance_path = artifact_root / "provenance.json"
+        provenance_path.write_text(json.dumps(provenance, indent=2, sort_keys=True), encoding="utf-8")
+
+        return ExtensionRunResult(
+            extension_id=extension.extension_id,
+            extension_version=extension.extension_version,
+            workload_id=workload.workload_id,
+            workload_version=workload.workload_version,
+            plan_hash=input_digest,
+            artifact_root=str(artifact_root),
+            provenance_path=str(provenance_path),
+            summary=summary,
+        )
+
     def _load_catalog_payload(self) -> dict[str, Any]:
         if not self.catalog_path.exists():
             return {"extensions": []}
@@ -282,16 +451,48 @@ class ExtensionManager:
         self.catalog_path.parent.mkdir(parents=True, exist_ok=True)
         self.catalog_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
-    def _load_manifest(self, repo_path: Path) -> dict[str, Any]:
-        manifest_path = repo_path / MANIFEST_FILENAME
-        if not manifest_path.exists():
-            raise FileNotFoundError(f"Missing {MANIFEST_FILENAME} in extension repo: {repo_path}")
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if not isinstance(manifest, dict):
-            raise ValueError(f"{MANIFEST_FILENAME} must be a JSON object")
-        return manifest
+    def _load_manifest(self, repo_path: Path) -> _LoadedManifest:
+        legacy_manifest_path = repo_path / LEGACY_MANIFEST_FILENAME
+        if legacy_manifest_path.exists():
+            manifest = json.loads(legacy_manifest_path.read_text(encoding="utf-8"))
+            if not isinstance(manifest, dict):
+                raise ValueError(f"{LEGACY_MANIFEST_FILENAME} must be a JSON object")
+            return _LoadedManifest(
+                payload=manifest,
+                manifest_path=legacy_manifest_path,
+                contract_style=CONTRACT_STYLE_LEGACY,
+            )
 
-    def _record_from_manifest(self, manifest: dict[str, Any], *, source: str, path: Path) -> ExtensionRecord:
+        for filename in SDK_MANIFEST_FILENAMES:
+            sdk_manifest_path = repo_path / filename
+            if not sdk_manifest_path.exists():
+                continue
+            manifest_model = load_sdk_manifest(sdk_manifest_path)
+            return _LoadedManifest(
+                payload=manifest_model.model_dump(mode="json"),
+                manifest_path=sdk_manifest_path,
+                contract_style=CONTRACT_STYLE_SDK_V0,
+            )
+
+        expected = [LEGACY_MANIFEST_FILENAME, *SDK_MANIFEST_FILENAMES]
+        raise FileNotFoundError(f"Missing extension manifest in repo: {repo_path} (expected one of {expected})")
+
+    def _record_from_manifest(
+        self,
+        manifest: dict[str, Any],
+        *,
+        source: str,
+        path: Path,
+        contract_style: str,
+        manifest_path: Path,
+    ) -> ExtensionRecord:
+        if contract_style == CONTRACT_STYLE_SDK_V0:
+            return self._sdk_record_from_manifest(manifest, source=source, path=path, manifest_path=manifest_path)
+        return self._legacy_record_from_manifest(manifest, source=source, path=path, manifest_path=manifest_path)
+
+    def _legacy_record_from_manifest(
+        self, manifest: dict[str, Any], *, source: str, path: Path, manifest_path: Path
+    ) -> ExtensionRecord:
         extension_id = str(manifest.get("extension_id", "")).strip()
         extension_version = str(manifest.get("extension_version", "")).strip()
         extension_api_version = str(manifest.get("extension_api_version", "")).strip() or "1.0.0"
@@ -309,7 +510,13 @@ class ExtensionManager:
             workload_id = str(item.get("workload_id", "")).strip()
             workload_version = str(item.get("workload_version", "")).strip() or "0.0.0"
             if workload_id:
-                workloads.append(WorkloadRecord(workload_id=workload_id, workload_version=workload_version))
+                workloads.append(
+                    WorkloadRecord(
+                        workload_id=workload_id,
+                        workload_version=workload_version,
+                        contract_style=CONTRACT_STYLE_LEGACY,
+                    )
+                )
 
         return ExtensionRecord(
             extension_id=extension_id,
@@ -320,6 +527,50 @@ class ExtensionManager:
             module=module,
             register_callable=register_callable,
             workloads=tuple(workloads),
+            contract_style=CONTRACT_STYLE_LEGACY,
+            manifest_path=str(manifest_path),
+        )
+
+    def _sdk_record_from_manifest(
+        self, manifest: dict[str, Any], *, source: str, path: Path, manifest_path: Path
+    ) -> ExtensionRecord:
+        extension_id = str(manifest.get("extension_id", "")).strip()
+        extension_version = str(manifest.get("extension_version", "")).strip()
+        manifest_version = str(manifest.get("manifest_version", "")).strip() or "v0"
+        if not extension_id:
+            raise ValueError("extension_id is required in manifest")
+        if not extension_version:
+            raise ValueError("extension_version is required in manifest")
+
+        workloads: list[WorkloadRecord] = []
+        for item in manifest.get("workloads", []):
+            workload_id = str(item.get("workload_id", "")).strip()
+            if not workload_id:
+                continue
+            required_capabilities = tuple(
+                str(cap).strip() for cap in item.get("required_capabilities", []) if str(cap).strip()
+            )
+            workloads.append(
+                WorkloadRecord(
+                    workload_id=workload_id,
+                    workload_version=extension_version,
+                    entrypoint=str(item.get("entrypoint", "")).strip(),
+                    required_capabilities=required_capabilities,
+                    contract_style=CONTRACT_STYLE_SDK_V0,
+                )
+            )
+
+        return ExtensionRecord(
+            extension_id=extension_id,
+            extension_version=extension_version,
+            source=source,
+            extension_api_version=manifest_version,
+            path=str(path),
+            module="",
+            register_callable="",
+            workloads=tuple(workloads),
+            contract_style=CONTRACT_STYLE_SDK_V0,
+            manifest_path=str(manifest_path),
         )
 
     def _row_from_record(self, record: ExtensionRecord) -> dict[str, Any]:
@@ -331,12 +582,21 @@ class ExtensionManager:
             "path": record.path,
             "module": record.module,
             "register_callable": record.register_callable,
+            "contract_style": record.contract_style,
+            "manifest_path": record.manifest_path,
             "workloads": [
-                {"workload_id": w.workload_id, "workload_version": w.workload_version} for w in record.workloads
+                {
+                    "workload_id": w.workload_id,
+                    "workload_version": w.workload_version,
+                    "entrypoint": w.entrypoint,
+                    "required_capabilities": list(w.required_capabilities),
+                    "contract_style": w.contract_style,
+                }
+                for w in record.workloads
             ],
         }
 
-    def _load_workload(self, extension: ExtensionRecord, workload_id: str) -> Workload:
+    def _load_legacy_workload(self, extension: ExtensionRecord, workload_id: str) -> Workload:
         extension_path = Path(extension.path).resolve()
         if not extension_path.exists():
             raise FileNotFoundError(f"Extension path missing: {extension.path}")
@@ -366,6 +626,57 @@ class ExtensionManager:
                     sys.path.remove(str(extension_path))
                 except ValueError:
                     pass
+
+    def _load_sdk_workload(self, extension: ExtensionRecord, workload: WorkloadRecord) -> SDKWorkload:
+        extension_path = Path(extension.path).resolve()
+        if not extension_path.exists():
+            raise FileNotFoundError(f"Extension path missing: {extension.path}")
+        module_name, attr_name = self._parse_sdk_entrypoint(workload.entrypoint)
+        self._validate_extension_imports(extension_path, module_name)
+
+        added_path = False
+        if str(extension_path) not in sys.path:
+            sys.path.insert(0, str(extension_path))
+            added_path = True
+        try:
+            module = importlib.import_module(module_name)
+            target = getattr(module, attr_name, None)
+            if target is None:
+                raise ValueError(f"E_SDK_ENTRYPOINT_MISSING: {workload.entrypoint}")
+            if inspect.isclass(target):
+                instance = target()
+            elif callable(target) and hasattr(target, "run"):
+                instance = target
+            elif callable(target):
+
+                class _CallableWorkload:
+                    def __init__(self, func):
+                        self._func = func
+
+                    def run(self, ctx: SDKWorkloadContext, payload: dict[str, Any]) -> WorkloadResult:
+                        return self._func(ctx, payload)
+
+                instance = _CallableWorkload(target)
+            else:
+                raise ValueError(f"E_SDK_ENTRYPOINT_INVALID: {workload.entrypoint}")
+
+            run_method = getattr(instance, "run", None)
+            if run_method is None or not callable(run_method):
+                raise ValueError(f"E_SDK_ENTRYPOINT_INVALID: {workload.entrypoint}")
+            return instance
+        finally:
+            if added_path:
+                try:
+                    sys.path.remove(str(extension_path))
+                except ValueError:
+                    pass
+
+    def _parse_sdk_entrypoint(self, entrypoint: str) -> tuple[str, str]:
+        value = str(entrypoint or "").strip()
+        module_name, sep, attr_name = value.partition(":")
+        if sep != ":" or not module_name.strip() or not attr_name.strip():
+            raise ValueError(f"E_SDK_ENTRYPOINT_INVALID: {entrypoint}")
+        return module_name.strip(), attr_name.strip()
 
     def _validate_extension_imports(self, extension_path: Path, module_name: str) -> None:
         module_path = extension_path / Path(*module_name.split("."))
@@ -405,6 +716,36 @@ class ExtensionManager:
                 if module.startswith("orket.") and not module.startswith("orket.extensions"):
                     if any(module.startswith(prefix) for prefix in blocked_prefixes):
                         raise ValueError(f"Extension import blocked by isolation policy: {module}")
+
+    def _build_sdk_capability_registry(
+        self, *, workspace: Path, artifact_root: Path, input_config: dict[str, Any]
+    ) -> CapabilityRegistry:
+        registry = CapabilityRegistry()
+        registry.register("workspace.root", str(workspace))
+        registry.register("artifact.root", str(artifact_root))
+        configured = input_config.get("capabilities")
+        if isinstance(configured, dict):
+            items = sorted((str(k).strip(), v) for k, v in configured.items())
+            for capability_id, provider in items:
+                if not capability_id or registry.has(capability_id):
+                    continue
+                registry.register(capability_id, provider)
+        return registry
+
+    def _validate_sdk_artifacts(self, result: WorkloadResult, artifact_root: Path) -> None:
+        artifact_root_resolved = artifact_root.resolve()
+        for artifact in result.artifacts:
+            artifact_path = str(artifact.path).strip()
+            if not artifact_path:
+                raise ValueError("E_SDK_ARTIFACT_PATH_INVALID")
+            target = (artifact_root / artifact_path).resolve()
+            if not str(target).startswith(str(artifact_root_resolved)):
+                raise ValueError(f"E_SDK_ARTIFACT_ESCAPE: {artifact_path}")
+            if not target.exists() or not target.is_file():
+                raise FileNotFoundError(f"E_SDK_ARTIFACT_MISSING: {artifact_path}")
+            digest = hashlib.sha256(target.read_bytes()).hexdigest()
+            if digest != artifact.digest_sha256:
+                raise ValueError(f"E_SDK_ARTIFACT_DIGEST_MISMATCH: {artifact_path}")
 
     def _artifact_root(
         self,
@@ -494,6 +835,44 @@ class ExtensionManager:
             "input_config_digest": input_digest,
             "run_plan": run_plan.canonical_payload(),
             "plan_hash": plan_hash,
+            "run_result": run_result,
+            "summary": summary,
+            "artifact_manifest": artifact_manifest,
+            "artifact_root": str(artifact_root),
+        }
+
+    def _build_sdk_provenance(
+        self,
+        *,
+        extension: ExtensionRecord,
+        workload: WorkloadRecord,
+        input_config: dict[str, Any],
+        input_digest: str,
+        run_result: dict[str, Any],
+        summary: dict[str, Any],
+        artifact_manifest: dict[str, Any],
+        artifact_root: Path,
+        department: str,
+    ) -> dict[str, Any]:
+        return {
+            "timestamp_utc": datetime.now(UTC).isoformat(),
+            "reliable_mode": self._reliable_mode_enabled(),
+            "contract_style": CONTRACT_STYLE_SDK_V0,
+            "extension": {
+                "extension_id": extension.extension_id,
+                "extension_version": extension.extension_version,
+                "manifest_path": extension.manifest_path,
+                "source": extension.source,
+            },
+            "workload": {
+                "workload_id": workload.workload_id,
+                "workload_version": workload.workload_version,
+                "entrypoint": workload.entrypoint,
+                "required_capabilities": list(workload.required_capabilities),
+            },
+            "department": department,
+            "input_config": input_config,
+            "input_config_digest": input_digest,
             "run_result": run_result,
             "summary": summary,
             "artifact_manifest": artifact_manifest,
