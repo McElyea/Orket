@@ -25,7 +25,7 @@ Estimated scope: ~2 hours focused work
 | TD-SEC-1b | Replace shell=True in refactor_transaction.py | `orket/interfaces/refactor_transaction.py` | complete |
 | TD-SEC-1c | Replace shell=True in api_generation.py | `orket/interfaces/api_generation.py` | complete |
 | TD-SEC-1d | Audit scripts for shell=True (keep if hardcoded, fix if parameterized) | `scripts/` | pending |
-| TD-SEC-2 | Add asyncio.Lock to GlobalState.interventions | `orket/state.py` | pending |
+| TD-SEC-2 | Add asyncio.Lock to GlobalState.interventions | `orket/state.py` | complete |
 | TD-SEC-3a | Delete filesystem.py | `orket/adapters/storage/filesystem.py` | pending |
 | TD-SEC-3b | Delete conductor.py | find and delete | pending |
 | TD-SEC-3c | Delete persistence.py | find and delete | pending |
@@ -60,6 +60,12 @@ Progress update (2026-03-01):
 - Validation:
   - `python -m pytest -q tests/interfaces/test_scaffold_init_cli.py tests/interfaces/test_refactor_transaction_cli.py tests/interfaces/test_api_add_transaction_cli.py tests/interfaces/test_replay_artifact_recording.py`
   - result: `16 passed`
+- Completed `TD-SEC-2` by exposing lock-protected intervention APIs on `GlobalState`:
+  - `set_intervention`, `get_intervention`, `remove_intervention`, `get_interventions`
+  - all methods guard shared intervention state via `_interventions_lock`
+- Added coverage:
+  - `tests/application/test_runtime_state_interventions.py`
+  - validation run included API state lifecycle tests (`92 passed` in combined run)
 
 ---
 

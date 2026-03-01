@@ -40,5 +40,22 @@ class GlobalState:
         async with self._tasks_lock:
             return self.active_tasks.get(session_id)
 
+    async def set_intervention(self, session_id: str, intervention: Dict[str, str]) -> None:
+        async with self._interventions_lock:
+            self.interventions[session_id] = dict(intervention)
+
+    async def get_intervention(self, session_id: str) -> Dict[str, str] | None:
+        async with self._interventions_lock:
+            value = self.interventions.get(session_id)
+            return dict(value) if value is not None else None
+
+    async def remove_intervention(self, session_id: str) -> None:
+        async with self._interventions_lock:
+            self.interventions.pop(session_id, None)
+
+    async def get_interventions(self) -> Dict[str, Dict[str, str]]:
+        async with self._interventions_lock:
+            return {key: dict(value) for key, value in self.interventions.items()}
+
 
 runtime_state = GlobalState()
