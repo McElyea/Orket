@@ -38,7 +38,7 @@ All gameplay-kernel foundational work is substantially complete:
 
 ### Phase 1: SDK Package Bootstrap (next)
 
-Status: **not started**
+Status: **in progress**
 
 Deliverables:
 1. Create `c:\Source\OrketSDK` with package structure
@@ -53,6 +53,22 @@ Exit criteria:
 - SDK package imports cleanly with minimal surface
 - Contract models and validation tests pass
 - `pip install -e c:\Source\OrketSDK` works in both Orket and TextMystery environments
+
+Progress update (2026-02-28):
+- Added in-repo SDK bootstrap package at `orket_extension_sdk/`
+- Implemented:
+  - `manifest.py` (`ExtensionManifest`, `WorkloadManifest`, `load_manifest`)
+  - `capabilities.py` (`CapabilityId`, `CapabilityProvider`, `CapabilityRegistry`)
+  - `workload.py` (`WorkloadContext`, `Workload`, `run_workload`)
+  - `result.py` (`WorkloadResult`, `ArtifactRef`, `Issue`)
+  - `testing.py` (`FakeCapabilities`, `DeterminismHarness`, `GoldenArtifact`)
+- Added unit tests under `tests/sdk/`:
+  - `test_manifest.py`
+  - `test_capabilities.py`
+  - `test_workload.py`
+  - `test_result.py`
+  - `test_testing.py`
+- Validation: `python -m pytest -q tests/sdk` -> `16 passed`
 
 ### Phase 2: Runtime Dual-Path Bridge
 

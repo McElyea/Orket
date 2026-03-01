@@ -27,5 +27,6 @@ Every non-archive project under `docs/projects/` must appear here.
 |---|---|---|---|---|---|
 | SDK | active | P1 | `docs/projects/SDK/` | Orket Core | Active roadmap lane. |
 | reforger-textmystery-adapter | queued | P2 | `docs/projects/reforger-textmystery-adapter/` | Orket Core | v0 normalize/reforge/materialize route with deterministic artifacts. |
+| techdebt | active | P3 | `docs/projects/techdebt/` | Orket Core | Security fixes, exception narrowing, test gaps, structural cleanup. Fix opportunistically. |
 | core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |
 | archive | archive-root | n/a | `docs/projects/archive/` | Orket Core | Completed projects only. |
