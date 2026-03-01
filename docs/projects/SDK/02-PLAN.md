@@ -108,7 +108,7 @@ Progress update (2026-02-28):
 
 ### Phase 3: TextMystery SDK Integration
 
-Status: **not started** (gameplay kernel is done, SDK wiring is not)
+Status: **in progress** (bridge-side SDK wiring started; full TextMystery SDK workload migration pending)
 
 Deliverables:
 1. Add `extension.yaml` to TextMystery using SDK manifest schema
@@ -121,6 +121,14 @@ Exit criteria:
 - TextMystery runs as an SDK workload under Orket
 - All existing parity/leak/determinism tests remain green
 - Artifacts include digest metadata
+
+Progress update (2026-02-28):
+- Migrated bridge extension registration script to SDK v0 outputs:
+  - `scripts/register_textmystery_bridge_extension.py` now writes `extension.yaml`
+  - generated bridge module now exposes SDK entrypoint `run_workload(ctx, input)`
+  - generated workload now emits `WorkloadResult` with digest-verified `bridge_response.json` artifact
+- Updated generated catalog row to SDK metadata (`contract_style`, `entrypoint`, `required_capabilities`)
+- Added coverage in `tests/application/test_register_textmystery_bridge_extension.py` for manifest + catalog shape
 
 ### Phase 4: Meta Breaker Route (proves SDK is generic)
 

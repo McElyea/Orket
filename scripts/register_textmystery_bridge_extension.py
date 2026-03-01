@@ -21,15 +21,14 @@ def _extension_dir(project_root: Path) -> Path:
 
 def _manifest_payload() -> dict[str, Any]:
     return {
+        "manifest_version": "v0",
         "extension_id": EXTENSION_ID,
-        "extension_version": "1.0.0",
-        "extension_api_version": "1.0.0",
-        "module": "textmystery_bridge_extension",
-        "register_callable": "register",
+        "extension_version": "2.0.0",
         "workloads": [
             {
                 "workload_id": WORKLOAD_ID,
-                "workload_version": "1.0.0",
+                "entrypoint": "textmystery_bridge_extension:run_workload",
+                "required_capabilities": [],
             }
         ],
     }
@@ -38,83 +37,61 @@ def _manifest_payload() -> dict[str, Any]:
 def _module_source() -> str:
     return """from __future__ import annotations
 
+import hashlib
 import json
+from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from orket.extensions import RunPlan
+from orket_extension_sdk import ArtifactRef, WorkloadResult
 
 
-class TextMysteryBridgeWorkload:
-    workload_id = "textmystery_bridge_v1"
-    workload_version = "1.0.0"
+def run_workload(ctx, input_payload: dict[str, Any]) -> WorkloadResult:
+    operation = str(input_payload.get("operation") or "parity-check").strip().lower()
+    if operation not in {"parity-check", "leak-check"}:
+        raise ValueError("operation must be 'parity-check' or 'leak-check'")
 
-    def __init__(self) -> None:
-        self._compiled_by_plan_hash: dict[str, dict[str, Any]] = {}
+    endpoint_base_url = str(input_payload.get("endpoint_base_url") or "http://127.0.0.1:8787").strip().rstrip("/")
+    request_payload = input_payload.get("payload") if isinstance(input_payload.get("payload"), dict) else {}
+    route = "/textmystery/parity-check" if operation == "parity-check" else "/textmystery/leak-check"
+    response_payload = _post_json(endpoint_base_url + route, request_payload)
 
-    def compile(self, input_config: dict[str, Any]) -> RunPlan:
-        operation = str(input_config.get("operation") or "parity-check").strip().lower()
-        if operation not in {"parity-check", "leak-check"}:
-            raise ValueError("operation must be 'parity-check' or 'leak-check'")
-
-        endpoint_base_url = str(input_config.get("endpoint_base_url") or "http://127.0.0.1:8787").strip().rstrip("/")
-        request_payload = input_config.get("payload") if isinstance(input_config.get("payload"), dict) else {}
-        route = "/textmystery/parity-check" if operation == "parity-check" else "/textmystery/leak-check"
-        response_payload = self._post_json(endpoint_base_url + route, request_payload)
-
-        plan = RunPlan(
-            workload_id=self.workload_id,
-            workload_version=self.workload_version,
-            actions=(),
-            metadata={
-                "bridge_operation": operation,
-                "endpoint_base_url": endpoint_base_url,
-                "request_payload": request_payload,
-                "response_payload": response_payload,
-            },
-        )
-        self._compiled_by_plan_hash[plan.plan_hash()] = dict(plan.metadata)
-        return plan
-
-    def validators(self):
-        return []
-
-    def summarize(self, run_artifacts: dict[str, Any]) -> dict[str, Any]:
-        run_result = run_artifacts.get("run_result") if isinstance(run_artifacts.get("run_result"), dict) else {}
-        plan_hash = str(run_result.get("plan_hash") or "")
-        metadata = self._compiled_by_plan_hash.get(plan_hash, {})
-        response_payload = metadata.get("response_payload") if isinstance(metadata.get("response_payload"), dict) else {}
-        return {
-            "ok": True,
-            "bridge_operation": metadata.get("bridge_operation"),
-            "endpoint_base_url": metadata.get("endpoint_base_url"),
+    output_path = Path(ctx.output_dir) / "bridge_response.json"
+    output_path.write_text(json.dumps(response_payload, indent=2, sort_keys=True), encoding="utf-8")
+    digest = hashlib.sha256(output_path.read_bytes()).hexdigest()
+    return WorkloadResult(
+        ok=True,
+        output={
+            "bridge_operation": operation,
+            "endpoint_base_url": endpoint_base_url,
             "contract_response": response_payload,
-        }
-
-    def required_materials(self):
-        return []
-
-    @staticmethod
-    def _post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
-        data = json.dumps(payload).encode("utf-8")
-        req = Request(url=url, data=data, headers={"Content-Type": "application/json"}, method="POST")
-        try:
-            with urlopen(req, timeout=10) as resp:  # nosec B310 - local bridge endpoint expected
-                body = resp.read().decode("utf-8")
-        except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"bridge request failed status={exc.code} url={url} detail={detail}") from exc
-        except URLError as exc:
-            raise RuntimeError(f"bridge request connection failed url={url} detail={exc}") from exc
-        parsed = json.loads(body)
-        if not isinstance(parsed, dict):
-            raise RuntimeError("bridge endpoint returned non-object JSON")
-        return parsed
+        },
+        artifacts=[
+            ArtifactRef(
+                path="bridge_response.json",
+                digest_sha256=digest,
+                kind="bridge_contract_response",
+            )
+        ],
+    )
 
 
-def register(registry):
-    registry.register_workload(TextMysteryBridgeWorkload())
+def _post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
+    data = json.dumps(payload).encode("utf-8")
+    req = Request(url=url, data=data, headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urlopen(req, timeout=10) as resp:  # nosec B310 - local bridge endpoint expected
+            body = resp.read().decode("utf-8")
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"bridge request failed status={exc.code} url={url} detail={detail}") from exc
+    except URLError as exc:
+        raise RuntimeError(f"bridge request connection failed url={url} detail={exc}") from exc
+    parsed = json.loads(body)
+    if not isinstance(parsed, dict):
+        raise RuntimeError("bridge endpoint returned non-object JSON")
+    return parsed
 """
 
 
@@ -130,9 +107,23 @@ def main() -> int:
     extension_dir = _extension_dir(PROJECT_ROOT)
     extension_dir.mkdir(parents=True, exist_ok=True)
 
-    manifest_path = extension_dir / "orket_extension.json"
+    manifest_path = extension_dir / "extension.yaml"
     module_path = extension_dir / "textmystery_bridge_extension.py"
-    manifest_path.write_text(json.dumps(_manifest_payload(), indent=2, sort_keys=True), encoding="utf-8")
+    manifest = _manifest_payload()
+    manifest_path.write_text(
+        "\n".join(
+            [
+                f"manifest_version: {manifest['manifest_version']}",
+                f"extension_id: {manifest['extension_id']}",
+                f"extension_version: {manifest['extension_version']}",
+                "workloads:",
+                f"  - workload_id: {manifest['workloads'][0]['workload_id']}",
+                f"    entrypoint: {manifest['workloads'][0]['entrypoint']}",
+                "    required_capabilities: []",
+            ]
+        ),
+        encoding="utf-8",
+    )
     module_path.write_text(_module_source(), encoding="utf-8")
 
     catalog_path = _catalog_path()
@@ -142,13 +133,21 @@ def main() -> int:
     rows.append(
         {
             "extension_id": EXTENSION_ID,
-            "extension_version": "1.0.0",
-            "extension_api_version": "1.0.0",
+            "extension_version": "2.0.0",
+            "extension_api_version": "v0",
+            "contract_style": "sdk_v0",
             "source": "workspace/live_ext/textmystery_bridge",
             "path": str(extension_dir),
-            "module": "textmystery_bridge_extension",
-            "register_callable": "register",
-            "workloads": [{"workload_id": WORKLOAD_ID, "workload_version": "1.0.0"}],
+            "manifest_path": str(manifest_path),
+            "workloads": [
+                {
+                    "workload_id": WORKLOAD_ID,
+                    "workload_version": "2.0.0",
+                    "entrypoint": "textmystery_bridge_extension:run_workload",
+                    "required_capabilities": [],
+                    "contract_style": "sdk_v0",
+                }
+            ],
         }
     )
     payload["extensions"] = rows
