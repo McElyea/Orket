@@ -1,8 +1,9 @@
-import asyncio
+﻿import asyncio
 import json
 from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Optional, List
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Body
@@ -43,8 +44,19 @@ from orket.application.services.runtime_policy import (
 
 from pydantic import BaseModel, Field
 
-api_runtime_node = DecisionNodeRegistry().resolve_api_runtime()
+@lru_cache(maxsize=1)
+def _get_api_runtime_node():
+    return DecisionNodeRegistry().resolve_api_runtime()
 
+class _ApiRuntimeNodeProxy:
+    def __getattr__(self, name):
+        return getattr(_get_api_runtime_node(), name)
+
+    def __setattr__(self, name, value):
+        setattr(_get_api_runtime_node(), name, value)
+
+
+api_runtime_node = _ApiRuntimeNodeProxy()
 class _EngineProxy:
     def __init__(self, factory):
         self._factory = factory
@@ -1992,3 +2004,5 @@ async def websocket_interactions(session_id: str, websocket: WebSocket):
         pass
     finally:
         await stream_bus.unsubscribe(session_id, queue)
+
+

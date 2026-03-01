@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.storage.async_file_tools import AsyncFileTools
@@ -23,9 +23,16 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
     It manages Rocks, Epics, Issues, and Team Selection.
     """
 
-    def __init__(self, model: str = None):
-        self.fs = AsyncFileTools(Path("."))
-        self.reforger_tools = ReforgerTools(Path("workspace/default"), [Path(".")])
+    def __init__(
+        self,
+        model: str | None = None,
+        *,
+        provider: LocalModelProvider | None = None,
+        fs: AsyncFileTools | None = None,
+        reforger_tools: ReforgerTools | None = None,
+    ) -> None:
+        self.fs = fs or AsyncFileTools(Path("."))
+        self.reforger_tools = reforger_tools or ReforgerTools(Path("workspace/default"), [Path(".")])
 
         from orket.schema import OrganizationConfig
 
@@ -42,13 +49,13 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         selector = ModelSelector(organization=self.org)
         selected_model = selector.select(role="operations_lead", override=model)
 
-        self.provider = LocalModelProvider(model=selected_model, temperature=0.1)
+        self.provider = provider or LocalModelProvider(model=selected_model, temperature=0.1)
         self.model_root = Path("model")
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
         self._load_engine_configs()
 
-    def _load_engine_configs(self):
+    def _load_engine_configs(self) -> None:
         loader = ConfigLoader(Path("model"), "core")
 
         try:
@@ -73,7 +80,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         except (FileNotFoundError, ValueError, CardNotFound):
             pass
 
-    async def _get_inventory(self) -> Dict[str, Any]:
+    async def _get_inventory(self) -> dict[str, Any]:
         inventory = {"departments": {}}
         for dept_dir in self.model_root.iterdir():
             if dept_dir.is_dir():
@@ -214,7 +221,7 @@ Do not include commentary outside the JSON.
             )
             return f"Driver failed to process request due to internal error: {str(e)}"
 
-    async def execute_plan(self, plan: Dict[str, Any]) -> str:
+    async def execute_plan(self, plan: dict[str, Any]) -> str:
         action = plan.get("action")
         reasoning = plan.get("reasoning", "No reasoning provided.")
         response_text = str(plan.get("response", "") or "").strip()
