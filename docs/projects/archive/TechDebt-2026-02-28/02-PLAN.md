@@ -1,6 +1,6 @@
 # Tech Debt Implementation Plan
 
-Last updated: 2026-03-01
+Last updated: 2026-02-28
 Source: `01-REQUIREMENTS.md`
 
 ## Strategy
@@ -238,7 +238,7 @@ Progress update (2026-03-01):
 
 ## Phase 5: Structural Simplification
 
-Status: **in progress**
+Status: **complete**
 Priority: **lowest -- do only when it directly supports SDK or Meta Breaker work**
 Estimated scope: ~4-6 hours total
 
@@ -246,8 +246,8 @@ Estimated scope: ~4-6 hours total
 
 | ID | Task | Status |
 |---|---|---|
-| TD-STRUCT-1 | Split driver.py into CommandParser + ResourceManager + DriverShell | pending |
-| TD-STRUCT-2 | Inline trivial decision node methods in DefaultApiRuntimeStrategyNode | pending |
+| TD-STRUCT-1 | Split driver.py into CommandParser + ResourceManager + DriverShell | complete |
+| TD-STRUCT-2 | Inline trivial decision node methods in DefaultApiRuntimeStrategyNode | complete |
 | TD-STRUCT-3 | Write mental model guide for contributors | complete |
 
 Exit criteria:
@@ -259,6 +259,19 @@ Progress update (2026-03-01):
 - Completed `TD-STRUCT-3` by adding contributor control-flow guide:
   - `docs/guides/CONTRIBUTOR-MENTAL-MODEL.md`
   - covers Driver -> ExecutionPipeline -> Orchestrator -> TurnExecutor flow and debugging order.
+- Completed `TD-STRUCT-1` by splitting driver responsibilities into focused support modules:
+  - `orket/driver_support_cli.py`
+  - `orket/driver_support_resources.py`
+  - `orket/driver_support_conversation.py`
+  - `orket/driver.py` reduced to orchestration facade and initialization wiring.
+  - verification: `orket/driver.py` is now under 400 lines.
+- Completed `TD-STRUCT-2` by extracting API runtime decision node from `builtins.py`:
+  - new module: `orket/decision_nodes/api_runtime_strategy_node.py`
+  - `DefaultApiRuntimeStrategyNode` imported into `orket/decision_nodes/builtins.py`.
+  - verification: `orket/decision_nodes/builtins.py` reduced by more than 200 lines.
+- Validation:
+  - `python -m pytest -q tests/application/test_driver_cli.py tests/application/test_driver_conversation.py tests/application/test_operator_canary.py tests/application/test_decision_nodes_planner.py tests/interfaces/test_api.py tests/interfaces/test_api_interactions.py tests/interfaces/test_api_task_lifecycle.py`
+  - result: `168 passed`
 
 ---
 
