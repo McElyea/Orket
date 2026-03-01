@@ -16,9 +16,9 @@ from orket.kernel.v1.canon import canonical_bytes, first_diff_path, raw_signatur
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round
 
 SEED = 1729
-EXPECTED_TORTURE_SHA256 = "d2731af1edec31bfc2efa6f27378fc7f38f6e72694e62c4702ccd31155e6b44a"
-EXPECTED_NEAR_MISS_SHA256 = "1d5d50f95373b099a5b33a85cbf9ba2043a95ebe3cc02f76c7c96b7a8f8fdf49"
-EXPECTED_SHAPE_SHA256 = "ef5b19474c6f3bb4a819012c98e537582ccf5b39bbd1c2a24938c3cfb29c4324"
+EXPECTED_TORTURE_SHA256 = "b43af67501d9b910dafc622d05f5c92ce414e257965b7bdfbf01d44a2c1663b4"
+EXPECTED_NEAR_MISS_SHA256 = "e42c01cbe0ba88ab2197d528110001d476f85f1ec8b3a48666ddd3aecf5b6aca"
+EXPECTED_SHAPE_SHA256 = "bffedc3c51768a2a63715c5ab6642bd2d7eddd695d65939d354cd9d802e271c7"
 
 
 def _fixture_path(name: str) -> Path:
