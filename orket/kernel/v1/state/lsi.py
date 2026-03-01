@@ -388,7 +388,7 @@ class LocalSovereignIndex:
         for triplet_file in sorted(triplets_dir.rglob("*.json"), key=lambda p: p.as_posix()):
             try:
                 triplet_record = _read_json(triplet_file)
-            except Exception:
+            except (OSError, json.JSONDecodeError, TypeError):
                 continue
             if not isinstance(triplet_record, dict):
                 continue

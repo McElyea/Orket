@@ -123,7 +123,7 @@ Progress update (2026-03-01):
 
 ## Phase 3: Exception Narrowing
 
-Status: **not started**
+Status: **complete**
 Priority: **fix opportunistically when touching files, or in focused sprint**
 Estimated scope: ~2-3 hours (15 instances, each needs investigation)
 
@@ -134,7 +134,7 @@ Estimated scope: ~2-3 hours (15 instances, each needs investigation)
 | TD-EXC-1a | Narrow 4 broad catches in gitea_state_adapter | `orket/adapters/storage/gitea_state_adapter.py` | complete |
 | TD-EXC-1b | Narrow 8 broad catches in orket_sentinel | `orket/tools/ci/orket_sentinel.py` | complete |
 | TD-EXC-1c | Narrow 1 broad catch in main | `orket/main.py` | complete |
-| TD-EXC-1d | Sweep remaining except Exception catches | grep across codebase | in progress |
+| TD-EXC-1d | Sweep remaining except Exception catches | grep across codebase | complete |
 
 Approach for each instance:
 1. Read the try block
@@ -163,13 +163,32 @@ Progress update (2026-03-01):
 - Marked `TD-EXC-1b` and `TD-EXC-1c` complete because their referenced files no longer exist in the codebase:
   - `orket/tools/ci/orket_sentinel.py`
   - `orket/main.py`
-- Remaining Phase 3 work is tracked under `TD-EXC-1d` (repository-wide sweep of remaining broad catches).
+- Advanced `TD-EXC-1d` by narrowing parser/metadata catches in:
+  - `orket/extensions/manager.py`
+  - `orket/application/services/guard_agent.py`
+  - `orket/kernel/v1/canon.py`
+  - `orket/kernel/v1/state/lsi.py`
+  - `orket/kernel/v1/state/promotion.py`
+  - `orket/reforger/routes/textmystery_persona_v0.py`
+- Verification:
+  - `python -m pytest -q tests/runtime/test_extension_manager.py tests/interfaces/test_cli_extensions.py tests/application/test_guard_agent_service.py tests/kernel/v1/test_promotion_ledger.py tests/kernel/v1/test_tombstone_promotion.py tests/reforger/compiler/test_compile_textmystery_v0.py`
+  - result: `34 passed`
+- Completed `TD-EXC-1d` by narrowing the remaining broad catches in:
+  - `orket/application/workflows/orchestrator.py`
+  - `orket/runtime/execution_pipeline.py`
+  - `orket/interfaces/api.py`
+  - `orket/application/services/gitea_state_worker.py`
+  - `orket/streaming/model_provider.py`
+- Verification:
+  - `python -m pytest -q tests/application/test_orchestrator_epic.py tests/interfaces/test_api.py tests/application/test_execution_pipeline_workload_shell.py tests/application/test_execution_pipeline_session_status.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_gitea_state_loop.py tests/application/test_gitea_state_worker.py tests/application/test_gitea_state_worker_coordinator.py tests/streaming/test_stream_test_workload.py tests/streaming/test_manager.py`
+  - result: `157 passed`
+  - `rg -n "except Exception" orket` -> no matches
 
 ---
 
 ## Phase 4: Test Coverage
 
-Status: **not started**
+Status: **in progress**
 Priority: **write tests when modifying the module, or in focused test sprint**
 Estimated scope: ~4-6 hours total
 
@@ -180,13 +199,21 @@ Estimated scope: ~4-6 hours total
 | TD-TEST-1 | Webhook handler tests | 8+ tests: PR cycles, escalation, auto-merge/reject, sandbox trigger | pending |
 | TD-TEST-2 | Sandbox orchestrator tests | 6+ tests: Compose generation (3 stacks), port allocation, password gen | pending |
 | TD-TEST-3 | API concurrency tests | 5+ tests: concurrent requests, WebSocket isolation, session cleanup | pending |
-| TD-TEST-4 | Verification path security test | 2 tests: valid path, malicious path | pending |
+| TD-TEST-4 | Verification path security test | 2 tests: valid path, malicious path | complete |
 | TD-TEST-5 | Driver tests | 10+ tests: command routing, errors, edge cases | pending |
 
 Exit criteria:
 - Each module listed above has meaningful test coverage
 - All new tests pass
 - No existing tests broken
+
+Progress update (2026-03-01):
+- Completed `TD-TEST-4` with explicit fixture-path boundary tests in `tests/adapters/test_verification_subprocess.py`:
+  - `test_verification_security_allows_fixture_under_verification_root`
+  - `test_verification_security_rejects_path_traversal_fixture`
+- Validation:
+  - `python -m pytest -q tests/adapters/test_verification_subprocess.py`
+  - result: `8 passed`
 
 ---
 

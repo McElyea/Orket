@@ -204,7 +204,7 @@ class TextMysteryPersonaRouteV0:
             raise ValueError(f"missing input file: {path}")
         try:
             payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except Exception as exc:  # noqa: BLE001
+        except (OSError, yaml.YAMLError) as exc:  # type: ignore[union-attr]
             raise ValueError(f"invalid yaml: {path}") from exc
         return payload
 
@@ -232,4 +232,3 @@ class TextMysteryPersonaRouteV0:
         if isinstance(value, list):
             return [self._normalize_object(item) for item in value]
         return value
-

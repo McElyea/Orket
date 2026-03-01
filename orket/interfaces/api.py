@@ -1893,7 +1893,7 @@ async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
                     interaction_context=context,
                 )
                 await interaction_manager.finalize(session_id, turn_id)
-        except Exception as exc:
+        except (RuntimeError, ValueError, TypeError, OSError, asyncio.TimeoutError) as exc:
             await interaction_manager.cancel(turn_id)
             await context.request_commit(CommitIntent(type="decision", ref=f"fail_closed:{str(exc)}"))
             await interaction_manager.finalize(session_id, turn_id)

@@ -878,7 +878,7 @@ class Orchestrator:
                         reason="team_replan_limit_exceeded",
                         metadata={"run_id": run_id, "replan_count": current_count},
                     )
-                except Exception:
+                except (CardNotFound, ExecutionFailed, ValueError, TypeError, RuntimeError, OSError):
                     continue
             log_event(
                 "team_replan_terminal_failure",
@@ -925,7 +925,7 @@ class Orchestrator:
                     await self.async_cards.save(issue.model_dump())
                 else:
                     await self.async_cards.save(dict(issue.__dict__))
-            except Exception:
+            except (CardNotFound, ExecutionFailed, ValueError, TypeError, RuntimeError, OSError):
                 continue
         log_event(
             "team_replan_scheduled",

@@ -75,7 +75,7 @@ def first_diff_path(a: bytes, b: bytes) -> str:
     try:
         left = json.loads(a.decode("utf-8"))
         right = json.loads(b.decode("utf-8"))
-    except Exception:
+    except (UnicodeDecodeError, json.JSONDecodeError, TypeError):
         return "$"
 
     if left == right:

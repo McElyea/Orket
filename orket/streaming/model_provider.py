@@ -237,7 +237,17 @@ class OllamaModelStreamProvider(ModelStreamProvider):
             )
         except asyncio.CancelledError:
             raise
-        except Exception as exc:  # pragma: no cover - provider/runtime variability
+        except (
+            RuntimeError,
+            ValueError,
+            TypeError,
+            KeyError,
+            OSError,
+            TimeoutError,
+            asyncio.TimeoutError,
+            json.JSONDecodeError,
+            httpx.HTTPError,
+        ) as exc:  # pragma: no cover - provider/runtime variability
             yield ProviderEvent(
                 provider_turn_id=provider_turn_id,
                 event_type=ProviderEventType.ERROR,
@@ -417,7 +427,17 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
             )
         except asyncio.CancelledError:
             raise
-        except Exception as exc:  # pragma: no cover - provider/runtime variability
+        except (
+            RuntimeError,
+            ValueError,
+            TypeError,
+            KeyError,
+            OSError,
+            TimeoutError,
+            asyncio.TimeoutError,
+            json.JSONDecodeError,
+            httpx.HTTPError,
+        ) as exc:  # pragma: no cover - provider/runtime variability
             yield ProviderEvent(
                 provider_turn_id=provider_turn_id,
                 event_type=ProviderEventType.ERROR,

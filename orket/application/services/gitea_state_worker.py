@@ -71,7 +71,7 @@ class GiteaStateWorker:
                 final_state=self.success_state,
                 error=None,
             )
-        except Exception as exc:
+        except (RuntimeError, ValueError, TypeError, OSError, TimeoutError, asyncio.TimeoutError) as exc:
             await self.adapter.release_or_fail(
                 card_id,
                 final_state=self.failure_state,

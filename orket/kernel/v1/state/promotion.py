@@ -103,7 +103,7 @@ def _load_last_promoted_turn_id(committed_root: Path) -> str:
         return "turn-0000"
     try:
         data = _read_json(path)
-    except Exception:
+    except (OSError, json.JSONDecodeError, TypeError):
         return "turn-0000"
     if isinstance(data, dict):
         value = data.get("last_promoted_turn_id")
@@ -214,7 +214,7 @@ def _load_tombstone_stems(staging_root: Path, turn_id: str) -> tuple[set[str], l
         loc_base = f"/index/staging/triplets/{_pointer_token(rel)}"
         try:
             payload = _read_json(p)
-        except Exception as exc:  # noqa: BLE001
+        except (OSError, json.JSONDecodeError, TypeError) as exc:
             issues.append(
                 KernelIssue(
                     level="FAIL",
@@ -378,7 +378,7 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
         requested_turn_index = _parse_turn_index(turn_id)
         last_promoted_turn_id = _load_last_promoted_turn_id(committed_root)
         last_promoted_turn_index = _parse_turn_index(last_promoted_turn_id)
-    except Exception as exc:  # noqa: BLE001
+    except (ValueError, OSError, json.JSONDecodeError, TypeError) as exc:
         issues.append(
             KernelIssue(
                 level="FAIL",
@@ -623,7 +623,7 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
         events.append(_event_line("INFO", "promotion", "I_PROMOTION_PASS", "/index/committed", "Promotion completed.", run_id=run_id, turn_id=turn_id, stems=promoted_stems))
         return PromotionResult(outcome="PASS", promoted_stems=promoted_stems, events=events, issues=[])
 
-    except Exception as exc:  # noqa: BLE001
+    except (OSError, ValueError, TypeError, json.JSONDecodeError, shutil.Error) as exc:
         # Attempt best-effort cleanup and fail closed.
         msg = str(exc)
         issues.append(
@@ -642,7 +642,7 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
         if new_root.exists():
             try:
                 shutil.rmtree(new_root)
-            except Exception:
+            except OSError:
                 pass
 
         return PromotionResult(outcome="FAIL", promoted_stems=[], events=events, issues=issues)

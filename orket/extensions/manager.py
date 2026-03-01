@@ -903,7 +903,7 @@ class ExtensionManager:
         rows: list[dict[str, Any]] = []
         try:
             group = entry_points().select(group="orket.extensions")
-        except Exception:
+        except (AttributeError, TypeError):
             return rows
 
         for ep in group:
@@ -919,6 +919,6 @@ class ExtensionManager:
                 if "register_callable" not in descriptor:
                     descriptor["register_callable"] = "register"
                 rows.append(descriptor)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, ValueError):
                 continue
         return rows

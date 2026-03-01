@@ -1,6 +1,9 @@
-﻿from orket.domain.verification import VerificationEngine
+﻿import pytest
+
+from orket.domain.verification import VerificationEngine, VerificationSecurityError
 from orket.schema import IssueVerification, VerificationScenario
 import subprocess
+
 
 
 def test_verification_runs_in_subprocess_and_passes(tmp_path):
@@ -173,3 +176,55 @@ def test_verification_subprocess_oserror_marks_all_failed(tmp_path, monkeypatch)
     assert result.passed == 0
     assert any("fatal error" in entry.lower() for entry in result.logs)
 
+
+def test_verification_security_allows_fixture_under_verification_root(tmp_path):
+    workspace = tmp_path / "workspace"
+    verification_dir = workspace / "verification"
+    verification_dir.mkdir(parents=True)
+    (verification_dir / "fixture_safe.py").write_text(
+        "def verify(input_data):\n"
+        "    return input_data.get('value', 0)\n",
+        encoding="utf-8",
+    )
+
+    verification = IssueVerification(
+        fixture_path="verification/fixture_safe.py",
+        scenarios=[
+            VerificationScenario(
+                id="S_SAFE",
+                description="safe fixture path",
+                input_data={"value": 2},
+                expected_output=2,
+            )
+        ],
+    )
+
+    result = VerificationEngine.verify(verification, workspace)
+    assert result.passed == 1
+    assert result.failed == 0
+
+
+def test_verification_security_rejects_path_traversal_fixture(tmp_path):
+    workspace = tmp_path / "workspace"
+    (workspace / "verification").mkdir(parents=True)
+    (workspace / "agent_output").mkdir(parents=True)
+    (workspace / "agent_output" / "fixture.py").write_text(
+        "def verify(input_data):\n"
+        "    return 1\n",
+        encoding="utf-8",
+    )
+
+    verification = IssueVerification(
+        fixture_path="../agent_output/fixture.py",
+        scenarios=[
+            VerificationScenario(
+                id="S_TRAVERSAL",
+                description="malicious fixture path traversal",
+                input_data={},
+                expected_output=1,
+            )
+        ],
+    )
+
+    with pytest.raises(VerificationSecurityError, match="SECURITY VIOLATION"):
+        VerificationEngine.verify(verification, workspace)

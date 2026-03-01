@@ -1,12 +1,13 @@
 ﻿from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.exceptions import CardNotFound, ComplexityViolation
+from orket.exceptions import CardNotFound, ComplexityViolation, ExecutionFailed
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
@@ -496,7 +497,16 @@ class ExecutionPipeline:
                 artifacts=artifacts,
             )
 
-        except Exception as exc:
+        except (
+            CardNotFound,
+            ComplexityViolation,
+            ExecutionFailed,
+            RuntimeError,
+            ValueError,
+            TypeError,
+            OSError,
+            asyncio.TimeoutError,
+        ) as exc:
             self.transcript = self.orchestrator.transcript
             legacy_transcript = [
                 {"step_index": i, "role": t.role, "issue": t.issue_id, "summary": t.content, "note": t.note}
@@ -504,7 +514,7 @@ class ExecutionPipeline:
             ]
             try:
                 backlog = await self.async_cards.get_by_build(active_build)
-            except Exception:
+            except (RuntimeError, ValueError, TypeError, OSError):
                 backlog = []
 
             await self.sessions.complete_session(run_id, "failed", legacy_transcript)
@@ -584,7 +594,7 @@ class ExecutionPipeline:
                     workspace=self.workspace,
                 )
             return exported
-        except Exception as exc:
+        except (RuntimeError, ValueError, TypeError, OSError) as exc:
             log_event(
                 "run_artifact_export_failed",
                 {

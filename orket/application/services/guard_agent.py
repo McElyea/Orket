@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import hashlib
 import re
 from typing import Any, Dict, Literal
+from pydantic import ValidationError
 
 from orket.core.domain.guard_contract import (
     GuardContract,
@@ -139,7 +140,7 @@ class GuardController:
         if isinstance(raw, dict):
             try:
                 return LoopControl.model_validate(raw)
-            except Exception:
+            except ValidationError:
                 pass
 
         return LoopControl(
