@@ -38,7 +38,7 @@ class InteractionContext:
         bus: StreamBus,
         cancel_event: asyncio.Event,
         commit_sink: Callable[[CommitIntent], Awaitable[None]],
-    ):
+    ) -> None:
         self.session_id = session_id
         self.turn_id = turn_id
         self._bus = bus
@@ -64,7 +64,7 @@ class InteractionContext:
 
 
 class CommitOrchestrator:
-    def __init__(self, project_root: Path | None = None):
+    def __init__(self, project_root: Path | None = None) -> None:
         self.project_root = (project_root or Path.cwd()).resolve()
 
     async def commit(self, *, session_id: str, turn_id: str, intents: list[CommitIntent]) -> dict[str, Any]:
@@ -110,7 +110,7 @@ class CommitOrchestrator:
 
 
 class InteractionManager:
-    def __init__(self, *, bus: StreamBus, commit_orchestrator: CommitOrchestrator, project_root: Path | None = None):
+    def __init__(self, *, bus: StreamBus, commit_orchestrator: CommitOrchestrator, project_root: Path | None = None) -> None:
         self.bus = bus
         self.commit_orchestrator = commit_orchestrator
         self.project_root = (project_root or Path.cwd()).resolve()

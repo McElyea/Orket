@@ -2,7 +2,7 @@ import json
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import Any, Dict, List, Callable, Optional
+from typing import Any, Callable
 from orket.time_utils import now_local
 
 # Initialize system logger
@@ -15,18 +15,18 @@ def setup_logging(workspace: Path) -> Path:
     return workspace / "orket.log"
 
 # Global list of event subscribers (e.g. for WebSockets)
-_subscribers: List[Callable[[Dict[str, Any]], None]] = []
+_subscribers: list[Callable[[dict[str, Any]], None]] = []
 
-def subscribe_to_events(callback: Callable[[Dict[str, Any]], None]):
+def subscribe_to_events(callback: Callable[[dict[str, Any]], None]) -> None:
     _subscribers.append(callback)
 
-def unsubscribe_from_events(callback: Callable[[Dict[str, Any]], None]):
+def unsubscribe_from_events(callback: Callable[[dict[str, Any]], None]) -> None:
     if callback in _subscribers:
         _subscribers.remove(callback)
 
 from orket.naming import sanitize_name
 
-def _log_path(workspace: Path, role: str = None) -> Path:
+def _log_path(workspace: Path, role: str | None = None) -> Path:
     root_log = Path("workspace/default/orket.log")
     root_log.parent.mkdir(parents=True, exist_ok=True)
     
@@ -54,7 +54,7 @@ RUNTIME_EVENT_ARTIFACT_EVENTS = {
 }
 
 
-def _build_runtime_event(event: str, data: Dict[str, Any], role: str) -> Dict[str, Any]:
+def _build_runtime_event(event: str, data: dict[str, Any], role: str) -> dict[str, Any]:
     payload = dict(data or {})
     return {
         "schema_version": RUNTIME_EVENT_SCHEMA_VERSION,
@@ -82,7 +82,7 @@ def _build_runtime_event(event: str, data: Dict[str, Any], role: str) -> Dict[st
     }
 
 
-def _append_runtime_event_artifact(workspace: Path, runtime_event: Dict[str, Any]) -> None:
+def _append_runtime_event_artifact(workspace: Path, runtime_event: dict[str, Any]) -> None:
     session_id = str(runtime_event.get("session_id") or "").strip()
     if not session_id:
         return
@@ -95,7 +95,13 @@ def _append_runtime_event_artifact(workspace: Path, runtime_event: Dict[str, Any
         handle.write(json.dumps(runtime_event, ensure_ascii=False, default=str) + "\n")
 
 
-def log_event(event: str, data: Dict[str, Any] = None, workspace: Optional[Path] = None, role: str = None, **kwargs) -> None:
+def log_event(
+    event: str,
+    data: dict[str, Any] | None = None,
+    workspace: Path | None = None,
+    role: str | None = None,
+    **kwargs: Any,
+) -> None:
     """
     Unified log router.
     Supports:
@@ -170,7 +176,7 @@ def log_model_selected(role: str, model: str, temperature: float, seed, epic: st
     )
 
 
-def log_model_usage(role: str, model: str, tokens: Dict[str, Any], step_index: int, epic: str, workspace: Path) -> None:
+def log_model_usage(role: str, model: str, tokens: dict[str, Any], step_index: int, epic: str, workspace: Path) -> None:
     log_event(
         "model_usage",
         {
@@ -185,7 +191,7 @@ def log_model_usage(role: str, model: str, tokens: Dict[str, Any], step_index: i
         workspace=workspace,
     )
 
-def get_member_metrics(workspace: Path) -> Dict[str, Any]:
+def get_member_metrics(workspace: Path) -> dict[str, Any]:
     """
     Aggregates stats per role from the workspace/orket.log.
     """
@@ -222,7 +228,7 @@ def get_member_metrics(workspace: Path) -> Dict[str, Any]:
                 continue
     return metrics
 
-def log_crash(exception: Exception, traceback_str: str, workspace: Optional[Path] = None):
+def log_crash(exception: Exception, traceback_str: str, workspace: Path | None = None) -> None:
     """
     Safely logs a crash to a rotating file.
     """

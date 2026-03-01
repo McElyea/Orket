@@ -14,7 +14,7 @@ import os
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 
 class AsyncFileTools:
@@ -22,11 +22,11 @@ class AsyncFileTools:
     Service for non-blocking file operations.
     """
 
-    def __init__(self, workspace_root: Path, references: List[Path] = None):
+    def __init__(self, workspace_root: Path, references: list[Path] | None = None) -> None:
         self.workspace_root = workspace_root
         self.references = references or []
 
-    def _run_async(self, coro):
+    def _run_async(self, coro: Any) -> Any:
         """
         Bridge async file I/O for synchronous callers.
 
@@ -98,7 +98,7 @@ class AsyncFileTools:
         async with aiofiles.open(path, mode='r', encoding='utf-8') as f:
             return await f.read()
 
-    async def write_file(self, path_str: str, content: str | Dict) -> str:
+    async def write_file(self, path_str: str, content: str | dict[str, Any]) -> str:
         """
         Write content to file asynchronously.
         """
@@ -113,7 +113,7 @@ class AsyncFileTools:
         
         return str(path)
 
-    async def list_directory(self, path_str: str = ".") -> List[str]:
+    async def list_directory(self, path_str: str = ".") -> list[str]:
         """
         List directory contents asynchronously (using thread pool for os.listdir).
         """
@@ -129,8 +129,8 @@ class AsyncFileTools:
     def read_file_sync(self, path_str: str) -> str:
         return self._run_async(self.read_file(path_str))
 
-    def write_file_sync(self, path_str: str, content: str | Dict) -> str:
+    def write_file_sync(self, path_str: str, content: str | dict[str, Any]) -> str:
         return self._run_async(self.write_file(path_str, content))
 
-    def list_directory_sync(self, path_str: str = ".") -> List[str]:
+    def list_directory_sync(self, path_str: str = ".") -> list[str]:
         return self._run_async(self.list_directory(path_str))
