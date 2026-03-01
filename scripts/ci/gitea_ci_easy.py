@@ -9,6 +9,7 @@ import os
 import time
 import urllib.parse
 import urllib.request
+import urllib.error
 from typing import Any
 
 from dotenv import dotenv_values
@@ -193,6 +194,19 @@ def _print_json(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, sort_keys=True))
 
 
+def _hint_for_error(*, base_url: str, error: Exception) -> str:
+    msg = str(error)
+    if "404" in msg:
+        if "github.com" in base_url.lower():
+            return "Configured URL appears to be GitHub, not Gitea. Set ORKET_GITEA_URL to your Gitea base URL."
+        return "Gitea Actions API endpoint not found. Confirm ORKET_GITEA_URL points to a Gitea server with Actions enabled."
+    if "401" in msg or "403" in msg:
+        return "Authentication failed. Verify ORKET_GITEA_TOKEN has repo/actions scope."
+    if "timed out" in msg.lower():
+        return "Request timed out. Check network path to Gitea and server availability."
+    return "Check ORKET_GITEA_URL/OWNER/REPO/TOKEN values and server action API availability."
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Easy Gitea CI helper for trigger/watch/status.")
     parser.add_argument("--gitea-url", default="")
@@ -246,112 +260,121 @@ def main() -> None:
     if missing:
         raise SystemExit("Missing required configuration: " + ", ".join(missing))
 
-    if args.command == "status":
-        runs = _fetch_runs(base_url=base_url, owner=owner, repo=repo, token=token, limit=max(1, int(args.limit)))
-        _print_json(
-            {
-                "status": "ok",
-                "count": len(runs),
-                "runs": [
+    try:
+        if args.command == "status":
+            runs = _fetch_runs(base_url=base_url, owner=owner, repo=repo, token=token, limit=max(1, int(args.limit)))
+            _print_json(
+                {
+                    "status": "ok",
+                    "count": len(runs),
+                    "runs": [
+                        {
+                            "id": str(item.get("id") or item.get("run_id") or ""),
+                            "name": str(item.get("name") or item.get("workflow_name") or ""),
+                            "branch": str(item.get("head_branch") or item.get("branch") or ""),
+                            "status": str(item.get("status") or ""),
+                            "conclusion": str(item.get("conclusion") or ""),
+                            "created_at": str(item.get("created_at") or ""),
+                            "html_url": str(item.get("html_url") or item.get("url") or ""),
+                            "failed": _run_failed(item),
+                        }
+                        for item in runs
+                    ],
+                }
+            )
+            return
+
+        if args.command == "watch":
+            run = _wait_for_completion(
+                base_url=base_url,
+                owner=owner,
+                repo=repo,
+                token=token,
+                run_id=str(args.run_id),
+                timeout_s=max(30, int(args.timeout_s)),
+                poll_s=max(2, int(args.poll_s)),
+            )
+            _print_json(
+                {
+                    "status": "ok",
+                    "run_id": str(run.get("id") or run.get("run_id") or ""),
+                    "workflow_name": str(run.get("name") or run.get("workflow_name") or ""),
+                    "run_status": str(run.get("status") or ""),
+                    "conclusion": str(run.get("conclusion") or ""),
+                    "html_url": str(run.get("html_url") or run.get("url") or ""),
+                }
+            )
+            return
+
+        if args.command == "trigger":
+            workflow_id = _resolve_workflow_id(
+                base_url=base_url,
+                owner=owner,
+                repo=repo,
+                token=token,
+                workflow=str(args.workflow),
+            )
+            marker = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+            _trigger_workflow(
+                base_url=base_url,
+                owner=owner,
+                repo=repo,
+                token=token,
+                workflow_id=workflow_id,
+                ref=str(args.ref),
+            )
+            if not bool(args.wait):
+                _print_json(
                     {
-                        "id": str(item.get("id") or item.get("run_id") or ""),
-                        "name": str(item.get("name") or item.get("workflow_name") or ""),
-                        "branch": str(item.get("head_branch") or item.get("branch") or ""),
-                        "status": str(item.get("status") or ""),
-                        "conclusion": str(item.get("conclusion") or ""),
-                        "created_at": str(item.get("created_at") or ""),
-                        "html_url": str(item.get("html_url") or item.get("url") or ""),
-                        "failed": _run_failed(item),
+                        "status": "ok",
+                        "workflow_id": workflow_id,
+                        "ref": str(args.ref),
+                        "message": "Triggered workflow dispatch.",
                     }
-                    for item in runs
-                ],
-            }
-        )
-        return
-
-    if args.command == "watch":
-        run = _wait_for_completion(
-            base_url=base_url,
-            owner=owner,
-            repo=repo,
-            token=token,
-            run_id=str(args.run_id),
-            timeout_s=max(30, int(args.timeout_s)),
-            poll_s=max(2, int(args.poll_s)),
-        )
-        _print_json(
-            {
-                "status": "ok",
-                "run_id": str(run.get("id") or run.get("run_id") or ""),
-                "workflow_name": str(run.get("name") or run.get("workflow_name") or ""),
-                "run_status": str(run.get("status") or ""),
-                "conclusion": str(run.get("conclusion") or ""),
-                "html_url": str(run.get("html_url") or run.get("url") or ""),
-            }
-        )
-        return
-
-    if args.command == "trigger":
-        workflow_id = _resolve_workflow_id(
-            base_url=base_url,
-            owner=owner,
-            repo=repo,
-            token=token,
-            workflow=str(args.workflow),
-        )
-        marker = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
-        _trigger_workflow(
-            base_url=base_url,
-            owner=owner,
-            repo=repo,
-            token=token,
-            workflow_id=workflow_id,
-            ref=str(args.ref),
-        )
-        if not bool(args.wait):
+                )
+                return
+            run = _wait_for_new_run(
+                base_url=base_url,
+                owner=owner,
+                repo=repo,
+                token=token,
+                workflow_id=workflow_id,
+                branch=str(args.ref),
+                min_created_at=marker,
+                timeout_s=max(30, int(args.timeout_s)),
+                poll_s=max(2, int(args.poll_s)),
+            )
+            run_id = str(run.get("id") or run.get("run_id") or "")
+            done = _wait_for_completion(
+                base_url=base_url,
+                owner=owner,
+                repo=repo,
+                token=token,
+                run_id=run_id,
+                timeout_s=max(30, int(args.timeout_s)),
+                poll_s=max(2, int(args.poll_s)),
+            )
             _print_json(
                 {
                     "status": "ok",
                     "workflow_id": workflow_id,
-                    "ref": str(args.ref),
-                    "message": "Triggered workflow dispatch.",
+                    "run_id": str(done.get("id") or done.get("run_id") or run_id),
+                    "run_status": str(done.get("status") or ""),
+                    "conclusion": str(done.get("conclusion") or ""),
+                    "html_url": str(done.get("html_url") or done.get("url") or ""),
                 }
             )
             return
-        run = _wait_for_new_run(
-            base_url=base_url,
-            owner=owner,
-            repo=repo,
-            token=token,
-            workflow_id=workflow_id,
-            branch=str(args.ref),
-            min_created_at=marker,
-            timeout_s=max(30, int(args.timeout_s)),
-            poll_s=max(2, int(args.poll_s)),
-        )
-        run_id = str(run.get("id") or run.get("run_id") or "")
-        done = _wait_for_completion(
-            base_url=base_url,
-            owner=owner,
-            repo=repo,
-            token=token,
-            run_id=run_id,
-            timeout_s=max(30, int(args.timeout_s)),
-            poll_s=max(2, int(args.poll_s)),
-        )
+    except (RuntimeError, TimeoutError, urllib.error.URLError, urllib.error.HTTPError, ValueError) as exc:
         _print_json(
             {
-                "status": "ok",
-                "workflow_id": workflow_id,
-                "run_id": str(done.get("id") or done.get("run_id") or run_id),
-                "run_status": str(done.get("status") or ""),
-                "conclusion": str(done.get("conclusion") or ""),
-                "html_url": str(done.get("html_url") or done.get("url") or ""),
+                "status": "error",
+                "error": str(exc),
+                "hint": _hint_for_error(base_url=base_url, error=exc),
             }
         )
-        return
+        raise SystemExit(1) from exc
 
 
 if __name__ == "__main__":
     main()
-
