@@ -9,13 +9,15 @@ from pathlib import Path
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import promote_turn
 
+CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
+
 
 CODE_TOKEN_RE = re.compile(r"\[CODE:([A-Z0-9_]+)\]")
 CODE_PATTERN_RE = re.compile(r"^[EI]_[A-Z0-9_]+$")
 
 
 def _registry_codes() -> list[str]:
-    payload = json.loads(Path("docs/projects/OS/contracts/error-codes-v1.json").read_text(encoding="utf-8"))
+    payload = json.loads((CONTRACTS_ROOT / "error-codes-v1.json").read_text(encoding="utf-8"))
     codes = payload.get("codes")
     if isinstance(codes, list):
         return [code for code in codes if isinstance(code, str)]
@@ -25,7 +27,7 @@ def _registry_codes() -> list[str]:
 
 
 def _registry_digest() -> str:
-    payload = json.loads(Path("docs/projects/OS/contracts/error-codes-v1.json").read_text(encoding="utf-8"))
+    payload = json.loads((CONTRACTS_ROOT / "error-codes-v1.json").read_text(encoding="utf-8"))
     canonical = json.dumps(
         payload,
         sort_keys=True,
@@ -104,5 +106,5 @@ def test_emitted_issue_and_event_codes_are_registered() -> None:
     missing = sorted(code for code in emitted_codes if code not in codes)
     assert not missing, (
         "Violation: Emitted code(s) are not registered in "
-        f"docs/projects/OS/contracts/error-codes-v1.json: {missing}"
+        f"{CONTRACTS_ROOT.as_posix()}/error-codes-v1.json: {missing}"
     )

@@ -5,6 +5,8 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
+
 
 def test_kernel_capability_policy_artifact_shape_is_valid() -> None:
     policy_path = Path("model/core/contracts/kernel_capability_policy_v1.json")
@@ -33,7 +35,7 @@ def test_kernel_capability_policy_artifact_shape_is_valid() -> None:
 
 def test_kernel_capability_policy_artifact_conforms_to_schema() -> None:
     policy_path = Path("model/core/contracts/kernel_capability_policy_v1.json")
-    schema_path = Path("docs/projects/OS/contracts/kernel-capability-policy-v1.schema.json")
+    schema_path = CONTRACTS_ROOT / "kernel-capability-policy-v1.schema.json"
     payload = json.loads(policy_path.read_text(encoding="utf-8"))
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     Draft202012Validator(schema).validate(payload)

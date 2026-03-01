@@ -16,7 +16,11 @@
     "discovery": "platform",
     "domain": "domain",
     "driver": "platform",
+    "driver_support_cli": "platform",
+    "driver_support_conversation": "platform",
+    "driver_support_resources": "platform",
     "events": "platform",
+    "extensions": "platform",
     "exceptions": "platform",
     "hardware": "platform",
     "infrastructure": "infrastructure",
@@ -30,6 +34,7 @@
     "platform": "platform",
     "policy": "platform",
     "preview": "platform",
+    "reforger": "platform",
     "repositories": "platform",
     "runtime": "runtime",
     "runtime_paths": "platform",
@@ -38,6 +43,7 @@
     "session": "platform",
     "settings": "platform",
     "state": "platform",
+    "streaming": "platform",
     "time_utils": "platform",
     "tool_families": "adapters",
     "tool_runtime": "adapters",
@@ -46,6 +52,8 @@
     "utils": "platform",
     "vendors": "vendors",
     "webhook_server": "interfaces"
+    ,
+    "workloads": "platform"
   },
   "forbidden_edges": [
     {

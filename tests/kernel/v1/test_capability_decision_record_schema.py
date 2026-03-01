@@ -6,11 +6,11 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
+
 
 def _schema() -> dict:
-    return json.loads(
-        Path("docs/projects/OS/contracts/capability-decision-record.schema.json").read_text(encoding="utf-8")
-    )
+    return json.loads((CONTRACTS_ROOT / "capability-decision-record.schema.json").read_text(encoding="utf-8"))
 
 
 def _base_record() -> dict:

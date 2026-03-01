@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -26,6 +27,8 @@ from orket.reforger.runbundle import (
     prepare_run_dirs,
     write_manifest,
 )
+
+LOGGER = logging.getLogger("orket.reforger")
 
 
 def _tool_version() -> str:
@@ -212,7 +215,7 @@ def _run_reforge(args: argparse.Namespace) -> int:
         },
     }
     write_manifest(dirs["manifest"], manifest_payload)
-    print(dirs["summary"].read_text(encoding="utf-8"))
+    LOGGER.info("%s", dirs["summary"].read_text(encoding="utf-8"))
 
     hard_violations = int(best_result.hard_fail_count)
     if str(args.save_best).lower() == "true":
@@ -254,23 +257,23 @@ def _init_reforge(args: argparse.Namespace) -> int:
         (target / "system.txt").write_text("Follow constraints strictly.\n", encoding="utf-8")
     if not (target / "constraints.yaml").exists():
         (target / "constraints.yaml").write_text(mode_text, encoding="utf-8")
-    print(f"Initialized pack: {target}")
+    LOGGER.info("Initialized pack: %s", target)
     return 0
 
 
 def _open_last_reforge() -> int:
     runs_root = _workspace_root() / "runs"
     if not runs_root.is_dir():
-        print("No runs directory found.")
+        LOGGER.info("No runs directory found.")
         return 0
     candidates = sorted([item for item in runs_root.iterdir() if item.is_dir()], key=lambda path: path.name)
     if not candidates:
-        print("No runs available.")
+        LOGGER.info("No runs available.")
         return 0
     last = candidates[-1]
     report = last / "diff" / "best_vs_baseline.md"
     if not report.exists():
-        print(f"Last run has no diff report: {last}")
+        LOGGER.info("Last run has no diff report: %s", last)
         return 0
     try:
         if os.name == "nt":
@@ -278,10 +281,10 @@ def _open_last_reforge() -> int:
         elif os.name == "posix":
             subprocess.run(["xdg-open", str(report)], check=False)
         else:
-            print(f"Open not supported on this platform. Report: {report}")
+            LOGGER.info("Open not supported on this platform. Report: %s", report)
             return 0
     except OSError:
-        print(f"Could not open report automatically. Report: {report}")
+        LOGGER.warning("Could not open report automatically. Report: %s", report)
     return 0
 
 
@@ -337,12 +340,12 @@ def handle_reforge(args: argparse.Namespace) -> int:
             max_iters=int(args.max_iters),
             scenario_pack_path=Path(str(args.scenario_pack)).resolve(),
         )
-        print(f"ok={result.ok}")
-        print(f"hard_fail_count={result.hard_fail_count}")
-        print(f"best_candidate_id={result.best_candidate_id}")
-        print(f"best_score={result.best_score:.6f}")
-        print(f"artifact_root={result.artifact_root}")
-        print(f"materialized_root={result.materialized_root}")
+        LOGGER.info("ok=%s", result.ok)
+        LOGGER.info("hard_fail_count=%s", result.hard_fail_count)
+        LOGGER.info("best_candidate_id=%s", result.best_candidate_id)
+        LOGGER.info("best_score=%.6f", result.best_score)
+        LOGGER.info("artifact_root=%s", result.artifact_root)
+        LOGGER.info("materialized_root=%s", result.materialized_root)
         return 0 if result.ok else 1
-    print("unsupported reforge command")
+    LOGGER.error("unsupported reforge command")
     return 2

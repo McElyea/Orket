@@ -6,13 +6,15 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
+
 
 def _load(path: str) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def test_replay_bundle_schema_requires_turn_paths() -> None:
-    schema = _load("docs/projects/OS/contracts/replay-bundle.schema.json")
+    schema = _load(str(CONTRACTS_ROOT / "replay-bundle.schema.json"))
     validator = Draft202012Validator(schema)
 
     valid_bundle = {
@@ -46,7 +48,7 @@ def test_replay_bundle_schema_requires_turn_paths() -> None:
 
 
 def test_replay_report_schema_accepts_structured_mismatch_and_nullable_digests() -> None:
-    schema = _load("docs/projects/OS/contracts/replay-report.schema.json")
+    schema = _load(str(CONTRACTS_ROOT / "replay-report.schema.json"))
     validator = Draft202012Validator(schema)
 
     report = {

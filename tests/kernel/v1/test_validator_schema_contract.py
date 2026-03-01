@@ -17,6 +17,8 @@ from orket.kernel.v1.validator import (
     start_run_v1,
 )
 
+CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
+
 
 def _load_schema(path: str) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
@@ -24,12 +26,12 @@ def _load_schema(path: str) -> dict:
 
 def _build_registry(root_schema: dict) -> Registry:
     schema_paths = [
-        "docs/projects/OS/contracts/kernel-api-v1.schema.json",
-        "docs/projects/OS/contracts/turn-result.schema.json",
-        "docs/projects/OS/contracts/kernel-issue.schema.json",
-        "docs/projects/OS/contracts/replay-report.schema.json",
-        "docs/projects/OS/contracts/capability-decision.schema.json",
-        "docs/projects/OS/contracts/capability-decision-record.schema.json",
+        str(CONTRACTS_ROOT / "kernel-api-v1.schema.json"),
+        str(CONTRACTS_ROOT / "turn-result.schema.json"),
+        str(CONTRACTS_ROOT / "kernel-issue.schema.json"),
+        str(CONTRACTS_ROOT / "replay-report.schema.json"),
+        str(CONTRACTS_ROOT / "capability-decision.schema.json"),
+        str(CONTRACTS_ROOT / "capability-decision-record.schema.json"),
     ]
     registry = Registry().with_resource(
         root_schema["$id"],
@@ -44,7 +46,7 @@ def _build_registry(root_schema: dict) -> Registry:
 
 
 def test_start_run_v1_response_conforms_to_kernel_api_schema() -> None:
-    kernel_api = _load_schema("docs/projects/OS/contracts/kernel-api-v1.schema.json")
+    kernel_api = _load_schema(str(CONTRACTS_ROOT / "kernel-api-v1.schema.json"))
     registry = _build_registry(kernel_api)
     response_schema = {"$ref": f"{kernel_api['$id']}#/$defs/StartRunResponse"}
 
@@ -60,7 +62,7 @@ def test_start_run_v1_response_conforms_to_kernel_api_schema() -> None:
 
 
 def test_execute_turn_v1_response_conforms_to_turn_result_schema() -> None:
-    turn_result_schema = _load_schema("docs/projects/OS/contracts/turn-result.schema.json")
+    turn_result_schema = _load_schema(str(CONTRACTS_ROOT / "turn-result.schema.json"))
     registry = _build_registry(turn_result_schema)
 
     with tempfile.TemporaryDirectory(prefix="orket_validator_schema_") as tmp:
@@ -89,7 +91,7 @@ def test_execute_turn_v1_response_conforms_to_turn_result_schema() -> None:
 
 
 def test_finish_run_v1_response_conforms_to_kernel_api_schema() -> None:
-    kernel_api = _load_schema("docs/projects/OS/contracts/kernel-api-v1.schema.json")
+    kernel_api = _load_schema(str(CONTRACTS_ROOT / "kernel-api-v1.schema.json"))
     registry = _build_registry(kernel_api)
     response_schema = {"$ref": f"{kernel_api['$id']}#/$defs/FinishRunResponse"}
 
@@ -108,7 +110,7 @@ def test_finish_run_v1_response_conforms_to_kernel_api_schema() -> None:
 
 
 def test_replay_run_v1_response_conforms_to_replay_report_schema() -> None:
-    replay_report_schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    replay_report_schema = _load_schema(str(CONTRACTS_ROOT / "replay-report.schema.json"))
     registry = _build_registry(replay_report_schema)
 
     response = replay_run_v1(
@@ -131,7 +133,7 @@ def test_replay_run_v1_response_conforms_to_replay_report_schema() -> None:
 
 
 def test_compare_runs_v1_response_conforms_to_replay_report_schema() -> None:
-    replay_report_schema = _load_schema("docs/projects/OS/contracts/replay-report.schema.json")
+    replay_report_schema = _load_schema(str(CONTRACTS_ROOT / "replay-report.schema.json"))
     registry = _build_registry(replay_report_schema)
 
     response = compare_runs_v1(
@@ -146,7 +148,7 @@ def test_compare_runs_v1_response_conforms_to_replay_report_schema() -> None:
 
 
 def test_authorize_tool_call_v1_response_conforms_to_kernel_api_schema() -> None:
-    kernel_api = _load_schema("docs/projects/OS/contracts/kernel-api-v1.schema.json")
+    kernel_api = _load_schema(str(CONTRACTS_ROOT / "kernel-api-v1.schema.json"))
     registry = _build_registry(kernel_api)
     response_schema = {"$ref": f"{kernel_api['$id']}#/$defs/AuthorizeToolCallResponse"}
 
@@ -161,7 +163,7 @@ def test_authorize_tool_call_v1_response_conforms_to_kernel_api_schema() -> None
 
 
 def test_resolve_capability_v1_response_conforms_to_kernel_api_schema() -> None:
-    kernel_api = _load_schema("docs/projects/OS/contracts/kernel-api-v1.schema.json")
+    kernel_api = _load_schema(str(CONTRACTS_ROOT / "kernel-api-v1.schema.json"))
     registry = _build_registry(kernel_api)
     response_schema = {"$ref": f"{kernel_api['$id']}#/$defs/ResolveCapabilityResponse"}
 
