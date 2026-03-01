@@ -6,6 +6,31 @@ on:
   pull_request:
 
 jobs:
+  rulesim_determinism_matrix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Enforce rulesim golden determinism
+        run: |
+          python -m pytest -q tests/rulesim/test_toy4_golden.py
+
   docs_hygiene:
     runs-on: ubuntu-latest
     steps:
