@@ -171,7 +171,7 @@ Progress update (2026-02-28):
 
 ### Phase 5: Documentation and Deprecation Gates
 
-Status: **in progress**
+Status: **complete**
 
 Deliverables:
 1. Public docs updated to SDK v0 seam language
@@ -191,7 +191,7 @@ Progress update (2026-02-28):
 
 ### Phase 6: Hardening
 
-Status: **in progress**
+Status: **complete**
 
 Deliverables:
 1. Deterministic hint/disambiguation policy conformance tests (TextMystery-specific)
@@ -215,6 +215,9 @@ Progress update (2026-02-28):
   - script: `scripts/run_textmystery_policy_conformance.py`
   - runs hint/disambiguation conformance tests in external TextMystery repo and emits JSON report
   - coverage: `tests/application/test_run_textmystery_policy_conformance.py`
+- Validation evidence:
+  - `python scripts/run_textmystery_policy_conformance.py --textmystery-root C:/Source/Orket-Extensions/TextMystery --output workspace/diagnostics/textmystery_policy_conformance.latest.json`
+  - latest run result: pass (`7 passed`)
 
 ---
 
