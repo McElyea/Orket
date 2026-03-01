@@ -61,6 +61,6 @@ After restore:
 3. If off-site copy is required, encrypt backup artifacts before transfer.
 
 ## Related Docs
-1. `docs/GITEA_STATE_OPERATIONAL_GUIDE.md`
-2. `docs/GITEA_WEBHOOK_SETUP.md`
-3. `docs/PRODUCT_PUBLISHING.md`
+1. `docs/process/GITEA_STATE_OPERATIONAL_GUIDE.md`
+2. `docs/process/GITEA_WEBHOOK_SETUP.md`
+3. `docs/process/PRODUCT_PUBLISHING.md`

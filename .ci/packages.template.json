@@ -1,0 +1,29 @@
+{
+  "global_trigger_paths": [
+    ".gitea/workflows",
+    "scripts/ci",
+    ".ci/packages.json"
+  ],
+  "packages": [
+    {
+      "id": "core",
+      "path": "packages/core",
+      "python_version": "3.11",
+      "working_directory": "packages/core",
+      "install_command": "python -m pip install --upgrade pip && python -m pip install -e \".[dev]\"",
+      "test_command": "python -m pytest -q tests/",
+      "lint_command": "ruff check src/",
+      "pyproject": "packages/core/pyproject.toml"
+    },
+    {
+      "id": "sdk",
+      "path": "packages/sdk",
+      "python_version": "3.11",
+      "working_directory": "packages/sdk",
+      "install_command": "python -m pip install --upgrade pip && python -m pip install -e \".[dev]\"",
+      "test_command": "python -m pytest -q tests/",
+      "lint_command": "ruff check src/",
+      "pyproject": "packages/sdk/pyproject.toml"
+    }
+  ]
+}

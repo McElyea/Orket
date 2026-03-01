@@ -1,0 +1,9 @@
+{
+  "schema_version": "ci_failure_policy.v1",
+  "main_branch": "main",
+  "stale_threshold_runs": 3,
+  "required_main_workflows": [
+    "Quality",
+    "Monorepo Packages CI"
+  ]
+}

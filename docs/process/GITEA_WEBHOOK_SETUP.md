@@ -82,6 +82,6 @@ sqlite3 .orket/durable/db/webhook.db "SELECT pr_key, cycle_count, status FROM pr
    - Missing writable `.orket/durable/db/` path.
 
 ## Related Docs
-1. `docs/PR_REVIEW_POLICY.md`
+1. `docs/process/PR_REVIEW_POLICY.md`
 2. `docs/SECURITY.md`
-3. `docs/GITEA_STATE_OPERATIONAL_GUIDE.md`
+3. `docs/process/GITEA_STATE_OPERATIONAL_GUIDE.md`

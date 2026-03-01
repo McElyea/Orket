@@ -6,6 +6,18 @@ from typing import Any, Protocol
 CapabilityId = str
 
 
+_CAPABILITY_VOCAB: dict[str, dict[str, Any]] = {
+    "workspace.root": {"deterministic": True},
+    "artifact.root": {"deterministic": True},
+    "time.now": {"deterministic": False},
+    "rng": {"deterministic": True},
+    "model.generate": {"deterministic": False},
+    "audio.play": {"deterministic": False},
+    "tts.speak": {"deterministic": False},
+    "speech.play_clip": {"deterministic": False},
+}
+
+
 class CapabilityProvider(Protocol):
     """Provider contract for a named capability."""
 
@@ -45,3 +57,36 @@ class CapabilityRegistry:
     def preflight(self, required_capabilities: list[CapabilityId]) -> list[CapabilityId]:
         missing = [cap for cap in required_capabilities if cap not in self._providers]
         return sorted(set(missing))
+
+
+def load_capability_vocab() -> dict[str, dict[str, Any]]:
+    return dict(_CAPABILITY_VOCAB)
+
+
+def validate_capabilities(
+    required_capabilities: list[str],
+    *,
+    strict: bool,
+    vocab: dict[str, dict[str, Any]] | None = None,
+) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    known = set((vocab or load_capability_vocab()).keys())
+    seen: set[str] = set()
+
+    for raw in list(required_capabilities or []):
+        capability_id = str(raw or "").strip()
+        if not capability_id:
+            errors.append("E_SDK_CAPABILITY_INVALID_ID")
+            continue
+        if capability_id in seen:
+            continue
+        seen.add(capability_id)
+        if capability_id not in known:
+            code = f"E_SDK_CAPABILITY_UNKNOWN: {capability_id}"
+            if strict:
+                errors.append(code)
+            else:
+                warnings.append(code)
+
+    return errors, warnings

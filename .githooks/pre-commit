@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -eu
+
+python scripts/ci/stamp_changed_versions.py --config .ci/packages.json

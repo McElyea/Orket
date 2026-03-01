@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from importlib import metadata
 from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Tuple
@@ -9,6 +10,9 @@ import zipfile
 import tomllib
 
 from pydantic import ValidationError
+from orket_extension_sdk.capabilities import load_capability_vocab, validate_capabilities
+from orket_extension_sdk import __version__ as sdk_version
+from orket_extension_sdk.manifest import load_manifest as load_sdk_manifest
 
 from orket.core.domain.orket_manifest import (
     OrketManifest,
@@ -34,6 +38,10 @@ ERROR_PACK_VALIDATE_FAILED = "E_PACK_VALIDATE_FAILED"
 ERROR_PACK_UNSAFE_ARCHIVE_PATH = "E_PACK_UNSAFE_ARCHIVE_PATH"
 ERROR_INSPECT_TARGET_NOT_FOUND = "E_INSPECT_TARGET_NOT_FOUND"
 ERROR_INSPECT_MANIFEST_NOT_FOUND = "E_INSPECT_MANIFEST_NOT_FOUND"
+ERROR_SDK_COMMAND_REQUIRED = "E_SDK_COMMAND_REQUIRED"
+ERROR_SDK_MANIFEST_NOT_FOUND = "E_SDK_MANIFEST_NOT_FOUND"
+ERROR_SDK_ENTRYPOINT_INVALID = "E_SDK_ENTRYPOINT_INVALID"
+ERROR_SDK_ENTRYPOINT_MISSING = "E_SDK_ENTRYPOINT_MISSING"
 
 
 def _resolve_manifest_path(target: Path) -> Tuple[Path | None, Path]:
@@ -518,6 +526,149 @@ def _is_safe_archive_name(name: str) -> bool:
     return normalized == str(pure)
 
 
+def _resolve_sdk_manifest_path(target: Path) -> Path | None:
+    if target.is_file():
+        return target
+    for filename in ("extension.yaml", "extension.yml", "extension.json"):
+        candidate = target / filename
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _parse_sdk_entrypoint(value: str) -> tuple[str, str]:
+    module_name, sep, attr_name = str(value or "").strip().partition(":")
+    if sep != ":" or not module_name.strip() or not attr_name.strip():
+        raise ValueError(ERROR_SDK_ENTRYPOINT_INVALID)
+    return module_name.strip(), attr_name.strip()
+
+
+def validate_sdk_extension(target: Path, *, strict: bool = False) -> Dict[str, Any]:
+    manifest_path = _resolve_sdk_manifest_path(target)
+    if manifest_path is None:
+        return {
+            "ok": False,
+            "target": str(target),
+            "error_count": 1,
+            "warning_count": 0,
+            "errors": [
+                {
+                    "code": ERROR_SDK_MANIFEST_NOT_FOUND,
+                    "location": "manifest",
+                    "message": "Manifest not found. Expected one of: extension.yaml, extension.yml, extension.json",
+                }
+            ],
+            "warnings": [],
+            "exit_code": 2,
+        }
+
+    errors: list[dict[str, str]] = []
+    warnings: list[dict[str, str]] = []
+
+    try:
+        manifest = load_sdk_manifest(manifest_path)
+    except ValueError as exc:
+        return {
+            "ok": False,
+            "target": str(target),
+            "manifest_path": str(manifest_path),
+            "error_count": 1,
+            "warning_count": 0,
+            "errors": [
+                {
+                    "code": "E_SDK_MANIFEST_PARSE",
+                    "location": str(manifest_path.name),
+                    "message": str(exc),
+                }
+            ],
+            "warnings": [],
+            "exit_code": 2,
+        }
+
+    extension_root = manifest_path.parent.resolve()
+    if str(extension_root) not in sys.path:
+        sys.path.insert(0, str(extension_root))
+        remove_path = True
+    else:
+        remove_path = False
+    try:
+        for workload in manifest.workloads:
+            location = f"workloads.{workload.workload_id}"
+            try:
+                module_name, attr_name = _parse_sdk_entrypoint(workload.entrypoint)
+            except ValueError:
+                errors.append(
+                    {
+                        "code": ERROR_SDK_ENTRYPOINT_INVALID,
+                        "location": f"{location}.entrypoint",
+                        "message": f"Invalid entrypoint format: {workload.entrypoint}",
+                    }
+                )
+                continue
+
+            try:
+                module = __import__(module_name, fromlist=[attr_name])
+            except Exception as exc:
+                errors.append(
+                    {
+                        "code": ERROR_SDK_ENTRYPOINT_MISSING,
+                        "location": f"{location}.entrypoint",
+                        "message": f"Unable to import module '{module_name}': {exc}",
+                    }
+                )
+                continue
+            if getattr(module, attr_name, None) is None:
+                errors.append(
+                    {
+                        "code": ERROR_SDK_ENTRYPOINT_MISSING,
+                        "location": f"{location}.entrypoint",
+                        "message": f"Entrypoint attr '{attr_name}' not found in module '{module_name}'",
+                    }
+                )
+
+            cap_errors, cap_warnings = validate_capabilities(
+                list(workload.required_capabilities),
+                strict=strict,
+                vocab=load_capability_vocab(),
+            )
+            for code in cap_errors:
+                errors.append(
+                    {
+                        "code": code.split(":", 1)[0],
+                        "location": f"{location}.required_capabilities",
+                        "message": code,
+                    }
+                )
+            for code in cap_warnings:
+                warnings.append(
+                    {
+                        "code": code.split(":", 1)[0],
+                        "location": f"{location}.required_capabilities",
+                        "message": code,
+                    }
+                )
+    finally:
+        if remove_path:
+            try:
+                sys.path.remove(str(extension_root))
+            except ValueError:
+                pass
+
+    ok = len(errors) == 0
+    return {
+        "ok": ok,
+        "target": str(target),
+        "manifest_path": str(manifest_path),
+        "extension_id": manifest.extension_id,
+        "workload_count": len(manifest.workloads),
+        "error_count": len(errors),
+        "warning_count": len(warnings),
+        "errors": errors,
+        "warnings": warnings,
+        "exit_code": 0 if ok else 2,
+    }
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="orket", description="Orket bundle tools.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -550,6 +701,15 @@ def _parser() -> argparse.ArgumentParser:
     inspect_parser = subparsers.add_parser("inspect", help="Inspect an Orket bundle directory or .orket archive.")
     inspect_parser.add_argument("target", nargs="?", default=".", help="Bundle directory or .orket archive path.")
     inspect_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+    sdk_parser = subparsers.add_parser("sdk", help="SDK commands.")
+    sdk_parser.add_argument("--version", action="store_true", help="Print the Orket SDK version.")
+    sdk_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    sdk_subparsers = sdk_parser.add_subparsers(dest="sdk_command")
+    sdk_validate = sdk_subparsers.add_parser("validate", help="Validate SDK extension manifest and entrypoints.")
+    sdk_validate.add_argument("target", nargs="?", default=".", help="Extension directory or manifest path.")
+    sdk_validate.add_argument("--strict", action="store_true", help="Treat unknown capabilities as errors.")
+    sdk_validate.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
     refactor_parser = subparsers.add_parser("refactor", help="Run CP-1.1 transactional refactor (rename only).")
     refactor_parser.add_argument("instruction", help="Refactor instruction. Supported: rename <A> to <B>.")
@@ -593,6 +753,17 @@ def _parse_vars(raw: str) -> Dict[str, str]:
 
 
 def _render_human(result: Dict[str, Any]) -> str:
+    if "extension_id" in result and "workload_count" in result:
+        if bool(result.get("ok")):
+            return (
+                f"OK: {result.get('extension_id')} "
+                f"(workloads={result.get('workload_count')}, warnings={result.get('warning_count', 0)})"
+            )
+        lines = [f"FAIL ({result.get('error_count', 0)} error(s))"]
+        for item in result.get("errors", []):
+            lines.append(f"[{item.get('code')}] {item.get('location')}: {item.get('message')}")
+        return "\n".join(lines)
+
     if "code" in result and "message" in result:
         lines: List[str] = []
         if result.get("plan"):
@@ -654,6 +825,28 @@ def main(argv: List[str] | None = None) -> int:
         result = pack_bundle(Path(args.source), out_path=out)
     elif args.command == "inspect":
         result = inspect_target(Path(args.target))
+    elif args.command == "sdk":
+        if str(getattr(args, "sdk_command", "")).strip() == "validate":
+            result = validate_sdk_extension(Path(args.target), strict=bool(args.strict))
+            for item in result.get("warnings", []):
+                print(
+                    f"[{item.get('code')}] {item.get('location')}: {item.get('message')}",
+                    file=sys.stderr,
+                )
+        elif bool(args.version):
+            result = {"ok": True, "sdk_version": sdk_version}
+        else:
+            result = {
+                "ok": False,
+                "error_count": 1,
+                "errors": [
+                    {
+                        "code": ERROR_SDK_COMMAND_REQUIRED,
+                        "location": "sdk",
+                        "message": "Specify an SDK command. Supported: 'orket sdk --version'.",
+                    }
+                ],
+            }
     elif args.command == "refactor":
         result = run_refactor_transaction(
             instruction=str(args.instruction),
@@ -690,6 +883,8 @@ def main(argv: List[str] | None = None) -> int:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
         print(_render_human(result))
+    if isinstance(result.get("exit_code"), int):
+        return int(result["exit_code"])
     return 0 if bool(result.get("ok")) else 1
 
 

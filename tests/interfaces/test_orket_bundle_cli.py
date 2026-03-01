@@ -9,6 +9,7 @@ from orket.interfaces.orket_bundle_cli import (
     ERROR_INSPECT_MANIFEST_NOT_FOUND,
     ERROR_MANIFEST_NOT_FOUND,
     ERROR_MANIFEST_SCHEMA,
+    ERROR_SDK_COMMAND_REQUIRED,
     ERROR_STATE_MACHINE_MISSING,
     _is_safe_archive_name,
     main,
@@ -180,3 +181,19 @@ def test_cli_validate_rejects_model_override_when_policy_disallows(tmp_path: Pat
     assert code == 1
     assert payload["ok"] is False
     assert any(item["code"] == "E_MODEL_OVERRIDE_NOT_ALLOWED" for item in payload["errors"])
+
+
+def test_cli_sdk_version_json(capsys) -> None:
+    code = main(["sdk", "--version", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["ok"] is True
+    assert isinstance(payload["sdk_version"], str)
+
+
+def test_cli_sdk_requires_command(capsys) -> None:
+    code = main(["sdk", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["errors"][0]["code"] == ERROR_SDK_COMMAND_REQUIRED

@@ -2,7 +2,7 @@
 
 import pytest
 
-from orket_extension_sdk.capabilities import CapabilityRegistry
+from orket_extension_sdk.capabilities import CapabilityRegistry, validate_capabilities
 
 
 class _Provider:
@@ -42,3 +42,15 @@ def test_registry_register_provider() -> None:
     registry.register_provider(_Provider())
 
     assert registry.has("trace.emit") is True
+
+
+def test_validate_capabilities_warns_by_default() -> None:
+    errors, warnings = validate_capabilities(["unknown.cap"], strict=False)
+    assert errors == []
+    assert warnings == ["E_SDK_CAPABILITY_UNKNOWN: unknown.cap"]
+
+
+def test_validate_capabilities_errors_in_strict_mode() -> None:
+    errors, warnings = validate_capabilities(["unknown.cap"], strict=True)
+    assert warnings == []
+    assert errors == ["E_SDK_CAPABILITY_UNKNOWN: unknown.cap"]

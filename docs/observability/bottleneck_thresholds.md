@@ -20,7 +20,7 @@ There is no single canonical runtime contract in Orket that enforces all thresho
 
 ## Canonical Gate Documents
 1. `docs/TESTING_POLICY.md`
-2. `docs/BENCHMARK_DETERMINISM.md`
-3. `docs/QUANT_SWEEP_RUNBOOK.md`
+2. `docs/observability/BENCHMARK_DETERMINISM.md`
+3. `docs/process/QUANT_SWEEP_RUNBOOK.md`
 
 If this guidance becomes implementation policy, move exact thresholds into a contract-backed doc and tests.

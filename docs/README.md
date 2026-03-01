@@ -1,10 +1,10 @@
 # Orket Docs Index
 
-Last reviewed: 2026-02-27
+Last reviewed: 2026-03-01
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
-## Primary Documents
+## Canonical Root Docs
 1. `docs/ROADMAP.md`
    - Active execution priority and project index.
 2. `docs/ARCHITECTURE.md`
@@ -17,32 +17,47 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
    - Test lanes and required command set.
 6. `docs/API_FRONTEND_CONTRACT.md`
    - Implemented API and websocket surface expected by UI clients.
+7. `docs/CONTRIBUTOR.md`
+   - Contributor workflow and operating protocol.
 
-## Operational Extensions
-1. `docs/GITEA_WEBHOOK_SETUP.md`
-2. `docs/GITEA_STATE_OPERATIONAL_GUIDE.md`
-3. `docs/GITEA_BACKUP_STRATEGY.md`
-4. `docs/QUANT_SWEEP_RUNBOOK.md`
-5. `docs/PRODUCT_PUBLISHING.md`
-6. `docs/LOCAL_CLEANUP_POLICY.md`
+## Requirements
+1. `docs/requirements/sdk/VERSIONING.md`
+   - SDK version source-of-truth and tag policy.
 
-## Governance and Process
-1. `docs/CONTRIBUTOR.md` is the process source of truth.
-2. `docs/PR_REVIEW_POLICY.md` defines PR review cycle policy.
-3. Active project plans live under `docs/projects/<project>/` and must be indexed in `docs/ROADMAP.md`.
-4. `docs/PUBLISHED_ARTIFACTS_POLICY.md` defines the canonical publish workflow for `benchmarks/published/`.
+## Process
+1. `docs/process/PR_REVIEW_POLICY.md`
+2. `docs/process/PUBLISHED_ARTIFACTS_POLICY.md`
+3. `docs/process/PRODUCT_PUBLISHING.md`
+4. `docs/process/LOCAL_CLEANUP_POLICY.md`
+5. `docs/process/GITEA_WEBHOOK_SETUP.md`
+6. `docs/process/GITEA_STATE_OPERATIONAL_GUIDE.md`
+7. `docs/process/GITEA_BACKUP_STRATEGY.md`
+8. `docs/process/FAILURE_RECOVERY.md`
+9. `docs/process/QUANT_SWEEP_RUNBOOK.md`
+10. `docs/process/GITEA_MONOREPO_CI_TEMPLATE.md`
+11. `docs/process/requirement-refactor-loop-template.md`
+12. `docs/process/decision-log-template.md`
 
-## Historical / Context
-1. `docs/PROJECT.md`
-2. `docs/VOLATILITY_BASELINE.md`
-3. `docs/BENCHMARK_DETERMINISM.md`
-4. `docs/BENCHMARK_FAILURE_LEDGER.md`
-5. `docs/architecture/` snapshots and ADR materials.
+## Observability
+1. `docs/observability/BENCHMARK_DETERMINISM.md`
+2. `docs/observability/BENCHMARK_FAILURE_LEDGER.md`
+3. `docs/observability/bottleneck_thresholds.md`
+4. `docs/observability/stream_scenarios.md`
+5. `docs/observability/textmystery_bridge.md`
 
-## Deprecated or Transitional Docs
-These files are retained for context but are not execution sources:
-1. `docs/PROGRAM_LEVEL_TASK_001_PROMPT_AND_RUBRIC.md`
-2. `docs/examples.md`
-3. `docs/bottleneck_thresholds.md`
+## Guides and Context
+1. `docs/guides/CONTRIBUTOR-MENTAL-MODEL.md`
+2. `docs/guides/examples.md`
+3. `docs/guides/PROJECT.md`
 
-When content is promoted into a canonical doc, remove duplication from transitional files.
+## Architecture Deep Dives
+1. `docs/architecture/ADR-0001-volatility-tier-boundaries.md`
+2. `docs/architecture/CONTRACT_BREAK_WORKFLOW.md`
+3. `docs/architecture/CONTRACT_DELTA_TEMPLATE.md`
+4. `docs/architecture/event_taxonomy.md`
+5. `docs/architecture/dependency_graph_snapshot.md`
+6. `docs/architecture/VOLATILITY_BASELINE.md`
+
+## Projects
+1. Active plans: `docs/projects/<project>/`
+2. Historical records: `docs/projects/archive/`

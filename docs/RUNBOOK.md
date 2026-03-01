@@ -132,6 +132,6 @@ python scripts/report_failure_modes.py --log workspace/default/orket.log --out b
 1. `docs/SECURITY.md`
 2. `docs/TESTING_POLICY.md`
 3. `docs/API_FRONTEND_CONTRACT.md`
-4. `docs/GITEA_WEBHOOK_SETUP.md`
+4. `docs/process/GITEA_WEBHOOK_SETUP.md`
 5. `docs/ROADMAP.md`
-6. `docs/PUBLISHED_ARTIFACTS_POLICY.md`
+6. `docs/process/PUBLISHED_ARTIFACTS_POLICY.md`

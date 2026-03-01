@@ -1,0 +1,29 @@
+{
+  "global_trigger_paths": [
+    ".gitea/workflows",
+    "scripts/ci",
+    ".ci/packages.json"
+  ],
+  "packages": [
+    {
+      "id": "orket",
+      "path": "orket",
+      "python_version": "3.11",
+      "working_directory": ".",
+      "install_command": "python -m pip install --upgrade pip && python -m pip install -e \".[dev]\"",
+      "test_command": "python -m pytest -q tests/",
+      "lint_command": "ruff check orket/",
+      "pyproject": "pyproject.toml"
+    },
+    {
+      "id": "orket-sdk",
+      "path": "orket_extension_sdk",
+      "python_version": "3.11",
+      "working_directory": ".",
+      "install_command": "python -m pip install --upgrade pip && python -m pip install -e \".[dev]\"",
+      "test_command": "python -m pytest -q tests/",
+      "lint_command": "ruff check orket_extension_sdk/",
+      "pyproject": "pyproject.toml"
+    }
+  ]
+}

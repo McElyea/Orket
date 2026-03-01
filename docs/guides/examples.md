@@ -5,7 +5,7 @@ Last reviewed: 2026-02-27
 This file is intentionally minimal. Canonical operational examples live in:
 1. `docs/RUNBOOK.md`
 2. `docs/API_FRONTEND_CONTRACT.md`
-3. `docs/QUANT_SWEEP_RUNBOOK.md`
+3. `docs/process/QUANT_SWEEP_RUNBOOK.md`
 
 ## Useful Quick Examples
 
