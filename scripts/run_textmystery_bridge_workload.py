@@ -29,7 +29,7 @@ async def _run(args: argparse.Namespace) -> int:
         workload_id="textmystery_bridge_v1",
         input_config={
             "operation": args.operation,
-            "endpoint_base_url": args.endpoint_base_url,
+            "textmystery_root": args.textmystery_root,
             "payload": _load_payload(Path(args.payload_file) if args.payload_file else None),
         },
         workspace=Path(args.workspace).resolve(),
@@ -42,7 +42,7 @@ async def _run(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run TextMystery bridge extension workload.")
     parser.add_argument("--operation", choices=["parity-check", "leak-check"], default="parity-check")
-    parser.add_argument("--endpoint-base-url", default="http://127.0.0.1:8787")
+    parser.add_argument("--textmystery-root", default="C:/Source/Orket-Extensions/TextMystery")
     parser.add_argument("--payload-file", default=None, help="Path to JSON object payload passed to bridge endpoint.")
     parser.add_argument("--workspace", default="workspace/default")
     parser.add_argument("--department", default="core")

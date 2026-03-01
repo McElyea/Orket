@@ -5,8 +5,6 @@ import asyncio
 import json
 import os
 import sys
-import threading
-from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -25,17 +23,6 @@ def _resolve_textmystery_src(args_root: str | None) -> Path:
     if env_root:
         return Path(env_root).resolve() / "src"
     return Path(r"C:\Source\Orket-Extensions\TextMystery\src")
-
-
-def _start_local_contract_server(textmystery_src: Path, host: str, port: int) -> tuple[ThreadingHTTPServer, threading.Thread]:
-    if str(textmystery_src) not in sys.path:
-        sys.path.insert(0, str(textmystery_src))
-    from textmystery.cli.live_server import _Handler  # type: ignore
-
-    server = ThreadingHTTPServer((host, port), _Handler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    return server, thread
 
 
 def _default_parity_payload() -> dict[str, Any]:
@@ -73,13 +60,13 @@ def _default_leak_payload() -> dict[str, Any]:
     }
 
 
-async def _run_bridge(endpoint_base_url: str) -> dict[str, Any]:
+async def _run_bridge(textmystery_root: str) -> dict[str, Any]:
     manager = ExtensionManager(project_root=PROJECT_ROOT)
     parity_result = await manager.run_workload(
         workload_id="textmystery_bridge_v1",
         input_config={
             "operation": "parity-check",
-            "endpoint_base_url": endpoint_base_url,
+            "textmystery_root": textmystery_root,
             "payload": _default_parity_payload(),
         },
         workspace=PROJECT_ROOT,
@@ -89,7 +76,7 @@ async def _run_bridge(endpoint_base_url: str) -> dict[str, Any]:
         workload_id="textmystery_bridge_v1",
         input_config={
             "operation": "leak-check",
-            "endpoint_base_url": endpoint_base_url,
+            "textmystery_root": textmystery_root,
             "payload": _default_leak_payload(),
         },
         workspace=PROJECT_ROOT,
@@ -99,10 +86,8 @@ async def _run_bridge(endpoint_base_url: str) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="One-command TextMystery bridge smoke run.")
+    parser = argparse.ArgumentParser(description="One-command TextMystery bridge smoke run (direct SDK/local contract).")
     parser.add_argument("--textmystery-root", default=None, help="Path to TextMystery project root.")
-    parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8787)
     args = parser.parse_args()
 
     register_bridge_main()
@@ -113,14 +98,8 @@ def main() -> int:
         print("Set --textmystery-root or TEXTMYSTERY_ROOT.")
         return 1
 
-    server, thread = _start_local_contract_server(textmystery_src, args.host, args.port)
-    endpoint = f"http://{args.host}:{args.port}"
-    try:
-        summaries = asyncio.run(_run_bridge(endpoint))
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=2.0)
+    textmystery_root = str(textmystery_src.parent)
+    summaries = asyncio.run(_run_bridge(textmystery_root))
 
     parity_contract = summaries.get("parity", {}).get("contract_response", {})
     leak_contract = summaries.get("leak", {}).get("contract_response", {})
@@ -128,7 +107,7 @@ def main() -> int:
     ok_leak = isinstance(leak_contract, dict) and bool(leak_contract.get("ok")) is True
 
     print("=== TextMystery Easy Smoke ===")
-    print(f"endpoint={endpoint}")
+    print(f"textmystery_root={textmystery_root}")
     print(f"parity_ok={ok_parity}")
     print(f"leak_ok={ok_leak}")
     print("parity_summary=" + json.dumps(summaries.get("parity", {}), indent=2, sort_keys=True))

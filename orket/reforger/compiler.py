@@ -7,9 +7,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from orket.reforger.routes import ROUTE_ID_TEXTMYSTERY_PERSONA_V0, TextMysteryPersonaRouteV0
+from orket.reforger.routes import (
+    ROUTE_ID_META_BREAKER_V0,
+    ROUTE_ID_TEXTMYSTERY_PERSONA_V0,
+    MetaBreakerRouteV0,
+    TextMysteryPersonaRouteV0,
+)
 
-ALLOWED_PATCH_SURFACE = ("/banks", "/entities", "/rules/defaults")
+ALLOWED_PATCH_SURFACE = ("/banks", "/entities", "/rules/defaults", "/archetypes", "/balance")
 
 
 @dataclass(frozen=True)
@@ -39,10 +44,12 @@ def _tree_manifest(root: Path) -> dict[str, str]:
     return rows
 
 
-def _resolve_route(route_id: str) -> TextMysteryPersonaRouteV0:
-    if route_id != ROUTE_ID_TEXTMYSTERY_PERSONA_V0:
-        raise ValueError(f"unsupported route_id: {route_id}")
-    return TextMysteryPersonaRouteV0()
+def _resolve_route(route_id: str) -> Any:
+    if route_id == ROUTE_ID_TEXTMYSTERY_PERSONA_V0:
+        return TextMysteryPersonaRouteV0()
+    if route_id == ROUTE_ID_META_BREAKER_V0:
+        return MetaBreakerRouteV0()
+    raise ValueError(f"unsupported route_id: {route_id}")
 
 
 def _load_scenario_pack(path: Path, *, mode: str) -> dict[str, Any]:
@@ -164,30 +171,121 @@ def _eval_truth_only(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> dic
     }
 
 
-def _patch_templates() -> list[list[dict[str, Any]]]:
-    return [
-        [
+def _eval_meta_balance(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> dict[str, Any]:
+    archetypes = blob.get("archetypes") if isinstance(blob.get("archetypes"), dict) else {}
+    balance = blob.get("balance") if isinstance(blob.get("balance"), dict) else {}
+    arche_ids = sorted(archetypes.keys())
+    dominant_threshold = float(balance.get("dominant_threshold", 0.55))
+    first_player_advantage = float(balance.get("first_player_advantage", 0.0))
+    aggregate: dict[str, float] = {}
+    for left in arche_ids:
+        row = archetypes[left].get("vs") if isinstance(archetypes[left], dict) else {}
+        if not isinstance(row, dict):
+            aggregate[left] = 0.0
+            continue
+        values = [float(row.get(right, 0.0)) for right in arche_ids]
+        aggregate[left] = round(sum(values) / max(1, len(values)), 6)
+    dominant = sorted([aid for aid, score in aggregate.items() if score >= dominant_threshold])
+
+    checks: list[dict[str, Any]] = []
+    for test in scenario_pack.get("tests", []):
+        kind = str(test.get("kind") or "")
+        params = test.get("params") if isinstance(test.get("params"), dict) else {}
+        hard = bool(test.get("hard", False))
+        weight = float(test.get("weight", 0.0))
+        ok = True
+        detail = ""
+
+        if kind == "matrix_bounds":
+            for left in arche_ids:
+                row = archetypes[left].get("vs") if isinstance(archetypes[left], dict) else {}
+                if not isinstance(row, dict):
+                    ok = False
+                    detail = f"{left}.vs missing"
+                    break
+                for right in arche_ids:
+                    value = float(row.get(right, -1.0))
+                    if value < 0.0 or value > 1.0:
+                        ok = False
+                        detail = f"{left}.vs.{right}={value}"
+                        break
+                if not ok:
+                    break
+        elif kind == "first_player_advantage_cap":
+            max_allowed = float(params.get("max_allowed", 0.08))
+            ok = first_player_advantage <= max_allowed
+            if not ok:
+                detail = f"first_player_advantage={first_player_advantage}"
+        elif kind == "dominant_strategy_absent":
+            ok = len(dominant) == 0
+            if not ok:
+                detail = ",".join(dominant)
+        elif kind == "winrate_variance_cap":
+            max_spread = float(params.get("max_spread", 0.15))
+            if aggregate:
+                spread = max(aggregate.values()) - min(aggregate.values())
+            else:
+                spread = 0.0
+            ok = spread <= max_spread
+            if not ok:
+                detail = f"spread={round(spread, 6)}"
+
+        checks.append(
             {
-                "op": "replace",
-                "path": "/rules/defaults/allow_exclamation",
-                "value": False,
+                "id": str(test.get("id") or ""),
+                "kind": kind,
+                "hard": hard,
+                "weight": weight,
+                "pass": ok,
+                "detail": detail,
             }
-        ],
-        [
-            {
-                "op": "replace",
-                "path": "/rules/defaults/max_words",
-                "value": 14,
-            }
-        ],
-        [
-            {
-                "op": "replace",
-                "path": "/banks/refusal_styles/REF_STYLE_STEEL/templates/0",
-                "value": "REFUSE\nrefusal_reason:restricted",
-            }
-        ],
-    ]
+        )
+
+    hard_fail_count = sum(1 for row in checks if row["hard"] and not row["pass"])
+    soft_total = sum(float(row["weight"]) for row in checks if not row["hard"])
+    soft_earned = sum(float(row["weight"]) for row in checks if not row["hard"] and row["pass"])
+    soft_score = (soft_earned / soft_total) if soft_total > 0 else 1.0
+    overall_score = 0.0 if hard_fail_count > 0 else soft_score
+    return {
+        "hard_fail_count": hard_fail_count,
+        "soft_score": round(soft_score, 6),
+        "overall_score": round(overall_score, 6),
+        "checks": checks,
+    }
+
+
+def _patch_templates(mode: str) -> list[list[dict[str, Any]]]:
+    if mode == "truth_only":
+        return [
+            [
+                {
+                    "op": "replace",
+                    "path": "/rules/defaults/allow_exclamation",
+                    "value": False,
+                }
+            ],
+            [
+                {
+                    "op": "replace",
+                    "path": "/rules/defaults/max_words",
+                    "value": 14,
+                }
+            ],
+            [
+                {
+                    "op": "replace",
+                    "path": "/banks/refusal_styles/REF_STYLE_STEEL/templates/0",
+                    "value": "REFUSE\nrefusal_reason:restricted",
+                }
+            ],
+        ]
+    if mode == "meta_balance":
+        return [
+            [{"op": "replace", "path": "/balance/first_player_advantage", "value": 0.02}],
+            [{"op": "replace", "path": "/balance/dominant_threshold", "value": 0.56}],
+            [{"op": "replace", "path": "/archetypes/aggro/vs/control", "value": 0.54}],
+        ]
+    raise ValueError(f"unsupported mode: {mode}")
 
 
 def _is_allowed_patch_path(path: str) -> bool:
@@ -309,10 +407,15 @@ def run_compile_pipeline(
 
     scenario_pack = _load_scenario_pack(scenario_pack_path, mode=mode)
     (artifacts / "scenario_pack.json").write_text(json.dumps(scenario_pack, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    templates = _patch_templates()
+    templates = _patch_templates(mode)
 
     candidates: list[dict[str, Any]] = []
-    baseline_eval = _eval_truth_only(canonical, scenario_pack)
+    if mode == "truth_only":
+        baseline_eval = _eval_truth_only(canonical, scenario_pack)
+    elif mode == "meta_balance":
+        baseline_eval = _eval_meta_balance(canonical, scenario_pack)
+    else:
+        raise ValueError(f"unsupported mode: {mode}")
     candidates.append(
         {
             "candidate_id": "0000",
@@ -339,7 +442,10 @@ def run_compile_pipeline(
         try:
             mutated = apply_patch_ops(canonical, patch_ops)
             route.validate_blob(mutated)
-            eval_result = _eval_truth_only(mutated, scenario_pack)
+            if mode == "truth_only":
+                eval_result = _eval_truth_only(mutated, scenario_pack)
+            else:
+                eval_result = _eval_meta_balance(mutated, scenario_pack)
             candidate_payload.update(
                 {
                     "validation_ok": True,

@@ -40,9 +40,8 @@ def _module_source() -> str:
 import hashlib
 import json
 from pathlib import Path
+import sys
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 from orket_extension_sdk import ArtifactRef, WorkloadResult
 
@@ -52,46 +51,71 @@ def run_workload(ctx, input_payload: dict[str, Any]) -> WorkloadResult:
     if operation not in {"parity-check", "leak-check"}:
         raise ValueError("operation must be 'parity-check' or 'leak-check'")
 
-    endpoint_base_url = str(input_payload.get("endpoint_base_url") or "http://127.0.0.1:8787").strip().rstrip("/")
+    textmystery_root = str(
+        input_payload.get("textmystery_root")
+        or "C:/Source/Orket-Extensions/TextMystery"
+    ).strip()
     request_payload = input_payload.get("payload") if isinstance(input_payload.get("payload"), dict) else {}
-    route = "/textmystery/parity-check" if operation == "parity-check" else "/textmystery/leak-check"
-    response_payload = _post_json(endpoint_base_url + route, request_payload)
+    response_payload = _run_contract_operation(
+        operation=operation,
+        textmystery_root=textmystery_root,
+        request_payload=request_payload,
+    )
 
     output_path = Path(ctx.output_dir) / "bridge_response.json"
     output_path.write_text(json.dumps(response_payload, indent=2, sort_keys=True), encoding="utf-8")
-    digest = hashlib.sha256(output_path.read_bytes()).hexdigest()
+    response_digest = hashlib.sha256(output_path.read_bytes()).hexdigest()
+    artifacts = [
+        ArtifactRef(
+            path="bridge_response.json",
+            digest_sha256=response_digest,
+            kind="bridge_contract_response",
+        )
+    ]
+    if operation == "parity-check":
+        turn_results = response_payload.get("turn_results") if isinstance(response_payload, dict) else None
+        if isinstance(turn_results, list):
+            turn_path = Path(ctx.output_dir) / "turn_results.json"
+            turn_path.write_text(json.dumps(turn_results, indent=2, sort_keys=True), encoding="utf-8")
+            turn_digest = hashlib.sha256(turn_path.read_bytes()).hexdigest()
+            artifacts.append(
+                ArtifactRef(
+                    path="turn_results.json",
+                    digest_sha256=turn_digest,
+                    kind="bridge_turn_results",
+                )
+            )
+
     return WorkloadResult(
         ok=True,
         output={
             "bridge_operation": operation,
-            "endpoint_base_url": endpoint_base_url,
+            "textmystery_root": textmystery_root,
             "contract_response": response_payload,
+            "trace_events": [
+                {"phase": "contract_call_start", "operation": operation},
+                {"phase": "contract_call_complete", "operation": operation},
+            ],
         },
-        artifacts=[
-            ArtifactRef(
-                path="bridge_response.json",
-                digest_sha256=digest,
-                kind="bridge_contract_response",
-            )
-        ],
+        artifacts=artifacts,
     )
 
 
-def _post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
-    data = json.dumps(payload).encode("utf-8")
-    req = Request(url=url, data=data, headers={"Content-Type": "application/json"}, method="POST")
-    try:
-        with urlopen(req, timeout=10) as resp:  # nosec B310 - local bridge endpoint expected
-            body = resp.read().decode("utf-8")
-    except HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"bridge request failed status={exc.code} url={url} detail={detail}") from exc
-    except URLError as exc:
-        raise RuntimeError(f"bridge request connection failed url={url} detail={exc}") from exc
-    parsed = json.loads(body)
-    if not isinstance(parsed, dict):
-        raise RuntimeError("bridge endpoint returned non-object JSON")
-    return parsed
+def _run_contract_operation(*, operation: str, textmystery_root: str, request_payload: dict[str, Any]) -> dict[str, Any]:
+    src_path = Path(textmystery_root).resolve() / "src"
+    if not src_path.exists():
+        raise FileNotFoundError(f"textmystery src path not found: {src_path}")
+    if str(src_path) not in sys.path:
+        sys.path.insert(0, str(src_path))
+    from textmystery.interfaces.live_contract import leak_check, parity_check
+
+    if operation == "parity-check":
+        response = parity_check(request_payload)
+    else:
+        response = leak_check(request_payload)
+    if not isinstance(response, dict):
+        raise RuntimeError("textmystery contract returned non-object response")
+    return response
 """
 
 

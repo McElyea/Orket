@@ -25,7 +25,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| SDK | active | P1 | `docs/projects/SDK/` | Orket Core | Active roadmap lane. Phase 2 complete; Phase 3 bridge-side SDK integration started; Phase 4 Meta Breaker bootstrap started; Phase 5 docs and Phase 6 hardening in progress. |
+| SDK | active | P1 | `docs/projects/SDK/` | Orket Core | Active roadmap lane. Phase 2 complete; Phase 3 direct local-contract SDK bridge + determinism coverage landed; Phase 4 Meta Breaker scenario pack + Reforger route bootstrap landed; Phase 5 docs and Phase 6 hardening/policy gate runners in progress. |
 | reforger-textmystery-adapter | queued | P2 | `docs/projects/reforger-textmystery-adapter/` | Orket Core | v0 normalize/reforge/materialize route with deterministic artifacts. |
 | techdebt | active | P3 | `docs/projects/techdebt/` | Orket Core | Security fixes, exception narrowing, test gaps, structural cleanup. Fix opportunistically. |
 | core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |

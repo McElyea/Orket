@@ -129,6 +129,12 @@ Progress update (2026-02-28):
   - generated workload now emits `WorkloadResult` with digest-verified `bridge_response.json` artifact
 - Updated generated catalog row to SDK metadata (`contract_style`, `entrypoint`, `required_capabilities`)
 - Added coverage in `tests/application/test_register_textmystery_bridge_extension.py` for manifest + catalog shape
+- Upgraded bridge runtime to direct local contract invocation (no HTTP dependency):
+  - workload now imports TextMystery contract functions from `<textmystery_root>/src`
+  - parity runs also emit `turn_results.json` digest artifact
+  - output includes trace-phase markers for contract-call start/complete
+- Added deterministic replay coverage for bridge SDK workload:
+  - `tests/application/test_textmystery_bridge_sdk_runtime.py`
 
 ### Phase 4: Meta Breaker Route (proves SDK is generic)
 
@@ -154,6 +160,10 @@ Progress update (2026-02-28):
 - Added scenario pack runner for balance checks:
   - `scripts/run_meta_breaker_scenarios.py`
   - predefined scenarios for first-player advantage and strict balance threshold
+- Added Reforger route + compile mode for Meta Breaker:
+  - route: `meta_breaker_v0` (`orket/reforger/routes/meta_breaker_v0.py`)
+  - compiler mode: `meta_balance` with deterministic scoring checks
+  - coverage: `tests/reforger/compiler/test_compile_meta_breaker_v0.py`
 - Added coverage:
   - `tests/application/test_register_meta_breaker_extension.py`
   - `tests/application/test_run_meta_breaker_workload.py`
@@ -201,6 +211,10 @@ Progress update (2026-02-28):
   - script: `scripts/run_extension_workload_baseline.py`
   - report schema includes min/max/mean/p50/p95 latency and per-run provenance roots
   - coverage: `tests/application/test_run_extension_workload_baseline.py`
+- Added TextMystery policy conformance gate runner:
+  - script: `scripts/run_textmystery_policy_conformance.py`
+  - runs hint/disambiguation conformance tests in external TextMystery repo and emits JSON report
+  - coverage: `tests/application/test_run_textmystery_policy_conformance.py`
 
 ---
 

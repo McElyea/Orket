@@ -26,6 +26,8 @@ If TextMystery is not at the default location, pass:
 python scripts/run_textmystery_easy_smoke.py --textmystery-root <path-to-TextMystery>
 ```
 
+The smoke path runs direct local contract calls through SDK workload execution; no HTTP server is required.
+
 This writes:
 - SDK manifest under `workspace/live_ext/textmystery_bridge/extension.yaml`
 - extension module under `workspace/live_ext/textmystery_bridge`
@@ -33,19 +35,18 @@ This writes:
 
 ## Run Bridge Workload
 ```powershell
-python scripts/run_textmystery_bridge_workload.py --operation parity-check --endpoint-base-url http://127.0.0.1:8787 --payload-file <payload.json>
+python scripts/run_textmystery_bridge_workload.py --operation parity-check --textmystery-root C:/Source/Orket-Extensions/TextMystery --payload-file <payload.json>
 ```
 
 or
 
 ```powershell
-python scripts/run_textmystery_bridge_workload.py --operation leak-check --endpoint-base-url http://127.0.0.1:8787 --payload-file <payload.json>
+python scripts/run_textmystery_bridge_workload.py --operation leak-check --textmystery-root C:/Source/Orket-Extensions/TextMystery --payload-file <payload.json>
 ```
 
-## Endpoint Expectations
-TextMystery side should expose:
-- `POST /textmystery/parity-check`
-- `POST /textmystery/leak-check`
+## Local Contract Expectations
+Bridge workload imports TextMystery local contract functions from:
+- `<textmystery_root>/src/textmystery/interfaces/live_contract.py`
 
 Contract details are documented in TextMystery:
 - `C:\Source\Orket-Extensions\TextMystery\docs\engine\live-endpoint-contract.md`
