@@ -12,10 +12,10 @@ import asyncio
 import aiofiles
 import os
 import json
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+from .async_executor_service import run_coroutine_blocking
 
 class AsyncFileTools:
     """
@@ -27,25 +27,7 @@ class AsyncFileTools:
         self.references = references or []
 
     def _run_async(self, coro: Any) -> Any:
-        """
-        Bridge async file I/O for synchronous callers.
-
-        Rationale:
-        - A large portion of the driver/runtime stack is still synchronous and depends
-          on `*_sync` file helpers.
-        - In pure sync contexts we can use `asyncio.run(coro)` directly.
-        - If a loop is already running (for example async tests/service entrypoints),
-          we run the coroutine on a dedicated worker thread with its own event loop to
-          avoid nested-loop runtime errors.
-
-        This is an interim compatibility bridge, not a preferred long-term model.
-        """
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+        return run_coroutine_blocking(coro)
 
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
         """
@@ -120,10 +102,8 @@ class AsyncFileTools:
         path = self._resolve_safe_path(path_str)
         if not path.exists():
             raise FileNotFoundError(f"Directory not found: {path_str}")
-        
-        # os.listdir is blocking, but fast. Still better to run in executor for purity.
-        loop = asyncio.get_event_loop()
-        items = await loop.run_in_executor(None, os.listdir, path)
+
+        items = await asyncio.to_thread(os.listdir, path)
         return sorted(items)
 
     def read_file_sync(self, path_str: str) -> str:
