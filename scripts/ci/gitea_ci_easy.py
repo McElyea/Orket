@@ -74,9 +74,97 @@ def _extract_workflow_list(payload: Any) -> list[dict[str, Any]]:
     return []
 
 
+def _status_failed(state: str) -> bool:
+    normalized = str(state or "").strip().lower()
+    return normalized in {"error", "failure", "failed", "cancelled"}
+
+
 def _run_failed(run: dict[str, Any]) -> bool:
     conclusion = str(run.get("conclusion") or "").strip().lower()
     return conclusion in {"failure", "failed", "cancelled", "timed_out", "action_required"}
+
+
+def _api_get(
+    *,
+    base_url: str,
+    owner: str,
+    repo: str,
+    token: str | None,
+    suffix: str,
+) -> Any:
+    return _http_json(method="GET", url=_build_api_url(base_url, owner, repo, suffix), token=token)
+
+
+def _fetch_repo_info(*, base_url: str, owner: str, repo: str, token: str | None) -> dict[str, Any]:
+    payload = _api_get(base_url=base_url, owner=owner, repo=repo, token=token, suffix="")
+    return payload if isinstance(payload, dict) else {}
+
+
+def _fetch_open_pulls(*, base_url: str, owner: str, repo: str, token: str | None) -> list[dict[str, Any]]:
+    payload = _api_get(base_url=base_url, owner=owner, repo=repo, token=token, suffix="/pulls?state=open&limit=50&page=1")
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    return []
+
+
+def _fetch_combined_status(*, base_url: str, owner: str, repo: str, token: str | None, ref: str) -> dict[str, Any]:
+    encoded = urllib.parse.quote(str(ref), safe="")
+    payload = _api_get(base_url=base_url, owner=owner, repo=repo, token=token, suffix=f"/commits/{encoded}/status")
+    return payload if isinstance(payload, dict) else {}
+
+
+def _actions_api_available(*, base_url: str, owner: str, repo: str, token: str | None) -> bool:
+    try:
+        _api_get(base_url=base_url, owner=owner, repo=repo, token=token, suffix="/actions/runs?per_page=1&page=1")
+        return True
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return False
+        raise
+
+
+def _status_fallback_rows(*, base_url: str, owner: str, repo: str, token: str | None) -> list[dict[str, Any]]:
+    repo_info = _fetch_repo_info(base_url=base_url, owner=owner, repo=repo, token=token)
+    default_branch = str(repo_info.get("default_branch") or "main")
+    refs: list[tuple[str, str, str]] = [("push", default_branch, default_branch)]
+    for pull in _fetch_open_pulls(base_url=base_url, owner=owner, repo=repo, token=token):
+        head = pull.get("head")
+        if not isinstance(head, dict):
+            continue
+        sha = str(head.get("sha") or "").strip()
+        ref = str(head.get("ref") or "").strip()
+        if sha:
+            refs.append(("pull_request", ref or f"pr-{pull.get('number')}", sha))
+    rows: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for event, branch, ref in refs:
+        key = (event, branch, ref)
+        if key in seen:
+            continue
+        seen.add(key)
+        payload = _fetch_combined_status(base_url=base_url, owner=owner, repo=repo, token=token, ref=ref)
+        statuses = payload.get("statuses", []) if isinstance(payload, dict) else []
+        if not isinstance(statuses, list):
+            statuses = []
+        for item in statuses:
+            if not isinstance(item, dict):
+                continue
+            state = str(item.get("state") or "")
+            rows.append(
+                {
+                    "context": str(item.get("context") or ""),
+                    "state": state,
+                    "failed": _status_failed(state),
+                    "description": str(item.get("description") or ""),
+                    "target_url": str(item.get("target_url") or ""),
+                    "sha": str(item.get("sha") or ""),
+                    "branch": branch,
+                    "event": event,
+                    "updated_at": str(item.get("updated_at") or item.get("created_at") or ""),
+                }
+            )
+    rows.sort(key=lambda x: (x["branch"], x["context"], x["updated_at"]), reverse=True)
+    return rows
 
 
 def _resolve_workflow_id(
@@ -230,6 +318,7 @@ def main() -> None:
     trigger_parser.add_argument("--wait", action="store_true")
     trigger_parser.add_argument("--timeout-s", type=int, default=1800)
     trigger_parser.add_argument("--poll-s", type=int, default=5)
+    sub.add_parser("doctor", help="Diagnose Gitea API and actions endpoint compatibility.")
 
     args = parser.parse_args()
 
@@ -262,29 +351,46 @@ def main() -> None:
 
     try:
         if args.command == "status":
-            runs = _fetch_runs(base_url=base_url, owner=owner, repo=repo, token=token, limit=max(1, int(args.limit)))
-            _print_json(
-                {
-                    "status": "ok",
-                    "count": len(runs),
-                    "runs": [
-                        {
-                            "id": str(item.get("id") or item.get("run_id") or ""),
-                            "name": str(item.get("name") or item.get("workflow_name") or ""),
-                            "branch": str(item.get("head_branch") or item.get("branch") or ""),
-                            "status": str(item.get("status") or ""),
-                            "conclusion": str(item.get("conclusion") or ""),
-                            "created_at": str(item.get("created_at") or ""),
-                            "html_url": str(item.get("html_url") or item.get("url") or ""),
-                            "failed": _run_failed(item),
-                        }
-                        for item in runs
-                    ],
-                }
-            )
+            if _actions_api_available(base_url=base_url, owner=owner, repo=repo, token=token):
+                runs = _fetch_runs(base_url=base_url, owner=owner, repo=repo, token=token, limit=max(1, int(args.limit)))
+                _print_json(
+                    {
+                        "status": "ok",
+                        "mode": "actions_api",
+                        "count": len(runs),
+                        "runs": [
+                            {
+                                "id": str(item.get("id") or item.get("run_id") or ""),
+                                "name": str(item.get("name") or item.get("workflow_name") or ""),
+                                "branch": str(item.get("head_branch") or item.get("branch") or ""),
+                                "status": str(item.get("status") or ""),
+                                "conclusion": str(item.get("conclusion") or ""),
+                                "created_at": str(item.get("created_at") or ""),
+                                "html_url": str(item.get("html_url") or item.get("url") or ""),
+                                "failed": _run_failed(item),
+                            }
+                            for item in runs
+                        ],
+                    }
+                )
+            else:
+                rows = _status_fallback_rows(base_url=base_url, owner=owner, repo=repo, token=token)
+                _print_json(
+                    {
+                        "status": "ok",
+                        "mode": "commit_status_fallback",
+                        "count": len(rows),
+                        "rows": rows[: max(1, int(args.limit))],
+                        "hint": "Actions REST endpoints are unavailable on this Gitea instance; showing commit status contexts.",
+                    }
+                )
             return
 
         if args.command == "watch":
+            if not _actions_api_available(base_url=base_url, owner=owner, repo=repo, token=token):
+                raise RuntimeError(
+                    "Actions REST endpoints are unavailable on this Gitea instance; watch requires actions API support."
+                )
             run = _wait_for_completion(
                 base_url=base_url,
                 owner=owner,
@@ -307,6 +413,10 @@ def main() -> None:
             return
 
         if args.command == "trigger":
+            if not _actions_api_available(base_url=base_url, owner=owner, repo=repo, token=token):
+                raise RuntimeError(
+                    "Actions REST endpoints are unavailable on this Gitea instance; trigger requires actions API support."
+                )
             workflow_id = _resolve_workflow_id(
                 base_url=base_url,
                 owner=owner,
@@ -362,6 +472,28 @@ def main() -> None:
                     "run_status": str(done.get("status") or ""),
                     "conclusion": str(done.get("conclusion") or ""),
                     "html_url": str(done.get("html_url") or done.get("url") or ""),
+                }
+            )
+            return
+        if args.command == "doctor":
+            version_url = f"{base_url.rstrip('/')}/api/v1/version"
+            version_payload = _http_json(method="GET", url=version_url, token=token)
+            repo_info = _fetch_repo_info(base_url=base_url, owner=owner, repo=repo, token=token)
+            actions_available = _actions_api_available(base_url=base_url, owner=owner, repo=repo, token=token)
+            _print_json(
+                {
+                    "status": "ok",
+                    "gitea_url": base_url,
+                    "api_version": version_payload,
+                    "repo_exists": bool(repo_info),
+                    "repo_default_branch": str(repo_info.get("default_branch") or ""),
+                    "actions_api_available": actions_available,
+                    "guidance": (
+                        "Actions endpoints present."
+                        if actions_available
+                        else "Actions REST endpoints missing (common on older Gitea builds). "
+                        "Use status fallback mode or upgrade Gitea for trigger/watch support."
+                    ),
                 }
             )
             return

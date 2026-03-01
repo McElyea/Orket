@@ -98,6 +98,7 @@ Requires `ORKET_GITEA_URL`, `ORKET_GITEA_OWNER`, `ORKET_GITEA_REPO`, and `ORKET_
 ```bash
 python scripts/ci/gitea_ci_easy.py status --limit 10
 ```
+If Actions API is unavailable on your Gitea version, this command automatically falls back to commit-status contexts.
 2. Trigger workflow and wait for result:
 ```bash
 python scripts/ci/gitea_ci_easy.py trigger --workflow quality.yml --ref main --wait
@@ -105,6 +106,10 @@ python scripts/ci/gitea_ci_easy.py trigger --workflow quality.yml --ref main --w
 3. Watch a known run:
 ```bash
 python scripts/ci/gitea_ci_easy.py watch --run-id <run_id>
+```
+4. Diagnose API compatibility:
+```bash
+python scripts/ci/gitea_ci_easy.py doctor
 ```
 
 ## Runtime Profiles and Migration
