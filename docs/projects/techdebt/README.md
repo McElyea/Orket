@@ -21,6 +21,8 @@ Date: 2026-03-02
    7. H7 sandbox service allowlist validation
 4. In progress:
    1. C2 blocking subprocess elimination in async/runtime hot paths
+   2. C3 blocking file I/O migration in async paths
+   3. C4 `api.py` router decomposition (`kernel` and `cards` extracted)
 
 ## Working Rule
 

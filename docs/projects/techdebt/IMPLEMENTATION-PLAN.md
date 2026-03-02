@@ -19,6 +19,9 @@ As of 2026-03-02 (America/Denver):
    1. Turn artifact writes/checkpoint/memory-trace persistence now offloaded via `asyncio.to_thread` from turn execution path.
    2. Turn replay cache load/persist in tool dispatcher now offloaded via `asyncio.to_thread`.
    3. API log/team topology reads and execution-graph snapshot persistence now offloaded via `asyncio.to_thread`.
+10. C4 in progress: API router decomposition started with extracted modules:
+   1. `orket/interfaces/routers/kernel.py` for `/v1/kernel/*`.
+   2. `orket/interfaces/routers/cards.py` for `/v1/cards*`.
 
 Verification executed:
 
@@ -33,6 +36,8 @@ Verification executed:
    1. `python -m pytest tests/core tests/application tests/adapters tests/interfaces tests/platform -q` -> `963 passed`.
    2. `python -m pytest tests/integration tests/runtime tests/contracts -q` -> `124 passed`.
    3. `python -m pytest tests/acceptance tests/kernel/v1/test_odr_refinement_behavior.py -q` -> `16 passed, 2 skipped`.
+7. Router parity validation:
+   1. `python -m pytest tests/interfaces/test_api.py tests/interfaces/test_api_kernel_lifecycle.py -q` -> `103 passed`.
 
 ## Objective
 
