@@ -93,4 +93,6 @@ docs/internal/
 data/voices/
 data/models/
 data/datasets/
+data/**
+data
 sdk_data/
