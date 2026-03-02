@@ -503,6 +503,35 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
     assert provenance["security"]["profile"] == "production"
     assert isinstance(provenance["security"]["policy_version"], str)
     assert provenance["security"]["compat_fallback_count"] >= 0
+    assert provenance["input_config"] == {}
+    assert provenance["run_result"] == {}
+    assert provenance["summary"] == {}
+    assert provenance["input_config_redacted"]["item_count"] >= 1
+    assert "payload_digest_sha256" in provenance["run_result_redacted"]
+    assert "payload_digest_sha256" in provenance["summary_redacted"]
+
+
+@pytest.mark.asyncio
+async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORKET_EXT_PROVENANCE_VERBOSE", "true")
+    repo = tmp_path / "sdk_repo_verbose"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo(repo)
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager.install_from_repo(str(repo))
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+    result = await manager.run_workload(
+        workload_id="sdk_v1",
+        input_config={"seed": 33, "mode": "verbose"},
+        workspace=workspace,
+        department="core",
+    )
+    provenance = json.loads(Path(result.provenance_path).read_text(encoding="utf-8"))
+    assert provenance["input_config"]["seed"] == 33
+    assert provenance["run_result"]["status"] in {"ok", "error"}
+    assert provenance["summary"]["artifact_count"] >= 1
 
 
 @pytest.mark.asyncio

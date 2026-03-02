@@ -178,6 +178,10 @@ class WorkloadArtifacts:
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
+        redacted_input = self._redacted_snapshot(input_config)
+        redacted_run_result = self._redacted_snapshot(run_result)
+        redacted_summary = self._redacted_snapshot(summary)
+        verbose = self._provenance_verbose_enabled()
         return {
             "timestamp_utc": datetime.now(UTC).isoformat(),
             "reliable_mode": self.reproducibility.reliable_mode_enabled(),
@@ -205,12 +209,15 @@ class WorkloadArtifacts:
                 "workload_id": workload.workload_id,
                 "workload_version": workload.workload_version,
             },
-            "input_config": input_config,
+            "input_config": input_config if verbose else {},
             "input_config_digest": input_digest,
+            "input_config_redacted": redacted_input,
             "run_plan": run_plan.canonical_payload(),
             "plan_hash": plan_hash,
-            "run_result": run_result,
-            "summary": summary,
+            "run_result": run_result if verbose else {},
+            "run_result_redacted": redacted_run_result,
+            "summary": summary if verbose else {},
+            "summary_redacted": redacted_summary,
             "artifact_manifest": artifact_manifest,
             "artifact_root": str(artifact_root),
         }
@@ -228,6 +235,10 @@ class WorkloadArtifacts:
         artifact_root: Path,
         department: str,
     ) -> dict[str, Any]:
+        redacted_input = self._redacted_snapshot(input_config)
+        redacted_run_result = self._redacted_snapshot(run_result)
+        redacted_summary = self._redacted_snapshot(summary)
+        verbose = self._provenance_verbose_enabled()
         return {
             "timestamp_utc": datetime.now(UTC).isoformat(),
             "reliable_mode": self.reproducibility.reliable_mode_enabled(),
@@ -259,10 +270,13 @@ class WorkloadArtifacts:
                 "required_capabilities": list(workload.required_capabilities),
             },
             "department": department,
-            "input_config": input_config,
+            "input_config": input_config if verbose else {},
             "input_config_digest": input_digest,
-            "run_result": run_result,
-            "summary": summary,
+            "input_config_redacted": redacted_input,
+            "run_result": run_result if verbose else {},
+            "run_result_redacted": redacted_run_result,
+            "summary": summary if verbose else {},
+            "summary_redacted": redacted_summary,
             "artifact_manifest": artifact_manifest,
             "artifact_root": str(artifact_root),
         }
@@ -357,3 +371,22 @@ class WorkloadArtifacts:
         if raw:
             return max(1, int(raw))
         return WorkloadArtifacts._ARTIFACT_TOTAL_SIZE_CAP_BYTES_DEFAULT
+
+    @staticmethod
+    def _provenance_verbose_enabled() -> bool:
+        import os
+
+        raw = str(os.getenv("ORKET_EXT_PROVENANCE_VERBOSE", "")).strip().lower()
+        return raw in {"1", "true", "yes", "on"}
+
+    @staticmethod
+    def _redacted_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
+        keys = sorted(str(key) for key in payload.keys())
+        digest = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        return {
+            "keys": keys,
+            "item_count": len(keys),
+            "payload_digest_sha256": digest,
+        }

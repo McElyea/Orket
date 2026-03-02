@@ -17,7 +17,7 @@ Current default target: techdebt.
 2. LieDetector -- Maintenance and polish for floor-progression truth/lie deduction game with TUI.
 
 ## Active Execution
-1. techdebt -- Phase 1 complete (semantic containment, symlink refusal, streaming SHA-256, size caps, deterministic ordered failure payloads). Phase 2/4/5 security gates now implemented and green on current artifacts (pinning+digest verification, trust policy matrix, compatibility fallback expiry/warning outputs, security regression runner, enforcement flip gate). Remaining completion work: provenance redaction-by-default and final compatibility fallback removal policy execution.
+1. techdebt -- Phase 1 complete (semantic containment, symlink refusal, streaming SHA-256, size caps, deterministic ordered failure payloads). Phase 2/3/4/5 controls now implemented and green on current artifacts (pinning+digest verification, trust policy matrix, provenance redaction-by-default, compatibility fallback expiry/warning outputs, security regression runner, enforcement flip gate). Remaining completion work: final compatibility fallback removal policy execution.
 2. LieDetector -- v1 complete; keep in maintenance unless new feature scope is requested.
 
 ## Project Index
