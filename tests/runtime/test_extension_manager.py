@@ -337,6 +337,13 @@ def test_install_from_repo_registers_extension(tmp_path):
 
     assert record.extension_id == "mystery.extension"
     assert record.workloads[0].workload_id == "mystery_v1"
+    assert len(record.resolved_commit_sha) == 40
+    assert len(record.manifest_digest_sha256) == 64
+    assert record.trust_profile == "production"
+    assert record.security_mode == "compat"
+    assert record.security_profile == "production"
+    assert len(record.security_policy_version) == 64
+    assert record.installed_at_utc
     assert manager.resolve_workload("mystery_v1") is not None
 
 
@@ -352,6 +359,9 @@ def test_install_from_repo_registers_sdk_extension(tmp_path):
     assert record.contract_style == "sdk_v0"
     assert record.workloads[0].workload_id == "sdk_v1"
     assert record.workloads[0].entrypoint == "sdk_extension:run_workload"
+    assert len(record.resolved_commit_sha) == 40
+    assert len(record.manifest_digest_sha256) == 64
+    assert len(record.security_policy_version) == 64
 
 
 def test_install_from_repo_registers_sdk_json_manifest_extension(tmp_path):
@@ -486,6 +496,13 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
     assert Path(result.provenance_path).exists()
     assert (Path(result.artifact_root) / "result.txt").exists()
     assert (Path(result.artifact_root) / "artifact_manifest.json").exists()
+    provenance = json.loads(Path(result.provenance_path).read_text(encoding="utf-8"))
+    assert provenance["extension"]["resolved_commit_sha"] == manager.resolve_workload("sdk_v1")[0].resolved_commit_sha
+    assert provenance["extension"]["manifest_digest_sha256"] == manager.resolve_workload("sdk_v1")[0].manifest_digest_sha256
+    assert provenance["security"]["mode"] == "compat"
+    assert provenance["security"]["profile"] == "production"
+    assert isinstance(provenance["security"]["policy_version"], str)
+    assert provenance["security"]["compat_fallback_count"] >= 0
 
 
 @pytest.mark.asyncio
@@ -553,7 +570,7 @@ async def test_run_sdk_workload_blocks_artifact_path_escape(tmp_path):
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
-    with pytest.raises(ValueError, match="E_SDK_ARTIFACT_ESCAPE"):
+    with pytest.raises(ValueError, match="E_ARTIFACT_PATH_TRAVERSAL"):
         await manager.run_workload(
             workload_id="sdk_bad_escape_v1",
             input_config={"seed": 99},
@@ -579,3 +596,49 @@ async def test_run_sdk_workload_rejects_artifact_digest_mismatch(tmp_path):
             workspace=workspace,
             department="core",
         )
+
+
+@pytest.mark.asyncio
+async def test_run_workload_rejects_manifest_digest_tamper(tmp_path):
+    repo = tmp_path / "sdk_repo_tamper"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_sdk_extension_repo(repo)
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    record = manager.install_from_repo(str(repo))
+
+    manifest_path = Path(record.manifest_path)
+    manifest_path.write_text("manifest_version: v0\nextension_id: sdk.extension\nextension_version: 9.9.9\n", encoding="utf-8")
+
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+    with pytest.raises(RuntimeError, match="E_EXT_MANIFEST_DIGEST_MISMATCH"):
+        await manager.run_workload(
+            workload_id="sdk_v1",
+            input_config={"seed": 8},
+            workspace=workspace,
+            department="core",
+        )
+
+
+def test_install_from_repo_enforce_mode_blocks_local_path(tmp_path, monkeypatch):
+    repo = tmp_path / "ext_repo_enforce"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_test_extension_repo(repo)
+    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "enforce")
+    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
+
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    with pytest.raises(RuntimeError, match="E_EXT_TRUST_SOURCE_LOCAL_PATH_DENIED"):
+        manager.install_from_repo(str(repo))
+
+
+def test_install_from_repo_compat_mode_records_fallbacks(tmp_path, monkeypatch):
+    repo = tmp_path / "ext_repo_compat"
+    repo.mkdir(parents=True, exist_ok=True)
+    _init_test_extension_repo(repo)
+    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "compat")
+    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
+
+    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    record = manager.install_from_repo(str(repo))
+    assert "EXT_LOCAL_PATH_COMPAT" in record.compat_fallbacks

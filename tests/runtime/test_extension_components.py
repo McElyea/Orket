@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
+import pytest
 from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
+from orket_extension_sdk.result import ArtifactRef, WorkloadResult
 
 from orket.extensions.catalog import ExtensionCatalog
 from orket.extensions.manifest_parser import ManifestParser
@@ -88,6 +91,109 @@ def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
 
     assert manifest["files"][0]["path"] == "a.txt"
     assert len(manifest["manifest_sha256"]) == 64
+
+
+def test_workload_artifacts_validate_sdk_artifacts_rejects_prefix_escape(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "artifacts"
+    artifact_root.mkdir(parents=True)
+    outside_dir = tmp_path / "artifacts-evil"
+    outside_dir.mkdir(parents=True)
+    outside_file = outside_dir / "outside.txt"
+    outside_file.write_text("not-inside-root", encoding="utf-8")
+
+    digest = hashlib.sha256(outside_file.read_bytes()).hexdigest()
+    result = WorkloadResult(
+        ok=True,
+        artifacts=[ArtifactRef(path="../artifacts-evil/outside.txt", digest_sha256=digest, kind="text")],
+    )
+
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+    with pytest.raises(ValueError, match="E_ARTIFACT_PATH_TRAVERSAL"):
+        artifacts.validate_sdk_artifacts(result, artifact_root)
+
+
+def test_workload_artifacts_rejects_symlink_in_sdk_validation_and_manifest(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "artifacts"
+    artifact_root.mkdir(parents=True)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("outside", encoding="utf-8")
+    link_path = artifact_root / "linked.txt"
+    try:
+        link_path.symlink_to(outside)
+    except OSError as exc:
+        pytest.skip(f"symlink unsupported in this environment: {exc}")
+
+    digest = hashlib.sha256(outside.read_bytes()).hexdigest()
+    result = WorkloadResult(
+        ok=True,
+        artifacts=[ArtifactRef(path="linked.txt", digest_sha256=digest, kind="text")],
+    )
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+
+    with pytest.raises(ValueError, match="E_ARTIFACT_SYMLINK_FORBIDDEN"):
+        artifacts.validate_sdk_artifacts(result, artifact_root)
+    with pytest.raises(ValueError, match="E_ARTIFACT_SYMLINK_FORBIDDEN"):
+        artifacts.build_artifact_manifest(artifact_root)
+
+
+def test_workload_artifacts_validate_sdk_artifacts_emits_deterministic_ordered_payload(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "artifacts"
+    artifact_root.mkdir(parents=True)
+    (artifact_root / "ok.txt").write_text("ok", encoding="utf-8")
+
+    result = WorkloadResult(
+        ok=True,
+        artifacts=[
+            ArtifactRef(path="../escape.txt", digest_sha256="0" * 64, kind="text"),
+            ArtifactRef(path="ok.txt", digest_sha256="f" * 64, kind="text"),
+        ],
+    )
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+    with pytest.raises(ValueError) as excinfo:
+        artifacts.validate_sdk_artifacts(result, artifact_root)
+    message = str(excinfo.value)
+    assert message.startswith("E_SDK_ARTIFACT_VALIDATION_FAILED:")
+    payload = json.loads(message.split(": ", 1)[1])
+    errors = payload["errors"]
+    assert [row["code"] for row in errors] == ["E_ARTIFACT_PATH_TRAVERSAL", "E_SDK_ARTIFACT_DIGEST_MISMATCH"]
+    assert errors[0]["path_norm"] == "../escape.txt"
+    assert errors[1]["path_norm"] == "ok.txt"
+
+
+def test_workload_artifacts_enforces_file_and_total_size_caps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    artifact_root = tmp_path / "artifacts"
+    artifact_root.mkdir(parents=True)
+    big = artifact_root / "big.bin"
+    small = artifact_root / "small.bin"
+    big.write_bytes(b"a" * 10)
+    small.write_bytes(b"b" * 5)
+    big_digest = hashlib.sha256(big.read_bytes()).hexdigest()
+    small_digest = hashlib.sha256(small.read_bytes()).hexdigest()
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+
+    monkeypatch.setenv("ORKET_EXT_ARTIFACT_FILE_SIZE_CAP_BYTES", "8")
+    with pytest.raises(ValueError, match="E_ARTIFACT_FILE_SIZE_CAP"):
+        artifacts.validate_sdk_artifacts(
+            WorkloadResult(
+                ok=True,
+                artifacts=[ArtifactRef(path="big.bin", digest_sha256=big_digest, kind="bin")],
+            ),
+            artifact_root,
+        )
+
+    monkeypatch.setenv("ORKET_EXT_ARTIFACT_FILE_SIZE_CAP_BYTES", "20")
+    monkeypatch.setenv("ORKET_EXT_ARTIFACT_TOTAL_SIZE_CAP_BYTES", "12")
+    with pytest.raises(ValueError, match="E_ARTIFACT_TOTAL_SIZE_CAP"):
+        artifacts.validate_sdk_artifacts(
+            WorkloadResult(
+                ok=True,
+                artifacts=[
+                    ArtifactRef(path="big.bin", digest_sha256=big_digest, kind="bin"),
+                    ArtifactRef(path="small.bin", digest_sha256=small_digest, kind="bin"),
+                ],
+            ),
+            artifact_root,
+        )
 
 
 def test_workload_artifacts_build_sdk_capability_registry_registers_audio_defaults(tmp_path: Path) -> None:

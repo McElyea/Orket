@@ -32,6 +32,17 @@ class ExtensionCatalog:
             register_callable = str(row.get("register_callable", "")).strip() or "register"
             contract_style = str(row.get("contract_style", "")).strip() or CONTRACT_STYLE_LEGACY
             manifest_path = str(row.get("manifest_path", "")).strip()
+            resolved_commit_sha = str(row.get("resolved_commit_sha", "")).strip()
+            manifest_digest_sha256 = str(row.get("manifest_digest_sha256", "")).strip()
+            source_ref = str(row.get("source_ref", "")).strip()
+            trust_profile = str(row.get("trust_profile", "")).strip() or "compat"
+            installed_at_utc = str(row.get("installed_at_utc", "")).strip()
+            security_mode = str(row.get("security_mode", "")).strip() or "compat"
+            security_profile = str(row.get("security_profile", "")).strip() or "production"
+            security_policy_version = str(row.get("security_policy_version", "")).strip()
+            compat_fallbacks = tuple(
+                str(item).strip() for item in row.get("compat_fallbacks", []) if str(item).strip()
+            )
             if not extension_id or extension_id in seen_ids:
                 continue
             seen_ids.add(extension_id)
@@ -66,6 +77,15 @@ class ExtensionCatalog:
                     workloads=tuple(workloads),
                     contract_style=contract_style,
                     manifest_path=manifest_path,
+                    resolved_commit_sha=resolved_commit_sha,
+                    manifest_digest_sha256=manifest_digest_sha256,
+                    source_ref=source_ref,
+                    trust_profile=trust_profile,
+                    installed_at_utc=installed_at_utc,
+                    security_mode=security_mode,
+                    security_profile=security_profile,
+                    security_policy_version=security_policy_version,
+                    compat_fallbacks=compat_fallbacks,
                 )
             )
         return records
@@ -109,6 +129,15 @@ class ExtensionCatalog:
             "register_callable": record.register_callable,
             "contract_style": record.contract_style,
             "manifest_path": record.manifest_path,
+            "resolved_commit_sha": record.resolved_commit_sha,
+            "manifest_digest_sha256": record.manifest_digest_sha256,
+            "source_ref": record.source_ref,
+            "trust_profile": record.trust_profile,
+            "installed_at_utc": record.installed_at_utc,
+            "security_mode": record.security_mode,
+            "security_profile": record.security_profile,
+            "security_policy_version": record.security_policy_version,
+            "compat_fallbacks": list(record.compat_fallbacks),
             "workloads": [
                 {
                     "workload_id": workload.workload_id,

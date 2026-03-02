@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +44,15 @@ class ExtensionRecord:
     workloads: tuple[WorkloadRecord, ...]
     contract_style: str = CONTRACT_STYLE_LEGACY
     manifest_path: str = ""
+    resolved_commit_sha: str = ""
+    manifest_digest_sha256: str = ""
+    source_ref: str = ""
+    trust_profile: str = "compat"
+    installed_at_utc: str = ""
+    security_mode: str = "compat"
+    security_profile: str = "production"
+    security_policy_version: str = ""
+    compat_fallbacks: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -62,3 +72,7 @@ class LoadedManifest:
     payload: dict[str, Any]
     manifest_path: Path
     contract_style: str
+
+
+def utc_now_iso() -> str:
+    return datetime.now(UTC).isoformat()

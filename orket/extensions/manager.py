@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import re
 import shutil
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from orket.runtime_paths import durable_root
 
@@ -23,11 +27,21 @@ from .models import (
     LoadedManifest,
     WorkloadRecord,
     default_extensions_catalog_path,
+    utc_now_iso,
 )
 from .reproducibility import ReproducibilityEnforcer
 from .workload_executor import WorkloadExecutor
 
 _LoadedManifest = LoadedManifest
+
+
+@dataclass(frozen=True)
+class _SourcePolicyDecision:
+    security_mode: str
+    security_profile: str
+    security_policy_version: str
+    trust_profile: str
+    compat_fallbacks: tuple[str, ...]
 
 
 class _WorkloadRegistry(ExtensionRegistry):
@@ -88,6 +102,9 @@ class ExtensionManager:
             "_reliable_mode_enabled": self.reproducibility.reliable_mode_enabled,
             "_validate_required_materials": self.reproducibility.validate_required_materials,
             "_validate_clean_git_if_required": self.reproducibility.validate_clean_git_if_required,
+            "_resolve_commit_sha": self._resolve_commit_sha,
+            "_sha256_file": self._sha256_file,
+            "_verify_extension_integrity": self._verify_extension_integrity,
         }
         target = delegated.get(name)
         if target is not None:
@@ -106,6 +123,7 @@ class ExtensionManager:
         if not repo_value:
             raise ValueError("repo is required")
         ref_value = str(ref or "").strip()
+        policy = self._evaluate_source_policy(repo_value)
 
         source_hash = hashlib.sha256(f"{repo_value}@{ref_value}".encode("utf-8")).hexdigest()[:12]
         leaf = f"{Path(repo_value).stem or 'extension'}-{source_hash}"
@@ -114,16 +132,26 @@ class ExtensionManager:
             shutil.rmtree(destination)
 
         self._run_command(["git", "clone", repo_value, str(destination)], cwd=self.project_root)
-        if ref_value:
-            self._run_command(["git", "checkout", ref_value], cwd=destination)
+        resolved_commit_sha = self._resolve_commit_sha(destination, ref_value)
+        self._run_command(["git", "checkout", "--detach", resolved_commit_sha], cwd=destination)
 
         loaded = self._load_manifest(destination)
+        manifest_digest_sha256 = self._sha256_file(loaded.manifest_path)
         record = self._record_from_manifest(
             loaded.payload,
             source=repo_value,
             path=destination,
             contract_style=loaded.contract_style,
             manifest_path=loaded.manifest_path,
+            resolved_commit_sha=resolved_commit_sha,
+            manifest_digest_sha256=manifest_digest_sha256,
+            source_ref=ref_value,
+            trust_profile=policy.trust_profile,
+            installed_at_utc=utc_now_iso(),
+            security_mode=policy.security_mode,
+            security_profile=policy.security_profile,
+            security_policy_version=policy.security_policy_version,
+            compat_fallbacks=policy.compat_fallbacks,
         )
         payload = self._load_catalog_payload()
         rows = [
@@ -148,6 +176,7 @@ class ExtensionManager:
         if resolved is None:
             raise ValueError(f"Unknown workload '{workload_id}'")
         extension, workload_record = resolved
+        self._verify_extension_integrity(extension)
 
         if workload_record.contract_style == CONTRACT_STYLE_SDK_V0 or extension.contract_style == CONTRACT_STYLE_SDK_V0:
             return await self._run_sdk_workload(
@@ -174,6 +203,114 @@ class ExtensionManager:
             raise RuntimeError(
                 f"Command failed: {' '.join(command)}\\nstdout={result.stdout.strip()}\\nstderr={result.stderr.strip()}"
             )
+
+    @staticmethod
+    def _resolve_commit_sha(repo_path: Path, ref: str) -> str:
+        target_ref = str(ref or "").strip() or "HEAD"
+        result = subprocess.run(
+            ["git", "rev-parse", f"{target_ref}^{{commit}}"],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"E_EXT_REF_RESOLVE_FAILED: {target_ref}")
+        return result.stdout.strip()
+
+    @staticmethod
+    def _sha256_file(path: Path) -> str:
+        hasher = hashlib.sha256()
+        with path.open("rb") as handle:
+            while True:
+                chunk = handle.read(1024 * 1024)
+                if not chunk:
+                    break
+                hasher.update(chunk)
+        return hasher.hexdigest()
+
+    def _verify_extension_integrity(self, extension: ExtensionRecord) -> None:
+        extension_path = Path(extension.path).resolve()
+        manifest_path_raw = str(extension.manifest_path or "").strip()
+        if extension.resolved_commit_sha:
+            git_dir = extension_path / ".git"
+            if git_dir.exists():
+                current = self._resolve_commit_sha(extension_path, "HEAD")
+                if current != extension.resolved_commit_sha:
+                    raise RuntimeError("E_EXT_COMMIT_MISMATCH")
+        if manifest_path_raw and extension.manifest_digest_sha256:
+            manifest_path = Path(manifest_path_raw).resolve()
+            current_digest = self._sha256_file(manifest_path)
+            if current_digest != extension.manifest_digest_sha256:
+                raise RuntimeError("E_EXT_MANIFEST_DIGEST_MISMATCH")
+
+    @staticmethod
+    def _evaluate_source_policy(repo: str) -> _SourcePolicyDecision:
+        mode = str(os.getenv("ORKET_EXT_SECURITY_MODE", "compat")).strip().lower() or "compat"
+        profile = str(os.getenv("ORKET_EXT_SECURITY_PROFILE", "production")).strip().lower() or "production"
+        allowed_hosts_raw = str(
+            os.getenv("ORKET_EXT_ALLOWED_HOSTS", "github.com,gitlab.com,gitea.local,localhost")
+        ).strip()
+        allowed_hosts = {item.strip().lower() for item in allowed_hosts_raw.split(",") if item.strip()}
+        allowed_protocols = {"https", "ssh"}
+        fallback_codes: list[str] = []
+
+        source_kind, protocol, host = ExtensionManager._classify_repo_source(repo)
+        production = profile == "production"
+        enforce = mode == "enforce"
+
+        def _deny_or_fallback(code: str, fallback_code: str) -> None:
+            if production and enforce:
+                raise RuntimeError(code)
+            fallback_codes.append(fallback_code)
+
+        if source_kind == "local":
+            if production:
+                _deny_or_fallback("E_EXT_TRUST_SOURCE_LOCAL_PATH_DENIED", "EXT_LOCAL_PATH_COMPAT")
+            else:
+                fallback_codes.append("DEV_PROFILE_EXCEPTION_LOCAL_PATH")
+        else:
+            if protocol and protocol not in allowed_protocols and production:
+                _deny_or_fallback("E_EXT_TRUST_PROTOCOL_DENIED", "EXT_PROTOCOL_COMPAT")
+            if host and host not in allowed_hosts and production:
+                _deny_or_fallback("E_EXT_TRUST_HOST_DENIED", "EXT_HOST_COMPAT")
+
+        return _SourcePolicyDecision(
+            security_mode=mode,
+            security_profile=profile,
+            security_policy_version=hashlib.sha256(
+                str(
+                    {
+                        "mode": mode,
+                        "profile": profile,
+                        "allowed_hosts": sorted(allowed_hosts),
+                        "allowed_protocols": sorted(allowed_protocols),
+                    }
+                ).encode("utf-8")
+            ).hexdigest(),
+            trust_profile=profile,
+            compat_fallbacks=tuple(sorted(set(fallback_codes))),
+        )
+
+    @staticmethod
+    def _classify_repo_source(repo: str) -> tuple[str, str, str]:
+        value = str(repo or "").strip()
+        if not value:
+            return ("local", "", "")
+        path_candidate = Path(value)
+        if path_candidate.exists() or path_candidate.is_absolute() or value.startswith("."):
+            return ("local", "file", "localhost")
+        if re.match(r"^[^@]+@[^:]+:.+$", value):
+            host = value.split("@", 1)[1].split(":", 1)[0].strip().lower()
+            return ("remote", "ssh", host)
+        parsed = urlparse(value)
+        if parsed.scheme:
+            protocol = parsed.scheme.strip().lower()
+            host = (parsed.hostname or "").strip().lower()
+            if protocol == "file":
+                return ("local", protocol, host or "localhost")
+            return ("remote", protocol, host)
+        return ("local", "file", "localhost")
 
 
 __all__ = [

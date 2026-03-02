@@ -54,10 +54,47 @@ class ManifestParser:
         path: Path,
         contract_style: str,
         manifest_path: Path,
+        resolved_commit_sha: str = "",
+        manifest_digest_sha256: str = "",
+        source_ref: str = "",
+        trust_profile: str = "compat",
+        installed_at_utc: str = "",
+        security_mode: str = "compat",
+        security_profile: str = "production",
+        security_policy_version: str = "",
+        compat_fallbacks: tuple[str, ...] = (),
     ) -> ExtensionRecord:
         if contract_style == CONTRACT_STYLE_SDK_V0:
-            return self.sdk_record_from_manifest(manifest, source=source, path=path, manifest_path=manifest_path)
-        return self.legacy_record_from_manifest(manifest, source=source, path=path, manifest_path=manifest_path)
+            return self.sdk_record_from_manifest(
+                manifest,
+                source=source,
+                path=path,
+                manifest_path=manifest_path,
+                resolved_commit_sha=resolved_commit_sha,
+                manifest_digest_sha256=manifest_digest_sha256,
+                source_ref=source_ref,
+                trust_profile=trust_profile,
+                installed_at_utc=installed_at_utc,
+                security_mode=security_mode,
+                security_profile=security_profile,
+                security_policy_version=security_policy_version,
+                compat_fallbacks=compat_fallbacks,
+            )
+        return self.legacy_record_from_manifest(
+            manifest,
+            source=source,
+            path=path,
+            manifest_path=manifest_path,
+            resolved_commit_sha=resolved_commit_sha,
+            manifest_digest_sha256=manifest_digest_sha256,
+            source_ref=source_ref,
+            trust_profile=trust_profile,
+            installed_at_utc=installed_at_utc,
+            security_mode=security_mode,
+            security_profile=security_profile,
+            security_policy_version=security_policy_version,
+            compat_fallbacks=compat_fallbacks,
+        )
 
     def legacy_record_from_manifest(
         self,
@@ -66,6 +103,15 @@ class ManifestParser:
         source: str,
         path: Path,
         manifest_path: Path,
+        resolved_commit_sha: str = "",
+        manifest_digest_sha256: str = "",
+        source_ref: str = "",
+        trust_profile: str = "compat",
+        installed_at_utc: str = "",
+        security_mode: str = "compat",
+        security_profile: str = "production",
+        security_policy_version: str = "",
+        compat_fallbacks: tuple[str, ...] = (),
     ) -> ExtensionRecord:
         extension_id = str(manifest.get("extension_id", "")).strip()
         extension_version = str(manifest.get("extension_version", "")).strip()
@@ -103,6 +149,15 @@ class ManifestParser:
             workloads=tuple(workloads),
             contract_style=CONTRACT_STYLE_LEGACY,
             manifest_path=str(manifest_path),
+            resolved_commit_sha=resolved_commit_sha,
+            manifest_digest_sha256=manifest_digest_sha256,
+            source_ref=source_ref,
+            trust_profile=trust_profile,
+            installed_at_utc=installed_at_utc,
+            security_mode=security_mode,
+            security_profile=security_profile,
+            security_policy_version=security_policy_version,
+            compat_fallbacks=compat_fallbacks,
         )
 
     def sdk_record_from_manifest(
@@ -112,6 +167,15 @@ class ManifestParser:
         source: str,
         path: Path,
         manifest_path: Path,
+        resolved_commit_sha: str = "",
+        manifest_digest_sha256: str = "",
+        source_ref: str = "",
+        trust_profile: str = "compat",
+        installed_at_utc: str = "",
+        security_mode: str = "compat",
+        security_profile: str = "production",
+        security_policy_version: str = "",
+        compat_fallbacks: tuple[str, ...] = (),
     ) -> ExtensionRecord:
         extension_id = str(manifest.get("extension_id", "")).strip()
         extension_version = str(manifest.get("extension_version", "")).strip()
@@ -150,4 +214,13 @@ class ManifestParser:
             workloads=tuple(workloads),
             contract_style=CONTRACT_STYLE_SDK_V0,
             manifest_path=str(manifest_path),
+            resolved_commit_sha=resolved_commit_sha,
+            manifest_digest_sha256=manifest_digest_sha256,
+            source_ref=source_ref,
+            trust_profile=trust_profile,
+            installed_at_utc=installed_at_utc,
+            security_mode=security_mode,
+            security_profile=security_profile,
+            security_policy_version=security_policy_version,
+            compat_fallbacks=compat_fallbacks,
         )
