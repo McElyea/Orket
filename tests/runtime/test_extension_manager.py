@@ -642,3 +642,29 @@ def test_install_from_repo_compat_mode_records_fallbacks(tmp_path, monkeypatch):
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     record = manager.install_from_repo(str(repo))
     assert "EXT_LOCAL_PATH_COMPAT" in record.compat_fallbacks
+
+
+def test_source_policy_enforce_denies_unapproved_host(monkeypatch):
+    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "enforce")
+    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
+    monkeypatch.setenv("ORKET_EXT_ALLOWED_HOSTS", "github.com")
+    with pytest.raises(RuntimeError, match="E_EXT_TRUST_HOST_DENIED"):
+        ExtensionManager._evaluate_source_policy("https://example.com/repo.git")
+
+
+def test_source_policy_enforce_denies_unapproved_protocol(monkeypatch):
+    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "enforce")
+    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
+    monkeypatch.setenv("ORKET_EXT_ALLOWED_HOSTS", "github.com")
+    with pytest.raises(RuntimeError, match="E_EXT_TRUST_PROTOCOL_DENIED"):
+        ExtensionManager._evaluate_source_policy("http://github.com/repo.git")
+
+
+def test_source_policy_compat_records_host_and_protocol_fallbacks(monkeypatch):
+    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "compat")
+    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
+    monkeypatch.setenv("ORKET_EXT_ALLOWED_HOSTS", "github.com")
+    decision = ExtensionManager._evaluate_source_policy("http://example.com/repo.git")
+    assert decision.security_mode == "compat"
+    assert "EXT_PROTOCOL_COMPAT" in decision.compat_fallbacks
+    assert "EXT_HOST_COMPAT" in decision.compat_fallbacks
