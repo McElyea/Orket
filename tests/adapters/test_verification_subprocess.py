@@ -3,6 +3,7 @@
 from orket.domain.verification import VerificationEngine, VerificationSecurityError
 from orket.schema import IssueVerification, VerificationScenario
 import subprocess
+import json
 
 
 
@@ -228,3 +229,93 @@ def test_verification_security_rejects_path_traversal_fixture(tmp_path):
 
     with pytest.raises(VerificationSecurityError, match="SECURITY VIOLATION"):
         VerificationEngine.verify(verification, workspace)
+
+
+def test_verification_production_profile_blocks_unsafe_subprocess(tmp_path, monkeypatch):
+    workspace = tmp_path / "workspace"
+    verification_dir = workspace / "verification"
+    verification_dir.mkdir(parents=True)
+    fixture_path = verification_dir / "fixture_pass.py"
+    fixture_path.write_text(
+        "def verify(input_data):\n"
+        "    return input_data.get('value', 0)\n",
+        encoding="utf-8",
+    )
+
+    verification = IssueVerification(
+        fixture_path="verification/fixture_pass.py",
+        scenarios=[
+            VerificationScenario(
+                id="P1",
+                description="production guard",
+                input_data={"value": 5},
+                expected_output=5,
+            )
+        ],
+    )
+
+    monkeypatch.setenv("ORKET_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv("ORKET_VERIFY_EXECUTION_MODE", "subprocess")
+    monkeypatch.delenv("ORKET_VERIFY_ALLOW_UNSAFE_SUBPROCESS", raising=False)
+
+    result = VerificationEngine.verify(verification, workspace)
+    assert result.failed == 1
+    assert any("disabled in production profile" in entry.lower() for entry in result.logs)
+
+
+def test_verification_container_mode_uses_docker_runner(tmp_path, monkeypatch):
+    workspace = tmp_path / "workspace"
+    verification_dir = workspace / "verification"
+    verification_dir.mkdir(parents=True)
+    fixture_path = verification_dir / "fixture_pass.py"
+    fixture_path.write_text(
+        "def verify(input_data):\n"
+        "    return input_data.get('value', 0)\n",
+        encoding="utf-8",
+    )
+
+    verification = IssueVerification(
+        fixture_path="verification/fixture_pass.py",
+        scenarios=[
+            VerificationScenario(
+                id="C1",
+                description="container mode",
+                input_data={"value": 9},
+                expected_output=9,
+            )
+        ],
+    )
+
+    monkeypatch.setenv("ORKET_VERIFY_EXECUTION_MODE", "container")
+
+    captured = {"cmd": None}
+
+    def fake_run(command, **kwargs):
+        captured["cmd"] = list(command)
+        payload = json.loads(kwargs.get("input") or "{}")
+        scenario = (payload.get("scenarios") or [{}])[0]
+        stdout_payload = {
+            "ok": True,
+            "results": [
+                {
+                    "id": scenario.get("id"),
+                    "expected_output": scenario.get("expected_output"),
+                    "actual_output": scenario.get("expected_output"),
+                    "status": "pass",
+                    "error": None,
+                }
+            ],
+        }
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=0,
+            stdout=json.dumps(stdout_payload),
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = VerificationEngine.verify(verification, workspace)
+    assert result.passed == 1
+    assert result.failed == 0
+    assert captured["cmd"][0] == "docker"

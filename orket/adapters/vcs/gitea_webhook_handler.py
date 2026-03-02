@@ -44,22 +44,32 @@ class GiteaWebhookHandler:
         self.lifecycle = PRLifecycleHandler(self)
         self.sandbox = SandboxDeploymentHandler(self)
 
-    def __getattr__(self, name: str) -> Any:
-        delegated = {
-            "_handle_pr_review": self.review.handle_pr_review,
-            "_auto_merge": self.review.auto_merge,
-            "_escalate_to_architect": self.review.escalate_to_architect,
-            "_auto_reject": self.review.auto_reject,
-            "_handle_pr_opened": self.lifecycle.handle_pr_opened,
-            "_handle_pr_merged": self.lifecycle.handle_pr_merged,
-            "_create_requirements_issue": self.lifecycle.create_requirements_issue,
-            "_trigger_sandbox_deployment": self.sandbox.trigger_sandbox_deployment,
-            "_add_sandbox_comment": self.sandbox.add_sandbox_comment,
-        }
-        target = delegated.get(name)
-        if target is not None:
-            return target
-        raise AttributeError(name)
+    async def _handle_pr_review(self, payload: Dict[str, Any]) -> Dict[str, str]:
+        return await self.review.handle_pr_review(payload)
+
+    async def _auto_merge(self, repo: Dict[str, Any], pr_number: int) -> None:
+        await self.review.auto_merge(repo, pr_number)
+
+    async def _escalate_to_architect(self, repo: Dict[str, Any], pr_number: int) -> None:
+        await self.review.escalate_to_architect(repo, pr_number)
+
+    async def _auto_reject(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> None:
+        await self.review.auto_reject(repo, pr_number, repo_full_name)
+
+    async def _handle_pr_opened(self, payload: Dict[str, Any]) -> Dict[str, str]:
+        return await self.lifecycle.handle_pr_opened(payload)
+
+    async def _handle_pr_merged(self, payload: Dict[str, Any]) -> Dict[str, str]:
+        return await self.lifecycle.handle_pr_merged(payload)
+
+    async def _create_requirements_issue(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> None:
+        await self.lifecycle.create_requirements_issue(repo, pr_number, repo_full_name)
+
+    async def _trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: Dict[str, Any]) -> None:
+        await self.sandbox.trigger_sandbox_deployment(owner, repo_name, pr)
+
+    async def _add_sandbox_comment(self, owner: str, repo_name: str, pr_number: int, sandbox: Any) -> None:
+        await self.sandbox.add_sandbox_comment(owner, repo_name, pr_number, sandbox)
 
     async def close(self) -> None:
         await self.client.aclose()

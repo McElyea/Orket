@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Any, Optional, List
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Body
+from fastapi import FastAPI, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 import os
@@ -30,6 +30,10 @@ from orket.streaming import (
 from orket.workloads import is_builtin_workload, run_builtin_workload, validate_builtin_workload_start
 from orket.interfaces.routers.kernel import build_kernel_router
 from orket.interfaces.routers.cards import build_cards_router
+from orket.interfaces.routers.settings import build_settings_router
+from orket.interfaces.routers.system import build_system_router
+from orket.interfaces.routers.sessions import build_sessions_router
+from orket.interfaces.routers.streaming import register_streaming_routes
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -42,10 +46,6 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
-
-
-from pydantic import BaseModel, Field
-
 @lru_cache(maxsize=1)
 def _get_api_runtime_node():
     return DecisionNodeRegistry().resolve_api_runtime()
@@ -122,28 +122,6 @@ def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
     method = _resolve_sync_method(target, invocation, error_prefix)
     return method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
-class SaveFileRequest(BaseModel):
-    path: str
-    content: str
-
-class RunAssetRequest(BaseModel):
-    path: Optional[str] = None
-    build_id: Optional[str] = None
-    type: Optional[str] = None
-    issue_id: Optional[str] = None
-
-class ChatDriverRequest(BaseModel):
-    message: str
-
-class RuntimePolicyUpdateRequest(BaseModel):
-    architecture_mode: Optional[str] = None
-    frontend_framework_mode: Optional[str] = None
-    project_surface_profile: Optional[str] = None
-    small_project_builder_variant: Optional[str] = None
-    state_backend_mode: Optional[str] = None
-    gitea_state_pilot_enabled: Optional[bool] = None
-
-
 SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
     "architecture_mode": {
         "env_var": "ORKET_ARCHITECTURE_MODE",
@@ -214,26 +192,6 @@ SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
 }
 
 SETTINGS_ORDER = tuple(SETTINGS_SCHEMA.keys())
-
-
-class InteractionSessionStartRequest(BaseModel):
-    session_params: dict[str, Any] = Field(default_factory=dict)
-
-
-class InteractionTurnRequest(BaseModel):
-    workload_id: str
-    input_config: dict[str, Any] = Field(default_factory=dict)
-    department: str = "core"
-    workspace: str = "workspace/default"
-    turn_params: dict[str, Any] = Field(default_factory=dict)
-
-
-class InteractionFinalizeRequest(BaseModel):
-    turn_id: str
-
-
-class InteractionCancelRequest(BaseModel):
-    turn_id: Optional[str] = None
 
 
 def _normalize_role_name(value: Any) -> str:
@@ -479,140 +437,83 @@ async def get_version():
 
 v1_router.include_router(build_kernel_router(lambda: engine))
 v1_router.include_router(build_cards_router(lambda: engine, api_runtime_node))
-
-@v1_router.post("/system/clear-logs")
-async def clear_logs():
-    log_path = api_runtime_node.resolve_clear_logs_path()
-    fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
-    try:
-        invocation = api_runtime_node.resolve_clear_logs_invocation(log_path)
-        await _invoke_async_method(fs, invocation, "clear logs")
-    except (PermissionError, FileNotFoundError, OSError) as exc:
-        log_event(
-            "clear_logs_skipped",
-            {"path": log_path, "error": str(exc)},
-            PROJECT_ROOT,
-        )
-    return {"ok": True}
-
-@v1_router.get("/system/heartbeat")
-async def heartbeat():
-    return {
-        "status": "online",
-        "timestamp": now_local().isoformat(),
-        "active_tasks": len(runtime_state.active_tasks)  # Read-only len() is safe without lock
-    }
-
-@v1_router.get("/system/metrics")
-async def get_metrics():
-    metrics = await asyncio.to_thread(get_metrics_snapshot)
-    return api_runtime_node.normalize_metrics(metrics)
-
-@v1_router.get("/system/explorer")
-async def list_system_files(path: str = "."):
-    target = api_runtime_node.resolve_explorer_path(PROJECT_ROOT, path)
-    if target is None:
-        raise HTTPException(**api_runtime_node.resolve_explorer_forbidden_error(path))
-    if not target.exists():
-        return api_runtime_node.resolve_explorer_missing_response(path)
-    
-    items = []
-    for p in target.iterdir():
-        if not api_runtime_node.include_explorer_entry(p.name):
-            continue
-        is_dir = p.is_dir()
-        items.append({"name": p.name, "is_dir": is_dir, "ext": p.suffix})
-    return {"items": api_runtime_node.sort_explorer_items(items), "path": path}
-
-@v1_router.get("/system/read")
-async def read_system_file(path: str):
-    fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
-    try:
-        invocation = api_runtime_node.resolve_read_invocation(path)
-        content = await _invoke_async_method(fs, invocation, "read")
-    except PermissionError as exc:
-        raise HTTPException(
-            status_code=403,
-            detail=api_runtime_node.permission_denied_detail("read", str(exc)),
-        ) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=api_runtime_node.read_not_found_detail(path)) from exc
-    return {"content": content}
-
-@v1_router.post("/system/save")
-async def save_system_file(req: SaveFileRequest):
-    fs = api_runtime_node.create_file_tools(PROJECT_ROOT)
-    try:
-        invocation = api_runtime_node.resolve_save_invocation(req.path, req.content)
-        await _invoke_async_method(fs, invocation, "save")
-    except PermissionError as exc:
-        raise HTTPException(
-            status_code=403,
-            detail=api_runtime_node.permission_denied_detail("save", str(exc)),
-        ) from exc
-    return {"ok": True}
-
-@v1_router.get("/system/calendar")
-async def get_calendar():
-    now = now_local()
-    calendar_window = api_runtime_node.calendar_window(now)
-    return {
-        "current_sprint": api_runtime_node.resolve_current_sprint(now),
-        "sprint_start": calendar_window["sprint_start"],
-        "sprint_end": calendar_window["sprint_end"],
-    }
-
-
-@v1_router.get("/system/runtime-policy/options")
-async def get_runtime_policy_options():
-    return runtime_policy_options()
-
-
-@v1_router.get("/system/model-assignments")
-async def get_model_assignments(roles: Optional[str] = None):
-    role_filter = _parse_roles_filter(roles)
-    active_roles = role_filter or await asyncio.to_thread(_discover_active_roles, PROJECT_ROOT / "model")
-    selector = ModelSelector(
-        organization=engine.org,
-        preferences=load_user_preferences(),
-        user_settings=load_user_settings(),
+v1_router.include_router(
+    build_settings_router(
+        settings_order=SETTINGS_ORDER,
+        settings_schema=SETTINGS_SCHEMA,
+        runtime_policy_options=lambda: runtime_policy_options(),
+        load_user_settings=lambda: load_user_settings(),
+        save_user_settings=lambda settings: save_user_settings(settings),
+        runtime_policy_process_rules=lambda: _runtime_policy_process_rules(),
+        resolve_settings_snapshot=lambda user_settings, process_rules: _resolve_settings_snapshot(user_settings, process_rules),
+        parse_setting_value=lambda field, value: _parse_setting_value(field, value),
+        settings_validation_error=lambda errors: _settings_validation_error(errors),
+        is_microservices_unlocked=lambda: is_microservices_unlocked(),
+        resolve_architecture_mode=lambda env_value, process_value, user_value: resolve_architecture_mode(
+            env_value, process_value, user_value
+        ),
+        resolve_frontend_framework_mode=lambda env_value, process_value, user_value: resolve_frontend_framework_mode(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_project_surface_profile=lambda env_value, process_value, user_value: resolve_project_surface_profile(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_small_project_builder_variant=lambda env_value, process_value, user_value: resolve_small_project_builder_variant(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_state_backend_mode=lambda env_value, process_value, user_value: resolve_state_backend_mode(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_gitea_state_pilot_enabled=lambda env_value, process_value, user_value: resolve_gitea_state_pilot_enabled(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        allowed_architecture_patterns=lambda: allowed_architecture_patterns(),
+        is_microservices_pilot_stable=lambda: is_microservices_pilot_stable(),
     )
-
-    items: list[dict[str, Any]] = []
-    for role in active_roles:
-        selected_model = selector.select(role=role)
-        decision = selector.get_last_selection_decision()
-        final_model = str(decision.get("final_model") or selected_model)
-        items.append(
-            {
-                "role": role,
-                "selected_model": str(decision.get("selected_model") or selected_model),
-                "final_model": final_model,
-                "demoted": bool(decision.get("demoted", False)),
-                "reason": str(decision.get("reason") or "unknown"),
-                "dialect": selector.get_dialect_name(final_model),
-            }
-        )
-    return {
-        "items": items,
-        "count": len(items),
-        "generated_at": now_local().isoformat(),
-        "filters": {"roles": role_filter or None},
-    }
-
-
-@v1_router.get("/system/teams")
-async def get_system_teams(department: Optional[str] = None):
-    topology = await asyncio.to_thread(_discover_team_topology, PROJECT_ROOT / "model")
-    if department:
-        dept = str(department).strip().lower()
-        topology = [item for item in topology if str(item.get("department") or "").strip().lower() == dept]
-    return {
-        "items": topology,
-        "count": len(topology),
-        "filters": {"department": department or None},
-    }
-
+)
+v1_router.include_router(
+    build_system_router(
+        project_root_getter=lambda: PROJECT_ROOT,
+        runtime_state=runtime_state,
+        api_runtime_node_getter=lambda: api_runtime_node,
+        now_local=now_local,
+        get_metrics_snapshot=get_metrics_snapshot,
+        log_event=lambda name, payload, workspace: log_event(name, payload, workspace),
+        model_selector_factory=lambda organization, preferences, user_settings: ModelSelector(
+            organization=organization,
+            preferences=preferences,
+            user_settings=user_settings,
+        ),
+        load_user_preferences=lambda: load_user_preferences(),
+        load_user_settings=lambda: load_user_settings(),
+        parse_roles_filter=lambda roles: _parse_roles_filter(roles),
+        discover_active_roles=lambda root: _discover_active_roles(root),
+        discover_team_topology=lambda root: _discover_team_topology(root),
+        invoke_async_method=_invoke_async_method,
+        schedule_async_invocation_task=_schedule_async_invocation_task,
+        engine_getter=lambda: engine,
+    )
+)
+v1_router.include_router(
+    build_sessions_router(
+        interaction_manager_getter=lambda: interaction_manager,
+        extension_manager_getter=lambda: extension_manager,
+        is_builtin_workload=lambda workload_id: is_builtin_workload(workload_id),
+        validate_builtin_workload_start=lambda **kwargs: validate_builtin_workload_start(**kwargs),
+        run_builtin_workload=lambda **kwargs: run_builtin_workload(**kwargs),
+        commit_intent_factory=lambda reason: CommitIntent(type="decision", ref=f"fail_closed:{reason}"),
+    )
+)
 
 def _normalize_setting_token(value: Any) -> str:
     return str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
@@ -707,193 +608,6 @@ def _settings_validation_error(errors: list[dict[str, Any]]) -> HTTPException:
         },
     )
 
-
-@v1_router.get("/settings")
-async def get_settings():
-    user_settings = load_user_settings()
-    process_rules = _runtime_policy_process_rules()
-    return {"settings": _resolve_settings_snapshot(user_settings, process_rules)}
-
-
-@v1_router.patch("/settings")
-async def update_settings(payload: dict[str, Any] = Body(...)):
-    editable = {key: payload[key] for key in SETTINGS_ORDER if key in payload}
-    errors: list[dict[str, Any]] = []
-    for key in payload.keys():
-        if key not in SETTINGS_SCHEMA:
-            errors.append(
-                {
-                    "field": key,
-                    "code": "unknown_setting",
-                    "message": "Setting is not user-editable.",
-                }
-            )
-    if not editable and not errors:
-        raise HTTPException(status_code=400, detail="No editable settings provided.")
-
-    options = runtime_policy_options()
-    normalized: dict[str, Any] = {}
-    for field, raw_value in editable.items():
-        parsed = _parse_setting_value(field, raw_value)
-        if parsed is None:
-            errors.append(
-                {
-                    "field": field,
-                    "code": "invalid_value",
-                    "provided": raw_value,
-                    "allowed_values": [item.get("value") for item in options[field].get("options", []) if isinstance(item, dict)],
-                }
-            )
-            continue
-        if field == "architecture_mode" and parsed == "force_microservices" and not is_microservices_unlocked():
-            errors.append(
-                {
-                    "field": field,
-                    "code": "policy_guard",
-                    "message": "force_microservices is locked until microservices readiness gates are satisfied.",
-                }
-            )
-            continue
-        normalized[field] = parsed
-
-    user_settings = load_user_settings().copy()
-    process_rules = _runtime_policy_process_rules()
-    candidate = user_settings.copy()
-    candidate.update(normalized)
-    snapshot = _resolve_settings_snapshot(candidate, process_rules)
-    if snapshot["state_backend_mode"]["value"] == "gitea" and not snapshot["gitea_state_pilot_enabled"]["value"]:
-        errors.append(
-            {
-                "field": "state_backend_mode",
-                "code": "policy_guard",
-                "message": "state_backend_mode='gitea' requires gitea_state_pilot_enabled=true.",
-            }
-        )
-
-    if errors:
-        raise _settings_validation_error(errors)
-
-    user_settings.update(normalized)
-    save_user_settings(user_settings)
-    return {
-        "ok": True,
-        "saved": normalized,
-        "settings": _resolve_settings_snapshot(user_settings, process_rules),
-    }
-
-
-@v1_router.get("/system/runtime-policy")
-async def get_runtime_policy():
-    user_settings = load_user_settings()
-    process_rules = _runtime_policy_process_rules()
-
-    architecture_mode = resolve_architecture_mode(
-        os.environ.get("ORKET_ARCHITECTURE_MODE", ""),
-        process_rules.get("architecture_mode"),
-        user_settings.get("architecture_mode"),
-    )
-    frontend_framework_mode = resolve_frontend_framework_mode(
-        os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE", ""),
-        process_rules.get("frontend_framework_mode"),
-        user_settings.get("frontend_framework_mode"),
-    )
-    project_surface_profile = resolve_project_surface_profile(
-        os.environ.get("ORKET_PROJECT_SURFACE_PROFILE", ""),
-        process_rules.get("project_surface_profile"),
-        user_settings.get("project_surface_profile"),
-    )
-    small_project_builder_variant = resolve_small_project_builder_variant(
-        os.environ.get("ORKET_SMALL_PROJECT_BUILDER_VARIANT", ""),
-        process_rules.get("small_project_builder_variant"),
-        user_settings.get("small_project_builder_variant"),
-    )
-    state_backend_mode = resolve_state_backend_mode(
-        os.environ.get("ORKET_STATE_BACKEND_MODE", ""),
-        process_rules.get("state_backend_mode"),
-        user_settings.get("state_backend_mode"),
-    )
-    gitea_state_pilot_enabled = resolve_gitea_state_pilot_enabled(
-        os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT", ""),
-        process_rules.get("gitea_state_pilot_enabled"),
-        user_settings.get("gitea_state_pilot_enabled"),
-    )
-    return {
-        "architecture_mode": architecture_mode,
-        "frontend_framework_mode": frontend_framework_mode,
-        "project_surface_profile": project_surface_profile,
-        "small_project_builder_variant": small_project_builder_variant,
-        "state_backend_mode": state_backend_mode,
-        "gitea_state_pilot_enabled": gitea_state_pilot_enabled,
-        "default_architecture_mode": "force_monolith",
-        "allowed_architecture_patterns": allowed_architecture_patterns(),
-        "microservices_unlocked": is_microservices_unlocked(),
-        "microservices_pilot_stable": is_microservices_pilot_stable(),
-    }
-
-
-@v1_router.post("/system/runtime-policy")
-async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
-    current = load_user_settings().copy()
-    if req.architecture_mode is not None:
-        current["architecture_mode"] = resolve_architecture_mode(req.architecture_mode)
-    if req.frontend_framework_mode is not None:
-        current["frontend_framework_mode"] = resolve_frontend_framework_mode(req.frontend_framework_mode)
-    if req.project_surface_profile is not None:
-        current["project_surface_profile"] = resolve_project_surface_profile(req.project_surface_profile)
-    if req.small_project_builder_variant is not None:
-        current["small_project_builder_variant"] = resolve_small_project_builder_variant(
-            req.small_project_builder_variant
-        )
-    if req.state_backend_mode is not None:
-        current["state_backend_mode"] = resolve_state_backend_mode(req.state_backend_mode)
-    if req.gitea_state_pilot_enabled is not None:
-        current["gitea_state_pilot_enabled"] = bool(
-            resolve_gitea_state_pilot_enabled(req.gitea_state_pilot_enabled)
-        )
-    save_user_settings(current)
-    return {
-        "ok": True,
-        "saved": {
-            "architecture_mode": current.get("architecture_mode"),
-            "frontend_framework_mode": current.get("frontend_framework_mode"),
-            "project_surface_profile": current.get("project_surface_profile"),
-            "small_project_builder_variant": current.get("small_project_builder_variant"),
-            "state_backend_mode": current.get("state_backend_mode"),
-            "gitea_state_pilot_enabled": current.get("gitea_state_pilot_enabled"),
-        },
-    }
-
-@v1_router.post("/system/run-active")
-async def run_active_asset(req: RunAssetRequest):
-    session_id = api_runtime_node.create_session_id()
-
-    asset_id = api_runtime_node.resolve_asset_id(req.path, req.issue_id)
-    if not asset_id:
-        raise HTTPException(
-            status_code=400,
-            detail=api_runtime_node.run_active_missing_asset_detail(),
-        )
-
-    invocation = api_runtime_node.resolve_run_active_invocation(
-        asset_id=asset_id,
-        build_id=req.build_id,
-        session_id=session_id,
-        request_type=req.type,
-    )
-    method_name = invocation["method_name"]
-
-    log_event(
-        "api_run_active",
-        {
-            "asset_id": asset_id,
-            "request_type": req.type,
-            "session_id": session_id,
-            "method_name": method_name,
-        },
-        PROJECT_ROOT,
-    )
-    await _schedule_async_invocation_task(engine, invocation, "run", session_id)
-    return {"session_id": session_id}
 
 @v1_router.get("/runs")
 async def list_runs():
@@ -1605,123 +1319,6 @@ async def list_logs(
         },
     }
 
-
-@v1_router.get("/system/board")
-async def get_system_board(dept: str = "core"):
-    return api_runtime_node.resolve_system_board(dept)
-
-@v1_router.get("/system/preview-asset")
-async def preview_asset(path: str, issue_id: Optional[str] = None):
-    target = api_runtime_node.resolve_preview_target(path, issue_id)
-    invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)
-    builder = api_runtime_node.create_preview_builder(PROJECT_ROOT / "model")
-    return await _invoke_async_method(builder, invocation, "preview")
-
-@v1_router.post("/system/chat-driver")
-async def chat_driver(req: ChatDriverRequest):
-    driver = api_runtime_node.create_chat_driver()
-    invocation = api_runtime_node.resolve_chat_driver_invocation(req.message)
-    response = await _invoke_async_method(driver, invocation, "chat driver")
-    return {"response": response}
-
-@v1_router.post("/interactions/sessions")
-async def start_interaction_session(req: InteractionSessionStartRequest):
-    if not interaction_manager.stream_enabled():
-        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
-    session_id = await interaction_manager.start(req.session_params)
-    return {"session_id": session_id}
-
-
-@v1_router.post("/interactions/{session_id}/turns")
-async def begin_interaction_turn(session_id: str, req: InteractionTurnRequest):
-    if not interaction_manager.stream_enabled():
-        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
-    workload_id = str(req.workload_id or "").strip()
-    if not workload_id:
-        raise HTTPException(status_code=400, detail="workload_id is required")
-    extension_match = extension_manager.resolve_workload(workload_id)
-    if not is_builtin_workload(workload_id) and extension_match is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unknown workload '{workload_id}'. Built-in workloads: stream_test_v1, model_stream_v1, rulesim_v0.",
-        )
-    if is_builtin_workload(workload_id):
-        try:
-            validate_builtin_workload_start(
-                workload_id=workload_id,
-                input_config=req.input_config,
-                turn_params=req.turn_params,
-            )
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-        except RuntimeError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
-    try:
-        turn_id = await interaction_manager.begin_turn(
-            session_id=session_id,
-            input_payload=req.input_config,
-            turn_params=req.turn_params,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    context = await interaction_manager.create_context(session_id, turn_id)
-    workspace = Path(req.workspace).resolve()
-
-    async def _run_turn():
-        try:
-            if is_builtin_workload(workload_id):
-                hints = await run_builtin_workload(
-                    workload_id=workload_id,
-                    input_config=req.input_config,
-                    turn_params=req.turn_params,
-                    interaction_context=context,
-                )
-                if int(hints.get("request_cancel_turn", 0) or 0) > 0:
-                    await interaction_manager.cancel(turn_id)
-                await interaction_manager.finalize(session_id, turn_id)
-                post_finalize_wait_ms = int(hints.get("post_finalize_wait_ms", 0))
-                if post_finalize_wait_ms > 0:
-                    await asyncio.sleep(post_finalize_wait_ms / 1000.0)
-            else:
-                await extension_manager.run_workload(
-                    workload_id=workload_id,
-                    input_config=req.input_config,
-                    workspace=workspace,
-                    department=req.department,
-                    interaction_context=context,
-                )
-                await interaction_manager.finalize(session_id, turn_id)
-        except (RuntimeError, ValueError, TypeError, OSError, asyncio.TimeoutError) as exc:
-            await interaction_manager.cancel(turn_id)
-            await context.request_commit(CommitIntent(type="decision", ref=f"fail_closed:{str(exc)}"))
-            await interaction_manager.finalize(session_id, turn_id)
-
-    asyncio.create_task(_run_turn())
-    return {"session_id": session_id, "turn_id": turn_id}
-
-
-@v1_router.post("/interactions/{session_id}/finalize")
-async def finalize_interaction_turn(session_id: str, req: InteractionFinalizeRequest):
-    if not interaction_manager.stream_enabled():
-        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
-    try:
-        handle = await interaction_manager.finalize(session_id, req.turn_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return handle.model_dump()
-
-
-@v1_router.post("/interactions/{session_id}/cancel")
-async def cancel_interaction(session_id: str, req: InteractionCancelRequest):
-    if not interaction_manager.stream_enabled():
-        raise HTTPException(status_code=400, detail="Stream events v1 is disabled.")
-    target = req.turn_id or session_id
-    try:
-        await interaction_manager.cancel(target)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"ok": True, "target": target}
-
 app.include_router(v1_router)
 
 
@@ -1750,57 +1347,13 @@ async def event_broadcaster():
                 if isinstance(exc, WebSocketDisconnect) or api_runtime_node.should_remove_websocket(exc):
                     await runtime_state.remove_websocket(ws)
         runtime_state.event_queue.task_done()
-
-@app.websocket("/ws/events")
-async def websocket_endpoint(websocket: WebSocket):
-    expected_key = os.getenv("ORKET_API_KEY")
-    header_key = websocket.headers.get(API_KEY_NAME) or websocket.headers.get(API_KEY_NAME.lower())
-    query_key = websocket.query_params.get("api_key")
-    supplied_key = api_runtime_node.resolve_websocket_api_key(header_key, query_key)
-    warning_event = api_runtime_node.websocket_query_compat_warning_event(
-        bool((not header_key) and query_key and supplied_key == query_key),
-        input_ref="/ws/events",
-    )
-    if warning_event:
-        log_event("security_compat_fallback_used", warning_event, PROJECT_ROOT)
-    if not api_runtime_node.is_api_key_valid(expected_key, supplied_key):
-        await websocket.close(code=4403)
-        return
-    await websocket.accept()
-    await runtime_state.add_websocket(websocket)
-    try:
-        while True: await websocket.receive_text()
-    except WebSocketDisconnect:
-        await runtime_state.remove_websocket(websocket)
-
-
-@app.websocket("/ws/interactions/{session_id}")
-async def websocket_interactions(session_id: str, websocket: WebSocket):
-    expected_key = os.getenv("ORKET_API_KEY")
-    header_key = websocket.headers.get(API_KEY_NAME) or websocket.headers.get(API_KEY_NAME.lower())
-    query_key = websocket.query_params.get("api_key")
-    supplied_key = api_runtime_node.resolve_websocket_api_key(header_key, query_key)
-    warning_event = api_runtime_node.websocket_query_compat_warning_event(
-        bool((not header_key) and query_key and supplied_key == query_key),
-        input_ref=f"/ws/interactions/{session_id}",
-    )
-    if warning_event:
-        log_event("security_compat_fallback_used", warning_event, PROJECT_ROOT)
-    if not api_runtime_node.is_api_key_valid(expected_key, supplied_key):
-        await websocket.close(code=4403)
-        return
-    if not interaction_manager.stream_enabled():
-        await websocket.close(code=4400)
-        return
-    await websocket.accept()
-    queue = await interaction_manager.subscribe(session_id)
-    try:
-        while True:
-            event = await queue.get()
-            await websocket.send_json(event.model_dump())
-    except WebSocketDisconnect:
-        pass
-    finally:
-        await stream_bus.unsubscribe(session_id, queue)
-
-
+register_streaming_routes(
+    app,
+    api_key_name=API_KEY_NAME,
+    api_runtime_node_getter=lambda: api_runtime_node,
+    interaction_manager_getter=lambda: interaction_manager,
+    stream_bus_getter=lambda: stream_bus,
+    runtime_state=runtime_state,
+    project_root_getter=lambda: PROJECT_ROOT,
+    log_event=log_event,
+)

@@ -50,8 +50,13 @@ class _WebhookHandlerProxy:
     def reset(self) -> None:
         self._handler = None
 
-    def __getattr__(self, item):
-        return getattr(self._get(), item)
+    async def handle_webhook(self, event_type: str, payload: Dict[str, Any]) -> Dict[str, str]:
+        return await self._get().handle_webhook(event_type, payload)
+
+    async def close(self) -> None:
+        if self._handler is not None:
+            await self._handler.close()
+            self._handler = None
 
 
 webhook_handler = _WebhookHandlerProxy()

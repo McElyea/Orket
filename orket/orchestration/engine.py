@@ -9,10 +9,15 @@ from orket.adapters.storage.async_repositories import (
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.decision_nodes.registry import DecisionNodeRegistry
-from orket.logging import log_event
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.orchestration.kernel_gateway_proxy import KernelGatewayProxy
 from orket.orchestration.orchestration_config import OrchestrationConfig
+from orket.orchestration.engine_services import (
+    CardArchiver,
+    KernelGatewayFacade,
+    SandboxManager,
+    SessionController,
+)
 
 class OrchestrationEngine:
     """
@@ -76,6 +81,10 @@ class OrchestrationEngine:
             success_repo=self.success,
             run_ledger_repo=self.run_ledger,
         )
+        self.sandbox_manager = SandboxManager(getattr(self._pipeline, "sandbox_orchestrator", None))
+        self.session_controller = SessionController(self.workspace_root)
+        self.card_archiver = CardArchiver(self.cards)
+        self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_proxy)
 
     def _resolve_state_backend_mode(self) -> str:
         return self.orchestration_config.resolve_state_backend_mode()
@@ -162,24 +171,19 @@ class OrchestrationEngine:
 
     async def get_sandboxes(self) -> List[Dict[str, Any]]:
         """Returns list of active sandboxes."""
-        registry = self._pipeline.sandbox_orchestrator.registry
-        return [s.model_dump() for s in registry.list_active()]
+        return await self.sandbox_manager.list_active()
 
     async def stop_sandbox(self, sandbox_id: str):
         """Stops and deletes a sandbox."""
-        await self._pipeline.sandbox_orchestrator.delete_sandbox(sandbox_id)
+        await self.sandbox_manager.stop(sandbox_id)
 
     async def halt_session(self, session_id: str):
         """Halts an active session by signaling the runtime state."""
-        from orket.state import runtime_state
-        task = await runtime_state.get_task(session_id)
-        if task:
-            task.cancel()
-            log_event("session_halted", {"session_id": session_id}, self.workspace_root)
+        await self.session_controller.halt(session_id)
 
     async def archive_card(self, card_id: str, archived_by: str = "system", reason: Optional[str] = None) -> bool:
         """Archive a single card record in persistence."""
-        return await self.cards.archive_card(card_id, archived_by=archived_by, reason=reason)
+        return await self.card_archiver.archive_card(card_id, archived_by=archived_by, reason=reason)
 
     async def archive_cards(
         self,
@@ -188,11 +192,11 @@ class OrchestrationEngine:
         reason: Optional[str] = None,
     ) -> Dict[str, List[str]]:
         """Archive multiple cards by id."""
-        return await self.cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
+        return await self.card_archiver.archive_cards(card_ids, archived_by=archived_by, reason=reason)
 
     async def archive_build(self, build_id: str, archived_by: str = "system", reason: Optional[str] = None) -> int:
         """Archive all cards under a build id."""
-        return await self.cards.archive_build(build_id, archived_by=archived_by, reason=reason)
+        return await self.card_archiver.archive_build(build_id, archived_by=archived_by, reason=reason)
 
     async def archive_related_cards(
         self,
@@ -202,8 +206,12 @@ class OrchestrationEngine:
         limit: int = 500,
     ) -> Dict[str, List[str]]:
         """Archive cards whose id/build/summary/note matches any token."""
-        card_ids = await self.cards.find_related_card_ids(related_tokens, limit=limit)
-        return await self.cards.archive_cards(card_ids, archived_by=archived_by, reason=reason)
+        return await self.card_archiver.archive_related_cards(
+            related_tokens,
+            archived_by=archived_by,
+            reason=reason,
+            limit=limit,
+        )
 
     def replay_turn(self, session_id: str, issue_id: str, turn_index: int, role: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -241,25 +249,25 @@ class OrchestrationEngine:
         }
 
     def kernel_start_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_proxy.start_run(request)
+        return self.kernel_gateway_facade.start_run(request)
 
     def kernel_execute_turn(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_proxy.execute_turn(request)
+        return self.kernel_gateway_facade.execute_turn(request)
 
     def kernel_finish_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_proxy.finish_run(request)
+        return self.kernel_gateway_facade.finish_run(request)
 
     def kernel_resolve_capability(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_proxy.resolve_capability(request)
+        return self.kernel_gateway_facade.resolve_capability(request)
 
     def kernel_authorize_tool_call(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_proxy.authorize_tool_call(request)
+        return self.kernel_gateway_facade.authorize_tool_call(request)
 
     def kernel_replay_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_proxy.replay_run(request)
+        return self.kernel_gateway_facade.replay_run(request)
 
     def kernel_compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self.kernel_proxy.compare_runs(request)
+        return self.kernel_gateway_facade.compare_runs(request)
 
     def kernel_run_lifecycle(
         self,
@@ -269,7 +277,7 @@ class OrchestrationEngine:
         finish_outcome: str = "PASS",
         start_request: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        return self.kernel_proxy.run_lifecycle(
+        return self.kernel_gateway_facade.run_lifecycle(
             workflow_id=workflow_id,
             execute_turn_requests=execute_turn_requests,
             finish_outcome=finish_outcome,

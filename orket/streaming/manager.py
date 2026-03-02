@@ -67,6 +67,14 @@ class CommitOrchestrator:
     def __init__(self, project_root: Path | None = None) -> None:
         self.project_root = (project_root or Path.cwd()).resolve()
 
+    @staticmethod
+    def _write_commit_artifact(path: Path, payload: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+
     async def commit(self, *, session_id: str, turn_id: str, intents: list[CommitIntent]) -> dict[str, Any]:
         # Deterministic digest over commit inputs.
         payload = {
@@ -76,22 +84,16 @@ class CommitOrchestrator:
         }
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
-        artifact_root = self.project_root / "workspace" / "interactions" / session_id / turn_id
-        artifact_root.mkdir(parents=True, exist_ok=True)
-        authority_path = artifact_root / "authority_commit.json"
-        authority_path.write_text(
-            json.dumps(
-                {
-                    "authoritative": True,
-                    "commit_digest": digest,
-                    "session_id": session_id,
-                    "turn_id": turn_id,
-                    "intents": [intent.model_dump() for intent in intents],
-                },
-                indent=2,
-                sort_keys=True,
-            ),
-            encoding="utf-8",
+        authority_path = self.project_root / "workspace" / "interactions" / session_id / turn_id / "authority_commit.json"
+        self._write_commit_artifact(
+            authority_path,
+            {
+                "authoritative": True,
+                "commit_digest": digest,
+                "session_id": session_id,
+                "turn_id": turn_id,
+                "intents": [intent.model_dump() for intent in intents],
+            },
         )
         fail_closed_issues = [
             str(intent.ref)[len("fail_closed:") :]
@@ -118,6 +120,11 @@ class InteractionManager:
         self._turns: dict[tuple[str, str], TurnState] = {}
         self._pending_commit_intents: dict[tuple[str, str], list[CommitIntent]] = {}
         self._lock = asyncio.Lock()
+
+    @staticmethod
+    def _write_trace_line(path: Path, payload: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
 
     def stream_enabled(self) -> bool:
         raw = (os.getenv("ORKET_STREAM_EVENTS_V1", "false") or "").strip().lower()
@@ -288,12 +295,11 @@ class InteractionManager:
             payload=payload,
         )
 
-        trace_root = self.project_root / "workspace" / "interactions" / session_id / turn_id
-        trace_root.mkdir(parents=True, exist_ok=True)
-        trace_path = trace_root / "interaction_trace.jsonl"
-        trace_path.write_text(
-            json.dumps({"authoritative": False, "event": "turn_finalized", "turn_id": turn_id}) + "\n",
-            encoding="utf-8",
+        trace_path = self.project_root / "workspace" / "interactions" / session_id / turn_id / "interaction_trace.jsonl"
+        await asyncio.to_thread(
+            self._write_trace_line,
+            trace_path,
+            {"authoritative": False, "event": "turn_finalized", "turn_id": turn_id},
         )
 
         async with self._lock:

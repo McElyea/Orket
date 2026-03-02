@@ -1,25 +1,26 @@
-from typing import Dict, Any, Set, List
+from typing import Any, Dict, List, Set
 
-class CriticalPathEngine:
+
+class ImpactWeightCalculator:
     """
-    Calculates the critical path (longest dependency chain) for a set of tasks.
-    Pure domain logic: No I/O, no DB access.
+    Calculates dependency impact weight for task prioritization.
+    Pure domain logic: no I/O, no DB access.
     """
     
     @staticmethod
     def get_priority_queue(issues: List[Any]) -> List[str]:
         """
         Returns a list of Issue IDs sorted by combined priority score.
-        Score = base_priority + critical_path_weight
+        Score = base_priority + impact_weight
         """
         # 1. Build adjacency map (who depends on me?)
-        adj_map = CriticalPathEngine.build_dependency_graph(issues)
+        adj_map = ImpactWeightCalculator.build_dependency_graph(issues)
 
         # 2. Calculate recursive weights
         weights = {}
         for issue in issues:
             i_id = issue.get("id") if isinstance(issue, dict) else issue.id
-            weights[i_id] = CriticalPathEngine.calculate_weight(i_id, adj_map)
+            weights[i_id] = ImpactWeightCalculator.calculate_weight(i_id, adj_map)
         
         # 3. Calculate combined priority scores (base priority + dependency weight)
         def calculate_score(issue) -> float:
@@ -41,34 +42,23 @@ class CriticalPathEngine:
         return [issue.get("id") if isinstance(issue, dict) else issue.id for issue in ready_issues]
 
     @staticmethod
-    def calculate_weight(issue_id: str, adj_map: Dict[str, Set[str]], visited: Set[str] = None) -> int:
+    def calculate_weight(issue_id: str, adj_map: Dict[str, Set[str]], visited: Set[str] | None = None) -> int:
         """
-        Recursively calculates the weight of an issue based on its dependency chain length.
-        Weight = 1 + max(weight(dependencies))
+        Recursively calculates the impact weight of an issue based on blocked descendants.
+        Weight = sum(1 + weight(blocked_child)) for each blocked child.
         """
         if visited is None:
             visited = set()
-            
+
         weight = 0
-        # For each task that depends on this issue_id (reverse dependency graph)
-        # We need to know who is blocked by issue_id.
-        # But wait, standard critical path is usually forward dependencies.
-        # Let's verify the logic: A task is critical if MANY things depend on it.
-        # So we want to know the depth of the dependency tree rooted at this task.
-        
-        # The adj_map passed here seems to be: Key = Issue, Value = Set of issues BLOCKED BY Key
-        
         for blocked_id in adj_map.get(issue_id, set()):
-            if blocked_id not in visited:
-                visited.add(blocked_id)
-                # Recurse: Weight is 1 (for this node) + max path of children
-                # Actually, this logic sums the weights? No, let's look at the original code.
-                # The original code was: weight += 1 + recursive_call
-                # That sums the entire subgraph size, which is a proxy for "Impact".
-                # True critical path length would use max(), but "Total Impact" uses sum().
-                # Given "Priority" context, impact (how many things I block) is a good metric.
-                weight += 1 + CriticalPathEngine.calculate_weight(blocked_id, adj_map, visited)
-        
+            if blocked_id in visited:
+                continue
+            # Branch-local visited prevents sibling branches from incorrectly sharing state.
+            next_visited = set(visited)
+            next_visited.add(blocked_id)
+            weight += 1 + ImpactWeightCalculator.calculate_weight(blocked_id, adj_map, next_visited)
+
         return weight
 
     @staticmethod
@@ -90,3 +80,7 @@ class CriticalPathEngine:
                 adj_map[dep_id].add(i_id)
                 
         return adj_map
+
+
+class CriticalPathEngine(ImpactWeightCalculator):
+    """Compatibility alias for historical imports."""

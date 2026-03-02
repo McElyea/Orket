@@ -24,6 +24,86 @@ class FixtureVerifier:
         self.verification_dir = verification_dir
 
     @staticmethod
+    def _is_truthy(value: str | None) -> bool:
+        return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+    def _resolve_execution_mode(self) -> str:
+        profile = str(
+            os.getenv("ORKET_RUNTIME_PROFILE")
+            or os.getenv("ORKET_PROFILE")
+            or "development"
+        ).strip().lower()
+        requested = str(os.getenv("ORKET_VERIFY_EXECUTION_MODE", "subprocess")).strip().lower() or "subprocess"
+        if requested not in {"subprocess", "container"}:
+            requested = "subprocess"
+        unsafe_override = self._is_truthy(os.getenv("ORKET_VERIFY_ALLOW_UNSAFE_SUBPROCESS", "0"))
+        if profile == "production" and requested != "container" and not unsafe_override:
+            raise RuntimeError(
+                "Verification subprocess mode is disabled in production profile. "
+                "Set ORKET_VERIFY_EXECUTION_MODE=container."
+            )
+        return requested
+
+    @staticmethod
+    def _run_subprocess(payload: dict, verification_root: Path, timeout_sec: int) -> subprocess.CompletedProcess[str]:
+        env = os.environ.copy()
+        env["PYTHONPATH"] = ""
+        return subprocess.run(
+            [sys.executable, "-I", "-c", RUNNER_CODE],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            timeout=timeout_sec,
+            cwd=str(verification_root),
+            env=env,
+            check=False,
+        )
+
+    @staticmethod
+    def _run_container(payload: dict, verification_root: Path, timeout_sec: int) -> subprocess.CompletedProcess[str]:
+        fixture_path = Path(str(payload.get("fixture_path") or ""))
+        try:
+            relative_fixture = fixture_path.resolve().relative_to(verification_root.resolve()).as_posix()
+        except ValueError:
+            relative_fixture = fixture_path.name
+
+        container_payload = dict(payload)
+        container_payload["fixture_path"] = f"/verification/{relative_fixture}"
+        image = str(os.getenv("ORKET_VERIFY_CONTAINER_IMAGE", "python:3.11-alpine")).strip() or "python:3.11-alpine"
+        command = [
+            "docker",
+            "run",
+            "--rm",
+            "-i",
+            "--network",
+            "none",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:size=10m",
+            "--memory",
+            "256m",
+            "--cpus",
+            "0.5",
+            "-v",
+            f"{verification_root.resolve()}:/verification:ro",
+            "-w",
+            "/verification",
+            image,
+            "python",
+            "-I",
+            "-c",
+            RUNNER_CODE,
+        ]
+        return subprocess.run(
+            command,
+            input=json.dumps(container_payload),
+            capture_output=True,
+            text=True,
+            timeout=timeout_sec,
+            check=False,
+        )
+
+    @staticmethod
     def mark_all_failed(verification: IssueVerification) -> int:
         for scenario in verification.scenarios:
             scenario.status = "fail"
@@ -87,20 +167,12 @@ class FixtureVerifier:
                 for scenario in verification.scenarios
             ],
         }
-
         try:
-            env = os.environ.copy()
-            env["PYTHONPATH"] = ""
-            result = subprocess.run(
-                [sys.executable, "-I", "-c", RUNNER_CODE],
-                input=json.dumps(payload),
-                capture_output=True,
-                text=True,
-                timeout=timeout_sec,
-                cwd=str(verification_root),
-                env=env,
-                check=False,
-            )
+            mode = self._resolve_execution_mode()
+            if mode == "container":
+                result = self._run_container(payload, verification_root, timeout_sec)
+            else:
+                result = self._run_subprocess(payload, verification_root, timeout_sec)
 
             if result.returncode != 0:
                 logs.append(f"FATAL ERROR loading fixture: subprocess exit code {result.returncode}")

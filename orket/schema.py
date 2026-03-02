@@ -48,7 +48,7 @@ class BaseCardConfig(BaseModel):
     Rocks, Epics, and Issues ARE Cards.
     """
     model_config = ConfigDict(populate_by_name=True, extra='ignore')
-    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
+    id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     name: Optional[str] = Field(None, alias="summary")
     type: CardType = Field(default=CardType.ISSUE)
     status: CardStatus = Field(default=CardStatus.READY)

@@ -1,43 +1,58 @@
 # Orket TechDebt Implementation Plan (Review3)
 
 Date: 2026-03-02  
-Source: `docs/projects/techdebt/Review3.md`
+Source: `docs/projects/archive/TechDebt-2026-03-02/Review3.md`
 
 ## Progress Snapshot
 
 As of 2026-03-02 (America/Denver):
 
 1. C1 complete: unified `ModelTimeoutError` to canonical `orket.exceptions.ModelTimeoutError`.
-2. C2 in progress: async request hot paths migrated off direct blocking subprocess/sync call sites (`/v1/system/metrics`, `/v1/runs/{session_id}/metrics`, `/v1/sandboxes/{sandbox_id}/logs` now offloaded via `asyncio.to_thread`).
-3. C5 complete (initial hardening): Gitea artifact git remote URL no longer embeds credentials; auth passed via transient git config env header.
-4. C6 complete: removed `lru_cache` from sync-async bridge method in config loader.
-5. M9 complete: deduplicated API method resolver logic into shared helper.
-6. H1 complete: made filesystem path-lock creation atomic with class-level guard lock.
-7. H4 complete: Gitea vendor now validates `epic_id` as a positive integer label id before outbound issue queries/creates.
-8. H7 complete: sandbox `service` parameter now validated against explicit allowlist before docker-compose logs invocation.
-9. C3 in progress: async turn/runtime file I/O hotspots moved off event loop:
-   1. Turn artifact writes/checkpoint/memory-trace persistence now offloaded via `asyncio.to_thread` from turn execution path.
-   2. Turn replay cache load/persist in tool dispatcher now offloaded via `asyncio.to_thread`.
-   3. API log/team topology reads and execution-graph snapshot persistence now offloaded via `asyncio.to_thread`.
-10. C4 in progress: API router decomposition started with extracted modules:
-   1. `orket/interfaces/routers/kernel.py` for `/v1/kernel/*`.
-   2. `orket/interfaces/routers/cards.py` for `/v1/cards*`.
+2. C2 complete: async request/runtime hot paths now avoid direct blocking subprocess calls in endpoint execution paths.
+3. C3 complete (targeted hotspots): turn artifacts/replay cache/runtime file reads/snapshots moved to async-safe wrappers (`asyncio.to_thread` or `AsyncFileTools`) in active request/runtime paths.
+4. C4 complete: `api.py` decomposed with extracted routers:
+   1. `orket/interfaces/routers/system.py`
+   2. `orket/interfaces/routers/cards.py`
+   3. `orket/interfaces/routers/sessions.py`
+   4. `orket/interfaces/routers/kernel.py`
+   5. `orket/interfaces/routers/settings.py`
+   6. `orket/interfaces/routers/streaming.py`
+5. C5 complete: Gitea artifact git remote URL no longer embeds credentials; auth passed via transient git config env header.
+6. C6 complete: removed `lru_cache` from sync-async bridge method in config loader.
+7. H1 complete: made filesystem path-lock creation atomic with class-level guard lock.
+8. H2 complete: extracted `SandboxManager`, `SessionController`, `CardArchiver`, and `KernelGatewayFacade` services from `OrchestrationEngine` while preserving facade compatibility.
+9. H3 complete: verification runner now supports containerized execution mode and blocks unsafe subprocess mode in production unless explicitly overridden.
+10. H4 complete: Gitea vendor now validates `epic_id` as a positive integer label id before outbound issue queries/creates.
+11. H6 partial complete: replaced dynamic proxy delegation with explicit forwarding in webhook handler surfaces.
+12. H7 complete: sandbox `service` parameter now validated against explicit allowlist before docker-compose logs invocation.
+13. M6 complete: critical-path logic corrected for branch-local visited handling and renamed canonical calculator (`ImpactWeightCalculator`) with compatibility alias.
+14. M9 complete: deduplicated API method resolver logic into shared helper.
+15. M10 complete: replaced truncated default card ids with full UUID hex to mitigate collision risk.
+16. Remaining medium backlog:
+   1. M1 compatibility shim reduction
+   2. M3 broader `extra='forbid'` migration sweep
 
 Verification executed:
 
-1. `python -m pytest tests/application/test_turn_executor_timeout_error.py tests/adapters/test_gitea_artifact_exporter.py tests/platform/test_config_loader.py tests/interfaces/test_api.py -k "gitea or timeout or metrics or unsupported_runtime_method or config_loader" -q`
-2. `python -m pytest tests/application/test_turn_executor_middleware.py tests/application/test_turn_executor_context.py tests/application/test_turn_executor_token_states.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_skill_contract.py tests/application/test_memory_trace_emission.py -q`
-3. `python -m pytest tests/interfaces/test_api.py tests/platform/test_hardware_metrics_cache.py tests/application/test_execution_pipeline_run_ledger.py -q`
-4. `python -m pytest tests/adapters/test_sandbox_command_runner.py tests/adapters/test_sandbox_compose_generation.py tests/adapters/test_parallel_file_locking.py tests/integration/test_toolbox_refactor.py tests/adapters/test_gitea_vendor.py tests/adapters/test_gitea_webhook.py tests/interfaces/test_webhook_factory.py tests/interfaces/test_webhook_rate_limit.py -q`
-5. Live integration verification (`GiteaArtifactExporter.export_run`):
-   1. Default mode (`ORKET_GITEA_ARTIFACT_EXPORT` disabled): observed `RESULT: None` (export bypass path).
-   2. Export-enabled mode (`ORKET_GITEA_ARTIFACT_EXPORT=1`): observed `RuntimeError` at settings validation with exact blocker: `Missing Gitea artifact export settings: GITEA_URL, GITEA_ADMIN_USER, GITEA_ADMIN_PASSWORD, OWNER`.
-6. Broad required pytest lanes:
-   1. `python -m pytest tests/core tests/application tests/adapters tests/interfaces tests/platform -q` -> `963 passed`.
+1. Required broad pytest lanes:
+   1. `python -m pytest tests/core tests/application tests/adapters tests/interfaces tests/platform -q` -> `966 passed`.
    2. `python -m pytest tests/integration tests/runtime tests/contracts -q` -> `124 passed`.
    3. `python -m pytest tests/acceptance tests/kernel/v1/test_odr_refinement_behavior.py -q` -> `16 passed, 2 skipped`.
-7. Router parity validation:
-   1. `python -m pytest tests/interfaces/test_api.py tests/interfaces/test_api_kernel_lifecycle.py -q` -> `103 passed`.
+2. API/router parity and websocket interaction suites:
+   1. `python -m pytest tests/interfaces/test_api.py tests/interfaces/test_api_interactions.py tests/interfaces/test_api_kernel_lifecycle.py -q` -> `110 passed`.
+3. Security and webhook regression suites:
+   1. `python -m pytest tests/adapters/test_verification_subprocess.py tests/adapters/test_gitea_webhook.py tests/interfaces/test_webhook_rate_limit.py tests/interfaces/test_webhook_factory.py -q` -> `31 passed`.
+4. Live integration verification:
+   1. Verification runner mode path:
+      1. `MODE=subprocess_default` -> `passed=1 failed=0`
+      2. `MODE=container` -> `passed=1 failed=0` (real `docker run` path exercised)
+   2. Webhook ingress path:
+      1. `/webhook/gitea` signed request -> `200` with handled payload (`ignored` for missing issue token) via real handler route path.
+5. Enforcement/security artifacts:
+   1. `python scripts/run_security_regression_suite.py` -> `ok: true`
+   2. `python scripts/export_security_compat_warnings.py` -> `warning_count: 0`
+   3. `python scripts/check_compat_fallback_expiry.py` -> `ok: true`
+   4. `python scripts/check_security_enforcement_flip_gate.py` -> `ok: true`
 
 ## Objective
 
@@ -181,7 +196,7 @@ Out of scope (this cycle):
 1. Code fixes for all C1-C6 findings.
 2. Updated tests covering touched risk areas.
 3. Router split PR-sized slices with parity evidence.
-4. Updated `docs/projects/techdebt/README.md` with progress and closure status.
+4. Updated `docs/projects/archive/TechDebt-2026-03-02/README.md` with progress and closure status.
 5. Enforcement/security artifacts committed when changed.
 
 ## Risks and Mitigations

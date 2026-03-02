@@ -127,3 +127,22 @@ def test_priority_migration_case_insensitive():
     assert issue_lower.priority == 1.0
     assert issue_mixed.priority == 2.0
 
+
+def test_priority_queue_counts_shared_descendants_per_branch():
+    epic = EpicConfig(
+        name="Diamond Dependencies",
+        team="standard",
+        environment="standard",
+        issues=[
+            IssueConfig(id="A", summary="Root blocker", priority=1.0, status=CardStatus.READY),
+            IssueConfig(id="B", summary="Depends on A", depends_on=["A"], status=CardStatus.READY),
+            IssueConfig(id="C", summary="Also depends on A", depends_on=["A"], status=CardStatus.READY),
+            IssueConfig(id="D", summary="Depends on B and C", depends_on=["B", "C"], status=CardStatus.READY),
+            IssueConfig(id="HIGH", summary="High isolated priority", priority=4.5, status=CardStatus.READY),
+        ],
+    )
+
+    queue = CriticalPathEngine.get_priority_queue(epic)
+    # A should receive impact from both branches in the diamond (B->D and C->D).
+    assert queue[0] == "A"
+
