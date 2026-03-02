@@ -14,6 +14,19 @@ class GiteaVendor(VendorInterface):
         self.headers = {"Authorization": f"token {token}", "Accept": "application/json"}
         self.repo_api = f"{self.base_url}/api/v1/repos/{owner}/{repo}"
 
+    @staticmethod
+    def _coerce_label_id(epic_id: Optional[str]) -> Optional[int]:
+        token = str(epic_id or "").strip()
+        if not token:
+            return None
+        try:
+            parsed = int(token)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("epic_id must be an integer label id") from exc
+        if parsed <= 0:
+            raise ValueError("epic_id must be a positive integer label id")
+        return parsed
+
     async def get_rocks(self) -> List[VendorRock]:
         async with httpx.AsyncClient() as client:
             resp = await client.get(f"{self.repo_api}/milestones", headers=self.headers)
@@ -31,7 +44,9 @@ class GiteaVendor(VendorInterface):
     async def get_cards(self, epic_id: Optional[str] = None) -> List[VendorCard]:
         # In Gitea, we filter Issues by milestone (Rock) or label (Epic)
         params = {}
-        if epic_id: params["labels"] = epic_id
+        label_id = self._coerce_label_id(epic_id)
+        if label_id is not None:
+            params["labels"] = str(label_id)
         
         async with httpx.AsyncClient() as client:
             resp = await client.get(f"{self.repo_api}/issues", headers=self.headers, params=params)
@@ -51,11 +66,12 @@ class GiteaVendor(VendorInterface):
             return resp.is_success
 
     async def add_card(self, epic_id: str, summary: str, description: str) -> VendorCard:
+        label_id = self._coerce_label_id(epic_id)
         async with httpx.AsyncClient() as client:
             resp = await client.post(f"{self.repo_api}/issues", headers=self.headers, json={
                 "title": summary,
                 "body": description,
-                "labels": [int(epic_id)] if epic_id.isdigit() else [epic_id]
+                "labels": [label_id] if label_id is not None else []
             })
             i = resp.json()
             return VendorCard(id=str(i["number"]), summary=i["title"], status="ready", priority="Medium")

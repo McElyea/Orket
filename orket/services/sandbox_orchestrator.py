@@ -54,6 +54,15 @@ class SandboxOrchestrator:
         self.command_runner = command_runner or CommandRunner()
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
         self.fs = fs or AsyncFileTools(workspace_root)
+        self._allowed_log_services = {
+            "api",
+            "frontend",
+            "db",
+            "database",
+            "pgadmin",
+            "mongo",
+            "mongo-express",
+        }
 
     async def create_sandbox(
         self,
@@ -246,7 +255,10 @@ class SandboxOrchestrator:
         ]
 
         if service:
-            cmd.append(service)
+            service_name = str(service).strip()
+            if service_name not in self._allowed_log_services:
+                raise ValueError(f"Unsupported sandbox service: {service_name}")
+            cmd.append(service_name)
 
         result = self.command_runner.run_sync(*cmd, timeout=10)
         return result.stdout

@@ -16,6 +16,9 @@ Date: 2026-03-02
    2. C5 credential-in-URL removal in Gitea artifact exporter
    3. C6 sync-async bridge cache removal
    4. M9 API method resolver dedupe
+   5. H1 filesystem path-lock creation race fix
+   6. H4 Gitea vendor `epic_id` validation
+   7. H7 sandbox service allowlist validation
 4. In progress:
    1. C2 blocking subprocess elimination in async/runtime hot paths
 

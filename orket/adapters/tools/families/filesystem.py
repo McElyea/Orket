@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import asyncio
+import threading
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -9,6 +10,7 @@ from orket.adapters.tools.families.base import BaseTools
 
 class FileSystemTools(BaseTools):
     _path_locks: dict[str, asyncio.Lock] = {}
+    _path_locks_guard = threading.Lock()
 
     def __init__(self, workspace_root: Path, references: List[Path]):
         super().__init__(workspace_root, references)
@@ -19,9 +21,12 @@ class FileSystemTools(BaseTools):
     @classmethod
     def _get_path_lock(cls, resolved_path: Path) -> asyncio.Lock:
         key = str(resolved_path)
-        if key not in cls._path_locks:
-            cls._path_locks[key] = asyncio.Lock()
-        return cls._path_locks[key]
+        with cls._path_locks_guard:
+            lock = cls._path_locks.get(key)
+            if lock is None:
+                lock = asyncio.Lock()
+                cls._path_locks[key] = lock
+            return lock
 
     async def read_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:

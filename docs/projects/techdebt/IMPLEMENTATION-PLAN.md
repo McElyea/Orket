@@ -12,12 +12,16 @@ As of 2026-03-02 (America/Denver):
 3. C5 complete (initial hardening): Gitea artifact git remote URL no longer embeds credentials; auth passed via transient git config env header.
 4. C6 complete: removed `lru_cache` from sync-async bridge method in config loader.
 5. M9 complete: deduplicated API method resolver logic into shared helper.
+6. H1 complete: made filesystem path-lock creation atomic with class-level guard lock.
+7. H4 complete: Gitea vendor now validates `epic_id` as a positive integer label id before outbound issue queries/creates.
+8. H7 complete: sandbox `service` parameter now validated against explicit allowlist before docker-compose logs invocation.
 
 Verification executed:
 
 1. `python -m pytest tests/application/test_turn_executor_timeout_error.py tests/adapters/test_gitea_artifact_exporter.py tests/platform/test_config_loader.py tests/interfaces/test_api.py -k "gitea or timeout or metrics or unsupported_runtime_method or config_loader" -q`
 2. `python -m pytest tests/application/test_turn_executor_middleware.py tests/application/test_turn_executor_context.py tests/application/test_turn_executor_token_states.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_skill_contract.py tests/application/test_memory_trace_emission.py -q`
 3. `python -m pytest tests/interfaces/test_api.py tests/platform/test_hardware_metrics_cache.py tests/application/test_execution_pipeline_run_ledger.py -q`
+4. `python -m pytest tests/adapters/test_sandbox_command_runner.py tests/adapters/test_sandbox_compose_generation.py tests/adapters/test_parallel_file_locking.py tests/integration/test_toolbox_refactor.py tests/adapters/test_gitea_vendor.py tests/adapters/test_gitea_webhook.py tests/interfaces/test_webhook_factory.py tests/interfaces/test_webhook_rate_limit.py -q`
 
 ## Objective
 
