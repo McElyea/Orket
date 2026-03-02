@@ -10,22 +10,21 @@ All process and workflow rules live in `docs/CONTRIBUTOR.md`.
 
 ## Invocation Rule
 If the user requests "follow roadmap" without naming a project, execute the highest-priority active (non-paused) item in **Priority Now**.
-Current default target: techdebt.
+Current default target: LieDetector.
 
 ## Priority Now
 1. LieDetector -- Maintenance and polish for floor-progression truth/lie deduction game with TUI.
 2. marshaller -- Marshaller v0 specification/implementation lane.
 
 ## Active Execution
-1. techdebt -- complete for current release baseline. Implemented and validated: containment hardening, trust/pinning controls, provenance redaction, compatibility fallback registry+expiry/warning/removal automation, and enforcement flip gate with green artifacts.
-2. LieDetector -- v1 complete; keep in maintenance unless new feature scope is requested.
+1. LieDetector -- v1 complete; keep in maintenance unless new feature scope is requested.
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| techdebt | active | P1-active | `docs/projects/techdebt/` | Orket Core | Security hardening program. Canonical execution plan: `docs/projects/techdebt/02-IMPLEMENTATION-PLAN.md`. |
+| techdebt | completed-archive | complete | `docs/projects/archive/techdebt/` | Orket Core | Security hardening baseline complete; archived from active roadmap. |
 | LieDetector | active-maintenance | P2-active | `docs/projects/LieDetector/` | Orket Core | Standalone "20 questions with a twist" deduction game. Persona system, SDK TUI, PolicyGate, ANSI renderer. v1 decoupled from mystery world. |
 | marshaller | queued | P2-queued | `docs/projects/marshaller/` | Orket Core | Marshaller v0 specification and implementation lane. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
