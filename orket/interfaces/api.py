@@ -1970,7 +1970,13 @@ async def websocket_endpoint(websocket: WebSocket):
     expected_key = os.getenv("ORKET_API_KEY")
     header_key = websocket.headers.get(API_KEY_NAME) or websocket.headers.get(API_KEY_NAME.lower())
     query_key = websocket.query_params.get("api_key")
-    supplied_key = header_key or query_key
+    supplied_key = api_runtime_node.resolve_websocket_api_key(header_key, query_key)
+    warning_event = api_runtime_node.websocket_query_compat_warning_event(
+        bool((not header_key) and query_key and supplied_key == query_key),
+        input_ref="/ws/events",
+    )
+    if warning_event:
+        log_event("security_compat_fallback_used", warning_event, PROJECT_ROOT)
     if not api_runtime_node.is_api_key_valid(expected_key, supplied_key):
         await websocket.close(code=4403)
         return
@@ -1987,7 +1993,13 @@ async def websocket_interactions(session_id: str, websocket: WebSocket):
     expected_key = os.getenv("ORKET_API_KEY")
     header_key = websocket.headers.get(API_KEY_NAME) or websocket.headers.get(API_KEY_NAME.lower())
     query_key = websocket.query_params.get("api_key")
-    supplied_key = header_key or query_key
+    supplied_key = api_runtime_node.resolve_websocket_api_key(header_key, query_key)
+    warning_event = api_runtime_node.websocket_query_compat_warning_event(
+        bool((not header_key) and query_key and supplied_key == query_key),
+        input_ref=f"/ws/interactions/{session_id}",
+    )
+    if warning_event:
+        log_event("security_compat_fallback_used", warning_event, PROJECT_ROOT)
     if not api_runtime_node.is_api_key_valid(expected_key, supplied_key):
         await websocket.close(code=4403)
         return

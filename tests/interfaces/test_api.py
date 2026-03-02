@@ -23,9 +23,18 @@ def test_version_unauthenticated():
 
 def test_version_allows_explicit_insecure_bypass(monkeypatch):
     monkeypatch.delenv("ORKET_API_KEY", raising=False)
+    monkeypatch.setenv("ORKET_API_SECURITY_PROFILE", "dev")
     monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
     response = client.get("/v1/version")
     assert response.status_code == 200
+
+
+def test_version_blocks_insecure_bypass_in_production_profile(monkeypatch):
+    monkeypatch.delenv("ORKET_API_KEY", raising=False)
+    monkeypatch.setenv("ORKET_API_SECURITY_PROFILE", "production")
+    monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
+    response = client.get("/v1/version")
+    assert response.status_code == 403
 
 def test_version_authenticated(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -1930,6 +1939,14 @@ def test_websocket_events_accepts_valid_api_key(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     with client.websocket_connect("/ws/events?api_key=test-key") as ws:
         ws.send_text("ping")
+
+
+def test_websocket_events_enforce_mode_rejects_query_api_key(monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_API_SECURITY_MODE", "enforce")
+    with pytest.raises(Exception):
+        with client.websocket_connect("/ws/events?api_key=test-key"):
+            pass
 
 
 def test_runs_sessions_use_runtime_invocation_policies(monkeypatch):

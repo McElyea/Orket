@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, List
 import os
@@ -13,6 +14,37 @@ class DefaultApiRuntimeStrategyNode:
     Preserves existing API request/runtime decision behavior.
     """
 
+    def security_mode(self) -> str:
+        return str(os.getenv("ORKET_API_SECURITY_MODE", "compat")).strip().lower() or "compat"
+
+    def security_profile(self) -> str:
+        return str(os.getenv("ORKET_API_SECURITY_PROFILE", "production")).strip().lower() or "production"
+
+    def allow_query_api_key_auth(self) -> bool:
+        return self.security_mode() != "enforce"
+
+    def resolve_websocket_api_key(self, header_key: str | None, query_key: str | None) -> str | None:
+        if header_key:
+            return header_key
+        if query_key and self.allow_query_api_key_auth():
+            return query_key
+        return None
+
+    def websocket_query_compat_warning_event(self, query_key_used: bool, *, input_ref: str) -> dict[str, Any] | None:
+        if not query_key_used:
+            return None
+        if self.security_mode() != "compat":
+            return None
+        return {
+            "event_name": "security_compat_fallback_used",
+            "component": "api.websocket_auth",
+            "fallback_code": "API_QUERY_AUTH_COMPAT",
+            "mode": self.security_mode(),
+            "reason": "query_auth_used",
+            "input_ref": input_ref,
+            "timestamp_utc": datetime.now(UTC).isoformat(),
+        }
+
     def default_allowed_origins_value(self) -> str:
         return "http://localhost:5173,http://127.0.0.1:5173"
 
@@ -22,6 +54,8 @@ class DefaultApiRuntimeStrategyNode:
     def is_api_key_valid(self, expected_key: str | None, provided_key: str | None) -> bool:
         if expected_key:
             return provided_key == expected_key
+        if self.security_profile() == "production":
+            return False
         insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower()
         return insecure_bypass in {"1", "true", "yes", "on"}
 
