@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 import re
@@ -201,6 +202,7 @@ class GiteaArtifactExporter:
         session_status: str,
     ) -> str:
         self._run_cmd(["git", "--version"], cwd=self.workspace)
+        auth_env = self._git_auth_env(username, password)
 
         if not repo_dir.exists():
             repo_dir.mkdir(parents=True, exist_ok=True)
@@ -209,15 +211,20 @@ class GiteaArtifactExporter:
             self._run_cmd(["git", "config", "user.name", os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_NAME", "Orket Artifact Bot")], cwd=repo_dir)
         self._run_cmd(["git", "config", "core.longpaths", "true"], cwd=repo_dir, allow_fail=True)
 
-        push_url = self._build_push_url(gitea_url, owner, repo_name, username, password)
+        repo_url = self._build_repo_url(gitea_url, owner, repo_name)
         remotes = self._run_cmd(["git", "remote"], cwd=repo_dir, allow_fail=True)
         if "origin" in remotes.split():
-            self._run_cmd(["git", "remote", "set-url", "origin", push_url], cwd=repo_dir)
+            self._run_cmd(["git", "remote", "set-url", "origin", repo_url], cwd=repo_dir)
         else:
-            self._run_cmd(["git", "remote", "add", "origin", push_url], cwd=repo_dir)
+            self._run_cmd(["git", "remote", "add", "origin", repo_url], cwd=repo_dir)
 
-        self._run_cmd(["git", "fetch", "origin", branch], cwd=repo_dir, allow_fail=True)
-        remote_head = self._run_cmd(["git", "ls-remote", "--heads", "origin", branch], cwd=repo_dir, allow_fail=True)
+        self._run_cmd(["git", "fetch", "origin", branch], cwd=repo_dir, allow_fail=True, env=auth_env)
+        remote_head = self._run_cmd(
+            ["git", "ls-remote", "--heads", "origin", branch],
+            cwd=repo_dir,
+            allow_fail=True,
+            env=auth_env,
+        )
         if remote_head.strip():
             self._run_cmd(["git", "checkout", "-B", branch, f"origin/{branch}"], cwd=repo_dir)
         else:
@@ -235,24 +242,49 @@ class GiteaArtifactExporter:
         if "nothing to commit" in commit_out.lower():
             return self._run_cmd(["git", "rev-parse", "HEAD"], cwd=repo_dir).strip()
 
-        self._run_cmd(["git", "push", "origin", branch], cwd=repo_dir)
+        self._run_cmd(["git", "push", "origin", branch], cwd=repo_dir, env=auth_env)
         return self._run_cmd(["git", "rev-parse", "HEAD"], cwd=repo_dir).strip()
 
-    def _build_push_url(self, base_url: str, owner: str, repo: str, username: str, password: str) -> str:
+    def _build_repo_url(self, base_url: str, owner: str, repo: str) -> str:
         parsed = parse.urlparse(base_url)
         scheme = parsed.scheme or "http"
-        host = parsed.netloc or parsed.path
-        user = parse.quote(username, safe="")
-        pw = parse.quote(password, safe="")
-        return f"{scheme}://{user}:{pw}@{host}/{owner}/{repo}.git"
+        if parsed.netloc:
+            host = parsed.netloc
+            base_path = parsed.path
+        else:
+            host = parsed.path
+            base_path = ""
+        normalized_path = base_path.strip("/")
+        if normalized_path:
+            normalized_path = f"/{normalized_path}"
+        return f"{scheme}://{host}{normalized_path}/{owner}/{repo}.git"
 
-    def _run_cmd(self, cmd: list[str], cwd: Path, allow_fail: bool = False) -> str:
+    def _git_auth_env(self, username: str, password: str) -> dict[str, str]:
+        auth_value = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+        env = dict(os.environ)
+        try:
+            config_count = max(0, int(str(env.get("GIT_CONFIG_COUNT", "0"))))
+        except ValueError:
+            config_count = 0
+        env[f"GIT_CONFIG_KEY_{config_count}"] = "http.extraHeader"
+        env[f"GIT_CONFIG_VALUE_{config_count}"] = f"Authorization: Basic {auth_value}"
+        env["GIT_CONFIG_COUNT"] = str(config_count + 1)
+        return env
+
+    def _run_cmd(
+        self,
+        cmd: list[str],
+        cwd: Path,
+        allow_fail: bool = False,
+        env: dict[str, str] | None = None,
+    ) -> str:
         proc = subprocess.run(
             cmd,
             cwd=str(cwd),
             capture_output=True,
             text=True,
             check=False,
+            env=env,
         )
         stdout = (proc.stdout or "").strip()
         stderr = (proc.stderr or "").strip()

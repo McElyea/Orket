@@ -3,7 +3,6 @@
 import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, List, Optional, Type
 
@@ -112,7 +111,6 @@ class ConfigLoader:
         raw = await self._load_asset_raw_async(category, name, self.department)
         return model_type.model_validate_json(raw)
 
-    @lru_cache(maxsize=256)
     def _load_asset_raw(self, category: str, name: str, dept: str) -> str:
         return self._run_async(self._load_asset_raw_async(category, name, dept))
 

@@ -75,7 +75,7 @@ class _EngineProxy:
         return getattr(self._get_engine(), item)
 
 
-def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
+def _resolve_method(target: object, invocation: dict, error_prefix: str):
     method_name = invocation["method_name"]
     method = getattr(target, method_name, None)
     if method is None:
@@ -84,17 +84,14 @@ def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
             raise HTTPException(status_code=400, detail=detail)
         raise HTTPException(status_code=400, detail=f"Unsupported {error_prefix} method '{method_name}'.")
     return method
+
+
+def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
+    return _resolve_method(target, invocation, error_prefix)
 
 
 def _resolve_sync_method(target: object, invocation: dict, error_prefix: str):
-    method_name = invocation["method_name"]
-    method = getattr(target, method_name, None)
-    if method is None:
-        detail = invocation.get("unsupported_detail")
-        if detail:
-            raise HTTPException(status_code=400, detail=detail)
-        raise HTTPException(status_code=400, detail=f"Unsupported {error_prefix} method '{method_name}'.")
-    return method
+    return _resolve_method(target, invocation, error_prefix)
 
 
 async def _invoke_async_method(target: object, invocation: dict, error_prefix: str):
@@ -560,7 +557,8 @@ async def heartbeat():
 
 @v1_router.get("/system/metrics")
 async def get_metrics():
-    return api_runtime_node.normalize_metrics(get_metrics_snapshot())
+    metrics = await asyncio.to_thread(get_metrics_snapshot)
+    return api_runtime_node.normalize_metrics(metrics)
 
 @v1_router.get("/system/explorer")
 async def list_system_files(path: str = "."):

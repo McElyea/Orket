@@ -16,6 +16,7 @@ from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.core.policies.tool_gate import ToolGate
 from orket.domain.execution import ExecutionTurn
+from orket.exceptions import ModelTimeoutError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 from . import turn_executor_ops
@@ -258,10 +259,6 @@ class ToolValidationError(Exception):
     def __init__(self, violations: List[str]):
         self.violations = violations
         super().__init__(f"Tool validation failed: {violations}")
-
-
-class ModelTimeoutError(Exception):
-    """Model request timed out."""
 
 
 __all__ = [
