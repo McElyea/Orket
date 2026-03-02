@@ -404,6 +404,9 @@ def test_default_api_runtime_strategy_parity(monkeypatch):
     monkeypatch.delenv("ORKET_ALLOW_INSECURE_NO_API_KEY", raising=False)
     assert node.is_api_key_valid(None, None) is False
     monkeypatch.setenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "true")
+    monkeypatch.setenv("ORKET_API_SECURITY_PROFILE", "production")
+    assert node.is_api_key_valid(None, None) is False
+    monkeypatch.setenv("ORKET_API_SECURITY_PROFILE", "dev")
     assert node.is_api_key_valid(None, None) is True
     assert node.is_api_key_valid("k", "k") is True
     assert node.is_api_key_valid("k", "x") is False
