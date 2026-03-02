@@ -13,11 +13,11 @@ If the user requests "follow roadmap" without naming a project, execute the high
 Current default target: techdebt.
 
 ## Priority Now
-1. techdebt -- Security remediation phased execution from `docs/projects/techdebt/02-IMPLEMENTATION-PLAN.md`.
-2. LieDetector -- Maintenance and polish for floor-progression truth/lie deduction game with TUI.
+1. LieDetector -- Maintenance and polish for floor-progression truth/lie deduction game with TUI.
+2. marshaller -- Marshaller v0 specification/implementation lane.
 
 ## Active Execution
-1. techdebt -- Phase 1 complete (semantic containment, symlink refusal, streaming SHA-256, size caps, deterministic ordered failure payloads). Phase 2/3/4/5 controls now implemented and green on current artifacts (pinning+digest verification, trust policy matrix, provenance redaction-by-default, compatibility fallback expiry/warning outputs, security regression runner, enforcement flip gate). Remaining completion work: final compatibility fallback removal policy execution.
+1. techdebt -- complete for current release baseline. Implemented and validated: containment hardening, trust/pinning controls, provenance redaction, compatibility fallback registry+expiry/warning/removal automation, and enforcement flip gate with green artifacts.
 2. LieDetector -- v1 complete; keep in maintenance unless new feature scope is requested.
 
 ## Project Index

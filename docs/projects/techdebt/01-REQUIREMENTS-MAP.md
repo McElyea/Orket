@@ -27,8 +27,9 @@ Source audit: `docs/projects/techdebt/Orket_Brutal_Production_Audit.pdf`
 | TD-012 | Provenance redaction-by-default | P1 | Orket Core | `orket/extensions/workload_artifacts.py` | complete | redaction/verbose provenance tests in `tests/runtime/test_extension_manager.py` |
 | TD-013 | API auth hardening (query token compat warning -> enforce deny) | P0 | Orket Core | `orket/interfaces/api.py`, `orket/decision_nodes/api_runtime_strategy_node.py` | complete | websocket auth tests in `tests/interfaces/test_api.py` |
 | TD-014 | Production lockout for insecure bypass | P0 | Orket Core | API/runtime strategy | complete | profile lockout tests in `tests/interfaces/test_api.py` |
-| TD-015 | Compatibility fallback expiry removal execution | P1 | Orket Core | extension trust path | open | pending Phase 5 completion |
+| TD-015 | Compatibility fallback expiry removal execution | P1 | Orket Core | `scripts/execute_compat_fallback_removal.py` | complete | `tests/application/test_execute_compat_fallback_removal.py` + live execution artifact |
 
 ## Gate Snapshot
 1. `P0_open`: 0
 2. Enforcement flip readiness: gate script green on current artifacts (`benchmarks/results/security_enforcement_flip_gate.json`).
+3. Compatibility removal execution: complete for current version baseline (`removed_count == 0` in `benchmarks/results/security_compat_removal_execution.json`).
