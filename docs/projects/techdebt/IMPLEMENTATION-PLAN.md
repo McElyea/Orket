@@ -22,6 +22,9 @@ Verification executed:
 2. `python -m pytest tests/application/test_turn_executor_middleware.py tests/application/test_turn_executor_context.py tests/application/test_turn_executor_token_states.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_skill_contract.py tests/application/test_memory_trace_emission.py -q`
 3. `python -m pytest tests/interfaces/test_api.py tests/platform/test_hardware_metrics_cache.py tests/application/test_execution_pipeline_run_ledger.py -q`
 4. `python -m pytest tests/adapters/test_sandbox_command_runner.py tests/adapters/test_sandbox_compose_generation.py tests/adapters/test_parallel_file_locking.py tests/integration/test_toolbox_refactor.py tests/adapters/test_gitea_vendor.py tests/adapters/test_gitea_webhook.py tests/interfaces/test_webhook_factory.py tests/interfaces/test_webhook_rate_limit.py -q`
+5. Live integration verification (`GiteaArtifactExporter.export_run`):
+   1. Default mode (`ORKET_GITEA_ARTIFACT_EXPORT` disabled): observed `RESULT: None` (export bypass path).
+   2. Export-enabled mode (`ORKET_GITEA_ARTIFACT_EXPORT=1`): observed `RuntimeError` at settings validation with exact blocker: `Missing Gitea artifact export settings: GITEA_URL, GITEA_ADMIN_USER, GITEA_ADMIN_PASSWORD, OWNER`.
 
 ## Objective
 
