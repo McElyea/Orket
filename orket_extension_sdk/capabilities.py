@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from .audio import AudioPlayer, TTSProvider
+from .llm import LLMProvider
+from .tui import ScreenRenderer
 
 CapabilityId = str
 
@@ -17,6 +19,7 @@ _CAPABILITY_VOCAB: dict[str, dict[str, Any]] = {
     "audio.play": {"deterministic": False},
     "tts.speak": {"deterministic": False},
     "speech.play_clip": {"deterministic": False},
+    "screen.render": {"deterministic": True},
 }
 
 
@@ -74,12 +77,26 @@ class CapabilityRegistry:
             raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: speech.play_clip -> AudioPlayer")
         return provider
 
+    def llm(self) -> LLMProvider:
+        provider = self.get("model.generate")
+        if not isinstance(provider, LLMProvider):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: model.generate -> LLMProvider")
+        return provider
+
+    def screen(self) -> ScreenRenderer:
+        provider = self.get("screen.render")
+        if not isinstance(provider, ScreenRenderer):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: screen.render -> ScreenRenderer")
+        return provider
+
     def preflight(self, required_capabilities: list[CapabilityId]) -> list[CapabilityId]:
         missing = [cap for cap in required_capabilities if cap not in self._providers]
         expected: dict[str, type[Any]] = {
             "tts.speak": TTSProvider,
             "audio.play": AudioPlayer,
             "speech.play_clip": AudioPlayer,
+            "model.generate": LLMProvider,
+            "screen.render": ScreenRenderer,
         }
         invalid: list[str] = []
         for capability_id in sorted(set(required_capabilities)):

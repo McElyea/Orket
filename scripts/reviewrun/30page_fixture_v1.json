@@ -1,0 +1,297 @@
+{
+  "fixture_id": "30page_fixture_v1",
+  "description": "Large messy PR fixture: config drift, rounding drift, discounts, ordering-sensitive registry, debug logging, cache changes, and boilerplate noise. (Patched fingerprints to match generator text exactly.)",
+  "scoring": {
+    "must_catch_weight": 5,
+    "nice_catch_weight": 2,
+    "reasoning_weight": 2,
+    "fix_weight": 1,
+    "max_score_note": "Score is computed by matching issue fingerprints in findings/critique and awarding weights. Reasoning/fix credit requires matching expected_reasoning/fix themes."
+  },
+  "issues": [
+    {
+      "issue_id": "CFG_DEBUG_DEFAULT_TRUE",
+      "category": "security",
+      "severity": "blocker",
+      "must_catch": true,
+      "files": ["app/config.py"],
+      "fingerprints": [
+        "debug: bool = True",
+        "\\bdebug\\s*:\\s*bool\\s*=\\s*True\\b"
+      ],
+      "why": "Debug mode enabled by default risks leaking sensitive request data and noisy logging in production.",
+      "expected_reasoning": [
+        "Debug should default to false in production",
+        "Debug logging can leak PII/secrets and increase attack surface",
+        "Default behavior change is risky and easy to miss in review"
+      ],
+      "expected_fix": [
+        "Set debug default to False",
+        "Gate debug logging behind explicit env/config override",
+        "Add tests/guards to ensure debug is not enabled by default"
+      ],
+      "deterministic_possible": true
+    },
+    {
+      "issue_id": "API_DEBUG_PRINTS_PAYLOAD",
+      "category": "security",
+      "severity": "high",
+      "must_catch": true,
+      "files": ["app/api.py"],
+      "fingerprints": [
+        "print(\"DEBUG payload=\", payload)",
+        "DEBUG payload=",
+        "\\bprint\\("
+      ],
+      "why": "Printing full request payload in debug path can leak secrets/PII and can be accidentally enabled due to config drift.",
+      "expected_reasoning": [
+        "Do not print raw payloads; even debug logs must be redacted",
+        "If debug default is true, this becomes production leakage",
+        "Use structured logging with redaction"
+      ],
+      "expected_fix": [
+        "Remove print statements",
+        "Use a logger with redaction and opt-in verbosity",
+        "Log only safe summary fields (counts, ids) not raw payload"
+      ],
+      "deterministic_possible": true
+    },
+    {
+      "issue_id": "ROUNDING_DEFAULT_DRIFT",
+      "category": "correctness",
+      "severity": "high",
+      "must_catch": true,
+      "files": ["app/config.py", "app/money.py", "app/pricing.py"],
+      "fingerprints": [
+        "strict_currency_rounding: bool = False",
+        "\\bstrict_currency_rounding\\s*:\\s*bool\\s*=\\s*False\\b",
+        "def round_trunc",
+        "return int(x)",
+        "return round_half_up(raw) if strict else round_trunc(raw)"
+      ],
+      "why": "Default rounding behavior changed from strict round-half-up to truncation, which changes totals and can cause customer-visible billing discrepancies.",
+      "expected_reasoning": [
+        "Rounding changes affect money; defaults should be extremely conservative",
+        "Truncation differs on .5 cases (and potentially negatives)",
+        "This is a silent behavior change with financial impact"
+      ],
+      "expected_fix": [
+        "Keep strict rounding as default",
+        "If introducing non-strict mode, require explicit opt-in",
+        "Add unit tests around .5 rounding boundaries and negative cases if applicable"
+      ],
+      "deterministic_possible": true
+    },
+    {
+      "issue_id": "SHIPPING_THRESHOLD_AFTER_DISCOUNTS",
+      "category": "business_logic",
+      "severity": "high",
+      "must_catch": true,
+      "files": ["app/pricing.py"],
+      "fingerprints": [
+        "def shipping_cents(subtotal_after_discounts",
+        "threshold applied AFTER discounts",
+        "shipping_cents(sub_after"
+      ],
+      "why": "Free shipping threshold is computed after discounts; this can unexpectedly remove free shipping for customers who qualified before discounts.",
+      "expected_reasoning": [
+        "Business rule ambiguity: threshold is typically based on pre-discount subtotal",
+        "This is a behavior change that impacts customers and revenue",
+        "Needs explicit product decision and tests"
+      ],
+      "expected_fix": [
+        "Clarify requirement: pre-discount vs post-discount threshold",
+        "If pre-discount is intended, compare against original subtotal",
+        "Add tests covering threshold boundary with discounts"
+      ],
+      "deterministic_possible": true
+    },
+    {
+      "issue_id": "DISCOUNT_PERCENT_UNBOUNDED",
+      "category": "security",
+      "severity": "high",
+      "must_catch": true,
+      "files": ["app/api.py", "app/discounts.py"],
+      "fingerprints": [
+        "percent=float(raw.get(\"percent\", 0.0))",
+        "accepts percent like 25",
+        "percent: float  # expected 0.0..1.0"
+      ],
+      "why": "Discount percent is accepted without validation; callers can send 25 (2500% off) resulting in negative totals or other invalid money states.",
+      "expected_reasoning": [
+        "Input validation is required at the boundary",
+        "Percent should be constrained to [0,1] (or an agreed range)",
+        "Invalid discounts can break invariants (negative totals)"
+      ],
+      "expected_fix": [
+        "Validate percent range and reject/clip invalid values",
+        "Add tests for invalid percent values",
+        "Consider using integer basis points instead of float"
+      ],
+      "deterministic_possible": true
+    },
+    {
+      "issue_id": "REGISTRY_ORDERING_CHANGE_SENSITIVE",
+      "category": "correctness",
+      "severity": "medium",
+      "must_catch": true,
+      "files": ["app/registry.py"],
+      "fingerprints": [
+        "# Joseph change: VIP moved first",
+        "(\"VIP\", \"percent\")",
+        "(\"PROMO10\", \"percent\")",
+        "HANDLERS = ["
+      ],
+      "why": "Handler ordering changed; registry is explicitly order-sensitive. This can change which rule wins for a given code path.",
+      "expected_reasoning": [
+        "Order-sensitive tables must be treated as sensitive",
+        "Behavior changes should be intentional and tested",
+        "Needs explicit rationale (why VIP overrides others)"
+      ],
+      "expected_fix": [
+        "Add/extend tests asserting ordering behavior",
+        "Add comment explaining precedence rules",
+        "Consider making precedence explicit in code instead of list ordering"
+      ],
+      "deterministic_possible": "maybe"
+    },
+    {
+      "issue_id": "CACHE_TTL_DRIFT",
+      "category": "performance",
+      "severity": "medium",
+      "must_catch": false,
+      "files": ["app/config.py"],
+      "fingerprints": [
+        "cache_ttl_seconds: int = 10"
+      ],
+      "why": "Cache TTL reduced significantly; can increase load and change caching effectiveness unexpectedly.",
+      "expected_reasoning": [
+        "TTL change affects performance and cost",
+        "Needs rationale/measurement",
+        "May alter user-perceived latency"
+      ],
+      "expected_fix": [
+        "Document rationale and expected impact",
+        "Consider making TTL environment-tunable",
+        "Add perf notes or metrics"
+      ],
+      "deterministic_possible": true
+    },
+    {
+      "issue_id": "CACHE_THREADSAFETY_COUNTER",
+      "category": "correctness",
+      "severity": "medium",
+      "must_catch": false,
+      "files": ["app/cache.py"],
+      "fingerprints": [
+        "self._hits = 0",
+        "self._hits += 1",
+        "not threadsafe",
+        "def stats(self) -> dict"
+      ],
+      "why": "Cache hit counter is shared mutable state and not thread-safe; can cause incorrect stats or race conditions under concurrency.",
+      "expected_reasoning": [
+        "Shared mutable state needs synchronization in multi-threaded contexts",
+        "Even 'debug' counters can become production problems",
+        "Potential for obscure race bugs"
+      ],
+      "expected_fix": [
+        "Use atomic/increment lock or remove counter",
+        "Keep stats collection separate from cache core",
+        "Document thread-safety expectations"
+      ],
+      "deterministic_possible": false
+    },
+    {
+      "issue_id": "DISCOUNT_STACK_ORDER_SENSITIVE",
+      "category": "business_logic",
+      "severity": "medium",
+      "must_catch": false,
+      "files": ["app/discounts.py"],
+      "fingerprints": [
+        "for d in discounts:",
+        "ordering is sensitive: applies in provided order"
+      ],
+      "why": "Stacking discounts in input order makes totals dependent on ordering; may be exploitable or inconsistent across callers.",
+      "expected_reasoning": [
+        "Order dependence is risky unless explicitly defined",
+        "Callers can manipulate ordering for different outcomes",
+        "Should define deterministic ordering or precedence"
+      ],
+      "expected_fix": [
+        "Sort discounts deterministically by precedence",
+        "Define stack rules (max discounts, precedence tiers)",
+        "Add tests that enforce the chosen rule"
+      ],
+      "deterministic_possible": false
+    },
+    {
+      "issue_id": "BOILERPLATE_TODO_FIXME_NOISE",
+      "category": "maintainability",
+      "severity": "low",
+      "must_catch": false,
+      "files": ["app/feature_*.py"],
+      "fingerprints": [
+        "TODO: remove debug path",
+        "FIXME: handle negative values correctly"
+      ],
+      "why": "Large PR introduces TODO/FIXME noise, which can mask real issues and increase maintenance debt.",
+      "expected_reasoning": [
+        "TODO/FIXME should be tracked or removed before merge",
+        "Large noise makes review harder and hides risks"
+      ],
+      "expected_fix": [
+        "Convert TODO/FIXME into tracked issues",
+        "Remove or isolate generated boilerplate from functional changes"
+      ],
+      "deterministic_possible": true
+    },
+    {
+      "issue_id": "INCONSISTENT_RETURN_TYPES",
+      "category": "correctness",
+      "severity": "low",
+      "must_catch": false,
+      "files": ["app/feature_*.py"],
+      "fingerprints": [
+        "def compute(x: int):",
+        "return str(x + 1)"
+      ],
+      "why": "Some generated modules return string vs int inconsistently; this is a correctness/type hazard if used.",
+      "expected_reasoning": [
+        "Inconsistent return types cause runtime errors when composed",
+        "Should be typed or normalized"
+      ],
+      "expected_fix": [
+        "Add type hints and enforce consistent return type",
+        "Remove dead/demo code if not used"
+      ],
+      "deterministic_possible": "maybe"
+    },
+    {
+      "issue_id": "TESTS_MISSING_EDGE_CASES",
+      "category": "tests",
+      "severity": "medium",
+      "must_catch": true,
+      "files": ["tests/test_api.py", "tests/test_pricing.py"],
+      "fingerprints": [
+        "def test_quote_smoke",
+        "assert out[\"total_cents\"] > 0",
+        "def test_total_smoke_with_discount",
+        "assert t > 0"
+      ],
+      "why": "Tests are mostly smoke tests and do not cover the introduced edge cases (percent validation, rounding boundaries, shipping threshold semantics, ordering).",
+      "expected_reasoning": [
+        "New business logic needs targeted tests",
+        "Smoke tests won’t catch regressions at boundaries",
+        "Should add tests for invalid inputs and threshold edges"
+      ],
+      "expected_fix": [
+        "Add percent range validation tests (e.g., 1.5, 25, -0.1)",
+        "Add rounding tests around .5 boundaries",
+        "Add free shipping tests before vs after discounts",
+        "Add ordering/precedence tests for registry changes"
+      ],
+      "deterministic_possible": "maybe"
+    }
+  ]
+}

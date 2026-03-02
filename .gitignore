@@ -88,3 +88,9 @@ orket_storage/
 .ruff_cache/
 benchmarks/results/**
 docs/internal/
+
+# SDK runtime data (user-local; not versioned)
+data/voices/
+data/models/
+data/datasets/
+sdk_data/

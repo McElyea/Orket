@@ -1,0 +1,11 @@
+{
+  "version": "sdk_data_manifest_v1",
+  "assets": [
+    {
+      "id": "example_asset",
+      "url": "https://example.com/path/to/asset.bin",
+      "sha256": "replace_with_real_sha256_hex",
+      "target_path": "sdk_data/example/asset.bin"
+    }
+  ]
+}
