@@ -158,7 +158,8 @@ class ToolDispatcher:
                     },
                     self.workspace,
                 )
-                replay_result = self.load_replay_tool_result(
+                replay_result = await asyncio.to_thread(
+                    self.load_replay_tool_result,
                     session_id=session_id,
                     issue_id=turn.issue_id,
                     role_name=turn.role,
@@ -209,7 +210,8 @@ class ToolDispatcher:
                         }
                     ],
                 )
-                self.persist_tool_result(
+                await asyncio.to_thread(
+                    self.persist_tool_result,
                     session_id=session_id,
                     issue_id=turn.issue_id,
                     role_name=turn.role,

@@ -8,13 +8,17 @@ Source: `docs/projects/techdebt/Review3.md`
 As of 2026-03-02 (America/Denver):
 
 1. C1 complete: unified `ModelTimeoutError` to canonical `orket.exceptions.ModelTimeoutError`.
-2. C2 in progress: `/v1/system/metrics` no longer performs direct blocking call in async endpoint (uses `asyncio.to_thread`).
+2. C2 in progress: async request hot paths migrated off direct blocking subprocess/sync call sites (`/v1/system/metrics`, `/v1/runs/{session_id}/metrics`, `/v1/sandboxes/{sandbox_id}/logs` now offloaded via `asyncio.to_thread`).
 3. C5 complete (initial hardening): Gitea artifact git remote URL no longer embeds credentials; auth passed via transient git config env header.
 4. C6 complete: removed `lru_cache` from sync-async bridge method in config loader.
 5. M9 complete: deduplicated API method resolver logic into shared helper.
 6. H1 complete: made filesystem path-lock creation atomic with class-level guard lock.
 7. H4 complete: Gitea vendor now validates `epic_id` as a positive integer label id before outbound issue queries/creates.
 8. H7 complete: sandbox `service` parameter now validated against explicit allowlist before docker-compose logs invocation.
+9. C3 in progress: async turn/runtime file I/O hotspots moved off event loop:
+   1. Turn artifact writes/checkpoint/memory-trace persistence now offloaded via `asyncio.to_thread` from turn execution path.
+   2. Turn replay cache load/persist in tool dispatcher now offloaded via `asyncio.to_thread`.
+   3. API log/team topology reads and execution-graph snapshot persistence now offloaded via `asyncio.to_thread`.
 
 Verification executed:
 
@@ -25,6 +29,10 @@ Verification executed:
 5. Live integration verification (`GiteaArtifactExporter.export_run`):
    1. Default mode (`ORKET_GITEA_ARTIFACT_EXPORT` disabled): observed `RESULT: None` (export bypass path).
    2. Export-enabled mode (`ORKET_GITEA_ARTIFACT_EXPORT=1`): observed `RuntimeError` at settings validation with exact blocker: `Missing Gitea artifact export settings: GITEA_URL, GITEA_ADMIN_USER, GITEA_ADMIN_PASSWORD, OWNER`.
+6. Broad required pytest lanes:
+   1. `python -m pytest tests/core tests/application tests/adapters tests/interfaces tests/platform -q` -> `963 passed`.
+   2. `python -m pytest tests/integration tests/runtime tests/contracts -q` -> `124 passed`.
+   3. `python -m pytest tests/acceptance tests/kernel/v1/test_odr_refinement_behavior.py -q` -> `16 passed, 2 skipped`.
 
 ## Objective
 

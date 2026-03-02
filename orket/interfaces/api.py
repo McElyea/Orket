@@ -623,7 +623,7 @@ async def get_runtime_policy_options():
 @v1_router.get("/system/model-assignments")
 async def get_model_assignments(roles: Optional[str] = None):
     role_filter = _parse_roles_filter(roles)
-    active_roles = role_filter or _discover_active_roles(PROJECT_ROOT / "model")
+    active_roles = role_filter or await asyncio.to_thread(_discover_active_roles, PROJECT_ROOT / "model")
     selector = ModelSelector(
         organization=engine.org,
         preferences=load_user_preferences(),
@@ -655,7 +655,7 @@ async def get_model_assignments(roles: Optional[str] = None):
 
 @v1_router.get("/system/teams")
 async def get_system_teams(department: Optional[str] = None):
-    topology = _discover_team_topology(PROJECT_ROOT / "model")
+    topology = await asyncio.to_thread(_discover_team_topology, PROJECT_ROOT / "model")
     if department:
         dept = str(department).strip().lower()
         topology = [item for item in topology if str(item.get("department") or "").strip().lower() == dept]
@@ -988,7 +988,7 @@ async def get_run_metrics(session_id: str):
     log_event("api_run_metrics", {"session_id": session_id}, PROJECT_ROOT)
     workspace = api_runtime_node.resolve_member_metrics_workspace(PROJECT_ROOT, session_id)
     metrics_reader = api_runtime_node.create_member_metrics_reader()
-    return metrics_reader(workspace)
+    return await asyncio.to_thread(metrics_reader, workspace)
 
 
 @v1_router.get("/runs/{session_id}/token-summary")
@@ -1004,7 +1004,8 @@ async def get_run_token_summary(session_id: str):
     records: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
     for path in candidate_files:
-        for record in _read_log_records(path):
+        path_records = await asyncio.to_thread(_read_log_records, path)
+        for record in path_records:
             signature = (
                 record.get("timestamp"),
                 record.get("event"),
@@ -1202,7 +1203,7 @@ async def list_run_replay_turns(session_id: str, role: Optional[str] = None):
     session = await engine.sessions.get_session(session_id)
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
-    turns = _collect_replay_turns(session_id=session_id, role=role)
+    turns = await asyncio.to_thread(_collect_replay_turns, session_id=session_id, role=role)
     return {
         "session_id": session_id,
         "turn_count": len(turns),
@@ -1226,7 +1227,7 @@ async def get_execution_graph(session_id: str):
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
     backlog = await engine.sessions.get_session_issues(session_id)
-    graph = _build_execution_graph(backlog, session_id)
+    graph = await asyncio.to_thread(_build_execution_graph, backlog, session_id)
     compact_edges = [
         {"source": str(edge.get("source") or ""), "target": str(edge.get("target") or "")}
         for edge in list(graph.get("edges") or [])
@@ -1240,7 +1241,7 @@ async def get_execution_graph(session_id: str):
         **graph,
         "edges": compact_edges,
     }
-    _persist_execution_graph_snapshot(session_id, payload)
+    await asyncio.to_thread(_persist_execution_graph_snapshot, session_id, payload)
     return payload
 
 @v1_router.get("/sessions/{session_id}")
@@ -1350,7 +1351,12 @@ async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
         api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT)
     )
     invocation = api_runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
-    logs = _invoke_sync_method(pipeline.sandbox_orchestrator, invocation, "sandbox logs")
+    logs = await asyncio.to_thread(
+        _invoke_sync_method,
+        pipeline.sandbox_orchestrator,
+        invocation,
+        "sandbox logs",
+    )
     return {"logs": logs}
 
 
@@ -1620,7 +1626,7 @@ async def list_logs(
 
     records: list[dict] = []
     for path in candidate_files:
-        records.extend(_read_log_records(path))
+        records.extend(await asyncio.to_thread(_read_log_records, path))
 
     def _record_session_id(record: dict) -> str:
         data = record.get("data", {})

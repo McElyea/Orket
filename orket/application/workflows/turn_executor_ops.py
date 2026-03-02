@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import copy
 import json
 import time
@@ -29,14 +30,15 @@ async def execute_turn(
     started_at = time.perf_counter()
     current_turn = None
 
-    def emit_failure_traces(error: str, failure_type: str) -> None:
+    async def emit_failure_traces(error: str, failure_type: str) -> None:
         executor._append_memory_event(
             context,
             role_name=role_name,
             interceptor="on_turn_failure",
             decision_type=str(failure_type).strip() or "turn_failed",
         )
-        executor._emit_memory_traces(
+        await asyncio.to_thread(
+            executor._emit_memory_traces,
             session_id=session_id,
             issue_id=issue_id,
             role_name=role_name,
@@ -63,7 +65,7 @@ async def execute_turn(
         )
         if middleware_outcome and middleware_outcome.short_circuit:
             reason = middleware_outcome.reason or "short-circuit before_prompt"
-            emit_failure_traces(reason, "before_prompt_short_circuit")
+            await emit_failure_traces(reason, "before_prompt_short_circuit")
             return TurnResult.failed(reason, should_retry=False)
         executor._append_memory_event(
             context,
@@ -94,7 +96,8 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        executor._write_turn_artifact(
+        await asyncio.to_thread(
+            executor._write_turn_artifact,
             session_id,
             issue_id,
             role_name,
@@ -102,7 +105,8 @@ async def execute_turn(
             "messages.json",
             json.dumps(messages, indent=2, ensure_ascii=False),
         )
-        executor._write_turn_artifact(
+        await asyncio.to_thread(
+            executor._write_turn_artifact,
             session_id,
             issue_id,
             role_name,
@@ -120,7 +124,7 @@ async def execute_turn(
         )
         if middleware_outcome and middleware_outcome.short_circuit:
             reason = middleware_outcome.reason or "short-circuit after_model"
-            emit_failure_traces(reason, "after_model_short_circuit")
+            await emit_failure_traces(reason, "after_model_short_circuit")
             return TurnResult.failed(reason, should_retry=False)
         executor._append_memory_event(
             context,
@@ -130,8 +134,17 @@ async def execute_turn(
         )
         response_content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
         response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
-        executor._write_turn_artifact(session_id, issue_id, role_name, turn_index, "model_response.txt", response_content or "")
-        executor._write_turn_artifact(
+        await asyncio.to_thread(
+            executor._write_turn_artifact,
+            session_id,
+            issue_id,
+            role_name,
+            turn_index,
+            "model_response.txt",
+            response_content or "",
+        )
+        await asyncio.to_thread(
+            executor._write_turn_artifact,
             session_id,
             issue_id,
             role_name,
@@ -179,7 +192,7 @@ async def execute_turn(
             )
             if middleware_outcome and middleware_outcome.short_circuit:
                 reason = middleware_outcome.reason or "short-circuit after_model"
-                emit_failure_traces(reason, "after_model_short_circuit")
+                await emit_failure_traces(reason, "after_model_short_circuit")
                 return TurnResult.failed(reason, should_retry=False)
             executor._append_memory_event(
                 context,
@@ -213,10 +226,11 @@ async def execute_turn(
                     },
                     executor.workspace,
                 )
-                emit_failure_traces(primary_reason, "contract_violation")
+                await emit_failure_traces(primary_reason, "contract_violation")
                 return TurnResult.failed(executor._deterministic_failure_message(primary_reason), should_retry=False)
 
-        executor._write_turn_artifact(
+        await asyncio.to_thread(
+            executor._write_turn_artifact,
             session_id,
             issue_id,
             role_name,
@@ -224,7 +238,8 @@ async def execute_turn(
             "parsed_tool_calls.json",
             json.dumps([{"tool": tool_call.tool, "args": tool_call.args} for tool_call in turn.tool_calls], indent=2, ensure_ascii=False),
         )
-        executor._write_turn_checkpoint(
+        await asyncio.to_thread(
+            executor._write_turn_checkpoint,
             session_id=session_id,
             issue_id=issue_id,
             role_name=role_name,
@@ -266,7 +281,8 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        executor._emit_memory_traces(
+        await asyncio.to_thread(
+            executor._emit_memory_traces,
             session_id=session_id,
             issue_id=issue_id,
             role_name=role_name,
@@ -292,7 +308,7 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        emit_failure_traces(str(exc), "state_violation")
+        await emit_failure_traces(str(exc), "state_violation")
         return TurnResult.failed(f"State violation: {exc}", should_retry=False)
 
     except ToolValidationError as exc:
@@ -309,7 +325,7 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        emit_failure_traces(str(exc), "tool_violation")
+        await emit_failure_traces(str(exc), "tool_violation")
         return TurnResult.governance_violation(exc.violations)
 
     except ModelTimeoutError as exc:
@@ -326,7 +342,7 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        emit_failure_traces(str(exc), "timeout")
+        await emit_failure_traces(str(exc), "timeout")
         return TurnResult.failed(str(exc), should_retry=True)
 
     except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as exc:
@@ -346,7 +362,7 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        emit_failure_traces(str(exc), type(exc).__name__)
+        await emit_failure_traces(str(exc), type(exc).__name__)
         return TurnResult.failed(f"Unexpected error: {exc}", should_retry=False)
 
 
