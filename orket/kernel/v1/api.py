@@ -11,6 +11,12 @@ from .validator import (
     resolve_capability_v1,
     start_run_v1,
 )
+from .nervous_system_runtime import (
+    admit_proposal_v1,
+    commit_proposal_v1,
+    end_session_v1,
+    projection_pack_v1,
+)
 from .experiments.runner import run_experiment_v1
 
 
@@ -42,6 +48,22 @@ def compare_runs(request: dict[str, Any]) -> dict[str, Any]:
     return compare_runs_v1(request)
 
 
+def projection_pack(request: dict[str, Any]) -> dict[str, Any]:
+    return projection_pack_v1(request)
+
+
+def admit_proposal(request: dict[str, Any]) -> dict[str, Any]:
+    return admit_proposal_v1(request)
+
+
+def commit_proposal(request: dict[str, Any]) -> dict[str, Any]:
+    return commit_proposal_v1(request)
+
+
+def end_session(request: dict[str, Any]) -> dict[str, Any]:
+    return end_session_v1(request)
+
+
 def run_experiment(request: dict[str, Any]) -> dict[str, Any]:
     return run_experiment_v1(request)
 
@@ -49,6 +71,10 @@ def run_experiment(request: dict[str, Any]) -> dict[str, Any]:
 __all__ = [
     "authorize_tool_call",
     "compare_runs",
+    "projection_pack",
+    "admit_proposal",
+    "commit_proposal",
+    "end_session",
     "execute_turn",
     "finish_run",
     "replay_run",

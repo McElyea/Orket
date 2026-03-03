@@ -1,4 +1,9 @@
 Orket Federated Stream Fabric (Exploratory Requirements v0)
+
+Status note (2026-03-03):
+
+- Unified successor requirements live in `docs/projects/future/NervousSystem/GovernanceFabric.md`.
+- Locked Nervous System v1 action-path implementation lives in `docs/projects/future/NervousSystem/IMPLEMENTATION_PLAN.md`.
 1. Purpose
 
 Define requirements for an optional Orket capability that:

@@ -29,6 +29,18 @@ class KernelV1Gateway:
     def compare_runs(self, request: dict[str, Any]) -> dict[str, Any]:
         return kernel_api.compare_runs(request)
 
+    def projection_pack(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.projection_pack(request)
+
+    def admit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.admit_proposal(request)
+
+    def commit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.commit_proposal(request)
+
+    def end_session(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.end_session(request)
+
     def run_lifecycle(
         self,
         *,

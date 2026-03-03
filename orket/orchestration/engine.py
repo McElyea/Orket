@@ -4,7 +4,11 @@ import json
 import os
 
 from orket.adapters.storage.async_repositories import (
-    AsyncSessionRepository, AsyncSnapshotRepository, AsyncSuccessRepository, AsyncRunLedgerRepository
+    AsyncPendingGateRepository,
+    AsyncRunLedgerRepository,
+    AsyncSessionRepository,
+    AsyncSnapshotRepository,
+    AsyncSuccessRepository,
 )
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
@@ -17,6 +21,7 @@ from orket.orchestration.engine_services import (
     SandboxManager,
     SessionController,
 )
+from orket.orchestration import engine_approvals
 
 class OrchestrationEngine:
     """
@@ -63,6 +68,7 @@ class OrchestrationEngine:
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
         self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
+        self.pending_gates = AsyncPendingGateRepository(self.db_path)
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
 
         
@@ -166,6 +172,41 @@ class OrchestrationEngine:
         """Halts an active session by signaling the runtime state."""
         await self.session_controller.halt(session_id)
 
+    async def list_approvals(
+        self,
+        *,
+        session_id: Optional[str] = None,
+        status: Optional[str] = None,
+        request_id: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        return await engine_approvals.list_approvals(
+            self,
+            session_id=session_id,
+            status=status,
+            request_id=request_id,
+            limit=limit,
+        )
+
+    async def get_approval(self, approval_id: str) -> Optional[Dict[str, Any]]:
+        return await engine_approvals.get_approval(self, approval_id)
+
+    async def decide_approval(
+        self,
+        *,
+        approval_id: str,
+        decision: str,
+        edited_proposal: Optional[Dict[str, Any]] = None,
+        notes: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        return await engine_approvals.decide_approval(
+            self,
+            approval_id=approval_id,
+            decision=decision,
+            edited_proposal=edited_proposal,
+            notes=notes,
+        )
+
     async def archive_card(self, card_id: str, archived_by: str = "system", reason: Optional[str] = None) -> bool:
         """Archive a single card record in persistence."""
         return await self.card_archiver.archive_card(card_id, archived_by=archived_by, reason=reason)
@@ -253,6 +294,18 @@ class OrchestrationEngine:
 
     def kernel_compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.compare_runs(request)
+
+    def kernel_projection_pack(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.projection_pack(request)
+
+    def kernel_admit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.admit_proposal(request)
+
+    def kernel_commit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.commit_proposal(request)
+
+    def kernel_end_session(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.end_session(request)
 
     def kernel_run_lifecycle(
         self,

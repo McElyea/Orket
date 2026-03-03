@@ -98,6 +98,187 @@ def test_kernel_compare_endpoint_routes_to_engine(monkeypatch) -> None:
     assert captured["request"]["run_a"]["run_id"] == "run-a"
 
 
+def test_kernel_projection_pack_endpoint_routes_to_engine(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    def fake_kernel_projection_pack(request):
+        captured["request"] = request
+        return {"ok": True, "projection_pack_digest": "a" * 64}
+
+    monkeypatch.setattr(api_module.engine, "kernel_projection_pack", fake_kernel_projection_pack)
+
+    response = client.post(
+        "/v1/kernel/projection-pack",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": "sess-api-1",
+            "trace_id": "trace-api-1",
+            "purpose": "action_path",
+            "tool_context_summary": {"tool": "write_file"},
+            "policy_context": {"mode": "strict"},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert captured["request"]["contract_version"] == "kernel_api/v1"
+    assert captured["request"]["session_id"] == "sess-api-1"
+
+
+def test_kernel_admit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    def fake_kernel_admit_proposal(request):
+        captured["request"] = request
+        return {"proposal_digest": "b" * 64, "admission_decision": {"decision": "ACCEPT_TO_UNIFY"}}
+
+    monkeypatch.setattr(api_module.engine, "kernel_admit_proposal", fake_kernel_admit_proposal)
+
+    response = client.post(
+        "/v1/kernel/admit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": "sess-api-2",
+            "trace_id": "trace-api-2",
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["admission_decision"]["decision"] == "ACCEPT_TO_UNIFY"
+    assert captured["request"]["contract_version"] == "kernel_api/v1"
+
+
+def test_kernel_commit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    def fake_kernel_commit_proposal(request):
+        captured["request"] = request
+        return {"status": "COMMITTED", "commit_event_digest": "c" * 64}
+
+    monkeypatch.setattr(api_module.engine, "kernel_commit_proposal", fake_kernel_commit_proposal)
+
+    response = client.post(
+        "/v1/kernel/commit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": "sess-api-3",
+            "trace_id": "trace-api-3",
+            "proposal_digest": "d" * 64,
+            "admission_decision_digest": "e" * 64,
+            "execution_result_digest": "f" * 64,
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "COMMITTED"
+    assert captured["request"]["contract_version"] == "kernel_api/v1"
+
+
+def test_kernel_end_session_endpoint_routes_to_engine(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    captured = {}
+
+    def fake_kernel_end_session(request):
+        captured["request"] = request
+        return {"status": "ENDED", "event_digest": "1" * 64}
+
+    monkeypatch.setattr(api_module.engine, "kernel_end_session", fake_kernel_end_session)
+
+    response = client.post(
+        "/v1/kernel/end-session",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": "sess-api-4",
+            "trace_id": "trace-api-4",
+            "reason": "manual-close",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "ENDED"
+    assert captured["request"]["contract_version"] == "kernel_api/v1"
+
+
+def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
+    monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
+    session_id = "sess-real-kernel-1"
+    trace_id = "trace-real-kernel-1"
+
+    projection = client.post(
+        "/v1/kernel/projection-pack",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "purpose": "action_path",
+            "tool_context_summary": {"tool": "write_file"},
+            "policy_context": {"mode": "strict"},
+        },
+    )
+    assert projection.status_code == 200
+    projection_payload = projection.json()
+    assert projection_payload["contract_version"] == "kernel_api/v1"
+    assert projection_payload["canonical_state_digest"] == "0" * 64
+
+    admitted = client.post(
+        "/v1/kernel/admit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "proposal": {"proposal_type": "action.tool_call", "payload": {}},
+        },
+    )
+    assert admitted.status_code == 200
+    admitted_payload = admitted.json()
+    assert admitted_payload["admission_decision"]["decision"] == "ACCEPT_TO_UNIFY"
+
+    committed = client.post(
+        "/v1/kernel/commit-proposal",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "proposal_digest": admitted_payload["proposal_digest"],
+            "admission_decision_digest": admitted_payload["decision_digest"],
+            "execution_result_digest": "a" * 64,
+        },
+    )
+    assert committed.status_code == 200
+    commit_payload = committed.json()
+    assert commit_payload["status"] == "COMMITTED"
+    assert isinstance(commit_payload["commit_event_digest"], str) and len(commit_payload["commit_event_digest"]) == 64
+
+    ended = client.post(
+        "/v1/kernel/end-session",
+        headers={"X-API-Key": "test-key"},
+        json={"session_id": session_id, "trace_id": trace_id, "reason": "done"},
+    )
+    assert ended.status_code == 200
+    assert ended.json()["status"] == "ENDED"
+
+
+def test_kernel_projection_pack_returns_400_when_nervous_system_flag_off(monkeypatch) -> None:
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
+
+    response = client.post(
+        "/v1/kernel/projection-pack",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "session_id": "sess-real-kernel-flag-off",
+            "trace_id": "trace-real-kernel-flag-off",
+            "purpose": "action_path",
+            "tool_context_summary": {},
+            "policy_context": {},
+        },
+    )
+    assert response.status_code == 400
+    assert "disabled" in response.json()["detail"].lower()
+
+
 def test_kernel_replay_endpoint_routes_to_engine_and_propagates_failure_codes(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 

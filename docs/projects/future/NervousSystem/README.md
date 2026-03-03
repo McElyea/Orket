@@ -128,6 +128,24 @@ If Orket can make that feel safe, the architecture works. If it can't, it doesn'
 - How do you validate extensions without becoming a gatekeeper?
 - What's the minimum viable nervous system that lets you safely run OpenClaw?
 
+## Locked v1 Plan
+
+The first implementation slice is now locked in `docs/projects/future/NervousSystem/IMPLEMENTATION_PLAN.md`.
+
+Live verification evidence for the locked v1 slice is recorded in:
+
+- `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`
+- `benchmarks/results/nervous_system_live_evidence.json`
+
+Scope for that locked slice:
+
+- Action path only (`action.tool_call` proposals)
+- Deterministic admission and commit
+- Approval queue/API with CLI fallback
+- Scoped per-action credential tokens
+- Append-only governance ledger
+- OpenClaw JSONL subprocess live verification
+
 ## Non-Goals
 
 - Building a better agent framework (brain is not our job)

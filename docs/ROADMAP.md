@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-03-02
+Last updated: 2026-03-03
 
 ## Canonical Rule
 `docs/ROADMAP.md` is the only active roadmap source.
@@ -10,23 +10,24 @@ All process and workflow rules live in `docs/CONTRIBUTOR.md`.
 
 ## Invocation Rule
 If the user requests "follow roadmap" without naming a project, execute the highest-priority active (non-paused) item in **Priority Now**.
-Current default target: LieDetector.
+Current default target: marshaller.
 
 ## Priority Now
-1. LieDetector -- Maintenance and polish for floor-progression truth/lie deduction game with TUI.
-2. marshaller -- Marshaller v0 specification/implementation lane.
+1. marshaller -- Marshaller v0 specification/implementation lane.
+2. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. LieDetector -- v1 complete; keep in maintenance unless new feature scope is requested.
+1. marshaller -- Execute v0 slices from `docs/projects/marshaller/Marshaller-v0.md`.
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| LieDetector | active-maintenance | P2-active | `docs/projects/LieDetector/` | Orket Core | Standalone "20 questions with a twist" deduction game. Persona system, SDK TUI, PolicyGate, ANSI renderer. v1 decoupled from mystery world. |
+| NervousSystem | active | P2-review | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`. |
 | marshaller | queued | P2-queued | `docs/projects/marshaller/` | Orket Core | Marshaller v0 specification and implementation lane. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
+| LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |
 | techdebt | completed-archive | complete | `docs/projects/archive/TechDebt-2026-03-02/` | Orket Core | Review3 remediation lane closed (C1-C6 complete; security gates green). Deferred medium backlog documented in archive README/plan. |
 | SDK-2026-03-01-Audio | completed-archive | complete | `docs/projects/archive/SDK-2026-03-01-Audio/` | Orket Core | SDK typed audio capabilities, Piper/audio backend wiring, bridge integration, and reforger voice-profile validation completed in-repo. |
 | core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |

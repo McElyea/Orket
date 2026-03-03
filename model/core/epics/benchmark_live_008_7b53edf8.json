@@ -1,0 +1,17 @@
+{
+  "name": "benchmark_live_008_7b53edf8",
+  "description": "Live benchmark task 008",
+  "status": "ready",
+  "team": "standard",
+  "environment": "standard",
+  "issues": [
+    {
+      "id": "LB-008-1",
+      "summary": "Execute benchmark task 008: Implement factorial(n). Quality contract: implement at least one non-trivial function body with >=2 meaningful statements, use function input parameters in computation, and do not return constant-only stub values. Code-shape contract: output focused implementation code in agent_output/main.py only. Do not emit CLI wrappers, crash handlers, orchestration boilerplate, or placeholder comments. Output contract: return exact required values with no extra characters, separators, or whitespace changes. When returning collections, apply stable deterministic ordering for all levels so repeated runs are identical and ordering-sensitive checks pass. For nested list/group outputs, sort each inner group deterministically and then sort the outer list by a stable key (for example first element, then length) before returning. Implement exactly one top-level function matching signature def factorial(n): that performs deterministic computation using at least one intermediate variable assignment before returning a computed value. Required function signature: def factorial(n):. Problem: Compute n! for non-negative integer n.. Evaluation examples (must match exactly): [{\"args\": [0], \"expected\": 1}, {\"args\": [1], \"expected\": 1}, {\"args\": [5], \"expected\": 120}].",
+      "seat": "coder",
+      "status": "ready",
+      "priority": "High",
+      "note": "Read task_context.json. Then write benchmark_task_008_output.md. The output must include task id, summary, implementation plan, and acceptance checks. If any file is missing, create it instead of failing. Main code style requirements: concise and task-focused; avoid comments unless strictly necessary; no __main__ entrypoint unless the task explicitly requires runtime CLI behavior; for function-mode tasks avoid print statements and follow the required function signature. For function-mode tasks, return exact expected output format with no additional characters; if returning list/dict/set-derived data, normalize to deterministic ordering before return. Description: Factorial. Instruction: Implement factorial(n). Pass conditions: Function returns expected values for examples; Required artifacts are produced; Task-level checks pass Problem statement: Compute n! for non-negative integer n. Function signature: def factorial(n): Constraints: n >= 0; 0! = 1 I/O examples: [{\"input\": [0], \"output\": 1}, {\"input\": [5], \"output\": 120}]"
+    }
+  ]
+}

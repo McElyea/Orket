@@ -74,6 +74,22 @@ def test_kernel_gateway_facade_delegates_calls() -> None:
             self.called.append(("compare", request))
             return {"ok": True}
 
+        def projection_pack(self, request):
+            self.called.append(("projection_pack", request))
+            return {"ok": True}
+
+        def admit_proposal(self, request):
+            self.called.append(("admit_proposal", request))
+            return {"ok": True}
+
+        def commit_proposal(self, request):
+            self.called.append(("commit_proposal", request))
+            return {"ok": True}
+
+        def end_session(self, request):
+            self.called.append(("end_session", request))
+            return {"ok": True}
+
         def run_lifecycle(self, **kwargs):
             self.called.append(("lifecycle", kwargs))
             return {"ok": True}
@@ -87,5 +103,9 @@ def test_kernel_gateway_facade_delegates_calls() -> None:
     assert facade.authorize_tool_call({"e": 5})["ok"] is True
     assert facade.replay_run({"f": 6})["ok"] is True
     assert facade.compare_runs({"g": 7})["ok"] is True
+    assert facade.projection_pack({"h": 8})["ok"] is True
+    assert facade.admit_proposal({"i": 9})["ok"] is True
+    assert facade.commit_proposal({"j": 10})["ok"] is True
+    assert facade.end_session({"k": 11})["ok"] is True
     assert facade.run_lifecycle(workflow_id="w", execute_turn_requests=[])["ok"] is True
-    assert len(gateway.called) == 8
+    assert len(gateway.called) == 12

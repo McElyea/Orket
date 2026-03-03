@@ -99,6 +99,18 @@ class KernelGatewayFacade:
     def compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self._gw.compare_runs(request)
 
+    def projection_pack(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.projection_pack(request)
+
+    def admit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.admit_proposal(request)
+
+    def commit_proposal(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.commit_proposal(request)
+
+    def end_session(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.end_session(request)
+
     def run_lifecycle(
         self,
         *,
