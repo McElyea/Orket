@@ -1,0 +1,40 @@
+{
+  "models": [
+    "qwen3.5-27b",
+    "qwen3.5-35b-a3b"
+  ],
+  "quants": [
+    "Q8_0",
+    "Q6_K",
+    "Q4_K_M"
+  ],
+  "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+  "runs_per_quant": 3,
+  "task_limit": 0,
+  "runtime_target": "local-hardware",
+  "execution_mode": "live-card",
+  "runtime_env": {
+    "ORKET_LLM_PROVIDER": "lmstudio",
+    "ORKET_MODEL_PROVIDER": "lmstudio",
+    "ORKET_LLM_OPENAI_BASE_URL": "http://127.0.0.1:1234/v1",
+    "ORKET_MODEL_STREAM_OPENAI_BASE_URL": "http://127.0.0.1:1234/v1"
+  },
+  "adherence_threshold": 0.97,
+  "latency_ceiling": 15.0,
+  "seed": 1337,
+  "threads": 0,
+  "affinity_policy": "",
+  "warmup_steps": 2,
+  "canary_runs": 10,
+  "canary_task_limit": 2,
+  "canary_latency_variance_threshold": 0.03,
+  "context_sweep_profile": "balanced",
+  "context_sweep_contexts": [
+    8192,
+    16384,
+    32768
+  ],
+  "context_adherence_min": 0.93,
+  "context_ttft_ceiling_ms": 350.0,
+  "context_decode_floor_tps": 15.0
+}

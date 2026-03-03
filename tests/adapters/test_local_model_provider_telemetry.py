@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+
+import httpx
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
@@ -42,3 +45,43 @@ def test_local_model_provider_ns_to_ms_is_type_strict() -> None:
     assert LocalModelProvider._ns_to_ms(1_000_000) == 1.0
     assert LocalModelProvider._ns_to_ms(2.5) == 2.5 / 1_000_000.0
     assert LocalModelProvider._ns_to_ms("bad") is None
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="dummy")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/chat/completions"
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["model"] == "dummy"
+        assert isinstance(payload["messages"], list)
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-1",
+                "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete([{"role": "user", "content": "hello"}])
+    await provider.client.aclose()
+
+    assert isinstance(response, ModelResponse)
+    assert response.content == "ok"
+    assert response.raw["provider"] == "openai-compat"
+    assert response.raw["provider_backend"] == "lmstudio"
+    assert response.raw["usage"] == {
+        "prompt_tokens": 7,
+        "completion_tokens": 3,
+        "total_tokens": 10,
+    }
+    assert isinstance(response.raw["timings"]["prompt_ms"], float)
+    assert isinstance(response.raw["timings"]["predicted_ms"], float)

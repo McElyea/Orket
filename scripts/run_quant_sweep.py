@@ -36,6 +36,17 @@ OPTIONAL_SIDECAR_FIELDS = [
 ]
 
 VALID_SIDECAR_PARSE_STATUSES = {"OK", "OPTIONAL_FIELD_MISSING", "NOT_APPLICABLE"}
+ROLE_MODEL_ENV_KEYS = [
+    "ORKET_MODEL_REQUIREMENTS_ANALYST",
+    "ORKET_MODEL_ARCHITECT",
+    "ORKET_MODEL_LEAD_ARCHITECT",
+    "ORKET_MODEL_CODER",
+    "ORKET_MODEL_DEVELOPER",
+    "ORKET_MODEL_REVIEWER",
+    "ORKET_MODEL_CODE_REVIEWER",
+    "ORKET_MODEL_INTEGRITY_GUARD",
+    "ORKET_MODEL_OPERATIONS_LEAD",
+]
 
 
 def _parse_args() -> argparse.Namespace:
@@ -113,7 +124,7 @@ def _parse_args() -> argparse.Namespace:
 
 def _load_matrix_config(path: str) -> dict[str, Any]:
     config_path = Path(str(path).strip())
-    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    payload = json.loads(config_path.read_text(encoding="utf-8-sig"))
     if not isinstance(payload, dict):
         raise ValueError("Matrix config must be a JSON object")
     return payload
@@ -121,7 +132,7 @@ def _load_matrix_config(path: str) -> dict[str, Any]:
 
 def _load_sidecar_profiles(path: str) -> dict[str, dict[str, Any]]:
     config_path = Path(str(path).strip())
-    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    payload = json.loads(config_path.read_text(encoding="utf-8-sig"))
     if not isinstance(payload, dict):
         raise ValueError("Sidecar profiles config must be a JSON object")
     profiles = payload.get("profiles")
@@ -135,6 +146,8 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         return args
 
     config = _load_matrix_config(str(args.matrix_config))
+    if not hasattr(args, "runtime_env"):
+        setattr(args, "runtime_env", {})
     defaults = {
         "task_bank": "benchmarks/task_bank/v1/tasks.json",
         "runs": 1,
@@ -164,6 +177,7 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "hardware_sidecar_timeout_sec": 120,
         "hardware_sidecar_profile": "",
         "sidecar_profiles_config": "benchmarks/configs/sidecar_profiles.json",
+        "runtime_env": {},
     }
     mapping = {
         "model_id": "models",
@@ -193,6 +207,7 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
         "hardware_sidecar_timeout_sec": "hardware_sidecar_timeout_sec",
         "hardware_sidecar_profile": "hardware_sidecar_profile",
         "sidecar_profiles_config": "sidecar_profiles_config",
+        "runtime_env": "runtime_env",
     }
 
     for arg_key, cfg_key in mapping.items():
@@ -206,8 +221,31 @@ def _apply_matrix_config(args: argparse.Namespace) -> argparse.Namespace:
             cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
         if arg_key == "quant_tags" and isinstance(cfg_value, list):
             cfg_value = ",".join(str(token).strip() for token in cfg_value if str(token).strip())
+        if arg_key == "runtime_env" and not isinstance(cfg_value, dict):
+            raise ValueError("Matrix config key 'runtime_env' must be a JSON object.")
         setattr(args, arg_key, cfg_value)
     return args
+
+
+def _resolve_runtime_env(raw: Any) -> dict[str, str]:
+    if not isinstance(raw, dict):
+        return {}
+    resolved: dict[str, str] = {}
+    for key, value in raw.items():
+        env_key = str(key or "").strip()
+        if not env_key:
+            continue
+        resolved[env_key] = str(value)
+    return resolved
+
+
+def _apply_role_model_env(env: dict[str, str], model_id: str) -> None:
+    token = str(model_id or "").strip()
+    if not token:
+        return
+    for key in ROLE_MODEL_ENV_KEYS:
+        env.setdefault(key, token)
+    env.setdefault("ORKET_OPERATOR_MODEL", token)
 
 
 def _resolve_sidecar_settings(args: argparse.Namespace) -> tuple[str, int, str]:
@@ -673,6 +711,7 @@ def _run_canary(
     model_id: str,
     quant_tag: str,
     out_dir: Path,
+    runtime_env: dict[str, str],
 ) -> dict[str, Any]:
     canary_out = out_dir / "_canary_report.json"
     harness_cmd = [
@@ -702,8 +741,10 @@ def _run_canary(
         str(args.warmup_steps),
     ]
     env = dict(os.environ)
+    env.update(runtime_env)
     env["ORKET_MODEL_ID"] = str(model_id)
     env["ORKET_QUANT_TAG"] = str(quant_tag)
+    _apply_role_model_env(env, str(model_id))
     if str(args.model_hash).strip():
         env["ORKET_MODEL_HASH"] = str(args.model_hash).strip()
     _run(harness_cmd, env=env)
@@ -760,6 +801,7 @@ def _run_canary(
 
 def main() -> int:
     args = _apply_matrix_config(_parse_args())
+    runtime_env = _resolve_runtime_env(getattr(args, "runtime_env", {}))
     sidecar_template, sidecar_timeout_sec, sidecar_profile = _resolve_sidecar_settings(args)
     model_ids = [token.strip() for token in str(args.model_id).split(",") if token.strip()]
     if not model_ids:
@@ -786,6 +828,7 @@ def main() -> int:
             "task_id_max": int(args.task_id_max),
             "runtime_target": str(args.runtime_target),
             "execution_mode": str(args.execution_mode),
+            "runtime_env": runtime_env,
             "out_dir": str(out_dir).replace("\\", "/"),
             "summary_out": str(summary_out).replace("\\", "/"),
             "experimental_controls": {
@@ -820,6 +863,7 @@ def main() -> int:
             model_id=model_ids[0],
             quant_tag=quant_tags[0],
             out_dir=out_dir,
+            runtime_env=runtime_env,
         )
         if not bool(canary_result.get("passed")):
             print(json.dumps({"canary": canary_result}, indent=2))
@@ -864,8 +908,10 @@ def main() -> int:
                 harness_cmd.extend(["--task-id-max", str(args.task_id_max)])
 
             env = dict(os.environ)
+            env.update(runtime_env)
             env["ORKET_MODEL_ID"] = str(model_id)
             env["ORKET_QUANT_TAG"] = str(quant_tag)
+            _apply_role_model_env(env, str(model_id))
             if str(args.model_hash).strip():
                 env["ORKET_MODEL_HASH"] = str(args.model_hash).strip()
 
@@ -994,6 +1040,7 @@ def main() -> int:
             "execution_mode": str(args.execution_mode),
             "venue": str(args.runtime_target),
             "flow": str(args.execution_mode),
+            "runtime_env": runtime_env,
         },
         "execution_lane": str(args.execution_lane),
         "vram_profile": str(args.vram_profile),

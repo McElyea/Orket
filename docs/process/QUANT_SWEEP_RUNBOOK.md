@@ -102,3 +102,5 @@ python scripts/thermal_stability_profiler.py `
 1. Matrix config can override `--model-id` and `--quant-tags` values.
 2. Polluted rows are excluded from frontier by default.
 3. Sidecar metrics are diagnostics-only, not pass/fail gate inputs.
+4. Matrix config optional `runtime_env` object is injected into canary + sweep subprocess env for backend selection (for example LM Studio).
+5. Sweep `model_id` is propagated to role model env vars (`ORKET_MODEL_CODER`, `ORKET_MODEL_ARCHITECT`, etc.) unless already set.
