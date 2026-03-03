@@ -42,16 +42,16 @@ class OrchestrationConfig:
         env_mode = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip().lower()
         env_pilot_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
         if env_mode == "gitea" and not env_pilot_raw:
-            raise NotImplementedError(
+            raise ValueError(
                 "State backend mode 'gitea' requires pilot enablement "
                 "(set ORKET_ENABLE_GITEA_STATE_PILOT=true or runtime policy gitea_state_pilot_enabled=true)."
             )
         if not gitea_state_pilot_enabled:
-            raise NotImplementedError(
+            raise ValueError(
                 "State backend mode 'gitea' requires pilot enablement "
                 "(set ORKET_ENABLE_GITEA_STATE_PILOT=true or runtime policy gitea_state_pilot_enabled=true)."
             )
         readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs())
         if not bool(readiness.get("ready")):
             failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
-            raise NotImplementedError(f"State backend mode 'gitea' pilot readiness failed: {failures}")
+            raise ValueError(f"State backend mode 'gitea' pilot readiness failed: {failures}")

@@ -57,7 +57,10 @@ class MemoryStore:
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             # Use id for tie-breaking on same timestamp
-            cursor = await conn.execute("SELECT * FROM project_memory ORDER BY created_at DESC, id DESC")
+            cursor = await conn.execute(
+                "SELECT * FROM project_memory ORDER BY created_at DESC, id DESC LIMIT ?",
+                (limit * 20,),
+            )
             rows = await cursor.fetchall()
             
             for row in rows:

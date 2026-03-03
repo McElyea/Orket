@@ -2,7 +2,7 @@
 from typing import List, Optional, Dict, Any
 from orket.vendors.base import VendorInterface, VendorRock, VendorEpic, VendorCard
 from orket.orket import ConfigLoader
-from orket.schema import RockConfig, EpicConfig, CardConfig
+from orket.schema import RockConfig, EpicConfig
 from orket.runtime_paths import resolve_runtime_db_path
 
 class LocalVendor(VendorInterface):

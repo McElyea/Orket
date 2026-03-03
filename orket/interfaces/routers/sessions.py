@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -113,7 +114,14 @@ def build_sessions_router(
                 await context.request_commit(commit_intent_factory(str(exc)))
                 await interaction_manager.finalize(session_id, turn_id)
 
-        asyncio.create_task(_run_turn())
+        _logger = logging.getLogger(__name__)
+        task = asyncio.create_task(_run_turn())
+        task.add_done_callback(
+            lambda t: t.exception() and _logger.error(
+                "interaction turn failed: session=%s turn=%s error=%s",
+                session_id, turn_id, t.exception(),
+            )
+        )
         return {"session_id": session_id, "turn_id": turn_id}
 
     @router.post("/interactions/{session_id}/finalize")

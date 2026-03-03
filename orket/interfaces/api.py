@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, UTC
 from functools import lru_cache
 from typing import Any, Optional, List
 
@@ -77,6 +77,15 @@ class _EngineProxy:
         return getattr(self._get_engine(), item)
 
 
+def _validate_session_path(session_id: str) -> Path:
+    """Validate session_id does not traverse outside the runs directory."""
+    base = (PROJECT_ROOT / "workspace" / "runs").resolve()
+    candidate = (base / session_id).resolve()
+    if not candidate.is_relative_to(base):
+        raise HTTPException(status_code=400, detail="Invalid session_id")
+    return candidate
+
+
 def _resolve_method(target: object, invocation: dict, error_prefix: str):
     method_name = invocation["method_name"]
     method = getattr(target, method_name, None)
@@ -88,16 +97,8 @@ def _resolve_method(target: object, invocation: dict, error_prefix: str):
     return method
 
 
-def _resolve_async_method(target: object, invocation: dict, error_prefix: str):
-    return _resolve_method(target, invocation, error_prefix)
-
-
-def _resolve_sync_method(target: object, invocation: dict, error_prefix: str):
-    return _resolve_method(target, invocation, error_prefix)
-
-
 async def _invoke_async_method(target: object, invocation: dict, error_prefix: str):
-    method = _resolve_async_method(target, invocation, error_prefix)
+    method = _resolve_method(target, invocation, error_prefix)
     return await method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
 
@@ -107,7 +108,7 @@ async def _schedule_async_invocation_task(
     error_prefix: str,
     session_id: str,
 ):
-    method = _resolve_async_method(target, invocation, error_prefix)
+    method = _resolve_method(target, invocation, error_prefix)
     task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
     await runtime_state.add_task(session_id, task)
 
@@ -119,7 +120,7 @@ async def _schedule_async_invocation_task(
 
 
 def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
-    method = _resolve_sync_method(target, invocation, error_prefix)
+    method = _resolve_method(target, invocation, error_prefix)
     return method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
 SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
@@ -355,6 +356,8 @@ def _on_log_record_factory(loop: asyncio.AbstractEventLoop):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    from orket.utils import ensure_log_dir
+    ensure_log_dir()
     broadcaster_task = asyncio.create_task(event_broadcaster())
     loop = asyncio.get_running_loop()
     subscribe_to_events(_on_log_record_factory(loop))
@@ -648,6 +651,7 @@ async def get_run_detail(session_id: str):
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str):
     log_event("api_run_metrics", {"session_id": session_id}, PROJECT_ROOT)
+    _validate_session_path(session_id)
     workspace = api_runtime_node.resolve_member_metrics_workspace(PROJECT_ROOT, session_id)
     metrics_reader = api_runtime_node.create_member_metrics_reader()
     return await asyncio.to_thread(metrics_reader, workspace)
@@ -660,8 +664,9 @@ async def get_run_token_summary(session_id: str):
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
+    run_path = _validate_session_path(session_id)
     candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
-    candidate_files.append(PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log")
+    candidate_files.append(run_path / "orket.log")
 
     records: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
@@ -770,8 +775,9 @@ async def get_run_token_summary(session_id: str):
 
 
 def _collect_replay_turns(session_id: str, role: Optional[str] = None) -> list[dict[str, Any]]:
+    run_path = _validate_session_path(session_id)
     candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
-    candidate_files.append(PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log")
+    candidate_files.append(run_path / "orket.log")
 
     records: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
@@ -1026,7 +1032,10 @@ def _coerce_datetime(value: Optional[str]) -> Optional[datetime]:
     if not value:
         return None
     try:
-        return datetime.fromisoformat(value)
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'")
 
@@ -1147,7 +1156,8 @@ def _build_execution_graph(backlog: list[dict[str, Any]], session_id: str) -> di
 
 def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
-    run_log = PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log"
+    run_path = _validate_session_path(session_id)
+    run_log = run_path / "orket.log"
     default_log = PROJECT_ROOT / "workspace" / "default" / "orket.log"
 
     for path in [run_log, default_log]:
@@ -1200,7 +1210,8 @@ def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[
 
 def _persist_execution_graph_snapshot(session_id: str, payload: dict[str, Any]) -> None:
     try:
-        path = PROJECT_ROOT / "workspace" / "runs" / session_id / "agent_output" / "observability" / "execution_graph_snapshot.json"
+        run_path = _validate_session_path(session_id)
+        path = run_path / "agent_output" / "observability" / "execution_graph_snapshot.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     except (OSError, TypeError, ValueError):
@@ -1262,20 +1273,13 @@ async def list_logs(
 
     candidate_files = [PROJECT_ROOT / "workspace" / "default" / "orket.log"]
     if session_id:
-        candidate_files.append(PROJECT_ROOT / "workspace" / "runs" / session_id / "orket.log")
+        run_path = _validate_session_path(session_id)
+        candidate_files.append(run_path / "orket.log")
 
     records: list[dict] = []
     for path in candidate_files:
         records.extend(await asyncio.to_thread(_read_log_records, path))
 
-    def _record_session_id(record: dict) -> str:
-        data = record.get("data", {})
-        if isinstance(data, dict):
-            runtime_event = data.get("runtime_event", {})
-            if isinstance(runtime_event, dict):
-                return str(runtime_event.get("session_id") or "")
-            return str(data.get("session_id") or "")
-        return ""
 
     filtered: list[dict] = []
     for record in records:

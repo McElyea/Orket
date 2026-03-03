@@ -9,6 +9,7 @@ Persists:
 Reconstructed to use aiosqlite for true async I/O.
 """
 from __future__ import annotations
+import asyncio
 import aiosqlite
 import json
 from pathlib import Path
@@ -32,72 +33,72 @@ class WebhookDatabase:
         self.db_path = resolve_webhook_db_path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialized = False
+        self._lock = asyncio.Lock()
 
     async def _ensure_initialized(self):
         """Ensure database schema exists."""
         if self._initialized:
             return
 
-        async with aiosqlite.connect(self.db_path) as conn:
-            # PR review cycles table
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS pr_review_cycles (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    pr_key TEXT UNIQUE NOT NULL,
-                    repo_full_name TEXT NOT NULL,
-                    pr_number INTEGER NOT NULL,
-                    cycle_count INTEGER NOT NULL DEFAULT 0,
-                    status TEXT NOT NULL DEFAULT 'active',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(repo_full_name, pr_number)
-                )
-            """)
+        async with self._lock:
+            if self._initialized:
+                return
 
-            # Review failure reasons table
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS review_failures (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    pr_key TEXT NOT NULL,
-                    cycle_number INTEGER NOT NULL,
-                    reviewer TEXT,
-                    reason TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (pr_key) REFERENCES pr_review_cycles(pr_key)
-                )
-            """)
+            async with aiosqlite.connect(self.db_path) as conn:
+                await conn.execute("""
+                    CREATE TABLE IF NOT EXISTS pr_review_cycles (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        pr_key TEXT UNIQUE NOT NULL,
+                        repo_full_name TEXT NOT NULL,
+                        pr_number INTEGER NOT NULL,
+                        cycle_count INTEGER NOT NULL DEFAULT 0,
+                        status TEXT NOT NULL DEFAULT 'active',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(repo_full_name, pr_number)
+                    )
+                """)
 
-            # Webhook event log
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS webhook_events (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    event_type TEXT NOT NULL,
-                    pr_key TEXT,
-                    payload TEXT,
-                    result TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
+                await conn.execute("""
+                    CREATE TABLE IF NOT EXISTS review_failures (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        pr_key TEXT NOT NULL,
+                        cycle_number INTEGER NOT NULL,
+                        reviewer TEXT,
+                        reason TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (pr_key) REFERENCES pr_review_cycles(pr_key)
+                    )
+                """)
 
-            # Bug Fix Phases table
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS bug_fix_phases (
-                    rock_id TEXT PRIMARY KEY,
-                    data_json TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
+                await conn.execute("""
+                    CREATE TABLE IF NOT EXISTS webhook_events (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        event_type TEXT NOT NULL,
+                        pr_key TEXT,
+                        payload TEXT,
+                        result TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
 
-            # Create indices
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_pr_key ON pr_review_cycles(pr_key)")
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_repo_pr ON pr_review_cycles(repo_full_name, pr_number)")
-            await conn.execute("CREATE INDEX IF NOT EXISTS idx_failure_pr_key ON review_failures(pr_key)")
+                await conn.execute("""
+                    CREATE TABLE IF NOT EXISTS bug_fix_phases (
+                        rock_id TEXT PRIMARY KEY,
+                        data_json TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
 
-            await conn.commit()
-            log_event("webhook_db", {"message": "Async database schema initialized"}, level="info")
+                await conn.execute("CREATE INDEX IF NOT EXISTS idx_pr_key ON pr_review_cycles(pr_key)")
+                await conn.execute("CREATE INDEX IF NOT EXISTS idx_repo_pr ON pr_review_cycles(repo_full_name, pr_number)")
+                await conn.execute("CREATE INDEX IF NOT EXISTS idx_failure_pr_key ON review_failures(pr_key)")
 
-        self._initialized = True
+                await conn.commit()
+                log_event("webhook_db", {"message": "Async database schema initialized"}, level="info")
+
+            self._initialized = True
 
     async def get_pr_cycle_count(self, repo_full_name: str, pr_number: int) -> int:
         """
@@ -217,18 +218,6 @@ class WebhookDatabase:
             """, (status, pr_key))
             await conn.commit()
             log_event("webhook_db", {"message": f"Closed PR cycle: {pr_key} ({status})"}, level="info")
-
-    async def log_webhook_event(self, event_type: str, pr_key: Optional[str], payload: str, result: str):
-        """
-        Log a webhook event for debugging/auditing.
-        """
-        await self._ensure_initialized()
-        async with aiosqlite.connect(self.db_path) as conn:
-            await conn.execute("""
-                INSERT INTO webhook_events (event_type, pr_key, payload, result)
-                VALUES (?, ?, ?, ?)
-            """, (event_type, pr_key, payload, result))
-            await conn.commit()
 
     async def get_active_prs(self) -> List[Dict[str, Any]]:
         """

@@ -41,13 +41,12 @@ class AsyncSessionRepository(SessionRepository):
         self._initialized = True
 
     async def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as conn:
-                conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
-                cursor = await conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
-                row = await cursor.fetchone()
-                return dict(row) if row else None
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            await self._ensure_initialized(conn)
+            cursor = await conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+            row = await cursor.fetchone()
+            return dict(row) if row else None
 
     async def start_session(self, session_id: str, data: Dict[str, Any]):
         async with self._lock:
@@ -60,13 +59,12 @@ class AsyncSessionRepository(SessionRepository):
                 await conn.commit()
 
     async def get_recent_runs(self, limit: int = 10) -> List[Dict[str, Any]]:
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as conn:
-                conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
-                cursor = await conn.execute("SELECT * FROM sessions ORDER BY start_time DESC LIMIT ?", (limit,))
-                rows = await cursor.fetchall()
-                return [dict(r) for r in rows]
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            await self._ensure_initialized(conn)
+            cursor = await conn.execute("SELECT * FROM sessions ORDER BY start_time DESC LIMIT ?", (limit,))
+            rows = await cursor.fetchall()
+            return [dict(r) for r in rows]
 
     async def get_session_issues(self, session_id: str) -> List[Dict[str, Any]]:
         """
@@ -74,41 +72,40 @@ class AsyncSessionRepository(SessionRepository):
 
         This intentionally mirrors legacy repository behavior used by `/v1/runs/{session_id}/backlog`.
         """
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as conn:
-                conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            await self._ensure_initialized(conn)
 
-                table_cursor = await conn.execute(
-                    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'issues' LIMIT 1"
-                )
-                has_issues_table = await table_cursor.fetchone()
-                if not has_issues_table:
-                    return []
+            table_cursor = await conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'issues' LIMIT 1"
+            )
+            has_issues_table = await table_cursor.fetchone()
+            if not has_issues_table:
+                return []
 
-                cursor = await conn.execute(
-                    "SELECT * FROM issues WHERE session_id = ? ORDER BY created_at ASC",
-                    (session_id,),
-                )
-                rows = await cursor.fetchall()
-                issues: List[Dict[str, Any]] = []
-                for row in rows:
-                    data = dict(row)
-                    for source_field, target_field, default in (
-                        ("verification_json", "verification", {}),
-                        ("metrics_json", "metrics", {}),
-                        ("depends_on_json", "depends_on", []),
-                    ):
-                        raw = data.get(source_field)
-                        if raw:
-                            try:
-                                data[target_field] = json.loads(raw)
-                            except json.JSONDecodeError:
-                                data[target_field] = default
-                        else:
+            cursor = await conn.execute(
+                "SELECT * FROM issues WHERE session_id = ? ORDER BY created_at ASC",
+                (session_id,),
+            )
+            rows = await cursor.fetchall()
+            issues: List[Dict[str, Any]] = []
+            for row in rows:
+                data = dict(row)
+                for source_field, target_field, default in (
+                    ("verification_json", "verification", {}),
+                    ("metrics_json", "metrics", {}),
+                    ("depends_on_json", "depends_on", []),
+                ):
+                    raw = data.get(source_field)
+                    if raw:
+                        try:
+                            data[target_field] = json.loads(raw)
+                        except json.JSONDecodeError:
                             data[target_field] = default
-                    issues.append(data)
-                return issues
+                    else:
+                        data[target_field] = default
+                issues.append(data)
+            return issues
 
     async def complete_session(self, session_id: str, status: str, transcript: List[Dict]):
         async with self._lock:
@@ -154,13 +151,12 @@ class AsyncSnapshotRepository(SnapshotRepository):
                 await conn.commit()
 
     async def get(self, session_id: str) -> Optional[Dict]:
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as conn:
-                conn.row_factory = aiosqlite.Row
-                await self._ensure_initialized(conn)
-                cursor = await conn.execute("SELECT * FROM session_snapshots WHERE session_id = ?", (session_id,))
-                row = await cursor.fetchone()
-                return dict(row) if row else None
+        async with aiosqlite.connect(self.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            await self._ensure_initialized(conn)
+            cursor = await conn.execute("SELECT * FROM session_snapshots WHERE session_id = ?", (session_id,))
+            row = await cursor.fetchone()
+            return dict(row) if row else None
 
 class AsyncSuccessRepository:
     """

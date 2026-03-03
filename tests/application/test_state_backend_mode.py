@@ -49,7 +49,7 @@ def test_resolve_gitea_worker_bounds():
 def test_engine_rejects_gitea_state_backend_without_pilot_enablement(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
     monkeypatch.delenv("ORKET_ENABLE_GITEA_STATE_PILOT", raising=False)
-    with pytest.raises(NotImplementedError, match="requires pilot enablement"):
+    with pytest.raises(ValueError, match="requires pilot enablement"):
         OrchestrationEngine(tmp_path, config_root=tmp_path)
 
 
@@ -60,7 +60,7 @@ def test_engine_rejects_gitea_state_backend_when_readiness_is_incomplete(monkeyp
     monkeypatch.delenv("ORKET_GITEA_TOKEN", raising=False)
     monkeypatch.delenv("ORKET_GITEA_OWNER", raising=False)
     monkeypatch.delenv("ORKET_GITEA_REPO", raising=False)
-    with pytest.raises(NotImplementedError, match="pilot readiness failed"):
+    with pytest.raises(ValueError, match="pilot readiness failed"):
         OrchestrationEngine(tmp_path, config_root=tmp_path)
 
 

@@ -2,7 +2,7 @@
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
-from typing import List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

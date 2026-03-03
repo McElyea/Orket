@@ -4,7 +4,11 @@ from datetime import datetime, UTC
 from orket.time_utils import now_local
 
 LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
+
+
+def ensure_log_dir() -> None:
+    """Create the log directory if it does not exist. Call from application startup."""
+    os.makedirs(LOG_DIR, exist_ok=True)
 
 CONSOLE_LEVELS = {"debug": 10, "info": 20, "warn": 30, "error": 40}
 CURRENT_LEVEL = CONSOLE_LEVELS.get("debug", 10)  # adjust as needed

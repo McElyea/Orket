@@ -37,7 +37,7 @@ class NoteStore:
         return visible
 
     def all(self) -> List[Note]:
-        return self._notes
+        return list(self._notes)
 
     def clear(self):
         self._notes = []

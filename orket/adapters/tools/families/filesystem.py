@@ -1,32 +1,35 @@
 ﻿from __future__ import annotations
 
 import asyncio
-import threading
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List
 
 from orket.adapters.tools.families.base import BaseTools
 
+_MAX_PATH_LOCKS = 1024
+
 
 class FileSystemTools(BaseTools):
-    _path_locks: dict[str, asyncio.Lock] = {}
-    _path_locks_guard = threading.Lock()
 
     def __init__(self, workspace_root: Path, references: List[Path]):
         super().__init__(workspace_root, references)
         from orket.adapters.storage.async_file_tools import AsyncFileTools
 
         self.async_fs = AsyncFileTools(workspace_root, references)
+        self._path_locks: OrderedDict[str, asyncio.Lock] = OrderedDict()
 
-    @classmethod
-    def _get_path_lock(cls, resolved_path: Path) -> asyncio.Lock:
+    def _get_path_lock(self, resolved_path: Path) -> asyncio.Lock:
         key = str(resolved_path)
-        with cls._path_locks_guard:
-            lock = cls._path_locks.get(key)
-            if lock is None:
-                lock = asyncio.Lock()
-                cls._path_locks[key] = lock
+        lock = self._path_locks.get(key)
+        if lock is not None:
+            self._path_locks.move_to_end(key)
             return lock
+        lock = asyncio.Lock()
+        self._path_locks[key] = lock
+        while len(self._path_locks) > _MAX_PATH_LOCKS:
+            self._path_locks.popitem(last=False)
+        return lock
 
     async def read_file(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         try:

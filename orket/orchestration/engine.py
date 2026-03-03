@@ -10,7 +10,6 @@ from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.runtime_paths import resolve_runtime_db_path
-from orket.orchestration.kernel_gateway_proxy import KernelGatewayProxy
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.orchestration.engine_services import (
     CardArchiver,
@@ -65,7 +64,6 @@ class OrchestrationEngine:
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
         self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
-        self.kernel_proxy = KernelGatewayProxy(self.kernel_gateway)
 
         
         # PERSISTENT PIEPELINE (Avoid rebuilds)
@@ -84,20 +82,7 @@ class OrchestrationEngine:
         self.sandbox_manager = SandboxManager(getattr(self._pipeline, "sandbox_orchestrator", None))
         self.session_controller = SessionController(self.workspace_root)
         self.card_archiver = CardArchiver(self.cards)
-        self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_proxy)
-
-    def _resolve_state_backend_mode(self) -> str:
-        return self.orchestration_config.resolve_state_backend_mode()
-
-    def _validate_state_backend_mode(self) -> None:
-        self.orchestration_config.validate_state_backend_mode(
-            self.state_backend_mode,
-            self.gitea_state_pilot_enabled,
-        )
-
-    def _resolve_gitea_state_pilot_enabled(self) -> bool:
-        return self.orchestration_config.resolve_gitea_state_pilot_enabled()
-
+        self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
 
     async def run_card(self, card_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, target_issue_id: str = None) -> Dict[str, Any]:
         """
@@ -130,7 +115,7 @@ class OrchestrationEngine:
             driver_steered=driver_steered
         )
 
-    async def run_issue(self, issue_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> List[Dict]:
+    async def run_issue(self, issue_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> Dict[str, Any]:
         """Resumes or executes a single atomic issue."""
         return await self._pipeline.run_card(
             issue_id,

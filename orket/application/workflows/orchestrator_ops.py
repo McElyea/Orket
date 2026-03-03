@@ -252,65 +252,32 @@ def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> Dict[str, 
         "reviewer_seat": reviewer_seat,
     }
 
-def _is_sandbox_disabled(self) -> bool:
-    env_raw = (os.environ.get("ORKET_DISABLE_SANDBOX") or "").strip().lower()
+def _resolve_bool_flag(self, env_key: str, org_key: str, default: bool = False) -> bool:
+    env_raw = (os.environ.get(env_key) or "").strip().lower()
     if env_raw in {"1", "true", "yes", "on"}:
         return True
     if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get("disable_sandbox")
+        value = self.org.process_rules.get(org_key)
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
             return value.strip().lower() in {"1", "true", "yes", "on"}
-    return False
+    return default
+
+def _is_sandbox_disabled(self) -> bool:
+    return self._resolve_bool_flag("ORKET_DISABLE_SANDBOX", "disable_sandbox")
 
 def _is_scaffolder_disabled(self) -> bool:
-    env_raw = (os.environ.get("ORKET_DISABLE_SCAFFOLDER") or "").strip().lower()
-    if env_raw in {"1", "true", "yes", "on"}:
-        return True
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get("disable_scaffolder")
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            return value.strip().lower() in {"1", "true", "yes", "on"}
-    return False
+    return self._resolve_bool_flag("ORKET_DISABLE_SCAFFOLDER", "disable_scaffolder")
 
 def _is_dependency_manager_disabled(self) -> bool:
-    env_raw = (os.environ.get("ORKET_DISABLE_DEPENDENCY_MANAGER") or "").strip().lower()
-    if env_raw in {"1", "true", "yes", "on"}:
-        return True
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get("disable_dependency_manager")
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            return value.strip().lower() in {"1", "true", "yes", "on"}
-    return False
+    return self._resolve_bool_flag("ORKET_DISABLE_DEPENDENCY_MANAGER", "disable_dependency_manager")
 
 def _is_runtime_verifier_disabled(self) -> bool:
-    env_raw = (os.environ.get("ORKET_DISABLE_RUNTIME_VERIFIER") or "").strip().lower()
-    if env_raw in {"1", "true", "yes", "on"}:
-        return True
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get("disable_runtime_verifier")
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            return value.strip().lower() in {"1", "true", "yes", "on"}
-    return False
+    return self._resolve_bool_flag("ORKET_DISABLE_RUNTIME_VERIFIER", "disable_runtime_verifier")
 
 def _is_deployment_planner_disabled(self) -> bool:
-    env_raw = (os.environ.get("ORKET_DISABLE_DEPLOYMENT_PLANNER") or "").strip().lower()
-    if env_raw in {"1", "true", "yes", "on"}:
-        return True
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get("disable_deployment_planner")
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            return value.strip().lower() in {"1", "true", "yes", "on"}
-    return False
+    return self._resolve_bool_flag("ORKET_DISABLE_DEPLOYMENT_PLANNER", "disable_deployment_planner")
 
 def _resolve_prompt_resolver_mode(self) -> str:
     env_raw = (os.environ.get("ORKET_PROMPT_RESOLVER_MODE") or "").strip().lower()

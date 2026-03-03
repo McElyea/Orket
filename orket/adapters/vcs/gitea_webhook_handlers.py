@@ -134,7 +134,14 @@ class PRLifecycleHandler:
 
         engine = OrchestrationEngine(self.handler.workspace)
         await engine.cards.update_status(issue_id, CardStatus.CODE_REVIEW)
-        asyncio.create_task(engine.run_card(issue_id))
+        task = asyncio.create_task(engine.run_card(issue_id))
+        task.add_done_callback(
+            lambda t: t.exception() and log_event(
+                "webhook_run_card_error",
+                {"issue_id": issue_id, "error": str(t.exception())},
+                self.handler.workspace,
+            )
+        )
         return {"status": "success", "message": f"PR #{pr_number} review triggered for {issue_id}"}
 
     async def handle_pr_merged(self, payload: Dict[str, Any]) -> Dict[str, str]:

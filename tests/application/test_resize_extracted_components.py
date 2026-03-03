@@ -4,7 +4,7 @@ import pytest
 
 from orket.domain.fixture_verifier import FixtureVerifier
 from orket.domain.sandbox_verifier import SandboxVerifier
-from orket.orchestration.kernel_gateway_proxy import KernelGatewayProxy
+from orket.orchestration.engine_services import KernelGatewayFacade
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.schema import IssueVerification, VerificationScenario
 
@@ -41,7 +41,7 @@ def test_orchestration_config_prefers_env(monkeypatch) -> None:
     assert cfg.resolve_state_backend_mode() == "local"
 
 
-def test_kernel_gateway_proxy_delegates_calls() -> None:
+def test_kernel_gateway_facade_delegates_calls() -> None:
     class _Gateway:
         def __init__(self) -> None:
             self.called = []
@@ -79,13 +79,13 @@ def test_kernel_gateway_proxy_delegates_calls() -> None:
             return {"ok": True}
 
     gateway = _Gateway()
-    proxy = KernelGatewayProxy(gateway)
-    assert proxy.start_run({"a": 1})["ok"] is True
-    assert proxy.execute_turn({"b": 2})["ok"] is True
-    assert proxy.finish_run({"c": 3})["ok"] is True
-    assert proxy.resolve_capability({"d": 4})["ok"] is True
-    assert proxy.authorize_tool_call({"e": 5})["ok"] is True
-    assert proxy.replay_run({"f": 6})["ok"] is True
-    assert proxy.compare_runs({"g": 7})["ok"] is True
-    assert proxy.run_lifecycle(workflow_id="w", execute_turn_requests=[])["ok"] is True
+    facade = KernelGatewayFacade(gateway)
+    assert facade.start_run({"a": 1})["ok"] is True
+    assert facade.execute_turn({"b": 2})["ok"] is True
+    assert facade.finish_run({"c": 3})["ok"] is True
+    assert facade.resolve_capability({"d": 4})["ok"] is True
+    assert facade.authorize_tool_call({"e": 5})["ok"] is True
+    assert facade.replay_run({"f": 6})["ok"] is True
+    assert facade.compare_runs({"g": 7})["ok"] is True
+    assert facade.run_lifecycle(workflow_id="w", execute_turn_requests=[])["ok"] is True
     assert len(gateway.called) == 8

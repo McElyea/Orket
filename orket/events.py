@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -24,5 +24,5 @@ class EventStream:
     def all(self) -> List[Event]:
         return self.events
 
-    def last(self) -> Event:
+    def last(self) -> Optional[Event]:
         return self.events[-1] if self.events else None

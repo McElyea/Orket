@@ -97,21 +97,6 @@ async def test_get_active_prs_returns_only_active(webhook_db):
 
 
 @pytest.mark.asyncio
-async def test_log_webhook_event_persists_row(webhook_db):
-    await webhook_db.log_webhook_event("pull_request", "org/repo#1", "{\"k\":1}", "ok")
-
-    async with aiosqlite.connect(webhook_db.db_path) as conn:
-        conn.row_factory = aiosqlite.Row
-        row = await (await conn.execute(
-            "SELECT event_type, pr_key, payload, result FROM webhook_events"
-        )).fetchone()
-
-    assert row["event_type"] == "pull_request"
-    assert row["pr_key"] == "org/repo#1"
-    assert row["result"] == "ok"
-
-
-@pytest.mark.asyncio
 async def test_get_bug_fix_phase_missing_returns_none(webhook_db):
     phase = await webhook_db.get_bug_fix_phase("missing")
     assert phase is None
@@ -182,17 +167,4 @@ async def test_close_pr_cycle_default_status_closed(webhook_db):
     assert row["status"] == "closed"
 
 
-@pytest.mark.asyncio
-async def test_webhook_event_payload_kept_as_text(webhook_db):
-    payload = json.dumps({"nested": {"value": 3}})
-    await webhook_db.log_webhook_event("pull_request_review", None, payload, "processed")
-
-    async with aiosqlite.connect(webhook_db.db_path) as conn:
-        conn.row_factory = aiosqlite.Row
-        row = await (await conn.execute(
-            "SELECT payload, pr_key FROM webhook_events"
-        )).fetchone()
-
-    assert row["payload"] == payload
-    assert row["pr_key"] is None
 

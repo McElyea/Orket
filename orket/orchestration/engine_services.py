@@ -75,29 +75,29 @@ class CardArchiver:
 class KernelGatewayFacade:
     """Focused kernel passthrough operations extracted from OrchestrationEngine."""
 
-    def __init__(self, kernel_proxy: Any) -> None:
-        self._kernel_proxy = kernel_proxy
+    def __init__(self, kernel_gateway: Any) -> None:
+        self._gw = kernel_gateway
 
     def start_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self._kernel_proxy.start_run(request)
+        return self._gw.start_run(request)
 
     def execute_turn(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self._kernel_proxy.execute_turn(request)
+        return self._gw.execute_turn(request)
 
     def finish_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self._kernel_proxy.finish_run(request)
+        return self._gw.finish_run(request)
 
     def resolve_capability(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self._kernel_proxy.resolve_capability(request)
+        return self._gw.resolve_capability(request)
 
     def authorize_tool_call(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self._kernel_proxy.authorize_tool_call(request)
+        return self._gw.authorize_tool_call(request)
 
     def replay_run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self._kernel_proxy.replay_run(request)
+        return self._gw.replay_run(request)
 
     def compare_runs(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        return self._kernel_proxy.compare_runs(request)
+        return self._gw.compare_runs(request)
 
     def run_lifecycle(
         self,
@@ -107,7 +107,7 @@ class KernelGatewayFacade:
         finish_outcome: str = "PASS",
         start_request: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        return self._kernel_proxy.run_lifecycle(
+        return self._gw.run_lifecycle(
             workflow_id=workflow_id,
             execute_turn_requests=execute_turn_requests,
             finish_outcome=finish_outcome,
