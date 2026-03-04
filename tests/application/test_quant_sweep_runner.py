@@ -121,6 +121,13 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
         "affinity_policy": "",
         "warmup_steps": None,
     }
+    sanitation = summary["matrix"]["model_cache_sanitation"]
+    assert sanitation["requested"] is True
+    assert sanitation["enabled"] is False
+    assert sanitation["runtime_provider"] == ""
+    assert len(sanitation["events"]) == 2
+    assert sanitation["events"][0]["status"] == "NOT_APPLICABLE"
+    assert sanitation["events"][1]["status"] == "NOT_APPLICABLE"
 
     assert len(summary["sessions"]) == 1
     session = summary["sessions"][0]
@@ -381,6 +388,8 @@ def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
     assert plan["vram_profile"] == "safe"
     assert plan["canary"]["enabled"] is True
     assert plan["canary"]["runs"] == 5
+    assert plan["model_cache_sanitation"]["requested"] is True
+    assert plan["model_cache_sanitation"]["enabled"] is False
 
 
 def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path) -> None:

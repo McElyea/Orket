@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import statistics
 import subprocess
 import sys
@@ -13,6 +12,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.live_consistency_common import extract_gate_run_id, now_utc_iso, tail_text, to_float, to_int
+except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
+    from live_consistency_common import extract_gate_run_id, now_utc_iso, tail_text, to_float, to_int
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -127,39 +130,6 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _now_utc() -> str:
-    return datetime.now(UTC).isoformat()
-
-
-def _tail(text: str, *, lines: int = 80) -> str:
-    chunk = (text or "").splitlines()
-    if len(chunk) <= lines:
-        return "\n".join(chunk)
-    return "\n".join(chunk[-lines:])
-
-
-def _to_int(value: Any, default: int = 0) -> int:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def _to_float(value: Any, default: float = 0.0) -> float:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def _extract_gate_run_id(text: str) -> str:
-    match = re.search(r"GATE_RUN_ID=([A-Za-z0-9_-]+)", text or "")
-    if match:
-        return match.group(1)
-    fallback = re.search(r"gate_run_id=([A-Za-z0-9_-]+)", text or "")
-    return fallback.group(1) if fallback else ""
-
-
 def _collect_stream_verdict_summary(gate_run_id: str, loops_requested: int) -> dict[str, Any]:
     workspace_root = PROJECT_ROOT / "workspace" / "observability" / "stream_scenarios"
     if not gate_run_id or not workspace_root.exists():
@@ -179,7 +149,7 @@ def _collect_stream_verdict_summary(gate_run_id: str, loops_requested: int) -> d
             continue
         scenario_id = rel.parts[0]
         loop_name = rel.parts[2]
-        loop_index = _to_int(loop_name.replace("loop-", "", 1), default=0)
+        loop_index = to_int(loop_name.replace("loop-", "", 1), default=0)
         payload = json.loads(verdict_path.read_text(encoding="utf-8"))
         observed = payload.get("observed") if isinstance(payload.get("observed"), dict) else {}
         expected = payload.get("expected") if isinstance(payload.get("expected"), dict) else {}
@@ -191,8 +161,8 @@ def _collect_stream_verdict_summary(gate_run_id: str, loops_requested: int) -> d
                 "law_checker_passed": bool(payload.get("law_checker_passed")),
                 "terminal_event": str(observed.get("terminal_event") or ""),
                 "commit_outcome": str(observed.get("commit_outcome") or ""),
-                "token_delta_count": _to_int(observed.get("token_delta_count"), default=0),
-                "min_expected_token_deltas": _to_int(expected.get("min_token_deltas"), default=0),
+                "token_delta_count": to_int(observed.get("token_delta_count"), default=0),
+                "min_expected_token_deltas": to_int(expected.get("min_token_deltas"), default=0),
                 "verdict_path": str(verdict_path.resolve()),
             }
         )
@@ -201,10 +171,10 @@ def _collect_stream_verdict_summary(gate_run_id: str, loops_requested: int) -> d
     loops_seen_global: set[int] = set()
     for scenario_id in sorted(scenario_entries.keys()):
         rows = sorted(scenario_entries[scenario_id], key=lambda row: (row["loop_index"], row["run_id"]))
-        loops_seen = sorted({_to_int(row["loop_index"], default=0) for row in rows if _to_int(row["loop_index"], 0) > 0})
+        loops_seen = sorted({to_int(row["loop_index"], default=0) for row in rows if to_int(row["loop_index"], 0) > 0})
         loops_seen_global.update(loops_seen)
         status_counts = Counter(str(row["status"]) for row in rows)
-        token_counts = [_to_int(row["token_delta_count"], 0) for row in rows]
+        token_counts = [to_int(row["token_delta_count"], 0) for row in rows]
         scenario_summaries.append(
             {
                 "scenario_id": scenario_id,
@@ -214,7 +184,7 @@ def _collect_stream_verdict_summary(gate_run_id: str, loops_requested: int) -> d
                 "law_checker_failures": sum(1 for row in rows if not bool(row["law_checker_passed"])),
                 "terminal_event_values": sorted({str(row["terminal_event"]) for row in rows}),
                 "commit_outcome_values": sorted({str(row["commit_outcome"]) for row in rows}),
-                "min_expected_token_deltas": max(_to_int(row["min_expected_token_deltas"], 0) for row in rows),
+                "min_expected_token_deltas": max(to_int(row["min_expected_token_deltas"], 0) for row in rows),
                 "token_delta_min": min(token_counts) if token_counts else 0,
                 "token_delta_max": max(token_counts) if token_counts else 0,
             }
@@ -227,7 +197,6 @@ def _collect_stream_verdict_summary(gate_run_id: str, loops_requested: int) -> d
         "loops_seen_global": sorted(loops_seen_global),
         "scenarios": scenario_summaries,
     }
-
 
 def _run_stream_gate(args: argparse.Namespace) -> dict[str, Any]:
     loops = max(0, int(args.stream_loops))
@@ -273,7 +242,7 @@ def _run_stream_gate(args: argparse.Namespace) -> dict[str, Any]:
     )
     duration_ms = round((time.perf_counter() - started) * 1000.0, 3)
     combined_output = (proc.stdout or "") + "\n" + (proc.stderr or "")
-    gate_run_id = _extract_gate_run_id(combined_output)
+    gate_run_id = extract_gate_run_id(combined_output)
     summary = _collect_stream_verdict_summary(gate_run_id=gate_run_id, loops_requested=loops)
     return {
         "enabled": True,
@@ -283,10 +252,9 @@ def _run_stream_gate(args: argparse.Namespace) -> dict[str, Any]:
         "command": cmd,
         "gate_run_id": gate_run_id,
         "summary": summary,
-        "stdout_tail": _tail(proc.stdout or ""),
-        "stderr_tail": _tail(proc.stderr or ""),
+        "stdout_tail": tail_text(proc.stdout or ""),
+        "stderr_tail": tail_text(proc.stderr or ""),
     }
-
 
 def _run_stress_suite(args: argparse.Namespace) -> dict[str, Any]:
     runs_requested = max(0, int(args.stress_runs))
@@ -339,8 +307,8 @@ def _run_stress_suite(args: argparse.Namespace) -> dict[str, Any]:
             "duration_ms": duration_ms,
             "report_path": str(out_path),
             "metrics": metrics,
-            "stdout_tail": _tail(proc.stdout or "", lines=30),
-            "stderr_tail": _tail(proc.stderr or "", lines=30),
+            "stdout_tail": tail_text(proc.stdout or "", lines=30),
+            "stderr_tail": tail_text(proc.stderr or "", lines=30),
         }
         run_summaries.append(run_summary)
 
@@ -359,11 +327,11 @@ def _run_stress_suite(args: argparse.Namespace) -> dict[str, Any]:
     aggregate_metrics: dict[str, Any] = {}
     for metric_name in sorted(metric_names):
         rows = [run.get("metrics", {}).get(metric_name, {}) for run in run_summaries if isinstance(run.get("metrics"), dict)]
-        p50_values = [_to_float(row.get("p50_ms"), default=0.0) for row in rows if row.get("p50_ms") is not None]
-        p95_values = [_to_float(row.get("p95_ms"), default=0.0) for row in rows if row.get("p95_ms") is not None]
-        p99_values = [_to_float(row.get("p99_ms"), default=0.0) for row in rows if row.get("p99_ms") is not None]
-        error_rates = [_to_float(row.get("error_rate_percent"), default=0.0) for row in rows]
-        failures = [_to_int(row.get("failures"), default=0) for row in rows]
+        p50_values = [to_float(row.get("p50_ms"), default=0.0) for row in rows if row.get("p50_ms") is not None]
+        p95_values = [to_float(row.get("p95_ms"), default=0.0) for row in rows if row.get("p95_ms") is not None]
+        p99_values = [to_float(row.get("p99_ms"), default=0.0) for row in rows if row.get("p99_ms") is not None]
+        error_rates = [to_float(row.get("error_rate_percent"), default=0.0) for row in rows]
+        failures = [to_int(row.get("failures"), default=0) for row in rows]
 
         def _range(values: list[float]) -> dict[str, float | None]:
             if not values:
@@ -387,12 +355,12 @@ def _run_stress_suite(args: argparse.Namespace) -> dict[str, Any]:
     if not run_summaries:
         ok = False
     for run in run_summaries:
-        if _to_int(run.get("return_code"), default=1) != 0:
+        if to_int(run.get("return_code"), default=1) != 0:
             ok = False
             break
         metrics = run.get("metrics") if isinstance(run.get("metrics"), dict) else {}
         for payload in metrics.values():
-            if _to_int(payload.get("failures"), default=0) > 0:
+            if to_int(payload.get("failures"), default=0) > 0:
                 ok = False
                 break
         if not ok:
@@ -409,7 +377,6 @@ def _run_stress_suite(args: argparse.Namespace) -> dict[str, Any]:
         "aggregate_metrics": aggregate_metrics,
     }
 
-
 def main() -> int:
     args = _parse_args()
     stream_result = _run_stream_gate(args)
@@ -417,7 +384,7 @@ def main() -> int:
 
     report = {
         "schema_version": "live_1000_consistency_v1",
-        "generated_at_utc": _now_utc(),
+        "generated_at_utc": now_utc_iso(),
         "config": {
             "stream_loops": int(args.stream_loops),
             "stream_provider_mode": str(args.stream_provider_mode),
@@ -450,3 +417,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -76,6 +76,7 @@ def test_run_quant_sweep_injects_runtime_env_from_matrix_config(tmp_path: Path) 
                     "ORKET_LLM_PROVIDER": "lmstudio",
                     "ORKET_LLM_OPENAI_BASE_URL": "http://127.0.0.1:1234/v1",
                 },
+                "sanitize_model_cache": False,
             },
             indent=2,
         ),
