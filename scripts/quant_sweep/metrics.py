@@ -89,71 +89,164 @@ def is_frontier_eligible_with_policy(
     return is_frontier_eligible(row=row, min_adherence=min_adherence, latency_ceiling=latency_ceiling)
 
 
-def collect_quant_metrics(report: dict[str, Any]) -> dict[str, Any]:
-    test_runs = report.get("test_runs") if isinstance(report.get("test_runs"), list) else []
-    adherence_samples: list[float] = []
-    memory_samples: list[float] = []
-    latency_samples: list[float] = []
-    init_latency_samples: list[float] = []
-    prompt_tps_samples: list[float] = []
-    generation_tps_samples: list[float] = []
-    token_statuses: list[str] = []
-    run_quality_statuses: list[str] = []
-    run_quality_reason_samples: list[str] = []
-    overhead_samples: list[float] = []
+def _aggregate_run_quality(
+    *,
+    run_quality_reasons: list[str],
+    missing_telemetry_rate: float,
+    max_missing_telemetry_rate: float,
+    average_overhead_ratio: float | None,
+    max_orchestration_overhead_ratio: float,
+    cpu_saturation_rate: float,
+    max_cpu_saturation_rate: float,
+    system_load_rate: float,
+    max_system_load_rate: float,
+    polluted_count: int,
+) -> tuple[str, list[str]]:
+    soft_reasons = {
+        "MISSING_TOKEN_TIMINGS",
+        "HIGH_ORCHESTRATION_OVERHEAD",
+        "HIGH_CPU_SATURATION",
+        "HIGH_SYSTEM_LOAD",
+    }
+    observed_reasons = {str(reason).strip().upper() for reason in run_quality_reasons if str(reason).strip()}
+    aggregated = [reason for reason in observed_reasons if reason not in soft_reasons]
+
+    if missing_telemetry_rate > max_missing_telemetry_rate:
+        aggregated.append("MISSING_TOKEN_TIMINGS")
+    if isinstance(average_overhead_ratio, (int, float)):
+        if float(average_overhead_ratio) > float(max_orchestration_overhead_ratio):
+            aggregated.append("HIGH_ORCHESTRATION_OVERHEAD")
+    elif "HIGH_ORCHESTRATION_OVERHEAD" in observed_reasons:
+        aggregated.append("HIGH_ORCHESTRATION_OVERHEAD")
+    if cpu_saturation_rate > max_cpu_saturation_rate:
+        aggregated.append("HIGH_CPU_SATURATION")
+    if system_load_rate > max_system_load_rate:
+        aggregated.append("HIGH_SYSTEM_LOAD")
+
+    if polluted_count > 0 and not aggregated and not observed_reasons:
+        aggregated.append("RUN_QUALITY_STATUS_POLLUTED")
+
+    reasons = sorted(set(aggregated))
+    return ("CLEAN" if not reasons else "POLLUTED"), reasons
+
+
+def _new_metric_samples() -> dict[str, Any]:
+    return {
+        "adherence_samples": [],
+        "memory_samples": [],
+        "latency_samples": [],
+        "init_latency_samples": [],
+        "prompt_tps_samples": [],
+        "generation_tps_samples": [],
+        "token_statuses": [],
+        "run_quality_reason_samples": [],
+        "overhead_samples": [],
+        "reason_run_counts": {},
+        "missing_telemetry_count": 0,
+        "polluted_count": 0,
+    }
+
+
+def _append_telemetry_samples(samples: dict[str, Any], telemetry: dict[str, Any]) -> None:
+    adherence = telemetry.get("adherence_score")
+    memory = telemetry.get("peak_memory_rss")
+    latency = telemetry.get("total_latency")
+    init_latency = telemetry.get("init_latency")
+    token_metrics = telemetry.get("token_metrics") if isinstance(telemetry.get("token_metrics"), dict) else {}
+    throughput = token_metrics.get("throughput") if isinstance(token_metrics.get("throughput"), dict) else {}
+    prompt_tps = throughput.get("prompt_tokens_per_second")
+    generation_tps = throughput.get("generation_tokens_per_second")
+    overhead_ratio = telemetry.get("orchestration_overhead_ratio")
+    run_quality_status = str(telemetry.get("run_quality_status") or "POLLUTED").strip().upper()
+    run_quality_reasons = telemetry.get("run_quality_reasons")
+    token_status = str(
+        telemetry.get("token_metrics_status")
+        or token_metrics.get("status")
+        or "TOKEN_AND_TIMING_UNAVAILABLE"
+    ).strip()
+
+    if isinstance(adherence, (int, float)):
+        samples["adherence_samples"].append(float(adherence))
+    if isinstance(memory, (int, float)):
+        samples["memory_samples"].append(float(memory))
+    if isinstance(latency, (int, float)):
+        samples["latency_samples"].append(float(latency))
+    if isinstance(init_latency, (int, float)):
+        samples["init_latency_samples"].append(float(init_latency))
+    if isinstance(prompt_tps, (int, float)):
+        samples["prompt_tps_samples"].append(float(prompt_tps))
+    if isinstance(generation_tps, (int, float)):
+        samples["generation_tps_samples"].append(float(generation_tps))
+    if isinstance(overhead_ratio, (int, float)):
+        samples["overhead_samples"].append(float(overhead_ratio))
+
+    samples["token_statuses"].append(token_status)
+    if str(token_status).strip().upper() != "OK":
+        samples["missing_telemetry_count"] = int(samples["missing_telemetry_count"]) + 1
+    if run_quality_status != "CLEAN":
+        samples["polluted_count"] = int(samples["polluted_count"]) + 1
+
+    if isinstance(run_quality_reasons, list):
+        run_reason_set = {str(reason).strip().upper() for reason in run_quality_reasons if str(reason).strip()}
+        samples["run_quality_reason_samples"].extend(run_reason_set)
+        reason_run_counts = samples["reason_run_counts"]
+        for reason in run_reason_set:
+            reason_run_counts[reason] = int(reason_run_counts.get(reason, 0)) + 1
+
+
+def _sample_quant_runs(test_runs: list[Any]) -> dict[str, Any]:
+    samples = _new_metric_samples()
     for row in test_runs:
         if not isinstance(row, dict):
             continue
         telemetry = row.get("telemetry") if isinstance(row.get("telemetry"), dict) else {}
-        adherence = telemetry.get("adherence_score")
-        memory = telemetry.get("peak_memory_rss")
-        latency = telemetry.get("total_latency")
-        init_latency = telemetry.get("init_latency")
-        token_metrics = telemetry.get("token_metrics") if isinstance(telemetry.get("token_metrics"), dict) else {}
-        throughput = token_metrics.get("throughput") if isinstance(token_metrics.get("throughput"), dict) else {}
-        prompt_tps = throughput.get("prompt_tokens_per_second")
-        generation_tps = throughput.get("generation_tokens_per_second")
-        overhead_ratio = telemetry.get("orchestration_overhead_ratio")
-        run_quality_status = str(telemetry.get("run_quality_status") or "POLLUTED").strip().upper()
-        run_quality_reasons = telemetry.get("run_quality_reasons")
-        token_status = str(
-            telemetry.get("token_metrics_status")
-            or token_metrics.get("status")
-            or "TOKEN_AND_TIMING_UNAVAILABLE"
-        ).strip()
-        if isinstance(adherence, (int, float)):
-            adherence_samples.append(float(adherence))
-        if isinstance(memory, (int, float)):
-            memory_samples.append(float(memory))
-        if isinstance(latency, (int, float)):
-            latency_samples.append(float(latency))
-        if isinstance(init_latency, (int, float)):
-            init_latency_samples.append(float(init_latency))
-        if isinstance(prompt_tps, (int, float)):
-            prompt_tps_samples.append(float(prompt_tps))
-        if isinstance(generation_tps, (int, float)):
-            generation_tps_samples.append(float(generation_tps))
-        if isinstance(overhead_ratio, (int, float)):
-            overhead_samples.append(float(overhead_ratio))
-        token_statuses.append(token_status)
-        run_quality_statuses.append(run_quality_status)
-        if isinstance(run_quality_reasons, list):
-            run_quality_reason_samples.extend(str(reason) for reason in run_quality_reasons)
-    aggregate_token_status = "TOKEN_AND_TIMING_UNAVAILABLE"
-    if token_statuses and all(status == "OK" for status in token_statuses):
-        aggregate_token_status = "OK"
-    aggregate_run_quality = "POLLUTED"
-    if run_quality_statuses and all(status == "CLEAN" for status in run_quality_statuses):
-        aggregate_run_quality = "CLEAN"
-    unique_run_quality_reasons = sorted(set(run_quality_reason_samples))
+        _append_telemetry_samples(samples, telemetry)
+    return samples
+
+
+def collect_quant_metrics(
+    report: dict[str, Any],
+    *,
+    max_missing_telemetry_rate: float = 0.0,
+    max_orchestration_overhead_ratio: float = 0.25,
+    max_cpu_saturation_rate: float = 0.0,
+    max_system_load_rate: float = 0.0,
+) -> dict[str, Any]:
+    test_runs = report.get("test_runs") if isinstance(report.get("test_runs"), list) else []
+    samples = _sample_quant_runs(test_runs)
+    run_count = len(samples["token_statuses"])
+    missing_telemetry_count = int(samples["missing_telemetry_count"])
+    polluted_count = int(samples["polluted_count"])
+    missing_telemetry_rate = (missing_telemetry_count / run_count) if run_count else 1.0
+    polluted_run_rate = (polluted_count / run_count) if run_count else 1.0
+    cpu_saturation_rate = (samples["reason_run_counts"].get("HIGH_CPU_SATURATION", 0) / run_count) if run_count else 0.0
+    system_load_rate = (samples["reason_run_counts"].get("HIGH_SYSTEM_LOAD", 0) / run_count) if run_count else 0.0
+    average_overhead_ratio = safe_avg(samples["overhead_samples"]) if samples["overhead_samples"] else None
+    aggregate_token_status = "OK" if run_count and missing_telemetry_rate <= max_missing_telemetry_rate else "TOKEN_AND_TIMING_UNAVAILABLE"
+    aggregate_run_quality, unique_run_quality_reasons = _aggregate_run_quality(
+        run_quality_reasons=samples["run_quality_reason_samples"],
+        missing_telemetry_rate=missing_telemetry_rate,
+        max_missing_telemetry_rate=float(max_missing_telemetry_rate),
+        average_overhead_ratio=average_overhead_ratio,
+        max_orchestration_overhead_ratio=float(max_orchestration_overhead_ratio),
+        cpu_saturation_rate=float(cpu_saturation_rate),
+        max_cpu_saturation_rate=float(max_cpu_saturation_rate),
+        system_load_rate=float(system_load_rate),
+        max_system_load_rate=float(max_system_load_rate),
+        polluted_count=polluted_count,
+    )
     return {
-        "adherence_score": safe_avg(adherence_samples),
-        "peak_memory_rss": safe_avg(memory_samples),
-        "total_latency": safe_avg(latency_samples),
-        "init_latency": safe_avg(init_latency_samples) if init_latency_samples else None,
-        "prompt_tokens_per_second": safe_avg(prompt_tps_samples) if prompt_tps_samples else None,
-        "generation_tokens_per_second": safe_avg(generation_tps_samples) if generation_tps_samples else None,
-        "orchestration_overhead_ratio": safe_avg(overhead_samples) if overhead_samples else None,
+        "adherence_score": safe_avg(samples["adherence_samples"]),
+        "peak_memory_rss": safe_avg(samples["memory_samples"]),
+        "total_latency": safe_avg(samples["latency_samples"]),
+        "init_latency": safe_avg(samples["init_latency_samples"]) if samples["init_latency_samples"] else None,
+        "prompt_tokens_per_second": safe_avg(samples["prompt_tps_samples"]) if samples["prompt_tps_samples"] else None,
+        "generation_tokens_per_second": safe_avg(samples["generation_tps_samples"]) if samples["generation_tps_samples"] else None,
+        "orchestration_overhead_ratio": average_overhead_ratio,
+        "missing_telemetry_rate": round(float(missing_telemetry_rate), 6),
+        "polluted_run_rate": round(float(polluted_run_rate), 6),
+        "cpu_saturation_rate": round(float(cpu_saturation_rate), 6),
+        "system_load_rate": round(float(system_load_rate), 6),
         "token_metrics_status": aggregate_token_status,
         "run_quality_status": aggregate_run_quality,
         "run_quality_reasons": unique_run_quality_reasons,

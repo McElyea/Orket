@@ -84,6 +84,14 @@ def build_dry_plan(
             "runs": int(args.canary_runs),
             "task_limit": int(args.canary_task_limit),
             "latency_variance_threshold": float(args.canary_latency_variance_threshold),
+            "drop_first_run": bool(args.canary_drop_first_run),
+            "max_missing_telemetry_rate": float(args.canary_max_missing_telemetry_rate),
+        },
+        "row_quality_policy": {
+            "max_missing_telemetry_rate": float(args.row_max_missing_telemetry_rate),
+            "max_orchestration_overhead_ratio": float(args.row_max_orchestration_overhead_ratio),
+            "max_cpu_saturation_rate": float(args.row_max_cpu_saturation_rate),
+            "max_system_load_rate": float(args.row_max_system_load_rate),
         },
         "hardware_sidecar": {
             "enabled": bool(str(sidecar_template).strip()),
@@ -106,7 +114,7 @@ def run_quant_harness(
 ) -> None:
     cmd = [
         "python",
-        "scripts/run_determinism_harness.py",
+        "scripts/HighTier/run_determinism_harness.py",
         "--task-bank",
         args.task_bank,
         "--runs",
@@ -155,7 +163,13 @@ def build_quant_row(
     out_dir: Path,
 ) -> dict[str, Any]:
     report = load_json(report_path)
-    metrics = collect_quant_metrics(report)
+    metrics = collect_quant_metrics(
+        report,
+        max_missing_telemetry_rate=float(args.row_max_missing_telemetry_rate),
+        max_orchestration_overhead_ratio=float(args.row_max_orchestration_overhead_ratio),
+        max_cpu_saturation_rate=float(args.row_max_cpu_saturation_rate),
+        max_system_load_rate=float(args.row_max_system_load_rate),
+    )
     sidecar_payload = run_sidecar(
         template=str(sidecar_template),
         timeout_sec=int(sidecar_timeout_sec),
@@ -277,6 +291,12 @@ def build_summary(
             },
             "execution_lane": str(args.execution_lane),
             "vram_profile": str(args.vram_profile),
+            "row_quality_policy": {
+                "max_missing_telemetry_rate": float(args.row_max_missing_telemetry_rate),
+                "max_orchestration_overhead_ratio": float(args.row_max_orchestration_overhead_ratio),
+                "max_cpu_saturation_rate": float(args.row_max_cpu_saturation_rate),
+                "max_system_load_rate": float(args.row_max_system_load_rate),
+            },
             "hardware_sidecar": {
                 "enabled": bool(str(sidecar_template).strip()),
                 "profile": sidecar_profile,

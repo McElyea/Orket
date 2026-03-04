@@ -21,7 +21,7 @@ def _add_core_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--runner-template",
         default=(
-            "python scripts/live_card_benchmark_runner.py --task {task_file} "
+            "python scripts/MidTier/live_card_benchmark_runner.py --task {task_file} "
             "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
         ),
     )
@@ -77,6 +77,11 @@ def _add_policy_args(parser: argparse.ArgumentParser) -> None:
         choices=["safe", "balanced", "stress"],
         help="VRAM safety profile label.",
     )
+    _add_canary_args(parser)
+    _add_row_quality_policy_args(parser)
+
+
+def _add_canary_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--canary-runs", type=int, default=0, help="If >0, run canary repeats before matrix execution.")
     parser.add_argument("--canary-task-limit", type=int, default=1, help="Task limit for canary harness run.")
     parser.add_argument(
@@ -84,6 +89,52 @@ def _add_policy_args(parser: argparse.ArgumentParser) -> None:
         type=float,
         default=0.03,
         help="Max allowed internal latency coefficient of variation for canary.",
+    )
+    parser.add_argument(
+        "--canary-drop-first-run",
+        dest="canary_drop_first_run",
+        action="store_true",
+        default=True,
+        help="Drop first canary sample before variance checks to reduce cold-start skew.",
+    )
+    parser.add_argument(
+        "--no-canary-drop-first-run",
+        dest="canary_drop_first_run",
+        action="store_false",
+        help="Disable first-sample drop in canary variance checks.",
+    )
+    parser.add_argument(
+        "--canary-max-missing-telemetry-rate",
+        type=float,
+        default=0.0,
+        help="Maximum allowed fraction of canary runs with missing token/timing telemetry.",
+    )
+
+
+def _add_row_quality_policy_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--row-max-missing-telemetry-rate",
+        type=float,
+        default=0.0,
+        help="Maximum allowed fraction of quant-row runs with missing token/timing telemetry before row is polluted.",
+    )
+    parser.add_argument(
+        "--row-max-orchestration-overhead-ratio",
+        type=float,
+        default=0.25,
+        help="Maximum allowed average orchestration overhead ratio per quant row before row is polluted.",
+    )
+    parser.add_argument(
+        "--row-max-cpu-saturation-rate",
+        type=float,
+        default=0.0,
+        help="Maximum allowed fraction of quant-row runs with HIGH_CPU_SATURATION before row is polluted.",
+    )
+    parser.add_argument(
+        "--row-max-system-load-rate",
+        type=float,
+        default=0.0,
+        help="Maximum allowed fraction of quant-row runs with HIGH_SYSTEM_LOAD before row is polluted.",
     )
 
 
@@ -149,7 +200,7 @@ def _matrix_defaults() -> dict[str, Any]:
         "runtime_target": "local-hardware",
         "execution_mode": "live-card",
         "runner_template": (
-            "python scripts/live_card_benchmark_runner.py --task {task_file} "
+            "python scripts/MidTier/live_card_benchmark_runner.py --task {task_file} "
             "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
         ),
         "task_limit": 0,
@@ -168,6 +219,12 @@ def _matrix_defaults() -> dict[str, Any]:
         "canary_runs": 0,
         "canary_task_limit": 1,
         "canary_latency_variance_threshold": 0.03,
+        "canary_drop_first_run": True,
+        "canary_max_missing_telemetry_rate": 0.0,
+        "row_max_missing_telemetry_rate": 0.0,
+        "row_max_orchestration_overhead_ratio": 0.25,
+        "row_max_cpu_saturation_rate": 0.0,
+        "row_max_system_load_rate": 0.0,
         "hardware_sidecar_template": "",
         "hardware_sidecar_timeout_sec": 120,
         "hardware_sidecar_profile": "",
@@ -204,6 +261,12 @@ def _matrix_mapping() -> dict[str, str]:
         "canary_runs": "canary_runs",
         "canary_task_limit": "canary_task_limit",
         "canary_latency_variance_threshold": "canary_latency_variance_threshold",
+        "canary_drop_first_run": "canary_drop_first_run",
+        "canary_max_missing_telemetry_rate": "canary_max_missing_telemetry_rate",
+        "row_max_missing_telemetry_rate": "row_max_missing_telemetry_rate",
+        "row_max_orchestration_overhead_ratio": "row_max_orchestration_overhead_ratio",
+        "row_max_cpu_saturation_rate": "row_max_cpu_saturation_rate",
+        "row_max_system_load_rate": "row_max_system_load_rate",
         "hardware_sidecar_template": "hardware_sidecar_template",
         "hardware_sidecar_timeout_sec": "hardware_sidecar_timeout_sec",
         "hardware_sidecar_profile": "hardware_sidecar_profile",
