@@ -30,8 +30,8 @@ class LocalModelProvider:
 
     def __init__(self, model: str, temperature: float = 0.2, seed: Optional[int] = None, timeout: int = 300):
         self.model = model
-        self.temperature = temperature
-        self.seed = seed
+        self.temperature = self._resolve_temperature_override(temperature)
+        self.seed = self._resolve_seed_override(seed)
         self.timeout = timeout
         self.provider_backend = self._resolve_provider_backend()
         self.provider_name = self._resolve_provider_name()
@@ -54,6 +54,34 @@ class LocalModelProvider:
             )
         else:
             self.client = ollama.AsyncClient(host=self.ollama_host) if self.ollama_host else ollama.AsyncClient()
+
+    @staticmethod
+    def _resolve_temperature_override(default_temperature: float) -> float:
+        for key in ("ORKET_BENCH_TEMPERATURE", "ORKET_LLM_TEMPERATURE", "ORKET_MODEL_TEMPERATURE"):
+            raw = str(os.getenv(key, "")).strip()
+            if not raw:
+                continue
+            try:
+                return float(raw)
+            except ValueError:
+                continue
+        return float(default_temperature)
+
+    @staticmethod
+    def _resolve_seed_override(default_seed: Optional[int]) -> Optional[int]:
+        if isinstance(default_seed, int):
+            return default_seed
+        for key in ("ORKET_BENCH_SEED", "ORKET_LLM_SEED", "ORKET_MODEL_SEED"):
+            raw = str(os.getenv(key, "")).strip()
+            if not raw:
+                continue
+            try:
+                parsed = int(raw)
+            except ValueError:
+                continue
+            if parsed > 0:
+                return parsed
+        return default_seed
 
     @staticmethod
     def _ns_to_ms(value: Any) -> float | None:
@@ -194,6 +222,25 @@ class LocalModelProvider:
 
         return float(prompt_ms), float(predicted_ms), float(total_ms)
 
+    @staticmethod
+    def _validate_openai_messages(messages: List[Dict[str, Any]]) -> None:
+        allowed_roles = {"system", "user", "assistant", "tool"}
+        invalid: list[str] = []
+        for index, message in enumerate(messages):
+            if not isinstance(message, dict):
+                invalid.append(f"{index}:<non-object>")
+                continue
+            role = str(message.get("role") or "").strip().lower()
+            if role not in allowed_roles:
+                invalid.append(f"{index}:{role or '<missing>'}")
+        if invalid:
+            allowed = ", ".join(sorted(allowed_roles))
+            details = ", ".join(invalid[:8])
+            raise ModelProviderError(
+                "OpenAI-compatible messages require roles in "
+                f"[{allowed}]. Invalid message roles: {details}. Normalize upstream."
+            )
+
     async def complete(self, messages: List[Dict[str, str]]) -> ModelResponse:
         if self.provider_backend == "openai_compat":
             return await self._complete_openai_compat(messages)
@@ -278,14 +325,18 @@ class LocalModelProvider:
             retry_delay *= 2
 
     async def _complete_openai_compat(self, messages: List[Dict[str, str]]) -> ModelResponse:
+        self._validate_openai_messages(list(messages))
         payload: Dict[str, Any] = {
             "model": self.model,
-            "messages": messages,
+            "messages": list(messages),
             "temperature": self.temperature,
             "stream": False,
         }
         if self.seed is not None:
             payload["seed"] = self.seed
+        response_format = str(os.getenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
+        if response_format in {"text", "json_schema"}:
+            payload["response_format"] = {"type": response_format}
 
         headers = {"Content-Type": "application/json"}
         if self.openai_api_key:

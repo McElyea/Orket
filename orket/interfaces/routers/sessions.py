@@ -115,13 +115,21 @@ def build_sessions_router(
                 await interaction_manager.finalize(session_id, turn_id)
 
         _logger = logging.getLogger(__name__)
+        def _log_turn_failure(done_task: asyncio.Task[Any]) -> None:
+            try:
+                error = done_task.exception()
+            except asyncio.CancelledError:
+                return
+            if error is not None:
+                _logger.error(
+                    "interaction turn failed: session=%s turn=%s error=%s",
+                    session_id,
+                    turn_id,
+                    error,
+                )
+
         task = asyncio.create_task(_run_turn())
-        task.add_done_callback(
-            lambda t: t.exception() and _logger.error(
-                "interaction turn failed: session=%s turn=%s error=%s",
-                session_id, turn_id, t.exception(),
-            )
-        )
+        task.add_done_callback(_log_turn_failure)
         return {"session_id": session_id, "turn_id": turn_id}
 
     @router.post("/interactions/{session_id}/finalize")

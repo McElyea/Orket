@@ -172,7 +172,23 @@ class MessageBuilder:
                 }
             )
 
-        if "history" in context:
-            messages.extend(context["history"])
+        history_rows = context.get("history")
+        if isinstance(history_rows, list) and history_rows:
+            history_payload: list[dict[str, str]] = []
+            for row in history_rows:
+                if not isinstance(row, dict):
+                    continue
+                actor = str(row.get("role", "")).strip()
+                content = str(row.get("content", "")).strip()
+                if not content:
+                    continue
+                history_payload.append({"actor": actor, "content": content})
+            if history_payload:
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "Prior Transcript JSON:\n" + json.dumps(history_payload, ensure_ascii=False),
+                    }
+                )
 
         return messages

@@ -81,6 +81,7 @@ jobs:
 
       - name: Enforce kernel sovereign gate
         run: |
+          python scripts/update_nervous_system_policy_digest_snapshot.py --check
           python -m pytest -q tests/kernel/v1
 
       - name: Enforce ODR determinism gate (PR tier)

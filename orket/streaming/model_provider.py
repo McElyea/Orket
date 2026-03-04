@@ -347,6 +347,7 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
                 payload={"model_id": self._model_id, "warm_state": "unknown", "load_ms": 0},
             )
             index = 0
+            fallback_body: dict[str, Any] | None = None
             canceled = await self._is_canceled(provider_turn_id)
             if canceled.is_set():
                 yield ProviderEvent(
@@ -408,18 +409,47 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
                                 )
                                 return
             else:
-                body = await asyncio.to_thread(
+                fallback_body = await asyncio.to_thread(
                     self._post_chat_completion_sync,
                     headers,
                     payload,
                 )
-                completion_text = self._extract_non_stream_text(body)
+                completion_text = self._extract_non_stream_text(fallback_body)
                 if completion_text:
                     yield ProviderEvent(
                         provider_turn_id=provider_turn_id,
                         event_type=ProviderEventType.TOKEN_DELTA,
                         payload={"delta": completion_text, "index": index},
                     )
+                    index += 1
+
+            if index == 0:
+                if fallback_body is None:
+                    fallback_payload = dict(payload)
+                    fallback_payload["stream"] = False
+                    fallback_body = await asyncio.to_thread(
+                        self._post_chat_completion_sync,
+                        headers,
+                        fallback_payload,
+                    )
+                completion_text = self._extract_non_stream_text(fallback_body)
+                completion_tokens = self._extract_completion_tokens(fallback_body)
+                if completion_text or completion_tokens > 0:
+                    token_payload: dict[str, Any] = {
+                        "delta": completion_text,
+                        "index": index,
+                    }
+                    if not completion_text:
+                        token_payload["synthetic"] = True
+                        token_payload["reason"] = "empty_content_with_completion_tokens"
+                        token_payload["completion_tokens"] = completion_tokens
+                    yield ProviderEvent(
+                        provider_turn_id=provider_turn_id,
+                        event_type=ProviderEventType.TOKEN_DELTA,
+                        payload=token_payload,
+                    )
+                    index += 1
+
             yield ProviderEvent(
                 provider_turn_id=provider_turn_id,
                 event_type=ProviderEventType.STOPPED,
@@ -469,10 +499,23 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
         if not isinstance(first, dict):
             return ""
         delta = first.get("delta")
-        if not isinstance(delta, dict):
-            return ""
-        content = delta.get("content")
-        return content if isinstance(content, str) else ""
+        if isinstance(delta, dict):
+            content = delta.get("content")
+            if isinstance(content, str):
+                return content
+            reasoning_content = delta.get("reasoning_content")
+            if isinstance(reasoning_content, str):
+                return reasoning_content
+            text = delta.get("text")
+            if isinstance(text, str):
+                return text
+        message = first.get("message")
+        if isinstance(message, dict):
+            content = message.get("content")
+            if isinstance(content, str):
+                return content
+        text = first.get("text")
+        return text if isinstance(text, str) else ""
 
     @staticmethod
     def _extract_non_stream_text(payload: dict[str, Any]) -> str:
@@ -487,6 +530,16 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
             return ""
         content = message.get("content")
         return content if isinstance(content, str) else ""
+
+    @staticmethod
+    def _extract_completion_tokens(payload: dict[str, Any]) -> int:
+        usage = payload.get("usage")
+        if not isinstance(usage, dict):
+            return 0
+        raw = usage.get("completion_tokens")
+        if isinstance(raw, int) and raw >= 0:
+            return raw
+        return 0
 
     def _post_chat_completion_sync(self, headers: dict[str, str], payload: dict[str, Any]) -> dict[str, Any]:
         timeout = httpx.Timeout(

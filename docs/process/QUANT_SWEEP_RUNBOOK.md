@@ -104,3 +104,14 @@ python scripts/thermal_stability_profiler.py `
 3. Sidecar metrics are diagnostics-only, not pass/fail gate inputs.
 4. Matrix config optional `runtime_env` object is injected into canary + sweep subprocess env for backend selection (for example LM Studio).
 5. Sweep `model_id` is propagated to role model env vars (`ORKET_MODEL_CODER`, `ORKET_MODEL_ARCHITECT`, etc.) unless already set.
+
+## LM Studio Endpoint Policy
+1. Orket inference path uses OpenAI-compatible endpoints:
+   - `GET /v1/models` for model discovery
+   - `POST /v1/chat/completions` for generation
+2. LM Studio native endpoints are operator-only control paths:
+   - `POST /api/v1/models/load` to pre-load a model before canary/sweep
+   - `POST /api/v1/models/download` for model provisioning workflows
+3. Do not route benchmark inference to `POST /api/v1/chat`; it expects `input` payload style and is not message-compatible with Orket's current runtime.
+4. `ORKET_LLM_OPENAI_BASE_URL` is used as configured. If it points to `/api/v1`, OpenAI-compatible chat-completions paths will not be auto-rewritten.
+5. OpenAI-compatible provider calls are strict: message roles must be one of `system|user|assistant|tool`; invalid roles fail fast and must be normalized upstream.

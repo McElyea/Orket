@@ -176,12 +176,14 @@ async def run_parallel_epic_trigger_load(base_url: str, total: int, concurrency:
 async def run_websocket_load(ws_url: str, clients: int) -> LoadResult:
     durations: List[float] = []
     failures = 0
+    api_key = os.getenv("ORKET_API_KEY", "").strip()
+    additional_headers = {"X-API-Key": api_key} if api_key else None
 
     async def connect_worker(i: int):
         nonlocal failures
         start = time.perf_counter()
         try:
-            async with websockets.connect(ws_url) as ws:
+            async with websockets.connect(ws_url, additional_headers=additional_headers) as ws:
                 await ws.send(f"ping-{i}")
                 await asyncio.sleep(0.05)
             durations.append((time.perf_counter() - start) * 1000)

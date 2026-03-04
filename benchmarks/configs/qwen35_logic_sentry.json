@@ -14,17 +14,19 @@
   "task_limit": 10,
   "runtime_target": "local-hardware",
   "execution_mode": "live-card",
+  "runner_template": "python scripts/live_card_benchmark_runner.py --task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir} --seed {seed} --threads {threads} --affinity-policy {affinity_policy} --warmup-steps {warmup_steps}",
   "runtime_env": {
     "ORKET_LLM_PROVIDER": "lmstudio",
     "ORKET_MODEL_PROVIDER": "lmstudio",
     "ORKET_LLM_OPENAI_BASE_URL": "http://127.0.0.1:1234/v1",
-    "ORKET_MODEL_STREAM_OPENAI_BASE_URL": "http://127.0.0.1:1234/v1"
+    "ORKET_MODEL_STREAM_OPENAI_BASE_URL": "http://127.0.0.1:1234/v1",
+    "ORKET_BENCH_TEMPERATURE": "0.0"
   },
   "adherence_threshold": 0.95,
   "latency_ceiling": 8.0,
   "seed": 1337,
-  "threads": 0,
-  "affinity_policy": "",
+  "threads": 1,
+  "affinity_policy": "all",
   "warmup_steps": 1,
   "canary_runs": 10,
   "canary_task_limit": 1,

@@ -12,7 +12,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.kernel.v1.nervous_system_policy_snapshot import build_policy_digest_snapshot
+from orket.kernel.v1.nervous_system_policy_snapshot import (
+    build_policy_digest_contributors,
+    build_policy_digest_snapshot,
+)
 
 DEFAULT_SNAPSHOT_PATH = Path("tests/fixtures/nervous_system_policy_digest_snapshot.json")
 
@@ -68,6 +71,23 @@ def _write_snapshot(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(_serialize(payload), encoding="utf-8")
 
 
+def _print_explain() -> None:
+    contributors = build_policy_digest_contributors()
+    print("[EXPLAIN] Digest contributors:")
+    for group_name in ("policy_contexts", "deny_rules", "tool_profiles"):
+        entries = list(contributors.get(group_name) or [])
+        print(f"  {group_name}:")
+        for entry in entries:
+            name = str(entry.get("name") or "")
+            digest = str(entry.get("digest") or "")
+            source_path = str(entry.get("source_path") or "")
+            rule_name = str(entry.get("rule_name") or "")
+            print(f"    - {name}")
+            print(f"      digest: {digest}")
+            print(f"      source_path: {source_path}")
+            print(f"      rule_name: {rule_name}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Update nervous-system policy digest snapshot.")
     parser.add_argument(
@@ -75,10 +95,21 @@ def main() -> int:
         default=str(DEFAULT_SNAPSHOT_PATH),
         help="Path to snapshot JSON fixture.",
     )
-    parser.add_argument(
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
         "--check",
         action="store_true",
         help="Only report drift; exit 1 if snapshot differs.",
+    )
+    mode_group.add_argument(
+        "--write",
+        action="store_true",
+        help="Rewrite snapshot fixture. This is the default mode.",
+    )
+    parser.add_argument(
+        "--explain",
+        action="store_true",
+        help="Print digest contributor paths and rule names.",
     )
     args = parser.parse_args()
 
@@ -88,6 +119,8 @@ def main() -> int:
     changes = _diff_dict(before, after)
 
     _print_changes(changes)
+    if args.explain:
+        _print_explain()
     if args.check:
         return 1 if changes else 0
 
