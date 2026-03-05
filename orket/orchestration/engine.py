@@ -5,14 +5,15 @@ import os
 
 from orket.adapters.storage.async_repositories import (
     AsyncPendingGateRepository,
-    AsyncRunLedgerRepository,
     AsyncSessionRepository,
     AsyncSnapshotRepository,
     AsyncSuccessRepository,
 )
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
+from orket.logging import log_event
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.orchestration.engine_services import (
@@ -37,7 +38,7 @@ class OrchestrationEngine:
                  sessions_repo: Optional[AsyncSessionRepository] = None,
                  snapshots_repo: Optional[AsyncSnapshotRepository] = None,
                  success_repo: Optional[AsyncSuccessRepository] = None,
-                 run_ledger_repo: Optional[AsyncRunLedgerRepository] = None,
+                 run_ledger_repo: Optional[Any] = None,
                  decision_nodes: Optional[DecisionNodeRegistry] = None,
                  kernel_gateway: Optional[KernelV1Gateway] = None):
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
@@ -56,6 +57,7 @@ class OrchestrationEngine:
         self.org = self.loader.load_organization()
         self.orchestration_config = OrchestrationConfig(self.org)
         self.state_backend_mode = self.orchestration_config.resolve_state_backend_mode()
+        self.run_ledger_mode = self.orchestration_config.resolve_run_ledger_mode()
         self.gitea_state_pilot_enabled = self.orchestration_config.resolve_gitea_state_pilot_enabled()
         self.orchestration_config.validate_state_backend_mode(
             self.state_backend_mode,
@@ -67,7 +69,16 @@ class OrchestrationEngine:
         self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
-        self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
+        if run_ledger_repo is not None:
+            self.run_ledger = run_ledger_repo
+        else:
+            self.run_ledger = build_run_ledger_repository(
+                mode=self.run_ledger_mode,
+                db_path=self.db_path,
+                workspace_root=self.workspace_root,
+                telemetry_sink=self._emit_run_ledger_telemetry,
+                primary_mode="sqlite",
+            )
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
 
@@ -89,6 +100,16 @@ class OrchestrationEngine:
         self.session_controller = SessionController(self.workspace_root)
         self.card_archiver = CardArchiver(self.cards)
         self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
+
+    async def _emit_run_ledger_telemetry(self, payload: Dict[str, Any]) -> None:
+        log_event(
+            "run_ledger_telemetry",
+            {
+                "run_ledger_mode": self.run_ledger_mode,
+                **dict(payload or {}),
+            },
+            workspace=self.workspace_root,
+        )
 
     async def run_card(self, card_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, target_issue_id: str = None) -> Dict[str, Any]:
         """

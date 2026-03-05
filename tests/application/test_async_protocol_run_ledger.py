@@ -124,3 +124,102 @@ async def test_async_protocol_run_ledger_duplicate_same_payload_marks_idempotent
     assert second["kind"] == "operation_rejected"
     assert second["error_code"] == "E_DUPLICATE_OPERATION"
     assert second["idempotent_reuse"] is True
+
+
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_append_event_flattens_payload_fields(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    appended = await repo.append_event(
+        session_id="sess-flat",
+        kind="operation_result",
+        payload={
+            "operation_id": "op-flat",
+            "tool": "write_file",
+            "result": {"ok": True, "value": 9},
+            "step_id": "ISSUE-1:1",
+        },
+    )
+    assert appended["kind"] == "operation_result"
+    assert appended["operation_id"] == "op-flat"
+    assert appended["tool"] == "write_file"
+    assert appended["result"]["ok"] is True
+    events = await repo.list_events("sess-flat")
+    assert events[0]["operation_id"] == "op-flat"
+    assert events[0]["step_id"] == "ISSUE-1:1"
+
+
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_append_receipt_assigns_seq_and_digest(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    first = await repo.append_receipt(
+        session_id="sess-receipt",
+        receipt={
+            "run_id": "sess-receipt",
+            "step_id": "ISSUE-1:1",
+            "operation_id": "op-1",
+            "event_seq_range": [1, 1],
+            "execution_result": {"ok": True},
+        },
+    )
+    second = await repo.append_receipt(
+        session_id="sess-receipt",
+        receipt={
+            "run_id": "sess-receipt",
+            "step_id": "ISSUE-1:2",
+            "operation_id": "op-2",
+            "event_seq_range": [2, 2],
+            "execution_result": {"ok": True},
+        },
+    )
+    assert first["receipt_seq"] == 1
+    assert second["receipt_seq"] == 2
+    assert len(str(first["receipt_digest"])) == 64
+    assert len(str(second["receipt_digest"])) == 64
+    rows = await repo.list_receipts("sess-receipt")
+    assert [row["receipt_seq"] for row in rows] == [1, 2]
+
+
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_append_receipt_dedupes_existing_digest(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    payload = {
+        "run_id": "sess-receipt-idem",
+        "step_id": "ISSUE-1:1",
+        "operation_id": "op-1",
+        "event_seq_range": [1, 1],
+        "execution_result": {"ok": True},
+    }
+    first = await repo.append_receipt(session_id="sess-receipt-idem", receipt=payload)
+    second = await repo.append_receipt(session_id="sess-receipt-idem", receipt=payload)
+    assert first["receipt_seq"] == 1
+    assert second["receipt_seq"] == 1
+    rows = await repo.list_receipts("sess-receipt-idem")
+    assert len(rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_append_receipt_rejects_non_monotonic_seq(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    await repo.append_receipt(
+        session_id="sess-receipt-seq",
+        receipt={
+            "run_id": "sess-receipt-seq",
+            "step_id": "ISSUE-1:1",
+            "operation_id": "op-1",
+            "event_seq_range": [1, 1],
+            "execution_result": {"ok": True},
+            "receipt_seq": 1,
+        },
+    )
+    with pytest.raises(ValueError, match="E_RECEIPT_SEQ_NON_MONOTONIC"):
+        await repo.append_receipt(
+            session_id="sess-receipt-seq",
+            receipt={
+                "run_id": "sess-receipt-seq",
+                "step_id": "ISSUE-1:2",
+                "operation_id": "op-2",
+                "event_seq_range": [2, 2],
+                "execution_result": {"ok": True},
+                "receipt_seq": 1,
+            },
+        )

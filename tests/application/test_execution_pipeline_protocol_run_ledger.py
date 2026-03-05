@@ -52,6 +52,33 @@ def _write_epic_assets(root: Path, epic_id: str) -> None:
     )
 
 
+def _write_protocol_turn_receipts(workspace: Path, *, session_id: str) -> None:
+    path = (
+        workspace
+        / "observability"
+        / session_id
+        / "ISSUE-1"
+        / "001_lead_architect"
+        / "protocol_receipts.log"
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "run_id": session_id,
+                "step_id": "ISSUE-1:1",
+                "operation_id": "op-1",
+                "tool": "write_file",
+                "tool_index": 0,
+                "execution_result": {"ok": True},
+            },
+            separators=(",", ":"),
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 @pytest.mark.asyncio
 async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(
     test_root,
@@ -199,3 +226,46 @@ async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     assert run["status"] == "terminal_failure"
     assert run["summary_json"]["session_status"] == "terminal_failure"
     assert run["summary_json"]["status_counts"]["blocked"] == 1
+
+
+@pytest.mark.asyncio
+async def test_execution_pipeline_materializes_protocol_receipts_into_run_ledger(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "protocol_ledger_epic_receipts")
+    _write_protocol_turn_receipts(workspace, session_id="sess-protocol-receipts")
+    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=protocol_repo,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export(**_kwargs):
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export)
+
+    await pipeline.run_epic(
+        "protocol_ledger_epic_receipts",
+        build_id="build-protocol-ledger-epic-receipts",
+        session_id="sess-protocol-receipts",
+    )
+
+    run = await protocol_repo.get_run("sess-protocol-receipts")
+    assert run is not None
+    assert run["artifact_json"]["protocol_receipts"]["status"] == "ok"
+    assert run["artifact_json"]["protocol_receipts"]["source_receipts"] == 1
+    assert run["artifact_json"]["protocol_receipts"]["materialized_receipts"] == 1
+    receipts = await protocol_repo.list_receipts("sess-protocol-receipts")
+    assert len(receipts) == 1
+    assert receipts[0]["operation_id"] == "op-1"

@@ -9,6 +9,7 @@ from orket.application.services.gitea_state_pilot import (
 )
 from orket.application.services.runtime_policy import (
     resolve_gitea_state_pilot_enabled,
+    resolve_run_ledger_mode,
     resolve_state_backend_mode,
 )
 from orket.settings import load_user_settings
@@ -27,6 +28,14 @@ class OrchestrationConfig:
             process_raw = str(self.org.process_rules.get("state_backend_mode", "")).strip()
         user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
         return resolve_state_backend_mode(env_raw, process_raw, user_raw)
+
+    def resolve_run_ledger_mode(self) -> str:
+        env_raw = (os.environ.get("ORKET_RUN_LEDGER_MODE") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("run_ledger_mode", "")).strip()
+        user_raw = str(load_user_settings().get("run_ledger_mode", "")).strip()
+        return resolve_run_ledger_mode(env_raw, process_raw, user_raw)
 
     def resolve_gitea_state_pilot_enabled(self) -> bool:
         env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()

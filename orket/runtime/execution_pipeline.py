@@ -13,7 +13,6 @@ from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
     AsyncSnapshotRepository,
     AsyncSuccessRepository,
-    AsyncRunLedgerRepository,
 )
 from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
@@ -28,10 +27,13 @@ from orket.application.services.runtime_policy import (
     resolve_gitea_worker_max_idle_streak,
     resolve_gitea_worker_max_iterations,
     resolve_gitea_state_pilot_enabled,
+    resolve_run_ledger_mode,
     resolve_state_backend_mode,
 )
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
+from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
+from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.workload_adapters import build_cards_workload_contract
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_runtime_db_path
@@ -63,7 +65,7 @@ class ExecutionPipeline:
         sessions_repo: Optional[AsyncSessionRepository] = None,
         snapshots_repo: Optional[AsyncSnapshotRepository] = None,
         success_repo: Optional[AsyncSuccessRepository] = None,
-        run_ledger_repo: Optional[AsyncRunLedgerRepository] = None,
+        run_ledger_repo: Optional[Any] = None,
         decision_nodes: Optional[DecisionNodeRegistry] = None,
     ):
         from orket.orchestration.notes import NoteStore
@@ -77,6 +79,7 @@ class ExecutionPipeline:
 
         self.org = self.loader.load_organization()
         self.state_backend_mode = self._resolve_state_backend_mode()
+        self.run_ledger_mode = self._resolve_run_ledger_mode()
         self.gitea_state_pilot_enabled = self._resolve_gitea_state_pilot_enabled()
         self._validate_state_backend_mode()
         self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
@@ -86,7 +89,16 @@ class ExecutionPipeline:
         self.sessions = sessions_repo or AsyncSessionRepository(self.db_path)
         self.snapshots = snapshots_repo or AsyncSnapshotRepository(self.db_path)
         self.success = success_repo or AsyncSuccessRepository(self.db_path)
-        self.run_ledger = run_ledger_repo or AsyncRunLedgerRepository(self.db_path)
+        if run_ledger_repo is not None:
+            self.run_ledger = run_ledger_repo
+        else:
+            self.run_ledger = build_run_ledger_repository(
+                mode=self.run_ledger_mode,
+                db_path=self.db_path,
+                workspace_root=self.workspace,
+                telemetry_sink=self._emit_run_ledger_telemetry,
+                primary_mode="sqlite",
+            )
         self.artifact_exporter = GiteaArtifactExporter(self.workspace)
 
         self.notes = NoteStore()
@@ -110,6 +122,7 @@ class ExecutionPipeline:
             loader=self.loader,
             sandbox_orchestrator=self.sandbox_orchestrator,
         )
+        setattr(self.orchestrator, "run_ledger", self.run_ledger)
         self.workload_shell = SharedWorkloadShell()
 
     def _resolve_state_backend_mode(self) -> str:
@@ -119,6 +132,14 @@ class ExecutionPipeline:
             process_raw = str(self.org.process_rules.get("state_backend_mode", "")).strip()
         user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
         return resolve_state_backend_mode(env_raw, process_raw, user_raw)
+
+    def _resolve_run_ledger_mode(self) -> str:
+        env_raw = (os.environ.get("ORKET_RUN_LEDGER_MODE") or "").strip()
+        process_raw = ""
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+            process_raw = str(self.org.process_rules.get("run_ledger_mode", "")).strip()
+        user_raw = str(load_user_settings().get("run_ledger_mode", "")).strip()
+        return resolve_run_ledger_mode(env_raw, process_raw, user_raw)
 
     def _validate_state_backend_mode(self) -> None:
         if self.state_backend_mode != "gitea":
@@ -143,6 +164,16 @@ class ExecutionPipeline:
             raise ValueError(
                 f"State backend mode 'gitea' pilot readiness failed: {failures}"
             )
+
+    async def _emit_run_ledger_telemetry(self, payload: Dict[str, Any]) -> None:
+        log_event(
+            "run_ledger_telemetry",
+            {
+                "run_ledger_mode": self.run_ledger_mode,
+                **dict(payload or {}),
+            },
+            workspace=self.workspace,
+        )
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
         env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
@@ -479,6 +510,9 @@ class ExecutionPipeline:
                 log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
 
             artifacts = self._run_artifact_refs(run_id)
+            receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
+            if receipt_projection:
+                artifacts["protocol_receipts"] = receipt_projection
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
                 run_type="epic",
@@ -525,6 +559,9 @@ class ExecutionPipeline:
             )
             failure_summary = self._build_run_summary(session_status="failed", backlog=backlog, transcript=legacy_transcript)
             artifacts = self._run_artifact_refs(run_id)
+            receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
+            if receipt_projection:
+                artifacts["protocol_receipts"] = receipt_projection
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
                 run_type="epic",
@@ -623,6 +660,39 @@ class ExecutionPipeline:
             "transcript_turns": len(transcript),
             "status_counts": status_counts,
         }
+
+    async def _materialize_protocol_receipts(self, *, run_id: str) -> Dict[str, Any] | None:
+        if not hasattr(self.run_ledger, "append_receipt"):
+            return None
+        if not hasattr(self.run_ledger, "append_event"):
+            return None
+        try:
+            summary = await materialize_protocol_receipts(
+                workspace=self.workspace,
+                session_id=str(run_id),
+                run_ledger=self.run_ledger,
+            )
+            if int(summary.get("source_receipts") or 0) > 0:
+                log_event(
+                    "protocol_receipts_materialized",
+                    {
+                        "run_id": str(run_id),
+                        **dict(summary),
+                    },
+                    workspace=self.workspace,
+                )
+            return summary
+        except (RuntimeError, ValueError, TypeError, OSError, AttributeError) as exc:
+            log_event(
+                "protocol_receipt_materialization_failed",
+                {
+                    "run_id": str(run_id),
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+                workspace=self.workspace,
+            )
+            return None
 
     async def run_rock(
         self,

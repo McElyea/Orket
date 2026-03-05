@@ -32,6 +32,7 @@ DEFAULT_FRONTEND_FRAMEWORK_MODE = "force_vue"
 DEFAULT_PROJECT_SURFACE_PROFILE = "unspecified"
 DEFAULT_SMALL_PROJECT_BUILDER_VARIANT = "auto"
 DEFAULT_STATE_BACKEND_MODE = "local"
+DEFAULT_RUN_LEDGER_MODE = "sqlite"
 DEFAULT_GITEA_STATE_PILOT_ENABLED = False
 DEFAULT_MICROSERVICES_UNLOCK_REPORT = "benchmarks/results/microservices_unlock_check.json"
 DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/microservices_pilot_stability_check.json"
@@ -54,6 +55,11 @@ SMALL_PROJECT_BUILDER_VARIANT_OPTIONS: List[Dict[str, str]] = [
 STATE_BACKEND_MODE_OPTIONS: List[Dict[str, str]] = [
     {"value": "local", "label": "Local DB (Default)"},
     {"value": "gitea", "label": "Gitea (Experimental)"},
+]
+RUN_LEDGER_MODE_OPTIONS: List[Dict[str, str]] = [
+    {"value": "sqlite", "label": "SQLite (Compat Default)"},
+    {"value": "protocol", "label": "Protocol Append-Only"},
+    {"value": "dual_write", "label": "Dual Write + Parity Telemetry"},
 ]
 GITEA_STATE_PILOT_ENABLED_OPTIONS: List[Dict[str, str]] = [
     {"value": "enabled", "label": "Enabled"},
@@ -190,6 +196,11 @@ def runtime_policy_options() -> Dict[str, Any]:
             "options": STATE_BACKEND_MODE_OPTIONS,
             "input_style": "radio",
         },
+        "run_ledger_mode": {
+            "default": DEFAULT_RUN_LEDGER_MODE,
+            "options": RUN_LEDGER_MODE_OPTIONS,
+            "input_style": "radio",
+        },
         "gitea_state_pilot_enabled": {
             "default": DEFAULT_GITEA_STATE_PILOT_ENABLED,
             "options": GITEA_STATE_PILOT_ENABLED_OPTIONS,
@@ -234,6 +245,23 @@ def resolve_state_backend_mode(*values: Any) -> str:
         "gitea": "gitea",
     }
     return aliases.get(raw, DEFAULT_STATE_BACKEND_MODE)
+
+
+def resolve_run_ledger_mode(*values: Any) -> str:
+    raw = _pick_first_non_empty(values)
+    aliases = {
+        "sqlite": "sqlite",
+        "sql": "sqlite",
+        "local": "sqlite",
+        "compat": "sqlite",
+        "protocol": "protocol",
+        "append_only": "protocol",
+        "append_only_protocol": "protocol",
+        "dual_write": "dual_write",
+        "dual": "dual_write",
+        "mirror": "dual_write",
+    }
+    return aliases.get(raw, DEFAULT_RUN_LEDGER_MODE)
 
 
 def resolve_gitea_state_pilot_enabled(*values: Any) -> bool:
