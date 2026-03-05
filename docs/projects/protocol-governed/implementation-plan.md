@@ -134,6 +134,24 @@ Latest completed increments:
     - settings and runtime-policy surfaces expose protocol determinism knobs
     - control surface contract published at
       `docs/projects/protocol-governed/determinism-control-surface.md`
+19. Protocol ledger parity campaign surfaces landed:
+    - runtime campaign comparator (`protocol_ledger_parity_campaign`)
+    - script harness `scripts/MidTier/run_protocol_ledger_parity_campaign.py`
+    - CLI command `orket protocol parity-campaign`
+    - sessions API endpoint `/v1/protocol/ledger-parity/campaign`
+20. Compatibility telemetry deltas are captured for dual-write parity:
+    - campaign-level field delta counts (`field_delta_counts`)
+    - value-transition signatures (`delta_signature_counts`)
+    - status drift signatures (`status_delta_counts`)
+21. Rollout evidence publication harness landed:
+    - `scripts/MidTier/publish_protocol_rollout_artifacts.py`
+    - versioned + latest bundle artifacts for operator review
+22. Error dashboard family aggregation landed:
+    - `scripts/MidTier/summarize_protocol_error_codes.py`
+    - registry-family aggregation via `error_family(...)`
+23. Parser/validator registry adoption expanded:
+    - strict parser boundaries now use registry-backed constants/families
+    - protocol preflight validator emits registered code families for schema/cardinality/workspace errors
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -154,6 +172,12 @@ Validation evidence (new test surfaces):
 16. `tests/runtime/test_protocol_determinism_campaign.py`
 17. `tests/runtime/test_run_ledger_factory.py`
 18. `tests/scripts/test_run_protocol_determinism_campaign.py`
+19. `tests/runtime/test_protocol_ledger_parity_campaign.py`
+20. `tests/scripts/test_run_protocol_ledger_parity_campaign.py`
+21. `tests/scripts/test_publish_protocol_rollout_artifacts.py`
+22. `tests/scripts/test_summarize_protocol_error_codes.py`
+23. Expanded: `tests/runtime/test_protocol_error_codes.py`
+24. Expanded: `tests/runtime/test_protocol_error_code_adoption.py`
 
 Verification runs (latest batch):
 1. `python -m pytest -q tests/interfaces/test_api.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
@@ -161,17 +185,14 @@ Verification runs (latest batch):
 3. `python -m pytest -q tests/application/test_state_backend_mode.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_error_codes.py`
 4. `python -m pytest -q tests/interfaces/test_cli_protocol_replay.py tests/interfaces/test_sessions_router_protocol_replay.py tests/runtime/test_protocol_determinism_campaign.py tests/runtime/test_protocol_replay.py tests/scripts/test_run_protocol_determinism_campaign.py tests/scripts/test_run_protocol_replay_compare.py tests/application/test_protocol_append_only_ledger.py tests/runtime/test_run_ledger_factory.py`
 5. `python scripts/MidTier/check_docs_project_hygiene.py`
+6. `python -m pytest -q tests/runtime/test_protocol_ledger_parity_campaign.py tests/scripts/test_run_protocol_ledger_parity_campaign.py tests/scripts/test_publish_protocol_rollout_artifacts.py tests/scripts/test_summarize_protocol_error_codes.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
+7. `python -m pytest -q tests/interfaces/test_cli_protocol_replay.py tests/interfaces/test_sessions_router_protocol_replay.py tests/platform/test_quality_workflow_gates.py`
+8. `python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/rollout_artifacts --baseline-run-id run-a --strict` (CI smoke parity/replay publication path)
 
 Next execution slices (active):
-1. Promote protocol ledger parity checks into CI once initial parity campaigns show no P0 drift.
-2. Add deterministic environment control wiring in runtime context:
-   - `timezone`
-   - `locale`
-   - `network_mode`
-   - `env_allowlist_hash`
-3. Publish deterministic replay campaign artifacts for operator review and rollback readiness.
-4. Capture compatibility telemetry deltas between SQLite ledger and append-only ledger during dual-write.
-5. Expand code-family adoption to remaining parser/validator call sites and wire error dashboards to registry families.
+1. Add network destination allowlist policy metadata to settings/runtime-policy surfaces for `network_mode=allowlist`.
+2. Wire deterministic clock-source capture/replay artifacts into execution capsule and replay diff surfaces.
+3. Complete enforce-phase rollout checklist once parity/replay evidence stays green across operator campaign windows.
 
 ## Delivery Strategy
 

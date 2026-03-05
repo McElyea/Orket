@@ -27,6 +27,13 @@ This registry defines stable protocol-governed error codes and prefixes used by:
 | Code | Description |
 |---|---|
 | `E_PARSE_JSON` | Strict response parser failed canonical JSON boundary checks. |
+| `E_RESPONSE_BYTES` | Response payload exceeded configured byte cap before JSON parse. |
+| `E_MARKDOWN_FENCE` | Markdown/code-fence delimiters were detected in strict tool-mode payload. |
+| `E_SCHEMA_ENVELOPE` | Response envelope shape failed strict schema checks. |
+| `E_TOOL_MODE_CONTENT_NON_EMPTY` | Tool-mode response `content` was not empty string. |
+| `E_MISSING_TOOL_CALLS` | Tool-mode response omitted required `tool_calls`. |
+| `E_TOOL_SEQUENCE` | Tool call ordering violated required deterministic sequence. |
+| `E_NON_ASCII_WHITESPACE` | Non-ASCII leading/trailing whitespace was detected. |
 | `E_LEDGER_RECORD_TOO_LARGE` | LPJ-C32 payload exceeded max ledger record bytes. |
 | `E_LEDGER_CORRUPT` | CRC32C mismatch for a fully addressable ledger record. |
 | `E_LEDGER_SEQ` | Missing, duplicate, or non-monotonic `event_seq`. |
@@ -38,7 +45,12 @@ This registry defines stable protocol-governed error codes and prefixes used by:
 
 | Prefix | Description | Example |
 |---|---|---|
+| `E_DUPLICATE_KEY` | Duplicate object key encountered during strict JSON parse. | `E_DUPLICATE_KEY:tool_calls` |
+| `E_SCHEMA_TOOL_CALL` | Tool-call object failed strict shape validation. | `E_SCHEMA_TOOL_CALL:0:args` |
+| `E_MAX_TOOL_CALLS` | Tool-call count exceeded configured deterministic cap. | `E_MAX_TOOL_CALLS:9>8` |
 | `E_WORKSPACE_CONSTRAINT` | Path safety violation in runtime validator pipeline. | `E_WORKSPACE_CONSTRAINT:path_traversal` |
+| `E_MISSING_REQUIRED_TOOL` | Required action tool missing from proposal. | `E_MISSING_REQUIRED_TOOL:write_file` |
+| `E_TOOL_CARDINALITY` | Required tool count was not exactly one. | `E_TOOL_CARDINALITY:write_file:2` |
 | `E_RECEIPT_SEQ_INVALID` | Receipt sequence value not parseable or invalid. | `E_RECEIPT_SEQ_INVALID:abc` |
 | `E_RECEIPT_SEQ_NON_MONOTONIC` | Receipt sequence not strictly increasing. | `E_RECEIPT_SEQ_NON_MONOTONIC:1<=last:1` |
 | `E_RECEIPT_LOG_PARSE` | Receipt log line failed JSON parse. | `E_RECEIPT_LOG_PARSE:line=7` |
@@ -58,7 +70,9 @@ This registry defines stable protocol-governed error codes and prefixes used by:
 2. Dashboards should aggregate by:
    - exact code when present
    - prefix family for parameterized errors
-3. Retry logic should key on code family, not free-form message text.
+3. Dashboard summary script:
+   - `scripts/MidTier/summarize_protocol_error_codes.py`
+4. Retry logic should key on code family, not free-form message text.
 
 ## Validation Checklist
 

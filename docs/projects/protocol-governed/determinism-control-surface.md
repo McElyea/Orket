@@ -134,9 +134,20 @@ Before rollout:
 
 ## Open Items
 
-1. CI parity campaign gating remains pending operator baseline thresholds.
-2. Network allowlist destination policy metadata is not yet surfaced in settings.
-3. Deterministic clock-source artifact replay wiring remains pending.
+1. Network allowlist destination policy metadata is not yet surfaced in settings.
+2. Deterministic clock-source artifact replay wiring remains pending.
+
+## Operator Artifact Publication
+
+Protocol rollout evidence bundles are published via:
+
+1. `scripts/MidTier/publish_protocol_rollout_artifacts.py`
+
+Bundle outputs include:
+
+1. replay campaign (`replay-campaign-schema.md`)
+2. ledger parity campaign (`ledger-parity-campaign-schema.md`)
+3. latest pointer artifacts for operator review and rollback readiness
 
 ## Operator Checklist
 

@@ -132,6 +132,65 @@ jobs:
         run: |
           python scripts/HighTier/docs_lint.py --project core-pillars --strict --json
 
+      - name: Enforce protocol-governed parity campaign smoke
+        run: |
+          mkdir -p .ci/protocol_quality_workspace/.orket/durable/db
+          mkdir -p benchmarks/results/protocol_governed
+          python - <<'PY'
+          import asyncio
+          from pathlib import Path
+          from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+          from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
+
+          async def seed() -> None:
+              workspace = Path(".ci/protocol_quality_workspace").resolve()
+              sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
+              sqlite = AsyncRunLedgerRepository(sqlite_db)
+              protocol = AsyncProtocolRunLedgerRepository(workspace)
+              for run_id in ("run-a", "run-b"):
+                  await sqlite.start_run(
+                      session_id=run_id,
+                      run_type="epic",
+                      run_name="CI Protocol",
+                      department="core",
+                      build_id="build-1",
+                      summary={"session_status": "running"},
+                      artifacts={"workspace": "workspace/default"},
+                  )
+                  await sqlite.finalize_run(
+                      session_id=run_id,
+                      status="incomplete",
+                      summary={"session_status": "incomplete"},
+                      artifacts={"gitea_export": {"provider": "gitea"}},
+                  )
+                  await protocol.start_run(
+                      session_id=run_id,
+                      run_type="epic",
+                      run_name="CI Protocol",
+                      department="core",
+                      build_id="build-1",
+                      summary={"session_status": "running"},
+                      artifacts={"workspace": "workspace/default"},
+                  )
+                  await protocol.append_event(
+                      session_id=run_id,
+                      kind="operation_result",
+                      payload={"operation_id": "op-1", "tool": "write_file", "result": {"ok": True}},
+                  )
+                  await protocol.finalize_run(
+                      session_id=run_id,
+                      status="incomplete",
+                      summary={"session_status": "incomplete"},
+                      artifacts={"gitea_export": {"provider": "gitea"}},
+                  )
+
+          asyncio.run(seed())
+          PY
+          python scripts/MidTier/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --strict --out benchmarks/results/protocol_governed/protocol_ledger_parity_campaign.json
+          python scripts/MidTier/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol_governed/protocol_replay_campaign.json
+          python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict
+          python scripts/MidTier/summarize_protocol_error_codes.py --input benchmarks/results/protocol_governed/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/protocol_error_code_summary.json
+
       - name: Enforce roadmap metrics (quick gate)
         run: |
           python scripts/MidTier/check_roadmap_metrics.py --quick
