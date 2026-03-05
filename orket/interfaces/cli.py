@@ -41,6 +41,8 @@ def parse_args():
     parser.add_argument("--marshaller-actor-id", type=str, default=None, help="Actor id for marshaller promotion metadata.")
     parser.add_argument("--marshaller-actor-source", type=str, default="cli", help="Actor source for marshaller promotion metadata.")
     parser.add_argument("--marshaller-branch", type=str, default="main", help="Target branch for marshaller promotion.")
+    parser.add_argument("--marshaller-inspect-attempt", type=int, default=None, help="Attempt index to inspect for 'orket marshaller inspect <run_id>'.")
+    parser.add_argument("--marshaller-list-limit", type=int, default=20, help="Max rows for 'orket marshaller list'.")
     return parser.parse_args()
 
 
@@ -128,7 +130,29 @@ async def run_cli():
             return
 
         if args.command == "marshaller":
-            from orket.marshaller.cli import default_run_id, execute_marshaller_from_files
+            from orket.marshaller.cli import (
+                default_run_id,
+                execute_marshaller_from_files,
+                inspect_marshaller_attempt,
+                list_marshaller_runs,
+            )
+
+            workspace_root = Path(".").resolve()
+            if args.subcommand == "list":
+                result = await list_marshaller_runs(workspace_root, limit=max(1, int(args.marshaller_list_limit)))
+                print(json.dumps(result, indent=2, ensure_ascii=False))
+                return
+            if args.subcommand == "inspect":
+                run_id = str(args.target or "").strip()
+                if not run_id:
+                    raise ValueError("marshaller inspect requires target run_id (e.g. 'orket marshaller inspect <run_id>').")
+                result = await inspect_marshaller_attempt(
+                    workspace_root,
+                    run_id=run_id,
+                    attempt_index=args.marshaller_inspect_attempt,
+                )
+                print(json.dumps(result, indent=2, ensure_ascii=False))
+                return
 
             request_raw = str(args.marshaller_request or "").strip()
             if not request_raw:
@@ -136,7 +160,7 @@ async def run_cli():
             if not args.marshaller_proposal:
                 raise ValueError("marshaller command requires at least one --marshaller-proposal <path>.")
             result = await execute_marshaller_from_files(
-                workspace_root=Path(".").resolve(),
+                workspace_root=workspace_root,
                 run_request_path=Path(request_raw).resolve(),
                 proposal_paths=[Path(str(item)).resolve() for item in args.marshaller_proposal],
                 run_id=str(args.marshaller_run_id or default_run_id()).strip(),

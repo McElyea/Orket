@@ -5,7 +5,12 @@ import sys
 
 import pytest
 
-from orket.marshaller.cli import default_run_id, execute_marshaller_from_files
+from orket.marshaller.cli import (
+    default_run_id,
+    execute_marshaller_from_files,
+    inspect_marshaller_attempt,
+    list_marshaller_runs,
+)
 
 
 def _git(repo: Path, *args: str, strip: bool = True) -> str:
@@ -146,3 +151,48 @@ async def test_execute_marshaller_from_files_can_promote(tmp_path: Path) -> None
 def test_default_run_id_has_prefix() -> None:
     assert default_run_id().startswith("marshaller-")
 
+
+@pytest.mark.asyncio
+async def test_list_and_inspect_marshaller_runs(tmp_path: Path) -> None:
+    repo, head = _init_repo(tmp_path)
+    patch = _make_patch(repo, "hello inspect cli\n")
+    run_request_path = _write_json(
+        tmp_path / "run_request_list.json",
+        {
+            "repo_path": str(repo),
+            "task_spec": {
+                "policy_version": "v0",
+                "policy_digest": "policy-1",
+                "gate_commands": {"test": [sys.executable, "-c", "import sys; sys.exit(0)"]},
+            },
+            "checks": ["test"],
+            "seed": 1,
+            "max_attempts": 1,
+            "execution_envelope": {"mode": "lockfile", "lockfile_digest": "sha256:lock"},
+        },
+    )
+    proposal_path = _write_json(
+        tmp_path / "proposal_list.json",
+        {
+            "proposal_id": "proposal-1",
+            "proposal_contract_version": "v0",
+            "base_revision_digest": head,
+            "patch": patch,
+            "intent": "update",
+            "touched_paths": ["app.txt"],
+            "rationale": "test",
+        },
+    )
+    await execute_marshaller_from_files(
+        workspace_root=tmp_path,
+        run_request_path=run_request_path,
+        proposal_paths=[proposal_path],
+        run_id="run-list-inspect",
+        allowed_paths=("app.txt",),
+    )
+    runs = await list_marshaller_runs(tmp_path, limit=10)
+    assert runs
+    assert runs[0]["run_id"] == "run-list-inspect"
+    inspect = await inspect_marshaller_attempt(tmp_path, run_id="run-list-inspect")
+    assert inspect["attempt_index"] == 1
+    assert inspect["decision"]["accept"] is True

@@ -18,7 +18,7 @@ Current default target: marshaller.
 3. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. marshaller -- Execute v0 slices from `docs/projects/marshaller/Marshaller-v0.md` (completed: Stage 0/1 intake + Stage 2/3/4 deterministic gates + replay equivalence + promotion ledgering + multi-attempt orchestration with run summary/triage artifacts + CLI execution surface; next: UI run browser/attempt inspector surface and production workflow wiring).
+1. marshaller -- Execute v0 slices from `docs/projects/marshaller/Marshaller-v0.md` (completed: Stage 0/1 intake + Stage 2/3/4 deterministic gates + replay equivalence + promotion ledgering + multi-attempt orchestration with run summary/triage artifacts + CLI execution surface + CLI run browser/attempt inspector (`list`/`inspect`); next: production workflow wiring and API/UI surfacing).
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
@@ -26,7 +26,7 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | NervousSystem | active | P2-review | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`. |
-| marshaller | active | P1-active | `docs/projects/marshaller/` | Orket Core | Marshaller v0 implementation in progress; baseline now includes multi-attempt execution with `max_attempts`, run-level `summary.json`/`triage.json`, replay equivalence checks, human-triggered promotion event recording, and CLI command integration (`orket marshaller`). |
+| marshaller | active | P1-active | `docs/projects/marshaller/` | Orket Core | Marshaller v0 implementation in progress; baseline now includes multi-attempt execution with `max_attempts`, run-level `summary.json`/`triage.json`, replay equivalence checks, human-triggered promotion event recording, and CLI run/inspect/list integration (`orket marshaller`). |
 | protocol-governed | queued | P2-queued | `docs/projects/protocol-governed/` | Orket Core | Runtime contract lane with v5.1 requirements and implementation sequencing plan. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
 | LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |
