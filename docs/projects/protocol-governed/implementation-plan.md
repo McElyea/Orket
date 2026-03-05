@@ -174,6 +174,8 @@ Latest completed increments:
     - `benchmarks/results/protocol_governed/enforce_phase/window_a/*`
     - `benchmarks/results/protocol_governed/enforce_phase/window_b/*`
     - checklist sign-off entries filled for both windows
+29. MidTier rollout campaign scripts now support direct file invocation from repo root:
+    - `python scripts/MidTier/<script>.py ...` and `python -m scripts.MidTier.<script>` both resolve repo imports
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -230,6 +232,10 @@ Verification runs (latest batch):
 19. `python -m scripts.MidTier.run_protocol_ledger_parity_campaign --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-b --strict --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json`
 20. `python -m scripts.MidTier.publish_protocol_rollout_artifacts --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/enforce_phase/window_b/rollout_artifacts --run-id run-b --session-id run-b --baseline-run-id run-b --strict`
 21. `python -m scripts.MidTier.summarize_protocol_error_codes --input benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json --input benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json --strict`
+22. `python scripts/MidTier/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json`
+23. `python scripts/MidTier/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json`
+24. `python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/enforce_phase/direct_path/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict`
+25. `python scripts/MidTier/summarize_protocol_error_codes.py --input benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json --input benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_error_code_summary.json --strict`
 
 Next execution slices (active):
 1. Execute equivalent campaign windows against production traffic and obtain operator approver sign-off using the same checklist artifacts.

@@ -28,10 +28,12 @@ For each window, capture:
 
 ## Required Commands
 
-1. `python -m scripts.MidTier.run_protocol_determinism_campaign --runs-root <runs_root> --baseline-run-id <run_id> --strict --out <replay_out_json>`
-2. `python -m scripts.MidTier.run_protocol_ledger_parity_campaign --sqlite-db <sqlite_db> --protocol-root <workspace_root> --session-id <session_id> --strict --out <parity_out_json>`
-3. `python -m scripts.MidTier.publish_protocol_rollout_artifacts --workspace-root <workspace_root> --out-dir <rollout_out_dir> --run-id <run_id> --session-id <session_id> --baseline-run-id <run_id> --strict`
-4. `python -m scripts.MidTier.summarize_protocol_error_codes --input <replay_out_json> --input <parity_out_json> --out <error_summary_out_json> --strict`
+1. `python scripts/MidTier/run_protocol_determinism_campaign.py --runs-root <runs_root> --baseline-run-id <run_id> --strict --out <replay_out_json>`
+2. `python scripts/MidTier/run_protocol_ledger_parity_campaign.py --sqlite-db <sqlite_db> --protocol-root <workspace_root> --session-id <session_id> --strict --out <parity_out_json>`
+3. `python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root <workspace_root> --out-dir <rollout_out_dir> --run-id <run_id> --session-id <session_id> --baseline-run-id <run_id> --strict`
+4. `python scripts/MidTier/summarize_protocol_error_codes.py --input <replay_out_json> --input <parity_out_json> --out <error_summary_out_json> --strict`
+
+Equivalent module form is also valid (`python -m scripts.MidTier.<script_name_without_py>`).
 
 ## Hard Gates
 
