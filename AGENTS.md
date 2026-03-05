@@ -1,7 +1,17 @@
 # Agent Instructions
 
 ## Response Formatting
-When referencing files, use plain backticked paths only (for example: `docs/ROADMAP.md`).
+When referencing files in chat responses, use clickable Markdown links with absolute Windows paths in URL form.
+
+Required style (preferred):
+1. `[Label](/C:/absolute/path/to/file.ext)`
+2. Example: `[Local Prompting Requirements](/C:/Source/Orket/docs/projects/protocol-governed/local-prompting-requirements.md)`
+3. Example with line suffix (only if the client supports it): `[File:120](/C:/Source/Orket/docs/projects/protocol-governed/local-prompting-requirements.md:120)`
+
+Rules:
+1. Prefer `/C:/...` (Style 2). `/c:/...` is acceptable if needed.
+2. Do not use `file://` links.
+3. Do not use plain backticked paths unless explicitly requested by the user.
 
 ## Live Integration Verification (Required)
 For any new or changed integration/automation (CI, APIs, webhooks, runners, external services), the agent must verify behavior with a live run against the real configured system before declaring completion.
@@ -14,6 +24,16 @@ For any new or changed integration/automation (CI, APIs, webhooks, runners, exte
 ### Testing Policy Reference
 1. `docs/CONTRIBUTOR.md` defines execution expectations.
 2. `AGENTS.md` defines execution discipline (including required live verification).
+
+## Script Output Conventions (Required)
+1. Any new script that writes rerunnable JSON results must use `scripts.common.rerun_diff_ledger.write_payload_with_diff_ledger` (or `write_json_with_diff_ledger` for JSON text payloads).
+2. Keep a stable canonical output file path for each script output; reruns must append `diff_ledger` entries instead of creating timestamp-only files.
+3. Default major-diff rollover policy for canonical files is:
+   - `paths_total_reference <= 250`: threshold `0.93`
+   - `251-1200`: threshold `0.88`
+   - `>1200`: threshold `0.80`
+   - Rollover also requires `churn_paths >= 20`.
+4. If a script overrides rollover thresholds or minimum changed paths, include a short code comment explaining why.
 
 ## Resource Efficiency
 

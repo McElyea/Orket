@@ -2,6 +2,9 @@
 
 Last updated: 2026-03-05
 
+## Priority Plan Pointer
+1. protocol-governed local prompting execution plan: `docs/projects/protocol-governed/local-prompting-plan.md`
+
 ## Canonical Rule
 `docs/ROADMAP.md` is the only active roadmap source.
 
