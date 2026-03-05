@@ -170,6 +170,10 @@ Latest completed increments:
     - `network_mode`, `network_allowlist_hash`, `clock_mode`, `clock_artifact_ref`, `clock_artifact_hash`, `timezone`, `locale`, `env_allowlist_hash`
 27. Enforce-phase rollout checklist published:
     - `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md`
+28. Enforce-phase window evidence captured (local quality workspace):
+    - `benchmarks/results/protocol_governed/enforce_phase/window_a/*`
+    - `benchmarks/results/protocol_governed/enforce_phase/window_b/*`
+    - checklist sign-off entries filled for both windows
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -218,9 +222,17 @@ Verification runs (latest batch):
 11. `python -m pytest -q tests/application/test_orchestrator_epic.py -k "protocol_governed_defaults or protocol_governed_env_overrides or protocol_determinism_invalid_network_mode"`
 12. `python -m pytest -q tests/runtime/test_determinism_controls.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_replay.py tests/application/test_turn_tool_dispatcher.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/interfaces/test_api.py tests/application/test_orchestrator_epic.py`
 13. `python scripts/MidTier/check_docs_project_hygiene.py`
+14. `python -m scripts.MidTier.run_protocol_determinism_campaign --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json`
+15. `python -m scripts.MidTier.run_protocol_ledger_parity_campaign --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json`
+16. `python -m scripts.MidTier.publish_protocol_rollout_artifacts --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/enforce_phase/window_a/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict`
+17. `python -m scripts.MidTier.summarize_protocol_error_codes --input benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json --input benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_error_code_summary.json --strict`
+18. `python -m scripts.MidTier.run_protocol_determinism_campaign --runs-root .ci/protocol_quality_workspace/runs --run-id run-b --baseline-run-id run-b --strict --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json`
+19. `python -m scripts.MidTier.run_protocol_ledger_parity_campaign --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-b --strict --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json`
+20. `python -m scripts.MidTier.publish_protocol_rollout_artifacts --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/enforce_phase/window_b/rollout_artifacts --run-id run-b --session-id run-b --baseline-run-id run-b --strict`
+21. `python -m scripts.MidTier.summarize_protocol_error_codes --input benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json --input benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json --strict`
 
 Next execution slices (active):
-1. Execute the enforce-phase campaign windows from `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md` and capture sign-off artifacts.
+1. Execute equivalent campaign windows against production traffic and obtain operator approver sign-off using the same checklist artifacts.
 
 ## Delivery Strategy
 
