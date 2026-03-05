@@ -11,7 +11,7 @@ from orket.runtime.protocol_error_codes import (
     format_protocol_error,
 )
 
-from .protocol_hashing import hash_env_allowlist
+from .protocol_hashing import hash_clock_artifact_ref, hash_env_allowlist, hash_network_allowlist
 
 
 def resolve_skill_tool_binding(context: dict[str, Any], tool_name: str) -> dict[str, Any] | None:
@@ -130,16 +130,28 @@ def build_execution_capsule(context: dict[str, Any]) -> dict[str, Any]:
     env_allowlist = context.get("env_allowlist")
     if not isinstance(env_allowlist, dict):
         env_allowlist = {}
+    network_allowlist_values = context.get("network_allowlist_values")
+    if not isinstance(network_allowlist_values, list):
+        network_allowlist_values = []
+    clock_artifact_ref = str(context.get("clock_artifact_ref") or "")
     toolchain = context.get("toolchain_version_set")
     if not isinstance(toolchain, dict):
         toolchain = {}
+    env_allowlist_hash = str(context.get("env_allowlist_hash") or hash_env_allowlist(env_allowlist))
+    network_allowlist_hash = str(
+        context.get("network_allowlist_hash") or hash_network_allowlist(network_allowlist_values)
+    )
+    clock_artifact_hash = str(context.get("clock_artifact_hash") or hash_clock_artifact_ref(clock_artifact_ref))
     return {
         "executor_image_digest": str(context.get("executor_image_digest") or ""),
         "toolchain_version_set": dict(toolchain),
         "os_arch": str(context.get("os_arch") or platform.machine() or "unknown"),
         "network_mode": str(context.get("network_mode") or "off"),
+        "network_allowlist_hash": network_allowlist_hash,
         "clock_mode": str(context.get("clock_mode") or "wall"),
+        "clock_artifact_ref": clock_artifact_ref,
+        "clock_artifact_hash": clock_artifact_hash,
         "timezone": str(context.get("timezone") or "UTC"),
         "locale": str(context.get("locale") or "C.UTF-8"),
-        "env_allowlist_hash": hash_env_allowlist(env_allowlist),
+        "env_allowlist_hash": env_allowlist_hash,
     }

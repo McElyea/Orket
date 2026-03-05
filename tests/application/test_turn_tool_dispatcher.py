@@ -376,6 +376,13 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
             "session_id": "s1",
             "turn_index": 1,
             "protocol_governed_enabled": True,
+            "network_mode": "allowlist",
+            "network_allowlist_values": ["api.example.com"],
+            "clock_mode": "artifact_replay",
+            "clock_artifact_ref": "artifacts/clock/run-a.json",
+            "timezone": "UTC",
+            "locale": "C.UTF-8",
+            "env_allowlist": {"HOME": "/home/user"},
         },
         issue=None,
     )
@@ -385,3 +392,10 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
     assert row["validator_version"] == "turn-validator/custom"
     assert row["protocol_hash"] == "b" * 64
     assert row["tool_schema_hash"] == "c" * 64
+    capsule = row["execution_capsule"]
+    assert capsule["network_mode"] == "allowlist"
+    assert capsule["clock_mode"] == "artifact_replay"
+    assert capsule["clock_artifact_ref"] == "artifacts/clock/run-a.json"
+    assert len(capsule["network_allowlist_hash"]) == 64
+    assert len(capsule["clock_artifact_hash"]) == 64
+    assert len(capsule["env_allowlist_hash"]) == 64

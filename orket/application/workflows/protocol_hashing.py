@@ -103,3 +103,19 @@ def hash_env_allowlist(env_allowlist: dict[str, Any] | None) -> str:
             if str(key).strip()
         }
     return hash_framed_fields("env_allowlist", [payload])
+
+
+def hash_network_allowlist(destinations: list[str] | None) -> str:
+    normalized = sorted(
+        {
+            str(item).strip()
+            for item in (destinations or [])
+            if str(item).strip()
+        }
+    )
+    return hash_framed_fields("network_allowlist", [normalized])
+
+
+def hash_clock_artifact_ref(value: str | None) -> str:
+    normalized = str(value or "").strip()
+    return hash_framed_fields("clock_artifact_ref", [normalized])

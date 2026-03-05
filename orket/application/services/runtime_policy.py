@@ -3,12 +3,15 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List
 
 from orket.runtime.determinism_controls import (
     build_determinism_controls,
+    resolve_clock_artifact_ref as resolve_protocol_clock_artifact_ref,
+    resolve_clock_mode as resolve_protocol_clock_mode,
     resolve_env_allowlist as resolve_protocol_env_allowlist,
     resolve_locale as resolve_protocol_locale,
+    resolve_network_allowlist as resolve_protocol_network_allowlist,
     resolve_network_mode as resolve_protocol_network_mode,
     resolve_timezone as resolve_protocol_timezone,
 )
@@ -42,6 +45,7 @@ DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS = 60.0
 DEFAULT_PROTOCOL_TIMEZONE = "UTC"
 DEFAULT_PROTOCOL_LOCALE = "C.UTF-8"
 DEFAULT_PROTOCOL_NETWORK_MODE = "off"
+DEFAULT_PROTOCOL_NETWORK_ALLOWLIST = ""
 DEFAULT_PROTOCOL_ENV_ALLOWLIST = ""
 
 PROJECT_SURFACE_PROFILE_OPTIONS: List[Dict[str, str]] = [
@@ -176,6 +180,7 @@ def runtime_policy_options() -> Dict[str, Any]:
             {"value": "force_monolith", "label": "Monolith (Forced)"},
             {"value": "architect_decides", "label": "Architect Decides (Monolith Only While Locked)"},
         ]
+    text_option = lambda default: {"default": default, "options": [], "input_style": "text"}
     return {
         "architecture_mode": {
             "default": DEFAULT_ARCHITECTURE_MODE,
@@ -209,26 +214,15 @@ def runtime_policy_options() -> Dict[str, Any]:
             "options": RUN_LEDGER_MODE_OPTIONS,
             "input_style": "radio",
         },
-        "protocol_timezone": {
-            "default": DEFAULT_PROTOCOL_TIMEZONE,
-            "options": [],
-            "input_style": "text",
-        },
-        "protocol_locale": {
-            "default": DEFAULT_PROTOCOL_LOCALE,
-            "options": [],
-            "input_style": "text",
-        },
+        "protocol_timezone": text_option(DEFAULT_PROTOCOL_TIMEZONE),
+        "protocol_locale": text_option(DEFAULT_PROTOCOL_LOCALE),
         "protocol_network_mode": {
             "default": DEFAULT_PROTOCOL_NETWORK_MODE,
             "options": PROTOCOL_NETWORK_MODE_OPTIONS,
             "input_style": "radio",
         },
-        "protocol_env_allowlist": {
-            "default": DEFAULT_PROTOCOL_ENV_ALLOWLIST,
-            "options": [],
-            "input_style": "text",
-        },
+        "protocol_network_allowlist": text_option(DEFAULT_PROTOCOL_NETWORK_ALLOWLIST),
+        "protocol_env_allowlist": text_option(DEFAULT_PROTOCOL_ENV_ALLOWLIST),
         "gitea_state_pilot_enabled": {
             "default": DEFAULT_GITEA_STATE_PILOT_ENABLED,
             "options": GITEA_STATE_PILOT_ENABLED_OPTIONS,
@@ -294,21 +288,20 @@ def resolve_run_ledger_mode(*values: Any) -> str:
 
 def resolve_protocol_timezone_setting(*values: Any) -> str:
     return resolve_protocol_timezone(*values)
-
-
 def resolve_protocol_locale_setting(*values: Any) -> str:
     return resolve_protocol_locale(*values)
-
-
 def resolve_protocol_network_mode_setting(*values: Any) -> str:
     return resolve_protocol_network_mode(*values)
 
 
+def resolve_protocol_network_allowlist_setting(*values: Any) -> str:
+    parsed = resolve_protocol_network_allowlist(*values)
+    return ",".join(parsed) if parsed else ""
+
+
 def resolve_protocol_env_allowlist_setting(*values: Any) -> str:
     parsed = resolve_protocol_env_allowlist(*values)
-    if not parsed:
-        return ""
-    return ",".join(parsed)
+    return ",".join(parsed) if parsed else ""
 
 
 def resolve_gitea_state_pilot_enabled(*values: Any) -> bool:
@@ -323,43 +316,56 @@ def resolve_gitea_state_pilot_enabled(*values: Any) -> bool:
     return DEFAULT_GITEA_STATE_PILOT_ENABLED
 
 
-def resolve_gitea_worker_max_iterations(*values: Any) -> int:
+def _resolve_numeric_setting(
+    *,
+    values: Iterable[Any],
+    parser: Callable[[str], int | float],
+    minimum: int | float,
+    default: int | float,
+) -> int | float:
     for value in values:
         raw = str(value or "").strip()
         if not raw:
             continue
         try:
-            parsed = int(raw)
+            parsed = parser(raw)
         except ValueError:
             continue
-        return max(1, parsed)
-    return DEFAULT_GITEA_WORKER_MAX_ITERATIONS
+        return max(minimum, parsed)
+    return default
+
+
+def resolve_gitea_worker_max_iterations(*values: Any) -> int:
+    return int(
+        _resolve_numeric_setting(
+            values=values,
+            parser=int,
+            minimum=1,
+            default=DEFAULT_GITEA_WORKER_MAX_ITERATIONS,
+        )
+    )
 
 
 def resolve_gitea_worker_max_idle_streak(*values: Any) -> int:
-    for value in values:
-        raw = str(value or "").strip()
-        if not raw:
-            continue
-        try:
-            parsed = int(raw)
-        except ValueError:
-            continue
-        return max(1, parsed)
-    return DEFAULT_GITEA_WORKER_MAX_IDLE_STREAK
+    return int(
+        _resolve_numeric_setting(
+            values=values,
+            parser=int,
+            minimum=1,
+            default=DEFAULT_GITEA_WORKER_MAX_IDLE_STREAK,
+        )
+    )
 
 
 def resolve_gitea_worker_max_duration_seconds(*values: Any) -> float:
-    for value in values:
-        raw = str(value or "").strip()
-        if not raw:
-            continue
-        try:
-            parsed = float(raw)
-        except ValueError:
-            continue
-        return max(0.0, parsed)
-    return DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS
+    return float(
+        _resolve_numeric_setting(
+            values=values,
+            parser=float,
+            minimum=0.0,
+            default=DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS,
+        )
+    )
 
 
 def resolve_protocol_determinism_controls(
@@ -367,17 +373,26 @@ def resolve_protocol_determinism_controls(
     timezone_values: Iterable[Any] = (),
     locale_values: Iterable[Any] = (),
     network_mode_values: Iterable[Any] = (),
+    network_allowlist_values: Iterable[Any] = (),
+    clock_mode_values: Iterable[Any] = (),
+    clock_artifact_ref_values: Iterable[Any] = (),
     env_allowlist_values: Iterable[Any] = (),
     environment: dict[str, str] | None = None,
 ) -> Dict[str, Any]:
     timezone = resolve_protocol_timezone(*list(timezone_values))
     locale = resolve_protocol_locale(*list(locale_values))
     network_mode = resolve_protocol_network_mode(*list(network_mode_values))
+    network_allowlist = resolve_protocol_network_allowlist(*list(network_allowlist_values))
+    clock_mode = resolve_protocol_clock_mode(*list(clock_mode_values))
+    clock_artifact_ref = resolve_protocol_clock_artifact_ref(*list(clock_artifact_ref_values))
     env_allowlist = resolve_protocol_env_allowlist(*list(env_allowlist_values))
     return build_determinism_controls(
         timezone=timezone,
         locale=locale,
         network_mode=network_mode,
+        network_allowlist=network_allowlist,
+        clock_mode=clock_mode,
+        clock_artifact_ref=clock_artifact_ref,
         env_allowlist=env_allowlist,
         environment=environment,
     )

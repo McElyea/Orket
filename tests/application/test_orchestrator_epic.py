@@ -1590,6 +1590,11 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["timezone"] == "UTC"
     assert context["locale"] == "C.UTF-8"
     assert context["network_mode"] == "off"
+    assert context["network_allowlist_values"] == []
+    assert len(context["network_allowlist_hash"]) == 64
+    assert context["clock_mode"] == "wall"
+    assert context["clock_artifact_ref"] == ""
+    assert len(context["clock_artifact_hash"]) == 64
     assert context["env_allowlist"] == {}
     assert context["env_allowlist_values"] == []
     assert len(context["env_allowlist_hash"]) == 64
@@ -1604,6 +1609,9 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     monkeypatch.setenv("ORKET_PROTOCOL_TIMEZONE", "America/Denver")
     monkeypatch.setenv("ORKET_PROTOCOL_LOCALE", "en_US.UTF-8")
     monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_MODE", "allowlist")
+    monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_ALLOWLIST", "api.example.com,cache.example.com")
+    monkeypatch.setenv("ORKET_PROTOCOL_CLOCK_MODE", "artifact_replay")
+    monkeypatch.setenv("ORKET_PROTOCOL_CLOCK_ARTIFACT_REF", "artifacts/clock/run-4.json")
     monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
     issue = IssueConfig(id="ARC-4", seat="architect", summary="Design architecture")
     context = orch._build_turn_context(
@@ -1621,6 +1629,11 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     assert context["timezone"] == "America/Denver"
     assert context["locale"] == "en_US.UTF-8"
     assert context["network_mode"] == "allowlist"
+    assert context["network_allowlist_values"] == ["api.example.com", "cache.example.com"]
+    assert len(context["network_allowlist_hash"]) == 64
+    assert context["clock_mode"] == "artifact_replay"
+    assert context["clock_artifact_ref"] == "artifacts/clock/run-4.json"
+    assert len(context["clock_artifact_hash"]) == 64
     assert context["env_allowlist_values"] == ["HOME", "PATH"]
     assert "PATH" in context["env_allowlist"]
     assert set(context["env_allowlist"].keys()).issubset({"HOME", "PATH"})

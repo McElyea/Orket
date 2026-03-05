@@ -56,6 +56,7 @@ def receipt_digest_inventory(receipts_log_path: Path) -> list[dict[str, Any]]:
                     "receipt_digest": str(payload.get("receipt_digest") or ""),
                     "event_seq_range": list(payload.get("event_seq_range") or []),
                     "operation_id": str(payload.get("operation_id") or ""),
+                    "execution_capsule": _receipt_execution_capsule(payload),
                     "line": int(line_index),
                 }
             )
@@ -67,6 +68,22 @@ def receipt_digest_inventory(receipts_log_path: Path) -> list[dict[str, Any]]:
         )
     )
     return rows
+
+
+def _receipt_execution_capsule(receipt_payload: dict[str, Any]) -> dict[str, Any]:
+    capsule = receipt_payload.get("execution_capsule")
+    if not isinstance(capsule, dict):
+        return {}
+    return {
+        "network_mode": str(capsule.get("network_mode") or ""),
+        "network_allowlist_hash": str(capsule.get("network_allowlist_hash") or ""),
+        "clock_mode": str(capsule.get("clock_mode") or ""),
+        "clock_artifact_ref": str(capsule.get("clock_artifact_ref") or ""),
+        "clock_artifact_hash": str(capsule.get("clock_artifact_hash") or ""),
+        "timezone": str(capsule.get("timezone") or ""),
+        "locale": str(capsule.get("locale") or ""),
+        "env_allowlist_hash": str(capsule.get("env_allowlist_hash") or ""),
+    }
 
 
 class ProtocolReplayEngine:

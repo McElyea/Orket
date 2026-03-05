@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
@@ -45,13 +46,23 @@ def _write_run_events(path: Path, *, status: str, operation_ok: bool) -> None:
 
 def _write_receipts(path: Path, *, operation_id: str = "op-1", receipt_seq: int = 1) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        (
-            '{"receipt_seq":%d,"receipt_digest":"%s","operation_id":"%s","event_seq_range":[2,2]}\n'
-            % (receipt_seq, "a" * 64, operation_id)
-        ),
-        encoding="utf-8",
-    )
+    payload = {
+        "receipt_seq": receipt_seq,
+        "receipt_digest": "a" * 64,
+        "operation_id": operation_id,
+        "event_seq_range": [2, 2],
+        "execution_capsule": {
+            "network_mode": "allowlist",
+            "network_allowlist_hash": "b" * 64,
+            "clock_mode": "artifact_replay",
+            "clock_artifact_ref": "artifacts/clock/run-a.json",
+            "clock_artifact_hash": "c" * 64,
+            "timezone": "UTC",
+            "locale": "C.UTF-8",
+            "env_allowlist_hash": "d" * 64,
+        },
+    }
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
 
 
 def test_artifact_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
@@ -81,6 +92,21 @@ def test_receipt_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
     inventory = receipt_digest_inventory(receipts)
     assert [row["receipt_seq"] for row in inventory] == [1, 2]
     assert [row["operation_id"] for row in inventory] == ["op-1", "op-2"]
+    assert inventory[0]["execution_capsule"] == {}
+    assert inventory[1]["execution_capsule"] == {}
+
+
+def test_receipt_digest_inventory_surfaces_execution_capsule_subset(tmp_path: Path) -> None:
+    receipts = tmp_path / "receipts.log"
+    _write_receipts(receipts, operation_id="op-clock")
+    inventory = receipt_digest_inventory(receipts)
+    assert len(inventory) == 1
+    capsule = inventory[0]["execution_capsule"]
+    assert capsule["network_mode"] == "allowlist"
+    assert capsule["clock_mode"] == "artifact_replay"
+    assert capsule["clock_artifact_ref"] == "artifacts/clock/run-a.json"
+    assert capsule["network_allowlist_hash"] == "b" * 64
+    assert capsule["clock_artifact_hash"] == "c" * 64
 
 
 def test_protocol_replay_engine_reconstructs_summary(tmp_path: Path) -> None:

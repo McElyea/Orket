@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-03-04
+Last updated: 2026-03-05
 
 ## Canonical Rule
 `docs/ROADMAP.md` is the only active roadmap source.
@@ -18,7 +18,7 @@ Current default target: protocol-governed.
 3. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: PR-04/PR-08/PR-09 rollout with run-ledger mode selection (`sqlite`/`protocol`/`dual_write`), dual-write parity telemetry, run-level protocol receipt materialization/cross-linking, replay comparator receipt inventory diffs, parity+replay campaign surfaces across script/CLI/API, rollout evidence publication artifacts, protocol determinism context wiring in turn execution, and expanded protocol error-code family adoption; PR-03/PR-06 parser+dispatcher hash/idempotency slices are landed).
+1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: enforce-phase rollout campaign windows and operator sign-off checklist execution; landed: network destination allowlist metadata on settings/runtime-policy surfaces, deterministic clock artifact metadata in execution capsule and replay receipt inventory diffs, and enforce-phase rollout checklist publication).
 2. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
 
 ## Project Index

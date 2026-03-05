@@ -354,6 +354,7 @@ def test_runtime_policy_options(monkeypatch):
     assert data["protocol_timezone"]["input_style"] == "text"
     assert data["protocol_locale"]["input_style"] == "text"
     assert data["protocol_network_mode"]["input_style"] == "radio"
+    assert data["protocol_network_allowlist"]["input_style"] == "text"
     assert data["protocol_env_allowlist"]["input_style"] == "text"
     assert data["gitea_state_pilot_enabled"]["input_style"] == "radio"
     assert data["architecture_mode"]["default"] == "force_monolith"
@@ -366,6 +367,7 @@ def test_runtime_policy_options(monkeypatch):
     assert data["protocol_timezone"]["default"] == "UTC"
     assert data["protocol_locale"]["default"] == "C.UTF-8"
     assert data["protocol_network_mode"]["default"] == "off"
+    assert data["protocol_network_allowlist"]["default"] == ""
     assert data["protocol_env_allowlist"]["default"] == ""
     assert data["gitea_state_pilot_enabled"]["default"] is False
 
@@ -468,6 +470,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_PROTOCOL_TIMEZONE", "America/Denver")
     monkeypatch.setenv("ORKET_PROTOCOL_LOCALE", "en_US.UTF-8")
     monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_MODE", "allowlist")
+    monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_ALLOWLIST", "api.example.com,cache.example.com")
     monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
     monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/nonexistent_pilot_stability.json")
@@ -490,6 +493,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
         "protocol_timezone": "America/Denver",
         "protocol_locale": "en_US.UTF-8",
         "protocol_network_mode": "allowlist",
+        "protocol_network_allowlist": "api.example.com,cache.example.com",
         "protocol_env_allowlist": "HOME,PATH",
         "gitea_state_pilot_enabled": True,
         "default_architecture_mode": "force_monolith",
@@ -545,6 +549,7 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
             "protocol_timezone": "America/Denver",
             "protocol_locale": "en_US.UTF-8",
             "protocol_network_mode": "allowlist",
+            "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
             "gitea_state_pilot_enabled": True,
         },
@@ -561,6 +566,7 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
     assert captured["settings"]["protocol_timezone"] == "America/Denver"
     assert captured["settings"]["protocol_locale"] == "en_US.UTF-8"
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
+    assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
     assert captured["settings"]["gitea_state_pilot_enabled"] is True
 
@@ -588,6 +594,7 @@ def test_settings_get_returns_metadata_and_sources(monkeypatch):
     assert settings["protocol_timezone"]["value"] == "UTC"
     assert settings["protocol_locale"]["value"] == "C.UTF-8"
     assert settings["protocol_network_mode"]["value"] == "off"
+    assert settings["protocol_network_allowlist"]["value"] == ""
     assert settings["protocol_env_allowlist"]["value"] == ""
     assert "force_monolith" in settings["architecture_mode"]["allowed_values"]
     assert settings["gitea_state_pilot_enabled"]["type"] == "boolean"
@@ -613,6 +620,7 @@ def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
             "protocol_timezone": "America/Denver",
             "protocol_locale": "en_US.UTF-8",
             "protocol_network_mode": "allowlist",
+            "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
             "gitea_state_pilot_enabled": "enabled",
         },
@@ -629,6 +637,7 @@ def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
     assert captured["settings"]["protocol_timezone"] == "America/Denver"
     assert captured["settings"]["protocol_locale"] == "en_US.UTF-8"
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
+    assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
     assert captured["settings"]["gitea_state_pilot_enabled"] is True
 

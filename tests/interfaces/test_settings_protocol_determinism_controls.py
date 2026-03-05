@@ -18,10 +18,12 @@ def test_runtime_policy_options_exposes_protocol_determinism_fields(monkeypatch)
     assert payload["protocol_timezone"]["default"] == "UTC"
     assert payload["protocol_locale"]["default"] == "C.UTF-8"
     assert payload["protocol_network_mode"]["default"] == "off"
+    assert payload["protocol_network_allowlist"]["default"] == ""
     assert payload["protocol_env_allowlist"]["default"] == ""
     assert payload["protocol_timezone"]["input_style"] == "text"
     assert payload["protocol_locale"]["input_style"] == "text"
     assert payload["protocol_network_mode"]["input_style"] == "radio"
+    assert payload["protocol_network_allowlist"]["input_style"] == "text"
     assert payload["protocol_env_allowlist"]["input_style"] == "text"
 
 
@@ -31,6 +33,7 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
     monkeypatch.setenv("ORKET_PROTOCOL_TIMEZONE", "America/Denver")
     monkeypatch.setenv("ORKET_PROTOCOL_LOCALE", "en_US.UTF-8")
     monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_MODE", "allowlist")
+    monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_ALLOWLIST", "api.example.com,cache.example.com")
     monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
     monkeypatch.setattr(
         api_module,
@@ -40,6 +43,7 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
             "protocol_timezone": "UTC",
             "protocol_locale": "C.UTF-8",
             "protocol_network_mode": "off",
+            "protocol_network_allowlist": "",
             "protocol_env_allowlist": "",
         },
     )
@@ -55,6 +59,7 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
                     "protocol_timezone": "America/Chicago",
                     "protocol_locale": "en_US.UTF-8",
                     "protocol_network_mode": "allowlist",
+                    "protocol_network_allowlist": "api.example.com",
                     "protocol_env_allowlist": "HOME",
                 }
             },
@@ -68,6 +73,7 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
     assert payload["protocol_timezone"] == "America/Denver"
     assert payload["protocol_locale"] == "en_US.UTF-8"
     assert payload["protocol_network_mode"] == "allowlist"
+    assert payload["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert payload["protocol_env_allowlist"] == "HOME,PATH"
 
 
@@ -84,6 +90,7 @@ def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch):
             "protocol_timezone": "America/Denver",
             "protocol_locale": "en_US.UTF-8",
             "protocol_network_mode": "allowlist",
+            "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
         },
         headers={"X-API-Key": "test-key"},
@@ -94,6 +101,7 @@ def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch):
     assert captured["settings"]["protocol_timezone"] == "America/Denver"
     assert captured["settings"]["protocol_locale"] == "en_US.UTF-8"
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
+    assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
 
 
@@ -111,6 +119,7 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch):
             "protocol_timezone": "America/Denver",
             "protocol_locale": "en_US.UTF-8",
             "protocol_network_mode": "allowlist",
+            "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
         },
         headers={"X-API-Key": "test-key"},
@@ -121,6 +130,7 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch):
     assert captured["settings"]["protocol_timezone"] == "America/Denver"
     assert captured["settings"]["protocol_locale"] == "en_US.UTF-8"
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
+    assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
 
 
@@ -149,6 +159,7 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
         lambda: {
             "run_ledger_mode": "dual_write",
             "protocol_network_mode": "allowlist",
+            "protocol_network_allowlist": "api.example.com",
         },
     )
     monkeypatch.setattr(
@@ -172,6 +183,7 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
     assert settings["protocol_timezone"]["source"] == "env"
     assert settings["protocol_locale"]["source"] == "env"
     assert settings["protocol_network_mode"]["source"] == "user"
+    assert settings["protocol_network_allowlist"]["source"] == "user"
     assert settings["protocol_env_allowlist"]["source"] == "process_rules"
     assert settings["run_ledger_mode"]["source"] == "user"
 

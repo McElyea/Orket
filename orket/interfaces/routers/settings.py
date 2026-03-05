@@ -17,6 +17,7 @@ class RuntimePolicyUpdateRequest(BaseModel):
     protocol_timezone: Optional[str] = None
     protocol_locale: Optional[str] = None
     protocol_network_mode: Optional[str] = None
+    protocol_network_allowlist: Optional[str] = None
     protocol_env_allowlist: Optional[str] = None
     gitea_state_pilot_enabled: Optional[bool] = None
 
@@ -42,6 +43,7 @@ def build_settings_router(
     resolve_protocol_timezone_setting: Callable[[Any, Any, Any], str],
     resolve_protocol_locale_setting: Callable[[Any, Any, Any], str],
     resolve_protocol_network_mode_setting: Callable[[Any, Any, Any], str],
+    resolve_protocol_network_allowlist_setting: Callable[[Any, Any, Any], str],
     resolve_protocol_env_allowlist_setting: Callable[[Any, Any, Any], str],
     resolve_gitea_state_pilot_enabled: Callable[[Any, Any, Any], bool],
     allowed_architecture_patterns: Callable[[], list[str]],
@@ -175,6 +177,11 @@ def build_settings_router(
             process_rules.get("protocol_network_mode"),
             user_settings.get("protocol_network_mode"),
         )
+        protocol_network_allowlist = resolve_protocol_network_allowlist_setting(
+            os.environ.get("ORKET_PROTOCOL_NETWORK_ALLOWLIST", ""),
+            process_rules.get("protocol_network_allowlist"),
+            user_settings.get("protocol_network_allowlist"),
+        )
         protocol_env_allowlist = resolve_protocol_env_allowlist_setting(
             os.environ.get("ORKET_PROTOCOL_ENV_ALLOWLIST", ""),
             process_rules.get("protocol_env_allowlist"),
@@ -195,6 +202,7 @@ def build_settings_router(
             "protocol_timezone": protocol_timezone,
             "protocol_locale": protocol_locale,
             "protocol_network_mode": protocol_network_mode,
+            "protocol_network_allowlist": protocol_network_allowlist,
             "protocol_env_allowlist": protocol_env_allowlist,
             "gitea_state_pilot_enabled": gitea_state_pilot_enabled,
             "default_architecture_mode": "force_monolith",
@@ -228,6 +236,12 @@ def build_settings_router(
             current["protocol_locale"] = resolve_protocol_locale_setting(req.protocol_locale, None, None)
         if req.protocol_network_mode is not None:
             current["protocol_network_mode"] = resolve_protocol_network_mode_setting(req.protocol_network_mode, None, None)
+        if req.protocol_network_allowlist is not None:
+            current["protocol_network_allowlist"] = resolve_protocol_network_allowlist_setting(
+                req.protocol_network_allowlist,
+                None,
+                None,
+            )
         if req.protocol_env_allowlist is not None:
             current["protocol_env_allowlist"] = resolve_protocol_env_allowlist_setting(
                 req.protocol_env_allowlist,
@@ -251,6 +265,7 @@ def build_settings_router(
                 "protocol_timezone": current.get("protocol_timezone"),
                 "protocol_locale": current.get("protocol_locale"),
                 "protocol_network_mode": current.get("protocol_network_mode"),
+                "protocol_network_allowlist": current.get("protocol_network_allowlist"),
                 "protocol_env_allowlist": current.get("protocol_env_allowlist"),
                 "gitea_state_pilot_enabled": current.get("gitea_state_pilot_enabled"),
             },

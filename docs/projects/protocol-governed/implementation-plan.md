@@ -1,6 +1,6 @@
 # Protocol-Governed Runtime Implementation Plan (v5.1)
 
-Last updated: 2026-03-04  
+Last updated: 2026-03-05  
 Status: Draft  
 Owner: Orket Core
 
@@ -32,14 +32,14 @@ Operational:
 2. Crash recovery never duplicates side effects.
 3. Determinism harness fails on any hidden nondeterminism.
 
-## Execution Status (2026-03-04)
+## Execution Status (2026-03-05)
 
 Completed slices:
 1. PR-01 strict envelope parser is wired (`E_PARSE_JSON` / duplicate-key / markdown fence / strict key set / cap checks).
 2. PR-02 deterministic preflight foundation is wired (schema+governance+approval validation before tool execution starts, with strict fail-fast behavior).
 3. Protocol context caps are wired into turn context (`protocol_governed_enabled`, `max_response_bytes`, `max_tool_calls`).
 
-In-progress slices:
+Recently completed slices:
 1. PR-03 canonical hash framing:
    - Added shared protocol canonicalization utilities and tuple-framed hashing.
    - Parser now stamps strict-mode metadata (`proposal_hash`, `validator_version`, `protocol_hash`, `tool_schema_hash`) into turn raw payload.
@@ -51,6 +51,14 @@ In-progress slices:
 3. PR-02 workspace constraints hardening:
    - Added `Path.is_relative_to()`-based workspace constraint checks in preflight with deterministic `E_WORKSPACE_CONSTRAINT:<detail>` errors.
    - Added path traversal and absolute path checks for path-bearing tools (`read_file`, `write_file`, `list_directory`, `list_dir`).
+4. PR-07 network destination allowlist metadata surfaces landed:
+   - Added `protocol_network_allowlist` to runtime-policy options/get/update and settings surfaces.
+   - Added deterministic `network_allowlist_values` + `network_allowlist_hash` propagation into turn context.
+5. PR-07 deterministic clock-source metadata wiring landed:
+   - Added `clock_mode` and `clock_artifact_ref` resolution in determinism controls.
+   - Added execution capsule fields (`clock_artifact_ref`, `clock_artifact_hash`, `network_allowlist_hash`) and replay receipt inventory exposure.
+6. PR-10 enforce-phase checklist publication landed:
+   - Added operator checklist at `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md`.
 
 Evidence added:
 1. `tests/application/test_protocol_hashing.py`
@@ -152,6 +160,16 @@ Latest completed increments:
 23. Parser/validator registry adoption expanded:
     - strict parser boundaries now use registry-backed constants/families
     - protocol preflight validator emits registered code families for schema/cardinality/workspace errors
+24. Network destination allowlist settings/runtime-policy metadata landed:
+    - new setting key `protocol_network_allowlist` exposed via `/v1/system/runtime-policy` and `/v1/settings`
+    - deterministic turn context now carries `network_allowlist_values` + `network_allowlist_hash`
+25. Clock-source replay metadata wiring landed:
+    - turn context now carries `clock_mode`, `clock_artifact_ref`, and `clock_artifact_hash`
+    - execution capsule now includes clock/network allowlist hash surfaces
+26. Replay receipt inventory now surfaces execution capsule subset:
+    - `network_mode`, `network_allowlist_hash`, `clock_mode`, `clock_artifact_ref`, `clock_artifact_hash`, `timezone`, `locale`, `env_allowlist_hash`
+27. Enforce-phase rollout checklist published:
+    - `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md`
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -178,6 +196,13 @@ Validation evidence (new test surfaces):
 22. `tests/scripts/test_summarize_protocol_error_codes.py`
 23. Expanded: `tests/runtime/test_protocol_error_codes.py`
 24. Expanded: `tests/runtime/test_protocol_error_code_adoption.py`
+25. Expanded: `tests/runtime/test_determinism_controls.py`
+26. Expanded: `tests/application/test_runtime_policy_protocol_controls.py`
+27. Expanded: `tests/application/test_turn_tool_dispatcher.py`
+28. Expanded: `tests/runtime/test_protocol_replay.py`
+29. Expanded: `tests/interfaces/test_settings_protocol_determinism_controls.py`
+30. Expanded: `tests/interfaces/test_api.py`
+31. Expanded: `tests/application/test_orchestrator_epic.py`
 
 Verification runs (latest batch):
 1. `python -m pytest -q tests/interfaces/test_api.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
@@ -188,11 +213,14 @@ Verification runs (latest batch):
 6. `python -m pytest -q tests/runtime/test_protocol_ledger_parity_campaign.py tests/scripts/test_run_protocol_ledger_parity_campaign.py tests/scripts/test_publish_protocol_rollout_artifacts.py tests/scripts/test_summarize_protocol_error_codes.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
 7. `python -m pytest -q tests/interfaces/test_cli_protocol_replay.py tests/interfaces/test_sessions_router_protocol_replay.py tests/platform/test_quality_workflow_gates.py`
 8. `python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/rollout_artifacts --baseline-run-id run-a --strict` (CI smoke parity/replay publication path)
+9. `python -m pytest -q tests/runtime/test_determinism_controls.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_replay.py tests/application/test_turn_tool_dispatcher.py -k "protocol_receipt_uses_turn_raw_metadata or idempotency or determinism_controls or receipt_digest_inventory or protocol_replay_engine"`
+10. `python -m pytest -q tests/interfaces/test_settings_protocol_determinism_controls.py tests/interfaces/test_api.py -k "runtime_policy_options or runtime_policy_get_uses_precedence or runtime_policy_update_normalizes_and_saves or settings_get_returns_metadata_and_sources or settings_patch_round_trip_persists_normalized_values or settings_patch_rejects_invalid_protocol_network_mode"`
+11. `python -m pytest -q tests/application/test_orchestrator_epic.py -k "protocol_governed_defaults or protocol_governed_env_overrides or protocol_determinism_invalid_network_mode"`
+12. `python -m pytest -q tests/runtime/test_determinism_controls.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_replay.py tests/application/test_turn_tool_dispatcher.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/interfaces/test_api.py tests/application/test_orchestrator_epic.py`
+13. `python scripts/MidTier/check_docs_project_hygiene.py`
 
 Next execution slices (active):
-1. Add network destination allowlist policy metadata to settings/runtime-policy surfaces for `network_mode=allowlist`.
-2. Wire deterministic clock-source capture/replay artifacts into execution capsule and replay diff surfaces.
-3. Complete enforce-phase rollout checklist once parity/replay evidence stays green across operator campaign windows.
+1. Execute the enforce-phase campaign windows from `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md` and capture sign-off artifacts.
 
 ## Delivery Strategy
 

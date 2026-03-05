@@ -44,6 +44,7 @@ from orket.application.services.runtime_policy import (
     resolve_project_surface_profile,
     resolve_protocol_env_allowlist_setting,
     resolve_protocol_locale_setting,
+    resolve_protocol_network_allowlist_setting,
     resolve_protocol_network_mode_setting,
     resolve_protocol_timezone_setting,
     resolve_run_ledger_mode,
@@ -221,6 +222,10 @@ SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
             "allow_list": "allowlist",
         },
         "type": "string",
+    },
+    "protocol_network_allowlist": {
+        "env_var": "ORKET_PROTOCOL_NETWORK_ALLOWLIST",
+        "type": "string_freeform",
     },
     "protocol_env_allowlist": {
         "env_var": "ORKET_PROTOCOL_ENV_ALLOWLIST",
@@ -535,6 +540,11 @@ v1_router.include_router(
             process_value,
             user_value,
         ),
+        resolve_protocol_network_allowlist_setting=lambda env_value, process_value, user_value: resolve_protocol_network_allowlist_setting(
+            env_value,
+            process_value,
+            user_value,
+        ),
         resolve_protocol_env_allowlist_setting=lambda env_value, process_value, user_value: resolve_protocol_env_allowlist_setting(
             env_value,
             process_value,
@@ -631,6 +641,8 @@ def _resolve_runtime_setting_value(field: str, env_value: Any, process_value: An
         return resolve_protocol_locale_setting(env_value, process_value, user_value)
     if field == "protocol_network_mode":
         return resolve_protocol_network_mode_setting(env_value, process_value, user_value)
+    if field == "protocol_network_allowlist":
+        return resolve_protocol_network_allowlist_setting(env_value, process_value, user_value)
     if field == "protocol_env_allowlist":
         return resolve_protocol_env_allowlist_setting(env_value, process_value, user_value)
     if field == "gitea_state_pilot_enabled":

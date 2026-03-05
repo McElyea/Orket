@@ -5,8 +5,12 @@ import pytest
 from orket.runtime.determinism_controls import (
     build_determinism_controls,
     parse_env_allowlist,
+    parse_network_allowlist,
+    resolve_clock_artifact_ref,
+    resolve_clock_mode,
     resolve_env_allowlist,
     resolve_locale,
+    resolve_network_allowlist,
     resolve_network_mode,
     resolve_timezone,
     snapshot_env_allowlist,
@@ -54,6 +58,26 @@ def test_parse_env_allowlist_accepts_list() -> None:
     assert parse_env_allowlist(["A", "B", "A"]) == ["A", "B"]
 
 
+def test_parse_network_allowlist_accepts_csv_and_dedupes() -> None:
+    assert parse_network_allowlist("api.example.com, api.example.com,cache.example.com") == [
+        "api.example.com",
+        "cache.example.com",
+    ]
+
+
+def test_resolve_network_allowlist_chooses_first_non_empty_source() -> None:
+    assert resolve_network_allowlist("", ["api.example.com"], "cache.example.com") == ["api.example.com"]
+
+
+def test_resolve_clock_mode_aliases() -> None:
+    assert resolve_clock_mode("wall-clock") == "wall"
+    assert resolve_clock_mode("artifact") == "artifact_replay"
+
+
+def test_resolve_clock_artifact_ref_prefers_first_non_empty() -> None:
+    assert resolve_clock_artifact_ref("", "artifacts/clock/run-a.json", "fallback.json") == "artifacts/clock/run-a.json"
+
+
 def test_resolve_env_allowlist_chooses_first_non_empty_source() -> None:
     assert resolve_env_allowlist("", ["A"], "B,C") == ["A"]
 
@@ -70,19 +94,27 @@ def test_build_determinism_controls_contains_stable_hash() -> None:
     first = build_determinism_controls(
         timezone="UTC",
         locale="C.UTF-8",
-        network_mode="off",
+        network_mode="allowlist",
+        network_allowlist="api.example.com,cache.example.com",
+        clock_mode="artifact",
+        clock_artifact_ref="artifacts/clock/run-a.json",
         env_allowlist="HOME,PATH",
         environment={"HOME": "/home/user", "PATH": "/bin"},
     )
     second = build_determinism_controls(
         timezone="UTC",
         locale="C.UTF-8",
-        network_mode="offline",
+        network_mode="allow-list",
+        network_allowlist=["cache.example.com", "api.example.com"],
+        clock_mode="artifact_replay",
+        clock_artifact_ref="artifacts/clock/run-a.json",
         env_allowlist=["PATH", "HOME"],
         environment={"PATH": "/bin", "HOME": "/home/user"},
     )
     assert first["env_allowlist_hash"] == second["env_allowlist_hash"]
     assert first["env_snapshot"] == second["env_snapshot"]
+    assert first["network_allowlist_hash"] == second["network_allowlist_hash"]
+    assert first["clock_artifact_hash"] == second["clock_artifact_hash"]
 
 
 def test_build_determinism_controls_hash_changes_when_value_changes() -> None:
@@ -95,3 +127,9 @@ def test_build_determinism_controls_hash_changes_when_value_changes() -> None:
         environment={"HOME": "/home/two"},
     )
     assert first["env_allowlist_hash"] != second["env_allowlist_hash"]
+
+
+def test_build_determinism_controls_clock_hash_changes_when_artifact_changes() -> None:
+    first = build_determinism_controls(clock_artifact_ref="artifacts/clock/a.json")
+    second = build_determinism_controls(clock_artifact_ref="artifacts/clock/b.json")
+    assert first["clock_artifact_hash"] != second["clock_artifact_hash"]

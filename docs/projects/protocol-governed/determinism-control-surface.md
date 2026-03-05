@@ -1,10 +1,10 @@
-# Protocol Determinism Control Surface (v1)
+# Protocol Determinism Control Surface (v2)
 
-Last updated: 2026-03-04  
+Last updated: 2026-03-05  
 Status: Draft  
 Owner: Orket Core
 
-This document defines the runtime control knobs used to constrain nondeterminism in protocol-governed execution.
+This document defines runtime control knobs used to constrain nondeterminism in protocol-governed execution.
 
 ## Objectives
 
@@ -19,9 +19,14 @@ The active control bundle is resolved per turn context:
 1. `timezone`
 2. `locale`
 3. `network_mode`
-4. `env_allowlist_values`
-5. `env_allowlist` (resolved environment snapshot)
-6. `env_allowlist_hash`
+4. `network_allowlist_values`
+5. `network_allowlist_hash`
+6. `clock_mode`
+7. `clock_artifact_ref`
+8. `clock_artifact_hash`
+9. `env_allowlist_values`
+10. `env_allowlist` (resolved environment snapshot)
+11. `env_allowlist_hash`
 
 ## Resolution Order
 
@@ -37,28 +42,40 @@ Each setting resolves in this order:
 1. `ORKET_PROTOCOL_TIMEZONE`
 2. `ORKET_PROTOCOL_LOCALE`
 3. `ORKET_PROTOCOL_NETWORK_MODE`
-4. `ORKET_PROTOCOL_ENV_ALLOWLIST`
+4. `ORKET_PROTOCOL_NETWORK_ALLOWLIST`
+5. `ORKET_PROTOCOL_CLOCK_MODE`
+6. `ORKET_PROTOCOL_CLOCK_ARTIFACT_REF`
+7. `ORKET_PROTOCOL_ENV_ALLOWLIST`
 
 ### Process Rules Keys
 
 1. `protocol_timezone`
 2. `protocol_locale`
 3. `protocol_network_mode`
-4. `protocol_env_allowlist`
+4. `protocol_network_allowlist`
+5. `protocol_clock_mode`
+6. `protocol_clock_artifact_ref`
+7. `protocol_env_allowlist`
 
 ### User Settings Keys
 
 1. `protocol_timezone`
 2. `protocol_locale`
 3. `protocol_network_mode`
-4. `protocol_env_allowlist`
+4. `protocol_network_allowlist`
+5. `protocol_clock_mode`
+6. `protocol_clock_artifact_ref`
+7. `protocol_env_allowlist`
 
 ## Defaults
 
 1. `timezone = UTC`
 2. `locale = C.UTF-8`
 3. `network_mode = off`
-4. `protocol_env_allowlist = ""`
+4. `protocol_network_allowlist = ""`
+5. `clock_mode = wall`
+6. `clock_artifact_ref = ""`
+7. `protocol_env_allowlist = ""`
 
 ## Network Mode Contract
 
@@ -70,6 +87,36 @@ Allowed values:
 Invalid values fail fast with:
 
 1. `E_NETWORK_MODE_INVALID:<detail>`
+
+## Network Allowlist Semantics
+
+`protocol_network_allowlist` accepts comma-separated destination tokens.
+
+Normalization behavior:
+
+1. trim whitespace around tokens
+2. remove empty tokens
+3. deduplicate
+4. sort lexicographically
+
+Artifact behavior:
+
+1. normalized values are stored as `network_allowlist_values`
+2. execution capsule records `network_allowlist_hash`
+3. replay comparator diff surfaces include the receipt execution capsule subset
+
+## Clock Source Semantics
+
+Supported `clock_mode` values:
+
+1. `wall`
+2. `artifact_replay`
+
+Clock artifact behavior:
+
+1. runtime captures `clock_artifact_ref` as a stable string reference
+2. execution capsule records `clock_artifact_hash`
+3. replay comparator diff surfaces include clock mode/ref/hash in receipt inventory
 
 ## Environment Allowlist Semantics
 
@@ -95,7 +142,7 @@ Controls are emitted into:
 1. turn execution context
 2. tool execution capsule fields
 3. protocol receipt payloads
-4. replay comparator state digest
+4. replay comparator state digest and diff surfaces (`receipt_inventory`)
 
 ## Settings API Surfaces
 
@@ -105,7 +152,8 @@ Settings metadata endpoints expose these keys:
 2. `protocol_timezone`
 3. `protocol_locale`
 4. `protocol_network_mode`
-5. `protocol_env_allowlist`
+5. `protocol_network_allowlist`
+6. `protocol_env_allowlist`
 
 Endpoints:
 
@@ -119,23 +167,19 @@ Endpoints:
 
 1. `protocol_timezone` and `protocol_locale` are freeform strings.
 2. `protocol_network_mode` is constrained to registry values.
-3. `protocol_env_allowlist` remains a normalized CSV string in settings surfaces.
-4. Turn context carries normalized structured values (`env_allowlist` map + hash).
+3. `protocol_network_allowlist` and `protocol_env_allowlist` remain normalized CSV strings in settings surfaces.
+4. Turn context and receipts carry normalized structured values and stable hashes.
 
 ## Validation Checklist
 
 Before rollout:
 
-1. verify default context emits `UTC`, `C.UTF-8`, `off`
+1. verify default context emits `UTC`, `C.UTF-8`, `off`, `wall`
 2. verify env/process/user precedence is deterministic
 3. verify invalid network mode fails with `E_NETWORK_MODE_INVALID`
-4. verify `env_allowlist_hash` changes when captured env values change
-5. verify receipts preserve control values in execution capsule
-
-## Open Items
-
-1. Network allowlist destination policy metadata is not yet surfaced in settings.
-2. Deterministic clock-source artifact replay wiring remains pending.
+4. verify `network_allowlist_hash` changes when destination set changes
+5. verify `clock_artifact_hash` changes when artifact reference changes
+6. verify receipts preserve control values in execution capsule
 
 ## Operator Artifact Publication
 
@@ -152,7 +196,8 @@ Bundle outputs include:
 ## Operator Checklist
 
 Before enabling strict protocol enforcement:
+
 1. Run at least one replay campaign with `--strict` and capture output artifact JSON.
 2. Confirm `run_ledger_mode` is intentionally set (`sqlite`, `protocol`, or `dual_write`).
-3. Verify `protocol_network_mode` policy matches deployment expectations.
+3. Verify `protocol_network_mode` and `protocol_network_allowlist` match deployment expectations.
 4. Verify `protocol_env_allowlist` does not contain secrets that should not be captured.
