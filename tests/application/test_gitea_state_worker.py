@@ -13,6 +13,7 @@ class _FakeAdapter:
         self.acquire_result = None
         self.calls = []
         self.renew_count = 0
+        self.renew_results = []
 
     async def fetch_ready_cards(self, *, limit: int = 1):
         self.calls.append(("fetch_ready_cards", limit))
@@ -25,9 +26,11 @@ class _FakeAdapter:
     async def transition_state(self, card_id: str, *, from_state: str, to_state: str, reason: str | None = None):
         self.calls.append(("transition_state", card_id, from_state, to_state, reason))
 
-    async def renew_lease(self, card_id: str, *, owner_id: str, lease_seconds: int):
+    async def renew_lease(self, card_id: str, *, owner_id: str, lease_seconds: int, expected_lease_epoch=None):
         self.renew_count += 1
-        self.calls.append(("renew_lease", card_id, owner_id, lease_seconds))
+        self.calls.append(("renew_lease", card_id, owner_id, lease_seconds, expected_lease_epoch))
+        if self.renew_results:
+            return self.renew_results.pop(0)
         return {"ok": True}
 
     async def release_or_fail(self, card_id: str, *, final_state: str, error: str | None = None):
@@ -51,7 +54,7 @@ async def test_run_once_returns_false_when_no_candidates():
 async def test_run_once_success_flow_transitions_and_releases():
     adapter = _FakeAdapter()
     adapter.cards = [{"issue_number": 7, "state": "ready"}]
-    adapter.acquire_result = {"card_id": "ISSUE-7"}
+    adapter.acquire_result = {"card_id": "ISSUE-7", "lease_epoch": 1}
     worker = GiteaStateWorker(adapter=adapter, worker_id="worker-a")
 
     async def _work(card):
@@ -68,7 +71,7 @@ async def test_run_once_success_flow_transitions_and_releases():
 async def test_run_once_failure_flow_releases_blocked_with_error():
     adapter = _FakeAdapter()
     adapter.cards = [{"issue_number": 9, "state": "ready"}]
-    adapter.acquire_result = {"card_id": "ISSUE-9"}
+    adapter.acquire_result = {"card_id": "ISSUE-9", "lease_epoch": 2}
     worker = GiteaStateWorker(adapter=adapter, worker_id="worker-a")
 
     async def _work(_card):
@@ -87,7 +90,7 @@ async def test_run_once_failure_flow_releases_blocked_with_error():
 async def test_renew_loop_heartbeats_while_work_in_progress():
     adapter = _FakeAdapter()
     adapter.cards = [{"issue_number": 12, "state": "ready"}]
-    adapter.acquire_result = {"card_id": "ISSUE-12"}
+    adapter.acquire_result = {"card_id": "ISSUE-12", "lease_epoch": 3}
     worker = GiteaStateWorker(
         adapter=adapter,
         worker_id="worker-a",
@@ -102,3 +105,53 @@ async def test_renew_loop_heartbeats_while_work_in_progress():
     consumed = await worker.run_once(work_fn=_work)
     assert consumed is True
     assert adapter.renew_count >= 1
+
+
+@pytest.mark.asyncio
+async def test_run_once_lease_expiry_signal_transitions_to_failure():
+    adapter = _FakeAdapter()
+    adapter.cards = [{"issue_number": 15, "state": "ready"}]
+    adapter.acquire_result = {"card_id": "ISSUE-15", "lease_epoch": 7}
+    adapter.renew_results = [{"ok": False, "error_code": "E_LEASE_EXPIRED"}]
+    worker = GiteaStateWorker(
+        adapter=adapter,
+        worker_id="worker-a",
+        lease_seconds=1,
+        renew_interval_seconds=0.05,
+    )
+
+    async def _work(_card):
+        await asyncio.sleep(0.15)
+        return {"ok": True}
+
+    consumed = await worker.run_once(work_fn=_work)
+    assert consumed is True
+    releases = [row for row in adapter.calls if row[0] == "release_or_fail"]
+    assert releases
+    assert releases[-1][2] == "blocked"
+    assert "E_LEASE_EXPIRED" in str(releases[-1][3])
+
+
+@pytest.mark.asyncio
+async def test_run_once_lease_epoch_mismatch_transitions_to_failure():
+    adapter = _FakeAdapter()
+    adapter.cards = [{"issue_number": 16, "state": "ready"}]
+    adapter.acquire_result = {"card_id": "ISSUE-16", "lease_epoch": 10}
+    adapter.renew_results = [{"ok": True, "lease_epoch": 11}]
+    worker = GiteaStateWorker(
+        adapter=adapter,
+        worker_id="worker-a",
+        lease_seconds=1,
+        renew_interval_seconds=0.05,
+    )
+
+    async def _work(_card):
+        await asyncio.sleep(0.15)
+        return {"ok": True}
+
+    consumed = await worker.run_once(work_fn=_work)
+    assert consumed is True
+    releases = [row for row in adapter.calls if row[0] == "release_or_fail"]
+    assert releases
+    assert releases[-1][2] == "blocked"
+    assert "E_LEASE_EXPIRED" in str(releases[-1][3])

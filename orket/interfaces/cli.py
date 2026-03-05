@@ -43,6 +43,12 @@ def parse_args():
     parser.add_argument("--marshaller-branch", type=str, default="main", help="Target branch for marshaller promotion.")
     parser.add_argument("--marshaller-inspect-attempt", type=int, default=None, help="Attempt index to inspect for 'orket marshaller inspect <run_id>'.")
     parser.add_argument("--marshaller-list-limit", type=int, default=20, help="Max rows for 'orket marshaller list'.")
+    parser.add_argument("--protocol-run-b", type=str, default=None, help="Second run id for 'orket protocol compare <run_a> --protocol-run-b <run_b>'.")
+    parser.add_argument("--protocol-events-a", type=str, default=None, help="Optional explicit events.log path for protocol run A.")
+    parser.add_argument("--protocol-events-b", type=str, default=None, help="Optional explicit events.log path for protocol run B.")
+    parser.add_argument("--protocol-artifacts-a", type=str, default=None, help="Optional artifact root path for protocol run A.")
+    parser.add_argument("--protocol-artifacts-b", type=str, default=None, help="Optional artifact root path for protocol run B.")
+    parser.add_argument("--protocol-strict", action="store_true", help="Return non-zero on protocol replay mismatch.")
     return parser.parse_args()
 
 
@@ -172,6 +178,73 @@ async def run_cli():
             )
             print(json.dumps(result, indent=2, ensure_ascii=False))
             return
+
+        if args.command == "protocol":
+            from orket.runtime.protocol_replay import ProtocolReplayEngine
+
+            def _run_root(run_id: str) -> Path:
+                base = (Path(args.workspace).resolve() / "runs").resolve()
+                candidate = (base / str(run_id).strip()).resolve()
+                if not candidate.is_relative_to(base):
+                    raise ValueError(f"Invalid run id path: {run_id}")
+                return candidate
+
+            def _resolve_events_path(*, run_id: str, override: str | None) -> Path:
+                override_value = str(override or "").strip()
+                if override_value:
+                    return Path(override_value).resolve()
+                return _run_root(run_id) / "events.log"
+
+            def _resolve_artifact_root(*, run_id: str, override: str | None) -> Path | None:
+                override_value = str(override or "").strip()
+                if override_value:
+                    return Path(override_value).resolve()
+                candidate = _run_root(run_id) / "artifacts"
+                return candidate if candidate.exists() else None
+
+            engine = ProtocolReplayEngine()
+            if args.subcommand == "replay":
+                run_id = str(args.target or "").strip()
+                if not run_id:
+                    raise ValueError("protocol replay requires target run_id (e.g. 'orket protocol replay <run_id>').")
+                events_path = _resolve_events_path(run_id=run_id, override=args.protocol_events_a)
+                if not events_path.exists():
+                    raise ValueError(f"events.log not found for run '{run_id}' at {events_path}")
+                replay = await asyncio.to_thread(
+                    engine.replay_from_ledger,
+                    events_log_path=events_path,
+                    artifact_root=_resolve_artifact_root(run_id=run_id, override=args.protocol_artifacts_a),
+                )
+                print(json.dumps(replay, indent=2, ensure_ascii=False))
+                return
+
+            if args.subcommand == "compare":
+                run_a = str(args.target or "").strip()
+                run_b = str(args.protocol_run_b or "").strip()
+                if not run_a or not run_b:
+                    raise ValueError(
+                        "protocol compare requires run A target and --protocol-run-b <run_id> "
+                        "(e.g. 'orket protocol compare <run_a> --protocol-run-b <run_b>')."
+                    )
+                events_a = _resolve_events_path(run_id=run_a, override=args.protocol_events_a)
+                events_b = _resolve_events_path(run_id=run_b, override=args.protocol_events_b)
+                if not events_a.exists():
+                    raise ValueError(f"events.log not found for run '{run_a}' at {events_a}")
+                if not events_b.exists():
+                    raise ValueError(f"events.log not found for run '{run_b}' at {events_b}")
+                comparison = await asyncio.to_thread(
+                    engine.compare_replays,
+                    run_a_events_path=events_a,
+                    run_b_events_path=events_b,
+                    run_a_artifact_root=_resolve_artifact_root(run_id=run_a, override=args.protocol_artifacts_a),
+                    run_b_artifact_root=_resolve_artifact_root(run_id=run_b, override=args.protocol_artifacts_b),
+                )
+                print(json.dumps(comparison, indent=2, ensure_ascii=False))
+                if bool(args.protocol_strict) and not bool(comparison.get("deterministic_match")):
+                    raise ValueError("Protocol replay mismatch detected under --protocol-strict.")
+                return
+
+            raise ValueError("Supported protocol commands: 'orket protocol replay <run_id>' or 'orket protocol compare <run_a> --protocol-run-b <run_b>'.")
 
         workspace = Path(args.workspace).resolve()
         engine = OrchestrationEngine(workspace, args.department)

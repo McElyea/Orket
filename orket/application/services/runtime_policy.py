@@ -5,6 +5,14 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
+from orket.runtime.determinism_controls import (
+    build_determinism_controls,
+    resolve_env_allowlist as resolve_protocol_env_allowlist,
+    resolve_locale as resolve_protocol_locale,
+    resolve_network_mode as resolve_protocol_network_mode,
+    resolve_timezone as resolve_protocol_timezone,
+)
+
 
 ARCHITECTURE_MODE_OPTIONS: List[Dict[str, str]] = [
     {"value": "force_monolith", "label": "Monolith (Forced)"},
@@ -277,3 +285,24 @@ def resolve_gitea_worker_max_duration_seconds(*values: Any) -> float:
             continue
         return max(0.0, parsed)
     return DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS
+
+
+def resolve_protocol_determinism_controls(
+    *,
+    timezone_values: Iterable[Any] = (),
+    locale_values: Iterable[Any] = (),
+    network_mode_values: Iterable[Any] = (),
+    env_allowlist_values: Iterable[Any] = (),
+    environment: dict[str, str] | None = None,
+) -> Dict[str, Any]:
+    timezone = resolve_protocol_timezone(*list(timezone_values))
+    locale = resolve_protocol_locale(*list(locale_values))
+    network_mode = resolve_protocol_network_mode(*list(network_mode_values))
+    env_allowlist = resolve_protocol_env_allowlist(*list(env_allowlist_values))
+    return build_determinism_controls(
+        timezone=timezone,
+        locale=locale,
+        network_mode=network_mode,
+        env_allowlist=env_allowlist,
+        environment=environment,
+    )

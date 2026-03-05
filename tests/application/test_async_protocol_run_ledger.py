@@ -81,3 +81,46 @@ async def test_async_protocol_run_ledger_isolated_by_session(tmp_path: Path) -> 
     assert len(events_b) == 1
     assert events_a[0]["session_id"] == "sess-a"
     assert events_b[0]["session_id"] == "sess-b"
+
+
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_operation_commit_is_first_wins(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    first = await repo.append_event(
+        session_id="sess-op",
+        kind="operation_result",
+        payload={
+            "operation_id": "op-1",
+            "tool": "write_file",
+            "result": {"ok": True, "value": 1},
+        },
+    )
+    second = await repo.append_event(
+        session_id="sess-op",
+        kind="operation_result",
+        payload={
+            "operation_id": "op-1",
+            "tool": "write_file",
+            "result": {"ok": True, "value": 2},
+        },
+    )
+    assert first["event_seq"] == 1
+    assert second["kind"] == "operation_rejected"
+    assert second["error_code"] == "E_DUPLICATE_OPERATION"
+    assert second["winner_event_seq"] == 1
+    assert second["idempotent_reuse"] is False
+
+
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_duplicate_same_payload_marks_idempotent_reuse(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    first_payload = {
+        "operation_id": "op-1",
+        "tool": "write_file",
+        "result": {"ok": True, "value": 1},
+    }
+    _ = await repo.append_event(session_id="sess-op-idem", kind="operation_result", payload=first_payload)
+    second = await repo.append_event(session_id="sess-op-idem", kind="operation_result", payload=first_payload)
+    assert second["kind"] == "operation_rejected"
+    assert second["error_code"] == "E_DUPLICATE_OPERATION"
+    assert second["idempotent_reuse"] is True

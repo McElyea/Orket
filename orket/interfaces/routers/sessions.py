@@ -8,6 +8,9 @@ from typing import Any, Callable, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from orket.adapters.storage.protocol_append_only_ledger import LedgerFramingError
+from orket.runtime.protocol_replay import ProtocolReplayEngine
+
 
 class InteractionSessionStartRequest(BaseModel):
     session_params: dict[str, Any] = Field(default_factory=dict)
@@ -40,6 +43,13 @@ def build_sessions_router(
     workspace_root_getter: Callable[[], Path] = lambda: Path(".").resolve(),
 ) -> APIRouter:
     router = APIRouter()
+
+    def _resolve_protocol_run_root(run_id: str) -> Path:
+        base = (workspace_root_getter() / "runs").resolve()
+        candidate = (base / str(run_id).strip()).resolve()
+        if not candidate.is_relative_to(base):
+            raise HTTPException(status_code=400, detail="Invalid run_id")
+        return candidate
 
     @router.post("/interactions/sessions")
     async def start_interaction_session(req: InteractionSessionStartRequest):
@@ -180,5 +190,49 @@ def build_sessions_router(
             )
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @router.get("/protocol/runs/{run_id}/replay")
+    async def replay_protocol_run(run_id: str):
+        run_root = _resolve_protocol_run_root(run_id)
+        events_path = run_root / "events.log"
+        if not events_path.exists():
+            raise HTTPException(status_code=404, detail=f"Protocol events log not found for run '{run_id}'.")
+        artifact_root = run_root / "artifacts"
+        engine = ProtocolReplayEngine()
+        try:
+            replay = await asyncio.to_thread(
+                engine.replay_from_ledger,
+                events_log_path=events_path,
+                artifact_root=artifact_root if artifact_root.exists() else None,
+            )
+        except LedgerFramingError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return replay
+
+    @router.get("/protocol/replay/compare")
+    async def compare_protocol_replays(run_a: str, run_b: str):
+        run_a_root = _resolve_protocol_run_root(run_a)
+        run_b_root = _resolve_protocol_run_root(run_b)
+        run_a_events = run_a_root / "events.log"
+        run_b_events = run_b_root / "events.log"
+        if not run_a_events.exists():
+            raise HTTPException(status_code=404, detail=f"Protocol events log not found for run '{run_a}'.")
+        if not run_b_events.exists():
+            raise HTTPException(status_code=404, detail=f"Protocol events log not found for run '{run_b}'.")
+
+        run_a_artifacts = run_a_root / "artifacts"
+        run_b_artifacts = run_b_root / "artifacts"
+        engine = ProtocolReplayEngine()
+        try:
+            comparison = await asyncio.to_thread(
+                engine.compare_replays,
+                run_a_events_path=run_a_events,
+                run_b_events_path=run_b_events,
+                run_a_artifact_root=run_a_artifacts if run_a_artifacts.exists() else None,
+                run_b_artifact_root=run_b_artifacts if run_b_artifacts.exists() else None,
+            )
+        except LedgerFramingError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return comparison
 
     return router

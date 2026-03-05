@@ -4,6 +4,9 @@ import asyncio
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.operation_commit_registry import OperationCommitRegistry
+
 from .protocol_append_only_ledger import AppendOnlyRunLedger
 
 
@@ -19,6 +22,9 @@ class AsyncProtocolRunLedgerRepository:
 
     def _ledger(self, session_id: str) -> AppendOnlyRunLedger:
         return AppendOnlyRunLedger(self._events_path(session_id))
+
+    def _operation_registry(self, session_id: str) -> OperationCommitRegistry:
+        return OperationCommitRegistry(self.root / "runs" / str(session_id).strip() / "operation_commits.json")
 
     async def start_run(
         self,
@@ -74,12 +80,33 @@ class AsyncProtocolRunLedgerRepository:
         kind: str,
         payload: Optional[Dict[str, Any]] = None,
     ) -> dict[str, Any]:
+        normalized_kind = str(kind)
+        normalized_payload = dict(payload or {})
         event = {
-            "kind": str(kind),
+            "kind": normalized_kind,
             "session_id": str(session_id),
-            "payload": dict(payload or {}),
+            "payload": normalized_payload,
         }
         async with self._lock:
+            if normalized_kind in {"operation_result", "tool_result"}:
+                operation_id = str(normalized_payload.get("operation_id") or "").strip()
+                if operation_id:
+                    decision = await self._reserve_operation_commit_locked(
+                        session_id=session_id,
+                        operation_id=operation_id,
+                        kind=normalized_kind,
+                        payload=normalized_payload,
+                    )
+                    if not bool(decision.get("accepted")):
+                        return {
+                            "kind": "operation_rejected",
+                            "session_id": str(session_id),
+                            "operation_id": operation_id,
+                            "error_code": decision.get("error_code"),
+                            "winner_event_seq": decision.get("winner_event_seq"),
+                            "winner_entry_digest": decision.get("winner_entry_digest"),
+                            "idempotent_reuse": bool(decision.get("idempotent_reuse", False)),
+                        }
             return await asyncio.to_thread(self._ledger(session_id).append_event, event)
 
     async def list_events(self, session_id: str) -> list[dict[str, Any]]:
@@ -139,3 +166,26 @@ class AsyncProtocolRunLedgerRepository:
             "started_event_seq": started_event_seq,
             "ended_event_seq": ended_event_seq,
         }
+
+    async def _reserve_operation_commit_locked(
+        self,
+        *,
+        session_id: str,
+        operation_id: str,
+        kind: str,
+        payload: Dict[str, Any],
+    ) -> dict[str, Any]:
+        event_seq = await asyncio.to_thread(self._ledger(session_id).next_event_seq)
+        registry = self._operation_registry(session_id)
+        entry_digest = hash_canonical_json(
+            {
+                "kind": str(kind),
+                "payload": dict(payload or {}),
+            }
+        )
+        return await asyncio.to_thread(
+            registry.commit,
+            operation_id=operation_id,
+            event_seq=int(event_seq),
+            entry_digest=entry_digest,
+        )
