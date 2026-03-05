@@ -33,6 +33,14 @@ def parse_args():
     parser.add_argument("--archive-related", action="append", default=[], help="Archive cards matching token in id/build/summary/note (repeatable).")
     parser.add_argument("--archive-reason", type=str, default="manual archive", help="Reason stored with archive transaction.")
     parser.add_argument("--replay-turn", type=str, default=None, help="Replay diagnostics for one turn: <session_id>:<issue_id>:<turn_index>[:role].")
+    parser.add_argument("--marshaller-request", type=str, default=None, help="Path to marshaller RunRequest JSON.")
+    parser.add_argument("--marshaller-proposal", action="append", default=[], help="Path to a marshaller PatchProposal JSON (repeatable).")
+    parser.add_argument("--marshaller-run-id", type=str, default=None, help="Optional marshaller run id override.")
+    parser.add_argument("--marshaller-allow-path", action="append", default=[], help="Allowed touched path prefix for marshaller intake checks (repeatable).")
+    parser.add_argument("--marshaller-promote", action="store_true", help="Promote accepted marshaller result to canonical git branch.")
+    parser.add_argument("--marshaller-actor-id", type=str, default=None, help="Actor id for marshaller promotion metadata.")
+    parser.add_argument("--marshaller-actor-source", type=str, default="cli", help="Actor source for marshaller promotion metadata.")
+    parser.add_argument("--marshaller-branch", type=str, default="main", help="Target branch for marshaller promotion.")
     return parser.parse_args()
 
 
@@ -117,6 +125,28 @@ async def run_cli():
 
         if args.command == "run":
             await _run_extension_workload(args, extension_manager)
+            return
+
+        if args.command == "marshaller":
+            from orket.marshaller.cli import default_run_id, execute_marshaller_from_files
+
+            request_raw = str(args.marshaller_request or "").strip()
+            if not request_raw:
+                raise ValueError("marshaller command requires --marshaller-request <path>.")
+            if not args.marshaller_proposal:
+                raise ValueError("marshaller command requires at least one --marshaller-proposal <path>.")
+            result = await execute_marshaller_from_files(
+                workspace_root=Path(".").resolve(),
+                run_request_path=Path(request_raw).resolve(),
+                proposal_paths=[Path(str(item)).resolve() for item in args.marshaller_proposal],
+                run_id=str(args.marshaller_run_id or default_run_id()).strip(),
+                allowed_paths=list(args.marshaller_allow_path or []),
+                promote=bool(args.marshaller_promote),
+                actor_id=args.marshaller_actor_id,
+                actor_source=str(args.marshaller_actor_source or "cli"),
+                branch=str(args.marshaller_branch or "main"),
+            )
+            print(json.dumps(result, indent=2, ensure_ascii=False))
             return
 
         workspace = Path(args.workspace).resolve()

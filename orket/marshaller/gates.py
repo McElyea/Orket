@@ -70,7 +70,7 @@ async def run_gate(
             rejection_code=None,
         )
 
-    retries = max(0, int(max_retries)) if flake_mode == "retry_then_deny" else 0
+    retries = max(0, int(max_retries)) if flake_mode in {"retry_then_deny", "quarantine_allow"} else 0
     for _ in range(retries):
         attempts.append(await run_process(command, cwd=cwd, env=env, timeout_seconds=timeout_seconds))
 
@@ -124,4 +124,3 @@ def _rejection_for_gate(name: str) -> str:
     if normalized == "lint":
         return LINT_FAILED
     return POLICY_DENY
-

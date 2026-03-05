@@ -8,7 +8,7 @@ import pytest
 from orket.marshaller.canonical import hash_canonical_json
 from orket.marshaller.promotion import promote_run
 from orket.marshaller.rejection_codes import FORBIDDEN_PATH
-from orket.marshaller.rejection_codes import FLAKE_DETECTED, TESTS_FAILED
+from orket.marshaller.rejection_codes import FLAKE_DETECTED, LINT_FAILED, TESTS_FAILED
 from orket.marshaller.replay import replay_run
 from orket.marshaller.runner import MarshallerRunner
 
@@ -204,6 +204,64 @@ async def test_runner_marks_flake_when_retry_outcomes_disagree(tmp_path: Path) -
     assert outcome.primary_rejection_code == FLAKE_DETECTED
     decision = _read_json(Path(outcome.decision_path))
     assert decision["primary_rejection_code"] == FLAKE_DETECTED
+
+
+@pytest.mark.asyncio
+async def test_runner_quarantine_allow_accepts_flaky_gate(tmp_path: Path) -> None:
+    repo, head = _init_repo(tmp_path)
+    patch = _make_patch(repo, "hello quarantine\n")
+    runner = MarshallerRunner(tmp_path)
+
+    flaky_script = (
+        "from pathlib import Path; import sys; "
+        "p=Path('flake.flag'); "
+        "exists=p.exists(); "
+        "p.write_text('1', encoding='utf-8'); "
+        "sys.exit(0 if exists else 1)"
+    )
+    run_request = _run_request_payload(
+        repo,
+        {
+            "test": [sys.executable, "-c", flaky_script],
+        },
+        flake_policy={"mode": "quarantine_allow", "max_retries": 1},
+    )
+    proposal = _proposal_payload(head, patch)
+
+    outcome = await runner.execute_once(
+        run_id="run-quarantine",
+        run_request_payload=run_request,
+        proposal_payload=proposal,
+        allowed_paths=("app.txt",),
+    )
+
+    assert outcome.accept is True
+    check = _read_json(Path(outcome.run_path) / "attempts" / "1" / "checks" / "test.json")
+    assert check["flake_detected"] is True
+    assert check["passed"] is True
+
+
+@pytest.mark.asyncio
+async def test_runner_maps_lint_gate_failure(tmp_path: Path) -> None:
+    repo, head = _init_repo(tmp_path)
+    patch = _make_patch(repo, "hello lint fail\n")
+    runner = MarshallerRunner(tmp_path)
+    run_request = _run_request_payload(
+        repo,
+        {
+            "lint": [sys.executable, "-c", "import sys; sys.exit(1)"],
+        },
+    )
+    proposal = _proposal_payload(head, patch)
+    outcome = await runner.execute_once(
+        run_id="run-lint-fail",
+        run_request_payload=run_request,
+        proposal_payload=proposal,
+        allowed_paths=("app.txt",),
+    )
+
+    assert outcome.accept is False
+    assert outcome.primary_rejection_code == LINT_FAILED
 
 
 @pytest.mark.asyncio
