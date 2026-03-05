@@ -4,7 +4,20 @@ from typing import Final
 
 
 E_PARSE_JSON: Final[str] = "E_PARSE_JSON"
+E_RESPONSE_BYTES: Final[str] = "E_RESPONSE_BYTES"
+E_MARKDOWN_FENCE: Final[str] = "E_MARKDOWN_FENCE"
+E_SCHEMA_ENVELOPE: Final[str] = "E_SCHEMA_ENVELOPE"
+E_TOOL_MODE_CONTENT_NON_EMPTY: Final[str] = "E_TOOL_MODE_CONTENT_NON_EMPTY"
+E_MISSING_TOOL_CALLS: Final[str] = "E_MISSING_TOOL_CALLS"
+E_TOOL_SEQUENCE: Final[str] = "E_TOOL_SEQUENCE"
+E_NON_ASCII_WHITESPACE: Final[str] = "E_NON_ASCII_WHITESPACE"
+
+E_DUPLICATE_KEY_PREFIX: Final[str] = "E_DUPLICATE_KEY"
+E_SCHEMA_TOOL_CALL_PREFIX: Final[str] = "E_SCHEMA_TOOL_CALL"
+E_MAX_TOOL_CALLS_PREFIX: Final[str] = "E_MAX_TOOL_CALLS"
 E_WORKSPACE_CONSTRAINT_PREFIX: Final[str] = "E_WORKSPACE_CONSTRAINT"
+E_MISSING_REQUIRED_TOOL_PREFIX: Final[str] = "E_MISSING_REQUIRED_TOOL"
+E_TOOL_CARDINALITY_PREFIX: Final[str] = "E_TOOL_CARDINALITY"
 
 E_LEDGER_RECORD_TOO_LARGE: Final[str] = "E_LEDGER_RECORD_TOO_LARGE"
 E_LEDGER_CORRUPT: Final[str] = "E_LEDGER_CORRUPT"
@@ -23,6 +36,13 @@ E_DUPLICATE_OPERATION: Final[str] = "E_DUPLICATE_OPERATION"
 
 _EXACT_CODES: Final[dict[str, str]] = {
     E_PARSE_JSON: "Response parser failed strict JSON boundary validation.",
+    E_RESPONSE_BYTES: "Response payload exceeded configured byte limits.",
+    E_MARKDOWN_FENCE: "Response payload contained markdown code fences.",
+    E_SCHEMA_ENVELOPE: "Response envelope failed strict schema validation.",
+    E_TOOL_MODE_CONTENT_NON_EMPTY: "Tool mode response content was not empty.",
+    E_MISSING_TOOL_CALLS: "Tool mode response omitted required tool calls.",
+    E_TOOL_SEQUENCE: "Observed tool calls violated required deterministic sequence.",
+    E_NON_ASCII_WHITESPACE: "Non-ASCII leading/trailing whitespace was detected.",
     E_LEDGER_RECORD_TOO_LARGE: "Ledger record payload exceeded LPJ-C32 cap.",
     E_LEDGER_CORRUPT: "Ledger checksum mismatch on a complete record.",
     E_LEDGER_SEQ: "Ledger event sequence is missing, duplicate, or non-monotonic.",
@@ -32,7 +52,12 @@ _EXACT_CODES: Final[dict[str, str]] = {
 }
 
 _PREFIX_CODES: Final[dict[str, str]] = {
+    E_DUPLICATE_KEY_PREFIX: "JSON payload contained duplicate object keys.",
+    E_SCHEMA_TOOL_CALL_PREFIX: "Tool-call object failed strict schema validation.",
+    E_MAX_TOOL_CALLS_PREFIX: "Tool-call count exceeded deterministic cap.",
     E_WORKSPACE_CONSTRAINT_PREFIX: "Workspace path safety constraint violation.",
+    E_MISSING_REQUIRED_TOOL_PREFIX: "A required tool call was not present in the proposal.",
+    E_TOOL_CARDINALITY_PREFIX: "Required tool cardinality was not exactly one.",
     E_RECEIPT_SEQ_INVALID_PREFIX: "Receipt sequence value is invalid.",
     E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX: "Receipt sequence is not strictly increasing.",
     E_RECEIPT_LOG_PARSE_PREFIX: "Receipt log line failed JSON parsing.",
@@ -62,6 +87,16 @@ def error_description(value: str) -> str:
         return _EXACT_CODES[code]
     prefix = code.split(":", 1)[0]
     return _PREFIX_CODES.get(prefix, "Unregistered protocol error code.")
+
+
+def error_family(value: str) -> str:
+    code = str(value or "").strip()
+    if code in _EXACT_CODES:
+        return code
+    prefix = code.split(":", 1)[0]
+    if prefix in _PREFIX_CODES:
+        return prefix
+    return ""
 
 
 def format_protocol_error(code: str, detail: str | None = None) -> str:

@@ -5,6 +5,12 @@ from typing import Any, Callable
 
 from orket.core.policies.tool_gate import ToolGate
 from orket.domain.execution import ExecutionTurn
+from orket.runtime.protocol_error_codes import (
+    E_MAX_TOOL_CALLS_PREFIX,
+    E_SCHEMA_TOOL_CALL_PREFIX,
+    E_WORKSPACE_CONSTRAINT_PREFIX,
+    format_protocol_error,
+)
 
 from .turn_path_resolver import PathResolver
 from .turn_tool_dispatcher_support import (
@@ -30,15 +36,15 @@ def collect_protocol_preflight_violations(
     except (TypeError, ValueError):
         max_tool_calls = 8
     if len(turn.tool_calls) > max_tool_calls:
-        return [f"E_MAX_TOOL_CALLS:{len(turn.tool_calls)}>{max_tool_calls}"]
+        return [format_protocol_error(E_MAX_TOOL_CALLS_PREFIX, f"{len(turn.tool_calls)}>{max_tool_calls}")]
 
     observed_tool_names: list[str] = []
     for index, tool_call in enumerate(turn.tool_calls):
         tool_name = str(tool_call.tool or "").strip()
         if not tool_name:
-            return [f"E_SCHEMA_TOOL_CALL:{index}:tool"]
+            return [format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, f"{index}:tool")]
         if not isinstance(tool_call.args, dict):
-            return [f"E_SCHEMA_TOOL_CALL:{index}:args"]
+            return [format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, f"{index}:args")]
         observed_tool_names.append(tool_name)
 
     required_tools_error = required_tools_violation(observed_tool_names=observed_tool_names, context=context)
@@ -57,7 +63,7 @@ def collect_protocol_preflight_violations(
             workspace=workspace,
         )
         if workspace_violation:
-            return [f"E_WORKSPACE_CONSTRAINT:{workspace_violation}"]
+            return [format_protocol_error(E_WORKSPACE_CONSTRAINT_PREFIX, workspace_violation)]
 
         gate_violation = tool_gate.validate(
             tool_name=tool_name,
@@ -89,7 +95,7 @@ def collect_protocol_preflight_violations(
             return [f"Approval required for tool '{tool_name}' before execution."]
 
         if not isinstance(tool_call.args, dict):
-            return [f"E_SCHEMA_TOOL_CALL:{index}:args"]
+            return [format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, f"{index}:args")]
     return []
 
 

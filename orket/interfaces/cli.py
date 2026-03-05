@@ -51,6 +51,9 @@ def parse_args():
     parser.add_argument("--protocol-runs-root", type=str, default=None, help="Optional runs root for 'orket protocol campaign'. Defaults to <workspace>/runs.")
     parser.add_argument("--protocol-campaign-run-id", action="append", default=[], help="Optional run id filter for 'orket protocol campaign' (repeatable).")
     parser.add_argument("--protocol-baseline-run-id", type=str, default=None, help="Optional baseline run id for 'orket protocol campaign'.")
+    parser.add_argument("--protocol-parity-session-id", action="append", default=[], help="Optional session id filter for 'orket protocol parity-campaign' (repeatable).")
+    parser.add_argument("--protocol-parity-discover-limit", type=int, default=200, help="SQLite discovery limit for 'orket protocol parity-campaign'.")
+    parser.add_argument("--protocol-max-parity-mismatches", type=int, default=0, help="Allowed mismatches under --protocol-strict for 'orket protocol parity-campaign'.")
     parser.add_argument("--protocol-sqlite-db", type=str, default=None, help="Optional sqlite run ledger DB path for 'orket protocol parity <run_id>'.")
     parser.add_argument("--protocol-strict", action="store_true", help="Return non-zero on protocol replay mismatch.")
     return parser.parse_args()
@@ -187,6 +190,7 @@ async def run_cli():
             from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
             from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
             from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
+            from orket.runtime.protocol_ledger_parity_campaign import compare_protocol_ledger_parity_campaign
             from orket.runtime.protocol_replay import ProtocolReplayEngine
             from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
@@ -290,12 +294,35 @@ async def run_cli():
                     raise ValueError("Protocol replay campaign mismatch detected under --protocol-strict.")
                 return
 
+            if args.subcommand == "parity-campaign":
+                sqlite_db = (
+                    Path(str(args.protocol_sqlite_db)).resolve()
+                    if str(args.protocol_sqlite_db or "").strip()
+                    else (Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+                )
+                if not sqlite_db.exists():
+                    raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
+                campaign = await compare_protocol_ledger_parity_campaign(
+                    sqlite_db=sqlite_db,
+                    protocol_root=Path(args.workspace).resolve(),
+                    session_ids=list(args.protocol_parity_session_id or []),
+                    discover_limit=max(0, int(args.protocol_parity_discover_limit)),
+                )
+                print(json.dumps(campaign, indent=2, ensure_ascii=False))
+                if bool(args.protocol_strict):
+                    mismatches = int(campaign.get("mismatch_count") or 0)
+                    allowed = max(0, int(args.protocol_max_parity_mismatches))
+                    if mismatches > allowed:
+                        raise ValueError("Run ledger parity campaign mismatch detected under --protocol-strict.")
+                return
+
             raise ValueError(
                 "Supported protocol commands: 'orket protocol replay <run_id>', "
                 "'orket protocol compare <run_a> --protocol-run-b <run_b>', or "
                 "'orket protocol parity <run_id> [--protocol-sqlite-db <path>]', or "
                 "'orket protocol campaign [--protocol-runs-root <path>] [--protocol-campaign-run-id <run_id>] "
-                "[--protocol-baseline-run-id <run_id>]'."
+                "[--protocol-baseline-run-id <run_id>]', or "
+                "'orket protocol parity-campaign [--protocol-sqlite-db <path>] [--protocol-parity-session-id <id>]'."
             )
 
         workspace = Path(args.workspace).resolve()

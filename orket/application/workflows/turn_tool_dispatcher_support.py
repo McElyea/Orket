@@ -4,6 +4,13 @@ from collections import Counter
 import platform
 from typing import Any
 
+from orket.runtime.protocol_error_codes import (
+    E_MISSING_REQUIRED_TOOL_PREFIX,
+    E_TOOL_CARDINALITY_PREFIX,
+    E_TOOL_SEQUENCE,
+    format_protocol_error,
+)
+
 from .protocol_hashing import hash_env_allowlist
 
 
@@ -102,9 +109,9 @@ def required_tools_violation(*, observed_tool_names: list[str], context: dict[st
     for tool_name in required:
         count = int(counts.get(tool_name, 0))
         if count == 0:
-            return f"E_MISSING_REQUIRED_TOOL:{tool_name}"
+            return format_protocol_error(E_MISSING_REQUIRED_TOOL_PREFIX, tool_name)
         if count != 1:
-            return f"E_TOOL_CARDINALITY:{tool_name}:{count}"
+            return format_protocol_error(E_TOOL_CARDINALITY_PREFIX, f"{tool_name}:{count}")
     return None
 
 
@@ -115,7 +122,7 @@ def required_sequence_violation(*, observed_tool_names: list[str], context: dict
     sequence_set = set(sequence)
     filtered = [tool_name for tool_name in observed_tool_names if tool_name in sequence_set]
     if filtered != sequence:
-        return "E_TOOL_SEQUENCE"
+        return E_TOOL_SEQUENCE
     return None
 
 

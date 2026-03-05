@@ -9,6 +9,19 @@ from typing import Any, Callable
 from orket.application.services.tool_parser import ToolParser
 from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.logging import log_event
+from orket.runtime.protocol_error_codes import (
+    E_DUPLICATE_KEY_PREFIX,
+    E_MARKDOWN_FENCE,
+    E_MAX_TOOL_CALLS_PREFIX,
+    E_MISSING_TOOL_CALLS,
+    E_NON_ASCII_WHITESPACE,
+    E_PARSE_JSON,
+    E_RESPONSE_BYTES,
+    E_SCHEMA_ENVELOPE,
+    E_SCHEMA_TOOL_CALL_PREFIX,
+    E_TOOL_MODE_CONTENT_NON_EMPTY,
+    format_protocol_error,
+)
 
 from .protocol_hashing import VALIDATOR_VERSION, default_protocol_hash, default_tool_schema_hash, hash_canonical_json
 
@@ -110,55 +123,55 @@ class ResponseParser:
         max_tool_calls: int,
     ) -> dict[str, Any]:
         if not isinstance(content, str):
-            raise ValueError("E_PARSE_JSON: response content must be a string")
+            raise ValueError(format_protocol_error(E_PARSE_JSON, "response content must be a string"))
         payload_bytes = content.encode("utf-8")
         if len(payload_bytes) > max(1, int(max_response_bytes)):
-            raise ValueError("E_RESPONSE_BYTES")
+            raise ValueError(E_RESPONSE_BYTES)
         trimmed = self._trim_ascii_whitespace_once(content)
         if "```" in trimmed:
-            raise ValueError("E_MARKDOWN_FENCE")
+            raise ValueError(E_MARKDOWN_FENCE)
         try:
             parsed = json.loads(trimmed, object_pairs_hook=_reject_duplicate_keys)
         except _DuplicateKeyError as exc:
-            raise ValueError(f"E_DUPLICATE_KEY:{exc}") from exc
+            raise ValueError(format_protocol_error(E_DUPLICATE_KEY_PREFIX, str(exc))) from exc
         except json.JSONDecodeError as exc:
-            raise ValueError("E_PARSE_JSON") from exc
+            raise ValueError(E_PARSE_JSON) from exc
 
         if not isinstance(parsed, dict):
-            raise ValueError("E_SCHEMA_ENVELOPE")
+            raise ValueError(E_SCHEMA_ENVELOPE)
         if set(parsed.keys()) != {"content", "tool_calls"}:
-            raise ValueError("E_SCHEMA_ENVELOPE")
+            raise ValueError(E_SCHEMA_ENVELOPE)
         if not isinstance(parsed.get("content"), str):
-            raise ValueError("E_SCHEMA_ENVELOPE")
+            raise ValueError(E_SCHEMA_ENVELOPE)
         if not isinstance(parsed.get("tool_calls"), list):
-            raise ValueError("E_SCHEMA_ENVELOPE")
+            raise ValueError(E_SCHEMA_ENVELOPE)
         if parsed.get("content") != "":
-            raise ValueError("E_TOOL_MODE_CONTENT_NON_EMPTY")
+            raise ValueError(E_TOOL_MODE_CONTENT_NON_EMPTY)
         tool_calls: list[dict[str, Any]] = []
         for index, item in enumerate(parsed["tool_calls"]):
             if not isinstance(item, dict):
-                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+                raise ValueError(format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, str(index)))
             if set(item.keys()) != {"tool", "args"}:
-                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+                raise ValueError(format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, str(index)))
             tool_name = item.get("tool")
             args = item.get("args")
             if not isinstance(tool_name, str) or not tool_name.strip():
-                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+                raise ValueError(format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, str(index)))
             if not isinstance(args, dict):
-                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+                raise ValueError(format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, str(index)))
             tool_calls.append({"tool": tool_name, "args": args})
         if not tool_calls:
-            raise ValueError("E_MISSING_TOOL_CALLS")
+            raise ValueError(E_MISSING_TOOL_CALLS)
         if len(tool_calls) > max(1, int(max_tool_calls)):
-            raise ValueError("E_MAX_TOOL_CALLS")
+            raise ValueError(format_protocol_error(E_MAX_TOOL_CALLS_PREFIX, str(len(tool_calls))))
         return {"content": "", "tool_calls": tool_calls}
 
     def _trim_ascii_whitespace_once(self, content: str) -> str:
         allowed = {" ", "\t", "\n", "\r"}
         if content and content[0].isspace() and content[0] not in allowed:
-            raise ValueError("E_NON_ASCII_WHITESPACE")
+            raise ValueError(E_NON_ASCII_WHITESPACE)
         if content and content[-1].isspace() and content[-1] not in allowed:
-            raise ValueError("E_NON_ASCII_WHITESPACE")
+            raise ValueError(E_NON_ASCII_WHITESPACE)
         start = 0
         end = len(content)
         while start < end and content[start] in allowed:

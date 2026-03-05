@@ -12,6 +12,7 @@ from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLed
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import LedgerFramingError
 from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
+from orket.runtime.protocol_ledger_parity_campaign import compare_protocol_ledger_parity_campaign
 from orket.runtime.protocol_replay import ProtocolReplayEngine
 from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
@@ -283,5 +284,28 @@ def build_sessions_router(
             )
         except LedgerFramingError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    @router.get("/protocol/ledger-parity/campaign")
+    async def campaign_protocol_ledger_parity(
+        session_id: list[str] = Query(default_factory=list),
+        sqlite_db_path: Optional[str] = None,
+        discover_limit: int = 200,
+    ):
+        sqlite_path = (
+            Path(str(sqlite_db_path)).resolve()
+            if str(sqlite_db_path or "").strip()
+            else (workspace_root_getter() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+        )
+        if not sqlite_path.exists():
+            raise HTTPException(status_code=404, detail=f"SQLite run ledger database not found: {sqlite_path}")
+        try:
+            return await compare_protocol_ledger_parity_campaign(
+                sqlite_db=sqlite_path,
+                protocol_root=workspace_root_getter(),
+                session_ids=list(session_id or []),
+                discover_limit=max(0, int(discover_limit)),
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     return router

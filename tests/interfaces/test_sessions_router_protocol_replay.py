@@ -264,3 +264,41 @@ def test_sessions_router_protocol_campaign_endpoint_reports_missing_runs_root(tm
     response = client.get(f"/v1/protocol/replay/campaign?runs_root={missing_root}")
     assert response.status_code == 404
     assert "Runs root not found" in response.text
+
+
+def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_clean_match(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
+    _write_protocol_run(workspace_root, "run-b", status="incomplete", ok=True)
+    asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
+    asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-b", status="incomplete"))
+    client = _build_client(workspace_root)
+
+    response = client.get(
+        "/v1/protocol/ledger-parity/campaign"
+        f"?sqlite_db_path={sqlite_db}&session_id=run-a&session_id=run-b&discover_limit=10"
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["all_match"] is True
+    assert payload["candidate_count"] == 2
+    assert payload["mismatch_count"] == 0
+
+
+def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_mismatch(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_protocol_run(workspace_root, "run-a", status="failed", ok=False)
+    asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
+    client = _build_client(workspace_root)
+
+    response = client.get(
+        "/v1/protocol/ledger-parity/campaign"
+        f"?sqlite_db_path={sqlite_db}&session_id=run-a&discover_limit=10"
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["all_match"] is False
+    assert payload["mismatch_count"] == 1
+    assert payload["compatibility_telemetry_delta"]["field_delta_counts"]["status"] >= 1
