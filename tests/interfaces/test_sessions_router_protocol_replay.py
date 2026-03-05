@@ -65,13 +65,14 @@ def _build_client(workspace_root: Path) -> TestClient:
     return TestClient(app)
 
 
-def _write_protocol_run(workspace_root: Path, run_id: str, *, status: str, ok: bool) -> None:
+def _write_protocol_run(workspace_root: Path, run_id: str, *, status: str, ok: bool, session_id: str | None = None) -> None:
+    resolved_session_id = str(session_id or run_id)
     run_root = workspace_root / "runs" / run_id
     ledger = AppendOnlyRunLedger(run_root / "events.log")
     ledger.append_event(
         {
             "kind": "run_started",
-            "session_id": run_id,
+            "session_id": resolved_session_id,
             "run_type": "epic",
             "run_name": "Replay",
             "department": "core",
@@ -84,7 +85,7 @@ def _write_protocol_run(workspace_root: Path, run_id: str, *, status: str, ok: b
     ledger.append_event(
         {
             "kind": "operation_result",
-            "session_id": run_id,
+            "session_id": resolved_session_id,
             "operation_id": "op-1",
             "tool": "write_file",
             "result": {"ok": ok},
@@ -93,7 +94,7 @@ def _write_protocol_run(workspace_root: Path, run_id: str, *, status: str, ok: b
     ledger.append_event(
         {
             "kind": "run_finalized",
-            "session_id": run_id,
+            "session_id": resolved_session_id,
             "status": status,
             "failure_class": None if status == "incomplete" else "ExecutionFailed",
             "failure_reason": None if status == "incomplete" else "failed",
@@ -201,3 +202,65 @@ def test_sessions_router_protocol_ledger_parity_reports_mismatch(tmp_path: Path)
     assert payload["parity_ok"] is False
     fields = {row["field"] for row in payload["differences"]}
     assert "status" in fields
+
+
+def test_sessions_router_protocol_campaign_endpoint_reports_clean_match(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
+    _write_protocol_run(workspace_root, "run-b", status="incomplete", ok=True, session_id="sess-campaign")
+    client = _build_client(workspace_root)
+
+    response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["all_match"] is True
+    assert payload["candidate_count"] == 2
+    assert payload["mismatch_count"] == 0
+
+
+def test_sessions_router_protocol_campaign_endpoint_reports_mismatch(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
+    _write_protocol_run(workspace_root, "run-b", status="failed", ok=False, session_id="sess-campaign")
+    client = _build_client(workspace_root)
+
+    response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["all_match"] is False
+    assert payload["mismatch_count"] == 1
+
+
+def test_sessions_router_protocol_campaign_endpoint_supports_run_id_filter(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
+    _write_protocol_run(workspace_root, "run-b", status="incomplete", ok=True, session_id="sess-campaign")
+    _write_protocol_run(workspace_root, "run-c", status="failed", ok=False, session_id="sess-campaign")
+    client = _build_client(workspace_root)
+
+    response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a&run_id=run-a&run_id=run-b")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["all_match"] is True
+    assert payload["candidate_count"] == 2
+    assert sorted(row["run_id"] for row in payload["comparisons"]) == ["run-a", "run-b"]
+
+
+def test_sessions_router_protocol_campaign_endpoint_rejects_invalid_run_id_filter(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
+    client = _build_client(workspace_root)
+
+    response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a&run_id=../outside")
+    assert response.status_code == 400
+    assert "invalid run id" in response.text.lower()
+
+
+def test_sessions_router_protocol_campaign_endpoint_reports_missing_runs_root(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    client = _build_client(workspace_root)
+
+    missing_root = tmp_path / "missing-runs"
+    response = client.get(f"/v1/protocol/replay/campaign?runs_root={missing_root}")
+    assert response.status_code == 404
+    assert "Runs root not found" in response.text

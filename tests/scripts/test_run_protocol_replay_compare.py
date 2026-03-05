@@ -40,6 +40,14 @@ def _write_events(path: Path, *, status: str, ok: bool) -> None:
     )
 
 
+def _write_receipts(path: Path, *, operation_id: str) -> None:
+    path.write_text(
+        '{"receipt_seq":1,"receipt_digest":"%s","operation_id":"%s","event_seq_range":[2,2]}\n'
+        % ("a" * 64, operation_id),
+        encoding="utf-8",
+    )
+
+
 def test_run_protocol_replay_compare_writes_output_file(tmp_path: Path) -> None:
     run_a = tmp_path / "run-a.log"
     run_b = tmp_path / "run-b.log"
@@ -77,6 +85,32 @@ def test_run_protocol_replay_compare_strict_exits_non_zero_on_divergence(tmp_pat
             str(run_a),
             "--run-b-events",
             str(run_b),
+            "--strict",
+        ]
+    )
+    assert exit_code == 1
+
+
+def test_run_protocol_replay_compare_receipt_overrides_are_compared(tmp_path: Path) -> None:
+    run_a = tmp_path / "run-a.log"
+    run_b = tmp_path / "run-b.log"
+    receipts_a = tmp_path / "run-a.receipts.log"
+    receipts_b = tmp_path / "run-b.receipts.log"
+    _write_events(run_a, status="incomplete", ok=True)
+    _write_events(run_b, status="incomplete", ok=True)
+    _write_receipts(receipts_a, operation_id="op-1")
+    _write_receipts(receipts_b, operation_id="op-9")
+
+    exit_code = main(
+        [
+            "--run-a-events",
+            str(run_a),
+            "--run-b-events",
+            str(run_b),
+            "--run-a-receipts",
+            str(receipts_a),
+            "--run-b-receipts",
+            str(receipts_b),
             "--strict",
         ]
     )

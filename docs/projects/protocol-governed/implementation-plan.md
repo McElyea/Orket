@@ -104,6 +104,27 @@ Latest completed increments:
     - timezone/locale/network mode resolution
     - env allowlist snapshot + hash generation
     - runtime policy helper for deterministic control bundle
+12. Run-ledger mode selection and dual-write telemetry landed:
+    - runtime `run_ledger_mode` policy resolution (`sqlite` / `protocol` / `dual_write`)
+    - factory wiring in orchestration engine + execution pipeline
+    - dual-write adapter with parity telemetry (`run_ledger_dual_write_parity`)
+13. Protocol receipt materialization landed:
+    - deterministic projection from per-turn `protocol_receipts.log` into run-level `runs/<run_id>/receipts.log`
+    - operation event cross-linking (`receipt_seq`, `event_seq_range`)
+    - idempotent replay-safe rematerialization path
+14. Determinism campaign and replay surfaces expanded:
+    - runtime campaign comparator module (`protocol_determinism_campaign`)
+    - script harness `scripts/MidTier/run_protocol_determinism_campaign.py`
+    - CLI command `orket protocol campaign`
+    - sessions API endpoint `/v1/protocol/replay/campaign`
+    - replay comparator now includes `receipt_inventory` in state digest and diffs
+15. Replay campaign output schema lock landed:
+    - canonical campaign output contract published at
+      `docs/projects/protocol-governed/replay-campaign-schema.md`
+16. Fault-injection replay coverage expanded:
+    - truncation tail boundaries across multiple byte cuts
+    - checksum corruption vectors for first/middle/final records
+    - explicit non-monotonic sequence vectors
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -118,31 +139,23 @@ Validation evidence (new test surfaces):
 10. `tests/interfaces/test_cli_protocol_replay.py`
 11. `tests/scripts/test_run_protocol_replay_compare.py`
 12. `tests/scripts/test_compare_run_ledger_backends.py`
+13. `tests/application/test_async_dual_write_run_ledger.py`
+14. `tests/application/test_execution_pipeline_run_ledger_mode.py`
+15. `tests/runtime/test_protocol_receipt_materializer.py`
+16. `tests/runtime/test_protocol_determinism_campaign.py`
+17. `tests/runtime/test_run_ledger_factory.py`
+18. `tests/scripts/test_run_protocol_determinism_campaign.py`
 
 Next execution slices (active):
-1. Integrate append-only ledger repository into runtime pipeline behind a policy flag so compat and protocol ledgers can be compared safely.
-2. Add deterministic replay comparator that reads:
-   - append-only events log
-   - protocol receipt log
-   - content-addressed artifact inventory
-3. Promote protocol ledger parity checks into CI once initial parity campaigns show no P0 drift.
-4. Land immutable receipt cross-linking:
-   - receipt references `event_seq_range`
-   - event records reference `receipt_digest` and/or `receipt_seq`
-5. Add deterministic environment control wiring in runtime context:
+1. Promote protocol ledger parity checks into CI once initial parity campaigns show no P0 drift.
+2. Add deterministic environment control wiring in runtime context:
    - `timezone`
    - `locale`
    - `network_mode`
    - `env_allowlist_hash`
-6. Expand replay fault-injection coverage:
-   - mid-record tail truncation at multiple byte boundaries
-   - checksum corruption on first/middle/final complete records
-   - explicit non-monotonic `event_seq` vectors
-   - assertion that replay ordering uses only `event_seq`
-7. Publish deterministic replay campaign artifacts for operator review and rollback readiness.
-8. Capture compatibility telemetry deltas between SQLite ledger and append-only ledger during dual-write.
-9. Lock replay comparator output schema before CI enforcement to avoid churn in operator dashboards.
-10. Maintain a stable protocol error-code registry across parser, validator, ledger, and replay paths.
+3. Publish deterministic replay campaign artifacts for operator review and rollback readiness.
+4. Capture compatibility telemetry deltas between SQLite ledger and append-only ledger during dual-write.
+5. Maintain a stable protocol error-code registry across parser, validator, ledger, and replay paths.
 
 ## Delivery Strategy
 

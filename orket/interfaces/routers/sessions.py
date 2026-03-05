@@ -5,12 +5,13 @@ import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import LedgerFramingError
+from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
 from orket.runtime.protocol_replay import ProtocolReplayEngine
 from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
@@ -237,6 +238,29 @@ def build_sessions_router(
         except LedgerFramingError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return comparison
+
+    @router.get("/protocol/replay/campaign")
+    async def campaign_protocol_replays(
+        run_id: list[str] = Query(default_factory=list),
+        baseline_run: Optional[str] = None,
+        runs_root: Optional[str] = None,
+    ):
+        root = (
+            Path(str(runs_root)).resolve()
+            if str(runs_root or "").strip()
+            else (workspace_root_getter() / "runs").resolve()
+        )
+        if not root.exists():
+            raise HTTPException(status_code=404, detail=f"Runs root not found: {root}")
+        try:
+            return await asyncio.to_thread(
+                compare_protocol_determinism_campaign,
+                runs_root=root,
+                run_ids=list(run_id or []),
+                baseline_run_id=str(baseline_run or "").strip() or None,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.get("/protocol/runs/{run_id}/ledger-parity")
     async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: Optional[str] = None):

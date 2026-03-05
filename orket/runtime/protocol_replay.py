@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 from typing import Any, Dict
 
@@ -37,6 +38,37 @@ def artifact_digest_inventory(artifact_root: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def receipt_digest_inventory(receipts_log_path: Path) -> list[dict[str, Any]]:
+    if not receipts_log_path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    with receipts_log_path.open("r", encoding="utf-8") as handle:
+        for line_index, line in enumerate(handle, start=1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            payload = json.loads(stripped)
+            if not isinstance(payload, dict):
+                continue
+            rows.append(
+                {
+                    "receipt_seq": int(payload.get("receipt_seq") or 0),
+                    "receipt_digest": str(payload.get("receipt_digest") or ""),
+                    "event_seq_range": list(payload.get("event_seq_range") or []),
+                    "operation_id": str(payload.get("operation_id") or ""),
+                    "line": int(line_index),
+                }
+            )
+    rows.sort(
+        key=lambda row: (
+            int(row.get("receipt_seq") or 0),
+            str(row.get("receipt_digest") or ""),
+            str(row.get("operation_id") or ""),
+        )
+    )
+    return rows
+
+
 class ProtocolReplayEngine:
     """Reconstruct protocol-governed run state from append-only ledger + artifacts."""
 
@@ -45,9 +77,19 @@ class ProtocolReplayEngine:
         *,
         events_log_path: Path,
         artifact_root: Path | None = None,
+        receipts_log_path: Path | None = None,
     ) -> dict[str, Any]:
         ledger = AppendOnlyRunLedger(events_log_path)
         events = ledger.replay_events()
+        resolved_receipts_path = receipts_log_path
+        if resolved_receipts_path is None:
+            candidate = events_log_path.with_name("receipts.log")
+            resolved_receipts_path = candidate if candidate.exists() else None
+        receipts = (
+            receipt_digest_inventory(resolved_receipts_path)
+            if resolved_receipts_path is not None
+            else []
+        )
 
         summary: dict[str, Any] = {
             "session_id": "",
@@ -63,6 +105,7 @@ class ProtocolReplayEngine:
             "operations": {},
             "status_timeline": [],
             "artifact_inventory": artifact_digest_inventory(artifact_root) if artifact_root else [],
+            "receipt_inventory": receipts,
         }
 
         for event in events:
@@ -104,6 +147,7 @@ class ProtocolReplayEngine:
                 }
 
         summary["operation_count"] = len(summary["operations"])
+        summary["receipt_count"] = len(summary["receipt_inventory"])
         summary["state_digest"] = hash_canonical_json(
             {
                 "session_id": summary["session_id"],
@@ -117,6 +161,7 @@ class ProtocolReplayEngine:
                 "last_event_seq": summary["last_event_seq"],
                 "operations": summary["operations"],
                 "artifact_inventory": summary["artifact_inventory"],
+                "receipt_inventory": summary["receipt_inventory"],
             }
         )
         return summary
@@ -128,9 +173,19 @@ class ProtocolReplayEngine:
         run_b_events_path: Path,
         run_a_artifact_root: Path | None = None,
         run_b_artifact_root: Path | None = None,
+        run_a_receipts_path: Path | None = None,
+        run_b_receipts_path: Path | None = None,
     ) -> dict[str, Any]:
-        replay_a = self.replay_from_ledger(events_log_path=run_a_events_path, artifact_root=run_a_artifact_root)
-        replay_b = self.replay_from_ledger(events_log_path=run_b_events_path, artifact_root=run_b_artifact_root)
+        replay_a = self.replay_from_ledger(
+            events_log_path=run_a_events_path,
+            artifact_root=run_a_artifact_root,
+            receipts_log_path=run_a_receipts_path,
+        )
+        replay_b = self.replay_from_ledger(
+            events_log_path=run_b_events_path,
+            artifact_root=run_b_artifact_root,
+            receipts_log_path=run_b_receipts_path,
+        )
 
         differences: list[dict[str, Any]] = []
         self._maybe_add_difference(differences, "status", replay_a["status"], replay_b["status"])
@@ -143,6 +198,12 @@ class ProtocolReplayEngine:
             "artifact_inventory",
             replay_a["artifact_inventory"],
             replay_b["artifact_inventory"],
+        )
+        self._maybe_add_difference(
+            differences,
+            "receipt_inventory",
+            replay_a["receipt_inventory"],
+            replay_b["receipt_inventory"],
         )
 
         deterministic_match = replay_a["state_digest"] == replay_b["state_digest"]

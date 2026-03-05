@@ -88,6 +88,9 @@ def _args(**overrides):
         "protocol_events_b": None,
         "protocol_artifacts_a": None,
         "protocol_artifacts_b": None,
+        "protocol_runs_root": None,
+        "protocol_campaign_run_id": [],
+        "protocol_baseline_run_id": None,
         "protocol_sqlite_db": None,
         "protocol_strict": False,
     }
@@ -117,6 +120,40 @@ async def _write_sqlite_run(db_path: Path, run_id: str, *, status: str) -> None:
         status=status,
         summary={"session_status": status},
         artifacts={"gitea_export": {"provider": "gitea"}},
+    )
+
+
+def _write_campaign_run(workspace: Path, run_id: str, *, session_id: str, status: str, ok: bool) -> None:
+    events = workspace / "runs" / run_id / "events.log"
+    ledger = AppendOnlyRunLedger(events)
+    ledger.append_event(
+        {
+            "kind": "run_started",
+            "session_id": session_id,
+            "run_type": "epic",
+            "run_name": "CLI Campaign",
+            "department": "core",
+            "build_id": "build-1",
+            "status": "running",
+        }
+    )
+    ledger.append_event(
+        {
+            "kind": "operation_result",
+            "session_id": session_id,
+            "operation_id": "op-1",
+            "tool": "write_file",
+            "result": {"ok": ok},
+        }
+    )
+    ledger.append_event(
+        {
+            "kind": "run_finalized",
+            "session_id": session_id,
+            "status": status,
+            "failure_class": None if status == "incomplete" else "ExecutionFailed",
+            "failure_reason": None if status == "incomplete" else "failed",
+        }
     )
 
 
@@ -253,3 +290,113 @@ async def test_cli_protocol_parity_missing_sqlite_reports_error(monkeypatch, tmp
     await cli_module.run_cli()
     out = capsys.readouterr().out
     assert "SQLite run ledger database not found" in out
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_campaign_prints_match_summary(monkeypatch, tmp_path: Path, capsys) -> None:
+    workspace = tmp_path / "workspace" / "default"
+    _write_campaign_run(workspace, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
+    _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="campaign",
+            workspace=str(workspace),
+            protocol_baseline_run_id="run-a",
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert '"all_match": true' in out.lower()
+    assert '"candidate_count": 2' in out.lower()
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_campaign_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
+    workspace = tmp_path / "workspace" / "default"
+    _write_campaign_run(workspace, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
+    _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="failed", ok=False)
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="campaign",
+            workspace=str(workspace),
+            protocol_baseline_run_id="run-a",
+            protocol_strict=True,
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert '"all_match": false' in out.lower()
+    assert "Protocol replay campaign mismatch detected under --protocol-strict." in out
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_campaign_supports_explicit_run_id_filter(monkeypatch, tmp_path: Path, capsys) -> None:
+    workspace = tmp_path / "workspace" / "default"
+    _write_campaign_run(workspace, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
+    _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
+    _write_campaign_run(workspace, "run-c", session_id="sess-campaign", status="failed", ok=False)
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="campaign",
+            workspace=str(workspace),
+            protocol_baseline_run_id="run-a",
+            protocol_campaign_run_id=["run-a", "run-b"],
+            protocol_strict=True,
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert '"all_match": true' in out.lower()
+    assert '"candidate_count": 2' in out.lower()
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_campaign_uses_explicit_runs_root(monkeypatch, tmp_path: Path, capsys) -> None:
+    workspace = tmp_path / "workspace" / "default"
+    custom_root = tmp_path / "custom-root"
+    _write_campaign_run(custom_root, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
+    _write_campaign_run(custom_root, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="campaign",
+            workspace=str(workspace),
+            protocol_runs_root=str(custom_root / "runs"),
+            protocol_baseline_run_id="run-a",
+            protocol_strict=True,
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert '"all_match": true' in out.lower()

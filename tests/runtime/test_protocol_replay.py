@@ -3,7 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from orket.runtime.protocol_replay import ProtocolReplayEngine, artifact_digest_inventory
+from orket.runtime.protocol_replay import (
+    ProtocolReplayEngine,
+    artifact_digest_inventory,
+    receipt_digest_inventory,
+)
 
 
 def _write_run_events(path: Path, *, status: str, operation_ok: bool) -> None:
@@ -39,6 +43,17 @@ def _write_run_events(path: Path, *, status: str, operation_ok: bool) -> None:
     )
 
 
+def _write_receipts(path: Path, *, operation_id: str = "op-1", receipt_seq: int = 1) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        (
+            '{"receipt_seq":%d,"receipt_digest":"%s","operation_id":"%s","event_seq_range":[2,2]}\n'
+            % (receipt_seq, "a" * 64, operation_id)
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_artifact_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
     artifact_root = tmp_path / "artifacts"
     (artifact_root / "b").mkdir(parents=True, exist_ok=True)
@@ -51,9 +66,27 @@ def test_artifact_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
     assert all(len(row["sha256"]) == 64 for row in inventory)
 
 
+def test_receipt_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
+    receipts = tmp_path / "receipts.log"
+    receipts.write_text(
+        "\n".join(
+            [
+                '{"receipt_seq":2,"receipt_digest":"%s","operation_id":"op-2","event_seq_range":[4,4]}' % ("b" * 64),
+                '{"receipt_seq":1,"receipt_digest":"%s","operation_id":"op-1","event_seq_range":[2,2]}' % ("a" * 64),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    inventory = receipt_digest_inventory(receipts)
+    assert [row["receipt_seq"] for row in inventory] == [1, 2]
+    assert [row["operation_id"] for row in inventory] == ["op-1", "op-2"]
+
+
 def test_protocol_replay_engine_reconstructs_summary(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-1" / "events.log"
     _write_run_events(events, status="incomplete", operation_ok=True)
+    _write_receipts(events.with_name("receipts.log"))
     artifacts = tmp_path / "runs" / "sess-1" / "artifacts"
     artifacts.mkdir(parents=True, exist_ok=True)
     (artifacts / "out.txt").write_text("ok", encoding="utf-8")
@@ -68,6 +101,7 @@ def test_protocol_replay_engine_reconstructs_summary(tmp_path: Path) -> None:
     assert replay["operations"]["op-1"]["ok"] is True
     assert replay["event_count"] == 3
     assert replay["last_event_seq"] == 3
+    assert replay["receipt_count"] == 1
     assert len(replay["state_digest"]) == 64
     assert len(replay["artifact_inventory"]) == 1
 
@@ -77,6 +111,8 @@ def test_protocol_replay_engine_compare_reports_match_for_identical_runs(tmp_pat
     run_b = tmp_path / "run_b" / "events.log"
     _write_run_events(run_a, status="incomplete", operation_ok=True)
     _write_run_events(run_b, status="incomplete", operation_ok=True)
+    _write_receipts(run_a.with_name("receipts.log"))
+    _write_receipts(run_b.with_name("receipts.log"))
 
     engine = ProtocolReplayEngine()
     comparison = engine.compare_replays(run_a_events_path=run_a, run_b_events_path=run_b)
@@ -91,6 +127,8 @@ def test_protocol_replay_engine_compare_reports_divergence(tmp_path: Path) -> No
     run_b = tmp_path / "run_b" / "events.log"
     _write_run_events(run_a, status="incomplete", operation_ok=True)
     _write_run_events(run_b, status="failed", operation_ok=False)
+    _write_receipts(run_a.with_name("receipts.log"), operation_id="op-1", receipt_seq=1)
+    _write_receipts(run_b.with_name("receipts.log"), operation_id="op-9", receipt_seq=1)
 
     engine = ProtocolReplayEngine()
     comparison = engine.compare_replays(run_a_events_path=run_a, run_b_events_path=run_b)
@@ -99,4 +137,5 @@ def test_protocol_replay_engine_compare_reports_divergence(tmp_path: Path) -> No
     fields = {row["field"] for row in comparison["differences"]}
     assert "status" in fields
     assert "operations" in fields
+    assert "receipt_inventory" in fields
     assert comparison["state_digest_a"] != comparison["state_digest_b"]

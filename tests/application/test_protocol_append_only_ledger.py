@@ -113,3 +113,55 @@ def test_append_only_run_ledger_replay_fails_on_corrupt_record(tmp_path: Path) -
     with pytest.raises(LedgerFramingError) as exc:
         ledger.replay_events()
     assert exc.value.code == "E_LEDGER_CORRUPT"
+
+
+def _three_record_stream() -> bytes:
+    first = encode_lpj_c32_record({"event_seq": 1, "kind": "a"})
+    second = encode_lpj_c32_record({"event_seq": 2, "kind": "b"})
+    third = encode_lpj_c32_record({"event_seq": 3, "kind": "c"})
+    return first + second + third
+
+
+def test_lpj_c32_decode_ignores_partial_tail_across_multiple_boundaries() -> None:
+    stream = _three_record_stream()
+    third = encode_lpj_c32_record({"event_seq": 3, "kind": "c"})
+    prefix = stream[: len(stream) - len(third)]
+    for trim in (1, 2, 3, 7, 11):
+        records = decode_lpj_c32_stream(prefix + third[:-trim])
+        assert [row["event_seq"] for row in records] == [1, 2]
+
+
+def test_lpj_c32_decode_rejects_checksum_corruption_on_first_middle_and_last_records() -> None:
+    records = [
+        {"event_seq": 1, "kind": "a"},
+        {"event_seq": 2, "kind": "b"},
+        {"event_seq": 3, "kind": "c"},
+    ]
+    frames = [bytearray(encode_lpj_c32_record(row)) for row in records]
+    offsets: list[tuple[int, int]] = []
+    running = 0
+    for index, frame in enumerate(frames):
+        offsets.append((index, running))
+        running += len(frame)
+
+    for index, stream_offset in offsets:
+        mutated = bytearray().join(frames)
+        # Flip one payload byte from the selected frame.
+        payload_start = stream_offset + 4
+        mutated[payload_start + 1] = mutated[payload_start + 1] ^ 0x01
+        with pytest.raises(LedgerFramingError) as exc:
+            decode_lpj_c32_stream(bytes(mutated))
+        assert exc.value.code == "E_LEDGER_CORRUPT"
+        assert f"offset={stream_offset}" in str(exc.value)
+
+
+def test_lpj_c32_decode_rejects_non_monotonic_event_seq_vectors() -> None:
+    vector = [
+        {"event_seq": 1, "kind": "a"},
+        {"event_seq": 3, "kind": "b"},
+        {"event_seq": 2, "kind": "c"},
+    ]
+    stream = b"".join(encode_lpj_c32_record(row) for row in vector)
+    with pytest.raises(LedgerFramingError) as exc:
+        decode_lpj_c32_stream(stream)
+    assert exc.value.code == "E_LEDGER_SEQ"

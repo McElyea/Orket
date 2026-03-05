@@ -48,6 +48,9 @@ def parse_args():
     parser.add_argument("--protocol-events-b", type=str, default=None, help="Optional explicit events.log path for protocol run B.")
     parser.add_argument("--protocol-artifacts-a", type=str, default=None, help="Optional artifact root path for protocol run A.")
     parser.add_argument("--protocol-artifacts-b", type=str, default=None, help="Optional artifact root path for protocol run B.")
+    parser.add_argument("--protocol-runs-root", type=str, default=None, help="Optional runs root for 'orket protocol campaign'. Defaults to <workspace>/runs.")
+    parser.add_argument("--protocol-campaign-run-id", action="append", default=[], help="Optional run id filter for 'orket protocol campaign' (repeatable).")
+    parser.add_argument("--protocol-baseline-run-id", type=str, default=None, help="Optional baseline run id for 'orket protocol campaign'.")
     parser.add_argument("--protocol-sqlite-db", type=str, default=None, help="Optional sqlite run ledger DB path for 'orket protocol parity <run_id>'.")
     parser.add_argument("--protocol-strict", action="store_true", help="Return non-zero on protocol replay mismatch.")
     return parser.parse_args()
@@ -183,6 +186,7 @@ async def run_cli():
         if args.command == "protocol":
             from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
             from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
+            from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
             from orket.runtime.protocol_replay import ProtocolReplayEngine
             from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
@@ -269,10 +273,29 @@ async def run_cli():
                     raise ValueError("Run ledger parity mismatch detected under --protocol-strict.")
                 return
 
+            if args.subcommand == "campaign":
+                runs_root = (
+                    Path(str(args.protocol_runs_root)).resolve()
+                    if str(args.protocol_runs_root or "").strip()
+                    else (Path(args.workspace).resolve() / "runs").resolve()
+                )
+                campaign = await asyncio.to_thread(
+                    compare_protocol_determinism_campaign,
+                    runs_root=runs_root,
+                    run_ids=list(args.protocol_campaign_run_id or []),
+                    baseline_run_id=str(args.protocol_baseline_run_id or "").strip() or None,
+                )
+                print(json.dumps(campaign, indent=2, ensure_ascii=False))
+                if bool(args.protocol_strict) and not bool(campaign.get("all_match", False)):
+                    raise ValueError("Protocol replay campaign mismatch detected under --protocol-strict.")
+                return
+
             raise ValueError(
                 "Supported protocol commands: 'orket protocol replay <run_id>', "
                 "'orket protocol compare <run_a> --protocol-run-b <run_b>', or "
-                "'orket protocol parity <run_id> [--protocol-sqlite-db <path>]'."
+                "'orket protocol parity <run_id> [--protocol-sqlite-db <path>]', or "
+                "'orket protocol campaign [--protocol-runs-root <path>] [--protocol-campaign-run-id <run_id>] "
+                "[--protocol-baseline-run-id <run_id>]'."
             )
 
         workspace = Path(args.workspace).resolve()

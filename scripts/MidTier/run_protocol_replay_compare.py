@@ -16,6 +16,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-b-events", required=True, help="Path to run B events.log")
     parser.add_argument("--run-a-artifacts", default="", help="Optional path to run A artifact root")
     parser.add_argument("--run-b-artifacts", default="", help="Optional path to run B artifact root")
+    parser.add_argument("--run-a-receipts", default="", help="Optional path to run A receipts.log")
+    parser.add_argument("--run-b-receipts", default="", help="Optional path to run B receipts.log")
     parser.add_argument("--out", default="", help="Optional output JSON path")
     parser.add_argument(
         "--strict",
@@ -38,11 +40,15 @@ def _run_compare(args: argparse.Namespace) -> dict[str, Any]:
     run_b_events = Path(str(args.run_b_events)).resolve()
     run_a_artifacts = _resolve_optional_path(str(args.run_a_artifacts))
     run_b_artifacts = _resolve_optional_path(str(args.run_b_artifacts))
+    run_a_receipts = _resolve_optional_path(str(args.run_a_receipts))
+    run_b_receipts = _resolve_optional_path(str(args.run_b_receipts))
     return engine.compare_replays(
         run_a_events_path=run_a_events,
         run_b_events_path=run_b_events,
         run_a_artifact_root=run_a_artifacts,
         run_b_artifact_root=run_b_artifacts,
+        run_a_receipts_path=run_a_receipts,
+        run_b_receipts_path=run_b_receipts,
     )
 
 
