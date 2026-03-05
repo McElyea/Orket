@@ -48,3 +48,30 @@ def test_required_write_and_observed_paths() -> None:
     ]
     assert PathResolver.observed_read_paths(turn) == ["agent_output/main.py"]
     assert PathResolver.observed_write_paths(turn) == ["agent_output/main.py"]
+
+
+def test_workspace_constraint_violation_rejects_absolute_paths(tmp_path: Path) -> None:
+    detail = PathResolver.workspace_constraint_violation(
+        tool_name="write_file",
+        args={"path": str((tmp_path / "outside.txt").resolve()), "content": "x"},
+        workspace=tmp_path,
+    )
+    assert detail == "write_file:absolute_path"
+
+
+def test_workspace_constraint_violation_rejects_traversal_paths(tmp_path: Path) -> None:
+    detail = PathResolver.workspace_constraint_violation(
+        tool_name="read_file",
+        args={"path": "../secrets.txt"},
+        workspace=tmp_path,
+    )
+    assert detail == "read_file:path_traversal"
+
+
+def test_workspace_constraint_violation_allows_in_workspace_relative_paths(tmp_path: Path) -> None:
+    detail = PathResolver.workspace_constraint_violation(
+        tool_name="list_directory",
+        args={"path": "agent_output"},
+        workspace=tmp_path,
+    )
+    assert detail is None

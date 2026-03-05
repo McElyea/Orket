@@ -32,6 +32,59 @@ Operational:
 2. Crash recovery never duplicates side effects.
 3. Determinism harness fails on any hidden nondeterminism.
 
+## Execution Status (2026-03-04)
+
+Completed slices:
+1. PR-01 strict envelope parser is wired (`E_PARSE_JSON` / duplicate-key / markdown fence / strict key set / cap checks).
+2. PR-02 deterministic preflight foundation is wired (schema+governance+approval validation before tool execution starts, with strict fail-fast behavior).
+3. Protocol context caps are wired into turn context (`protocol_governed_enabled`, `max_response_bytes`, `max_tool_calls`).
+
+In-progress slices:
+1. PR-03 canonical hash framing:
+   - Added shared protocol canonicalization utilities and tuple-framed hashing.
+   - Parser now stamps strict-mode metadata (`proposal_hash`, `validator_version`, `protocol_hash`, `tool_schema_hash`) into turn raw payload.
+   - Dispatcher and artifact writer now consume canonical hashing instead of ad hoc JSON hashing for protocol surfaces.
+2. PR-06 deterministic tool execution and idempotency guards:
+   - Added deterministic `step_id`, `step_seed`, and `operation_id` derivation in tool execution flow.
+   - Added operation-id result cache path and replay/reuse semantics.
+   - Added append-only protocol receipt emission per tool call with deterministic digest.
+3. PR-02 workspace constraints hardening:
+   - Added `Path.is_relative_to()`-based workspace constraint checks in preflight with deterministic `E_WORKSPACE_CONSTRAINT:<detail>` errors.
+   - Added path traversal and absolute path checks for path-bearing tools (`read_file`, `write_file`, `list_directory`, `list_dir`).
+
+Evidence added:
+1. `tests/application/test_protocol_hashing.py`
+2. Expanded:
+   - `tests/application/test_turn_response_parser.py`
+   - `tests/application/test_turn_tool_dispatcher.py`
+   - `tests/application/test_turn_path_resolver.py`
+   - `tests/application/test_turn_artifact_writer.py`
+
+Next execution slices (active):
+1. Integrate append-only ledger repository into runtime pipeline behind a policy flag so compat and protocol ledgers can be compared safely.
+2. Add deterministic replay comparator that reads:
+   - append-only events log
+   - protocol receipt log
+   - content-addressed artifact inventory
+3. Promote protocol ledger parity checks into CI once initial parity campaigns show no P0 drift.
+4. Land immutable receipt cross-linking:
+   - receipt references `event_seq_range`
+   - event records reference `receipt_digest` and/or `receipt_seq`
+5. Add deterministic environment control wiring in runtime context:
+   - `timezone`
+   - `locale`
+   - `network_mode`
+   - `env_allowlist_hash`
+6. Expand replay fault-injection coverage:
+   - mid-record tail truncation at multiple byte boundaries
+   - checksum corruption on first/middle/final complete records
+   - explicit non-monotonic `event_seq` vectors
+   - assertion that replay ordering uses only `event_seq`
+7. Publish deterministic replay campaign artifacts for operator review and rollback readiness.
+8. Capture compatibility telemetry deltas between SQLite ledger and append-only ledger during dual-write.
+9. Lock replay comparator output schema before CI enforcement to avoid churn in operator dashboards.
+10. Maintain a stable protocol error-code registry across parser, validator, ledger, and replay paths.
+
 ## Delivery Strategy
 
 1. Ship behind a runtime flag first (`compat` mode), then enforce as default after parity evidence.
