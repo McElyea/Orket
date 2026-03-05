@@ -10,16 +10,16 @@ All process and workflow rules live in `docs/CONTRIBUTOR.md`.
 
 ## Invocation Rule
 If the user requests "follow roadmap" without naming a project, execute the highest-priority active (non-paused) item in **Priority Now**.
-Current default target: marshaller.
+Current default target: protocol-governed.
 
 ## Priority Now
-1. marshaller -- Marshaller v0 specification/implementation lane.
-2. protocol-governed -- Runtime protocol determinism hardening (requirements v5.1 + implementation plan).
+1. protocol-governed -- Runtime protocol determinism hardening (requirements v5.1 + implementation plan).
+2. marshaller -- Marshaller v0 scaffolding lane aligned to protocol-governed runtime decisions.
 3. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. marshaller -- Execute v0 slices from `docs/projects/marshaller/Marshaller-v0.md` (completed: Stage 0/1 intake + Stage 2/3/4 deterministic gates + replay equivalence + promotion ledgering + multi-attempt orchestration with run summary/triage artifacts + CLI execution/list/inspect + built-in workload wiring `marshaller_v0` + API endpoints for run listing/inspection; next: optional dedicated UI layer over marshaller API).
-2. protocol-governed -- PR-01 and PR-02 initial slices in progress (strict envelope parser mode plus protocol preflight validation-before-execution in tool dispatch, both behind protocol-governed mode flag, with tests).
+1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: PR-01 strict envelope parser and PR-02 validation-before-execution preflight with max response/tool-call caps and context wiring).
+2. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
@@ -27,8 +27,8 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | NervousSystem | active | P2-review | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`. |
-| marshaller | active | P1-active | `docs/projects/marshaller/` | Orket Core | Marshaller v0 implementation in progress; baseline includes multi-attempt execution (`max_attempts`), run-level `summary.json`/`triage.json`, replay equivalence, promotion event recording, CLI run/inspect/list integration (`orket marshaller`), built-in workload registration (`marshaller_v0`), and API run-browser endpoints. |
-| protocol-governed | active | P2-active | `docs/projects/protocol-governed/` | Orket Core | Runtime contract lane with v5.1 requirements and implementation sequencing plan; PR-01 strict parser boundary and PR-02 preflight tool validation slices started in runtime workflow code paths. |
+| marshaller | active | P2-scaffolding | `docs/projects/marshaller/` | Orket Core | Current Marshaller implementation is scaffolding and will be refit to finalized protocol-governed runtime decisions. |
+| protocol-governed | active | P1-active | `docs/projects/protocol-governed/` | Orket Core | Primary overhaul lane; strict parser boundary, preflight tool validation, and protocol context/cap wiring are in progress against v5.1. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
 | LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |
 | techdebt | completed-archive | complete | `docs/projects/archive/TechDebt-2026-03-02/` | Orket Core | Review3 remediation lane closed (C1-C6 complete; security gates green). Deferred medium backlog documented in archive README/plan. |

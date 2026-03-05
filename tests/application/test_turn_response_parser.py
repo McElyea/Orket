@@ -92,3 +92,30 @@ def test_response_parser_strict_protocol_mode_rejects_markdown_fences(tmp_path: 
         raise AssertionError("expected ValueError for markdown fences")
     except ValueError as exc:
         assert "E_MARKDOWN_FENCE" in str(exc)
+
+
+def test_response_parser_strict_protocol_mode_rejects_excess_tool_calls(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = {
+        "content": (
+            '{"content":"","tool_calls":['
+            '{"tool":"write_file","args":{}},'
+            '{"tool":"read_file","args":{}}]}'
+        ),
+        "raw": {"total_tokens": 9},
+    }
+    try:
+        parser.parse_response(
+            response=response,
+            issue_id="ISSUE-1",
+            role_name="coder",
+            context={
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "max_tool_calls": 1,
+            },
+        )
+        raise AssertionError("expected ValueError for too many tool calls")
+    except ValueError as exc:
+        assert "E_MAX_TOOL_CALLS" in str(exc)

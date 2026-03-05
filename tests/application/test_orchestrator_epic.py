@@ -1571,6 +1571,45 @@ def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
     assert context["project_surface_profile"] == "unspecified"
 
 
+def test_build_turn_context_protocol_governed_defaults(orchestrator):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={})
+    issue = IssueConfig(id="ARC-3", seat="architect", summary="Design architecture")
+    context = orch._build_turn_context(
+        run_id="run-3",
+        issue=issue,
+        seat_name="architect",
+        roles_to_load=["architect"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+    assert context["protocol_governed_enabled"] is False
+    assert context["max_response_bytes"] == 8192
+    assert context["max_tool_calls"] == 8
+
+
+def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkeypatch):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={})
+    monkeypatch.setenv("ORKET_PROTOCOL_GOVERNED_ENABLED", "true")
+    monkeypatch.setenv("ORKET_PROTOCOL_MAX_RESPONSE_BYTES", "4096")
+    monkeypatch.setenv("ORKET_PROTOCOL_MAX_TOOL_CALLS", "3")
+    issue = IssueConfig(id="ARC-4", seat="architect", summary="Design architecture")
+    context = orch._build_turn_context(
+        run_id="run-4",
+        issue=issue,
+        seat_name="architect",
+        roles_to_load=["architect"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+    assert context["protocol_governed_enabled"] is True
+    assert context["max_response_bytes"] == 4096
+    assert context["max_tool_calls"] == 3
+
+
 def test_resolve_runtime_modes_honor_user_settings_when_process_rules_unset(orchestrator, monkeypatch):
     orch, _cards, _loader = orchestrator
     monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")

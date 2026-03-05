@@ -38,6 +38,7 @@ class ResponseParser:
             envelope = self._parse_strict_envelope(
                 content=content,
                 max_response_bytes=int(context.get("max_response_bytes", 8192)),
+                max_tool_calls=int(context.get("max_tool_calls", 8)),
             )
             capture("strict_parse_success", {"tool_call_count": len(envelope["tool_calls"])})
             parsed_calls = list(envelope["tool_calls"])
@@ -88,7 +89,13 @@ class ResponseParser:
             raw=raw_data,
         )
 
-    def _parse_strict_envelope(self, *, content: Any, max_response_bytes: int) -> dict[str, Any]:
+    def _parse_strict_envelope(
+        self,
+        *,
+        content: Any,
+        max_response_bytes: int,
+        max_tool_calls: int,
+    ) -> dict[str, Any]:
         if not isinstance(content, str):
             raise ValueError("E_PARSE_JSON: response content must be a string")
         payload_bytes = content.encode("utf-8")
@@ -129,6 +136,8 @@ class ResponseParser:
             tool_calls.append({"tool": tool_name, "args": args})
         if not tool_calls:
             raise ValueError("E_MISSING_TOOL_CALLS")
+        if len(tool_calls) > max(1, int(max_tool_calls)):
+            raise ValueError("E_MAX_TOOL_CALLS")
         return {"content": "", "tool_calls": tool_calls}
 
     def _trim_ascii_whitespace_once(self, content: str) -> str:

@@ -272,6 +272,12 @@ class ToolDispatcher:
         approval_required_tools: set[str],
     ) -> list[str]:
         violations: list[str] = []
+        try:
+            max_tool_calls = max(1, int(context.get("max_tool_calls", 8)))
+        except (TypeError, ValueError):
+            max_tool_calls = 8
+        if len(turn.tool_calls) > max_tool_calls:
+            return [f"E_MAX_TOOL_CALLS:{len(turn.tool_calls)}>{max_tool_calls}"]
         for index, tool_call in enumerate(turn.tool_calls):
             tool_name = str(tool_call.tool or "").strip()
             if not tool_name:

@@ -93,6 +93,60 @@ def _resolve_small_project_builder_variant(self) -> str:
     user_raw = str(load_user_settings().get("small_project_builder_variant", "")).strip()
     return resolve_small_project_builder_variant(env_raw, process_raw, user_raw)
 
+def _resolve_protocol_governed_enabled(self) -> bool:
+    env_raw = (
+        os.environ.get("ORKET_PROTOCOL_GOVERNED_ENABLED")
+        or os.environ.get("ORKET_PROTOCOL_GOVERNED")
+        or ""
+    ).strip().lower()
+    if env_raw in {"1", "true", "yes", "on", "enabled"}:
+        return True
+    if env_raw in {"0", "false", "no", "off", "disabled"}:
+        return False
+    process_raw = ""
+    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
+        process_raw = str(self.org.process_rules.get("protocol_governed_enabled", "")).strip().lower()
+    if process_raw in {"1", "true", "yes", "on", "enabled"}:
+        return True
+    if process_raw in {"0", "false", "no", "off", "disabled"}:
+        return False
+    user_raw = str(load_user_settings().get("protocol_governed_enabled", "")).strip().lower()
+    return user_raw in {"1", "true", "yes", "on", "enabled"}
+
+def _resolve_protocol_max_response_bytes(self) -> int:
+    values = [
+        os.environ.get("ORKET_PROTOCOL_MAX_RESPONSE_BYTES"),
+        (self.org.process_rules.get("protocol_max_response_bytes") if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else None),
+        load_user_settings().get("protocol_max_response_bytes"),
+    ]
+    for value in values:
+        raw = str(value or "").strip()
+        if not raw:
+            continue
+        try:
+            parsed = int(raw)
+        except (TypeError, ValueError):
+            continue
+        return max(256, parsed)
+    return 8192
+
+def _resolve_protocol_max_tool_calls(self) -> int:
+    values = [
+        os.environ.get("ORKET_PROTOCOL_MAX_TOOL_CALLS"),
+        (self.org.process_rules.get("protocol_max_tool_calls") if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else None),
+        load_user_settings().get("protocol_max_tool_calls"),
+    ]
+    for value in values:
+        raw = str(value or "").strip()
+        if not raw:
+            continue
+        try:
+            parsed = int(raw)
+        except (TypeError, ValueError):
+            continue
+        return max(1, parsed)
+    return 8
+
 def _resolve_workflow_profile(self) -> str:
     env_raw = (os.environ.get("ORKET_WORKFLOW_PROFILE") or "").strip().lower()
     if env_raw in {"legacy_cards_v1", "project_task_v1"}:
@@ -1588,6 +1642,9 @@ def _build_turn_context(
         }
     )
     tool_profile_version = profile_versions[0] if len(profile_versions) == 1 else "unknown-v1"
+    protocol_governed_enabled = self._resolve_protocol_governed_enabled()
+    max_response_bytes = self._resolve_protocol_max_response_bytes()
+    max_tool_calls = self._resolve_protocol_max_tool_calls()
 
     return {
         "session_id": run_id,
@@ -1650,6 +1707,9 @@ def _build_turn_context(
         "tool_profile_version": tool_profile_version,
         "max_tool_execution_time": max_tool_execution_time,
         "max_tool_memory": max_tool_memory,
+        "protocol_governed_enabled": protocol_governed_enabled,
+        "max_response_bytes": max_response_bytes,
+        "max_tool_calls": max_tool_calls,
     }
 
 async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:
