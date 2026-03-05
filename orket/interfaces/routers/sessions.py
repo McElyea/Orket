@@ -37,6 +37,7 @@ def build_sessions_router(
     validate_builtin_workload_start: Callable[..., None],
     run_builtin_workload: Callable[..., Any],
     commit_intent_factory: Callable[[str], Any],
+    workspace_root_getter: Callable[[], Path] = lambda: Path(".").resolve(),
 ) -> APIRouter:
     router = APIRouter()
 
@@ -157,5 +158,27 @@ def build_sessions_router(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         return {"ok": True, "target": target}
+
+    @router.get("/marshaller/runs")
+    async def list_marshaller_run_rows(limit: int = 20):
+        from orket.marshaller.cli import list_marshaller_runs
+
+        workspace_root = workspace_root_getter()
+        rows = await list_marshaller_runs(workspace_root, limit=max(1, int(limit)))
+        return {"runs": rows}
+
+    @router.get("/marshaller/runs/{run_id}")
+    async def inspect_marshaller_run(run_id: str, attempt_index: Optional[int] = None):
+        from orket.marshaller.cli import inspect_marshaller_attempt
+
+        workspace_root = workspace_root_getter()
+        try:
+            return await inspect_marshaller_attempt(
+                workspace_root,
+                run_id=run_id,
+                attempt_index=attempt_index,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     return router

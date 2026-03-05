@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
+import orket.marshaller.cli as marshaller_cli
 
 
 client = TestClient(api_module.app)
@@ -173,3 +174,30 @@ def test_builtin_hint_request_cancel_turn_emits_turn_interrupted(monkeypatch):
         assert "turn_interrupted" in event_types
         assert "commit_final" in event_types
         assert "turn_final" not in event_types
+
+
+def test_marshaller_runs_endpoint_returns_rows(monkeypatch):
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def _fake_list(_workspace_root, *, limit: int = 20):
+        return [{"run_id": "run-1", "attempt_count": 2, "accepted": True, "accepted_attempt_index": 2}]
+
+    monkeypatch.setattr(marshaller_cli, "list_marshaller_runs", _fake_list)
+    response = client.get("/v1/marshaller/runs?limit=5", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runs"][0]["run_id"] == "run-1"
+
+
+def test_marshaller_run_inspect_maps_missing_to_404(monkeypatch):
+    monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+
+    async def _fake_inspect(_workspace_root, *, run_id: str, attempt_index=None):
+        raise ValueError(f"Run not found: {run_id}")
+
+    monkeypatch.setattr(marshaller_cli, "inspect_marshaller_attempt", _fake_inspect)
+    response = client.get("/v1/marshaller/runs/missing-run", headers={"X-API-Key": "test-key"})
+    assert response.status_code == 404
+    assert "Run not found: missing-run" in response.text
