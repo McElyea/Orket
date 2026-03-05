@@ -8,8 +8,11 @@ from typing import Any, Callable, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import LedgerFramingError
 from orket.runtime.protocol_replay import ProtocolReplayEngine
+from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
 
 class InteractionSessionStartRequest(BaseModel):
@@ -234,5 +237,27 @@ def build_sessions_router(
         except LedgerFramingError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return comparison
+
+    @router.get("/protocol/runs/{run_id}/ledger-parity")
+    async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: Optional[str] = None):
+        _ = _resolve_protocol_run_root(run_id)
+        sqlite_path = (
+            Path(str(sqlite_db_path)).resolve()
+            if str(sqlite_db_path or "").strip()
+            else (workspace_root_getter() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+        )
+        if not sqlite_path.exists():
+            raise HTTPException(status_code=404, detail=f"SQLite run ledger database not found: {sqlite_path}")
+        protocol_root = workspace_root_getter()
+        sqlite_repo = AsyncRunLedgerRepository(sqlite_path)
+        protocol_repo = AsyncProtocolRunLedgerRepository(protocol_root)
+        try:
+            return await compare_run_ledger_rows(
+                sqlite_repo=sqlite_repo,
+                protocol_repo=protocol_repo,
+                session_id=str(run_id),
+            )
+        except LedgerFramingError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     return router

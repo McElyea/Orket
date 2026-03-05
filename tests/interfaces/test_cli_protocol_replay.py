@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 import orket.interfaces.cli as cli_module
 
@@ -21,6 +22,8 @@ def _write_run(workspace: Path, run_id: str, *, status: str, ok: bool) -> None:
             "department": "core",
             "build_id": "build-1",
             "status": "running",
+            "summary": {"session_status": "running"},
+            "artifacts": {"workspace": "workspace/default"},
         }
     )
     ledger.append_event(
@@ -39,6 +42,8 @@ def _write_run(workspace: Path, run_id: str, *, status: str, ok: bool) -> None:
             "status": status,
             "failure_class": None if status == "incomplete" else "ExecutionFailed",
             "failure_reason": None if status == "incomplete" else "failed",
+            "summary": {"session_status": status},
+            "artifacts": {"gitea_export": {"provider": "gitea"}},
         }
     )
 
@@ -83,6 +88,7 @@ def _args(**overrides):
         "protocol_events_b": None,
         "protocol_artifacts_a": None,
         "protocol_artifacts_b": None,
+        "protocol_sqlite_db": None,
         "protocol_strict": False,
     }
     base.update(overrides)
@@ -92,6 +98,26 @@ def _args(**overrides):
 class _DummyExtensionManager:
     def __init__(self, *args, **kwargs):
         return None
+
+
+async def _write_sqlite_run(db_path: Path, run_id: str, *, status: str) -> None:
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    repo = AsyncRunLedgerRepository(db_path)
+    await repo.start_run(
+        session_id=run_id,
+        run_type="epic",
+        run_name="CLI Protocol",
+        department="core",
+        build_id="build-1",
+        summary={"session_status": "running"},
+        artifacts={"workspace": "workspace/default"},
+    )
+    await repo.finalize_run(
+        session_id=run_id,
+        status=status,
+        summary={"session_status": status},
+        artifacts={"gitea_export": {"provider": "gitea"}},
+    )
 
 
 @pytest.mark.asyncio
@@ -145,3 +171,85 @@ async def test_cli_protocol_compare_strict_reports_mismatch(monkeypatch, tmp_pat
     out = capsys.readouterr().out
     assert '"deterministic_match": false' in out.lower()
     assert "Protocol replay mismatch detected under --protocol-strict." in out
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_parity_prints_parity_result(monkeypatch, tmp_path: Path, capsys) -> None:
+    workspace = tmp_path / "workspace" / "default"
+    sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_run(workspace, "run-a", status="incomplete", ok=True)
+    await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="parity",
+            target="run-a",
+            protocol_sqlite_db=str(sqlite_db),
+            workspace=str(workspace),
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert '"parity_ok": true' in out.lower()
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_parity_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
+    workspace = tmp_path / "workspace" / "default"
+    sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_run(workspace, "run-a", status="failed", ok=False)
+    await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
+
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="parity",
+            target="run-a",
+            protocol_sqlite_db=str(sqlite_db),
+            protocol_strict=True,
+            workspace=str(workspace),
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert '"parity_ok": false' in out.lower()
+    assert "Run ledger parity mismatch detected under --protocol-strict." in out
+
+
+@pytest.mark.asyncio
+async def test_cli_protocol_parity_missing_sqlite_reports_error(monkeypatch, tmp_path: Path, capsys) -> None:
+    workspace = tmp_path / "workspace" / "default"
+    _write_run(workspace, "run-a", status="incomplete", ok=True)
+
+    missing_db = workspace / "missing.db"
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="parity",
+            target="run-a",
+            protocol_sqlite_db=str(missing_db),
+            workspace=str(workspace),
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert "SQLite run ledger database not found" in out

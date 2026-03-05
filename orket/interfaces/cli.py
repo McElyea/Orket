@@ -48,6 +48,7 @@ def parse_args():
     parser.add_argument("--protocol-events-b", type=str, default=None, help="Optional explicit events.log path for protocol run B.")
     parser.add_argument("--protocol-artifacts-a", type=str, default=None, help="Optional artifact root path for protocol run A.")
     parser.add_argument("--protocol-artifacts-b", type=str, default=None, help="Optional artifact root path for protocol run B.")
+    parser.add_argument("--protocol-sqlite-db", type=str, default=None, help="Optional sqlite run ledger DB path for 'orket protocol parity <run_id>'.")
     parser.add_argument("--protocol-strict", action="store_true", help="Return non-zero on protocol replay mismatch.")
     return parser.parse_args()
 
@@ -180,7 +181,10 @@ async def run_cli():
             return
 
         if args.command == "protocol":
+            from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+            from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
             from orket.runtime.protocol_replay import ProtocolReplayEngine
+            from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
             def _run_root(run_id: str) -> Path:
                 base = (Path(args.workspace).resolve() / "runs").resolve()
@@ -244,7 +248,32 @@ async def run_cli():
                     raise ValueError("Protocol replay mismatch detected under --protocol-strict.")
                 return
 
-            raise ValueError("Supported protocol commands: 'orket protocol replay <run_id>' or 'orket protocol compare <run_a> --protocol-run-b <run_b>'.")
+            if args.subcommand == "parity":
+                run_id = str(args.target or "").strip()
+                if not run_id:
+                    raise ValueError("protocol parity requires target run_id (e.g. 'orket protocol parity <run_id>').")
+                sqlite_db = (
+                    Path(str(args.protocol_sqlite_db)).resolve()
+                    if str(args.protocol_sqlite_db or "").strip()
+                    else (Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+                )
+                if not sqlite_db.exists():
+                    raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
+                parity = await compare_run_ledger_rows(
+                    sqlite_repo=AsyncRunLedgerRepository(sqlite_db),
+                    protocol_repo=AsyncProtocolRunLedgerRepository(Path(args.workspace).resolve()),
+                    session_id=run_id,
+                )
+                print(json.dumps(parity, indent=2, ensure_ascii=False))
+                if bool(args.protocol_strict) and not bool(parity.get("parity_ok")):
+                    raise ValueError("Run ledger parity mismatch detected under --protocol-strict.")
+                return
+
+            raise ValueError(
+                "Supported protocol commands: 'orket protocol replay <run_id>', "
+                "'orket protocol compare <run_a> --protocol-run-b <run_b>', or "
+                "'orket protocol parity <run_id> [--protocol-sqlite-db <path>]'."
+            )
 
         workspace = Path(args.workspace).resolve()
         engine = OrchestrationEngine(workspace, args.department)

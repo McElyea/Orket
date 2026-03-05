@@ -60,6 +60,65 @@ Evidence added:
    - `tests/application/test_turn_path_resolver.py`
    - `tests/application/test_turn_artifact_writer.py`
 
+Latest completed increments:
+1. Append-only LPJ-C32 v1 ledger adapter landed:
+   - deterministic framing (`uint32_be len | payload | uint32_be crc32c`)
+   - 4 MiB payload cap enforcement
+   - replay truncation tail tolerance
+   - checksum corruption detection (`E_LEDGER_CORRUPT`)
+   - monotonic sequence validation (`E_LEDGER_SEQ`)
+2. Async protocol run-ledger repository landed:
+   - async start/finalize/event append APIs
+   - deterministic replay-backed `get_run` projection
+   - session-isolated event storage
+3. Replay reconstruction engine landed:
+   - rebuild run summary from append-only events
+   - operation map extraction from event stream
+   - artifact digest inventory integration
+4. Determinism replay comparator landed:
+   - run-vs-run digest comparison
+   - deterministic difference surface for status/ops/artifacts
+5. CLI replay comparator script landed:
+   - `scripts/MidTier/run_protocol_replay_compare.py`
+   - strict mode exits non-zero on mismatch
+6. Protocol sessions API surfaces landed:
+   - `/v1/protocol/runs/{run_id}/replay`
+   - `/v1/protocol/replay/compare`
+7. Ledger parity comparator landed:
+   - runtime parity module comparing SQLite row vs protocol row
+   - backend comparison script `scripts/MidTier/compare_run_ledger_backends.py`
+   - sessions endpoint `/v1/protocol/runs/{run_id}/ledger-parity`
+8. CLI protocol command surface expanded:
+   - `orket protocol replay <run_id>`
+   - `orket protocol compare <run_a> --protocol-run-b <run_b>`
+   - `orket protocol parity <run_id> [--protocol-sqlite-db <path>]`
+9. Lease expiry semantics hardened in worker:
+   - `E_LEASE_EXPIRED` failure path
+   - lease epoch mismatch detection
+   - renewal result gate before success commit
+10. First-commit-wins operation guard landed:
+    - runtime `operation_id` commit registry
+    - duplicate commit rejection (`E_DUPLICATE_OPERATION`)
+    - winner linkage (`winner_event_seq`, `winner_entry_digest`)
+11. Determinism control-surface utility landed:
+    - timezone/locale/network mode resolution
+    - env allowlist snapshot + hash generation
+    - runtime policy helper for deterministic control bundle
+
+Validation evidence (new test surfaces):
+1. `tests/application/test_protocol_append_only_ledger.py`
+2. `tests/application/test_async_protocol_run_ledger.py`
+3. `tests/application/test_execution_pipeline_protocol_run_ledger.py`
+4. `tests/application/test_runtime_policy_protocol_controls.py`
+5. `tests/runtime/test_protocol_replay.py`
+6. `tests/runtime/test_operation_commit_registry.py`
+7. `tests/runtime/test_determinism_controls.py`
+8. `tests/runtime/test_run_ledger_parity.py`
+9. `tests/interfaces/test_sessions_router_protocol_replay.py`
+10. `tests/interfaces/test_cli_protocol_replay.py`
+11. `tests/scripts/test_run_protocol_replay_compare.py`
+12. `tests/scripts/test_compare_run_ledger_backends.py`
+
 Next execution slices (active):
 1. Integrate append-only ledger repository into runtime pipeline behind a policy flag so compat and protocol ledgers can be compared safely.
 2. Add deterministic replay comparator that reads:

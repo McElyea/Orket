@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+import asyncio
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.interfaces.routers.sessions import build_sessions_router
 
@@ -75,6 +77,8 @@ def _write_protocol_run(workspace_root: Path, run_id: str, *, status: str, ok: b
             "department": "core",
             "build_id": "build-1",
             "status": "running",
+            "summary": {"session_status": "running"},
+            "artifacts": {"workspace": "workspace/default"},
         }
     )
     ledger.append_event(
@@ -93,7 +97,29 @@ def _write_protocol_run(workspace_root: Path, run_id: str, *, status: str, ok: b
             "status": status,
             "failure_class": None if status == "incomplete" else "ExecutionFailed",
             "failure_reason": None if status == "incomplete" else "failed",
+            "summary": {"session_status": status},
+            "artifacts": {"gitea_export": {"provider": "gitea"}},
         }
+    )
+
+
+async def _seed_sqlite_run(*, sqlite_db: Path, session_id: str, status: str) -> None:
+    sqlite_db.parent.mkdir(parents=True, exist_ok=True)
+    sqlite_repo = AsyncRunLedgerRepository(sqlite_db)
+    await sqlite_repo.start_run(
+        session_id=session_id,
+        run_type="epic",
+        run_name="Replay",
+        department="core",
+        build_id="build-1",
+        summary={"session_status": "running"},
+        artifacts={"workspace": "workspace/default"},
+    )
+    await sqlite_repo.finalize_run(
+        session_id=session_id,
+        status=status,
+        summary={"session_status": status},
+        artifacts={"gitea_export": {"provider": "gitea"}},
     )
 
 
@@ -135,3 +161,43 @@ def test_sessions_router_protocol_run_rejects_traversal_run_id(tmp_path: Path) -
     response = client.get("/v1/protocol/replay/compare?run_a=../../etc&run_b=run-b")
     assert response.status_code == 400
     assert "Invalid run_id" in response.text
+
+
+def test_sessions_router_protocol_ledger_parity_endpoint(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
+    asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
+    client = _build_client(workspace_root)
+
+    response = client.get(f"/v1/protocol/runs/run-a/ledger-parity?sqlite_db_path={sqlite_db}")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["parity_ok"] is True
+    assert payload["differences"] == []
+
+
+def test_sessions_router_protocol_ledger_parity_missing_sqlite_returns_404(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
+    client = _build_client(workspace_root)
+
+    missing = tmp_path / "missing.db"
+    response = client.get(f"/v1/protocol/runs/run-a/ledger-parity?sqlite_db_path={missing}")
+    assert response.status_code == 404
+    assert "SQLite run ledger database not found" in response.text
+
+
+def test_sessions_router_protocol_ledger_parity_reports_mismatch(tmp_path: Path) -> None:
+    workspace_root = tmp_path / "workspace"
+    sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
+    _write_protocol_run(workspace_root, "run-a", status="failed", ok=False)
+    asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
+    client = _build_client(workspace_root)
+
+    response = client.get(f"/v1/protocol/runs/run-a/ledger-parity?sqlite_db_path={sqlite_db}")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["parity_ok"] is False
+    fields = {row["field"] for row in payload["differences"]}
+    assert "status" in fields
