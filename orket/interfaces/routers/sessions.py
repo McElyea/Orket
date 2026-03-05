@@ -61,7 +61,10 @@ def build_sessions_router(
         if not is_builtin_workload(workload_id) and extension_match is None:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unknown workload '{workload_id}'. Built-in workloads: stream_test_v1, model_stream_v1, rulesim_v0.",
+                detail=(
+                    f"Unknown workload '{workload_id}'. Built-in workloads: "
+                    "stream_test_v1, model_stream_v1, rulesim_v0, marshaller_v0."
+                ),
             )
         if is_builtin_workload(workload_id):
             try:

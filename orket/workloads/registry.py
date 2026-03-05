@@ -4,6 +4,7 @@ from typing import Any
 
 from orket.streaming.manager import InteractionContext
 
+from .marshaller_v0 import run_marshaller_v0, validate_marshaller_v0_start
 from .model_stream_v1 import run_model_stream_v1, validate_model_stream_v1_start
 from .rulesim_v0 import run_rulesim_v0, validate_rulesim_v0_start
 from .stream_test_v1 import run_stream_test_v1
@@ -35,11 +36,17 @@ async def run_builtin_workload(
             turn_params=turn_params,
             interaction_context=interaction_context,
         )
+    if normalized == "marshaller_v0":
+        return await run_marshaller_v0(
+            input_config=input_config,
+            turn_params=turn_params,
+            interaction_context=interaction_context,
+        )
     raise ValueError(f"Unknown workload '{workload_id}'")
 
 
 def is_builtin_workload(workload_id: str) -> bool:
-    return str(workload_id or "").strip() in {"stream_test_v1", "model_stream_v1", "rulesim_v0"}
+    return str(workload_id or "").strip() in {"stream_test_v1", "model_stream_v1", "rulesim_v0", "marshaller_v0"}
 
 
 def validate_builtin_workload_start(
@@ -53,3 +60,5 @@ def validate_builtin_workload_start(
         validate_model_stream_v1_start(input_config=input_config, turn_params=turn_params)
     if normalized == "rulesim_v0":
         validate_rulesim_v0_start(input_config=input_config, turn_params=turn_params)
+    if normalized == "marshaller_v0":
+        validate_marshaller_v0_start(input_config=input_config, turn_params=turn_params)
