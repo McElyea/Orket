@@ -16,8 +16,9 @@ async def replay_run(run_path: Path) -> dict[str, Any]:
     Reads recorded artifacts only and emits `replay_result.json`.
     """
 
-    decision_path = run_path / "attempts" / "1" / "decision.json"
-    proposal_path = run_path / "attempts" / "1" / "proposal.json"
+    attempt_index = await _resolve_attempt_index(run_path)
+    decision_path = run_path / "attempts" / str(attempt_index) / "decision.json"
+    proposal_path = run_path / "attempts" / str(attempt_index) / "proposal.json"
     decision = await _read_json(decision_path)
     proposal = await _read_json(proposal_path)
 
@@ -37,11 +38,29 @@ async def replay_run(run_path: Path) -> dict[str, Any]:
         "equivalence_key_match": replay_key == stored_key,
         "recorded_equivalence_key": stored_key,
         "replayed_equivalence_key": replay_key,
+        "attempt_index": attempt_index,
         "decision_path": str(decision_path),
         "proposal_path": str(proposal_path),
     }
     await _write_json(run_path / "replay_result.json", payload)
     return payload
+
+
+async def _resolve_attempt_index(run_path: Path) -> int:
+    summary_path = run_path / "summary.json"
+    if await asyncio.to_thread(summary_path.exists):
+        summary = await _read_json(summary_path)
+        accepted = summary.get("accepted_attempt_index")
+        if isinstance(accepted, int) and accepted >= 1:
+            return accepted
+    attempts_root = run_path / "attempts"
+    if not await asyncio.to_thread(attempts_root.exists):
+        raise ValueError(f"No attempts found under {attempts_root}")
+    names = await asyncio.to_thread(lambda: [p.name for p in attempts_root.iterdir() if p.is_dir()])
+    numeric = sorted(int(name) for name in names if name.isdigit())
+    if not numeric:
+        raise ValueError(f"No numeric attempt directories found under {attempts_root}")
+    return numeric[-1]
 
 
 async def _read_json(path: Path) -> dict[str, Any]:

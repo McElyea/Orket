@@ -15,6 +15,7 @@ async def promote_run(
     actor_id: str,
     actor_source: str,
     branch: str = "main",
+    attempt_index: int | None = None,
 ) -> dict[str, Any]:
     """
     Human-triggered promotion for a single accepted attempt.
@@ -24,11 +25,12 @@ async def promote_run(
     """
 
     run_payload = await _read_json(run_path / "run.json")
-    decision = await _read_json(run_path / "attempts" / "1" / "decision.json")
+    selected_attempt = await _resolve_attempt_index(run_path, attempt_index)
+    decision = await _read_json(run_path / "attempts" / str(selected_attempt) / "decision.json")
     if not bool(decision.get("accept")):
         raise ValueError("Cannot promote a rejected attempt")
 
-    patch_path = run_path / "attempts" / "1" / "patch.diff"
+    patch_path = run_path / "attempts" / str(selected_attempt) / "patch.diff"
     repo_path = Path(str(((run_payload.get("request") or {}).get("repo_path")) or "")).resolve()
     if not await asyncio.to_thread(repo_path.exists):
         raise ValueError(f"Repository path does not exist: {repo_path}")
@@ -46,7 +48,7 @@ async def promote_run(
         raise RuntimeError(f"Failed to stage promotion changes: {add_result.stderr.strip()}")
 
     run_id = str(run_payload.get("run_id") or run_path.name)
-    commit_message = f"marshaller promote {run_id} attempt 1"
+    commit_message = f"marshaller promote {run_id} attempt {selected_attempt}"
     commit_result = await run_process(("git", "commit", "-m", commit_message), cwd=repo_path)
     if commit_result.returncode != 0:
         raise RuntimeError(f"Failed to create promotion commit: {commit_result.stderr.strip()}")
@@ -60,9 +62,10 @@ async def promote_run(
         "actor_source": str(actor_source).strip(),
         "branch": branch,
         "run_id": run_id,
+        "attempt_index": selected_attempt,
         "commit_sha": commit_sha,
         "tree_digest": tree_digest,
-        "decision_path": str(run_path / "attempts" / "1" / "decision.json"),
+        "decision_path": str(run_path / "attempts" / str(selected_attempt) / "decision.json"),
     }
     await _write_json(run_path / "promotion.json", promotion_payload)
 
@@ -71,6 +74,18 @@ async def promote_run(
     promotion_payload["promotion_entry_digest"] = str(event.get("entry_digest", ""))
     await _write_json(run_path / "promotion.json", promotion_payload)
     return promotion_payload
+
+
+async def _resolve_attempt_index(run_path: Path, attempt_index: int | None) -> int:
+    if isinstance(attempt_index, int) and attempt_index >= 1:
+        return attempt_index
+    summary_path = run_path / "summary.json"
+    if await asyncio.to_thread(summary_path.exists):
+        summary = await _read_json(summary_path)
+        accepted = summary.get("accepted_attempt_index")
+        if isinstance(accepted, int) and accepted >= 1:
+            return accepted
+    raise ValueError("No accepted attempt index available; pass attempt_index explicitly")
 
 
 async def _read_json(path: Path) -> dict[str, Any]:
@@ -89,4 +104,3 @@ async def _write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def _write_utf8_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8", newline="\n")
-

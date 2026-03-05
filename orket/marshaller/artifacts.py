@@ -23,6 +23,12 @@ class MarshallerArtifacts:
     async def write_run_json(self, payload: dict[str, Any]) -> None:
         await self._write_json(self.run_root / "run.json", payload)
 
+    async def write_summary(self, payload: dict[str, Any]) -> None:
+        await self._write_json(self.run_root / "summary.json", payload)
+
+    async def write_triage(self, payload: dict[str, Any]) -> None:
+        await self._write_json(self.run_root / "triage.json", payload)
+
     async def write_proposal(self, attempt_index: int, payload: dict[str, Any]) -> None:
         await self._write_json(self.attempt_dir(attempt_index) / "proposal.json", payload)
 

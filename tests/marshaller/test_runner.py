@@ -7,6 +7,7 @@ import pytest
 
 from orket.marshaller.canonical import hash_canonical_json
 from orket.marshaller.promotion import promote_run
+from orket.marshaller.rejection_codes import FORBIDDEN_PATH
 from orket.marshaller.rejection_codes import FLAKE_DETECTED, TESTS_FAILED
 from orket.marshaller.replay import replay_run
 from orket.marshaller.runner import MarshallerRunner
@@ -203,3 +204,88 @@ async def test_runner_marks_flake_when_retry_outcomes_disagree(tmp_path: Path) -
     assert outcome.primary_rejection_code == FLAKE_DETECTED
     decision = _read_json(Path(outcome.decision_path))
     assert decision["primary_rejection_code"] == FLAKE_DETECTED
+
+
+@pytest.mark.asyncio
+async def test_runner_uses_next_attempt_until_acceptance(tmp_path: Path) -> None:
+    repo, head = _init_repo(tmp_path)
+    runner = MarshallerRunner(tmp_path)
+    valid_patch = _make_patch(repo, "final text\n")
+
+    run_request = _run_request_payload(
+        repo,
+        {
+            "test": [sys.executable, "-c", "import sys; sys.exit(0)"],
+        },
+    )
+    first_bad = _proposal_payload(head, valid_patch)
+    first_bad["proposal_id"] = "proposal-bad"
+    first_bad["touched_paths"] = ["../escape.txt"]
+    second_good = _proposal_payload(head, valid_patch)
+    second_good["proposal_id"] = "proposal-good"
+    run_request["max_attempts"] = 2
+
+    outcome = await runner.execute(
+        run_id="run-multi",
+        run_request_payload=run_request,
+        proposal_payloads=[first_bad, second_good],
+        allowed_paths=("app.txt",),
+    )
+
+    assert outcome.accept is True
+    assert outcome.attempt_count == 2
+    assert outcome.accepted_attempt_index == 2
+    summary = _read_json(Path(outcome.summary_path))
+    assert summary["accepted_attempt_index"] == 2
+    assert summary["primary_rejection_histogram"] == {FORBIDDEN_PATH: 1}
+    triage = _read_json(Path(outcome.run_path) / "triage.json")
+    assert len(triage["attempts"]) == 2
+    assert triage["attempts"][0]["primary_rejection_code"] == FORBIDDEN_PATH
+    replay = await replay_run(Path(outcome.run_path))
+    assert replay["attempt_index"] == 2
+    promotion = await promote_run(
+        Path(outcome.run_path),
+        actor_id="local-user",
+        actor_source="cli",
+        branch=_current_branch(repo),
+    )
+    assert promotion["attempt_index"] == 2
+
+
+@pytest.mark.asyncio
+async def test_runner_respects_max_attempts_cap(tmp_path: Path) -> None:
+    repo, head = _init_repo(tmp_path)
+    runner = MarshallerRunner(tmp_path)
+    patch = _make_patch(repo, "cap test\n")
+    run_request = _run_request_payload(
+        repo,
+        {
+            "test": [sys.executable, "-c", "import sys; sys.exit(0)"],
+        },
+    )
+    run_request["max_attempts"] = 2
+
+    bad_a = _proposal_payload(head, patch)
+    bad_b = _proposal_payload(head, patch)
+    bad_c = _proposal_payload(head, patch)
+    bad_a["proposal_id"] = "a"
+    bad_b["proposal_id"] = "b"
+    bad_c["proposal_id"] = "c"
+    bad_a["touched_paths"] = ["../bad-a.txt"]
+    bad_b["touched_paths"] = ["../bad-b.txt"]
+    bad_c["touched_paths"] = ["../bad-c.txt"]
+
+    outcome = await runner.execute(
+        run_id="run-cap",
+        run_request_payload=run_request,
+        proposal_payloads=[bad_a, bad_b, bad_c],
+        allowed_paths=("app.txt",),
+    )
+
+    assert outcome.accept is False
+    assert outcome.attempt_count == 2
+    summary = _read_json(Path(outcome.summary_path))
+    assert summary["attempt_count"] == 2
+    assert summary["total_proposals_received"] == 3
+    triage = _read_json(Path(outcome.run_path) / "triage.json")
+    assert len(triage["attempts"]) == 2
