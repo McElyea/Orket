@@ -34,7 +34,16 @@ class ResponseParser:
         def capture(stage: str, data: dict[str, Any]) -> None:
             parser_diag.append({"stage": stage, "data": data})
 
-        parsed_calls = ToolParser.parse(content, diagnostics=capture)
+        if bool(context.get("protocol_governed_enabled", False)):
+            envelope = self._parse_strict_envelope(
+                content=content,
+                max_response_bytes=int(context.get("max_response_bytes", 8192)),
+            )
+            capture("strict_parse_success", {"tool_call_count": len(envelope["tool_calls"])})
+            parsed_calls = list(envelope["tool_calls"])
+            content = envelope["content"]
+        else:
+            parsed_calls = ToolParser.parse(content, diagnostics=capture)
         session_id = context.get("session_id", "unknown-session")
         turn_index = int(context.get("turn_index", 0))
         for diag in parser_diag:
@@ -78,6 +87,63 @@ class ResponseParser:
             timestamp=datetime.now(UTC),
             raw=raw_data,
         )
+
+    def _parse_strict_envelope(self, *, content: Any, max_response_bytes: int) -> dict[str, Any]:
+        if not isinstance(content, str):
+            raise ValueError("E_PARSE_JSON: response content must be a string")
+        payload_bytes = content.encode("utf-8")
+        if len(payload_bytes) > max(1, int(max_response_bytes)):
+            raise ValueError("E_RESPONSE_BYTES")
+        trimmed = self._trim_ascii_whitespace_once(content)
+        if "```" in trimmed:
+            raise ValueError("E_MARKDOWN_FENCE")
+        try:
+            parsed = json.loads(trimmed, object_pairs_hook=_reject_duplicate_keys)
+        except _DuplicateKeyError as exc:
+            raise ValueError(f"E_DUPLICATE_KEY:{exc}") from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError("E_PARSE_JSON") from exc
+
+        if not isinstance(parsed, dict):
+            raise ValueError("E_SCHEMA_ENVELOPE")
+        if set(parsed.keys()) != {"content", "tool_calls"}:
+            raise ValueError("E_SCHEMA_ENVELOPE")
+        if not isinstance(parsed.get("content"), str):
+            raise ValueError("E_SCHEMA_ENVELOPE")
+        if not isinstance(parsed.get("tool_calls"), list):
+            raise ValueError("E_SCHEMA_ENVELOPE")
+        if parsed.get("content") != "":
+            raise ValueError("E_TOOL_MODE_CONTENT_NON_EMPTY")
+        tool_calls: list[dict[str, Any]] = []
+        for index, item in enumerate(parsed["tool_calls"]):
+            if not isinstance(item, dict):
+                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+            if set(item.keys()) != {"tool", "args"}:
+                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+            tool_name = item.get("tool")
+            args = item.get("args")
+            if not isinstance(tool_name, str) or not tool_name.strip():
+                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+            if not isinstance(args, dict):
+                raise ValueError(f"E_SCHEMA_TOOL_CALL:{index}")
+            tool_calls.append({"tool": tool_name, "args": args})
+        if not tool_calls:
+            raise ValueError("E_MISSING_TOOL_CALLS")
+        return {"content": "", "tool_calls": tool_calls}
+
+    def _trim_ascii_whitespace_once(self, content: str) -> str:
+        allowed = {" ", "\t", "\n", "\r"}
+        if content and content[0].isspace() and content[0] not in allowed:
+            raise ValueError("E_NON_ASCII_WHITESPACE")
+        if content and content[-1].isspace() and content[-1] not in allowed:
+            raise ValueError("E_NON_ASCII_WHITESPACE")
+        start = 0
+        end = len(content)
+        while start < end and content[start] in allowed:
+            start += 1
+        while end > start and content[end - 1] in allowed:
+            end -= 1
+        return content[start:end]
 
     def non_json_residue(self, content: str) -> str:
         blob = ToolParser.normalize_json_stringify(content or "")
@@ -154,3 +220,16 @@ class ResponseParser:
             if {"rationale", "violations", "remediation_actions"} & set(parsed.keys()):
                 return parsed
         return {}
+
+
+class _DuplicateKeyError(ValueError):
+    pass
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in payload:
+            raise _DuplicateKeyError(key)
+        payload[key] = value
+    return payload

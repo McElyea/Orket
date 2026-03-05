@@ -19,6 +19,7 @@ Current default target: marshaller.
 
 ## Active Execution
 1. marshaller -- Execute v0 slices from `docs/projects/marshaller/Marshaller-v0.md` (completed: Stage 0/1 intake + Stage 2/3/4 deterministic gates + replay equivalence + promotion ledgering + multi-attempt orchestration with run summary/triage artifacts + CLI execution/list/inspect + built-in workload wiring `marshaller_v0` + API endpoints for run listing/inspection; next: optional dedicated UI layer over marshaller API).
+2. protocol-governed -- PR-01 strict proposal boundary started (strict envelope parser mode in turn response parsing with duplicate-key/fence/schema enforcement and tests).
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
@@ -27,7 +28,7 @@ Every non-archive project under `docs/projects/` must appear here.
 |---|---|---|---|---|---|
 | NervousSystem | active | P2-review | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`. |
 | marshaller | active | P1-active | `docs/projects/marshaller/` | Orket Core | Marshaller v0 implementation in progress; baseline includes multi-attempt execution (`max_attempts`), run-level `summary.json`/`triage.json`, replay equivalence, promotion event recording, CLI run/inspect/list integration (`orket marshaller`), built-in workload registration (`marshaller_v0`), and API run-browser endpoints. |
-| protocol-governed | queued | P2-queued | `docs/projects/protocol-governed/` | Orket Core | Runtime contract lane with v5.1 requirements and implementation sequencing plan. |
+| protocol-governed | active | P2-active | `docs/projects/protocol-governed/` | Orket Core | Runtime contract lane with v5.1 requirements and implementation sequencing plan; PR-01 strict parsing slice started in turn response parsing. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
 | LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |
 | techdebt | completed-archive | complete | `docs/projects/archive/TechDebt-2026-03-02/` | Orket Core | Review3 remediation lane closed (C1-C6 complete; security gates green). Deferred medium backlog documented in archive README/plan. |

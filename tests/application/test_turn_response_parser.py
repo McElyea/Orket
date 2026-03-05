@@ -40,3 +40,55 @@ def test_response_parser_non_json_residue_and_guard_payload(tmp_path: Path) -> N
 
     assert residue == "trailing"
     assert payload.get("rationale") == "ok"
+
+
+def test_response_parser_strict_protocol_mode_accepts_canonical_envelope(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = {
+        "content": '{"content":"","tool_calls":[{"tool":"write_file","args":{"path":"a.txt","content":"x"}}]}',
+        "raw": {"total_tokens": 9},
+    }
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="coder",
+        context={"session_id": "s1", "turn_index": 1, "protocol_governed_enabled": True},
+    )
+    assert len(turn.tool_calls) == 1
+    assert turn.tool_calls[0].tool == "write_file"
+
+
+def test_response_parser_strict_protocol_mode_rejects_duplicate_keys(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = {
+        "content": '{"content":"","tool_calls":[{"tool":"write_file","args":{},"args":{}}]}',
+        "raw": {"total_tokens": 9},
+    }
+    try:
+        parser.parse_response(
+            response=response,
+            issue_id="ISSUE-1",
+            role_name="coder",
+            context={"session_id": "s1", "turn_index": 1, "protocol_governed_enabled": True},
+        )
+        raise AssertionError("expected ValueError for duplicate keys")
+    except ValueError as exc:
+        assert "E_DUPLICATE_KEY" in str(exc)
+
+
+def test_response_parser_strict_protocol_mode_rejects_markdown_fences(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = {
+        "content": '```json\n{"content":"","tool_calls":[{"tool":"write_file","args":{}}]}\n```',
+        "raw": {"total_tokens": 9},
+    }
+    try:
+        parser.parse_response(
+            response=response,
+            issue_id="ISSUE-1",
+            role_name="coder",
+            context={"session_id": "s1", "turn_index": 1, "protocol_governed_enabled": True},
+        )
+        raise AssertionError("expected ValueError for markdown fences")
+    except ValueError as exc:
+        assert "E_MARKDOWN_FENCE" in str(exc)
