@@ -28,7 +28,7 @@ def test_check_telemetry_artifact_fields_passes_with_required_keys(tmp_path: Pat
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/check_telemetry_artifact_fields.py",
+            "scripts/security/check_telemetry_artifact_fields.py",
             "--report",
             str(report),
         ],
@@ -61,7 +61,7 @@ def test_check_telemetry_artifact_fields_fails_on_missing_or_invalid(tmp_path: P
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/check_telemetry_artifact_fields.py",
+            "scripts/security/check_telemetry_artifact_fields.py",
             "--report",
             str(report),
             "--out",

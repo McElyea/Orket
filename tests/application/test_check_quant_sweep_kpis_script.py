@@ -22,7 +22,7 @@ def test_check_quant_sweep_kpis_passes_when_thresholds_met(tmp_path: Path) -> No
         encoding="utf-8",
     )
     result = subprocess.run(
-        ["python", "scripts/MidTier/check_quant_sweep_kpis.py", "--summary", str(summary)],
+        ["python", "scripts/quant/check_quant_sweep_kpis.py", "--summary", str(summary)],
         capture_output=True,
         text=True,
         check=False,
@@ -49,7 +49,7 @@ def test_check_quant_sweep_kpis_fails_when_thresholds_breached(tmp_path: Path) -
         encoding="utf-8",
     )
     result = subprocess.run(
-        ["python", "scripts/MidTier/check_quant_sweep_kpis.py", "--summary", str(summary)],
+        ["python", "scripts/quant/check_quant_sweep_kpis.py", "--summary", str(summary)],
         capture_output=True,
         text=True,
         check=False,

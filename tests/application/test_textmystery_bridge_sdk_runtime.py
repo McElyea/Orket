@@ -9,7 +9,7 @@ from orket.extensions import ExtensionManager
 
 
 def _load_register_module():
-    script_path = Path("scripts/MidTier/register_textmystery_bridge_extension.py").resolve()
+    script_path = Path("scripts/extensions/register_textmystery_bridge_extension.py").resolve()
     spec = importlib.util.spec_from_file_location("register_textmystery_bridge_extension_runtime", script_path)
     if spec is None or spec.loader is None:
         raise RuntimeError("unable to load register_textmystery_bridge_extension.py")

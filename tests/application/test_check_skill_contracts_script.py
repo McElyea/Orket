@@ -39,7 +39,7 @@ def test_check_skill_contracts_script_passes_valid_manifest(tmp_path: Path) -> N
     manifest.write_text(json.dumps(_valid_manifest()) + "\n", encoding="utf-8")
 
     result = subprocess.run(
-        ["python", "scripts/MidTier/check_skill_contracts.py", "--manifest", str(manifest)],
+        ["python", "scripts/governance/check_skill_contracts.py", "--manifest", str(manifest)],
         capture_output=True,
         text=True,
         check=False,
@@ -58,7 +58,7 @@ def test_check_skill_contracts_script_fails_invalid_manifest(tmp_path: Path) -> 
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/check_skill_contracts.py",
+            "scripts/governance/check_skill_contracts.py",
             "--manifest",
             str(manifest),
             "--out",

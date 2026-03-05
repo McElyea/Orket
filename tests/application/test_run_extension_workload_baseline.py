@@ -64,7 +64,7 @@ def test_run_extension_workload_baseline_emits_latency_report(tmp_path: Path) ->
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_extension_workload_baseline.py",
+            "scripts/extensions/run_extension_workload_baseline.py",
             "--repo",
             str(repo),
             "--workload-id",

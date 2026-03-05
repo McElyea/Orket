@@ -18,13 +18,13 @@ def test_orchestrator_history_context_defaults_to_10(monkeypatch, tmp_path):
     )
 
     orchestrator.transcript = [
-        SimpleNamespace(role=f"r{i}", content=f"c{i}") for i in range(12)
+        SimpleNamespace(role=("coder" if i % 2 == 0 else "reviewer"), content=f"c{i}") for i in range(12)
     ]
-    history = orchestrator._history_context()
+    history = orchestrator._history_context(seat_name="coder")
 
-    assert len(history) == 10
-    assert history[0] == {"role": "r2", "content": "c2"}
-    assert history[-1] == {"role": "r11", "content": "c11"}
+    assert len(history) == 5
+    assert history[0] == {"role": "coder", "content": "c2"}
+    assert history[-1] == {"role": "coder", "content": "c10"}
 
 
 def test_orchestrator_history_context_env_override(monkeypatch, tmp_path):
@@ -41,10 +41,10 @@ def test_orchestrator_history_context_env_override(monkeypatch, tmp_path):
     )
 
     orchestrator.transcript = [
-        SimpleNamespace(role=f"r{i}", content=f"c{i}") for i in range(6)
+        SimpleNamespace(role=("coder" if i % 2 == 0 else "reviewer"), content=f"c{i}") for i in range(6)
     ]
-    history = orchestrator._history_context()
+    history = orchestrator._history_context(seat_name="coder")
 
-    assert len(history) == 3
-    assert history[0] == {"role": "r3", "content": "c3"}
+    assert len(history) == 1
+    assert history[0] == {"role": "coder", "content": "c4"}
 

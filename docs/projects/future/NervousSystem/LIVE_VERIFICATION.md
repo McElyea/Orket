@@ -3,7 +3,7 @@
 Date: 2026-03-03
 
 ## Command
-`python scripts/MidTier/run_nervous_system_live_evidence.py`
+`python scripts/nervous_system/run_nervous_system_live_evidence.py`
 
 ## Integration Path
 - Mode: `subprocess_jsonl`
@@ -43,7 +43,7 @@ Lineage rule used in this run:
 - `commit.recorded` is emitted for all terminal outcomes, including rejected commits.
 
 ## Evidence Artifact
-`benchmarks/results/nervous_system_live_evidence.json`
+`benchmarks/results/nervous_system/nervous_system_live_evidence.json`
 
 The artifact includes per-scenario `session_id`, `trace_id`, `request_id`, `proposal_digest`, `admission_decision_digest`, `approval_id` (where present), `token_id_hash` (hashed only), `policy_digest`, `tool_profile_digest`, optional `scope_digest`, explicit `admission_decision`, explicit `commit_status`, and `required_event_digests`.
 

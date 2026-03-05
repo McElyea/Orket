@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.MidTier.summarize_protocol_error_codes import main
+from scripts.protocol.summarize_protocol_error_codes import main
 
 
 def test_summarize_protocol_error_codes_reports_family_distribution(tmp_path: Path) -> None:

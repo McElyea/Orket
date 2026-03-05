@@ -204,7 +204,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--out",
-        default="benchmarks/results/reviewrun_answer_key_score.json",
+        default="benchmarks/results/reviewrun/reviewrun_answer_key_score.json",
         help="Where to write the score report JSON.",
     )
     args = parser.parse_args()

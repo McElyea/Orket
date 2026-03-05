@@ -49,7 +49,7 @@ jobs:
 
       - name: Enforce docs project hygiene
         run: |
-          python scripts/MidTier/check_docs_project_hygiene.py
+          python scripts/governance/check_docs_project_hygiene.py
 
       - name: Enforce workload contract path/schema checks
         run: |
@@ -73,15 +73,15 @@ jobs:
 
       - name: Enforce dependency direction rules
         run: |
-          python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail
+          python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail
 
       - name: Audit OS registry/spec sync
         run: |
-          python scripts/HighTier/audit_registry.py
+          python scripts/governance/audit_registry.py
 
       - name: Enforce kernel sovereign gate
         run: |
-          python scripts/MidTier/update_nervous_system_policy_digest_snapshot.py --check
+          python scripts/nervous_system/update_nervous_system_policy_digest_snapshot.py --check
           python -m pytest -q tests/kernel/v1
 
       - name: Enforce ODR determinism gate (PR tier)
@@ -97,7 +97,7 @@ jobs:
 
       - name: Enforce kernel fire-drill suite
         run: |
-          python scripts/HighTier/run_kernel_fire_drill.py
+          python scripts/governance/run_kernel_fire_drill.py
 
       - name: Enforce TS digest parity gate
         run: |
@@ -105,12 +105,12 @@ jobs:
 
       - name: Enforce digest vectors are committed truth (no CI overwrite)
         run: |
-          python scripts/MidTier/gen_digest_vectors.py --out /tmp/digest-v1.json
+          python scripts/governance/gen_digest_vectors.py --out /tmp/digest-v1.json
           diff -u tests/kernel/v1/vectors/digest-v1.json /tmp/digest-v1.json
 
       - name: Enforce volatility boundary script
         run: |
-          python scripts/HighTier/check_volatility_boundaries.py
+          python scripts/benchmarks/check_volatility_boundaries.py
 
       - name: Enforce volatility boundary tests
         run: |
@@ -118,24 +118,24 @@ jobs:
 
       - name: Build retention dry-run plan
         run: |
-          python scripts/HighTier/retention_plan.py --out benchmarks/results/retention_plan.json
+          python scripts/governance/retention_plan.py --out benchmarks/results/governance/retention_plan.json
 
       - name: Enforce retention policy safety
         run: |
-          python scripts/HighTier/check_retention_policy.py --plan benchmarks/results/retention_plan.json --out benchmarks/results/retention_policy_check.json --require-safety
+          python scripts/governance/check_retention_policy.py --plan benchmarks/results/governance/retention_plan.json --out benchmarks/results/governance/retention_policy_check.json --require-safety
 
       - name: Enforce offline capability matrix contract
         run: |
-          python scripts/HighTier/check_offline_matrix.py --require-default-offline --out benchmarks/results/offline_matrix_check.json
+          python scripts/benchmarks/check_offline_matrix.py --require-default-offline --out benchmarks/results/benchmarks/offline_matrix_check.json
 
       - name: Enforce docs gate contract
         run: |
-          python scripts/HighTier/docs_lint.py --project core-pillars --strict --json
+          python scripts/governance/docs_lint.py --project core-pillars --strict --json
 
       - name: Enforce protocol-governed parity campaign smoke
         run: |
           mkdir -p .ci/protocol_quality_workspace/.orket/durable/db
-          mkdir -p benchmarks/results/protocol_governed
+          mkdir -p benchmarks/results/benchmarks/protocol_governed
           python - <<'PY'
           import asyncio
           from pathlib import Path
@@ -186,18 +186,18 @@ jobs:
 
           asyncio.run(seed())
           PY
-          python scripts/MidTier/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --strict --out benchmarks/results/protocol_governed/protocol_ledger_parity_campaign.json
-          python scripts/MidTier/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol_governed/protocol_replay_campaign.json
-          python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict
-          python scripts/MidTier/summarize_protocol_error_codes.py --input benchmarks/results/protocol_governed/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/protocol_error_code_summary.json
+          python scripts/protocol/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --strict --out benchmarks/results/protocol/protocol_governed/protocol_ledger_parity_campaign.json
+          python scripts/protocol/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol/protocol_governed/protocol_replay_campaign.json
+          python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict
+          python scripts/protocol/summarize_protocol_error_codes.py --input benchmarks/results/protocol/protocol_governed/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/protocol_error_code_summary.json
 
       - name: Enforce roadmap metrics (quick gate)
         run: |
-          python scripts/MidTier/check_roadmap_metrics.py --quick
+          python scripts/governance/check_roadmap_metrics.py --quick
 
       - name: Enforce model-streaming scenario gate
         run: |
-          python scripts/MidTier/run_model_streaming_gate.py --provider-mode stub --timeout 20
+          python scripts/streaming/run_model_streaming_gate.py --provider-mode stub --timeout 20
 
       - name: Validate prompt assets
         run: |
@@ -255,35 +255,35 @@ jobs:
 
       - name: Enforce dependency direction rules
         run: |
-          python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail
+          python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail
 
       - name: Enforce volatility boundary script
         run: |
-          python scripts/HighTier/check_volatility_boundaries.py
+          python scripts/benchmarks/check_volatility_boundaries.py
 
       - name: Build retention dry-run plan
         run: |
-          python scripts/HighTier/retention_plan.py --out benchmarks/results/retention_plan.json
+          python scripts/governance/retention_plan.py --out benchmarks/results/governance/retention_plan.json
 
       - name: Enforce retention policy safety
         run: |
-          python scripts/HighTier/check_retention_policy.py --plan benchmarks/results/retention_plan.json --out benchmarks/results/retention_policy_check.json --require-safety
+          python scripts/governance/check_retention_policy.py --plan benchmarks/results/governance/retention_plan.json --out benchmarks/results/governance/retention_policy_check.json --require-safety
 
       - name: Enforce offline capability matrix contract
         run: |
-          python scripts/HighTier/check_offline_matrix.py --require-default-offline --out benchmarks/results/offline_matrix_check.json
+          python scripts/benchmarks/check_offline_matrix.py --require-default-offline --out benchmarks/results/benchmarks/offline_matrix_check.json
 
       - name: Enforce docs gate contract
         run: |
-          python scripts/HighTier/docs_lint.py --project core-pillars --strict --json
+          python scripts/governance/docs_lint.py --project core-pillars --strict --json
 
       - name: Enforce roadmap pytest metrics
         run: |
-          python scripts/MidTier/check_roadmap_metrics.py
+          python scripts/governance/check_roadmap_metrics.py
 
       - name: Enforce memory determinism contract smoke
         run: |
-          mkdir -p benchmarks/results/memory
+          mkdir -p benchmarks/results/benchmarks/memory
           python - <<'PY'
           import json
           from pathlib import Path
@@ -327,25 +327,25 @@ jobs:
                   }
               ]
           }
-          trace_path = Path("benchmarks/results/memory/memory_trace_fixture.json")
-          retrieval_path = Path("benchmarks/results/memory/memory_retrieval_trace_fixture.json")
+          trace_path = Path("benchmarks/results/benchmarks/memory/memory_trace_fixture.json")
+          retrieval_path = Path("benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json")
           trace_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
           retrieval_path.write_text(json.dumps(retrieval, indent=2) + "\n", encoding="utf-8")
           PY
-          python scripts/HighTier/check_memory_determinism.py \
-            --trace benchmarks/results/memory/memory_trace_fixture.json \
-            --retrieval-trace benchmarks/results/memory/memory_retrieval_trace_fixture.json \
-            --out benchmarks/results/memory/memory_determinism_check.json
-          python scripts/HighTier/compare_memory_determinism.py \
-            --left benchmarks/results/memory/memory_trace_fixture.json \
-            --right benchmarks/results/memory/memory_trace_fixture.json \
-            --left-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
-            --right-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
-            --out benchmarks/results/memory/memory_determinism_compare.json
+          python scripts/benchmarks/check_memory_determinism.py \
+            --trace benchmarks/results/benchmarks/memory/memory_trace_fixture.json \
+            --retrieval-trace benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json \
+            --out benchmarks/results/benchmarks/memory/memory_determinism_check.json
+          python scripts/benchmarks/compare_memory_determinism.py \
+            --left benchmarks/results/benchmarks/memory/memory_trace_fixture.json \
+            --right benchmarks/results/benchmarks/memory/memory_trace_fixture.json \
+            --left-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json \
+            --right-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json \
+            --out benchmarks/results/benchmarks/memory/memory_determinism_compare.json
 
       - name: Enforce replay artifact drift comparator smoke
         run: |
-          mkdir -p benchmarks/results/replay
+          mkdir -p benchmarks/results/benchmarks/replay
           python - <<'PY'
           import json
           from pathlib import Path
@@ -371,14 +371,14 @@ jobs:
           left_path.write_text(json.dumps(left, indent=2) + "\n", encoding="utf-8")
           right_path.write_text(json.dumps(right, indent=2) + "\n", encoding="utf-8")
           PY
-          python scripts/MidTier/compare_replay_artifacts.py \
+          python scripts/replay/compare_replay_artifacts.py \
             --left benchmarks/results/replay/replay_left_fixture.json \
             --right benchmarks/results/replay/replay_right_fixture.json \
             --out benchmarks/results/replay/replay_drift_compare.json
 
       - name: Enforce skill contract smoke
         run: |
-          mkdir -p benchmarks/results/skills
+          mkdir -p benchmarks/results/benchmarks/skills
           python - <<'PY'
           import json
           from pathlib import Path
@@ -409,57 +409,57 @@ jobs:
                   }
               ],
           }
-          out = Path("benchmarks/results/skills/skill_contract_fixture.json")
+          out = Path("benchmarks/results/governance/skills/skill_contract_fixture.json")
           out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           PY
-          python scripts/MidTier/check_skill_contracts.py \
-            --manifest benchmarks/results/skills/skill_contract_fixture.json \
-            --out benchmarks/results/skills/skill_contract_check.json
+          python scripts/governance/check_skill_contracts.py \
+            --manifest benchmarks/results/governance/skills/skill_contract_fixture.json \
+            --out benchmarks/results/governance/skills/skill_contract_check.json
 
       - name: Build monolith variant matrix plan
         run: |
-          python scripts/MidTier/run_monolith_variant_matrix.py --out benchmarks/results/monolith_variant_matrix.json
+          python scripts/acceptance/run_monolith_variant_matrix.py --out benchmarks/results/acceptance/monolith_variant_matrix.json
 
       - name: Enforce monolith readiness gate policy
         run: |
-          python scripts/MidTier/check_monolith_readiness_gate.py --matrix benchmarks/results/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only
+          python scripts/acceptance/check_monolith_readiness_gate.py --matrix benchmarks/results/acceptance/monolith_variant_matrix.json --policy model/core/contracts/monolith_readiness_policy.json --allow-plan-only
 
       - name: Evaluate microservices unlock checklist
         run: |
-          python scripts/MidTier/check_microservices_unlock.py --matrix benchmarks/results/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --live-report benchmarks/results/live_acceptance_patterns.json --out benchmarks/results/microservices_unlock_check.json
+          python scripts/acceptance/check_microservices_unlock.py --matrix benchmarks/results/acceptance/monolith_variant_matrix.json --readiness-policy model/core/contracts/monolith_readiness_policy.json --unlock-policy model/core/contracts/microservices_unlock_policy.json --live-report benchmarks/results/acceptance/live_acceptance_patterns.json --out benchmarks/results/acceptance/microservices_unlock_check.json
 
       - name: Evaluate gitea state pilot readiness
         run: |
           ORKET_STATE_BACKEND_MODE=gitea ORKET_ENABLE_GITEA_STATE_PILOT=true ORKET_GITEA_URL=https://gitea.example.local ORKET_GITEA_TOKEN=ci-token ORKET_GITEA_OWNER=orket ORKET_GITEA_REPO=orket \
-          python scripts/MidTier/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea_state_pilot_readiness.json --require-ready
+          python scripts/gitea/check_gitea_state_pilot_readiness.py --out benchmarks/results/gitea/gitea_state_pilot_readiness.json --require-ready
 
       - name: Evaluate gitea state hardening gate
         run: |
-          python scripts/MidTier/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea_state_hardening_check.json --require-ready
+          python scripts/gitea/check_gitea_state_hardening.py --execute --out benchmarks/results/gitea/gitea_state_hardening_check.json --require-ready
 
       - name: Evaluate gitea phase3 readiness
         run: |
-          python scripts/MidTier/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea_state_hardening_check.json --out benchmarks/results/gitea_state_phase3_readiness.json --require-ready
+          python scripts/gitea/check_gitea_state_phase3_readiness.py --execute --pilot-readiness benchmarks/results/gitea/gitea_state_pilot_readiness.json --hardening-readiness benchmarks/results/gitea/gitea_state_hardening_check.json --out benchmarks/results/gitea/gitea_state_phase3_readiness.json --require-ready
 
       - name: Build architecture pilot matrix plan
         run: |
-          python scripts/MidTier/run_architecture_pilot_matrix.py --out benchmarks/results/architecture_pilot_matrix.json
+          python scripts/acceptance/run_architecture_pilot_matrix.py --out benchmarks/results/acceptance/architecture_pilot_matrix.json
 
       - name: Run benchmark suite scoring smoke
         run: |
-          python scripts/MidTier/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 1 --venue standard --flow default --runner-template 'python scripts/HighTier/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmark_determinism_report.json --scored-out benchmarks/results/benchmark_scored_report.json
+          python scripts/benchmarks/run_benchmark_suite.py --task-bank benchmarks/task_bank/v1/tasks.json --policy model/core/contracts/benchmark_scoring_policy.json --runs 1 --venue standard --flow default --runner-template 'python scripts/benchmarks/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}' --raw-out benchmarks/results/benchmarks/benchmark_determinism_report.json --scored-out benchmarks/results/benchmarks/benchmark_scored_report.json
 
       - name: Enforce orchestration overhead telemetry consistency
         run: |
-          python scripts/MidTier/check_orchestration_overhead_consistency.py --report benchmarks/results/benchmark_determinism_report.json --out benchmarks/results/orchestration_overhead_consistency.json
+          python scripts/benchmarks/check_orchestration_overhead_consistency.py --report benchmarks/results/benchmarks/benchmark_determinism_report.json --out benchmarks/results/benchmarks/orchestration_overhead_consistency.json
 
       - name: Enforce telemetry lane/profile fields
         run: |
-          python scripts/MidTier/check_telemetry_artifact_fields.py --report benchmarks/results/benchmark_determinism_report.json --out benchmarks/results/telemetry_artifact_fields_check.json
+          python scripts/security/check_telemetry_artifact_fields.py --report benchmarks/results/benchmarks/benchmark_determinism_report.json --out benchmarks/results/security/telemetry_artifact_fields_check.json
 
       - name: Enforce benchmark scoring gate
         run: |
-          python scripts/MidTier/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmark_scoring_gate.json --require-thresholds
+          python scripts/benchmarks/check_benchmark_scoring_gate.py --scored-report benchmarks/results/benchmarks/benchmark_scored_report.json --policy model/core/contracts/benchmark_scoring_policy.json --out benchmarks/results/benchmarks/benchmark_scoring_gate.json --require-thresholds
 
       - name: Validate prompt assets
         run: |
@@ -483,7 +483,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: load-evidence-${{ github.run_id }}
-          path: benchmarks/results/*.json
+          path: benchmarks/results/benchmarks/*.json
           if-no-files-found: warn
 
   product_quality:
@@ -580,7 +580,7 @@ jobs:
 
       - name: Run migration smoke
         run: |
-          python scripts/MidTier/run_migrations.py --runtime-db .ci/runtime.db --webhook-db .ci/webhook.db
+          python scripts/governance/run_migrations.py --runtime-db .ci/runtime.db --webhook-db .ci/webhook.db
 
       - name: Validate migration tables
         run: |

@@ -8,13 +8,13 @@ import sys
 
 def _run_torture_script() -> dict:
     result = subprocess.run(
-        [sys.executable, "scripts/MidTier/run_nervous_system_attack_torture_pack.py"],
+        [sys.executable, "scripts/nervous_system/run_nervous_system_attack_torture_pack.py"],
         capture_output=True,
         text=True,
         check=False,
     )
     assert result.returncode == 0, result.stdout + "\n" + result.stderr
-    artifact_path = Path("benchmarks/results/nervous_system_attack_torture_evidence.json")
+    artifact_path = Path("benchmarks/results/nervous_system/nervous_system_attack_torture_evidence.json")
     assert artifact_path.exists()
     return json.loads(artifact_path.read_text(encoding="utf-8"))
 

@@ -25,7 +25,7 @@ def test_build_explorer_check_summary_passes(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/build_explorer_check_summary.py",
+            "scripts/explorer/build_explorer_check_summary.py",
             "--ingestion",
             str(ingestion),
             "--rollup",
@@ -59,7 +59,7 @@ def test_build_explorer_check_summary_fails_on_failed_check(tmp_path: Path) -> N
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/build_explorer_check_summary.py",
+            "scripts/explorer/build_explorer_check_summary.py",
             "--ingestion",
             str(ingestion),
             "--rollup",

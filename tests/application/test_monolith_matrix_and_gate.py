@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.MidTier.run_monolith_variant_matrix import build_combos, choose_default_variant, summarize_report
-from scripts.MidTier.check_monolith_readiness_gate import aggregate_metrics, _missing_required_combinations, _resolve_thresholds
+from scripts.acceptance.run_monolith_variant_matrix import build_combos, choose_default_variant, summarize_report
+from scripts.acceptance.check_monolith_readiness_gate import aggregate_metrics, _missing_required_combinations, _resolve_thresholds
 
 
 def test_build_combos_cartesian_product():

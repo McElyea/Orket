@@ -21,7 +21,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_score_uses_weighted_loss_formula() -> None:
-    module = _load_script_module("score_odr_calibration_test", "scripts/LowTier/score_odr_calibration.py")
+    module = _load_script_module("score_odr_calibration_test", "scripts/odr/score_odr_calibration.py")
     eval_payload = {
         "runs": [
             {"run_id": "a", "final_outcome_eval": "CONVERGED_RESOLVED", "rounds": [1]},

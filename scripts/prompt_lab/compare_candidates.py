@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-DEFAULT_THRESHOLDS_PATH = Path("benchmarks/results/prompt_promotion_thresholds.json")
+DEFAULT_THRESHOLDS_PATH = Path("benchmarks/results/prompt_lab/prompt_promotion_thresholds.json")
 
 
 def _load_json(path: Path) -> Dict[str, Any]:

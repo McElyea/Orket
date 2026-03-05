@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from lmstudio_model_cache import clear_loaded_models, default_lmstudio_base_url
+from providers.lmstudio_model_cache import clear_loaded_models, default_lmstudio_base_url
 from quant_sweep.constants import ROLE_MODEL_ENV_KEYS
 
 
@@ -21,15 +21,15 @@ def _add_core_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--runner-template",
         default=(
-            "python scripts/MidTier/live_card_benchmark_runner.py --task {task_file} "
+            "python scripts/benchmarks/live_card_benchmark_runner.py --task {task_file} "
             "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
         ),
     )
     parser.add_argument("--task-limit", type=int, default=0)
     parser.add_argument("--task-id-min", type=int, default=0)
     parser.add_argument("--task-id-max", type=int, default=0)
-    parser.add_argument("--out-dir", default="benchmarks/results/quant_sweep")
-    parser.add_argument("--summary-out", default="benchmarks/results/quant_sweep/sweep_summary.json")
+    parser.add_argument("--out-dir", default="benchmarks/results/benchmarks/quant_sweep")
+    parser.add_argument("--summary-out", default="benchmarks/results/quant/quant_sweep/sweep_summary.json")
     parser.add_argument("--matrix-config", default="", help="Optional JSON config file for matrix/session defaults.")
     parser.add_argument("--dry-run", action="store_true", help="Print resolved sweep plan and exit.")
 
@@ -212,14 +212,14 @@ def _matrix_defaults() -> dict[str, Any]:
         "runtime_target": "local-hardware",
         "execution_mode": "live-card",
         "runner_template": (
-            "python scripts/MidTier/live_card_benchmark_runner.py --task {task_file} "
+            "python scripts/benchmarks/live_card_benchmark_runner.py --task {task_file} "
             "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
         ),
         "task_limit": 0,
         "task_id_min": 0,
         "task_id_max": 0,
-        "out_dir": "benchmarks/results/quant_sweep",
-        "summary_out": "benchmarks/results/quant_sweep/sweep_summary.json",
+        "out_dir": "benchmarks/results/benchmarks/quant_sweep",
+        "summary_out": "benchmarks/results/quant/quant_sweep/sweep_summary.json",
         "adherence_threshold": 0.95,
         "latency_ceiling": 10.0,
         "seed": 0,

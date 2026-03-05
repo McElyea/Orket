@@ -7,7 +7,7 @@ Owner: Orket Core
 This document defines the stable output contract for ledger parity campaign artifacts emitted by:
 
 1. `orket/runtime/protocol_ledger_parity_campaign.py`
-2. `scripts/MidTier/run_protocol_ledger_parity_campaign.py`
+2. `scripts/protocol/run_protocol_ledger_parity_campaign.py`
 3. `GET /v1/protocol/ledger-parity/campaign`
 4. `orket protocol parity-campaign`
 

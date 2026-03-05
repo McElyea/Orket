@@ -22,7 +22,7 @@ def test_check_explorer_ingestion_passes_for_complete_index(tmp_path: Path) -> N
         encoding="utf-8",
     )
     result = subprocess.run(
-        ["python", "scripts/HighTier/check_explorer_ingestion.py", "--index", str(index)],
+        ["python", "scripts/explorer/check_explorer_ingestion.py", "--index", str(index)],
         capture_output=True,
         text=True,
         check=False,
@@ -48,7 +48,7 @@ def test_check_explorer_ingestion_fails_on_missing_fields(tmp_path: Path) -> Non
         encoding="utf-8",
     )
     result = subprocess.run(
-        ["python", "scripts/HighTier/check_explorer_ingestion.py", "--index", str(index)],
+        ["python", "scripts/explorer/check_explorer_ingestion.py", "--index", str(index)],
         capture_output=True,
         text=True,
         check=False,
@@ -64,7 +64,7 @@ def test_check_explorer_ingestion_fixture_regression_cases(tmp_path: Path) -> No
     invalid_fixture = Path("tests/fixtures/explorer_index/invalid_missing_kind.json")
 
     valid_run = subprocess.run(
-        ["python", "scripts/HighTier/check_explorer_ingestion.py", "--index", str(valid_fixture)],
+        ["python", "scripts/explorer/check_explorer_ingestion.py", "--index", str(valid_fixture)],
         capture_output=True,
         text=True,
         check=False,
@@ -72,7 +72,7 @@ def test_check_explorer_ingestion_fixture_regression_cases(tmp_path: Path) -> No
     assert valid_run.returncode == 0, valid_run.stdout + "\n" + valid_run.stderr
 
     invalid_run = subprocess.run(
-        ["python", "scripts/HighTier/check_explorer_ingestion.py", "--index", str(invalid_fixture)],
+        ["python", "scripts/explorer/check_explorer_ingestion.py", "--index", str(invalid_fixture)],
         capture_output=True,
         text=True,
         check=False,

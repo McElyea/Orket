@@ -6,7 +6,7 @@ from pathlib import Path
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
-from scripts.MidTier.publish_protocol_rollout_artifacts import main
+from scripts.protocol.publish_protocol_rollout_artifacts import main
 
 
 async def _seed_run(

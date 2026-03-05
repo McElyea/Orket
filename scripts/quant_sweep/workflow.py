@@ -117,7 +117,7 @@ def run_quant_harness(
 ) -> None:
     cmd = [
         "python",
-        "scripts/HighTier/run_determinism_harness.py",
+        "scripts/benchmarks/run_determinism_harness.py",
         "--task-bank",
         args.task_bank,
         "--runs",

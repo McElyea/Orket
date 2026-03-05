@@ -11,11 +11,11 @@ def test_phase4_runner_executes_001_to_060_and_writes_report(tmp_path: Path) -> 
     result = subprocess.run(
         [
             "python",
-            "scripts/LowTier/run_phase4_benchmark.py",
+            "scripts/benchmarks/run_phase4_benchmark.py",
             "--runs",
             "1",
             "--runner-template",
-            "python scripts/HighTier/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}",
+            "python scripts/benchmarks/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}",
             "--raw-out",
             str(raw_out),
             "--scored-out",

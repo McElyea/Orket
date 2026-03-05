@@ -28,6 +28,7 @@
     "interfaces": "interfaces",
     "kernel": "kernel",
     "logging": "platform",
+    "marshaller": "legacy",
     "naming": "platform",
     "orchestration": "orchestration",
     "organization_loop": "platform",

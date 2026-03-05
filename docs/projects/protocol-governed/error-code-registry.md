@@ -71,7 +71,7 @@ This registry defines stable protocol-governed error codes and prefixes used by:
    - exact code when present
    - prefix family for parameterized errors
 3. Dashboard summary script:
-   - `scripts/MidTier/summarize_protocol_error_codes.py`
+   - `scripts/protocol/summarize_protocol_error_codes.py`
 4. Retry logic should key on code family, not free-form message text.
 
 ## Validation Checklist

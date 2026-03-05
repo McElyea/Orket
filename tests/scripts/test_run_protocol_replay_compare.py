@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from scripts.MidTier.run_protocol_replay_compare import main
+from scripts.protocol.run_protocol_replay_compare import main
 
 
 def _write_events(path: Path, *, status: str, ok: bool) -> None:

@@ -40,8 +40,8 @@ This document records benchmark failures, root causes, and remediations so weak 
 ## Current Reliability Snapshot
 - Live rock `001-080`: deterministic `80/80`, failing tasks `0`, overall score `5.0`.
 - Reports:
-  - `benchmarks/results/live_rock_v2_001_080_determinism_report.json`
-  - `benchmarks/results/live_rock_v2_001_080_scored_report.json`
+  - `benchmarks/results/benchmarks/live_rock_v2_001_080_determinism_report.json`
+  - `benchmarks/results/benchmarks/live_rock_v2_001_080_scored_report.json`
 
 ## Follow-up Policy
 For every future benchmark update:

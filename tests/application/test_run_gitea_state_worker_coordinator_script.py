@@ -17,7 +17,7 @@ def _args(**overrides) -> argparse.Namespace:
         "max_idle_streak": 10,
         "max_duration_seconds": 60.0,
         "idle_sleep_seconds": 0.0,
-        "summary_out": "benchmarks/results/gitea_state_worker_run_summary.json",
+        "summary_out": "benchmarks/results/gitea/gitea_state_worker_run_summary.json",
         "allow_mutate": False,
     }
     base.update(overrides)

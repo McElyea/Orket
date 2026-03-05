@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOCS_LINT_CMD=${DOCS_LINT_CMD:-"python scripts/HighTier/docs_lint.py --project core-pillars"}
+DOCS_LINT_CMD=${DOCS_LINT_CMD:-"python scripts/governance/docs_lint.py --project core-pillars"}
 
 die() {
   echo "ERROR: $*" >&2

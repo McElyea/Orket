@@ -25,7 +25,7 @@ def test_check_valid_run_policy_passes_when_frontier_quant_is_valid(tmp_path: Pa
         encoding="utf-8",
     )
     result = subprocess.run(
-        ["python", "scripts/MidTier/check_valid_run_policy.py", "--summary", str(summary)],
+        ["python", "scripts/quant/check_valid_run_policy.py", "--summary", str(summary)],
         capture_output=True,
         text=True,
         check=False,
@@ -55,7 +55,7 @@ def test_check_valid_run_policy_fails_when_frontier_quant_is_invalid(tmp_path: P
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/check_valid_run_policy.py",
+            "scripts/quant/check_valid_run_policy.py",
             "--summary",
             str(summary),
             "--out",

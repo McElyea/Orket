@@ -16,12 +16,12 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_dashboard_markdown_includes_trend_and_leaderboard_sections() -> None:
-    mod = _load_script_module("render_benchmark_dashboard_test", "scripts/MidTier/render_benchmark_dashboard.py")
+    mod = _load_script_module("render_benchmark_dashboard_test", "scripts/benchmarks/render_benchmark_dashboard.py")
     trends = {
         "row_count": 1,
         "rows": [
             {
-                "source": "benchmarks/results/a.json",
+                "source": "benchmarks/results/benchmarks/a.json",
                 "venue": "standard",
                 "flow": "default",
                 "overall_avg_score": 4.7,
@@ -40,7 +40,7 @@ def test_dashboard_markdown_includes_trend_and_leaderboard_sections() -> None:
                 "entries": [
                     {
                         "rank": 1,
-                        "source": "benchmarks/results/a.json",
+                        "source": "benchmarks/results/benchmarks/a.json",
                         "venue": "standard",
                         "flow": "default",
                         "overall_avg_score": 4.7,
@@ -52,4 +52,4 @@ def test_dashboard_markdown_includes_trend_and_leaderboard_sections() -> None:
     markdown = mod.build_dashboard_markdown(trends=trends, leaderboard=leaderboard)
     assert "## Trends" in markdown
     assert "## Leaderboard" in markdown
-    assert "benchmarks/results/a.json" in markdown
+    assert "benchmarks/results/benchmarks/a.json" in markdown

@@ -29,7 +29,7 @@ def _report(compliance_a: float, compliance_b: float, passed_a: int, runs_a: int
 
 
 def test_policy_release_gate_passes_on_compliance_improvement():
-    mod = _load_script_module("check_policy_release_gate_a", "scripts/MidTier/check_policy_release_gate.py")
+    mod = _load_script_module("check_policy_release_gate_a", "scripts/security/check_policy_release_gate.py")
     previous = _report(80.0, 84.0, 1, 2, 1, 2)
     current = _report(86.0, 88.0, 1, 2, 1, 2)
     result = mod.evaluate_policy_release_gate(previous_report=previous, current_report=current)
@@ -38,7 +38,7 @@ def test_policy_release_gate_passes_on_compliance_improvement():
 
 
 def test_policy_release_gate_passes_on_success_rate_improvement():
-    mod = _load_script_module("check_policy_release_gate_b", "scripts/MidTier/check_policy_release_gate.py")
+    mod = _load_script_module("check_policy_release_gate_b", "scripts/security/check_policy_release_gate.py")
     previous = _report(80.0, 80.0, 0, 2, 0, 2)
     current = _report(80.0, 80.0, 2, 2, 2, 2)
     result = mod.evaluate_policy_release_gate(previous_report=previous, current_report=current)
@@ -47,7 +47,7 @@ def test_policy_release_gate_passes_on_success_rate_improvement():
 
 
 def test_policy_release_gate_fails_when_no_measurable_gain():
-    mod = _load_script_module("check_policy_release_gate_c", "scripts/MidTier/check_policy_release_gate.py")
+    mod = _load_script_module("check_policy_release_gate_c", "scripts/security/check_policy_release_gate.py")
     previous = _report(90.0, 90.0, 2, 2, 2, 2)
     current = _report(90.0, 90.0, 2, 2, 2, 2)
     result = mod.evaluate_policy_release_gate(previous_report=previous, current_report=current)

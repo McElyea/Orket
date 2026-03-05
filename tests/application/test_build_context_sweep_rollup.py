@@ -29,7 +29,7 @@ def test_build_context_sweep_rollup_emits_compact_summary(tmp_path: Path) -> Non
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/build_context_sweep_rollup.py",
+            "scripts/context/build_context_sweep_rollup.py",
             "--context-ceiling",
             str(ceiling),
             "--out",

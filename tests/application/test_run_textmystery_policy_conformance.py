@@ -19,7 +19,7 @@ def test_run_textmystery_policy_conformance_pass(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_textmystery_policy_conformance.py",
+            "scripts/extensions/run_textmystery_policy_conformance.py",
             "--textmystery-root",
             str(repo),
             "--test",
@@ -45,7 +45,7 @@ def test_run_textmystery_policy_conformance_fail(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_textmystery_policy_conformance.py",
+            "scripts/extensions/run_textmystery_policy_conformance.py",
             "--textmystery-root",
             str(repo),
             "--test",

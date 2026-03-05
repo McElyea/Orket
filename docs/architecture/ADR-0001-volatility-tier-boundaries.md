@@ -35,7 +35,7 @@ Trade-offs:
 
 ## Enforcement
 1. Architecture boundary tests in `tests/platform/test_architecture_volatility_boundaries.py`.
-2. Dependency-direction script: `scripts/MidTier/check_dependency_direction.py`.
+2. Dependency-direction script: `scripts/governance/check_dependency_direction.py`.
 3. Canonical dependency policy contract: `model/core/contracts/dependency_direction_policy.json`.
 4. CI workflow must run these checks before quality/test jobs.
 5. Legacy migration uses a ratcheting budget (`legacy_edge_budget`) that is enforced as non-regression in CI.

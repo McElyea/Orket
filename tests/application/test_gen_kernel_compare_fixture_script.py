@@ -9,7 +9,7 @@ from pathlib import Path
 def test_gen_kernel_compare_fixture_script(tmp_path: Path) -> None:
     out_path = tmp_path / "kernel_compare_fixture.json"
     result = subprocess.run(
-        [sys.executable, "scripts/MidTier/gen_kernel_compare_fixture.py", "--out", str(out_path)],
+        [sys.executable, "scripts/governance/gen_kernel_compare_fixture.py", "--out", str(out_path)],
         capture_output=True,
         text=True,
         check=False,

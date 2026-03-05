@@ -44,7 +44,7 @@ def test_check_sidecar_parse_policy_passes_for_ok_payload(tmp_path: Path) -> Non
         encoding="utf-8",
     )
     result = subprocess.run(
-        ["python", "scripts/MidTier/check_sidecar_parse_policy.py", "--summary", str(summary)],
+        ["python", "scripts/quant/check_sidecar_parse_policy.py", "--summary", str(summary)],
         capture_output=True,
         text=True,
         check=False,
@@ -72,7 +72,7 @@ def test_check_sidecar_parse_policy_fails_when_status_invalid(tmp_path: Path) ->
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/check_sidecar_parse_policy.py",
+            "scripts/quant/check_sidecar_parse_policy.py",
             "--summary",
             str(summary),
             "--out",

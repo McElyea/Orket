@@ -30,7 +30,7 @@ def _rss_bytes() -> int:
 def main() -> int:
     episodes = 100000
     workspace = Path("workspace/rulesim_perf_baseline")
-    out_path = Path("benchmarks/results/rulesim_100k_baseline.json")
+    out_path = Path("benchmarks/results/rulesim/rulesim_100k_baseline.json")
     config = {
         "schema_version": "rulesim_v0",
         "rulesystem_id": "loop",

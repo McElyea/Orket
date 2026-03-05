@@ -9,31 +9,31 @@ This document defines how to run live stream scenarios and what they prove.
 
 ## Run a Scenario
 ```powershell
-python scripts/MidTier/run_stream_scenario.py --scenario <scenario-yaml-path> --timeout 20
+python scripts/streaming/run_stream_scenario.py --scenario <scenario-yaml-path> --timeout 20
 ```
 
 ## Run Full Model-Streaming Gate
 ```powershell
-python scripts/MidTier/run_model_streaming_gate.py --provider-mode stub --timeout 20
+python scripts/streaming/run_model_streaming_gate.py --provider-mode stub --timeout 20
 ```
 ```powershell
-python scripts/MidTier/run_model_streaming_gate.py --provider-mode real --timeout 20
+python scripts/streaming/run_model_streaming_gate.py --provider-mode real --timeout 20
 ```
 ```powershell
-python scripts/MidTier/run_model_streaming_gate.py --provider-mode real --real-provider lmstudio --stability-loops 5 --preflight-smoke-stream --timeout 30
+python scripts/streaming/run_model_streaming_gate.py --provider-mode real --real-provider lmstudio --stability-loops 5 --preflight-smoke-stream --timeout 30
 ```
 
 ## Intentional Two-Gate Design
-- Provider Gate (direct): provider scenarios (`s7`, `s8`, `s9`) run through `scripts/LowTier/run_provider_scenario_direct.py` in real mode. This validates provider streaming, cancel behavior, and lifecycle mapping without WS/API transport noise.
-- Runtime Gate (WS/API): baseline scenarios (`s0`, `s5`, `s6`) run through `scripts/MidTier/run_stream_scenario.py`. This validates interaction-plane transport, stream laws, and authority boundaries.
+- Provider Gate (direct): provider scenarios (`s7`, `s8`, `s9`) run through `scripts/streaming/run_provider_scenario_direct.py` in real mode. This validates provider streaming, cancel behavior, and lifecycle mapping without WS/API transport noise.
+- Runtime Gate (WS/API): baseline scenarios (`s0`, `s5`, `s6`) run through `scripts/streaming/run_stream_scenario.py`. This validates interaction-plane transport, stream laws, and authority boundaries.
 - Both gates are required. They cover different failure classes and should not be collapsed into one path.
 
 ## Real Provider Preflight
 ```powershell
-python scripts/MidTier/check_model_provider_preflight.py
+python scripts/providers/check_model_provider_preflight.py
 ```
 ```powershell
-python scripts/MidTier/check_model_provider_preflight.py --smoke-stream
+python scripts/providers/check_model_provider_preflight.py --smoke-stream
 ```
 
 ## Provider Identity In Verdicts

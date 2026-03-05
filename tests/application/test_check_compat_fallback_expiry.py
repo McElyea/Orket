@@ -16,7 +16,7 @@ def _load_script_module(name: str, relative_path: str):
 
 
 def test_compat_fallback_expiry_check_passes_without_expired_or_unknown_codes():
-    mod = _load_script_module("check_compat_fallback_expiry_a", "scripts/MidTier/check_compat_fallback_expiry.py")
+    mod = _load_script_module("check_compat_fallback_expiry_a", "scripts/security/check_compat_fallback_expiry.py")
     payload = {"extensions": [{"extension_id": "x", "compat_fallbacks": ["EXT_LOCAL_PATH_COMPAT"]}]}
     result = mod.evaluate_compat_fallback_expiry(current_version="0.4.9", catalog_payload=payload)
     assert result["ok"] is True
@@ -25,7 +25,7 @@ def test_compat_fallback_expiry_check_passes_without_expired_or_unknown_codes():
 
 
 def test_compat_fallback_expiry_check_fails_on_expired_active_code():
-    mod = _load_script_module("check_compat_fallback_expiry_b", "scripts/MidTier/check_compat_fallback_expiry.py")
+    mod = _load_script_module("check_compat_fallback_expiry_b", "scripts/security/check_compat_fallback_expiry.py")
     payload = {"extensions": [{"extension_id": "x", "compat_fallbacks": ["EXT_LOCAL_PATH_COMPAT"]}]}
     result = mod.evaluate_compat_fallback_expiry(current_version="0.5.0", catalog_payload=payload)
     assert result["ok"] is False
@@ -33,7 +33,7 @@ def test_compat_fallback_expiry_check_fails_on_expired_active_code():
 
 
 def test_compat_fallback_expiry_check_fails_on_unknown_code():
-    mod = _load_script_module("check_compat_fallback_expiry_c", "scripts/MidTier/check_compat_fallback_expiry.py")
+    mod = _load_script_module("check_compat_fallback_expiry_c", "scripts/security/check_compat_fallback_expiry.py")
     payload = {"extensions": [{"extension_id": "x", "compat_fallbacks": ["EXT_UNKNOWN_COMPAT"]}]}
     result = mod.evaluate_compat_fallback_expiry(current_version="0.4.0", catalog_payload=payload)
     assert result["ok"] is False

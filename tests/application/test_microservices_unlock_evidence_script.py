@@ -2,26 +2,26 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from scripts.MidTier.run_microservices_unlock_evidence import build_command_plan
+from scripts.acceptance.run_microservices_unlock_evidence import build_command_plan
 
 
 def test_build_command_plan_contains_expected_steps() -> None:
     args = SimpleNamespace(
         models=["m1", "m2"],
         iterations=2,
-        matrix_out="benchmarks/results/matrix.json",
-        live_report_out="benchmarks/results/live.json",
-        unlock_out="benchmarks/results/unlock.json",
-        decision_out="benchmarks/results/decision.json",
+        matrix_out="benchmarks/results/benchmarks/matrix.json",
+        live_report_out="benchmarks/results/benchmarks/live.json",
+        unlock_out="benchmarks/results/benchmarks/unlock.json",
+        decision_out="benchmarks/results/benchmarks/decision.json",
         require_unlocked=False,
     )
     plan = build_command_plan(args)
     assert len(plan) == 5
-    assert plan[0][:3] == ["python", "scripts/MidTier/run_monolith_variant_matrix.py", "--execute"]
-    assert plan[1][:3] == ["python", "-m", "scripts.MidTier.run_live_acceptance_loop"]
-    assert plan[2][:2] == ["python", "scripts/MidTier/report_live_acceptance_patterns.py"]
-    assert plan[3][:2] == ["python", "scripts/MidTier/check_microservices_unlock.py"]
-    assert plan[4][:2] == ["python", "scripts/LowTier/decide_microservices_pilot.py"]
+    assert plan[0][:3] == ["python", "scripts/acceptance/run_monolith_variant_matrix.py", "--execute"]
+    assert plan[1][:3] == ["python", "-m", "scripts.acceptance.run_live_acceptance_loop"]
+    assert plan[2][:2] == ["python", "scripts/acceptance/report_live_acceptance_patterns.py"]
+    assert plan[3][:2] == ["python", "scripts/acceptance/check_microservices_unlock.py"]
+    assert plan[4][:2] == ["python", "scripts/acceptance/decide_microservices_pilot.py"]
 
 
 def test_build_command_plan_appends_require_unlocked_flag() -> None:

@@ -9,7 +9,7 @@ from orket.extensions import ExtensionManager
 
 
 def _load_register_module():
-    script_path = Path("scripts/MidTier/register_meta_breaker_extension.py").resolve()
+    script_path = Path("scripts/extensions/register_meta_breaker_extension.py").resolve()
     spec = importlib.util.spec_from_file_location("register_meta_breaker_extension_for_run", script_path)
     if spec is None or spec.loader is None:
         raise RuntimeError("unable to load register_meta_breaker_extension.py")

@@ -258,7 +258,7 @@ def main() -> int:
     parser.add_argument(
         "--out",
         type=str,
-        default="benchmarks/results/reviewrun_consistency_1000.json",
+        default="benchmarks/results/reviewrun/reviewrun_consistency_1000.json",
         help="Output report path.",
     )
     parser.add_argument(

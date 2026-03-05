@@ -6,11 +6,11 @@ from pathlib import Path
 
 
 def test_check_offline_matrix_passes_with_core_doc() -> None:
-    out_path = Path("benchmarks/results/offline_matrix_check_test.json")
+    out_path = Path("benchmarks/results/benchmarks/offline_matrix_check_test.json")
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_offline_matrix.py",
+            "scripts/benchmarks/check_offline_matrix.py",
             "--matrix-doc",
             "docs/projects/core-pillars/09-OFFLINE-CAPABILITY-MATRIX.md",
             "--out",
@@ -31,7 +31,7 @@ def test_check_offline_matrix_fails_when_doc_missing(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_offline_matrix.py",
+            "scripts/benchmarks/check_offline_matrix.py",
             "--matrix-doc",
             str(tmp_path / "missing.md"),
             "--out",

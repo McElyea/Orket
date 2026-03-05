@@ -26,7 +26,7 @@ async def test_engine_delegates_run_gitea_state_loop_to_pipeline():
         max_idle_streak=2,
         max_duration_seconds=10.0,
         idle_sleep_seconds=0.1,
-        summary_out="benchmarks/results/run.json",
+        summary_out="benchmarks/results/benchmarks/run.json",
     )
     assert result["ok"] is True
     assert captured["worker_id"] == "worker-9"

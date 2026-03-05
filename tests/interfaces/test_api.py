@@ -473,7 +473,7 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_ALLOWLIST", "api.example.com,cache.example.com")
     monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
     monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
-    monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/nonexistent_pilot_stability.json")
+    monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/benchmarks/nonexistent_pilot_stability.json")
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
     monkeypatch.setattr(
         api_module.engine,

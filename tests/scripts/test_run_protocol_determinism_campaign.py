@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from scripts.MidTier.run_protocol_determinism_campaign import main
+from scripts.protocol.run_protocol_determinism_campaign import main
 
 
 def _write_run(path: Path, *, status: str, ok: bool, session_id: str = "sess-1") -> None:

@@ -32,7 +32,7 @@ Every explorer artifact must include:
 4. Remove deprecated fields only in the next major schema version.
 
 ## Contract Enforcement
-1. `scripts/MidTier/check_explorer_schema_contracts.py` is the CI contract gate.
+1. `scripts/explorer/check_explorer_schema_contracts.py` is the CI contract gate.
 2. Smoke workflow must execute contract tests for all explorer artifacts.
 
 ## Companion Schemas

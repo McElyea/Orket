@@ -73,7 +73,7 @@ def test_compare_memory_determinism_passes_for_equivalent_payloads(tmp_path: Pat
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/compare_memory_determinism.py",
+            "scripts/benchmarks/compare_memory_determinism.py",
             "--left",
             str(left),
             "--right",
@@ -101,7 +101,7 @@ def test_compare_memory_determinism_fails_for_tool_fingerprint_mismatch(tmp_path
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/compare_memory_determinism.py",
+            "scripts/benchmarks/compare_memory_determinism.py",
             "--left",
             str(left),
             "--right",

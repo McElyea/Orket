@@ -185,7 +185,7 @@ Before rollout:
 
 Protocol rollout evidence bundles are published via:
 
-1. `scripts/MidTier/publish_protocol_rollout_artifacts.py`
+1. `scripts/protocol/publish_protocol_rollout_artifacts.py`
 
 Bundle outputs include:
 

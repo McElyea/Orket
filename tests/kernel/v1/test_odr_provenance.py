@@ -30,7 +30,7 @@ def test_generate_odr_provenance_no_probes(tmp_path: Path) -> None:
     out = input_dir / "provenance.json"
     cmd = [
         sys.executable,
-        "scripts/MidTier/generate_odr_provenance.py",
+        "scripts/odr/generate_odr_provenance.py",
         "--input-dir",
         str(input_dir),
         "--out",
@@ -51,7 +51,7 @@ def test_generate_odr_provenance_no_probes(tmp_path: Path) -> None:
 
 
 def test_normalize_ollama_version_returns_machine_parseable_value() -> None:
-    module_path = Path("scripts/MidTier/generate_odr_provenance.py")
+    module_path = Path("scripts/odr/generate_odr_provenance.py")
     spec = importlib.util.spec_from_file_location("odr_provenance_module_test", module_path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.LowTier.check_microservices_pilot_stability import evaluate_pilot_stability
+from scripts.acceptance.check_microservices_pilot_stability import evaluate_pilot_stability
 
 
 def _artifact(pass_delta: float, runtime_delta: float, reviewer_delta: float) -> dict:

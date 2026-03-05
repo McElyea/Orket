@@ -8,10 +8,10 @@ def test_nightly_workflow_enforces_memory_determinism_contract_gates() -> None:
     text = workflow_path.read_text(encoding="utf-8")
 
     required_commands = [
-        "python scripts/HighTier/check_memory_determinism.py",
-        "python scripts/HighTier/compare_memory_determinism.py",
-        "benchmarks/results/nightly_memory_determinism_check.json",
-        "benchmarks/results/nightly_memory_determinism_compare.json",
+        "python scripts/benchmarks/check_memory_determinism.py",
+        "python scripts/benchmarks/compare_memory_determinism.py",
+        "benchmarks/results/benchmarks/nightly_memory_determinism_check.json",
+        "benchmarks/results/benchmarks/nightly_memory_determinism_compare.json",
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]
     assert not missing, "nightly workflow missing required memory determinism gates: " + ", ".join(missing)

@@ -37,7 +37,7 @@ def test_lab_guard_checker_fails_on_cooldown_or_vram_limit(tmp_path: Path) -> No
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_lab_guards.py",
+            "scripts/benchmarks/check_lab_guards.py",
             "--summary",
             str(summary),
             "--cooldown-target-c",
@@ -65,7 +65,7 @@ def test_lab_guard_checker_skips_when_metrics_not_applicable(tmp_path: Path) -> 
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_lab_guards.py",
+            "scripts/benchmarks/check_lab_guards.py",
             "--summary",
             str(summary),
             "--allow-skip",
@@ -90,7 +90,7 @@ def test_lab_guard_checker_passes_within_limits(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_lab_guards.py",
+            "scripts/benchmarks/check_lab_guards.py",
             "--summary",
             str(summary),
             "--cooldown-target-c",

@@ -72,8 +72,8 @@ Exit criteria:
 3. No write outside scope barrier under adversarial fixture.
 
 Required validation commands:
-1. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail`
-2. `python scripts/HighTier/check_volatility_boundaries.py`
+1. `python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail`
+2. `python scripts/benchmarks/check_volatility_boundaries.py`
 3. `python -m pytest -q`
 
 ---
@@ -115,8 +115,8 @@ Exit criteria:
 3. User-edited extension region survives rerun.
 
 Required validation commands:
-1. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail`
-2. `python scripts/HighTier/check_volatility_boundaries.py`
+1. `python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail`
+2. `python scripts/benchmarks/check_volatility_boundaries.py`
 3. `python -m pytest -q`
 
 ---
@@ -147,8 +147,8 @@ Exit criteria:
 3. No out-of-scope writes during init execution.
 
 Required validation commands:
-1. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail`
-2. `python scripts/HighTier/check_volatility_boundaries.py`
+1. `python scripts/governance/check_dependency_direction.py --legacy-edge-enforcement fail`
+2. `python scripts/benchmarks/check_volatility_boundaries.py`
 3. `python -m pytest -q`
 
 ---

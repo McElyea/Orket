@@ -82,7 +82,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate prompt quality metrics from observability artifacts.")
     parser.add_argument("--observability-root", default="workspace/default/observability")
     parser.add_argument("--log", default="workspace/default/orket.log")
-    parser.add_argument("--out", default="benchmarks/results/prompt_eval_metrics.json")
+    parser.add_argument("--out", default="benchmarks/results/prompt_lab/prompt_eval_metrics.json")
     args = parser.parse_args()
 
     metrics = evaluate(Path(args.observability_root), Path(args.log))

@@ -23,7 +23,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_compile_plan_emits_workload_contract(tmp_path: Path) -> None:
-    module = _load_script_module("run_arbiter_workload_contract", "scripts/MidTier/run_arbiter.py")
+    module = _load_script_module("run_arbiter_workload_contract", "scripts/odr/run_arbiter.py")
     arbiter = module.RunArbiter(
         plan_out=tmp_path / "out" / "arbiter_plan.json",
         error_out=tmp_path / "out" / "arbiter_error.json",
@@ -50,7 +50,7 @@ def test_compile_plan_emits_workload_contract(tmp_path: Path) -> None:
 
 
 def test_compile_plan_workload_contract_omits_provenance_target_when_disabled(tmp_path: Path) -> None:
-    module = _load_script_module("run_arbiter_workload_contract_no_prov", "scripts/MidTier/run_arbiter.py")
+    module = _load_script_module("run_arbiter_workload_contract_no_prov", "scripts/odr/run_arbiter.py")
     arbiter = module.RunArbiter(
         plan_out=tmp_path / "out" / "arbiter_plan.json",
         error_out=tmp_path / "out" / "arbiter_error.json",

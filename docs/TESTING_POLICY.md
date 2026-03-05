@@ -50,15 +50,15 @@ python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_nightly -q
 ## CLI and Security Smoke
 1. CLI regression smoke:
 ```bash
-python scripts/MidTier/run_cli_regression_smoke.py --out benchmarks/results/cli_regression_smoke.json
+python scripts/governance/run_cli_regression_smoke.py --out benchmarks/results/governance/cli_regression_smoke.json
 ```
 2. Security canary:
 ```bash
-python scripts/MidTier/security_canary.py
+python scripts/security/security_canary.py
 ```
 3. Model-streaming scenario gate:
 ```bash
-python scripts/MidTier/run_model_streaming_gate.py --provider-mode stub --timeout 20
+python scripts/streaming/run_model_streaming_gate.py --provider-mode stub --timeout 20
 ```
 
 ## Completion Standard

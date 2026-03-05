@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.MidTier.check_gitea_state_hardening import evaluate_hardening
+from scripts.gitea.check_gitea_state_hardening import evaluate_hardening
 
 
 def test_hardening_gate_passes_when_all_targets_green() -> None:

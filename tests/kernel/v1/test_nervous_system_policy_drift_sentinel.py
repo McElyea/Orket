@@ -28,5 +28,5 @@ def test_policy_and_tool_profile_digest_snapshot() -> None:
     expected = build_policy_digest_snapshot()
     assert snapshot == expected, (
         "Nervous-system policy snapshot drift detected. If this change is intentional, run "
-        "python scripts/MidTier/update_nervous_system_policy_digest_snapshot.py"
+        "python scripts/nervous_system/update_nervous_system_policy_digest_snapshot.py"
     )

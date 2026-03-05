@@ -27,7 +27,7 @@ def test_build_explorer_artifact_index_writes_rows(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/build_explorer_artifact_index.py",
+            "scripts/explorer/build_explorer_artifact_index.py",
             "--frontier",
             str(frontier),
             "--context",

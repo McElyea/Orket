@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def test_prompt_promotion_thresholds_file_has_required_guard_keys() -> None:
-    path = Path("benchmarks/results/prompt_promotion_thresholds.json")
+    path = Path("benchmarks/results/prompt_lab/prompt_promotion_thresholds.json")
     assert path.exists(), "Missing canonical prompt promotion thresholds file."
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)

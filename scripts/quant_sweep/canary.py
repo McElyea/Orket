@@ -14,7 +14,7 @@ from quant_sweep.runtime import load_json, run_cmd
 def _build_canary_command(args: argparse.Namespace, out_path: Path) -> list[str]:
     command = [
         "python",
-        "scripts/HighTier/run_determinism_harness.py",
+        "scripts/benchmarks/run_determinism_harness.py",
         "--task-bank",
         args.task_bank,
         "--runs",

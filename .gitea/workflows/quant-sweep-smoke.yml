@@ -3,28 +3,28 @@ name: Quant Sweep Smoke
 on:
   pull_request:
     paths:
-      - "scripts/MidTier/run_quant_sweep.py"
-      - "scripts/HighTier/run_determinism_harness.py"
-      - "scripts/MidTier/live_card_benchmark_runner.py"
-      - "scripts/HighTier/manage_baselines.py"
-      - "scripts/MidTier/check_quant_sweep_kpis.py"
-      - "scripts/MidTier/quant_sweep_kpi_report.py"
-      - "scripts/MidTier/sidecar_probe.py"
-      - "scripts/MidTier/quant_frontier_explorer.py"
-      - "scripts/MidTier/context_ceiling_finder.py"
-      - "scripts/MidTier/thermal_stability_profiler.py"
-      - "scripts/MidTier/check_explorer_schema_contracts.py"
-      - "scripts/HighTier/check_lab_guards.py"
-      - "scripts/MidTier/run_context_sweep.py"
-      - "scripts/MidTier/check_context_sweep_outputs.py"
-      - "scripts/MidTier/build_explorer_artifact_index.py"
-      - "scripts/HighTier/check_explorer_ingestion.py"
-      - "scripts/MidTier/build_context_sweep_rollup.py"
-      - "scripts/MidTier/check_context_rollup_contract.py"
-      - "scripts/MidTier/cleanup_context_sweep_artifacts.py"
-      - "scripts/MidTier/check_context_profile_policy.py"
-      - "scripts/MidTier/build_explorer_check_summary.py"
-      - "scripts/MidTier/render_explorer_check_digest.py"
+      - "scripts/quant/run_quant_sweep.py"
+      - "scripts/benchmarks/run_determinism_harness.py"
+      - "scripts/benchmarks/live_card_benchmark_runner.py"
+      - "scripts/benchmarks/manage_baselines.py"
+      - "scripts/quant/check_quant_sweep_kpis.py"
+      - "scripts/quant/quant_sweep_kpi_report.py"
+      - "scripts/quant/sidecar_probe.py"
+      - "scripts/quant/quant_frontier_explorer.py"
+      - "scripts/context/context_ceiling_finder.py"
+      - "scripts/quant/thermal_stability_profiler.py"
+      - "scripts/explorer/check_explorer_schema_contracts.py"
+      - "scripts/benchmarks/check_lab_guards.py"
+      - "scripts/context/run_context_sweep.py"
+      - "scripts/context/check_context_sweep_outputs.py"
+      - "scripts/explorer/build_explorer_artifact_index.py"
+      - "scripts/explorer/check_explorer_ingestion.py"
+      - "scripts/context/build_context_sweep_rollup.py"
+      - "scripts/context/check_context_rollup_contract.py"
+      - "scripts/context/cleanup_context_sweep_artifacts.py"
+      - "scripts/context/check_context_profile_policy.py"
+      - "scripts/explorer/build_explorer_check_summary.py"
+      - "scripts/explorer/render_explorer_check_digest.py"
       - "tests/application/test_quant_sweep_runner.py"
       - "tests/application/test_manage_baselines_script.py"
       - "tests/application/test_benchmark_telemetry_manifest.py"
@@ -101,7 +101,7 @@ jobs:
 
       - name: Matrix Dry Run Smoke
         run: |
-          python scripts/MidTier/run_quant_sweep.py \
+          python scripts/quant/run_quant_sweep.py \
             --model-id placeholder-model \
             --quant-tags Q8_0 \
             --matrix-config benchmarks/configs/quant_sweep_common_sessions.json \

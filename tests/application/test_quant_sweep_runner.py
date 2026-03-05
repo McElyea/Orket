@@ -76,7 +76,7 @@ def test_run_quant_sweep_builds_summary_and_frontier(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -220,7 +220,7 @@ def test_run_quant_sweep_recommends_mismatch_when_no_quant_meets_threshold(tmp_p
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -304,7 +304,7 @@ def test_run_quant_sweep_canary_gate_blocks_on_missing_telemetry(tmp_path: Path)
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -356,7 +356,7 @@ def test_run_quant_sweep_dry_run_uses_matrix_config(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "placeholder-model",
             "--quant-tags",
@@ -452,7 +452,7 @@ def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path
     default_result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -484,7 +484,7 @@ def test_run_quant_sweep_excludes_polluted_rows_unless_overridden(tmp_path: Path
     override_result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -581,7 +581,7 @@ def test_run_quant_sweep_records_hardware_sidecar_output(tmp_path: Path) -> None
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -668,7 +668,7 @@ def test_run_quant_sweep_sidecar_required_field_missing_sets_status(tmp_path: Pa
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -762,7 +762,7 @@ def test_run_quant_sweep_sidecar_optional_field_missing_sets_status(tmp_path: Pa
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -844,7 +844,7 @@ def test_run_quant_sweep_include_invalid_allows_sidecar_parse_failures_in_fronti
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "qwen-coder",
             "--quant-tags",
@@ -892,7 +892,7 @@ def test_run_quant_sweep_dry_run_resolves_sidecar_profile(tmp_path: Path) -> Non
             {
                 "profiles": {
                     "cpu_only": {
-                        "template": "python scripts/MidTier/sidecar_probe.py --backend cpu --model {model_id} --quant {quant_tag} --out {out_file}",
+                        "template": "python scripts/quant/sidecar_probe.py --backend cpu --model {model_id} --quant {quant_tag} --out {out_file}",
                         "timeout_sec": 45,
                     }
                 }
@@ -903,7 +903,7 @@ def test_run_quant_sweep_dry_run_resolves_sidecar_profile(tmp_path: Path) -> Non
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_quant_sweep.py",
+            "scripts/quant/run_quant_sweep.py",
             "--model-id",
             "placeholder-model",
             "--quant-tags",

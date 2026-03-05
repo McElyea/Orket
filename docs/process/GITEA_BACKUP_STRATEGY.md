@@ -18,7 +18,7 @@ Critical paths:
 
 ## Backup Command
 ```bash
-./scripts/LowTier/backup_gitea.sh
+./scripts/gitea/backup_gitea.sh
 ```
 
 Output archive pattern:
@@ -29,7 +29,7 @@ Retention:
 
 ## Restore Command
 ```bash
-./scripts/LowTier/restore_gitea.sh backups/gitea/gitea_backup_YYYYMMDD_HHMMSS.tar.gz
+./scripts/gitea/restore_gitea.sh backups/gitea/gitea_backup_YYYYMMDD_HHMMSS.tar.gz
 ```
 
 Typical restore flow:

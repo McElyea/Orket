@@ -87,14 +87,14 @@ Latest completed increments:
    - run-vs-run digest comparison
    - deterministic difference surface for status/ops/artifacts
 5. CLI replay comparator script landed:
-   - `scripts/MidTier/run_protocol_replay_compare.py`
+   - `scripts/protocol/run_protocol_replay_compare.py`
    - strict mode exits non-zero on mismatch
 6. Protocol sessions API surfaces landed:
    - `/v1/protocol/runs/{run_id}/replay`
    - `/v1/protocol/replay/compare`
 7. Ledger parity comparator landed:
    - runtime parity module comparing SQLite row vs protocol row
-   - backend comparison script `scripts/MidTier/compare_run_ledger_backends.py`
+   - backend comparison script `scripts/protocol/compare_run_ledger_backends.py`
    - sessions endpoint `/v1/protocol/runs/{run_id}/ledger-parity`
 8. CLI protocol command surface expanded:
    - `orket protocol replay <run_id>`
@@ -122,7 +122,7 @@ Latest completed increments:
     - idempotent replay-safe rematerialization path
 14. Determinism campaign and replay surfaces expanded:
     - runtime campaign comparator module (`protocol_determinism_campaign`)
-    - script harness `scripts/MidTier/run_protocol_determinism_campaign.py`
+    - script harness `scripts/protocol/run_protocol_determinism_campaign.py`
     - CLI command `orket protocol campaign`
     - sessions API endpoint `/v1/protocol/replay/campaign`
     - replay comparator now includes `receipt_inventory` in state digest and diffs
@@ -144,7 +144,7 @@ Latest completed increments:
       `docs/projects/protocol-governed/determinism-control-surface.md`
 19. Protocol ledger parity campaign surfaces landed:
     - runtime campaign comparator (`protocol_ledger_parity_campaign`)
-    - script harness `scripts/MidTier/run_protocol_ledger_parity_campaign.py`
+    - script harness `scripts/protocol/run_protocol_ledger_parity_campaign.py`
     - CLI command `orket protocol parity-campaign`
     - sessions API endpoint `/v1/protocol/ledger-parity/campaign`
 20. Compatibility telemetry deltas are captured for dual-write parity:
@@ -152,10 +152,10 @@ Latest completed increments:
     - value-transition signatures (`delta_signature_counts`)
     - status drift signatures (`status_delta_counts`)
 21. Rollout evidence publication harness landed:
-    - `scripts/MidTier/publish_protocol_rollout_artifacts.py`
+    - `scripts/protocol/publish_protocol_rollout_artifacts.py`
     - versioned + latest bundle artifacts for operator review
 22. Error dashboard family aggregation landed:
-    - `scripts/MidTier/summarize_protocol_error_codes.py`
+    - `scripts/protocol/summarize_protocol_error_codes.py`
     - registry-family aggregation via `error_family(...)`
 23. Parser/validator registry adoption expanded:
     - strict parser boundaries now use registry-backed constants/families
@@ -171,11 +171,11 @@ Latest completed increments:
 27. Enforce-phase rollout checklist published:
     - `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md`
 28. Enforce-phase window evidence captured (local quality workspace):
-    - `benchmarks/results/protocol_governed/enforce_phase/window_a/*`
-    - `benchmarks/results/protocol_governed/enforce_phase/window_b/*`
+    - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/*`
+    - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/*`
     - checklist sign-off entries filled for both windows
-29. MidTier rollout campaign scripts now support direct file invocation from repo root:
-    - `python scripts/MidTier/<script>.py ...` and `python -m scripts.MidTier.<script>` both resolve repo imports
+29. Rollout campaign scripts now support direct file invocation from repo root:
+    - `python scripts/protocol/<script>.py ...` and `python -m scripts.protocol.<script>` both resolve repo imports
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -215,27 +215,27 @@ Verification runs (latest batch):
 2. `python -m pytest -q tests/application/test_orchestrator_epic.py -k "protocol_governed_defaults or protocol_governed_env_overrides or protocol_determinism_invalid_network_mode"`
 3. `python -m pytest -q tests/application/test_state_backend_mode.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_error_codes.py`
 4. `python -m pytest -q tests/interfaces/test_cli_protocol_replay.py tests/interfaces/test_sessions_router_protocol_replay.py tests/runtime/test_protocol_determinism_campaign.py tests/runtime/test_protocol_replay.py tests/scripts/test_run_protocol_determinism_campaign.py tests/scripts/test_run_protocol_replay_compare.py tests/application/test_protocol_append_only_ledger.py tests/runtime/test_run_ledger_factory.py`
-5. `python scripts/MidTier/check_docs_project_hygiene.py`
+5. `python scripts/governance/check_docs_project_hygiene.py`
 6. `python -m pytest -q tests/runtime/test_protocol_ledger_parity_campaign.py tests/scripts/test_run_protocol_ledger_parity_campaign.py tests/scripts/test_publish_protocol_rollout_artifacts.py tests/scripts/test_summarize_protocol_error_codes.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
 7. `python -m pytest -q tests/interfaces/test_cli_protocol_replay.py tests/interfaces/test_sessions_router_protocol_replay.py tests/platform/test_quality_workflow_gates.py`
-8. `python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/rollout_artifacts --baseline-run-id run-a --strict` (CI smoke parity/replay publication path)
+8. `python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/rollout_artifacts --baseline-run-id run-a --strict` (CI smoke parity/replay publication path)
 9. `python -m pytest -q tests/runtime/test_determinism_controls.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_replay.py tests/application/test_turn_tool_dispatcher.py -k "protocol_receipt_uses_turn_raw_metadata or idempotency or determinism_controls or receipt_digest_inventory or protocol_replay_engine"`
 10. `python -m pytest -q tests/interfaces/test_settings_protocol_determinism_controls.py tests/interfaces/test_api.py -k "runtime_policy_options or runtime_policy_get_uses_precedence or runtime_policy_update_normalizes_and_saves or settings_get_returns_metadata_and_sources or settings_patch_round_trip_persists_normalized_values or settings_patch_rejects_invalid_protocol_network_mode"`
 11. `python -m pytest -q tests/application/test_orchestrator_epic.py -k "protocol_governed_defaults or protocol_governed_env_overrides or protocol_determinism_invalid_network_mode"`
 12. `python -m pytest -q tests/runtime/test_determinism_controls.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_replay.py tests/application/test_turn_tool_dispatcher.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/interfaces/test_api.py tests/application/test_orchestrator_epic.py`
-13. `python scripts/MidTier/check_docs_project_hygiene.py`
-14. `python -m scripts.MidTier.run_protocol_determinism_campaign --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json`
-15. `python -m scripts.MidTier.run_protocol_ledger_parity_campaign --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json`
-16. `python -m scripts.MidTier.publish_protocol_rollout_artifacts --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/enforce_phase/window_a/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict`
-17. `python -m scripts.MidTier.summarize_protocol_error_codes --input benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json --input benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_error_code_summary.json --strict`
-18. `python -m scripts.MidTier.run_protocol_determinism_campaign --runs-root .ci/protocol_quality_workspace/runs --run-id run-b --baseline-run-id run-b --strict --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json`
-19. `python -m scripts.MidTier.run_protocol_ledger_parity_campaign --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-b --strict --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json`
-20. `python -m scripts.MidTier.publish_protocol_rollout_artifacts --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/enforce_phase/window_b/rollout_artifacts --run-id run-b --session-id run-b --baseline-run-id run-b --strict`
-21. `python -m scripts.MidTier.summarize_protocol_error_codes --input benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json --input benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json --strict`
-22. `python scripts/MidTier/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json`
-23. `python scripts/MidTier/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-a --strict --out benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json`
-24. `python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol_governed/enforce_phase/direct_path/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict`
-25. `python scripts/MidTier/summarize_protocol_error_codes.py --input benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json --input benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol_governed/enforce_phase/direct_path/protocol_error_code_summary.json --strict`
+13. `python scripts/governance/check_docs_project_hygiene.py`
+14. `python -m scripts.protocol.run_protocol_determinism_campaign --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json`
+15. `python -m scripts.protocol.run_protocol_ledger_parity_campaign --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-a --strict --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json`
+16. `python -m scripts.protocol.publish_protocol_rollout_artifacts --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict`
+17. `python -m scripts.protocol.summarize_protocol_error_codes --input benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json --input benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_error_code_summary.json --strict`
+18. `python -m scripts.protocol.run_protocol_determinism_campaign --runs-root .ci/protocol_quality_workspace/runs --run-id run-b --baseline-run-id run-b --strict --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json`
+19. `python -m scripts.protocol.run_protocol_ledger_parity_campaign --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-b --strict --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json`
+20. `python -m scripts.protocol.publish_protocol_rollout_artifacts --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/rollout_artifacts --run-id run-b --session-id run-b --baseline-run-id run-b --strict`
+21. `python -m scripts.protocol.summarize_protocol_error_codes --input benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json --input benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json --strict`
+22. `python scripts/protocol/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json`
+23. `python scripts/protocol/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-a --strict --out benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json`
+24. `python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict`
+25. `python scripts/protocol/summarize_protocol_error_codes.py --input benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json --input benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_error_code_summary.json --strict`
 
 Next execution slices (active):
 1. Execute equivalent campaign windows against production traffic and obtain operator approver sign-off using the same checklist artifacts.

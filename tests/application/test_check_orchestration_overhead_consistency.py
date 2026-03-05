@@ -36,7 +36,7 @@ def test_check_orchestration_overhead_consistency_passes_with_required_fields(tm
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/check_orchestration_overhead_consistency.py",
+            "scripts/benchmarks/check_orchestration_overhead_consistency.py",
             "--report",
             str(report),
             "--out",
@@ -73,7 +73,7 @@ def test_check_orchestration_overhead_consistency_fails_on_missing_fields(tmp_pa
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/check_orchestration_overhead_consistency.py",
+            "scripts/benchmarks/check_orchestration_overhead_consistency.py",
             "--report",
             str(report),
             "--out",

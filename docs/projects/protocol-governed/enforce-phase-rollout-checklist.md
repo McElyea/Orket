@@ -28,12 +28,12 @@ For each window, capture:
 
 ## Required Commands
 
-1. `python scripts/MidTier/run_protocol_determinism_campaign.py --runs-root <runs_root> --baseline-run-id <run_id> --strict --out <replay_out_json>`
-2. `python scripts/MidTier/run_protocol_ledger_parity_campaign.py --sqlite-db <sqlite_db> --protocol-root <workspace_root> --session-id <session_id> --strict --out <parity_out_json>`
-3. `python scripts/MidTier/publish_protocol_rollout_artifacts.py --workspace-root <workspace_root> --out-dir <rollout_out_dir> --run-id <run_id> --session-id <session_id> --baseline-run-id <run_id> --strict`
-4. `python scripts/MidTier/summarize_protocol_error_codes.py --input <replay_out_json> --input <parity_out_json> --out <error_summary_out_json> --strict`
+1. `python scripts/protocol/run_protocol_determinism_campaign.py --runs-root <runs_root> --baseline-run-id <run_id> --strict --out <replay_out_json>`
+2. `python scripts/protocol/run_protocol_ledger_parity_campaign.py --sqlite-db <sqlite_db> --protocol-root <workspace_root> --session-id <session_id> --strict --out <parity_out_json>`
+3. `python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root <workspace_root> --out-dir <rollout_out_dir> --run-id <run_id> --session-id <session_id> --baseline-run-id <run_id> --strict`
+4. `python scripts/protocol/summarize_protocol_error_codes.py --input <replay_out_json> --input <parity_out_json> --out <error_summary_out_json> --strict`
 
-Equivalent module form is also valid (`python -m scripts.MidTier.<script_name_without_py>`).
+Equivalent module form is also valid (`python -m scripts.protocol.<script_name_without_py>`).
 
 ## Hard Gates
 
@@ -77,18 +77,18 @@ Record sign-off per window:
 
 Window A:
 1. Window ID/date: `window_a / 2026-03-05`
-2. Replay campaign artifact path: `benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json`
-3. Parity campaign artifact path: `benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json`
-4. Rollout bundle path: `benchmarks/results/protocol_governed/enforce_phase/window_a/rollout_artifacts/protocol_rollout_bundle.latest.json`
-5. Error summary path: `benchmarks/results/protocol_governed/enforce_phase/window_a/protocol_error_code_summary.json`
+2. Replay campaign artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json`
+3. Parity campaign artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json`
+4. Rollout bundle path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/rollout_artifacts/protocol_rollout_bundle.latest.json`
+5. Error summary path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_error_code_summary.json`
 6. Gate status (`PASS`/`FAIL`): `PASS`
 7. Approver: `Orket Core (local quality workspace)`
 
 Window B:
 1. Window ID/date: `window_b / 2026-03-05`
-2. Replay campaign artifact path: `benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json`
-3. Parity campaign artifact path: `benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json`
-4. Rollout bundle path: `benchmarks/results/protocol_governed/enforce_phase/window_b/rollout_artifacts/protocol_rollout_bundle.latest.json`
-5. Error summary path: `benchmarks/results/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json`
+2. Replay campaign artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json`
+3. Parity campaign artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json`
+4. Rollout bundle path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/rollout_artifacts/protocol_rollout_bundle.latest.json`
+5. Error summary path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json`
 6. Gate status (`PASS`/`FAIL`): `PASS`
 7. Approver: `Orket Core (local quality workspace)`

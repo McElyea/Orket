@@ -4,7 +4,7 @@ import json
 from datetime import datetime, UTC, timedelta
 from pathlib import Path
 
-from scripts.MidTier.cleanup_published_projects import CleanupConfig, apply_cleanup
+from scripts.governance.cleanup_published_projects import CleanupConfig, apply_cleanup
 
 
 def _write_registry(path: Path, payload: dict) -> None:

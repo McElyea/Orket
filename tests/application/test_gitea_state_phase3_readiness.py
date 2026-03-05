@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.MidTier.check_gitea_state_phase3_readiness import evaluate_phase3_readiness
+from scripts.gitea.check_gitea_state_phase3_readiness import evaluate_phase3_readiness
 
 
 def test_phase3_readiness_passes_when_gates_and_targets_are_green() -> None:

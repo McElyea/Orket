@@ -43,7 +43,7 @@ def test_thermal_stability_profiler_flags_heat_soak_and_pollution(tmp_path: Path
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/thermal_stability_profiler.py",
+            "scripts/quant/thermal_stability_profiler.py",
             "--summaries",
             f"{s1},{s2},{s3}",
             "--cooldown-target-c",

@@ -16,7 +16,7 @@ def _load_script_module(name: str, relative_path: str):
 
 
 def test_execute_compat_fallback_removal_noop_before_expiry():
-    mod = _load_script_module("execute_compat_fallback_removal_a", "scripts/MidTier/execute_compat_fallback_removal.py")
+    mod = _load_script_module("execute_compat_fallback_removal_a", "scripts/security/execute_compat_fallback_removal.py")
     payload = {"extensions": [{"extension_id": "x", "compat_fallbacks": ["EXT_LOCAL_PATH_COMPAT"]}]}
     result = mod.execute_removal(catalog_payload=payload, current_version="0.4.9")
     assert result["changed"] is False
@@ -25,7 +25,7 @@ def test_execute_compat_fallback_removal_noop_before_expiry():
 
 
 def test_execute_compat_fallback_removal_removes_expired_codes():
-    mod = _load_script_module("execute_compat_fallback_removal_b", "scripts/MidTier/execute_compat_fallback_removal.py")
+    mod = _load_script_module("execute_compat_fallback_removal_b", "scripts/security/execute_compat_fallback_removal.py")
     payload = {
         "extensions": [
             {"extension_id": "x", "compat_fallbacks": ["EXT_LOCAL_PATH_COMPAT", "DEV_PROFILE_EXCEPTION_LOCAL_PATH"]}

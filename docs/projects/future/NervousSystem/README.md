@@ -135,7 +135,7 @@ The first implementation slice is now locked in `docs/projects/future/NervousSys
 Live verification evidence for the locked v1 slice is recorded in:
 
 - `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`
-- `benchmarks/results/nervous_system_live_evidence.json`
+- `benchmarks/results/nervous_system/nervous_system_live_evidence.json`
 
 Scope for that locked slice:
 

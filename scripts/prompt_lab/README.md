@@ -8,7 +8,7 @@ This directory is not runtime-critical for core orchestration.
 ```bash
 python scripts/prompt_lab/eval_harness.py
 ```
-Output: `benchmarks/results/prompt_eval_metrics.json`
+Output: `benchmarks/results/prompt_lab/prompt_eval_metrics.json`
 
 ## Candidate Generation
 ```bash
@@ -21,7 +21,7 @@ Outputs:
 
 ## Candidate Comparison
 ```bash
-python scripts/prompt_lab/compare_candidates.py --stable-eval benchmarks/results/prompt_eval_metrics.stable.json --candidate-eval benchmarks/results/prompt_eval_metrics.candidate.json --stable-patterns benchmarks/results/live_patterns.stable.json --candidate-patterns benchmarks/results/live_patterns.candidate.json --thresholds benchmarks/results/prompt_promotion_thresholds.json
+python scripts/prompt_lab/compare_candidates.py --stable-eval benchmarks/results/prompt_lab/prompt_eval_metrics.stable.json --candidate-eval benchmarks/results/prompt_lab/prompt_eval_metrics.candidate.json --stable-patterns benchmarks/results/prompt_lab/live_patterns.stable.json --candidate-patterns benchmarks/results/prompt_lab/live_patterns.candidate.json --thresholds benchmarks/results/prompt_lab/prompt_promotion_thresholds.json
 ```
 Exit code:
 1. `0`: candidate passes configured gates.

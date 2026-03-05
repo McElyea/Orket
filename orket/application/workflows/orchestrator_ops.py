@@ -463,8 +463,22 @@ def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
             resolved[key] = None
     return resolved
 
-def _history_context(self) -> List[Dict[str, str]]:
-    return [{"role": t.role, "content": t.content} for t in self.transcript[-self.context_window:]]
+def _history_context(self, seat_name: str | None = None) -> List[Dict[str, str]]:
+    history_rows = self.transcript[-self.context_window:]
+    normalized_seat = str(seat_name or "").strip().lower()
+    if normalized_seat:
+        history_rows = [
+            row
+            for row in history_rows
+            if str(getattr(row, "role", "") or "").strip().lower() == normalized_seat
+        ]
+    return [
+        {
+            "role": str(getattr(row, "role", "") or "").strip(),
+            "content": str(getattr(row, "content", "") or ""),
+        }
+        for row in history_rows
+    ]
 
 async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
     """
@@ -1761,7 +1775,7 @@ def _build_turn_context(
         "idesign_enabled": bool(idesign_enabled),
         "create_pending_gate_request": _pending_gate_request_writer,
         "resume_mode": bool(resume_mode),
-        "history": self._history_context(),
+        "history": self._history_context(seat_name=seat_name),
         "skill_contract_enforced": bool(resolved_skill_tool_bindings),
         "skill_tool_bindings": resolved_skill_tool_bindings,
         "tool_profile_version": tool_profile_version,

@@ -72,23 +72,23 @@ python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr -q
 ```
 3. CLI regression smoke:
 ```bash
-python scripts/MidTier/run_cli_regression_smoke.py --out benchmarks/results/cli_regression_smoke.json
+python scripts/governance/run_cli_regression_smoke.py --out benchmarks/results/governance/cli_regression_smoke.json
 ```
 4. Release smoke:
 ```bash
-python scripts/MidTier/release_smoke.py
+python scripts/governance/release_smoke.py
 ```
 5. Security canary:
 ```bash
-python scripts/MidTier/security_canary.py
+python scripts/security/security_canary.py
 ```
 6. Volatility boundary gate:
 ```bash
-python scripts/HighTier/check_volatility_boundaries.py
+python scripts/benchmarks/check_volatility_boundaries.py
 ```
 7. Published artifact sync check:
 ```bash
-python scripts/MidTier/sync_published_index.py --check
+python scripts/governance/sync_published_index.py --check
 ```
 
 ## Gitea CI Helper
@@ -123,7 +123,7 @@ set ORKET_WORKFLOW_PROFILE=project_task_v1
 ```
 2. Migration dry-run:
 ```bash
-python scripts/MidTier/workitem_migration_dry_run.py --in benchmarks/results/workitem_migration_input.json --out benchmarks/results/workitem_migration_dry_run.json
+python scripts/governance/workitem_migration_dry_run.py --in benchmarks/results/governance/workitem_migration_input.json --out benchmarks/results/governance/workitem_migration_dry_run.json
 ```
 
 ## Storage Paths
@@ -146,7 +146,7 @@ Workspace/log paths:
    - Confirm webhook receiver is on `:8080`.
 3. Stalled run:
 ```bash
-python scripts/MidTier/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/failure_modes.json
+python scripts/replay/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/replay/failure_modes.json
 ```
 
 ## Related Docs

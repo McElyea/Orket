@@ -63,6 +63,13 @@ class ScriptScore:
     final_score: int
     tier: str
 
+    @property
+    def domain(self) -> str:
+        parts = self.final_path.split("/")
+        if len(parts) >= 3 and parts[0] == "scripts":
+            return parts[1]
+        return "misc"
+
 
 def _load_scores(path: Path) -> list[ScriptScore]:
     rows: list[ScriptScore] = []
@@ -140,9 +147,9 @@ def _iter_artifacts() -> Iterable[Path]:
 
 def _script_patterns(score: ScriptScore) -> tuple[str, ...]:
     stem = score.script.rsplit(".", 1)[0]
-    old_rel = f"scripts/{score.script}"
+    old_rel = f"scripts/{score.tier}/{score.script}"
     new_rel = score.final_path
-    dotted_old = f"scripts.{stem}"
+    dotted_old = f"scripts.{score.tier}.{stem}"
     dotted_new = new_rel.replace("/", ".").rsplit(".", 1)[0]
     return (new_rel, old_rel, dotted_new, dotted_old, score.script)
 
@@ -165,7 +172,7 @@ def _md_link(target: Path) -> str:
     return f"[`{rel_from_output.as_posix()}`](../../{rel_from_output.as_posix()})"
 
 
-def _tier_sort_key(row: ScriptScore) -> tuple[int, str]:
+def _score_sort_key(row: ScriptScore) -> tuple[int, str]:
     return (-row.final_score, row.script)
 
 
@@ -202,19 +209,20 @@ def build_index() -> None:
     lines.append("")
     lines.append(f"_Generated: {now}_")
     lines.append("")
-    lines.append("This index maps script ratings to purpose and recent artifact evidence.")
-    lines.append("Ratings come from `script_tier_scores.csv` (1-10 scale).")
+    lines.append("This index maps script scores to purpose and recent artifact evidence.")
+    lines.append("Scores come from `script_tier_scores.csv` (1-10 scale) and are grouped by functional family.")
     lines.append("")
 
-    tier_order = ("HighTier", "MidTier", "LowTier")
-    for tier in tier_order:
-        tier_rows = sorted((r for r in scores if r.tier == tier), key=_tier_sort_key)
-        lines.append(f"## {tier} ({len(tier_rows)})")
+    families = sorted({row.family for row in scores})
+    for family in families:
+        family_rows = sorted((r for r in scores if r.family == family), key=_score_sort_key)
+        lines.append(f"## {family} ({len(family_rows)})")
         lines.append("")
-        lines.append("| Script | Rating | Purpose | Recent Artifact Links |")
-        lines.append("|---|---:|---|---|")
-        for row in tier_rows:
+        lines.append("| Script | Domain | Rating | Purpose | Recent Artifact Links |")
+        lines.append("|---|---|---:|---|---|")
+        for row in family_rows:
             script_path = f"`{row.final_path}`"
+            domain = f"`{row.domain}`"
             rating = f"{row.final_score}/10"
             purpose = descriptions[row.script].replace("|", "\\|")
             direct_matches = _artifact_matches(_script_patterns(row), artifact_cache)
@@ -229,7 +237,7 @@ def build_index() -> None:
                 rendered = "<br>".join(_md_link(path) for path in merged)
             else:
                 rendered = "-"
-            lines.append(f"| {script_path} | {rating} | {purpose} | {rendered} |")
+            lines.append(f"| {script_path} | {domain} | {rating} | {purpose} | {rendered} |")
         lines.append("")
 
     OUTPUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")

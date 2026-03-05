@@ -17,7 +17,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_generate_odr_calibration_bundle_outputs_expected_distribution(tmp_path: Path) -> None:
-    module = _load_script_module("generate_odr_calibration_bundle_test", "scripts/LowTier/generate_odr_calibration_bundle.py")
+    module = _load_script_module("generate_odr_calibration_bundle_test", "scripts/odr/generate_odr_calibration_bundle.py")
     out_dir = tmp_path / "odr_calibration"
     args = [
         "--out-dir",

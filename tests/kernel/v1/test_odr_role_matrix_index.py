@@ -41,7 +41,7 @@ def test_generate_odr_role_matrix_index(tmp_path: Path) -> None:
     out_path = input_dir / "index.json"
     cmd = [
         sys.executable,
-        "scripts/MidTier/generate_odr_role_matrix_index.py",
+        "scripts/odr/generate_odr_role_matrix_index.py",
         "--input-dir",
         str(input_dir),
         "--out",
@@ -117,7 +117,7 @@ def test_generate_odr_role_matrix_index_includes_code_leak_rule_key(tmp_path: Pa
     out_path = input_dir / "index.json"
     cmd = [
         sys.executable,
-        "scripts/MidTier/generate_odr_role_matrix_index.py",
+        "scripts/odr/generate_odr_role_matrix_index.py",
         "--input-dir",
         str(input_dir),
         "--out",

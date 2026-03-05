@@ -8,7 +8,7 @@ This document freezes the output contract for protocol replay campaign compariso
 
 Reference implementation surfaces:
 1. `orket/runtime/protocol_determinism_campaign.py`
-2. `scripts/MidTier/run_protocol_determinism_campaign.py`
+2. `scripts/protocol/run_protocol_determinism_campaign.py`
 3. CLI command: `orket protocol campaign`
 4. API endpoint: `/v1/protocol/replay/campaign`
 

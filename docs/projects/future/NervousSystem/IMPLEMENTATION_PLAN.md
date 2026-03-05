@@ -5,8 +5,8 @@ Build a feature-flagged Nervous System v1 for `action.tool_call` proposals only,
 
 Execution status (2026-03-03):
 1. Locked v1 slices implemented in repo (`orket/kernel/v1/*nervous_system*`, approval router integration, OpenClaw JSONL adapter).
-2. Live verification completed via `python scripts/MidTier/run_nervous_system_live_evidence.py`.
-3. Evidence artifact: `benchmarks/results/nervous_system_live_evidence.json`.
+2. Live verification completed via `python scripts/nervous_system/run_nervous_system_live_evidence.py`.
+3. Evidence artifact: `benchmarks/results/nervous_system/nervous_system_live_evidence.json`.
 
 ## Scope and Semantics
 1. v1 handles action path only; no content arbitration.
@@ -172,7 +172,7 @@ Required v1 event types:
 2. Prove blocked destructive action scenario.
 3. Prove approval-required scenario (request, decision, execution).
 4. Prove credentialed token issuance/usage scenario.
-5. Write `benchmarks/results/nervous_system_live_evidence.json` including `session_id`, `trace_id`, optional `request_id`, `proposal_digest`, `admission_decision_digest`, `approval_id`, token hash/id hash, `policy_digest`, `tool_profile_digest`, and required event digests.
+5. Write `benchmarks/results/nervous_system/nervous_system_live_evidence.json` including `session_id`, `trace_id`, optional `request_id`, `proposal_digest`, `admission_decision_digest`, `approval_id`, token hash/id hash, `policy_digest`, `tool_profile_digest`, and required event digests.
 6. If live flow fails, capture exact failing step/error in `docs/projects/future/NervousSystem/LIVE_BLOCKERS.md`.
 
 ## Tests and Acceptance

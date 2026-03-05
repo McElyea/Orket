@@ -22,7 +22,7 @@ def _write(path: Path, payload: dict) -> None:
 
 
 def test_compare_replay_artifacts_ignores_volatile_fields(tmp_path: Path) -> None:
-    module = _load_script_module("compare_replay_artifacts_a", "scripts/MidTier/compare_replay_artifacts.py")
+    module = _load_script_module("compare_replay_artifacts_a", "scripts/replay/compare_replay_artifacts.py")
 
     left = {
         "contract_version": "core_pillars/replay_artifact/v1",
@@ -47,7 +47,7 @@ def test_compare_replay_artifacts_ignores_volatile_fields(tmp_path: Path) -> Non
 
 
 def test_compare_replay_artifacts_reports_deterministic_mismatch_order(tmp_path: Path) -> None:
-    module = _load_script_module("compare_replay_artifacts_b", "scripts/MidTier/compare_replay_artifacts.py")
+    module = _load_script_module("compare_replay_artifacts_b", "scripts/replay/compare_replay_artifacts.py")
 
     left = {
         "contract_version": "core_pillars/replay_artifact/v1",
@@ -69,7 +69,7 @@ def test_compare_replay_artifacts_reports_deterministic_mismatch_order(tmp_path:
 
 
 def test_compare_replay_artifacts_cli_writes_fail_report(tmp_path: Path, monkeypatch: object) -> None:
-    module = _load_script_module("compare_replay_artifacts_c", "scripts/MidTier/compare_replay_artifacts.py")
+    module = _load_script_module("compare_replay_artifacts_c", "scripts/replay/compare_replay_artifacts.py")
 
     left_path = tmp_path / "left.json"
     right_path = tmp_path / "right.json"

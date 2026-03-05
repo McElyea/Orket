@@ -29,23 +29,23 @@ jobs:
 
       - name: Baseline Health Summary
         run: |
-          mkdir -p benchmarks/results/quant_sweep
-          python scripts/HighTier/manage_baselines.py health \
+          mkdir -p benchmarks/results/benchmarks/quant_sweep
+          python scripts/benchmarks/manage_baselines.py health \
             --storage-root "${{ github.event.inputs.storage_root || '.orket/durable/diagnostics/baselines' }}" \
-            > benchmarks/results/quant_sweep/baseline_health_weekly.json
+            > benchmarks/results/quant/quant_sweep/baseline_health_weekly.json
 
       - name: Baseline Prune Plan (Dry Run)
         run: |
-          python scripts/HighTier/manage_baselines.py prune \
+          python scripts/benchmarks/manage_baselines.py prune \
             --storage-root "${{ github.event.inputs.storage_root || '.orket/durable/diagnostics/baselines' }}" \
             --keep-last "${{ github.event.inputs.keep_last || '10' }}" \
             --dry-run \
-            > benchmarks/results/quant_sweep/baseline_prune_weekly.json
+            > benchmarks/results/quant/quant_sweep/baseline_prune_weekly.json
 
       - name: Upload Retention Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: baseline-retention-weekly
           path: |
-            benchmarks/results/quant_sweep/baseline_health_weekly.json
-            benchmarks/results/quant_sweep/baseline_prune_weekly.json
+            benchmarks/results/quant/quant_sweep/baseline_health_weekly.json
+            benchmarks/results/quant/quant_sweep/baseline_prune_weekly.json

@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from lmstudio_model_cache import LmStudioCacheClearError
+from providers.lmstudio_model_cache import LmStudioCacheClearError
 from quant_sweep.canary import run_canary
 from quant_sweep.config import (
     apply_matrix_config,

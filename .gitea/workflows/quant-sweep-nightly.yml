@@ -34,7 +34,7 @@ jobs:
 
       - name: Quant Sweep Dry Run
         run: |
-          python scripts/MidTier/run_quant_sweep.py \
+          python scripts/quant/run_quant_sweep.py \
             --model-id placeholder-model \
             --quant-tags Q8_0 \
             --matrix-config "${{ github.event.inputs.matrix_config || 'benchmarks/configs/quant_sweep_common_sessions.json' }}" \
@@ -46,7 +46,7 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          path = Path("benchmarks/results/quant_sweep/nightly_sample_summary.json")
+          path = Path("benchmarks/results/quant/quant_sweep/nightly_sample_summary.json")
           path.parent.mkdir(parents=True, exist_ok=True)
           payload = {
               "schema_version": "1.1.3",
@@ -65,14 +65,14 @@ jobs:
 
       - name: Extract KPI Report
         run: |
-          python scripts/MidTier/quant_sweep_kpi_report.py \
-            --summary benchmarks/results/quant_sweep/nightly_sample_summary.json \
-            --out benchmarks/results/quant_sweep/nightly_sample_kpis.json
+          python scripts/quant/quant_sweep_kpi_report.py \
+            --summary benchmarks/results/quant/quant_sweep/nightly_sample_summary.json \
+            --out benchmarks/results/quant/quant_sweep/nightly_sample_kpis.json
 
       - name: Enforce KPI Thresholds
         run: |
-          python scripts/MidTier/check_quant_sweep_kpis.py \
-            --summary benchmarks/results/quant_sweep/nightly_sample_summary.json \
+          python scripts/quant/check_quant_sweep_kpis.py \
+            --summary benchmarks/results/quant/quant_sweep/nightly_sample_summary.json \
             --max-missing-telemetry-rate 0.01 \
             --max-polluted-run-rate 0.1 \
             --min-frontier-success-rate 0.8 \
@@ -83,5 +83,5 @@ jobs:
         with:
           name: quant-sweep-nightly-artifacts
           path: |
-            benchmarks/results/quant_sweep/nightly_sample_summary.json
-            benchmarks/results/quant_sweep/nightly_sample_kpis.json
+            benchmarks/results/quant/quant_sweep/nightly_sample_summary.json
+            benchmarks/results/quant/quant_sweep/nightly_sample_kpis.json

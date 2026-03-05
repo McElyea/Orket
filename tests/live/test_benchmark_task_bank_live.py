@@ -13,12 +13,12 @@ import pytest
     reason="Set ORKET_RUN_BENCHMARK_LIVE_100=1 to execute 001-100 live card benchmark run.",
 )
 def test_benchmark_task_bank_runs_live_through_card_system() -> None:
-    raw_out = Path("benchmarks/results/live_card_100_determinism_report.json")
-    scored_out = Path("benchmarks/results/live_card_100_scored_report.json")
+    raw_out = Path("benchmarks/results/benchmarks/live_card_100_determinism_report.json")
+    scored_out = Path("benchmarks/results/benchmarks/live_card_100_scored_report.json")
     result = subprocess.run(
         [
             "python",
-            "scripts/MidTier/run_live_card_benchmark_suite.py",
+            "scripts/benchmarks/run_live_card_benchmark_suite.py",
             "--runs",
             "1",
             "--raw-out",

@@ -65,7 +65,7 @@ def test_check_memory_determinism_passes_with_minimal_valid_payloads(tmp_path: P
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_memory_determinism.py",
+            "scripts/benchmarks/check_memory_determinism.py",
             "--trace",
             str(trace),
             "--retrieval-trace",
@@ -87,7 +87,7 @@ def test_check_memory_determinism_fails_on_missing_required_fields(tmp_path: Pat
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_memory_determinism.py",
+            "scripts/benchmarks/check_memory_determinism.py",
             "--trace",
             str(trace),
         ],
@@ -135,7 +135,7 @@ def test_check_memory_determinism_fails_when_oversized_trace_has_no_truncation_m
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_memory_determinism.py",
+            "scripts/benchmarks/check_memory_determinism.py",
             "--trace",
             str(trace),
             "--max-trace-bytes",
@@ -184,7 +184,7 @@ def test_check_memory_determinism_allows_oversized_trace_with_truncation_marker(
     result = subprocess.run(
         [
             "python",
-            "scripts/HighTier/check_memory_determinism.py",
+            "scripts/benchmarks/check_memory_determinism.py",
             "--trace",
             str(trace),
             "--max-trace-bytes",

@@ -411,7 +411,7 @@ def _markdown_report(snapshot: dict[str, Any]) -> str:
 
     lines.append("")
     lines.append("## Raw Failure Dump")
-    lines.append("See `benchmarks/results/ci_failure_dump.json`.")
+    lines.append("See `benchmarks/results/ci/ci_failure_dump.json`.")
     lines.append("")
     return "\n".join(lines)
 
@@ -430,8 +430,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Compute CI failure delta from Gitea.")
     parser.add_argument("--policy", default=".ci/ci_failure_policy.json")
     parser.add_argument("--snapshot", default=".orket/durable/ci/last_state.json")
-    parser.add_argument("--report-md", default="benchmarks/results/ci_failure_dump.md")
-    parser.add_argument("--report-json", default="benchmarks/results/ci_failure_dump.json")
+    parser.add_argument("--report-md", default="benchmarks/results/ci/ci_failure_dump.md")
+    parser.add_argument("--report-json", default="benchmarks/results/ci/ci_failure_dump.json")
     parser.add_argument("--gitea-url", default="")
     parser.add_argument("--owner", default="")
     parser.add_argument("--repo", default="")

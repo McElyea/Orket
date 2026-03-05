@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 
-from scripts.MidTier.replay_comparator import compare_payload
+from scripts.replay.replay_comparator import compare_payload
 
 CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
 

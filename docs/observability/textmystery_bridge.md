@@ -10,20 +10,20 @@ This bridge keeps TextMystery and Orket separated while allowing contract-based 
 Run from Orket root:
 
 ```powershell
-python scripts/MidTier/register_textmystery_bridge_extension.py
+python scripts/extensions/register_textmystery_bridge_extension.py
 ```
 
 ## Easiest One-Command Run
 From Orket root:
 
 ```powershell
-python scripts/MidTier/run_textmystery_easy_smoke.py
+python scripts/extensions/run_textmystery_easy_smoke.py
 ```
 
 If TextMystery is not at the default location, pass:
 
 ```powershell
-python scripts/MidTier/run_textmystery_easy_smoke.py --textmystery-root <path-to-TextMystery>
+python scripts/extensions/run_textmystery_easy_smoke.py --textmystery-root <path-to-TextMystery>
 ```
 
 The smoke path runs direct local contract calls through SDK workload execution; no HTTP server is required.
@@ -35,13 +35,13 @@ This writes:
 
 ## Run Bridge Workload
 ```powershell
-python scripts/MidTier/run_textmystery_bridge_workload.py --operation parity-check --textmystery-root C:/Source/Orket-Extensions/TextMystery --payload-file <payload.json>
+python scripts/extensions/run_textmystery_bridge_workload.py --operation parity-check --textmystery-root C:/Source/Orket-Extensions/TextMystery --payload-file <payload.json>
 ```
 
 or
 
 ```powershell
-python scripts/MidTier/run_textmystery_bridge_workload.py --operation leak-check --textmystery-root C:/Source/Orket-Extensions/TextMystery --payload-file <payload.json>
+python scripts/extensions/run_textmystery_bridge_workload.py --operation leak-check --textmystery-root C:/Source/Orket-Extensions/TextMystery --payload-file <payload.json>
 ```
 
 ## Local Contract Expectations

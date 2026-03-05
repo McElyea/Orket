@@ -57,7 +57,7 @@ Define the CP-4 runtime contract that decouples engine core from fixed card hier
 4. Legacy IDs remain valid aliases only during migration window.
 5. Migration must support dry-run artifact output and deterministic rollback path.
 6. Canonical dry-run command:
-- `python scripts/MidTier/workitem_migration_dry_run.py --in <legacy_records.json> --out <report.json>`
+- `python scripts/governance/workitem_migration_dry_run.py --in <legacy_records.json> --out <report.json>`
 
 ## Acceptance Tests
 1. `test_workitem_transition_requires_action_api`

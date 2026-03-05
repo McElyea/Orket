@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.LowTier.decide_microservices_pilot import decide_from_unlock_report
+from scripts.acceptance.decide_microservices_pilot import decide_from_unlock_report
 
 
 def test_decision_enables_microservices_when_unlock_true() -> None:
