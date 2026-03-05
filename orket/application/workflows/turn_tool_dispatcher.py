@@ -51,6 +51,15 @@ class ToolDispatcher:
             str(tool).strip() for tool in (context.get("approval_required_tools") or []) if str(tool).strip()
         }
         request_writer = context.get("create_pending_gate_request")
+        if bool(context.get("protocol_governed_enabled", False)):
+            preflight_violations = self.collect_protocol_preflight_violations(
+                turn=turn,
+                context=context,
+                roles=roles,
+                approval_required_tools=approval_required_tools,
+            )
+            if preflight_violations:
+                raise self.tool_validation_error_factory(preflight_violations)
 
         for tool_call in turn.tool_calls:
             try:
@@ -253,6 +262,52 @@ class ToolDispatcher:
 
         if violations:
             raise self.tool_validation_error_factory(violations)
+
+    def collect_protocol_preflight_violations(
+        self,
+        *,
+        turn: ExecutionTurn,
+        context: dict[str, Any],
+        roles: list[str],
+        approval_required_tools: set[str],
+    ) -> list[str]:
+        violations: list[str] = []
+        for index, tool_call in enumerate(turn.tool_calls):
+            tool_name = str(tool_call.tool or "").strip()
+            if not tool_name:
+                violations.append(f"E_SCHEMA_TOOL_CALL:{index}:tool")
+                continue
+            if not isinstance(tool_call.args, dict):
+                violations.append(f"E_SCHEMA_TOOL_CALL:{index}:args")
+                continue
+            gate_violation = self.tool_gate.validate(
+                tool_name=tool_name,
+                args=tool_call.args,
+                context=context,
+                roles=roles,
+            )
+            if gate_violation:
+                violations.append(f"Governance Violation: {gate_violation}")
+            if bool(context.get("skill_contract_enforced")):
+                binding = self.resolve_skill_tool_binding(context, tool_name)
+                if binding is None:
+                    violations.append(f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'.")
+                else:
+                    missing_permissions = self.missing_required_permissions(binding, context)
+                    if missing_permissions:
+                        violations.append(
+                            "Skill contract violation: missing required permissions for "
+                            f"'{tool_name}' ({', '.join(missing_permissions)})."
+                        )
+                    limit_violations = self.runtime_limit_violations(binding, context)
+                    if limit_violations:
+                        violations.append(
+                            "Skill contract violation: runtime limits exceeded for "
+                            f"'{tool_name}' ({', '.join(limit_violations)})."
+                        )
+            if tool_name in approval_required_tools:
+                violations.append(f"Approval required for tool '{tool_name}' before execution.")
+        return violations
 
     @staticmethod
     def resolve_skill_tool_binding(context: dict[str, Any], tool_name: str) -> dict[str, Any] | None:
