@@ -1,0 +1,156 @@
+from __future__ import annotations
+
+import asyncio
+from typing import Any, Callable
+
+from orket.core.policies.tool_gate import ToolGate
+from orket.domain.execution import ExecutionTurn
+
+from .turn_path_resolver import PathResolver
+from .turn_tool_dispatcher_support import (
+    required_sequence_violation,
+    required_tools_violation,
+)
+
+
+def collect_protocol_preflight_violations(
+    *,
+    turn: ExecutionTurn,
+    context: dict[str, Any],
+    roles: list[str],
+    approval_required_tools: set[str],
+    tool_gate: ToolGate,
+    workspace: Any,
+    resolve_skill_tool_binding: Callable[[dict[str, Any], str], dict[str, Any] | None],
+    missing_required_permissions: Callable[[dict[str, Any], dict[str, Any]], list[str]],
+    runtime_limit_violations: Callable[[dict[str, Any], dict[str, Any]], list[str]],
+) -> list[str]:
+    try:
+        max_tool_calls = max(1, int(context.get("max_tool_calls", 8)))
+    except (TypeError, ValueError):
+        max_tool_calls = 8
+    if len(turn.tool_calls) > max_tool_calls:
+        return [f"E_MAX_TOOL_CALLS:{len(turn.tool_calls)}>{max_tool_calls}"]
+
+    observed_tool_names: list[str] = []
+    for index, tool_call in enumerate(turn.tool_calls):
+        tool_name = str(tool_call.tool or "").strip()
+        if not tool_name:
+            return [f"E_SCHEMA_TOOL_CALL:{index}:tool"]
+        if not isinstance(tool_call.args, dict):
+            return [f"E_SCHEMA_TOOL_CALL:{index}:args"]
+        observed_tool_names.append(tool_name)
+
+    required_tools_error = required_tools_violation(observed_tool_names=observed_tool_names, context=context)
+    if required_tools_error:
+        return [required_tools_error]
+
+    sequence_error = required_sequence_violation(observed_tool_names=observed_tool_names, context=context)
+    if sequence_error:
+        return [sequence_error]
+
+    for index, tool_call in enumerate(turn.tool_calls):
+        tool_name = str(tool_call.tool or "").strip()
+        workspace_violation = PathResolver.workspace_constraint_violation(
+            tool_name=tool_name,
+            args=dict(tool_call.args or {}),
+            workspace=workspace,
+        )
+        if workspace_violation:
+            return [f"E_WORKSPACE_CONSTRAINT:{workspace_violation}"]
+
+        gate_violation = tool_gate.validate(
+            tool_name=tool_name,
+            args=tool_call.args,
+            context=context,
+            roles=roles,
+        )
+        if gate_violation:
+            return [f"Governance Violation: {gate_violation}"]
+
+        if bool(context.get("skill_contract_enforced")):
+            binding = resolve_skill_tool_binding(context, tool_name)
+            if binding is None:
+                return [f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'."]
+            missing_permissions = missing_required_permissions(binding, context)
+            if missing_permissions:
+                return [
+                    "Skill contract violation: missing required permissions for "
+                    f"'{tool_name}' ({', '.join(missing_permissions)})."
+                ]
+            limit_violations = runtime_limit_violations(binding, context)
+            if limit_violations:
+                return [
+                    "Skill contract violation: runtime limits exceeded for "
+                    f"'{tool_name}' ({', '.join(limit_violations)})."
+                ]
+
+        if tool_name in approval_required_tools:
+            return [f"Approval required for tool '{tool_name}' before execution."]
+
+        if not isinstance(tool_call.args, dict):
+            return [f"E_SCHEMA_TOOL_CALL:{index}:args"]
+    return []
+
+
+async def load_or_execute_tool(
+    *,
+    protocol_enabled: bool,
+    session_id: str,
+    turn: ExecutionTurn,
+    tool_name: str,
+    tool_args: dict[str, Any],
+    turn_index: int,
+    operation_id: str,
+    binding: dict[str, Any] | None,
+    toolbox: Any,
+    context: dict[str, Any],
+    step_id: str,
+    step_seed: str,
+    validator_version: str,
+    protocol_hash: str,
+    tool_schema_hash: str,
+    load_operation_result: Callable[..., dict[str, Any] | None],
+    load_replay_tool_result: Callable[..., dict[str, Any] | None],
+) -> tuple[dict[str, Any], bool]:
+    if protocol_enabled:
+        operation_record = await asyncio.to_thread(
+            load_operation_result,
+            session_id=session_id,
+            issue_id=turn.issue_id,
+            role_name=turn.role,
+            turn_index=turn_index,
+            operation_id=operation_id,
+        )
+        if isinstance(operation_record, dict):
+            replay_result = operation_record.get("result")
+            if isinstance(replay_result, dict):
+                return replay_result, True
+
+    replay_result = await asyncio.to_thread(
+        load_replay_tool_result,
+        session_id=session_id,
+        issue_id=turn.issue_id,
+        role_name=turn.role,
+        turn_index=turn_index,
+        tool_name=tool_name,
+        tool_args=tool_args,
+        resume_mode=bool(context.get("resume_mode")),
+    )
+    if replay_result is not None:
+        return replay_result, True
+
+    execution_context = dict(context)
+    if isinstance(binding, dict):
+        execution_context["skill_entrypoint_id"] = str(binding.get("entrypoint_id") or "")
+        execution_context["skill_runtime"] = str(binding.get("runtime") or "")
+        execution_context["skill_runtime_version"] = str(binding.get("runtime_version") or "")
+        execution_context["tool_runtime_limits"] = dict(binding.get("runtime_limits") or {})
+    execution_context["step_id"] = step_id
+    execution_context["step_seed"] = step_seed
+    execution_context["operation_id"] = operation_id
+    execution_context["validator_version"] = validator_version
+    execution_context["protocol_hash"] = protocol_hash
+    execution_context["tool_schema_hash"] = tool_schema_hash
+    result = await toolbox.execute(tool_name, tool_args, execution_context)
+    return result if isinstance(result, dict) else {"ok": False, "error": "non_dict_result"}, False

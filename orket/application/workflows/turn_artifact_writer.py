@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -9,6 +8,8 @@ from typing import Any
 from orket.domain.execution import ExecutionTurn
 from orket.naming import sanitize_name
 from orket.schema import IssueConfig, RoleConfig
+
+from .protocol_hashing import ProtocolCanonicalizationError, hash_canonical_json, hash_framed_fields
 
 
 class TurnArtifactWriter:
@@ -18,8 +19,7 @@ class TurnArtifactWriter:
         self.workspace = workspace
 
     def message_hash(self, messages: list[dict[str, str]]) -> str:
-        normalized = json.dumps(messages, sort_keys=True, ensure_ascii=False)
-        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
+        return hash_framed_fields("message_hash", [messages])[:16]
 
     def memory_trace_enabled(self, context: dict[str, Any]) -> bool:
         if bool(context.get("memory_trace_enabled", False)):
@@ -27,8 +27,11 @@ class TurnArtifactWriter:
         return str(context.get("visibility_mode", "")).strip() != ""
 
     def hash_payload(self, payload: Any) -> str:
-        normalized = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
-        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        try:
+            return hash_canonical_json(payload)
+        except ProtocolCanonicalizationError:
+            fallback = {"non_canonical_repr": str(payload)}
+            return hash_canonical_json(fallback)
 
     def append_memory_event(
         self,
@@ -188,12 +191,11 @@ class TurnArtifactWriter:
         filename: str,
         content: str,
     ) -> None:
-        out_dir = (
-            self.workspace
-            / "observability"
-            / sanitize_name(session_id)
-            / sanitize_name(issue_id)
-            / f"{turn_index:03d}_{sanitize_name(role_name)}"
+        out_dir = self._turn_output_dir(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
         )
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / filename).write_text(content, encoding="utf-8")
@@ -233,8 +235,7 @@ class TurnArtifactWriter:
         )
 
     def tool_replay_key(self, tool_name: str, tool_args: dict[str, Any]) -> str:
-        normalized = json.dumps({"tool": tool_name, "args": tool_args}, sort_keys=True, ensure_ascii=False)
-        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
+        return hash_framed_fields("tool_replay_key", [tool_name, tool_args])[:12]
 
     def tool_result_path(
         self,
@@ -247,12 +248,11 @@ class TurnArtifactWriter:
         tool_args: dict[str, Any],
     ) -> Path:
         replay_key = self.tool_replay_key(tool_name, tool_args)
-        out_dir = (
-            self.workspace
-            / "observability"
-            / sanitize_name(session_id)
-            / sanitize_name(issue_id)
-            / f"{turn_index:03d}_{sanitize_name(role_name)}"
+        out_dir = self._turn_output_dir(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
         )
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir / f"tool_result_{sanitize_name(tool_name)}_{replay_key}.json"
@@ -305,3 +305,115 @@ class TurnArtifactWriter:
             tool_args=tool_args,
         )
         path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def operation_result_path(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        operation_id: str,
+    ) -> Path:
+        out_dir = self._turn_output_dir(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+        )
+        operation_dir = out_dir / "operations"
+        operation_dir.mkdir(parents=True, exist_ok=True)
+        op_id = sanitize_name(str(operation_id).strip() or "unknown-operation")
+        return operation_dir / f"{op_id}.json"
+
+    def load_operation_result(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        operation_id: str,
+    ) -> dict[str, Any] | None:
+        path = self.operation_result_path(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            operation_id=operation_id,
+        )
+        if not path.exists():
+            return None
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError, TypeError, ValueError):
+            return None
+
+    def persist_operation_result(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        operation_id: str,
+        tool_name: str,
+        tool_args: dict[str, Any],
+        result: dict[str, Any],
+    ) -> None:
+        path = self.operation_result_path(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            operation_id=operation_id,
+        )
+        payload = {
+            "operation_id": operation_id,
+            "tool": tool_name,
+            "args": dict(tool_args or {}),
+            "result": dict(result or {}),
+            "result_digest": self.hash_payload(result if isinstance(result, dict) else {}),
+        }
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def append_protocol_receipt(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        receipt: dict[str, Any],
+    ) -> dict[str, Any]:
+        base_receipt = dict(receipt or {})
+        receipt_digest = hash_canonical_json(base_receipt)
+        base_receipt["receipt_digest"] = receipt_digest
+        line = json.dumps(base_receipt, ensure_ascii=False, separators=(",", ":"))
+        receipt_path = self._turn_output_dir(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+        ) / "protocol_receipts.log"
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        with receipt_path.open("a", encoding="utf-8") as handle:
+            handle.write(line)
+            handle.write("\n")
+        return base_receipt
+
+    def _turn_output_dir(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+    ) -> Path:
+        return (
+            self.workspace
+            / "observability"
+            / sanitize_name(session_id)
+            / sanitize_name(issue_id)
+            / f"{turn_index:03d}_{sanitize_name(role_name)}"
+        )

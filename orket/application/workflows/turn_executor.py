@@ -78,6 +78,9 @@ class TurnExecutor:
             hash_payload=self.artifact_writer.hash_payload,
             load_replay_tool_result=self.artifact_writer.load_replay_tool_result,
             persist_tool_result=self.artifact_writer.persist_tool_result,
+            load_operation_result=self.artifact_writer.load_operation_result,
+            persist_operation_result=self.artifact_writer.persist_operation_result,
+            append_protocol_receipt=self.artifact_writer.append_protocol_receipt,
             tool_validation_error_factory=lambda violations: ToolValidationError(violations),
         )
 
@@ -123,6 +126,9 @@ class TurnExecutor:
             "_tool_result_path": self.artifact_writer.tool_result_path,
             "_load_replay_tool_result": self.artifact_writer.load_replay_tool_result,
             "_persist_tool_result": self.artifact_writer.persist_tool_result,
+            "_load_operation_result": self.artifact_writer.load_operation_result,
+            "_persist_operation_result": self.artifact_writer.persist_operation_result,
+            "_append_protocol_receipt": self.artifact_writer.append_protocol_receipt,
             "_state_delta_from_tool_calls": lambda context, turn: turn_executor_ops.state_delta_from_tool_calls(context, turn),
             "_synthesize_required_status_tool_call": lambda turn, context: turn_executor_ops.synthesize_required_status_tool_call(turn, context),
         }

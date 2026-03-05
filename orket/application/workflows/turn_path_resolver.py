@@ -9,6 +9,8 @@ from orket.domain.execution import ExecutionTurn
 class PathResolver:
     """Stateless path resolution helpers for turn contract checks."""
 
+    _PATH_TOOL_NAMES = {"read_file", "write_file", "list_directory", "list_dir"}
+
     @staticmethod
     def required_read_paths(context: dict[str, Any], workspace: Path) -> list[str]:
         existing, _ = PathResolver.partition_required_read_paths(context, workspace)
@@ -62,3 +64,42 @@ class PathResolver:
             for call in turn.tool_calls
             if call.tool == "write_file"
         ]
+
+    @staticmethod
+    def workspace_constraint_violation(*, tool_name: str, args: dict[str, Any], workspace: Path) -> str | None:
+        normalized_tool = str(tool_name or "").strip()
+        if normalized_tool not in PathResolver._PATH_TOOL_NAMES:
+            return None
+        if not isinstance(args, dict):
+            return f"{normalized_tool}:args_not_object"
+        raw_path = str(args.get("path", "")).strip()
+        if not raw_path:
+            return f"{normalized_tool}:path_missing"
+        return PathResolver._path_violation(raw_path=raw_path, workspace=workspace, tool_name=normalized_tool)
+
+    @staticmethod
+    def _path_violation(*, raw_path: str, workspace: Path, tool_name: str) -> str | None:
+        path_obj = Path(raw_path)
+        if path_obj.is_absolute():
+            return f"{tool_name}:absolute_path"
+
+        normalized = raw_path.replace("\\", "/")
+        if ".." in [segment for segment in normalized.split("/") if segment]:
+            return f"{tool_name}:path_traversal"
+
+        workspace_root = workspace.resolve()
+        candidate = (workspace_root / path_obj).resolve()
+        if not candidate.is_relative_to(workspace_root):
+            return f"{tool_name}:path_escape"
+
+        symlink_check = workspace_root
+        for part in path_obj.parts:
+            symlink_check = symlink_check / part
+            if not symlink_check.exists():
+                continue
+            if not symlink_check.is_symlink():
+                continue
+            resolved = symlink_check.resolve()
+            if not resolved.is_relative_to(workspace_root):
+                return f"{tool_name}:symlink_escape"
+        return None

@@ -10,6 +10,8 @@ from orket.application.services.tool_parser import ToolParser
 from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.logging import log_event
 
+from .protocol_hashing import VALIDATOR_VERSION, default_protocol_hash, default_tool_schema_hash, hash_canonical_json
+
 
 class ResponseParser:
     """Model response parsing and JSON residue helpers for turn execution."""
@@ -28,6 +30,8 @@ class ResponseParser:
     ) -> ExecutionTurn:
         content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
         raw_data = getattr(response, "raw", {}) if not isinstance(response, dict) else response
+        raw_payload = dict(raw_data) if isinstance(raw_data, dict) else {}
+        protocol_metadata: dict[str, Any] = {}
 
         parser_diag: list[dict[str, Any]] = []
 
@@ -40,11 +44,20 @@ class ResponseParser:
                 max_response_bytes=int(context.get("max_response_bytes", 8192)),
                 max_tool_calls=int(context.get("max_tool_calls", 8)),
             )
+            proposal_hash = hash_canonical_json(envelope)
+            protocol_metadata = {
+                "proposal_hash": proposal_hash,
+                "validator_version": str(context.get("validator_version") or VALIDATOR_VERSION),
+                "protocol_hash": str(context.get("protocol_hash") or default_protocol_hash()),
+                "tool_schema_hash": str(context.get("tool_schema_hash") or default_tool_schema_hash()),
+            }
             capture("strict_parse_success", {"tool_call_count": len(envelope["tool_calls"])})
             parsed_calls = list(envelope["tool_calls"])
             content = envelope["content"]
         else:
             parsed_calls = ToolParser.parse(content, diagnostics=capture)
+        if protocol_metadata:
+            raw_payload.update(protocol_metadata)
         session_id = context.get("session_id", "unknown-session")
         turn_index = int(context.get("turn_index", 0))
         for diag in parser_diag:
@@ -84,9 +97,9 @@ class ResponseParser:
             thought=None,
             content=content,
             tool_calls=tool_calls,
-            tokens_used=raw_data.get("total_tokens", 0),
+            tokens_used=raw_payload.get("total_tokens", 0),
             timestamp=datetime.now(UTC),
-            raw=raw_data,
+            raw=raw_payload,
         )
 
     def _parse_strict_envelope(

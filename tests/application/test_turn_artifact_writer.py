@@ -53,3 +53,46 @@ def test_turn_artifact_writer_checkpoint_writes_file(tmp_path: Path) -> None:
     assert checkpoint.exists()
     data = json.loads(checkpoint.read_text(encoding="utf-8"))
     assert data["prompt_hash"] == "abc123"
+
+
+def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> None:
+    writer = TurnArtifactWriter(tmp_path)
+    writer.persist_operation_result(
+        session_id="s1",
+        issue_id="ISSUE-1",
+        role_name="coder",
+        turn_index=3,
+        operation_id="op-123",
+        tool_name="write_file",
+        tool_args={"path": "agent_output/main.py", "content": "ok"},
+        result={"ok": True, "status": "done"},
+    )
+
+    loaded = writer.load_operation_result(
+        session_id="s1",
+        issue_id="ISSUE-1",
+        role_name="coder",
+        turn_index=3,
+        operation_id="op-123",
+    )
+    assert loaded is not None
+    assert loaded["operation_id"] == "op-123"
+    assert loaded["result"] == {"ok": True, "status": "done"}
+
+
+def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Path) -> None:
+    writer = TurnArtifactWriter(tmp_path)
+    receipt = writer.append_protocol_receipt(
+        session_id="s1",
+        issue_id="ISSUE-1",
+        role_name="coder",
+        turn_index=4,
+        receipt={"run_id": "s1", "step_id": "ISSUE-1:4", "receipt_seq": 1},
+    )
+    assert isinstance(receipt.get("receipt_digest"), str)
+    assert len(receipt["receipt_digest"]) == 64
+    receipt_log = tmp_path / "observability" / "s1" / "ISSUE-1" / "004_coder" / "protocol_receipts.log"
+    assert receipt_log.exists()
+    rows = [json.loads(line) for line in receipt_log.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert rows[0]["receipt_seq"] == 1
+    assert rows[0]["receipt_digest"] == receipt["receipt_digest"]

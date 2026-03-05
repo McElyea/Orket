@@ -56,6 +56,11 @@ def test_response_parser_strict_protocol_mode_accepts_canonical_envelope(tmp_pat
     )
     assert len(turn.tool_calls) == 1
     assert turn.tool_calls[0].tool == "write_file"
+    assert isinstance(turn.raw.get("proposal_hash"), str)
+    assert len(turn.raw["proposal_hash"]) == 64
+    assert isinstance(turn.raw.get("validator_version"), str)
+    assert isinstance(turn.raw.get("protocol_hash"), str)
+    assert isinstance(turn.raw.get("tool_schema_hash"), str)
 
 
 def test_response_parser_strict_protocol_mode_rejects_duplicate_keys(tmp_path: Path) -> None:
@@ -119,3 +124,27 @@ def test_response_parser_strict_protocol_mode_rejects_excess_tool_calls(tmp_path
         raise AssertionError("expected ValueError for too many tool calls")
     except ValueError as exc:
         assert "E_MAX_TOOL_CALLS" in str(exc)
+
+
+def test_response_parser_strict_protocol_mode_uses_context_overrides_for_hash_metadata(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = {
+        "content": '{"content":"","tool_calls":[{"tool":"write_file","args":{"path":"a.txt","content":"x"}}]}',
+        "raw": {"total_tokens": 9},
+    }
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="coder",
+        context={
+            "session_id": "s1",
+            "turn_index": 1,
+            "protocol_governed_enabled": True,
+            "validator_version": "turn-validator/custom",
+            "protocol_hash": "p" * 64,
+            "tool_schema_hash": "s" * 64,
+        },
+    )
+    assert turn.raw["validator_version"] == "turn-validator/custom"
+    assert turn.raw["protocol_hash"] == "p" * 64
+    assert turn.raw["tool_schema_hash"] == "s" * 64

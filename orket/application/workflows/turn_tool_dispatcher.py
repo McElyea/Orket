@@ -10,9 +10,31 @@ from orket.domain.execution import ExecutionTurn
 from orket.logging import log_event
 from orket.schema import IssueConfig
 
+from .protocol_hashing import (
+    VALIDATOR_VERSION,
+    build_step_id,
+    default_protocol_hash,
+    default_tool_schema_hash,
+    derive_operation_id,
+    derive_step_seed,
+    hash_canonical_json,
+)
+from .turn_tool_dispatcher_protocol import (
+    collect_protocol_preflight_violations,
+    load_or_execute_tool,
+)
+from .turn_tool_dispatcher_support import (
+    as_positive_float,
+    build_execution_capsule,
+    missing_required_permissions,
+    permission_values,
+    resolve_skill_tool_binding,
+    runtime_limit_violations,
+)
+
 
 class ToolDispatcher:
-    """Execute tool calls with governance checks and replay caching."""
+    """Execute tool calls with governance checks and replay/idempotency caching."""
 
     def __init__(
         self,
@@ -24,6 +46,9 @@ class ToolDispatcher:
         hash_payload: Callable[[Any], str],
         load_replay_tool_result: Callable[..., dict[str, Any] | None],
         persist_tool_result: Callable[..., None],
+        load_operation_result: Callable[..., dict[str, Any] | None],
+        persist_operation_result: Callable[..., None],
+        append_protocol_receipt: Callable[..., dict[str, Any]],
         tool_validation_error_factory: Callable[[list[str]], Exception],
     ) -> None:
         self.tool_gate = tool_gate
@@ -33,6 +58,9 @@ class ToolDispatcher:
         self.hash_payload = hash_payload
         self.load_replay_tool_result = load_replay_tool_result
         self.persist_tool_result = persist_tool_result
+        self.load_operation_result = load_operation_result
+        self.persist_operation_result = persist_operation_result
+        self.append_protocol_receipt = append_protocol_receipt
         self.tool_validation_error_factory = tool_validation_error_factory
 
     async def execute_tools(
@@ -45,13 +73,39 @@ class ToolDispatcher:
     ) -> None:
         violations: list[str] = []
         roles = context.get("roles", [turn.role])
-        session_id = context.get("session_id", "unknown-session")
+        session_id = str(context.get("session_id", "unknown-session"))
         turn_index = int(context.get("turn_index", 0))
+        step_id = build_step_id(issue_id=turn.issue_id, turn_index=turn_index)
+        run_seed = str(context.get("run_seed") or session_id)
+        step_seed = derive_step_seed(run_seed=run_seed, run_id=session_id, step_id=step_id)
+        raw_payload = turn.raw if isinstance(turn.raw, dict) else {}
+        proposal_hash = str(raw_payload.get("proposal_hash") or "")
+        if not proposal_hash:
+            proposal_hash = hash_canonical_json(
+                {
+                    "content": str(turn.content or ""),
+                    "tool_calls": [
+                        {
+                            "tool": str(call.tool or ""),
+                            "args": dict(call.args or {}),
+                        }
+                        for call in list(turn.tool_calls or [])
+                    ],
+                }
+            )
+        validator_version = str(raw_payload.get("validator_version") or context.get("validator_version") or VALIDATOR_VERSION)
+        protocol_hash = str(raw_payload.get("protocol_hash") or context.get("protocol_hash") or default_protocol_hash())
+        tool_schema_hash = str(
+            raw_payload.get("tool_schema_hash") or context.get("tool_schema_hash") or default_tool_schema_hash()
+        )
+        protocol_enabled = bool(context.get("protocol_governed_enabled", False))
+        execution_capsule = build_execution_capsule(context)
         approval_required_tools = {
             str(tool).strip() for tool in (context.get("approval_required_tools") or []) if str(tool).strip()
         }
         request_writer = context.get("create_pending_gate_request")
-        if bool(context.get("protocol_governed_enabled", False)):
+
+        if protocol_enabled:
             preflight_violations = self.collect_protocol_preflight_violations(
                 turn=turn,
                 context=context,
@@ -61,11 +115,22 @@ class ToolDispatcher:
             if preflight_violations:
                 raise self.tool_validation_error_factory(preflight_violations)
 
-        for tool_call in turn.tool_calls:
+        for index, tool_call in enumerate(turn.tool_calls):
+            operation_id = derive_operation_id(
+                run_id=session_id,
+                step_id=step_id,
+                tool_index=index,
+            )
+            receipt_seq = index + 1
+            tool_name = str(tool_call.tool or "")
+            binding = self.resolve_skill_tool_binding(context, tool_name)
             try:
-                binding = self.resolve_skill_tool_binding(context, str(tool_call.tool or ""))
                 middleware_outcome = self.middleware.apply_before_tool(
-                    tool_call.tool, tool_call.args, issue=issue, role_name=turn.role, context=context
+                    tool_name,
+                    tool_call.args,
+                    issue=issue,
+                    role_name=turn.role,
+                    context=context,
                 )
                 if middleware_outcome and middleware_outcome.short_circuit:
                     tool_call.result = {
@@ -74,6 +139,7 @@ class ToolDispatcher:
                     }
                     violations.append(tool_call.result["error"])
                     continue
+
                 self.append_memory_event(
                     context,
                     role_name=turn.role,
@@ -81,8 +147,8 @@ class ToolDispatcher:
                     decision_type="tool_call_ready",
                     tool_calls=[
                         {
-                            "tool_name": tool_call.tool,
-                            "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_call.tool or "unknown"),
+                            "tool_name": tool_name,
+                            "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_name or "unknown"),
                             "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
                             "normalized_args": dict(tool_call.args or {}),
                             "normalization_version": str(context.get("normalization_version") or "json-v1"),
@@ -93,7 +159,10 @@ class ToolDispatcher:
                 )
 
                 gate_violation = self.tool_gate.validate(
-                    tool_name=tool_call.tool, args=tool_call.args, context=context, roles=roles
+                    tool_name=tool_name,
+                    args=tool_call.args,
+                    context=context,
+                    roles=roles,
                 )
                 if gate_violation:
                     log_event(
@@ -103,7 +172,7 @@ class ToolDispatcher:
                             "role": turn.role,
                             "session_id": session_id,
                             "turn_index": turn_index,
-                            "tool": tool_call.tool,
+                            "tool": tool_name,
                             "args": tool_call.args,
                             "reason": gate_violation,
                         },
@@ -114,27 +183,27 @@ class ToolDispatcher:
 
                 if bool(context.get("skill_contract_enforced")):
                     if binding is None:
-                        violations.append(f"Skill contract violation: undeclared entrypoint/tool '{tool_call.tool}'.")
+                        violations.append(f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'.")
                         continue
                     missing_permissions = self.missing_required_permissions(binding, context)
                     if missing_permissions:
                         violations.append(
                             "Skill contract violation: missing required permissions for "
-                            f"'{tool_call.tool}' ({', '.join(missing_permissions)})."
+                            f"'{tool_name}' ({', '.join(missing_permissions)})."
                         )
                         continue
                     limit_violations = self.runtime_limit_violations(binding, context)
                     if limit_violations:
                         violations.append(
                             "Skill contract violation: runtime limits exceeded for "
-                            f"'{tool_call.tool}' ({', '.join(limit_violations)})."
+                            f"'{tool_name}' ({', '.join(limit_violations)})."
                         )
                         continue
 
-                if tool_call.tool in approval_required_tools:
+                if tool_name in approval_required_tools:
                     request_id = None
                     if callable(request_writer):
-                        maybe_request = request_writer(tool_name=tool_call.tool, tool_args=tool_call.args)
+                        maybe_request = request_writer(tool_name=tool_name, tool_args=tool_call.args)
                         if asyncio.iscoroutine(maybe_request):
                             request_id = await maybe_request
                         else:
@@ -146,13 +215,13 @@ class ToolDispatcher:
                             "role": turn.role,
                             "session_id": session_id,
                             "turn_index": turn_index,
-                            "tool": tool_call.tool,
+                            "tool": tool_name,
                             "request_id": request_id,
                             "stage_gate_mode": context.get("stage_gate_mode"),
                         },
                         self.workspace,
                     )
-                    violations.append(f"Approval required for tool '{tool_call.tool}' before execution.")
+                    violations.append(f"Approval required for tool '{tool_name}' before execution.")
                     continue
 
                 log_event(
@@ -162,44 +231,40 @@ class ToolDispatcher:
                         "role": turn.role,
                         "session_id": session_id,
                         "turn_index": turn_index,
-                        "tool": tool_call.tool,
+                        "tool": tool_name,
                         "args": tool_call.args,
+                        "operation_id": operation_id,
                     },
                     self.workspace,
                 )
-                replay_result = await asyncio.to_thread(
-                    self.load_replay_tool_result,
+
+                result, replayed = await load_or_execute_tool(
+                    protocol_enabled=protocol_enabled,
                     session_id=session_id,
-                    issue_id=turn.issue_id,
-                    role_name=turn.role,
+                    turn=turn,
+                    tool_name=tool_name,
+                    tool_args=dict(tool_call.args or {}),
                     turn_index=turn_index,
-                    tool_name=tool_call.tool,
-                    tool_args=tool_call.args,
-                    resume_mode=bool(context.get("resume_mode")),
+                    operation_id=operation_id,
+                    binding=binding,
+                    toolbox=toolbox,
+                    context=context,
+                    step_id=step_id,
+                    step_seed=step_seed,
+                    validator_version=validator_version,
+                    protocol_hash=protocol_hash,
+                    tool_schema_hash=tool_schema_hash,
+                    load_operation_result=self.load_operation_result,
+                    load_replay_tool_result=self.load_replay_tool_result,
                 )
-                if replay_result is not None:
-                    result = replay_result
-                    log_event(
-                        "tool_call_replayed",
-                        {
-                            "issue_id": turn.issue_id,
-                            "role": turn.role,
-                            "session_id": session_id,
-                            "turn_index": turn_index,
-                            "tool": tool_call.tool,
-                        },
-                        self.workspace,
-                    )
-                else:
-                    execution_context = dict(context)
-                    if isinstance(binding, dict):
-                        execution_context["skill_entrypoint_id"] = str(binding.get("entrypoint_id") or "")
-                        execution_context["skill_runtime"] = str(binding.get("runtime") or "")
-                        execution_context["skill_runtime_version"] = str(binding.get("runtime_version") or "")
-                        execution_context["tool_runtime_limits"] = dict(binding.get("runtime_limits") or {})
-                    result = await toolbox.execute(tool_call.tool, tool_call.args, execution_context)
+
                 result = self.middleware.apply_after_tool(
-                    tool_call.tool, tool_call.args, result, issue=issue, role_name=turn.role, context=context
+                    tool_name,
+                    tool_call.args,
+                    result,
+                    issue=issue,
+                    role_name=turn.role,
+                    context=context,
                 )
                 tool_call.result = result
                 self.append_memory_event(
@@ -209,8 +274,8 @@ class ToolDispatcher:
                     decision_type="tool_call_result",
                     tool_calls=[
                         {
-                            "tool_name": tool_call.tool,
-                            "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_call.tool or "unknown"),
+                            "tool_name": tool_name,
+                            "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_name or "unknown"),
                             "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
                             "normalized_args": dict(tool_call.args or {}),
                             "normalization_version": str(context.get("normalization_version") or "json-v1"),
@@ -219,16 +284,57 @@ class ToolDispatcher:
                         }
                     ],
                 )
-                await asyncio.to_thread(
-                    self.persist_tool_result,
-                    session_id=session_id,
-                    issue_id=turn.issue_id,
-                    role_name=turn.role,
-                    turn_index=turn_index,
-                    tool_name=tool_call.tool,
-                    tool_args=tool_call.args,
-                    result=result,
-                )
+
+                if protocol_enabled:
+                    await asyncio.to_thread(
+                        self.persist_operation_result,
+                        session_id=session_id,
+                        issue_id=turn.issue_id,
+                        role_name=turn.role,
+                        turn_index=turn_index,
+                        operation_id=operation_id,
+                        tool_name=tool_name,
+                        tool_args=dict(tool_call.args or {}),
+                        result=result if isinstance(result, dict) else {"ok": False, "error": "non_dict_result"},
+                    )
+                    await asyncio.to_thread(
+                        self.append_protocol_receipt,
+                        session_id=session_id,
+                        issue_id=turn.issue_id,
+                        role_name=turn.role,
+                        turn_index=turn_index,
+                        receipt={
+                            "run_id": session_id,
+                            "step_id": step_id,
+                            "receipt_seq": receipt_seq,
+                            "operation_id": operation_id,
+                            "proposal_hash": proposal_hash,
+                            "validator_version": validator_version,
+                            "protocol_hash": protocol_hash,
+                            "tool_schema_hash": tool_schema_hash,
+                            "tool_index": index,
+                            "tool": tool_name,
+                            "tool_args": dict(tool_call.args or {}),
+                            "execution_result": result if isinstance(result, dict) else {},
+                            "artifact_digests": [],
+                            "retry_count": int(context.get("retry_count") or 0),
+                            "validator_duration_ms": int(context.get("validator_duration_ms") or 0),
+                            "execution_capsule": execution_capsule,
+                            "replayed": bool(replayed),
+                        },
+                    )
+                else:
+                    await asyncio.to_thread(
+                        self.persist_tool_result,
+                        session_id=session_id,
+                        issue_id=turn.issue_id,
+                        role_name=turn.role,
+                        turn_index=turn_index,
+                        tool_name=tool_name,
+                        tool_args=tool_call.args,
+                        result=result,
+                    )
+
                 log_event(
                     "tool_call_result",
                     {
@@ -236,16 +342,18 @@ class ToolDispatcher:
                         "role": turn.role,
                         "session_id": session_id,
                         "turn_index": turn_index,
-                        "tool": tool_call.tool,
+                        "tool": tool_name,
                         "ok": bool(result.get("ok", False)),
                         "error": result.get("error"),
+                        "operation_id": operation_id,
+                        "replayed": bool(replayed),
                     },
                     self.workspace,
                 )
                 if not result.get("ok", False):
-                    violations.append(f"Tool {tool_call.tool} failed: {result.get('error')}")
-            except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as e:
-                tool_call.error = str(e)
+                    violations.append(f"Tool {tool_name} failed: {result.get('error')}")
+            except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as exc:
+                tool_call.error = str(exc)
                 log_event(
                     "tool_call_exception",
                     {
@@ -253,12 +361,13 @@ class ToolDispatcher:
                         "role": turn.role,
                         "session_id": session_id,
                         "turn_index": turn_index,
-                        "tool": tool_call.tool,
-                        "error": str(e),
+                        "tool": tool_name,
+                        "error": str(exc),
+                        "operation_id": operation_id,
                     },
                     self.workspace,
                 )
-                violations.append(f"Tool {tool_call.tool} error: {e}")
+                violations.append(f"Tool {tool_name} error: {exc}")
 
         if violations:
             raise self.tool_validation_error_factory(violations)
@@ -271,106 +380,32 @@ class ToolDispatcher:
         roles: list[str],
         approval_required_tools: set[str],
     ) -> list[str]:
-        violations: list[str] = []
-        try:
-            max_tool_calls = max(1, int(context.get("max_tool_calls", 8)))
-        except (TypeError, ValueError):
-            max_tool_calls = 8
-        if len(turn.tool_calls) > max_tool_calls:
-            return [f"E_MAX_TOOL_CALLS:{len(turn.tool_calls)}>{max_tool_calls}"]
-        for index, tool_call in enumerate(turn.tool_calls):
-            tool_name = str(tool_call.tool or "").strip()
-            if not tool_name:
-                violations.append(f"E_SCHEMA_TOOL_CALL:{index}:tool")
-                continue
-            if not isinstance(tool_call.args, dict):
-                violations.append(f"E_SCHEMA_TOOL_CALL:{index}:args")
-                continue
-            gate_violation = self.tool_gate.validate(
-                tool_name=tool_name,
-                args=tool_call.args,
-                context=context,
-                roles=roles,
-            )
-            if gate_violation:
-                violations.append(f"Governance Violation: {gate_violation}")
-            if bool(context.get("skill_contract_enforced")):
-                binding = self.resolve_skill_tool_binding(context, tool_name)
-                if binding is None:
-                    violations.append(f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'.")
-                else:
-                    missing_permissions = self.missing_required_permissions(binding, context)
-                    if missing_permissions:
-                        violations.append(
-                            "Skill contract violation: missing required permissions for "
-                            f"'{tool_name}' ({', '.join(missing_permissions)})."
-                        )
-                    limit_violations = self.runtime_limit_violations(binding, context)
-                    if limit_violations:
-                        violations.append(
-                            "Skill contract violation: runtime limits exceeded for "
-                            f"'{tool_name}' ({', '.join(limit_violations)})."
-                        )
-            if tool_name in approval_required_tools:
-                violations.append(f"Approval required for tool '{tool_name}' before execution.")
-        return violations
+        return collect_protocol_preflight_violations(
+            turn=turn,
+            context=context,
+            roles=roles,
+            approval_required_tools=approval_required_tools,
+            tool_gate=self.tool_gate,
+            workspace=self.workspace,
+            resolve_skill_tool_binding=self.resolve_skill_tool_binding,
+            missing_required_permissions=self.missing_required_permissions,
+            runtime_limit_violations=self.runtime_limit_violations,
+        )
 
     @staticmethod
     def resolve_skill_tool_binding(context: dict[str, Any], tool_name: str) -> dict[str, Any] | None:
-        bindings = context.get("skill_tool_bindings")
-        if not isinstance(bindings, dict):
-            return None
-        binding = bindings.get(str(tool_name).strip())
-        if not isinstance(binding, dict):
-            return None
-        return binding
+        return resolve_skill_tool_binding(context, tool_name)
 
     def missing_required_permissions(self, binding: dict[str, Any], context: dict[str, Any]) -> list[str]:
-        required = binding.get("required_permissions")
-        if not isinstance(required, dict) or not required:
-            return []
-        granted = context.get("granted_permissions")
-        granted = granted if isinstance(granted, dict) else {}
-        missing: list[str] = []
-        for scope, values in required.items():
-            required_values = self.permission_values(values)
-            granted_values = self.permission_values(granted.get(scope))
-            for value in sorted(required_values - granted_values):
-                missing.append(f"{scope}:{value}")
-        return missing
+        return missing_required_permissions(binding, context)
 
     @staticmethod
     def permission_values(values: Any) -> set[str]:
-        if values is None:
-            return set()
-        if isinstance(values, str):
-            normalized = values.strip()
-            return {normalized} if normalized else set()
-        if isinstance(values, list):
-            return {str(item).strip() for item in values if str(item).strip()}
-        return set()
+        return permission_values(values)
 
     def runtime_limit_violations(self, binding: dict[str, Any], context: dict[str, Any]) -> list[str]:
-        limits = binding.get("runtime_limits")
-        if not isinstance(limits, dict) or not limits:
-            return []
-        violations: list[str] = []
-        requested_exec = self.as_positive_float(limits.get("max_execution_time"))
-        requested_memory = self.as_positive_float(limits.get("max_memory"))
-        allowed_exec = self.as_positive_float(context.get("max_tool_execution_time"))
-        allowed_memory = self.as_positive_float(context.get("max_tool_memory"))
-        if requested_exec is not None and allowed_exec is not None and requested_exec > allowed_exec:
-            violations.append("max_execution_time")
-        if requested_memory is not None and allowed_memory is not None and requested_memory > allowed_memory:
-            violations.append("max_memory")
-        return violations
+        return runtime_limit_violations(binding, context)
 
     @staticmethod
     def as_positive_float(value: Any) -> float | None:
-        if value is None:
-            return None
-        try:
-            number = float(value)
-        except (TypeError, ValueError):
-            return None
-        return number if number > 0 else None
+        return as_positive_float(value)
