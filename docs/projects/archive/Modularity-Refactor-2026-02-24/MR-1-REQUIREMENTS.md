@@ -48,8 +48,8 @@ Eliminate known critical runtime defects and restore trustworthy architecture/te
 
 2. Run at minimum:
 - `python -m pytest -q tests/core tests/interfaces tests/adapters tests/platform`
-- `python scripts/check_dependency_direction.py`
-- `python scripts/check_volatility_boundaries.py`
+- `python scripts/MidTier/check_dependency_direction.py`
+- `python scripts/HighTier/check_volatility_boundaries.py`
 
 ## Acceptance Criteria
 

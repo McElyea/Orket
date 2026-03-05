@@ -85,6 +85,18 @@ def _add_canary_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--canary-runs", type=int, default=0, help="If >0, run canary repeats before matrix execution.")
     parser.add_argument("--canary-task-limit", type=int, default=1, help="Task limit for canary harness run.")
     parser.add_argument(
+        "--canary-task-id-min",
+        type=int,
+        default=0,
+        help="Optional inclusive lower-bound task ID for canary filtering (falls back to --task-id-min when unset).",
+    )
+    parser.add_argument(
+        "--canary-task-id-max",
+        type=int,
+        default=0,
+        help="Optional inclusive upper-bound task ID for canary filtering (falls back to --task-id-max when unset).",
+    )
+    parser.add_argument(
         "--canary-latency-variance-threshold",
         type=float,
         default=0.03,
@@ -218,6 +230,8 @@ def _matrix_defaults() -> dict[str, Any]:
         "vram_profile": "safe",
         "canary_runs": 0,
         "canary_task_limit": 1,
+        "canary_task_id_min": 0,
+        "canary_task_id_max": 0,
         "canary_latency_variance_threshold": 0.03,
         "canary_drop_first_run": True,
         "canary_max_missing_telemetry_rate": 0.0,
@@ -260,6 +274,8 @@ def _matrix_mapping() -> dict[str, str]:
         "vram_profile": "vram_profile",
         "canary_runs": "canary_runs",
         "canary_task_limit": "canary_task_limit",
+        "canary_task_id_min": "canary_task_id_min",
+        "canary_task_id_max": "canary_task_id_max",
         "canary_latency_variance_threshold": "canary_latency_variance_threshold",
         "canary_drop_first_run": "canary_drop_first_run",
         "canary_max_missing_telemetry_rate": "canary_max_missing_telemetry_rate",
@@ -329,6 +345,16 @@ def apply_role_model_env(env: dict[str, str], model_id: str) -> None:
     for key in ROLE_MODEL_ENV_KEYS:
         env.setdefault(key, token)
     env.setdefault("ORKET_OPERATOR_MODEL", token)
+
+
+def resolve_canary_task_bounds(args: argparse.Namespace) -> tuple[int, int]:
+    task_id_min = int(getattr(args, "canary_task_id_min", 0) or 0)
+    task_id_max = int(getattr(args, "canary_task_id_max", 0) or 0)
+    if task_id_min <= 0:
+        task_id_min = int(getattr(args, "task_id_min", 0) or 0)
+    if task_id_max <= 0:
+        task_id_max = int(getattr(args, "task_id_max", 0) or 0)
+    return task_id_min, task_id_max
 
 
 def resolve_sidecar_settings(args: argparse.Namespace) -> tuple[str, int, str]:

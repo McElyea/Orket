@@ -23,7 +23,7 @@ Primary files:
 2. `docs/projects/OS/contracts/error-codes-v1.json` (wrapper-form registry instance)
 3. `docs/projects/OS/contracts/error-codes-v1.schema.json` (compat shape for migration window)
 4. `docs/projects/OS/contracts/sovereign-laws.md` (new; locked laws only)
-5. `scripts/audit_registry.py` (read wrapper and compute deterministic digest)
+5. `scripts/HighTier/audit_registry.py` (read wrapper and compute deterministic digest)
 
 Required acceptance checks:
 1. Registry audit reads wrapper and emits deterministic digest over canonical bytes of:
@@ -32,7 +32,7 @@ Required acceptance checks:
 3. No edits to `orket/kernel/v1/*` in this PR.
 
 Suggested checks:
-1. `python scripts/audit_registry.py`
+1. `python scripts/HighTier/audit_registry.py`
 2. `python -m pytest -q tests/kernel/v1/test_registry.py`
 
 ## PR-02: CapabilityDecisionRecord Schema + Coexistence Wiring
@@ -118,7 +118,7 @@ Goal:
 1. Ship the deterministic gate implementation for replay parity.
 
 Primary files:
-1. `scripts/replay_comparator.py` (new)
+1. `scripts/MidTier/replay_comparator.py` (new)
 2. `tests/kernel/v1/test_replay_comparator.py` (new)
 3. `tests/interfaces/test_api_kernel_lifecycle.py` (API-boundary parity assertions)
 

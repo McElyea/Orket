@@ -61,9 +61,9 @@ Progress update (2026-03-01):
   - `python -m pytest -q tests/interfaces/test_scaffold_init_cli.py tests/interfaces/test_refactor_transaction_cli.py tests/interfaces/test_api_add_transaction_cli.py tests/interfaces/test_replay_artifact_recording.py`
   - result: `16 passed`
 - Completed `TD-SEC-1d` by replacing parameterized `shell=True` usage in scripts:
-  - `scripts/context_ceiling_finder.py`
-  - `scripts/run_determinism_harness.py`
-  - `scripts/run_quant_sweep.py`
+  - `scripts/MidTier/context_ceiling_finder.py`
+  - `scripts/HighTier/run_determinism_harness.py`
+  - `scripts/MidTier/run_quant_sweep.py`
 - Validation:
   - `python -m pytest -q tests/application/test_context_ceiling_finder.py tests/application/test_benchmark_task_id_filters.py tests/application/test_benchmark_telemetry_manifest.py tests/application/test_quant_sweep_runner.py`
   - result: `16 passed`

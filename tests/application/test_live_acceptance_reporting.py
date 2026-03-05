@@ -20,7 +20,7 @@ def _load_script_module(name: str, relative_path: str):
 def test_prompt_policy_summary_counts_from_turn_start_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop",
-        "scripts/run_live_acceptance_loop.py",
+        "scripts/MidTier/run_live_acceptance_loop.py",
     )
 
     events = [
@@ -58,7 +58,7 @@ def test_prompt_policy_summary_counts_from_turn_start_events() -> None:
 def test_runtime_failure_breakdown_count_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_breakdown",
-        "scripts/run_live_acceptance_loop.py",
+        "scripts/MidTier/run_live_acceptance_loop.py",
     )
     events = [
         {"event": "runtime_verifier_completed", "data": {"failure_breakdown": {"timeout": 2, "command_failed": 1}}},
@@ -73,7 +73,7 @@ def test_runtime_failure_breakdown_count_from_events() -> None:
 def test_event_data_int_sum_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_data_sum",
-        "scripts/run_live_acceptance_loop.py",
+        "scripts/MidTier/run_live_acceptance_loop.py",
     )
     events = [
         {"event": "preflight_missing_read_paths", "data": {"missing_required_read_paths_count": 2}},
@@ -86,7 +86,7 @@ def test_event_data_int_sum_from_events() -> None:
 def test_turn_non_progress_rule_counts_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_rule_counts",
-        "scripts/run_live_acceptance_loop.py",
+        "scripts/MidTier/run_live_acceptance_loop.py",
     )
     events = [
         {
@@ -125,7 +125,7 @@ def test_turn_non_progress_rule_counts_from_events() -> None:
 def test_runtime_event_schema_counts_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_runtime_event_schema",
-        "scripts/run_live_acceptance_loop.py",
+        "scripts/MidTier/run_live_acceptance_loop.py",
     )
     events = [
         {"event": "turn_start", "data": {"runtime_event": {"schema_version": "v1"}}},
@@ -141,7 +141,7 @@ def test_runtime_event_schema_counts_from_events() -> None:
 def test_guard_terminal_reason_count_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_guard_reason",
-        "scripts/run_live_acceptance_loop.py",
+        "scripts/MidTier/run_live_acceptance_loop.py",
     )
     events = [
         {
@@ -159,7 +159,7 @@ def test_guard_terminal_reason_count_from_events() -> None:
 def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns",
-        "scripts/report_live_acceptance_patterns.py",
+        "scripts/MidTier/report_live_acceptance_patterns.py",
     )
 
     runs = [
@@ -279,7 +279,7 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
 def test_report_live_acceptance_patterns_loads_monolith_matrix_summary(tmp_path: Path) -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns_matrix",
-        "scripts/report_live_acceptance_patterns.py",
+        "scripts/MidTier/report_live_acceptance_patterns.py",
     )
     matrix_path = tmp_path / "matrix.json"
     matrix_path.write_text(
@@ -302,7 +302,7 @@ def test_report_live_acceptance_patterns_loads_monolith_matrix_summary(tmp_path:
 def test_matrix_trends_group_by_builder_and_profile() -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns_trends",
-        "scripts/report_live_acceptance_patterns.py",
+        "scripts/MidTier/report_live_acceptance_patterns.py",
     )
     trends = reporter._matrix_trends(
         [

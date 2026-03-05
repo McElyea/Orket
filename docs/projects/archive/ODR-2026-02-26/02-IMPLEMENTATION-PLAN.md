@@ -70,7 +70,7 @@ Exit Criteria:
 2. No reliance on network, model adapters, or filesystem writes.
 
 ## Validation Commands
-1. `python scripts/check_dependency_direction.py --legacy-edge-enforcement fail`
-2. `python scripts/check_volatility_boundaries.py`
+1. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail`
+2. `python scripts/HighTier/check_volatility_boundaries.py`
 3. `python -m pytest -q tests/kernel/v1/test_odr_core.py`
 4. `python -m pytest -q`

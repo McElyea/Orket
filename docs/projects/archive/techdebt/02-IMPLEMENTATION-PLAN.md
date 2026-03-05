@@ -130,7 +130,7 @@ Enforcement activation requires all:
 2. Add centralized compatibility registry in code:
 - One table for all active fallback branches.
 3. Add CI check script:
-- `scripts/check_compat_fallback_expiry.py`
+- `scripts/MidTier/check_compat_fallback_expiry.py`
 - Fails if expired fallback remains active.
 4. Add policy artifact output:
 - `benchmarks/results/security_compat_expiry_check.json`.

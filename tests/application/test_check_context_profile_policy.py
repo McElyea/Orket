@@ -27,7 +27,7 @@ def test_check_context_profile_policy_passes_for_valid_inputs(tmp_path: Path) ->
     result = subprocess.run(
         [
             "python",
-            "scripts/check_context_profile_policy.py",
+            "scripts/MidTier/check_context_profile_policy.py",
             "--profiles",
             str(profiles),
             "--matrix-configs",
@@ -62,7 +62,7 @@ def test_check_context_profile_policy_fails_for_bad_order(tmp_path: Path) -> Non
     result = subprocess.run(
         [
             "python",
-            "scripts/check_context_profile_policy.py",
+            "scripts/MidTier/check_context_profile_policy.py",
             "--profiles",
             str(profiles),
             "--matrix-configs",
@@ -86,7 +86,7 @@ def test_check_context_profile_policy_fixture_regressions(tmp_path: Path) -> Non
     valid = subprocess.run(
         [
             "python",
-            "scripts/check_context_profile_policy.py",
+            "scripts/MidTier/check_context_profile_policy.py",
             "--profiles",
             "tests/fixtures/context_profiles/valid_profiles.json",
             "--matrix-configs",
@@ -101,7 +101,7 @@ def test_check_context_profile_policy_fixture_regressions(tmp_path: Path) -> Non
     drift = subprocess.run(
         [
             "python",
-            "scripts/check_context_profile_policy.py",
+            "scripts/MidTier/check_context_profile_policy.py",
             "--profiles",
             "tests/fixtures/context_profiles/drifted_profiles.json",
             "--matrix-configs",

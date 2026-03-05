@@ -11,7 +11,7 @@ Define the next OS v1 slice that productizes replay comparator behavior as a fir
 Ship a runtime comparator surface that is contract-safe, deterministic, and gate-enforced across kernel and API boundaries.
 
 ## In Scope
-1. Add runtime/service comparator path that uses the same deterministic laws as `scripts/replay_comparator.py`.
+1. Add runtime/service comparator path that uses the same deterministic laws as `scripts/MidTier/replay_comparator.py`.
 2. Expose comparator inputs/outputs via existing kernel API boundaries.
 3. Enforce comparator law checks in CI as mandatory gates.
 4. Keep replay report ordering, report-id nullification, and IssueKey multiplicity behavior stable.
@@ -51,7 +51,7 @@ Ship a runtime comparator surface that is contract-safe, deterministic, and gate
 5. CI fails when comparator law behavior drifts.
 
 ## Initial Execution Order
-1. Move/port comparator logic from `scripts/replay_comparator.py` to runtime seam.
+1. Move/port comparator logic from `scripts/MidTier/replay_comparator.py` to runtime seam.
 2. Add kernel-level tests for registry lock, version mismatch, safe boundary, multiplicity, and report-id rules.
 3. Wire API compare/replay handlers to runtime comparator path.
 4. Promote gate checks in workflow and test policy text.

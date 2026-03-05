@@ -38,7 +38,7 @@ def _fake_report_for_tiers() -> dict[str, Any]:
 
 
 def test_score_report_emits_per_task_and_tier_aggregates() -> None:
-    score_module = _load_script_module("score_benchmark_run_a", "scripts/score_benchmark_run.py")
+    score_module = _load_script_module("score_benchmark_run_a", "scripts/MidTier/score_benchmark_run.py")
     policy = json.loads(Path("model/core/contracts/benchmark_scoring_policy.json").read_text(encoding="utf-8"))
     report = _fake_report_for_tiers()
 
@@ -56,7 +56,7 @@ def test_score_report_emits_per_task_and_tier_aggregates() -> None:
 
 
 def test_scoring_gate_fails_when_metadata_missing() -> None:
-    gate_module = _load_script_module("check_benchmark_scoring_gate_a", "scripts/check_benchmark_scoring_gate.py")
+    gate_module = _load_script_module("check_benchmark_scoring_gate_a", "scripts/MidTier/check_benchmark_scoring_gate.py")
     policy = json.loads(Path("model/core/contracts/benchmark_scoring_policy.json").read_text(encoding="utf-8"))
 
     result = gate_module.evaluate_gate(scored={"overall_avg_score": 4.9}, policy=policy)
@@ -66,8 +66,8 @@ def test_scoring_gate_fails_when_metadata_missing() -> None:
 
 
 def test_scoring_gate_passes_for_good_report() -> None:
-    score_module = _load_script_module("score_benchmark_run_b", "scripts/score_benchmark_run.py")
-    gate_module = _load_script_module("check_benchmark_scoring_gate_b", "scripts/check_benchmark_scoring_gate.py")
+    score_module = _load_script_module("score_benchmark_run_b", "scripts/MidTier/score_benchmark_run.py")
+    gate_module = _load_script_module("check_benchmark_scoring_gate_b", "scripts/MidTier/check_benchmark_scoring_gate.py")
     policy = json.loads(Path("model/core/contracts/benchmark_scoring_policy.json").read_text(encoding="utf-8"))
     report = _fake_report_for_tiers()
     tasks_by_id = {task_id: {"id": task_id, "tier": int(task_id)} for task_id in report["details"].keys()}

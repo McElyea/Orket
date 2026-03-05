@@ -138,3 +138,28 @@ def test_parse_json_stringify_arguments_normalized():
     assert results[0]["args"]["path"] == "agent_output/design.txt"
     assert "\"recommendation\":\"monolith\"" in results[0]["args"]["content"]
 
+
+def test_parse_truncated_write_file_json_recovery():
+    text = """```json
+{"tool": "write_file", "args": {"path": "agent_output/main.py", "content": "print(\\"ok\\")\\n" }
+```"""
+    results = ToolParser.parse(text)
+    assert len(results) == 1
+    assert results[0]["tool"] == "write_file"
+    assert results[0]["args"]["path"] == "agent_output/main.py"
+    assert "print(\"ok\")" in results[0]["args"]["content"]
+
+
+def test_parse_truncated_tool_batch_recovery():
+    text = """
+```json
+{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)\\n"}}
+{"tool":"update_issue_status","args":{"status":"code_review"}
+```
+"""
+    results = ToolParser.parse(text)
+    assert len(results) == 2
+    assert results[0]["tool"] == "write_file"
+    assert results[1]["tool"] == "update_issue_status"
+    assert results[1]["args"]["status"] == "code_review"
+

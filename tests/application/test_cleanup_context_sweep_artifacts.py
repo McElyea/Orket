@@ -13,7 +13,7 @@ def test_cleanup_context_sweep_artifacts_removes_ephemeral_storage(tmp_path: Pat
     result = subprocess.run(
         [
             "python",
-            "scripts/cleanup_context_sweep_artifacts.py",
+            "scripts/MidTier/cleanup_context_sweep_artifacts.py",
             "--out-dir",
             str(out_dir),
         ],
@@ -34,7 +34,7 @@ def test_cleanup_context_sweep_artifacts_dry_run_keeps_files(tmp_path: Path) -> 
     result = subprocess.run(
         [
             "python",
-            "scripts/cleanup_context_sweep_artifacts.py",
+            "scripts/MidTier/cleanup_context_sweep_artifacts.py",
             "--out-dir",
             str(out_dir),
             "--dry-run",

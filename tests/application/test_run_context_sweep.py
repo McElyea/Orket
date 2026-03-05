@@ -69,7 +69,7 @@ def test_run_context_sweep_generates_per_context_summaries_and_ceiling(tmp_path:
     result = subprocess.run(
         [
             "python",
-            "scripts/run_context_sweep.py",
+            "scripts/MidTier/run_context_sweep.py",
             "--contexts",
             "4096,8192,16384",
             "--model-id",
@@ -176,7 +176,7 @@ def test_run_context_sweep_can_resolve_context_profile(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/run_context_sweep.py",
+            "scripts/MidTier/run_context_sweep.py",
             "--context-profile",
             "safe",
             "--context-profiles-config",
@@ -265,7 +265,7 @@ def test_run_context_sweep_can_resolve_matrix_config_defaults(tmp_path: Path) ->
     result = subprocess.run(
         [
             "python",
-            "scripts/run_context_sweep.py",
+            "scripts/MidTier/run_context_sweep.py",
             "--contexts",
             "1024",
             "--matrix-config",

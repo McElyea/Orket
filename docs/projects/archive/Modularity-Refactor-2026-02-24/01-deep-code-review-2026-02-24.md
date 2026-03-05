@@ -51,8 +51,8 @@ Mode: local review only (no push)
 
 ### High 5: Dependency-direction enforcement is incomplete and currently allows large ungoverned `root` surface
 - Evidence:
-  - `scripts/check_dependency_direction.py:17-28` maps many modules to `root`.
-  - `scripts/check_dependency_direction.py:48-68` defines no restrictions for `root -> *`.
+  - `scripts/MidTier/check_dependency_direction.py:17-28` maps many modules to `root`.
+  - `scripts/MidTier/check_dependency_direction.py:48-68` defines no restrictions for `root -> *`.
   - `docs/architecture/dependency_graph_snapshot.md:10` shows `root -> root` as dominant edge class.
 - Impact:
   - A large part of the codebase is effectively outside hard boundary enforcement.

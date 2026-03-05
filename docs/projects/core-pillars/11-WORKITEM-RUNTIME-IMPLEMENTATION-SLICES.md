@@ -19,8 +19,8 @@ Execution mode: deterministic vertical slices
 5. CP-4.5: legacy Rock/Epic/Issue mapping utility, dry-run report script, and lossless fixture landed.
 
 ## Completion Evidence
-1. `python scripts/check_dependency_direction.py --legacy-edge-enforcement fail` passes.
-2. `python scripts/check_volatility_boundaries.py` passes.
+1. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail` passes.
+2. `python scripts/HighTier/check_volatility_boundaries.py` passes.
 3. `python -m pytest -q` passes.
 
 ## CP-4.1 WorkItem Core Contract and Transition API
@@ -105,6 +105,6 @@ Acceptance:
 1. `test_migration_rock_epic_issue_mapping_is_lossless`
 
 ## Required Validation Commands (Each Slice Exit)
-1. `python scripts/check_dependency_direction.py --legacy-edge-enforcement fail`
-2. `python scripts/check_volatility_boundaries.py`
+1. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail`
+2. `python scripts/HighTier/check_volatility_boundaries.py`
 3. `python -m pytest -q`

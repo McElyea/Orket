@@ -13,7 +13,7 @@
   "task_limit": 0,
   "runtime_target": "local-hardware",
   "execution_mode": "live-card",
-  "runner_template": "python scripts/live_card_benchmark_runner.py --task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir} --seed {seed} --threads {threads} --affinity-policy {affinity_policy} --warmup-steps {warmup_steps}",
+  "runner_template": "python scripts/MidTier/live_card_benchmark_runner.py --task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir} --seed {seed} --threads {threads} --affinity-policy {affinity_policy} --warmup-steps {warmup_steps}",
   "runtime_env": {
     "ORKET_LLM_PROVIDER": "lmstudio",
     "ORKET_MODEL_PROVIDER": "lmstudio",

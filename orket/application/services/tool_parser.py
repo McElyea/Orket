@@ -7,6 +7,98 @@ class ToolParser:
     Service responsible for extracting structured tool calls from raw model text.
     Standardized on stack-based JSON extraction for maximum robustness.
     """
+
+    @staticmethod
+    def _decode_relaxed_string(value: str) -> str:
+        raw = value or ""
+        try:
+            return json.loads(f"\"{raw}\"")
+        except json.JSONDecodeError:
+            return (
+                raw.replace("\\\\", "\\")
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace('\\"', '"')
+            )
+
+    @staticmethod
+    def _dedupe_tool_calls(tool_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        deduped: List[Dict[str, Any]] = []
+        seen: set[str] = set()
+        for call in tool_calls:
+            key = json.dumps(call, sort_keys=True, ensure_ascii=False)
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(call)
+        return deduped
+
+    @staticmethod
+    def _likely_truncated_json(text: str) -> bool:
+        blob = text or ""
+        return blob.count("{") > blob.count("}")
+
+    @staticmethod
+    def _recover_truncated_tool_calls(
+        text: str,
+        diagnostics: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+    ) -> List[Dict[str, Any]]:
+        cleaned = re.sub(r"```(?:json)?", " ", text or "", flags=re.IGNORECASE).replace("```", " ")
+        tool_markers = list(re.finditer(r'"tool"\s*:\s*"(?P<tool>[a-zA-Z0-9_]+)"', cleaned))
+        if not tool_markers:
+            return []
+
+        recovered: List[Dict[str, Any]] = []
+        for idx, marker in enumerate(tool_markers):
+            tool_name = marker.group("tool")
+            segment_start = marker.start()
+            segment_end = tool_markers[idx + 1].start() if idx + 1 < len(tool_markers) else len(cleaned)
+            segment = cleaned[segment_start:segment_end]
+
+            if tool_name == "update_issue_status":
+                status_match = re.search(r'"status"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
+                if status_match:
+                    recovered.append({"tool": tool_name, "args": {"status": status_match.group(1)}})
+                continue
+
+            if tool_name != "write_file":
+                continue
+
+            path_match = re.search(r'"path"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
+            content_match = re.search(r'"content"\s*:\s*"', segment, flags=re.DOTALL)
+            if not path_match or not content_match:
+                continue
+
+            content_start = content_match.end()
+            trailing = segment[content_start:]
+            # Truncated generations often omit the final closing quote/braces. Recover by
+            # taking the remainder when no valid terminator is found.
+            terminator = re.search(r'(?<!\\)"\s*(?:[},]|$)', trailing, flags=re.DOTALL)
+            raw_content = trailing[: terminator.start()] if terminator else trailing
+            raw_content = raw_content.strip().replace("```", "").rstrip()
+            if not raw_content:
+                continue
+
+            recovered.append(
+                {
+                    "tool": tool_name,
+                    "args": {
+                        "path": path_match.group(1),
+                        "content": ToolParser._decode_relaxed_string(raw_content),
+                    },
+                }
+            )
+
+        if recovered and diagnostics is not None:
+            diagnostics(
+                "parse_partial_recovery",
+                {
+                    "strategy": "truncated_json_recovery",
+                    "count": len(recovered),
+                    "tools": [item.get("tool") for item in recovered],
+                },
+            )
+        return recovered
     
     @staticmethod
     def parse(
@@ -110,8 +202,13 @@ class ToolParser:
                             )
 
         if results:
-            emit("parse_success", {"strategy": "stack_json", "count": len(results)})
-            return results
+            recovered: List[Dict[str, Any]] = []
+            if ToolParser._likely_truncated_json(text):
+                recovered = ToolParser._recover_truncated_tool_calls(text, diagnostics=diagnostics)
+            merged = ToolParser._dedupe_tool_calls([*results, *recovered]) if recovered else results
+            strategy = "stack_json+truncated_json_recovery" if len(merged) > len(results) else "stack_json"
+            emit("parse_success", {"strategy": strategy, "count": len(merged)})
+            return merged
 
         # 2. Legacy DSL Fallback (Regex based - fragile)
         dsl_blocks = re.split(r"(?:\[|TOOL:\s*)(write_file|create_issue|add_issue_comment|get_issue_context)(?:\]|\s*)", text)
@@ -131,9 +228,15 @@ class ToolParser:
 
         if results:
             emit("parse_success", {"strategy": "legacy_dsl", "count": len(results)})
+            return results
+
+        recovered = ToolParser._recover_truncated_tool_calls(text, diagnostics=diagnostics)
+        if recovered:
+            emit("parse_success", {"strategy": "truncated_json_recovery", "count": len(recovered)})
+            return recovered
         else:
             emit("parse_empty", {"reason": "no_parseable_tool_calls"})
-        return results
+        return []
 
     @staticmethod
     def normalize_json_stringify(text: str) -> str:

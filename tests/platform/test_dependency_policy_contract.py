@@ -4,7 +4,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from scripts.dependency_policy import POLICY_PATH, PROJECT_ROOT, load_dependency_policy
+from scripts.MidTier.dependency_policy import POLICY_PATH, PROJECT_ROOT, load_dependency_policy
 
 
 def _expected_top_level_namespaces() -> set[str]:
@@ -36,7 +36,7 @@ def test_dependency_direction_and_snapshot_use_canonical_policy(tmp_path: Path) 
     snapshot_out_md = tmp_path / "dependency_snapshot.md"
 
     check = subprocess.run(
-        ["python", "scripts/check_dependency_direction.py", "--out", str(check_out)],
+        ["python", "scripts/MidTier/check_dependency_direction.py", "--out", str(check_out)],
         capture_output=True,
         text=True,
     )
@@ -52,7 +52,7 @@ def test_dependency_direction_and_snapshot_use_canonical_policy(tmp_path: Path) 
     snapshot = subprocess.run(
         [
             "python",
-            "scripts/export_dependency_graph.py",
+            "scripts/MidTier/export_dependency_graph.py",
             "--out-json",
             str(snapshot_out_json),
             "--out-md",
@@ -74,7 +74,7 @@ def test_dependency_direction_can_fail_on_legacy_budget_overrun(tmp_path: Path) 
     result = subprocess.run(
         [
             "python",
-            "scripts/check_dependency_direction.py",
+            "scripts/MidTier/check_dependency_direction.py",
             "--out",
             str(check_out),
             "--legacy-edge-max",

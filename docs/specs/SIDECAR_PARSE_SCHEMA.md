@@ -54,6 +54,6 @@ Examples:
 1. `sessions[*].per_quant[*].hardware_sidecar`
 
 This contract is enforced by:
-1. `scripts/check_sidecar_parse_policy.py`
+1. `scripts/MidTier/check_sidecar_parse_policy.py`
 2. `tests/application/test_check_sidecar_parse_policy.py`
 

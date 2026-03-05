@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def _load_register_module():
-    script_path = Path("scripts/register_meta_breaker_extension.py").resolve()
+    script_path = Path("scripts/MidTier/register_meta_breaker_extension.py").resolve()
     spec = importlib.util.spec_from_file_location("register_meta_breaker_extension_for_scenarios", script_path)
     if spec is None or spec.loader is None:
         raise RuntimeError("unable to load register_meta_breaker_extension.py")
@@ -27,7 +27,7 @@ def test_run_meta_breaker_scenarios_emits_pack_report(tmp_path, monkeypatch):
     result = subprocess.run(
         [
             "python",
-            "scripts/run_meta_breaker_scenarios.py",
+            "scripts/MidTier/run_meta_breaker_scenarios.py",
             "--project-root",
             str(tmp_path),
             "--workspace",

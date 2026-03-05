@@ -34,7 +34,7 @@ jobs:
 
       - name: Quant Sweep Dry Run
         run: |
-          python scripts/run_quant_sweep.py \
+          python scripts/MidTier/run_quant_sweep.py \
             --model-id placeholder-model \
             --quant-tags Q8_0 \
             --matrix-config "${{ github.event.inputs.matrix_config || 'benchmarks/configs/quant_sweep_common_sessions.json' }}" \
@@ -65,13 +65,13 @@ jobs:
 
       - name: Extract KPI Report
         run: |
-          python scripts/quant_sweep_kpi_report.py \
+          python scripts/MidTier/quant_sweep_kpi_report.py \
             --summary benchmarks/results/quant_sweep/nightly_sample_summary.json \
             --out benchmarks/results/quant_sweep/nightly_sample_kpis.json
 
       - name: Enforce KPI Thresholds
         run: |
-          python scripts/check_quant_sweep_kpis.py \
+          python scripts/MidTier/check_quant_sweep_kpis.py \
             --summary benchmarks/results/quant_sweep/nightly_sample_summary.json \
             --max-missing-telemetry-rate 0.01 \
             --max-polluted-run-rate 0.1 \

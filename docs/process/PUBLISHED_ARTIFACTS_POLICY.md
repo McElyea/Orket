@@ -38,11 +38,11 @@ Top-level fields:
 2. Update `benchmarks/published/index.json`.
 3. Regenerate README:
 ```bash
-python scripts/sync_published_index.py --write
+python scripts/MidTier/sync_published_index.py --write
 ```
 4. Validate sync before commit:
 ```bash
-python scripts/sync_published_index.py --check
+python scripts/MidTier/sync_published_index.py --check
 ```
 5. Commit artifact files, `index.json`, and `README.md` together.
 

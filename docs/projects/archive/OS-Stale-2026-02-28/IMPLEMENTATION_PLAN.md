@@ -128,18 +128,18 @@ fail if emitted `KernelIssue.code` not in `contracts/error-codes-v1.json`.
 2. Add digest vector tests with `State/digest-spec-v1.md` canonicalization and integer-only constraints.
 3. Add tombstone wire-format vector tests.
 4. Set/confirm sovereign gate command for CI.
-5. Add `scripts/audit_registry.py` to enforce registry/spec sync.
-6. Add `scripts/gen_digest_vectors.py` for maintainer-only vector generation.
+5. Add `scripts/HighTier/audit_registry.py` to enforce registry/spec sync.
+6. Add `scripts/MidTier/gen_digest_vectors.py` for maintainer-only vector generation.
 7. Add TypeScript parity gate under `conformance/ts`.
 8. Add CI diff-only vector verification:
-`python scripts/gen_digest_vectors.py --out /tmp/digest-v1.json`
+`python scripts/MidTier/gen_digest_vectors.py --out /tmp/digest-v1.json`
 `diff -u tests/kernel/v1/vectors/digest-v1.json /tmp/digest-v1.json`
 
 Exit criteria:
 1. Kernel gate command is deterministic and green.
 2. Kernel exit condition in `KERNEL_REQUIREMENTS_EXIT.md` is fully satisfied.
 3. CI consumes committed vectors only (no write-back).
-4. Registry audit is green (`scripts/audit_registry.py`).
+4. Registry audit is green (`scripts/HighTier/audit_registry.py`).
 
 ## Acceptance Gate (Kernel Requirements Exit)
 Kernel Requirements phase is closed only when all are true:
@@ -181,8 +181,8 @@ Completed in current execution slice:
 2. Baseline Phase F guardrails are landed:
 - `test_registry.py`
 - `test_digest_vectors.py`
-- `scripts/audit_registry.py`
-- `scripts/gen_digest_vectors.py`
+- `scripts/HighTier/audit_registry.py`
+- `scripts/MidTier/gen_digest_vectors.py`
 - `conformance/ts` parity harness
 3. `.gitea/workflows/quality.yml` enforces:
 - registry audit
@@ -190,7 +190,7 @@ Completed in current execution slice:
 - TS digest parity
 - digest vector regenerate+diff fail-closed check
 4. Legacy Spec-002 law tests are physically consolidated into `tests/kernel/v1`; `tests/lsi` mirror files are removed.
-5. `scripts/audit_registry.py` is now strict-mode fail-closed for registry extras, with complete OS doc coverage enforced.
+5. `scripts/HighTier/audit_registry.py` is now strict-mode fail-closed for registry extras, with complete OS doc coverage enforced.
 6. Deprecated `jsonschema.RefResolver` is replaced by `referencing.Registry` wiring in kernel schema-contract tests.
 7. Validator boundary now includes thin capability/replay handlers:
 - `resolve_capability_v1`
@@ -227,10 +227,10 @@ Completed in current execution slice:
 35. `/v1/kernel/compare` malformed payload rejection is now covered with deterministic API validation behavior.
 36. Replay vectors now include richer multi-mismatch noise case with sorted deterministic mismatch fields.
 37. Architecture gate now enforces kernel API interface tests via `.gitea/workflows/quality.yml` (`tests/interfaces/test_api_kernel_lifecycle.py`).
-38. Fixture-generation ergonomics are active through `scripts/gen_kernel_compare_fixture.py` with contract test coverage.
+38. Fixture-generation ergonomics are active through `scripts/MidTier/gen_kernel_compare_fixture.py` with contract test coverage.
 39. Card-006 acceptance `100/100 replay stability` is enforced via deterministic iteration tests in `tests/kernel/v1/test_replay_stability.py`.
 40. Card-closure mapping is now documented in `docs/projects/OS/Roadmap/Card-Closure-Checklist.md`.
-41. Card-008 fire-drill governance gap is closed via named suite `scripts/run_kernel_fire_drill.py` and CI enforcement.
+41. Card-008 fire-drill governance gap is closed via named suite `scripts/HighTier/run_kernel_fire_drill.py` and CI enforcement.
 42. Final closure pass is documented in `docs/projects/OS/Roadmap/ClosurePass-2026-02-24.md` (provisional complete pending owner sign-off).
 43. Closeout checklist and roadmap status are updated to `closeout-ready`.
 44. Replay comparator vectors now cover mixed issue-set pointer/code ordering normalization and mixed pointer/code drift.

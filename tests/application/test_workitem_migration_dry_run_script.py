@@ -23,7 +23,7 @@ def test_workitem_migration_dry_run_script_emits_report(tmp_path: Path) -> None:
     subprocess.run(
         [
             sys.executable,
-            "scripts/workitem_migration_dry_run.py",
+            "scripts/MidTier/workitem_migration_dry_run.py",
             "--in",
             str(in_path),
             "--out",

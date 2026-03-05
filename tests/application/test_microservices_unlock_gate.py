@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.check_microservices_unlock import (
+from scripts.MidTier.check_microservices_unlock import (
     _check_governance_stability,
     _check_matrix_stability,
     evaluate_unlock,

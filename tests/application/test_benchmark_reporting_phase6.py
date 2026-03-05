@@ -16,7 +16,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_trend_report_includes_required_fields(tmp_path: Path) -> None:
-    mod = _load_script_module("report_benchmark_trends_test", "scripts/report_benchmark_trends.py")
+    mod = _load_script_module("report_benchmark_trends_test", "scripts/MidTier/report_benchmark_trends.py")
     input_path = tmp_path / "scored.json"
     input_path.write_text(
         """{
@@ -42,7 +42,7 @@ def test_trend_report_includes_required_fields(tmp_path: Path) -> None:
 
 
 def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
-    mod = _load_script_module("report_benchmark_trends_delta_test", "scripts/report_benchmark_trends.py")
+    mod = _load_script_module("report_benchmark_trends_delta_test", "scripts/MidTier/report_benchmark_trends.py")
     first = tmp_path / "a.json"
     second = tmp_path / "b.json"
     first.write_text(
@@ -83,7 +83,7 @@ def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
 
 
 def test_leaderboard_groups_by_schema_and_policy(tmp_path: Path) -> None:
-    mod = _load_script_module("build_benchmark_leaderboard_test", "scripts/build_benchmark_leaderboard.py")
+    mod = _load_script_module("build_benchmark_leaderboard_test", "scripts/MidTier/build_benchmark_leaderboard.py")
     a = tmp_path / "a.json"
     b = tmp_path / "b.json"
     a.write_text(

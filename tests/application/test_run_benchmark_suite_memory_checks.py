@@ -17,7 +17,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_run_benchmark_suite_invokes_memory_checks_when_paths_are_provided(monkeypatch, tmp_path: Path) -> None:
-    module = _load_script_module("run_benchmark_suite_memory", "scripts/run_benchmark_suite.py")
+    module = _load_script_module("run_benchmark_suite_memory", "scripts/MidTier/run_benchmark_suite.py")
     recorded: list[list[str]] = []
 
     def _fake_run(cmd: list[str]) -> None:
@@ -37,7 +37,7 @@ def test_run_benchmark_suite_invokes_memory_checks_when_paths_are_provided(monke
         [
             "run_benchmark_suite.py",
             "--runner-template",
-            "python scripts/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}",
+            "python scripts/HighTier/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}",
             "--raw-out",
             str(raw_out),
             "--scored-out",
@@ -64,10 +64,10 @@ def test_run_benchmark_suite_invokes_memory_checks_when_paths_are_provided(monke
     rc = module.main()
     assert rc == 0
     assert len(recorded) == 4
-    assert recorded[2][0:2] == ["python", "scripts/check_memory_determinism.py"]
+    assert recorded[2][0:2] == ["python", "scripts/HighTier/check_memory_determinism.py"]
     assert "--trace" in recorded[2]
     assert "--retrieval-trace" in recorded[2]
-    assert recorded[3][0:2] == ["python", "scripts/compare_memory_determinism.py"]
+    assert recorded[3][0:2] == ["python", "scripts/HighTier/compare_memory_determinism.py"]
     assert "--left-retrieval" in recorded[3]
     assert "--right-retrieval" in recorded[3]
 

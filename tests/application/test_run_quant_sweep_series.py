@@ -22,7 +22,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_run_quant_sweep_series_executes_models_in_order(monkeypatch, tmp_path: Path) -> None:
-    module = _load_script_module("run_quant_sweep_series_order", "scripts/run_quant_sweep_series.py")
+    module = _load_script_module("run_quant_sweep_series_order", "scripts/MidTier/run_quant_sweep_series.py")
     matrix_path = tmp_path / "matrix.json"
     matrix_path.write_text(
         json.dumps(
@@ -72,7 +72,7 @@ def test_run_quant_sweep_series_executes_models_in_order(monkeypatch, tmp_path: 
 
 
 def test_run_quant_sweep_series_uses_shared_model_cache_clear(monkeypatch, tmp_path: Path) -> None:
-    module = _load_script_module("run_quant_sweep_series_shared_clear", "scripts/run_quant_sweep_series.py")
+    module = _load_script_module("run_quant_sweep_series_shared_clear", "scripts/MidTier/run_quant_sweep_series.py")
     matrix_path = tmp_path / "matrix.json"
     matrix_path.write_text(
         json.dumps(

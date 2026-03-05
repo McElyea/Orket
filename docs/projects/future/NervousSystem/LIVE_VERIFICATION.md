@@ -3,7 +3,7 @@
 Date: 2026-03-03
 
 ## Command
-`python scripts/run_nervous_system_live_evidence.py`
+`python scripts/MidTier/run_nervous_system_live_evidence.py`
 
 ## Integration Path
 - Mode: `subprocess_jsonl`

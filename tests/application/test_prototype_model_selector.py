@@ -28,7 +28,7 @@ def test_prototype_model_selector_picks_best_valid_candidate(tmp_path: Path) -> 
     result = subprocess.run(
         [
             "python",
-            "scripts/prototype_model_selector.py",
+            "scripts/MidTier/prototype_model_selector.py",
             "--summary",
             str(summary),
             "--out",
@@ -70,7 +70,7 @@ def test_prototype_model_selector_returns_none_when_no_candidate_qualifies(tmp_p
     result = subprocess.run(
         [
             "python",
-            "scripts/prototype_model_selector.py",
+            "scripts/MidTier/prototype_model_selector.py",
             "--summary",
             str(summary),
             "--out",

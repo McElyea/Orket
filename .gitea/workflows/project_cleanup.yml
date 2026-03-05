@@ -52,5 +52,5 @@ jobs:
           if [ -n "$SOURCE_DIR" ]; then
             ARGS+=(--source-dir "$SOURCE_DIR")
           fi
-          python scripts/cleanup_published_projects.py "${ARGS[@]}"
+          python scripts/MidTier/cleanup_published_projects.py "${ARGS[@]}"
 

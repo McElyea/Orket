@@ -4,18 +4,24 @@ This folder contains command entrypoints and shared script modules.
 
 ## Layout
 
-- `run_*.py`
-  - Thin command entrypoints.
-  - Parse CLI flags and call domain modules.
-- `check_*.py`
-  - Policy and contract validators.
-  - Return non-zero on policy violations.
-- `render_*.py`, `report_*.py`, `build_*.py`
-  - Artifact generation and reporting utilities.
+- `HighTier/`
+  - Highest-utility scripts (score 7-10).
+  - Most-referenced operational and CI-facing entrypoints.
+- `MidTier/`
+  - Useful support scripts (score 4-6).
+  - General reporting, orchestration, and utility automation.
+- `LowTier/`
+  - Niche or low-reference scripts (score 1-3).
+  - Kept for specific workflows and experiments.
 - `quant_sweep/`
   - Reusable quant-sweep package.
   - Provider-aware runtime hooks.
   - Shared sidecar and KPI logic.
+- `tiering/`
+  - Tier assignment artifacts and score chart.
+  - `script_tier_scores.md` and `script_tier_scores.csv`.
+
+Scores are computed from workflow/test/docs references plus recent activity, then grouped by family/dependency so near-duplicate scripts stay together.
 
 ## Quant Sweep Package
 
@@ -40,7 +46,7 @@ Entry scripts should depend on this package instead of duplicating quant orchest
 
 Provider-specific behavior stays explicit:
 
-- LM Studio sanitation uses `scripts/lmstudio_model_cache.py`.
+- LM Studio sanitation uses `scripts/MidTier/lmstudio_model_cache.py`.
 - Sweeps only invoke sanitation when provider is `lmstudio`.
 - Opaque "one-size-fits-all provider adapters" are intentionally avoided.
 

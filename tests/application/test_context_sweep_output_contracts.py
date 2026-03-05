@@ -16,7 +16,7 @@ def test_check_context_sweep_outputs_passes_with_complete_coverage(tmp_path: Pat
     result = subprocess.run(
         [
             "python",
-            "scripts/check_context_sweep_outputs.py",
+            "scripts/MidTier/check_context_sweep_outputs.py",
             "--contexts",
             "4096,8192",
             "--summary-template",
@@ -38,7 +38,7 @@ def test_check_context_sweep_outputs_fails_with_missing_files(tmp_path: Path) ->
     result = subprocess.run(
         [
             "python",
-            "scripts/check_context_sweep_outputs.py",
+            "scripts/MidTier/check_context_sweep_outputs.py",
             "--contexts",
             "4096,8192",
             "--summary-template",

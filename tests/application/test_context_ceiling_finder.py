@@ -57,7 +57,7 @@ def test_context_ceiling_finder_emits_safe_ceiling_and_degradation(tmp_path: Pat
     result = subprocess.run(
         [
             "python",
-            "scripts/context_ceiling_finder.py",
+            "scripts/MidTier/context_ceiling_finder.py",
             "--contexts",
             "4096,8192,16384",
             "--summary-template",

@@ -8,7 +8,7 @@ import sys
 
 def _run_live_script() -> dict:
     result = subprocess.run(
-        [sys.executable, "scripts/run_nervous_system_live_evidence.py"],
+        [sys.executable, "scripts/MidTier/run_nervous_system_live_evidence.py"],
         capture_output=True,
         text=True,
         check=False,

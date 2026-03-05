@@ -1,6 +1,6 @@
 # Volatility Baseline
 
-Generated from `scripts/churn_report.py` on 2026-02-11.
+Generated from `scripts/LowTier/churn_report.py` on 2026-02-11.
 Evidence file: `benchmarks/results/2026-02-11_phaseR_churn.json`.
 
 ## Current Hotspots (File Touches)

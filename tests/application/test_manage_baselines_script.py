@@ -40,7 +40,7 @@ def test_manage_baselines_resolve_statuses(tmp_path: Path) -> None:
     ok = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "resolve",
             "--storage-root",
             str(baselines_root),
@@ -63,7 +63,7 @@ def test_manage_baselines_resolve_statuses(tmp_path: Path) -> None:
     rev_mismatch = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "resolve",
             "--storage-root",
             str(baselines_root),
@@ -92,7 +92,7 @@ def test_manage_baselines_pin_updates_task_file(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "pin",
             "--task-file",
             str(task_file),
@@ -143,7 +143,7 @@ def test_manage_baselines_health_and_prune(tmp_path: Path) -> None:
     health = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "health",
             "--storage-root",
             str(baselines_root),
@@ -167,7 +167,7 @@ def test_manage_baselines_health_and_prune(tmp_path: Path) -> None:
     dry_prune = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "prune",
             "--storage-root",
             str(baselines_root),
@@ -189,7 +189,7 @@ def test_manage_baselines_health_and_prune(tmp_path: Path) -> None:
     prune = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "prune",
             "--storage-root",
             str(baselines_root),
@@ -250,7 +250,7 @@ def test_manage_baselines_pin_and_unpin_controls_prune(tmp_path: Path) -> None:
     pin = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "pin-baseline",
             "--storage-root",
             str(baselines_root),
@@ -271,7 +271,7 @@ def test_manage_baselines_pin_and_unpin_controls_prune(tmp_path: Path) -> None:
     prune = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "prune",
             "--storage-root",
             str(baselines_root),
@@ -293,7 +293,7 @@ def test_manage_baselines_pin_and_unpin_controls_prune(tmp_path: Path) -> None:
     unpin = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "unpin-baseline",
             "--storage-root",
             str(baselines_root),
@@ -314,7 +314,7 @@ def test_manage_baselines_pin_and_unpin_controls_prune(tmp_path: Path) -> None:
     prune_again = subprocess.run(
         [
             "python",
-            "scripts/manage_baselines.py",
+            "scripts/HighTier/manage_baselines.py",
             "prune",
             "--storage-root",
             str(baselines_root),

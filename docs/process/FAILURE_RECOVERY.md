@@ -43,7 +43,7 @@ Actions:
 Checks:
 1. Generate failure report:
 ```bash
-python scripts/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/failure_modes.json
+python scripts/MidTier/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/failure_modes.json
 ```
 2. Inspect per-turn checkpoint files in `workspace/default/observability/...`.
 
@@ -62,18 +62,18 @@ Checks:
 Actions:
 1. Run migrations:
 ```bash
-python scripts/run_migrations.py
+python scripts/MidTier/run_migrations.py
 ```
 2. Re-run smoke gates:
 ```bash
-python scripts/release_smoke.py
-python scripts/security_canary.py
+python scripts/MidTier/release_smoke.py
+python scripts/MidTier/security_canary.py
 ```
 
 ## Post-Recovery Verification
 1. `python -m pytest -q`
-2. `python scripts/check_volatility_boundaries.py`
-3. `python scripts/run_cli_regression_smoke.py --out benchmarks/results/cli_regression_smoke.json`
+2. `python scripts/HighTier/check_volatility_boundaries.py`
+3. `python scripts/MidTier/run_cli_regression_smoke.py --out benchmarks/results/cli_regression_smoke.json`
 
 ## Escalation Rule
 If the same failure repeats after one clean recovery pass, create a tracked project item with:

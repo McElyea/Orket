@@ -49,10 +49,10 @@ Verification executed:
    2. Webhook ingress path:
       1. `/webhook/gitea` signed request -> `200` with handled payload (`ignored` for missing issue token) via real handler route path.
 5. Enforcement/security artifacts:
-   1. `python scripts/run_security_regression_suite.py` -> `ok: true`
-   2. `python scripts/export_security_compat_warnings.py` -> `warning_count: 0`
-   3. `python scripts/check_compat_fallback_expiry.py` -> `ok: true`
-   4. `python scripts/check_security_enforcement_flip_gate.py` -> `ok: true`
+   1. `python scripts/MidTier/run_security_regression_suite.py` -> `ok: true`
+   2. `python scripts/MidTier/export_security_compat_warnings.py` -> `warning_count: 0`
+   3. `python scripts/MidTier/check_compat_fallback_expiry.py` -> `ok: true`
+   4. `python scripts/MidTier/check_security_enforcement_flip_gate.py` -> `ok: true`
 
 ## Objective
 
@@ -186,10 +186,10 @@ Out of scope (this cycle):
    2. `python -m pytest tests/integration tests/runtime tests/contracts -q`
    3. `python -m pytest tests/acceptance tests/kernel/v1/test_odr_refinement_behavior.py -q`
 3. Security artifacts/gates:
-   1. `python scripts/run_security_regression_suite.py`
-   2. `python scripts/export_security_compat_warnings.py`
-   3. `python scripts/check_compat_fallback_expiry.py`
-   4. `python scripts/check_security_enforcement_flip_gate.py`
+   1. `python scripts/MidTier/run_security_regression_suite.py`
+   2. `python scripts/MidTier/export_security_compat_warnings.py`
+   3. `python scripts/MidTier/check_compat_fallback_expiry.py`
+   4. `python scripts/MidTier/check_security_enforcement_flip_gate.py`
 
 ## Deliverables
 

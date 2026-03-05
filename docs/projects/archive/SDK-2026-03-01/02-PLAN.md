@@ -125,7 +125,7 @@ Exit criteria:
 
 Progress update (2026-02-28):
 - Migrated bridge extension registration script to SDK v0 outputs:
-  - `scripts/register_textmystery_bridge_extension.py` now writes `extension.yaml`
+  - `scripts/MidTier/register_textmystery_bridge_extension.py` now writes `extension.yaml`
   - generated bridge module now exposes SDK entrypoint `run_workload(ctx, input)`
   - generated workload now emits `WorkloadResult` with digest-verified `bridge_response.json` artifact
 - Updated generated catalog row to SDK metadata (`contract_style`, `entrypoint`, `required_capabilities`)
@@ -137,7 +137,7 @@ Progress update (2026-02-28):
 - Added deterministic replay coverage for bridge SDK workload:
   - `tests/application/test_textmystery_bridge_sdk_runtime.py`
 - Added real local smoke evidence through Orket SDK path:
-  - `python scripts/run_textmystery_easy_smoke.py --textmystery-root C:/Source/Orket-Extensions/TextMystery`
+  - `python scripts/MidTier/run_textmystery_easy_smoke.py --textmystery-root C:/Source/Orket-Extensions/TextMystery`
   - latest run result: `RESULT=PASS`
 
 ### Phase 4: Meta Breaker Route (proves SDK is generic)
@@ -158,11 +158,11 @@ Exit criteria:
 
 Progress update (2026-02-28):
 - Added Meta Breaker SDK extension bootstrap scripts:
-  - `scripts/register_meta_breaker_extension.py`
-  - `scripts/run_meta_breaker_workload.py`
+  - `scripts/MidTier/register_meta_breaker_extension.py`
+  - `scripts/MidTier/run_meta_breaker_workload.py`
 - Added deterministic non-TextMystery SDK workload implementation (archetype matchup analysis + digest artifact output)
 - Added scenario pack runner for balance checks:
-  - `scripts/run_meta_breaker_scenarios.py`
+  - `scripts/MidTier/run_meta_breaker_scenarios.py`
   - predefined scenarios for first-player advantage and strict balance threshold
 - Added Reforger route + compile mode for Meta Breaker:
   - route: `meta_breaker_v0` (`orket/reforger/routes/meta_breaker_v0.py`)
@@ -215,15 +215,15 @@ Progress update (2026-02-28):
   - artifact path escape attempt rejected (`E_SDK_ARTIFACT_ESCAPE`)
   - artifact digest mismatch rejected (`E_SDK_ARTIFACT_DIGEST_MISMATCH`)
 - Added workload execution latency baseline runner:
-  - script: `scripts/run_extension_workload_baseline.py`
+  - script: `scripts/MidTier/run_extension_workload_baseline.py`
   - report schema includes min/max/mean/p50/p95 latency and per-run provenance roots
   - coverage: `tests/application/test_run_extension_workload_baseline.py`
 - Added TextMystery policy conformance gate runner:
-  - script: `scripts/run_textmystery_policy_conformance.py`
+  - script: `scripts/MidTier/run_textmystery_policy_conformance.py`
   - runs hint/disambiguation conformance tests in external TextMystery repo and emits JSON report
   - coverage: `tests/application/test_run_textmystery_policy_conformance.py`
 - Validation evidence:
-  - `python scripts/run_textmystery_policy_conformance.py --textmystery-root C:/Source/Orket-Extensions/TextMystery --output workspace/diagnostics/textmystery_policy_conformance.latest.json`
+  - `python scripts/MidTier/run_textmystery_policy_conformance.py --textmystery-root C:/Source/Orket-Extensions/TextMystery --output workspace/diagnostics/textmystery_policy_conformance.latest.json`
   - latest run result: pass (`7 passed`)
 
 ---

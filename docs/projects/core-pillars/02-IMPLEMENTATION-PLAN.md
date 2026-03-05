@@ -54,9 +54,9 @@ Canonical detailed execution ordering and slice DoR/DoD:
 7. Keep profile-specific hierarchy and transition rules out of engine-core contracts.
 
 ## Validation Commands
-1. `python scripts/check_dependency_direction.py --legacy-edge-enforcement fail`
-2. `python scripts/export_dependency_graph.py`
-3. `python scripts/check_volatility_boundaries.py`
+1. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail`
+2. `python scripts/MidTier/export_dependency_graph.py`
+3. `python scripts/HighTier/check_volatility_boundaries.py`
 4. `python -m pytest -q`
 
 ## Risks

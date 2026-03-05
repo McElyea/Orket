@@ -4,7 +4,7 @@ Date: 2026-02-24
 Execution mode: bounded deterministic slice delivery
 
 ## Phase 1: Contract Skeleton
-1. Implement CLI argument parsing for `scripts/docs_lint.py`.
+1. Implement CLI argument parsing for `scripts/HighTier/docs_lint.py`.
 2. Implement deterministic file discovery for scoped markdown paths.
 3. Implement result envelope and stable violation sorting.
 4. Add usage errors and `E_DOCS_USAGE`.
@@ -31,10 +31,10 @@ Execution mode: bounded deterministic slice delivery
 3. Promote strict mode into CI docs gate command once stable.
 
 ## Validation Commands
-1. `python scripts/docs_lint.py --project core-pillars`
+1. `python scripts/HighTier/docs_lint.py --project core-pillars`
 2. `python -m pytest -q tests/acceptance/docs_gate tests/platform/test_quality_workflow_gates.py`
-3. `python scripts/check_dependency_direction.py --legacy-edge-enforcement fail`
-4. `python scripts/check_volatility_boundaries.py`
+3. `python scripts/MidTier/check_dependency_direction.py --legacy-edge-enforcement fail`
+4. `python scripts/HighTier/check_volatility_boundaries.py`
 5. `python -m pytest -q`
 
 ## Risks and Controls

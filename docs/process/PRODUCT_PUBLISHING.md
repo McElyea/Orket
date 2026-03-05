@@ -20,27 +20,27 @@ GITEA_PRODUCT_OWNER=Orket
 ## Commands
 Dry-run first:
 ```bash
-python scripts/publish_products_to_gitea.py
+python scripts/MidTier/publish_products_to_gitea.py
 ```
 
 Execute publish:
 ```bash
-python scripts/publish_products_to_gitea.py --execute --verify-parity --private --force
+python scripts/MidTier/publish_products_to_gitea.py --execute --verify-parity --private --force
 ```
 
 Flexible source directory:
 ```bash
-python scripts/publish_products_to_gitea.py --execute --verify-parity --source-dir bin/projects
+python scripts/MidTier/publish_products_to_gitea.py --execute --verify-parity --source-dir bin/projects
 ```
 
 Optional local deletion after verification:
 ```bash
-python scripts/publish_products_to_gitea.py --execute --verify-parity --delete-local --source-dir product
+python scripts/MidTier/publish_products_to_gitea.py --execute --verify-parity --delete-local --source-dir product
 ```
 
 Publish selected projects only:
 ```bash
-python scripts/publish_products_to_gitea.py --execute --projects sneaky_price_watch price_arbitrage
+python scripts/MidTier/publish_products_to_gitea.py --execute --projects sneaky_price_watch price_arbitrage
 ```
 
 ## Notes

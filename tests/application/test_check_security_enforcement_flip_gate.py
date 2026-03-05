@@ -18,7 +18,7 @@ def _load_script_module(name: str, relative_path: str):
 def test_enforcement_flip_gate_passes_when_all_checks_green():
     mod = _load_script_module(
         "check_security_enforcement_flip_gate_a",
-        "scripts/check_security_enforcement_flip_gate.py",
+        "scripts/MidTier/check_security_enforcement_flip_gate.py",
     )
     result = mod.evaluate_enforcement_flip_gate(
         ci_failure_payload={"summary": {"p0": 0}},
@@ -33,7 +33,7 @@ def test_enforcement_flip_gate_passes_when_all_checks_green():
 def test_enforcement_flip_gate_fails_when_any_check_fails():
     mod = _load_script_module(
         "check_security_enforcement_flip_gate_b",
-        "scripts/check_security_enforcement_flip_gate.py",
+        "scripts/MidTier/check_security_enforcement_flip_gate.py",
     )
     result = mod.evaluate_enforcement_flip_gate(
         ci_failure_payload={"summary": {"p0": 1}},

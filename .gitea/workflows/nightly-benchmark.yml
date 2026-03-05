@@ -25,13 +25,13 @@ jobs:
 
       - name: Run Phase 5 Benchmark Suite
         run: >
-          python scripts/run_benchmark_suite.py
+          python scripts/MidTier/run_benchmark_suite.py
           --task-bank benchmarks/task_bank/v1/tasks.json
           --policy model/core/contracts/benchmark_scoring_policy.json
           --runs 1
           --venue standard
           --flow default
-          --runner-template "python scripts/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}"
+          --runner-template "python scripts/MidTier/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}"
           --task-id-min 61
           --task-id-max 100
           --raw-out benchmarks/results/nightly_phase5_determinism_report.json
@@ -95,11 +95,11 @@ jobs:
           (out_dir / "memory_trace_fixture.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
           (out_dir / "memory_retrieval_trace_fixture.json").write_text(json.dumps(retrieval, indent=2), encoding="utf-8")
           PY
-          python scripts/check_memory_determinism.py \
+          python scripts/HighTier/check_memory_determinism.py \
             --trace benchmarks/results/memory/memory_trace_fixture.json \
             --retrieval-trace benchmarks/results/memory/memory_retrieval_trace_fixture.json \
             --out benchmarks/results/nightly_memory_determinism_check.json
-          python scripts/compare_memory_determinism.py \
+          python scripts/HighTier/compare_memory_determinism.py \
             --left benchmarks/results/memory/memory_trace_fixture.json \
             --right benchmarks/results/memory/memory_trace_fixture.json \
             --left-retrieval benchmarks/results/memory/memory_retrieval_trace_fixture.json \
@@ -116,19 +116,19 @@ jobs:
 
       - name: Build Trend Report
         run: >
-          python scripts/report_benchmark_trends.py
+          python scripts/MidTier/report_benchmark_trends.py
           --input-glob "benchmarks/results/nightly_phase5_scored*.json"
           --out benchmarks/results/nightly_benchmark_trends.json
 
       - name: Build Leaderboard
         run: >
-          python scripts/build_benchmark_leaderboard.py
+          python scripts/MidTier/build_benchmark_leaderboard.py
           --inputs benchmarks/results/nightly_phase5_scored_report.json
           --out benchmarks/results/nightly_benchmark_leaderboard.json
 
       - name: Render Dashboard
         run: >
-          python scripts/render_benchmark_dashboard.py
+          python scripts/MidTier/render_benchmark_dashboard.py
           --trends benchmarks/results/nightly_benchmark_trends.json
           --leaderboard benchmarks/results/nightly_benchmark_leaderboard.json
           --out benchmarks/results/nightly_benchmark_dashboard.md

@@ -630,7 +630,7 @@ def test_kernel_compare_endpoint_generated_fixture_optional_parity_source(monkey
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     generated_fixture = tmp_path / "kernel_compare_generated_fixture.json"
     result = subprocess.run(
-        [sys.executable, "scripts/gen_kernel_compare_fixture.py", "--out", str(generated_fixture)],
+        [sys.executable, "scripts/MidTier/gen_kernel_compare_fixture.py", "--out", str(generated_fixture)],
         capture_output=True,
         text=True,
         check=False,

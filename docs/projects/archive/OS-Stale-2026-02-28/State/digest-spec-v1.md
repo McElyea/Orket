@@ -97,7 +97,7 @@ Path B (canonical bytes and digest verification):
 5. CI consumes committed vectors and may compare regenerated output, but must never overwrite committed vectors.
 
 ## Conformance Harness
-1. Python maintainer command for vector regeneration: `python scripts/gen_digest_vectors.py`.
+1. Python maintainer command for vector regeneration: `python scripts/MidTier/gen_digest_vectors.py`.
 2. Python gate: `python -m pytest -q tests/kernel/v1`.
 3. TypeScript parity gate: `npm test --prefix conformance/ts`.
 4. CI is consume-only for committed vectors; regeneration in CI is diff-only.

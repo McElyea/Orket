@@ -8,7 +8,7 @@ Status: Archived (completed)
 | Current Artifact | Proposed Artifact | PR | Change Type | Break Risk | Required Tests/Gates | Notes |
 |---|---|---|---|---|---|---|
 | none | `contracts/stage-order-v1.json` | PR-01 | Additive | Low | schema contract checks, comparator ordering tests | Authoritative stage spine for deterministic ordering. |
-| `contracts/error-codes-v1.json` | wrapper-form registry instance | PR-01 | Tighten + migration compatibility | Medium | `scripts/audit_registry.py`, `tests/kernel/v1/test_registry.py` | Digest input uses full wrapper canonical JSON. |
+| `contracts/error-codes-v1.json` | wrapper-form registry instance | PR-01 | Tighten + migration compatibility | Medium | `scripts/HighTier/audit_registry.py`, `tests/kernel/v1/test_registry.py` | Digest input uses full wrapper canonical JSON. |
 | `contracts/error-codes-v1.schema.json` | coexistence-compatible registry schema | PR-01 | Tighten | Medium | schema contract checks | Migration window must avoid silent semantic swaps. |
 | none | `contracts/sovereign-laws.md` | PR-01 | Additive | Low | law-reference checks | Locked laws only; no speculative/unlocked law text. |
 | `contracts/capability-decision.schema.json` | `contracts/capability-decision-record.schema.json` (new) | PR-02 | Add in parallel | Medium | validator schema contracts, capability scenario tests | Locked: coexist one minor cycle, then replace. |

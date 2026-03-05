@@ -46,21 +46,21 @@ Define and enforce deterministic retention behavior for multi-purpose artifact s
 
 ## Scripts
 
-1. `scripts/retention_plan.py`
+1. `scripts/HighTier/retention_plan.py`
 - Generates dry-run retention action plan from:
   - local filesystem scan (`--root`) or
   - inventory JSON (`--inventory`)
 - Writes plan JSON (default: `benchmarks/results/retention_plan.json`)
 
-2. `scripts/check_retention_policy.py`
+2. `scripts/HighTier/check_retention_policy.py`
 - Validates retention plan safety invariants
 - Writes policy-check JSON (default: `benchmarks/results/retention_policy_check.json`)
 - `--require-safety` exits non-zero on violations
 
 ## Default Test Steps For Runs
 
-1. `python scripts/retention_plan.py --out benchmarks/results/retention_plan.json`
-2. `python scripts/check_retention_policy.py --plan benchmarks/results/retention_plan.json --out benchmarks/results/retention_policy_check.json --require-safety`
+1. `python scripts/HighTier/retention_plan.py --out benchmarks/results/retention_plan.json`
+2. `python scripts/HighTier/check_retention_policy.py --plan benchmarks/results/retention_plan.json --out benchmarks/results/retention_policy_check.json --require-safety`
 3. `python -m pytest -q tests/runtime/test_retention_policy.py`
 4. `python -m pytest -q tests/application/test_retention_scripts.py`
 

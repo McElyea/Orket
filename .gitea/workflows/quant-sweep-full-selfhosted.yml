@@ -102,7 +102,7 @@ jobs:
           if [[ -n "${TASK_BANK}" ]]; then
             EXTRA_ARGS+=(--task-bank "${TASK_BANK}")
           fi
-          python scripts/run_quant_sweep.py \
+          python scripts/MidTier/run_quant_sweep.py \
             --model-id placeholder-model \
             --quant-tags Q8_0 \
             --matrix-config "${MATRIX_CONFIG}" \
@@ -111,25 +111,25 @@ jobs:
 
       - name: Build KPI Report
         run: |
-          python scripts/quant_sweep_kpi_report.py \
+          python scripts/MidTier/quant_sweep_kpi_report.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/full_sweep_kpis.json
-          python scripts/analyze_vram_fragmentation.py \
+          python scripts/MidTier/analyze_vram_fragmentation.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/vram_fragmentation_analysis.json
-          python scripts/prototype_model_selector.py \
+          python scripts/MidTier/prototype_model_selector.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/model_selector_prototype.json
 
       - name: Enforce sidecar parse policy contract
         run: |
-          python scripts/check_sidecar_parse_policy.py \
+          python scripts/MidTier/check_sidecar_parse_policy.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/sidecar_parse_policy_check.json
 
       - name: Enforce valid-run frontier policy
         run: |
-          python scripts/check_valid_run_policy.py \
+          python scripts/MidTier/check_valid_run_policy.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/valid_run_policy_check.json
 
@@ -137,11 +137,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/quant_frontier_explorer.py \
+          python scripts/MidTier/quant_frontier_explorer.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/quant_sweep/full_frontier_explorer.json \
             --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}"
-          python scripts/run_context_sweep.py \
+          python scripts/MidTier/run_context_sweep.py \
             --contexts "${{ github.event.inputs.context_sweep_contexts || '8192' }}" \
             --context-profile "${{ github.event.inputs.context_profile || 'safe' }}" \
             --matrix-config "${MATRIX_CONFIG}" \
@@ -154,49 +154,49 @@ jobs:
             --decode-floor-tps "${{ github.event.inputs.context_decode_floor_tps || '0' }}" \
             --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}" \
             --out-dir benchmarks/results/context_sweep
-          python scripts/thermal_stability_profiler.py \
+          python scripts/MidTier/thermal_stability_profiler.py \
             --summaries "${{ env.SUMMARY_OUT }}" \
             --out benchmarks/results/thermal/thermal_profile.json \
             --provenance-ref "${GITHUB_RUN_ID}:${GITHUB_SHA}"
-          python scripts/check_explorer_schema_contracts.py \
+          python scripts/MidTier/check_explorer_schema_contracts.py \
             --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json \
             --context benchmarks/results/context_sweep/context_ceiling.json \
             --thermal benchmarks/results/thermal/thermal_profile.json
-          python scripts/check_context_sweep_outputs.py \
+          python scripts/MidTier/check_context_sweep_outputs.py \
             --contexts "${{ github.event.inputs.context_sweep_contexts || '8192' }}" \
             --summary-template benchmarks/results/context_sweep/context_{context}_summary.json \
             --context-ceiling benchmarks/results/context_sweep/context_ceiling.json
-          python scripts/build_explorer_artifact_index.py \
+          python scripts/MidTier/build_explorer_artifact_index.py \
             --frontier benchmarks/results/quant_sweep/full_frontier_explorer.json \
             --context benchmarks/results/context_sweep/context_ceiling.json \
             --thermal benchmarks/results/thermal/thermal_profile.json \
             --out benchmarks/results/quant_sweep/explorer_artifact_index.json
-          python scripts/check_explorer_ingestion.py \
+          python scripts/HighTier/check_explorer_ingestion.py \
             --index benchmarks/results/quant_sweep/explorer_artifact_index.json \
             --out benchmarks/results/quant_sweep/explorer_ingestion_check.json
-          python scripts/build_context_sweep_rollup.py \
+          python scripts/MidTier/build_context_sweep_rollup.py \
             --context-ceiling benchmarks/results/context_sweep/context_ceiling.json \
             --out benchmarks/results/context_sweep/context_rollup.json
-          python scripts/check_context_rollup_contract.py \
+          python scripts/MidTier/check_context_rollup_contract.py \
             --rollup benchmarks/results/context_sweep/context_rollup.json \
             --context-ceiling benchmarks/results/context_sweep/context_ceiling.json \
             --out benchmarks/results/context_sweep/context_rollup_check.json
-          python scripts/check_lab_guards.py \
+          python scripts/HighTier/check_lab_guards.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --allow-skip \
             --out benchmarks/results/quant_sweep/lab_guard_check.json
-          python scripts/build_explorer_check_summary.py \
+          python scripts/MidTier/build_explorer_check_summary.py \
             --ingestion benchmarks/results/quant_sweep/explorer_ingestion_check.json \
             --rollup benchmarks/results/context_sweep/context_rollup_check.json \
             --guards benchmarks/results/quant_sweep/lab_guard_check.json \
             --out benchmarks/results/quant_sweep/explorer_check_summary.json
-          python scripts/render_explorer_check_digest.py \
+          python scripts/MidTier/render_explorer_check_digest.py \
             --summary benchmarks/results/quant_sweep/explorer_check_summary.json \
             --out benchmarks/results/quant_sweep/explorer_check_digest.md
 
       - name: Enforce KPI Policy
         run: |
-          python scripts/check_quant_sweep_kpis.py \
+          python scripts/MidTier/check_quant_sweep_kpis.py \
             --summary "${{ env.SUMMARY_OUT }}" \
             --max-missing-telemetry-rate "${{ github.event.inputs.max_missing_telemetry_rate || '0.01' }}" \
             --max-polluted-run-rate "${{ github.event.inputs.max_polluted_run_rate || '0.10' }}" \
@@ -264,10 +264,10 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ github.event.inputs.context_cleanup_mode || 'dry-run' }}" == "apply" ]]; then
-            python scripts/cleanup_context_sweep_artifacts.py \
+            python scripts/MidTier/cleanup_context_sweep_artifacts.py \
               --out-dir benchmarks/results/context_sweep
           else
-            python scripts/cleanup_context_sweep_artifacts.py \
+            python scripts/MidTier/cleanup_context_sweep_artifacts.py \
               --out-dir benchmarks/results/context_sweep \
               --dry-run
           fi

@@ -34,11 +34,11 @@ This directory is the curated, share-safe benchmark lane.
 2. Add/update artifact rows in `index.json`.
 3. Regenerate this README:
 ```bash
-python scripts/sync_published_index.py --write
+python scripts/MidTier/sync_published_index.py --write
 ```
 4. Validate before commit:
 ```bash
-python scripts/sync_published_index.py --check
+python scripts/MidTier/sync_published_index.py --check
 ```
 5. Do not overwrite prior published artifacts; add versioned files instead.
 

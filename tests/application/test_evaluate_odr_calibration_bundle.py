@@ -21,7 +21,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_evaluator_emits_warning_when_conflict_disappears_without_marker() -> None:
-    module = _load_script_module("evaluate_odr_calibration_bundle_test", "scripts/evaluate_odr_calibration_bundle.py")
+    module = _load_script_module("evaluate_odr_calibration_bundle_test", "scripts/MidTier/evaluate_odr_calibration_bundle.py")
     bundle = {
         "runs": [
             {
@@ -68,7 +68,7 @@ def test_evaluator_emits_warning_when_conflict_disappears_without_marker() -> No
 
 
 def test_evaluator_marks_format_violation_on_parse_or_code_leak() -> None:
-    module = _load_script_module("evaluate_odr_calibration_bundle_test_fmt", "scripts/evaluate_odr_calibration_bundle.py")
+    module = _load_script_module("evaluate_odr_calibration_bundle_test_fmt", "scripts/MidTier/evaluate_odr_calibration_bundle.py")
     bundle = {
         "runs": [
             {

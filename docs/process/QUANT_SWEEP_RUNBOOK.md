@@ -14,7 +14,7 @@ Run reproducible quantization sweeps with deterministic summary artifacts and po
 
 ## Dry Run
 ```powershell
-python scripts/run_quant_sweep.py `
+python scripts/MidTier/run_quant_sweep.py `
   --model-id placeholder `
   --quant-tags Q8_0 `
   --matrix-config benchmarks/configs/quant_sweep_common_sessions.json `
@@ -23,27 +23,63 @@ python scripts/run_quant_sweep.py `
 
 ## Execute Sweep
 ```powershell
-python scripts/run_quant_sweep.py `
+python scripts/MidTier/run_quant_sweep.py `
   --model-id placeholder `
   --quant-tags Q8_0 `
   --matrix-config benchmarks/configs/quant_sweep_common_sessions.json `
   --summary-out benchmarks/results/quant_sweep/sweep_summary.json
 ```
 
+## Short Preflight Tuning
+Use the short tuner before long sweeps to select stable canary task IDs and per-model row-overhead thresholds.
+
+```powershell
+python scripts/MidTier/tune_quant_sweep_short.py `
+  --matrix-config benchmarks/configs/qwen35_logic_sentry.json `
+  --models qwen3.5-0.8b,qwen3.5-2b,qwen3.5-4b `
+  --candidate-task-ids 8,9 `
+  --probe-quant-tag Q8_0 `
+  --canary-runs 3 `
+  --probe-runs 1 `
+  --validate-all-quants `
+  --summary-root benchmarks/results/quant_sweep/tuning/preflight_qwen35
+```
+
+Read `tuning_manifest.json` under `--summary-root` and apply each model's `recommended_overrides` in the long-run matrix config.
+The tuner now also writes `convergence_report.json` and includes a `convergence` block in `tuning_manifest.json` with the auto-evaluated `overall_decision` (`STOP|CONTINUE`).
+
+## Tuning Convergence Check
+Use this to decide whether to stop tuning (plateau) or keep running short probes.
+
+```powershell
+python scripts/MidTier/check_quant_tuning_convergence.py `
+  --summary-root benchmarks/results/quant_sweep/tuning `
+  --models qwen3.5-27b,qwen3.5-35b-a3b,qwen/qwen3.5-9b `
+  --window 3 `
+  --score-epsilon 0.05 `
+  --override-epsilon 0.01 `
+  --out benchmarks/results/quant_sweep/tuning/convergence_report.json
+```
+
+Decision rules:
+1. `STOP`: within the window, best task is stable, score stays within epsilon, overrides stay within epsilon, and probes passed.
+2. `CONTINUE`: metrics still drifting or failed probes appear in the window.
+3. `INSUFFICIENT_DATA`: not enough runs for the selected window.
+
 ## KPI and Gate Checks
 1. KPI extraction:
 ```powershell
-python scripts/quant_sweep_kpi_report.py `
+python scripts/MidTier/quant_sweep_kpi_report.py `
   --summary benchmarks/results/quant_sweep/sweep_summary.json `
   --out benchmarks/results/quant_sweep/sweep_kpis.json
 ```
 2. KPI gate:
 ```powershell
-python scripts/check_quant_sweep_kpis.py --summary benchmarks/results/quant_sweep/sweep_summary.json
+python scripts/MidTier/check_quant_sweep_kpis.py --summary benchmarks/results/quant_sweep/sweep_summary.json
 ```
 3. Lab guard diagnostics:
 ```powershell
-python scripts/check_lab_guards.py `
+python scripts/HighTier/check_lab_guards.py `
   --summary benchmarks/results/quant_sweep/sweep_summary.json `
   --cooldown-target-c 50 `
   --vram-profile safe `
@@ -53,14 +89,14 @@ python scripts/check_lab_guards.py `
 ## Reporting Artifacts
 1. Markdown/scatter report:
 ```powershell
-python scripts/render_quant_sweep_report.py `
+python scripts/MidTier/render_quant_sweep_report.py `
   --summary benchmarks/results/quant_sweep/sweep_summary.json `
   --out-md benchmarks/results/quant_sweep/sweep_report.md `
   --out-scatter benchmarks/results/quant_sweep/sweep_scatter.json
 ```
 2. Frontier explorer artifact:
 ```powershell
-python scripts/quant_frontier_explorer.py `
+python scripts/MidTier/quant_frontier_explorer.py `
   --summary benchmarks/results/quant_sweep/sweep_summary.json `
   --out benchmarks/results/quant_sweep/frontier_explorer.json `
   --provenance-ref local-run:manual `
@@ -70,7 +106,7 @@ python scripts/quant_frontier_explorer.py `
 ## Context and Thermal Extensions
 1. Context sweep orchestrator:
 ```powershell
-python scripts/run_context_sweep.py `
+python scripts/MidTier/run_context_sweep.py `
   --contexts 4096,8192,16384 `
   --model-id qwen2.5-coder:7b `
   --quant-tags Q8_0 `
@@ -81,7 +117,7 @@ python scripts/run_context_sweep.py `
 ```
 2. Thermal profiler:
 ```powershell
-python scripts/thermal_stability_profiler.py `
+python scripts/MidTier/thermal_stability_profiler.py `
   --summaries benchmarks/results/quant_sweep/run1.json,benchmarks/results/quant_sweep/run2.json,benchmarks/results/quant_sweep/run3.json `
   --cooldown-target-c 50 `
   --polluted-thermal-threshold-c 85 `

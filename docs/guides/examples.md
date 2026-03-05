@@ -31,5 +31,5 @@ python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr -q
 
 ### Live ODR role matrix (model-in-loop)
 ```bash
-python scripts/run_odr_live_role_matrix.py --out benchmarks/results/odr_live_role_matrix.json
+python scripts/HighTier/run_odr_live_role_matrix.py --out benchmarks/results/odr_live_role_matrix.json
 ```

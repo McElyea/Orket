@@ -11,10 +11,10 @@ Move OS from `closeout-ready` to owner-approved closeout/archive state.
 - `Roadmap/Card-Closure-Checklist.md`
 - `Roadmap/ClosurePass-2026-02-24.md`
 2. Deterministic gates are green:
-- `python scripts/audit_registry.py`
+- `python scripts/HighTier/audit_registry.py`
 - `python -m pytest -q tests/kernel/v1`
 - `python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py`
-- `python scripts/run_kernel_fire_drill.py`
+- `python scripts/HighTier/run_kernel_fire_drill.py`
 3. CI architecture gate enforces kernel sovereign + interface + fire-drill checks.
 
 ## Owner Sign-Off Items

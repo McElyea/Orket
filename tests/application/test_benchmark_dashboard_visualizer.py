@@ -16,7 +16,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
 
 
 def test_dashboard_markdown_includes_trend_and_leaderboard_sections() -> None:
-    mod = _load_script_module("render_benchmark_dashboard_test", "scripts/render_benchmark_dashboard.py")
+    mod = _load_script_module("render_benchmark_dashboard_test", "scripts/MidTier/render_benchmark_dashboard.py")
     trends = {
         "row_count": 1,
         "rows": [

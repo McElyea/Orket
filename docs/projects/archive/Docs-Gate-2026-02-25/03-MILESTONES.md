@@ -18,7 +18,7 @@ Exit criteria:
 2. Project appears in `docs/ROADMAP.md` project index.
 
 ## DG-2: Script Delivery
-1. Deliver `scripts/docs_lint.py` with deterministic checks.
+1. Deliver `scripts/HighTier/docs_lint.py` with deterministic checks.
 2. Enforce `DL1-DL3` and contract-stable reporting.
 
 Exit criteria:

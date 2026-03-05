@@ -110,7 +110,7 @@ Required scenario coverage additions:
 6. replay equivalence mismatch -> `E_REPLAY_EQUIVALENCE_FAILED`
 
 Required gate commands:
-1. `python scripts/audit_registry.py`
+1. `python scripts/HighTier/audit_registry.py`
 2. `python -m pytest -q tests/kernel/v1`
 3. `npm test --prefix conformance/ts`
 

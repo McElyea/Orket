@@ -41,7 +41,7 @@ def test_retention_plan_and_policy_check_scripts(tmp_path: Path) -> None:
     plan = subprocess.run(
         [
             "python",
-            "scripts/retention_plan.py",
+            "scripts/HighTier/retention_plan.py",
             "--inventory",
             str(inventory),
             "--as-of",
@@ -65,7 +65,7 @@ def test_retention_plan_and_policy_check_scripts(tmp_path: Path) -> None:
     check = subprocess.run(
         [
             "python",
-            "scripts/check_retention_policy.py",
+            "scripts/HighTier/check_retention_policy.py",
             "--plan",
             str(out_plan),
             "--out",

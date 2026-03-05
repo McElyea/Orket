@@ -18,7 +18,7 @@ Critical paths:
 
 ## Backup Command
 ```bash
-./scripts/backup_gitea.sh
+./scripts/LowTier/backup_gitea.sh
 ```
 
 Output archive pattern:
@@ -29,7 +29,7 @@ Retention:
 
 ## Restore Command
 ```bash
-./scripts/restore_gitea.sh backups/gitea/gitea_backup_YYYYMMDD_HHMMSS.tar.gz
+./scripts/LowTier/restore_gitea.sh backups/gitea/gitea_backup_YYYYMMDD_HHMMSS.tar.gz
 ```
 
 Typical restore flow:
@@ -40,7 +40,7 @@ Typical restore flow:
 ## Windows Scheduled Backup
 Setup helper script:
 ```powershell
-.\scripts\setup_windows_backup.ps1
+.\scripts\LowTier\setup_windows_backup.ps1
 ```
 
 This configures a scheduled daily backup task on local machine.

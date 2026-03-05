@@ -16,7 +16,7 @@ def _load_script_module(name: str, relative_path: str):
 
 
 def test_export_security_compat_warnings_empty():
-    mod = _load_script_module("export_security_compat_warnings_a", "scripts/export_security_compat_warnings.py")
+    mod = _load_script_module("export_security_compat_warnings_a", "scripts/MidTier/export_security_compat_warnings.py")
     payload = {"extensions": [{"extension_id": "x", "compat_fallbacks": []}]}
     result = mod.build_security_compat_warnings(catalog_payload=payload)
     assert result["ok"] is True
@@ -25,7 +25,7 @@ def test_export_security_compat_warnings_empty():
 
 
 def test_export_security_compat_warnings_collects_fallbacks():
-    mod = _load_script_module("export_security_compat_warnings_b", "scripts/export_security_compat_warnings.py")
+    mod = _load_script_module("export_security_compat_warnings_b", "scripts/MidTier/export_security_compat_warnings.py")
     payload = {
         "extensions": [
             {

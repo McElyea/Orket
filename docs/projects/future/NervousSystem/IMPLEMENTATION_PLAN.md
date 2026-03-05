@@ -5,7 +5,7 @@ Build a feature-flagged Nervous System v1 for `action.tool_call` proposals only,
 
 Execution status (2026-03-03):
 1. Locked v1 slices implemented in repo (`orket/kernel/v1/*nervous_system*`, approval router integration, OpenClaw JSONL adapter).
-2. Live verification completed via `python scripts/run_nervous_system_live_evidence.py`.
+2. Live verification completed via `python scripts/MidTier/run_nervous_system_live_evidence.py`.
 3. Evidence artifact: `benchmarks/results/nervous_system_live_evidence.json`.
 
 ## Scope and Semantics

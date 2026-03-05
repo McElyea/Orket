@@ -84,7 +84,7 @@ def _valid_run_payload(*, architect: str, auditor: str) -> dict:
 
 
 def test_run_odr_quant_sweep_preflight_fail_closed_blocks_execution(monkeypatch, tmp_path: Path) -> None:
-    module = _load_script_module("run_odr_quant_sweep_preflight", "scripts/run_odr_quant_sweep.py")
+    module = _load_script_module("run_odr_quant_sweep_preflight", "scripts/MidTier/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]
     base_spec = tmp_path / "base.json"
     base_spec.write_text(json.dumps({"config": {"rounds": 1}}), encoding="utf-8")
@@ -118,7 +118,7 @@ def test_run_odr_quant_sweep_preflight_fail_closed_blocks_execution(monkeypatch,
 
 
 def test_run_odr_quant_sweep_arbiter_passes_and_checks_postflight(monkeypatch, tmp_path: Path) -> None:
-    module = _load_script_module("run_odr_quant_sweep_pass", "scripts/run_odr_quant_sweep.py")
+    module = _load_script_module("run_odr_quant_sweep_pass", "scripts/MidTier/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]
     base_spec = tmp_path / "base.json"
     base_spec.write_text(json.dumps({"config": {"rounds": 1}}), encoding="utf-8")
@@ -126,13 +126,13 @@ def test_run_odr_quant_sweep_arbiter_passes_and_checks_postflight(monkeypatch, t
     args = _args(tmp_path, base_spec=base_spec, provenance_out=provenance_out)
 
     def _fake_exec(cmd, check=False, **kwargs):  # noqa: ANN001, ANN003
-        if len(cmd) > 1 and cmd[1] == "scripts/run_odr_live_role_matrix.py":
+        if len(cmd) > 1 and cmd[1] == "scripts/HighTier/run_odr_live_role_matrix.py":
             out = Path(cmd[cmd.index("--out") + 1])
             architect = cmd[cmd.index("--architect-models") + 1]
             auditor = cmd[cmd.index("--auditor-models") + 1]
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(_valid_run_payload(architect=architect, auditor=auditor)), encoding="utf-8")
-        if len(cmd) > 1 and cmd[1] == "scripts/generate_odr_provenance.py":
+        if len(cmd) > 1 and cmd[1] == "scripts/MidTier/generate_odr_provenance.py":
             out = Path(cmd[cmd.index("--out") + 1])
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps({"ok": True}), encoding="utf-8")
@@ -173,14 +173,14 @@ def test_run_odr_quant_sweep_arbiter_passes_and_checks_postflight(monkeypatch, t
 
 
 def test_run_odr_quant_sweep_arbiter_leak_validator_emits_error(monkeypatch, tmp_path: Path) -> None:
-    module = _load_script_module("run_odr_quant_sweep_leak", "scripts/run_odr_quant_sweep.py")
+    module = _load_script_module("run_odr_quant_sweep_leak", "scripts/MidTier/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]
     base_spec = tmp_path / "base.json"
     base_spec.write_text(json.dumps({"config": {"rounds": 1}}), encoding="utf-8")
     args = _args(tmp_path, base_spec=base_spec)
 
     def _fake_exec(cmd, check=False, **kwargs):  # noqa: ANN001, ANN003
-        if len(cmd) > 1 and cmd[1] == "scripts/run_odr_live_role_matrix.py":
+        if len(cmd) > 1 and cmd[1] == "scripts/HighTier/run_odr_live_role_matrix.py":
             out = Path(cmd[cmd.index("--out") + 1])
             architect = cmd[cmd.index("--architect-models") + 1]
             auditor = cmd[cmd.index("--auditor-models") + 1]
@@ -216,7 +216,7 @@ def test_run_odr_quant_sweep_arbiter_leak_validator_emits_error(monkeypatch, tmp
 
 
 def test_run_odr_quant_sweep_require_clean_git_fails_when_dirty(monkeypatch, tmp_path: Path) -> None:
-    module = _load_script_module("run_odr_quant_sweep_git_gate", "scripts/run_odr_quant_sweep.py")
+    module = _load_script_module("run_odr_quant_sweep_git_gate", "scripts/MidTier/run_odr_quant_sweep.py")
     run_arbiter = sys.modules["run_arbiter"]
     base_spec = tmp_path / "base.json"
     base_spec.write_text(json.dumps({"config": {"rounds": 1}}), encoding="utf-8")

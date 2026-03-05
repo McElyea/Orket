@@ -56,7 +56,7 @@ def test_quant_frontier_explorer_builds_artifact_and_appends_store(tmp_path: Pat
     first = subprocess.run(
         [
             "python",
-            "scripts/quant_frontier_explorer.py",
+            "scripts/MidTier/quant_frontier_explorer.py",
             "--summary",
             str(summary),
             "--out",
@@ -81,7 +81,7 @@ def test_quant_frontier_explorer_builds_artifact_and_appends_store(tmp_path: Pat
     second = subprocess.run(
         [
             "python",
-            "scripts/quant_frontier_explorer.py",
+            "scripts/MidTier/quant_frontier_explorer.py",
             "--summary",
             str(summary),
             "--out",

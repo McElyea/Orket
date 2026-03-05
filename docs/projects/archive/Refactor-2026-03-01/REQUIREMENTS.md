@@ -85,7 +85,7 @@ Decompose god classes, eliminate SOLID violations, and resolve remaining design 
 1. Run full test suite: `python -m pytest tests/ -v --tb=short`
 2. Run architecture guards:
    - `python -m pytest tests/platform/ -v`
-   - `python scripts/check_dependency_direction.py`
+   - `python scripts/MidTier/check_dependency_direction.py`
 3. Verify no broad exception catches added: `grep -rn "except Exception" orket/`
 4. Verify no sync HTTP usage added: `grep -rn "import requests" orket/`
 5. Verify type hint consistency: `grep -rn "Dict\[" orket/` should return 0 results.

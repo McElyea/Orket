@@ -41,7 +41,7 @@ def test_context_rollup_contract_passes(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/check_context_rollup_contract.py",
+            "scripts/MidTier/check_context_rollup_contract.py",
             "--rollup",
             str(rollup),
             "--context-ceiling",
@@ -62,7 +62,7 @@ def test_context_rollup_contract_fails_on_mismatch(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/check_context_rollup_contract.py",
+            "scripts/MidTier/check_context_rollup_contract.py",
             "--rollup",
             str(rollup),
             "--context-ceiling",
@@ -87,7 +87,7 @@ def test_context_rollup_contract_fails_on_missing_provenance_ref(tmp_path: Path)
     result = subprocess.run(
         [
             "python",
-            "scripts/check_context_rollup_contract.py",
+            "scripts/MidTier/check_context_rollup_contract.py",
             "--rollup",
             str(rollup),
             "--context-ceiling",

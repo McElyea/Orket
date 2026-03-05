@@ -225,8 +225,8 @@ This is optional for v1. Raw YAML loading is sufficient.
 ## Running (v1)
 
 ```
-python scripts/play_lie_detector.py --seed 42
-python scripts/play_lie_detector.py --seed 42 --plain --no-llm
+python scripts/MidTier/play_lie_detector.py --seed 42
+python scripts/MidTier/play_lie_detector.py --seed 42 --plain --no-llm
 ```
 
 ## Implementation Phases

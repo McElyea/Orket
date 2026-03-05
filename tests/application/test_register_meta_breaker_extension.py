@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 def _load_script_module():
-    script_path = Path("scripts/register_meta_breaker_extension.py").resolve()
+    script_path = Path("scripts/MidTier/register_meta_breaker_extension.py").resolve()
     spec = importlib.util.spec_from_file_location("register_meta_breaker_extension", script_path)
     if spec is None or spec.loader is None:
         raise RuntimeError("unable to load register_meta_breaker_extension.py")

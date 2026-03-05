@@ -15,7 +15,7 @@ def _valid_payload() -> dict:
         "workload_contract_version": WORKLOAD_CONTRACT_VERSION_V1,
         "workload_type": "odr",
         "units": [{"unit_id": "pair:qwen:gemma", "mode": "role_matrix"}],
-        "required_materials": [{"kind": "file", "value": "scripts/run_odr_live_role_matrix.py"}],
+        "required_materials": [{"kind": "file", "value": "scripts/HighTier/run_odr_live_role_matrix.py"}],
         "expected_artifacts": ["benchmarks/published/ODR/index.json"],
         "validators": ["shape", "trace", "leak"],
         "summary_targets": ["benchmarks/published/ODR/index.json"],

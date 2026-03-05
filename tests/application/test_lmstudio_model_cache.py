@@ -35,7 +35,7 @@ class _FakeResponse:
 
 
 def test_clear_loaded_models_unloads_all_instances(monkeypatch) -> None:
-    module = _load_script_module("lmstudio_model_cache_clear", "scripts/lmstudio_model_cache.py")
+    module = _load_script_module("lmstudio_model_cache_clear", "scripts/MidTier/lmstudio_model_cache.py")
     loaded_instances = ["qwen3.5-2b:1", "qwen3.5-4b:2"]
 
     def _fake_urlopen(request, timeout=0):  # noqa: ANN001, ANN003
@@ -79,7 +79,7 @@ def test_clear_loaded_models_unloads_all_instances(monkeypatch) -> None:
 
 
 def test_default_lmstudio_base_url_prefers_env(monkeypatch) -> None:
-    module = _load_script_module("lmstudio_model_cache_env", "scripts/lmstudio_model_cache.py")
+    module = _load_script_module("lmstudio_model_cache_env", "scripts/MidTier/lmstudio_model_cache.py")
     monkeypatch.setenv("ORKET_LMSTUDIO_BASE_URL", "http://localhost:1234/custom")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
 

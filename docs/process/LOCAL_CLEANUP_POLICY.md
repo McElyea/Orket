@@ -15,17 +15,17 @@ Publisher writes metadata to:
 ## Commands
 Manual dry-run:
 ```bash
-python scripts/cleanup_published_projects.py
+python scripts/MidTier/cleanup_published_projects.py
 ```
 
 Manual execute (default thresholds):
 ```bash
-python scripts/cleanup_published_projects.py --execute
+python scripts/MidTier/cleanup_published_projects.py --execute
 ```
 
 Custom thresholds:
 ```bash
-python scripts/cleanup_published_projects.py --execute --archive-days 30 --hard-delete-days 75
+python scripts/MidTier/cleanup_published_projects.py --execute --archive-days 30 --hard-delete-days 75
 ```
 
 ## Scheduled Automation

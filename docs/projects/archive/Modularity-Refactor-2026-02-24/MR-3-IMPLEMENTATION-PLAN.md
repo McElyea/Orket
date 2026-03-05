@@ -35,10 +35,10 @@ Execution mode: policy-first, test-enforced
 
 ## Validation Commands
 
-1. `python scripts/check_dependency_direction.py`
-2. `python scripts/export_dependency_graph.py`
+1. `python scripts/MidTier/check_dependency_direction.py`
+2. `python scripts/MidTier/export_dependency_graph.py`
 3. `python -m pytest -q tests/platform`
-4. `python scripts/check_volatility_boundaries.py`
+4. `python scripts/HighTier/check_volatility_boundaries.py`
 
 ## Work Slicing Guidance
 

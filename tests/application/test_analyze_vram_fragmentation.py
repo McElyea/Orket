@@ -27,7 +27,7 @@ def test_analyze_vram_fragmentation_emits_expected_report(tmp_path: Path) -> Non
     result = subprocess.run(
         [
             "python",
-            "scripts/analyze_vram_fragmentation.py",
+            "scripts/MidTier/analyze_vram_fragmentation.py",
             "--summary",
             str(summary),
             "--out",
@@ -61,7 +61,7 @@ def test_analyze_vram_fragmentation_handles_missing_sidecar_samples(tmp_path: Pa
     result = subprocess.run(
         [
             "python",
-            "scripts/analyze_vram_fragmentation.py",
+            "scripts/MidTier/analyze_vram_fragmentation.py",
             "--summary",
             str(summary),
             "--out",

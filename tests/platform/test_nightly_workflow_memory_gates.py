@@ -8,8 +8,8 @@ def test_nightly_workflow_enforces_memory_determinism_contract_gates() -> None:
     text = workflow_path.read_text(encoding="utf-8")
 
     required_commands = [
-        "python scripts/check_memory_determinism.py",
-        "python scripts/compare_memory_determinism.py",
+        "python scripts/HighTier/check_memory_determinism.py",
+        "python scripts/HighTier/compare_memory_determinism.py",
         "benchmarks/results/nightly_memory_determinism_check.json",
         "benchmarks/results/nightly_memory_determinism_compare.json",
     ]

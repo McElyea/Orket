@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 
-SCRIPT_PATH = Path("scripts/update_nervous_system_policy_digest_snapshot.py")
+SCRIPT_PATH = Path("scripts/MidTier/update_nervous_system_policy_digest_snapshot.py")
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:

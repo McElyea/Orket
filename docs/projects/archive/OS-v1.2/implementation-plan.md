@@ -53,10 +53,10 @@ Out of scope:
 ## Definition of Done
 1. All acceptance checks in `pr-workboard.md` are satisfied for each landed PR.
 2. CI architecture gates remain green, including:
-   - `python scripts/audit_registry.py`
+   - `python scripts/HighTier/audit_registry.py`
    - `python -m pytest -q tests/kernel/v1`
    - `python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py`
-   - `python scripts/run_kernel_fire_drill.py`
+   - `python scripts/HighTier/run_kernel_fire_drill.py`
 3. Promotion to authoritative docs occurs only after PR-07 merge and final review.
 
 ## Execution Artifact

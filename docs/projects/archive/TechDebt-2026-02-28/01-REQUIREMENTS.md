@@ -15,9 +15,9 @@ Files:
 - `orket/interfaces/scaffold_init.py:55`
 - `orket/interfaces/refactor_transaction.py:36`
 - `orket/interfaces/api_generation.py:41`
-- `scripts/context_ceiling_finder.py:151`
-- `scripts/run_determinism_harness.py:332`
-- `scripts/run_quant_sweep.py:419`
+- `scripts/MidTier/context_ceiling_finder.py:151`
+- `scripts/HighTier/run_determinism_harness.py:332`
+- `scripts/MidTier/run_quant_sweep.py:419`
 
 Fix: Replace with list-based `subprocess.run()` (no `shell=True`).
 

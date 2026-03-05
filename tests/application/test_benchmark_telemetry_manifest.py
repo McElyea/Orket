@@ -32,13 +32,13 @@ def test_run_determinism_harness_emits_telemetry_manifest_defaults(tmp_path: Pat
     result = subprocess.run(
         [
             "python",
-            "scripts/run_determinism_harness.py",
+            "scripts/HighTier/run_determinism_harness.py",
             "--task-bank",
             str(task_bank),
             "--runs",
             "1",
             "--runner-template",
-            "python scripts/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}",
+            "python scripts/HighTier/determinism_control_runner.py --task {task_file} --venue {venue} --flow {flow}",
             "--output",
             str(out),
         ],
@@ -182,7 +182,7 @@ def test_run_determinism_harness_uses_runner_telemetry_when_present(tmp_path: Pa
     result = subprocess.run(
         [
             "python",
-            "scripts/run_determinism_harness.py",
+            "scripts/HighTier/run_determinism_harness.py",
             "--task-bank",
             str(task_bank),
             "--runs",
@@ -251,7 +251,7 @@ def test_run_determinism_harness_uses_runner_telemetry_when_present(tmp_path: Pa
 
 
 def test_constraint_validator_handles_ast_and_empty_rules() -> None:
-    module_path = Path("scripts/live_card_benchmark_runner.py")
+    module_path = Path("scripts/MidTier/live_card_benchmark_runner.py")
     spec = importlib.util.spec_from_file_location("live_card_benchmark_runner_test", module_path)
     assert spec is not None
     module = importlib.util.module_from_spec(spec)
@@ -277,7 +277,7 @@ def test_constraint_validator_handles_ast_and_empty_rules() -> None:
 
 
 def test_baseline_selection_and_vibe_delta(tmp_path: Path) -> None:
-    module_path = Path("scripts/live_card_benchmark_runner.py")
+    module_path = Path("scripts/MidTier/live_card_benchmark_runner.py")
     spec = importlib.util.spec_from_file_location("live_card_benchmark_runner_test_baseline", module_path)
     assert spec is not None
     module = importlib.util.module_from_spec(spec)

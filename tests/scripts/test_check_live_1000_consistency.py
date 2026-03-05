@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 
-SCRIPT_PATH = Path("scripts/check_live_1000_consistency.py")
+SCRIPT_PATH = Path("scripts/LowTier/check_live_1000_consistency.py")
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:

@@ -65,7 +65,7 @@ def test_explorer_schema_contracts_pass_for_valid_payloads(tmp_path: Path) -> No
     result = subprocess.run(
         [
             "python",
-            "scripts/check_explorer_schema_contracts.py",
+            "scripts/MidTier/check_explorer_schema_contracts.py",
             "--frontier",
             str(frontier),
             "--context",
@@ -88,7 +88,7 @@ def test_explorer_schema_contracts_fail_on_missing_required(tmp_path: Path) -> N
     result = subprocess.run(
         [
             "python",
-            "scripts/check_explorer_schema_contracts.py",
+            "scripts/MidTier/check_explorer_schema_contracts.py",
             "--frontier",
             str(frontier),
         ],

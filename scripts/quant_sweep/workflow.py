@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from quant_sweep.config import apply_role_model_env
+from quant_sweep.config import apply_role_model_env, resolve_canary_task_bounds
 from quant_sweep.metrics import (
     best_value_quant,
     build_stability_kpis,
@@ -57,6 +57,7 @@ def build_dry_plan(
     out_dir: Path,
     summary_out: Path,
 ) -> dict[str, Any]:
+    canary_task_id_min, canary_task_id_max = resolve_canary_task_bounds(args)
     return {
         "commit_sha": commit_sha,
         "models": model_ids,
@@ -83,6 +84,8 @@ def build_dry_plan(
             "enabled": int(args.canary_runs) > 0,
             "runs": int(args.canary_runs),
             "task_limit": int(args.canary_task_limit),
+            "task_id_min": int(canary_task_id_min),
+            "task_id_max": int(canary_task_id_max),
             "latency_variance_threshold": float(args.canary_latency_variance_threshold),
             "drop_first_run": bool(args.canary_drop_first_run),
             "max_missing_telemetry_rate": float(args.canary_max_missing_telemetry_rate),
@@ -272,6 +275,7 @@ def build_summary(
     canary_result: dict[str, Any] | None,
     sessions: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    canary_task_id_min, canary_task_id_max = resolve_canary_task_bounds(args)
     summary = {
         "schema_version": "1.1.3",
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
@@ -296,6 +300,15 @@ def build_summary(
                 "max_orchestration_overhead_ratio": float(args.row_max_orchestration_overhead_ratio),
                 "max_cpu_saturation_rate": float(args.row_max_cpu_saturation_rate),
                 "max_system_load_rate": float(args.row_max_system_load_rate),
+            },
+            "canary_policy": {
+                "runs": int(args.canary_runs),
+                "task_limit": int(args.canary_task_limit),
+                "task_id_min": int(canary_task_id_min),
+                "task_id_max": int(canary_task_id_max),
+                "latency_variance_threshold": float(args.canary_latency_variance_threshold),
+                "drop_first_run": bool(args.canary_drop_first_run),
+                "max_missing_telemetry_rate": float(args.canary_max_missing_telemetry_rate),
             },
             "hardware_sidecar": {
                 "enabled": bool(str(sidecar_template).strip()),

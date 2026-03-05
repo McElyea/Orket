@@ -15,7 +15,7 @@ Orket
    - Run anti-orphan checks at handoff:
      1) every non-archive folder in `docs/projects/` appears in roadmap Project Index
      2) every active/queued roadmap entry points to an existing path
-     3) run `python scripts/check_docs_project_hygiene.py` and fix all failures before handoff
+     3) run `python scripts/MidTier/check_docs_project_hygiene.py` and fix all failures before handoff
 3. Keep runtime paths in `orket/` async-safe and governance mechanical.
 4. Do not scan dependency/vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
 5. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.
@@ -28,8 +28,8 @@ Orket
 9. Published artifacts rule:
    - `benchmarks/published/index.json` is canonical.
    - After any published artifact change, run:
-     1) `python scripts/sync_published_index.py --write`
-     2) `python scripts/sync_published_index.py --check`
+     1) `python scripts/MidTier/sync_published_index.py --write`
+     2) `python scripts/MidTier/sync_published_index.py --check`
    - Commit `index.json`, generated `README.md`, and artifact files together.
 
 ## Current Focus

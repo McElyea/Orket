@@ -65,7 +65,7 @@ def test_render_quant_sweep_report_excludes_invalid_by_default(tmp_path: Path) -
     result = subprocess.run(
         [
             "python",
-            "scripts/render_quant_sweep_report.py",
+            "scripts/MidTier/render_quant_sweep_report.py",
             "--summary",
             str(summary),
             "--out-md",
@@ -101,7 +101,7 @@ def test_render_quant_sweep_report_can_include_invalid(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/render_quant_sweep_report.py",
+            "scripts/MidTier/render_quant_sweep_report.py",
             "--summary",
             str(summary),
             "--out-md",

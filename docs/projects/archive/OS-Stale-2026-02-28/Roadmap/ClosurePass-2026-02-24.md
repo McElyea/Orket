@@ -28,16 +28,16 @@ Status: Provisional complete pending owner sign-off
 8. Card 008 (Contract Tests): Complete
 - Evidence:
   - schema contracts (`tests/kernel/v1/test_validator_schema_contract.py`, `tests/interfaces/test_api_kernel_lifecycle.py`)
-  - registry conformance (`tests/kernel/v1/test_registry.py`, `scripts/audit_registry.py`)
+  - registry conformance (`tests/kernel/v1/test_registry.py`, `scripts/HighTier/audit_registry.py`)
   - vector handshake (`tests/kernel/v1/vectors/*`, TS parity gate)
-  - fire-drill suite (`scripts/run_kernel_fire_drill.py`)
+  - fire-drill suite (`scripts/HighTier/run_kernel_fire_drill.py`)
 
 ## Gate Snapshot
 
-1. Registry audit: PASS (`python scripts/audit_registry.py`)
+1. Registry audit: PASS (`python scripts/HighTier/audit_registry.py`)
 2. Kernel sovereign suite: PASS (`python -m pytest -q tests/kernel/v1`)
 3. Kernel interface boundary suite: PASS (`python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py`)
-4. Fire-drill suite: PASS (`python scripts/run_kernel_fire_drill.py`)
+4. Fire-drill suite: PASS (`python scripts/HighTier/run_kernel_fire_drill.py`)
 
 ## Remaining Action for Full Program Closure
 

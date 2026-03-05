@@ -8,7 +8,7 @@ import sys
 
 def _run_torture_script() -> dict:
     result = subprocess.run(
-        [sys.executable, "scripts/run_nervous_system_attack_torture_pack.py"],
+        [sys.executable, "scripts/MidTier/run_nervous_system_attack_torture_pack.py"],
         capture_output=True,
         text=True,
         check=False,

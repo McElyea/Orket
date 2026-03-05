@@ -27,7 +27,7 @@ Define deterministic offline behavior for the v1 command surface and enforce tha
 
 ## Enforcement
 1. Contract checker:
-- `python scripts/check_offline_matrix.py --require-default-offline`
+- `python scripts/HighTier/check_offline_matrix.py --require-default-offline`
 
 2. Required checks:
 - matrix doc exists and contains v1 commands

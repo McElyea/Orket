@@ -8,7 +8,7 @@ Provide a deterministic docs verification gate for mutation workflows (`orket re
 
 ## Entry Point Contract
 1. Command:
-- `python scripts/docs_lint.py --project core-pillars`
+- `python scripts/HighTier/docs_lint.py --project core-pillars`
 
 2. Supported flags (v1):
 - `--project <name>` (required for v1 scope, supports `core-pillars`)

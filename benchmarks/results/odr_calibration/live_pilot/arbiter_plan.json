@@ -24,17 +24,17 @@
     {
       "kind": "file",
       "required": true,
-      "value": "scripts/run_odr_live_role_matrix.py"
+      "value": "scripts/HighTier/run_odr_live_role_matrix.py"
     },
     {
       "kind": "file",
       "required": true,
-      "value": "scripts/generate_odr_role_matrix_index.py"
+      "value": "scripts/MidTier/generate_odr_role_matrix_index.py"
     },
     {
       "kind": "file",
       "required": true,
-      "value": "scripts/generate_odr_provenance.py"
+      "value": "scripts/MidTier/generate_odr_provenance.py"
     },
     {
       "kind": "model",
@@ -95,17 +95,17 @@
       {
         "kind": "file",
         "required": true,
-        "value": "scripts/run_odr_live_role_matrix.py"
+        "value": "scripts/HighTier/run_odr_live_role_matrix.py"
       },
       {
         "kind": "file",
         "required": true,
-        "value": "scripts/generate_odr_role_matrix_index.py"
+        "value": "scripts/MidTier/generate_odr_role_matrix_index.py"
       },
       {
         "kind": "file",
         "required": true,
-        "value": "scripts/generate_odr_provenance.py"
+        "value": "scripts/MidTier/generate_odr_provenance.py"
       },
       {
         "kind": "model",

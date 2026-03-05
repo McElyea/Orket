@@ -44,7 +44,7 @@ Execution mode: seam-first refactor, API-compatible
 
 1. `python -m pytest -q tests/interfaces tests/application tests/platform`
 2. `python -m pytest -q tests -k \"module or startup or profile\"`
-3. `python scripts/check_dependency_direction.py`
+3. `python scripts/MidTier/check_dependency_direction.py`
 
 ## Work Slicing Guidance
 

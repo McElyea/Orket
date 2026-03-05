@@ -260,7 +260,7 @@ No registry violations
 
 6. Registry Auditor (Truth Triangle)
 
-File: scripts/audit_registry.py
+File: scripts/HighTier/audit_registry.py
 
 Purpose: keep registry synchronized with the normative spec so developers don’t have to “read code” to learn meanings.
 
@@ -278,11 +278,11 @@ Diff-style failure output (add/remove guidance)
 
 Maintainer-only:
 
-python scripts/gen_digest_vectors.py (regenerate vectors; commit + review)
+python scripts/MidTier/gen_digest_vectors.py (regenerate vectors; commit + review)
 
 Local/CI verification (Gitea workflows / local runners):
 
-python scripts/audit_registry.py (registry ↔ spec sync)
+python scripts/HighTier/audit_registry.py (registry ↔ spec sync)
 
 python -m pytest -q tests/kernel/v1 (kernel + governance)
 
@@ -330,7 +330,7 @@ Experiment A — Prove the “Truth Triangle” gates work
 
 Goal: A PR cannot merge if it breaks:
 
-registry ↔ spec sync (scripts/audit_registry.py)
+registry ↔ spec sync (scripts/HighTier/audit_registry.py)
 
 python kernel gate (pytest tests/kernel/v1)
 
@@ -380,7 +380,7 @@ Runner should fail on the “regen+diff” step (if you include it), and you sho
 
 Minimal runner check to add (if not already):
 
-python scripts/gen_digest_vectors.py --out /tmp/digest-v1.json
+python scripts/MidTier/gen_digest_vectors.py --out /tmp/digest-v1.json
 diff -u tests/kernel/v1/vectors/digest-v1.json /tmp/digest-v1.json
 Experiment C — Prove “One law per PR” is enforceable socially + mechanically
 
@@ -412,7 +412,7 @@ Act Runner (Gitea’s runner)
 
 If you’re on Gitea Actions, your single job should run:
 
-python scripts/audit_registry.py
+python scripts/HighTier/audit_registry.py
 python -m pytest -q tests/kernel/v1
 npm test --prefix conformance/ts
 

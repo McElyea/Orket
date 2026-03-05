@@ -326,6 +326,9 @@ def consistency_scope_diagnostics(
         return {"scope": {"consistency_tool_calls_only": False}, "violations": []}
 
     residue = non_json_residue(str(turn.content or ""))
+    residue = _normalize_reasoning_residue(residue, has_tool_calls=bool(turn.tool_calls))
+    if residue and _is_tool_only_truncated_payload(turn, residue):
+        residue = ""
     if residue:
         return {
             "scope": {"consistency_tool_calls_only": True},
@@ -338,6 +341,53 @@ def consistency_scope_diagnostics(
             ],
         }
     return {"scope": {"consistency_tool_calls_only": True}, "violations": []}
+
+
+def _normalize_reasoning_residue(residue: str, *, has_tool_calls: bool) -> str:
+    stripped = str(residue or "").strip()
+    if not stripped or not has_tool_calls:
+        return stripped
+
+    collapsed = re.sub(r"\s+", " ", stripped).lower()
+    collapsed_no_ws = re.sub(r"\s+", "", stripped).lower()
+    reasoning_prefixes = (
+        "<think",
+        "thinking process:",
+        "thought process:",
+        "reasoning:",
+        "# thinking",
+        "## thinking",
+        "### thinking",
+    )
+    if any(collapsed.startswith(prefix) or collapsed_no_ws.startswith(prefix.replace(" ", "")) for prefix in reasoning_prefixes):
+        return ""
+    return stripped
+
+
+def _is_tool_only_truncated_payload(turn: ExecutionTurn, residue: str) -> bool:
+    if not residue or not (turn.tool_calls or []):
+        return False
+
+    from orket.application.services.tool_parser import ToolParser
+
+    blob = ToolParser.normalize_json_stringify(str(turn.content or ""))
+    blob = re.sub(r"```(?:json)?", " ", blob, flags=re.IGNORECASE).replace("```", " ")
+    stripped = blob.strip()
+    if not stripped or stripped[0] not in {"{", "["}:
+        return False
+
+    has_tool_marker = any(
+        marker in stripped for marker in ('"tool"', '"tool_calls"', '"function"', '"name"', '"arguments"')
+    )
+    if not has_tool_marker:
+        return False
+
+    unbalanced_json = (stripped.count("{") > stripped.count("}")) or (stripped.count("[") > stripped.count("]"))
+    if not unbalanced_json:
+        return False
+
+    compact_residue = re.sub(r"\s+", "", residue)
+    return bool(compact_residue) and compact_residue[0] in {"{", "["}
 
 
 def required_read_paths(context: dict[str, Any], workspace: Any) -> list[str]:

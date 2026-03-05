@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.check_gitea_state_pilot_readiness import evaluate_readiness
+from scripts.MidTier.check_gitea_state_pilot_readiness import evaluate_readiness
 
 
 def test_readiness_passes_with_full_gitea_inputs() -> None:

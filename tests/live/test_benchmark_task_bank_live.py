@@ -18,7 +18,7 @@ def test_benchmark_task_bank_runs_live_through_card_system() -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/run_live_card_benchmark_suite.py",
+            "scripts/MidTier/run_live_card_benchmark_suite.py",
             "--runs",
             "1",
             "--raw-out",

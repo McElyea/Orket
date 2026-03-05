@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.run_architecture_pilot_matrix import (
+from scripts.MidTier.run_architecture_pilot_matrix import (
     PilotCombo,
     _aggregate_by_architecture,
     _build_comparison,

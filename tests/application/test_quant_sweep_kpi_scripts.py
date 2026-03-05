@@ -26,7 +26,7 @@ def test_check_quant_sweep_kpis_fails_on_polluted_rate(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/check_quant_sweep_kpis.py",
+            "scripts/MidTier/check_quant_sweep_kpis.py",
             "--summary",
             str(summary),
             "--max-polluted-run-rate",
@@ -69,7 +69,7 @@ def test_quant_sweep_kpi_report_extracts_stability_block(tmp_path: Path) -> None
     result = subprocess.run(
         [
             "python",
-            "scripts/quant_sweep_kpi_report.py",
+            "scripts/MidTier/quant_sweep_kpi_report.py",
             "--summary",
             str(summary),
             "--out",

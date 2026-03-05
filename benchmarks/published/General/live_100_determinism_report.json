@@ -4,7 +4,7 @@
   "venue": "local-hardware",
   "flow": "live",
   "runs_per_task": 1,
-  "runner_template": "python scripts/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}",
+  "runner_template": "python scripts/MidTier/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}",
   "artifact_globs": [],
   "task_id_min": 1,
   "task_id_max": 100,

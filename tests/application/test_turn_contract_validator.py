@@ -49,3 +49,70 @@ def test_contract_validator_reports_consistency_scope_violation(tmp_path: Path) 
     )
     assert diagnostics["violations"]
     assert diagnostics["violations"][0]["rule_id"] == "CONSISTENCY.OUTPUT_FORMAT"
+
+
+def test_contract_validator_allows_recovered_truncated_tool_only_payload(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content='```json\n{"tool":"write_file","args":{"path":"a.txt","content":"ok"}\n```',
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "ok"})],
+    )
+    diagnostics = validator.consistency_scope_diagnostics(
+        turn,
+        context={"verification_scope": {"consistency_tool_calls_only": True}},
+    )
+    assert diagnostics["violations"] == []
+
+
+def test_contract_validator_rejects_prefixed_prose_even_with_recovered_tool_call(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content='I will now comply: {"tool":"write_file","args":{"path":"a.txt","content":"ok"}',
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "ok"})],
+    )
+    diagnostics = validator.consistency_scope_diagnostics(
+        turn,
+        context={"verification_scope": {"consistency_tool_calls_only": True}},
+    )
+    assert diagnostics["violations"]
+    assert diagnostics["violations"][0]["rule_id"] == "CONSISTENCY.OUTPUT_FORMAT"
+
+
+def test_contract_validator_allows_think_prefixed_tool_only_payload(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content=(
+            '<think>I should only emit tool calls.</think>'
+            '{"tool":"write_file","args":{"path":"a.txt","content":"ok"}}'
+        ),
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "ok"})],
+    )
+    diagnostics = validator.consistency_scope_diagnostics(
+        turn,
+        context={"verification_scope": {"consistency_tool_calls_only": True}},
+    )
+    assert diagnostics["violations"] == []
+
+
+def test_contract_validator_allows_thinking_process_prefixed_tool_only_payload(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content=(
+            "Thinking Process: first I inspect the task.\n"
+            '{"tool":"write_file","args":{"path":"a.txt","content":"ok"}}'
+        ),
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "ok"})],
+    )
+    diagnostics = validator.consistency_scope_diagnostics(
+        turn,
+        context={"verification_scope": {"consistency_tool_calls_only": True}},
+    )
+    assert diagnostics["violations"] == []

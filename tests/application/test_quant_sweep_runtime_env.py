@@ -87,7 +87,7 @@ def test_run_quant_sweep_injects_runtime_env_from_matrix_config(tmp_path: Path) 
     result = subprocess.run(
         [
             "python",
-            "scripts/run_quant_sweep.py",
+            "scripts/MidTier/run_quant_sweep.py",
             "--model-id",
             "placeholder",
             "--quant-tags",

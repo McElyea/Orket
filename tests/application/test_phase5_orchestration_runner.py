@@ -11,7 +11,7 @@ def _run_runner(task_payload: dict, tmp_path: Path) -> subprocess.CompletedProce
     return subprocess.run(
         [
             "python",
-            "scripts/orchestration_runner.py",
+            "scripts/MidTier/orchestration_runner.py",
             "--task",
             str(task_path),
             "--venue",

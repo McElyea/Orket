@@ -51,8 +51,8 @@ This document defines security requirements for API/webhook boundaries, configur
 
 ## 6. Auditability and Canary Checks
 1. Session/runtime actions are observable through logs and datastore records.
-2. `scripts/security_canary.py` validates:
+2. `scripts/MidTier/security_canary.py` validates:
    - fail-closed API auth
    - mandatory webhook signature
    - disabled webhook test endpoint by default
-3. `scripts/release_smoke.py` runs security canary by default.
+3. `scripts/MidTier/release_smoke.py` runs security canary by default.

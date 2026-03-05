@@ -6,7 +6,7 @@ on:
     paths:
       - "product/**"
       - "bin/**"
-      - "scripts/publish_products_to_gitea.py"
+      - "scripts/MidTier/publish_products_to_gitea.py"
   workflow_dispatch:
     inputs:
       source_dir:
@@ -89,4 +89,4 @@ jobs:
             ARGS+=(--projects "${PROJECT_ARRAY[@]}")
           fi
           # CI automation is intentionally non-destructive: no --delete-local here.
-          python scripts/publish_products_to_gitea.py "${ARGS[@]}"
+          python scripts/MidTier/publish_products_to_gitea.py "${ARGS[@]}"

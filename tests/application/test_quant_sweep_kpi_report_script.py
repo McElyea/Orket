@@ -29,7 +29,7 @@ def test_quant_sweep_kpi_report_extracts_block(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/quant_sweep_kpi_report.py",
+            "scripts/MidTier/quant_sweep_kpi_report.py",
             "--summary",
             str(summary),
             "--out",

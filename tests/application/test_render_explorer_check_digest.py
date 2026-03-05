@@ -27,7 +27,7 @@ def test_render_explorer_check_digest_writes_markdown(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             "python",
-            "scripts/render_explorer_check_digest.py",
+            "scripts/MidTier/render_explorer_check_digest.py",
             "--summary",
             str(summary),
             "--out",
@@ -62,7 +62,7 @@ def test_render_explorer_check_digest_fails_on_missing_provenance_fields(tmp_pat
     result = subprocess.run(
         [
             "python",
-            "scripts/render_explorer_check_digest.py",
+            "scripts/MidTier/render_explorer_check_digest.py",
             "--summary",
             str(summary),
             "--out",

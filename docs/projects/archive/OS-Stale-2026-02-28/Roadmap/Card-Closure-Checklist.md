@@ -53,7 +53,7 @@ Evidence:
 3. `tests/kernel/v1/test_digest_vectors.py`
 4. `tests/kernel/v1/test_tombstone_promotion.py`
 5. `tests/interfaces/test_api_kernel_lifecycle.py`
-6. `scripts/audit_registry.py`
+6. `scripts/HighTier/audit_registry.py`
 
 Gate linkage:
 1. `.gitea/workflows/quality.yml` -> registry audit
@@ -63,4 +63,4 @@ Gate linkage:
 
 Status:
 1. Completed.
-2. Fire-drill suite is now codified as `python scripts/run_kernel_fire_drill.py`.
+2. Fire-drill suite is now codified as `python scripts/HighTier/run_kernel_fire_drill.py`.

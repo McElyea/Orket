@@ -25,7 +25,7 @@ Execution mode: incremental, low blast radius
 3. Align architecture policy statements:
 - `docs/ARCHITECTURE.md`
 - `tests/platform/test_architecture_volatility_boundaries.py`
-- `scripts/check_dependency_direction.py`
+- `scripts/MidTier/check_dependency_direction.py`
 
 ## Phase 3: Validation and Closeout
 
@@ -37,8 +37,8 @@ Execution mode: incremental, low blast radius
 
 2. Run broader lanes:
 - `python -m pytest -q tests/core tests/interfaces tests/adapters tests/platform`
-- `python scripts/check_dependency_direction.py`
-- `python scripts/check_volatility_boundaries.py`
+- `python scripts/MidTier/check_dependency_direction.py`
+- `python scripts/HighTier/check_volatility_boundaries.py`
 
 3. Produce closure note:
 - fixed defects
