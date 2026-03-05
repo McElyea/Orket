@@ -7,6 +7,12 @@ import struct
 from typing import Any
 
 from orket.application.workflows.protocol_hashing import canonical_json
+from orket.runtime.protocol_error_codes import (
+    E_LEDGER_CORRUPT,
+    E_LEDGER_PARSE,
+    E_LEDGER_RECORD_TOO_LARGE,
+    E_LEDGER_SEQ,
+)
 
 
 MAX_LEDGER_PAYLOAD_BYTES = 4 * 1024 * 1024
@@ -54,7 +60,7 @@ def encode_lpj_c32_record(
     payload_len = len(payload_bytes)
     if payload_len > max_payload_bytes:
         raise LedgerFramingError(
-            "E_LEDGER_RECORD_TOO_LARGE",
+            E_LEDGER_RECORD_TOO_LARGE,
             f"{payload_len}>{max_payload_bytes}",
         )
     checksum = crc32c(payload_bytes)
@@ -76,7 +82,7 @@ def decode_lpj_c32_stream(
             break
         payload_len = struct.unpack(">I", data[offset : offset + 4])[0]
         if payload_len > max_payload_bytes:
-            raise LedgerFramingError("E_LEDGER_RECORD_TOO_LARGE", f"{payload_len}>{max_payload_bytes}")
+            raise LedgerFramingError(E_LEDGER_RECORD_TOO_LARGE, f"{payload_len}>{max_payload_bytes}")
         record_end = offset + 4 + payload_len + 4
         if record_end > total_len:
             # Partial tail: end-of-log by contract.
@@ -86,20 +92,20 @@ def decode_lpj_c32_stream(
         expected_crc = struct.unpack(">I", data[offset + 4 + payload_len : record_end])[0]
         actual_crc = crc32c(payload_bytes)
         if expected_crc != actual_crc:
-            raise LedgerFramingError("E_LEDGER_CORRUPT", f"offset={offset}")
+            raise LedgerFramingError(E_LEDGER_CORRUPT, f"offset={offset}")
 
         try:
             payload = json.loads(payload_bytes.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-            raise LedgerFramingError("E_LEDGER_PARSE", f"offset={offset}") from exc
+            raise LedgerFramingError(E_LEDGER_PARSE, f"offset={offset}") from exc
         if not isinstance(payload, dict):
-            raise LedgerFramingError("E_LEDGER_PARSE", f"offset={offset}:record_not_object")
+            raise LedgerFramingError(E_LEDGER_PARSE, f"offset={offset}:record_not_object")
 
         event_seq = payload.get("event_seq")
         if not isinstance(event_seq, int) or event_seq <= 0:
-            raise LedgerFramingError("E_LEDGER_SEQ", f"offset={offset}:missing_event_seq")
+            raise LedgerFramingError(E_LEDGER_SEQ, f"offset={offset}:missing_event_seq")
         if event_seq <= last_event_seq:
-            raise LedgerFramingError("E_LEDGER_SEQ", f"offset={offset}:non_monotonic")
+            raise LedgerFramingError(E_LEDGER_SEQ, f"offset={offset}:non_monotonic")
         last_event_seq = event_seq
         records.append(payload)
         offset = record_end
@@ -122,7 +128,7 @@ class AppendOnlyRunLedger:
         if explicit_event_seq is None:
             event["event_seq"] = next_event_seq
         elif int(explicit_event_seq) != next_event_seq:
-            raise LedgerFramingError("E_LEDGER_SEQ", f"expected={next_event_seq},actual={explicit_event_seq}")
+            raise LedgerFramingError(E_LEDGER_SEQ, f"expected={next_event_seq},actual={explicit_event_seq}")
 
         frame = encode_lpj_c32_record(event, max_payload_bytes=self.max_payload_bytes)
         self.path.parent.mkdir(parents=True, exist_ok=True)

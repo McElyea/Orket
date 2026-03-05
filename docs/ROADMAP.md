@@ -18,7 +18,7 @@ Current default target: protocol-governed.
 3. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: PR-04/PR-08/PR-09 rollout with run-ledger mode selection (`sqlite`/`protocol`/`dual_write`), dual-write parity telemetry, run-level protocol receipt materialization/cross-linking, replay comparator receipt inventory diffs, and campaign surfaces across script/CLI/API; PR-03/PR-06 parser+dispatcher hash/idempotency slices are landed).
+1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: PR-04/PR-08/PR-09 rollout with run-ledger mode selection (`sqlite`/`protocol`/`dual_write`), dual-write parity telemetry, run-level protocol receipt materialization/cross-linking, replay comparator receipt inventory diffs, campaign surfaces across script/CLI/API, protocol determinism context wiring in turn execution, and a centralized protocol error-code registry; PR-03/PR-06 parser+dispatcher hash/idempotency slices are landed).
 2. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
 
 ## Project Index

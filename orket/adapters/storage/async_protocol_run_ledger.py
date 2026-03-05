@@ -8,6 +8,12 @@ from typing import Any, Dict, Optional
 
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.runtime.operation_commit_registry import OperationCommitRegistry
+from orket.runtime.protocol_error_codes import (
+    E_RECEIPT_LOG_PARSE_PREFIX,
+    E_RECEIPT_LOG_SCHEMA_PREFIX,
+    E_RECEIPT_SEQ_INVALID_PREFIX,
+    E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX,
+)
 
 from .protocol_append_only_ledger import AppendOnlyRunLedger
 
@@ -259,10 +265,10 @@ class AsyncProtocolRunLedgerRepository:
             try:
                 normalized["receipt_seq"] = int(raw_seq)
             except (TypeError, ValueError) as exc:
-                raise ValueError(f"E_RECEIPT_SEQ_INVALID:{raw_seq}") from exc
+                raise ValueError(f"{E_RECEIPT_SEQ_INVALID_PREFIX}:{raw_seq}") from exc
             if int(normalized["receipt_seq"]) <= last_seq:
                 raise ValueError(
-                    f"E_RECEIPT_SEQ_NON_MONOTONIC:{normalized['receipt_seq']}<=last:{last_seq}"
+                    f"{E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX}:{normalized['receipt_seq']}<=last:{last_seq}"
                 )
 
         line = json.dumps(normalized, ensure_ascii=False, separators=(",", ":"))
@@ -287,9 +293,9 @@ class AsyncProtocolRunLedgerRepository:
                 try:
                     parsed = json.loads(stripped)
                 except json.JSONDecodeError as exc:
-                    raise ValueError(f"E_RECEIPT_LOG_PARSE:line={line_index}") from exc
+                    raise ValueError(f"{E_RECEIPT_LOG_PARSE_PREFIX}:line={line_index}") from exc
                 if not isinstance(parsed, dict):
-                    raise ValueError(f"E_RECEIPT_LOG_SCHEMA:line={line_index}")
+                    raise ValueError(f"{E_RECEIPT_LOG_SCHEMA_PREFIX}:line={line_index}")
                 rows.append(dict(parsed))
         rows.sort(
             key=lambda row: (

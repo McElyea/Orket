@@ -125,6 +125,15 @@ Latest completed increments:
     - truncation tail boundaries across multiple byte cuts
     - checksum corruption vectors for first/middle/final records
     - explicit non-monotonic sequence vectors
+17. Protocol error-code registry landed:
+    - centralized constants/prefix registry in `orket/runtime/protocol_error_codes.py`
+    - parser/ledger/replay-facing codes mapped to stable identifiers
+    - registry reference published at `docs/projects/protocol-governed/error-code-registry.md`
+18. Determinism control-surface settings wiring landed:
+    - protocol timezone/locale/network/allowlist controls resolved into turn context
+    - settings and runtime-policy surfaces expose protocol determinism knobs
+    - control surface contract published at
+      `docs/projects/protocol-governed/determinism-control-surface.md`
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -146,6 +155,13 @@ Validation evidence (new test surfaces):
 17. `tests/runtime/test_run_ledger_factory.py`
 18. `tests/scripts/test_run_protocol_determinism_campaign.py`
 
+Verification runs (latest batch):
+1. `python -m pytest -q tests/interfaces/test_api.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
+2. `python -m pytest -q tests/application/test_orchestrator_epic.py -k "protocol_governed_defaults or protocol_governed_env_overrides or protocol_determinism_invalid_network_mode"`
+3. `python -m pytest -q tests/application/test_state_backend_mode.py tests/application/test_runtime_policy_protocol_controls.py tests/runtime/test_protocol_error_codes.py`
+4. `python -m pytest -q tests/interfaces/test_cli_protocol_replay.py tests/interfaces/test_sessions_router_protocol_replay.py tests/runtime/test_protocol_determinism_campaign.py tests/runtime/test_protocol_replay.py tests/scripts/test_run_protocol_determinism_campaign.py tests/scripts/test_run_protocol_replay_compare.py tests/application/test_protocol_append_only_ledger.py tests/runtime/test_run_ledger_factory.py`
+5. `python scripts/MidTier/check_docs_project_hygiene.py`
+
 Next execution slices (active):
 1. Promote protocol ledger parity checks into CI once initial parity campaigns show no P0 drift.
 2. Add deterministic environment control wiring in runtime context:
@@ -155,7 +171,7 @@ Next execution slices (active):
    - `env_allowlist_hash`
 3. Publish deterministic replay campaign artifacts for operator review and rollback readiness.
 4. Capture compatibility telemetry deltas between SQLite ledger and append-only ledger during dual-write.
-5. Maintain a stable protocol error-code registry across parser, validator, ledger, and replay paths.
+5. Expand code-family adoption to remaining parser/validator call sites and wire error dashboards to registry families.
 
 ## Delivery Strategy
 

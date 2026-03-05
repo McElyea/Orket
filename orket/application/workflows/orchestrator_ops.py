@@ -37,6 +37,7 @@ from orket.application.services.runtime_policy import (
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
     resolve_project_surface_profile,
+    resolve_protocol_determinism_controls,
     resolve_small_project_builder_variant,
 )
 from orket.adapters.storage.async_file_tools import AsyncFileTools
@@ -146,6 +147,44 @@ def _resolve_protocol_max_tool_calls(self) -> int:
             continue
         return max(1, parsed)
     return 8
+
+def _resolve_protocol_determinism_context(self) -> Dict[str, Any]:
+    process_rules = (
+        self.org.process_rules
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
+        else {}
+    )
+    user_settings = load_user_settings()
+    controls = resolve_protocol_determinism_controls(
+        timezone_values=[
+            os.environ.get("ORKET_PROTOCOL_TIMEZONE"),
+            process_rules.get("protocol_timezone"),
+            user_settings.get("protocol_timezone"),
+        ],
+        locale_values=[
+            os.environ.get("ORKET_PROTOCOL_LOCALE"),
+            process_rules.get("protocol_locale"),
+            user_settings.get("protocol_locale"),
+        ],
+        network_mode_values=[
+            os.environ.get("ORKET_PROTOCOL_NETWORK_MODE"),
+            process_rules.get("protocol_network_mode"),
+            user_settings.get("protocol_network_mode"),
+        ],
+        env_allowlist_values=[
+            os.environ.get("ORKET_PROTOCOL_ENV_ALLOWLIST"),
+            process_rules.get("protocol_env_allowlist"),
+            user_settings.get("protocol_env_allowlist"),
+        ],
+    )
+    return {
+        "timezone": str(controls.get("timezone") or "UTC"),
+        "locale": str(controls.get("locale") or "C.UTF-8"),
+        "network_mode": str(controls.get("network_mode") or "off"),
+        "env_allowlist": dict(controls.get("env_snapshot") or {}),
+        "env_allowlist_values": list(controls.get("env_allowlist") or []),
+        "env_allowlist_hash": str(controls.get("env_allowlist_hash") or ""),
+    }
 
 def _resolve_workflow_profile(self) -> str:
     env_raw = (os.environ.get("ORKET_WORKFLOW_PROFILE") or "").strip().lower()
@@ -1645,6 +1684,7 @@ def _build_turn_context(
     protocol_governed_enabled = self._resolve_protocol_governed_enabled()
     max_response_bytes = self._resolve_protocol_max_response_bytes()
     max_tool_calls = self._resolve_protocol_max_tool_calls()
+    determinism_controls = self._resolve_protocol_determinism_context()
 
     return {
         "session_id": run_id,
@@ -1710,6 +1750,12 @@ def _build_turn_context(
         "protocol_governed_enabled": protocol_governed_enabled,
         "max_response_bytes": max_response_bytes,
         "max_tool_calls": max_tool_calls,
+        "timezone": determinism_controls["timezone"],
+        "locale": determinism_controls["locale"],
+        "network_mode": determinism_controls["network_mode"],
+        "env_allowlist": determinism_controls["env_allowlist"],
+        "env_allowlist_values": determinism_controls["env_allowlist_values"],
+        "env_allowlist_hash": determinism_controls["env_allowlist_hash"],
     }
 
 async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:

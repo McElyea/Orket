@@ -1587,6 +1587,12 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["protocol_governed_enabled"] is False
     assert context["max_response_bytes"] == 8192
     assert context["max_tool_calls"] == 8
+    assert context["timezone"] == "UTC"
+    assert context["locale"] == "C.UTF-8"
+    assert context["network_mode"] == "off"
+    assert context["env_allowlist"] == {}
+    assert context["env_allowlist_values"] == []
+    assert len(context["env_allowlist_hash"]) == 64
 
 
 def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkeypatch):
@@ -1595,6 +1601,10 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     monkeypatch.setenv("ORKET_PROTOCOL_GOVERNED_ENABLED", "true")
     monkeypatch.setenv("ORKET_PROTOCOL_MAX_RESPONSE_BYTES", "4096")
     monkeypatch.setenv("ORKET_PROTOCOL_MAX_TOOL_CALLS", "3")
+    monkeypatch.setenv("ORKET_PROTOCOL_TIMEZONE", "America/Denver")
+    monkeypatch.setenv("ORKET_PROTOCOL_LOCALE", "en_US.UTF-8")
+    monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_MODE", "allowlist")
+    monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
     issue = IssueConfig(id="ARC-4", seat="architect", summary="Design architecture")
     context = orch._build_turn_context(
         run_id="run-4",
@@ -1608,6 +1618,31 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     assert context["protocol_governed_enabled"] is True
     assert context["max_response_bytes"] == 4096
     assert context["max_tool_calls"] == 3
+    assert context["timezone"] == "America/Denver"
+    assert context["locale"] == "en_US.UTF-8"
+    assert context["network_mode"] == "allowlist"
+    assert context["env_allowlist_values"] == ["HOME", "PATH"]
+    assert "PATH" in context["env_allowlist"]
+    assert set(context["env_allowlist"].keys()).issubset({"HOME", "PATH"})
+    assert len(context["env_allowlist_hash"]) == 64
+
+
+def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast(orchestrator, monkeypatch):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={})
+    monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_MODE", "internet")
+    issue = IssueConfig(id="ARC-4B", seat="architect", summary="Design architecture")
+
+    with pytest.raises(ValueError, match="E_NETWORK_MODE_INVALID"):
+        orch._build_turn_context(
+            run_id="run-4b",
+            issue=issue,
+            seat_name="architect",
+            roles_to_load=["architect"],
+            turn_status=CardStatus.IN_PROGRESS,
+            selected_model="dummy-model",
+            resume_mode=False,
+        )
 
 
 def test_resolve_runtime_modes_honor_user_settings_when_process_rules_unset(orchestrator, monkeypatch):

@@ -39,6 +39,10 @@ DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT = "benchmarks/results/microservices
 DEFAULT_GITEA_WORKER_MAX_ITERATIONS = 100
 DEFAULT_GITEA_WORKER_MAX_IDLE_STREAK = 10
 DEFAULT_GITEA_WORKER_MAX_DURATION_SECONDS = 60.0
+DEFAULT_PROTOCOL_TIMEZONE = "UTC"
+DEFAULT_PROTOCOL_LOCALE = "C.UTF-8"
+DEFAULT_PROTOCOL_NETWORK_MODE = "off"
+DEFAULT_PROTOCOL_ENV_ALLOWLIST = ""
 
 PROJECT_SURFACE_PROFILE_OPTIONS: List[Dict[str, str]] = [
     {"value": "unspecified", "label": "Unspecified (Legacy Defaults)"},
@@ -60,6 +64,10 @@ RUN_LEDGER_MODE_OPTIONS: List[Dict[str, str]] = [
     {"value": "sqlite", "label": "SQLite (Compat Default)"},
     {"value": "protocol", "label": "Protocol Append-Only"},
     {"value": "dual_write", "label": "Dual Write + Parity Telemetry"},
+]
+PROTOCOL_NETWORK_MODE_OPTIONS: List[Dict[str, str]] = [
+    {"value": "off", "label": "Off (Deterministic Default)"},
+    {"value": "allowlist", "label": "Allowlist"},
 ]
 GITEA_STATE_PILOT_ENABLED_OPTIONS: List[Dict[str, str]] = [
     {"value": "enabled", "label": "Enabled"},
@@ -201,6 +209,26 @@ def runtime_policy_options() -> Dict[str, Any]:
             "options": RUN_LEDGER_MODE_OPTIONS,
             "input_style": "radio",
         },
+        "protocol_timezone": {
+            "default": DEFAULT_PROTOCOL_TIMEZONE,
+            "options": [],
+            "input_style": "text",
+        },
+        "protocol_locale": {
+            "default": DEFAULT_PROTOCOL_LOCALE,
+            "options": [],
+            "input_style": "text",
+        },
+        "protocol_network_mode": {
+            "default": DEFAULT_PROTOCOL_NETWORK_MODE,
+            "options": PROTOCOL_NETWORK_MODE_OPTIONS,
+            "input_style": "radio",
+        },
+        "protocol_env_allowlist": {
+            "default": DEFAULT_PROTOCOL_ENV_ALLOWLIST,
+            "options": [],
+            "input_style": "text",
+        },
         "gitea_state_pilot_enabled": {
             "default": DEFAULT_GITEA_STATE_PILOT_ENABLED,
             "options": GITEA_STATE_PILOT_ENABLED_OPTIONS,
@@ -262,6 +290,25 @@ def resolve_run_ledger_mode(*values: Any) -> str:
         "mirror": "dual_write",
     }
     return aliases.get(raw, DEFAULT_RUN_LEDGER_MODE)
+
+
+def resolve_protocol_timezone_setting(*values: Any) -> str:
+    return resolve_protocol_timezone(*values)
+
+
+def resolve_protocol_locale_setting(*values: Any) -> str:
+    return resolve_protocol_locale(*values)
+
+
+def resolve_protocol_network_mode_setting(*values: Any) -> str:
+    return resolve_protocol_network_mode(*values)
+
+
+def resolve_protocol_env_allowlist_setting(*values: Any) -> str:
+    parsed = resolve_protocol_env_allowlist(*values)
+    if not parsed:
+        return ""
+    return ",".join(parsed)
 
 
 def resolve_gitea_state_pilot_enabled(*values: Any) -> bool:

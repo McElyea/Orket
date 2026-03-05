@@ -42,6 +42,11 @@ from orket.application.services.runtime_policy import (
     resolve_frontend_framework_mode,
     resolve_gitea_state_pilot_enabled,
     resolve_project_surface_profile,
+    resolve_protocol_env_allowlist_setting,
+    resolve_protocol_locale_setting,
+    resolve_protocol_network_mode_setting,
+    resolve_protocol_timezone_setting,
+    resolve_run_ledger_mode,
     resolve_small_project_builder_variant,
     resolve_state_backend_mode,
     runtime_policy_options,
@@ -185,6 +190,41 @@ SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
             "gitea": "gitea",
         },
         "type": "string",
+    },
+    "run_ledger_mode": {
+        "env_var": "ORKET_RUN_LEDGER_MODE",
+        "aliases": {
+            "sqlite": "sqlite",
+            "compat": "sqlite",
+            "protocol": "protocol",
+            "append_only": "protocol",
+            "dual_write": "dual_write",
+            "dual": "dual_write",
+        },
+        "type": "string",
+    },
+    "protocol_timezone": {
+        "env_var": "ORKET_PROTOCOL_TIMEZONE",
+        "type": "string_freeform",
+    },
+    "protocol_locale": {
+        "env_var": "ORKET_PROTOCOL_LOCALE",
+        "type": "string_freeform",
+    },
+    "protocol_network_mode": {
+        "env_var": "ORKET_PROTOCOL_NETWORK_MODE",
+        "aliases": {
+            "off": "off",
+            "offline": "off",
+            "disabled": "off",
+            "allowlist": "allowlist",
+            "allow_list": "allowlist",
+        },
+        "type": "string",
+    },
+    "protocol_env_allowlist": {
+        "env_var": "ORKET_PROTOCOL_ENV_ALLOWLIST",
+        "type": "string_freeform",
     },
     "gitea_state_pilot_enabled": {
         "env_var": "ORKET_ENABLE_GITEA_STATE_PILOT",
@@ -475,6 +515,31 @@ v1_router.include_router(
             process_value,
             user_value,
         ),
+        resolve_run_ledger_mode=lambda env_value, process_value, user_value: resolve_run_ledger_mode(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_protocol_timezone_setting=lambda env_value, process_value, user_value: resolve_protocol_timezone_setting(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_protocol_locale_setting=lambda env_value, process_value, user_value: resolve_protocol_locale_setting(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_protocol_network_mode_setting=lambda env_value, process_value, user_value: resolve_protocol_network_mode_setting(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_protocol_env_allowlist_setting=lambda env_value, process_value, user_value: resolve_protocol_env_allowlist_setting(
+            env_value,
+            process_value,
+            user_value,
+        ),
         resolve_gitea_state_pilot_enabled=lambda env_value, process_value, user_value: resolve_gitea_state_pilot_enabled(
             env_value,
             process_value,
@@ -533,6 +598,9 @@ def _parse_setting_value(field: str, value: Any) -> Any | None:
         if token in {"0", "false", "no", "off", "disabled"}:
             return False
         return None
+    if schema["type"] == "string_freeform":
+        parsed = str(value or "").strip()
+        return parsed if parsed else None
     token = _normalize_setting_token(value)
     aliases = schema.get("aliases", {})
     return aliases.get(token)
@@ -555,6 +623,16 @@ def _resolve_runtime_setting_value(field: str, env_value: Any, process_value: An
         return resolve_small_project_builder_variant(env_value, process_value, user_value)
     if field == "state_backend_mode":
         return resolve_state_backend_mode(env_value, process_value, user_value)
+    if field == "run_ledger_mode":
+        return resolve_run_ledger_mode(env_value, process_value, user_value)
+    if field == "protocol_timezone":
+        return resolve_protocol_timezone_setting(env_value, process_value, user_value)
+    if field == "protocol_locale":
+        return resolve_protocol_locale_setting(env_value, process_value, user_value)
+    if field == "protocol_network_mode":
+        return resolve_protocol_network_mode_setting(env_value, process_value, user_value)
+    if field == "protocol_env_allowlist":
+        return resolve_protocol_env_allowlist_setting(env_value, process_value, user_value)
     if field == "gitea_state_pilot_enabled":
         return bool(resolve_gitea_state_pilot_enabled(env_value, process_value, user_value))
     raise KeyError(f"Unsupported runtime setting '{field}'")
@@ -574,7 +652,7 @@ def _resolve_settings_snapshot(user_settings: dict[str, Any], process_rules: dic
         source = "default"
         # Keep state backend settings stable across machines with ambient env vars.
         # API settings UX should primarily reflect explicit policy/user choices.
-        if field != "state_backend_mode" and _parse_setting_value(field, env_value) is not None:
+        if field not in {"state_backend_mode", "run_ledger_mode"} and _parse_setting_value(field, env_value) is not None:
             source = "env"
         elif _parse_setting_value(field, process_value) is not None:
             source = "process_rules"

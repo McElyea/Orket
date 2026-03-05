@@ -4,6 +4,7 @@ import os
 from typing import Any
 
 from orket.application.workflows.protocol_hashing import hash_env_allowlist
+from orket.runtime.protocol_error_codes import E_NETWORK_MODE_INVALID_PREFIX
 
 
 DEFAULT_TIMEZONE = "UTC"
@@ -48,7 +49,7 @@ def resolve_network_mode(*values: Any) -> str:
         resolved = aliases.get(normalized)
         if resolved is None:
             raise ValueError(
-                f"E_NETWORK_MODE_INVALID:{normalized} (expected one of: {sorted(NETWORK_MODE_VALUES)})"
+                f"{E_NETWORK_MODE_INVALID_PREFIX}:{normalized} (expected one of: {sorted(NETWORK_MODE_VALUES)})"
             )
         return resolved
     return DEFAULT_NETWORK_MODE

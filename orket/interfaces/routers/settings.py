@@ -13,6 +13,11 @@ class RuntimePolicyUpdateRequest(BaseModel):
     project_surface_profile: Optional[str] = None
     small_project_builder_variant: Optional[str] = None
     state_backend_mode: Optional[str] = None
+    run_ledger_mode: Optional[str] = None
+    protocol_timezone: Optional[str] = None
+    protocol_locale: Optional[str] = None
+    protocol_network_mode: Optional[str] = None
+    protocol_env_allowlist: Optional[str] = None
     gitea_state_pilot_enabled: Optional[bool] = None
 
 
@@ -33,6 +38,11 @@ def build_settings_router(
     resolve_project_surface_profile: Callable[[Any, Any, Any], str],
     resolve_small_project_builder_variant: Callable[[Any, Any, Any], str],
     resolve_state_backend_mode: Callable[[Any, Any, Any], str],
+    resolve_run_ledger_mode: Callable[[Any, Any, Any], str],
+    resolve_protocol_timezone_setting: Callable[[Any, Any, Any], str],
+    resolve_protocol_locale_setting: Callable[[Any, Any, Any], str],
+    resolve_protocol_network_mode_setting: Callable[[Any, Any, Any], str],
+    resolve_protocol_env_allowlist_setting: Callable[[Any, Any, Any], str],
     resolve_gitea_state_pilot_enabled: Callable[[Any, Any, Any], bool],
     allowed_architecture_patterns: Callable[[], list[str]],
     is_microservices_pilot_stable: Callable[[], bool],
@@ -145,6 +155,31 @@ def build_settings_router(
             process_rules.get("state_backend_mode"),
             user_settings.get("state_backend_mode"),
         )
+        run_ledger_mode = resolve_run_ledger_mode(
+            os.environ.get("ORKET_RUN_LEDGER_MODE", ""),
+            process_rules.get("run_ledger_mode"),
+            user_settings.get("run_ledger_mode"),
+        )
+        protocol_timezone = resolve_protocol_timezone_setting(
+            os.environ.get("ORKET_PROTOCOL_TIMEZONE", ""),
+            process_rules.get("protocol_timezone"),
+            user_settings.get("protocol_timezone"),
+        )
+        protocol_locale = resolve_protocol_locale_setting(
+            os.environ.get("ORKET_PROTOCOL_LOCALE", ""),
+            process_rules.get("protocol_locale"),
+            user_settings.get("protocol_locale"),
+        )
+        protocol_network_mode = resolve_protocol_network_mode_setting(
+            os.environ.get("ORKET_PROTOCOL_NETWORK_MODE", ""),
+            process_rules.get("protocol_network_mode"),
+            user_settings.get("protocol_network_mode"),
+        )
+        protocol_env_allowlist = resolve_protocol_env_allowlist_setting(
+            os.environ.get("ORKET_PROTOCOL_ENV_ALLOWLIST", ""),
+            process_rules.get("protocol_env_allowlist"),
+            user_settings.get("protocol_env_allowlist"),
+        )
         gitea_state_pilot_enabled = resolve_gitea_state_pilot_enabled(
             os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT", ""),
             process_rules.get("gitea_state_pilot_enabled"),
@@ -156,6 +191,11 @@ def build_settings_router(
             "project_surface_profile": project_surface_profile,
             "small_project_builder_variant": small_project_builder_variant,
             "state_backend_mode": state_backend_mode,
+            "run_ledger_mode": run_ledger_mode,
+            "protocol_timezone": protocol_timezone,
+            "protocol_locale": protocol_locale,
+            "protocol_network_mode": protocol_network_mode,
+            "protocol_env_allowlist": protocol_env_allowlist,
             "gitea_state_pilot_enabled": gitea_state_pilot_enabled,
             "default_architecture_mode": "force_monolith",
             "allowed_architecture_patterns": allowed_architecture_patterns(),
@@ -180,6 +220,20 @@ def build_settings_router(
             )
         if req.state_backend_mode is not None:
             current["state_backend_mode"] = resolve_state_backend_mode(req.state_backend_mode, None, None)
+        if req.run_ledger_mode is not None:
+            current["run_ledger_mode"] = resolve_run_ledger_mode(req.run_ledger_mode, None, None)
+        if req.protocol_timezone is not None:
+            current["protocol_timezone"] = resolve_protocol_timezone_setting(req.protocol_timezone, None, None)
+        if req.protocol_locale is not None:
+            current["protocol_locale"] = resolve_protocol_locale_setting(req.protocol_locale, None, None)
+        if req.protocol_network_mode is not None:
+            current["protocol_network_mode"] = resolve_protocol_network_mode_setting(req.protocol_network_mode, None, None)
+        if req.protocol_env_allowlist is not None:
+            current["protocol_env_allowlist"] = resolve_protocol_env_allowlist_setting(
+                req.protocol_env_allowlist,
+                None,
+                None,
+            )
         if req.gitea_state_pilot_enabled is not None:
             current["gitea_state_pilot_enabled"] = bool(
                 resolve_gitea_state_pilot_enabled(req.gitea_state_pilot_enabled, None, None)
@@ -193,9 +247,13 @@ def build_settings_router(
                 "project_surface_profile": current.get("project_surface_profile"),
                 "small_project_builder_variant": current.get("small_project_builder_variant"),
                 "state_backend_mode": current.get("state_backend_mode"),
+                "run_ledger_mode": current.get("run_ledger_mode"),
+                "protocol_timezone": current.get("protocol_timezone"),
+                "protocol_locale": current.get("protocol_locale"),
+                "protocol_network_mode": current.get("protocol_network_mode"),
+                "protocol_env_allowlist": current.get("protocol_env_allowlist"),
                 "gitea_state_pilot_enabled": current.get("gitea_state_pilot_enabled"),
             },
         }
 
     return router
-
