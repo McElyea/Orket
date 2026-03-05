@@ -1,5 +1,6 @@
 from .contracts import ExecutionEnvelope, PatchProposal, RunRequest
 from .intake import IntakeValidationResult, evaluate_patch_proposal, validate_patch_proposal_payload
+from .promotion import promote_run
 from .replay import replay_run
 from .runner import MarshallerRunOutcome, MarshallerRunner
 
@@ -13,4 +14,5 @@ __all__ = [
     "MarshallerRunner",
     "MarshallerRunOutcome",
     "replay_run",
+    "promote_run",
 ]

@@ -20,6 +20,18 @@ class LedgerWriter:
     def current_digest(self) -> str:
         return self._prev_digest
 
+    @classmethod
+    async def resume(cls, ledger_path: Path) -> LedgerWriter:
+        writer = cls(ledger_path)
+        if not await asyncio.to_thread(ledger_path.exists):
+            return writer
+        last_record = await asyncio.to_thread(_last_record, ledger_path)
+        if not last_record:
+            return writer
+        writer._event_seq = int(last_record.get("event_seq", 0))
+        writer._prev_digest = str(last_record.get("entry_digest", ""))
+        return writer
+
     async def append(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         self._event_seq += 1
         record: dict[str, Any] = {
@@ -43,3 +55,12 @@ def _append_text(path: Path, text: str) -> None:
     with path.open("a", encoding="utf-8", newline="\n") as handle:
         handle.write(text)
 
+
+def _last_record(path: Path) -> dict[str, Any] | None:
+    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if not lines:
+        return None
+    payload = json.loads(lines[-1])
+    if not isinstance(payload, dict):
+        return None
+    return payload

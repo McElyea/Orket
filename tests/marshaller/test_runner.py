@@ -6,6 +6,7 @@ import sys
 import pytest
 
 from orket.marshaller.canonical import hash_canonical_json
+from orket.marshaller.promotion import promote_run
 from orket.marshaller.rejection_codes import FLAKE_DETECTED, TESTS_FAILED
 from orket.marshaller.replay import replay_run
 from orket.marshaller.runner import MarshallerRunner
@@ -93,6 +94,10 @@ def _assert_ledger_chain(records: list[dict]) -> None:
         prev = actual
 
 
+def _current_branch(repo: Path) -> str:
+    return _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+
+
 @pytest.mark.asyncio
 async def test_runner_accepts_when_patch_and_gates_pass(tmp_path: Path) -> None:
     repo, head = _init_repo(tmp_path)
@@ -123,6 +128,19 @@ async def test_runner_accepts_when_patch_and_gates_pass(tmp_path: Path) -> None:
     _assert_ledger_chain(ledger)
     replay = await replay_run(Path(outcome.run_path))
     assert replay["equivalence_key_match"] is True
+    promotion = await promote_run(
+        Path(outcome.run_path),
+        actor_id="local-user",
+        actor_source="cli",
+        branch=_current_branch(repo),
+    )
+    assert promotion["commit_sha"]
+    assert promotion["tree_digest"]
+    promotion_file = _read_json(Path(outcome.run_path) / "promotion.json")
+    assert promotion_file["actor_type"] == "human"
+    ledger_after_promotion = _read_ledger(Path(outcome.run_path) / "ledger.jsonl")
+    assert ledger_after_promotion[-1]["event_type"] == "promotion_event"
+    _assert_ledger_chain(ledger_after_promotion)
 
 
 @pytest.mark.asyncio
