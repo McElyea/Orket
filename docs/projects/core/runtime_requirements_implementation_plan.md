@@ -50,10 +50,20 @@ Scope:
    2. compatibility surface map (`core/tools/compatibility_map.yaml`)
    3. tool registry snapshot version source
 2. Add schema/version parsing utilities shared by runtime and replay flows.
+3. Capture immutable tool registry snapshot at runtime start.
 
 Deliverables:
 1. Registry files and loader modules with strict validation.
 2. Startup/runtime failure paths for missing or malformed contracts.
+3. `tool_registry_snapshot.json`.
+
+Tool registry snapshot example:
+```json
+{
+  "tool_registry_version": "1.2.0",
+  "tools": ["file.patch", "workspace.search"]
+}
+```
 
 Required proof:
 1. Unit tests for schema registry and compatibility map parsing.
@@ -81,6 +91,7 @@ Required proof:
 1. Integration test asserting ledger order on successful and failing tool calls.
 2. Contract tests asserting required invocation manifest fields.
 3. Integration test asserting run-level determinism classification.
+4. Concurrency test asserting ledger ordering remains correct under parallel tool invocation attempts.
 
 Exit criteria:
 1. Runs cannot complete without required invocation manifests.
@@ -94,7 +105,7 @@ Scope:
 3. Enforce replay-mode behavior:
    1. no inference
    2. no prompt construction
-   3. no repair heuristics
+   3. no repair heuristics or tool-validator repair paths
    4. recorded tool calls only
 4. Add replay compatibility checks for:
    1. tool registry snapshot
@@ -106,6 +117,14 @@ Deliverables:
 1. Runtime/replay hash computation utility.
 2. Golden run metadata schema update.
 3. Drift classifier with deterministic layer precedence.
+4. `drift_report.json` includes `drift_schema_version`.
+
+Drift schema example:
+```json
+{
+  "drift_schema_version": "1.0"
+}
+```
 
 Required proof:
 1. Integration replay test proving inference path is never called.
@@ -122,6 +141,7 @@ Scope:
 1. Static enforcement preventing compatibility/experimental imports of core internals.
 2. Runtime ring-policy enforcement in tool dispatch.
 3. Reject undeclared tools and ring violations before execution.
+4. Validate active capability profile against tool capability requirements before execution.
 
 Deliverables:
 1. Lint/static-check rule for import boundaries.
@@ -141,6 +161,7 @@ Scope:
    1. expands to core tools only
    2. no compatibility chaining
    3. determinism propagation (least-deterministic wins)
+   4. deterministic translation for identical inputs
 2. Require mapping metadata:
    1. mapping version
    2. schema compatibility range
@@ -154,11 +175,16 @@ Deliverables:
 Required proof:
 1. Contract tests for mapping validation and deterministic class propagation.
 2. Integration tests for translation artifact generation.
+3. Contract test asserting translation determinism for identical inputs.
 
 Exit criteria:
 1. Invalid compatibility mappings fail at load-time or pre-dispatch.
 
 ### CORE-IMP-05: Prompt Budget and Tokenizer Truth
+
+Dependencies:
+1. `CORE-IMP-01`
+2. `CORE-IMP-02`
 
 Scope:
 1. Implement stage-level prompt budgets and fail-closed enforcement.
@@ -189,6 +215,16 @@ Scope:
 Deliverables:
 1. Scoreboard computation module and artifact output.
 2. Promotion gate evaluator utility.
+3. `tool_scoreboard.json` includes `scoreboard_schema_version`.
+
+Scoreboard schema example:
+```json
+{
+  "scoreboard_schema_version": "1.0",
+  "tool": "file.patch",
+  "success_rate": 0.97
+}
+```
 
 Required proof:
 1. Contract tests proving scoreboard reproducibility from ledger only.
@@ -210,7 +246,7 @@ Deliverables:
 
 Required proof:
 1. Golden parity tests for pilot mappings.
-2. Replay parity for deterministic mappings.
+2. Replay parity for deterministic mappings and classified nondeterministic behavior for external mappings.
 
 Exit criteria:
 1. At least one compatibility mapping meets all promotion prerequisites (not necessarily promoted).
@@ -227,11 +263,13 @@ Exit criteria:
 2. Current ledger event model may be insufficient for strict ordering assertions.
 3. Replay path may currently rely on prompt/model helpers.
 4. Scoreboard code may currently depend on non-ledger telemetry.
+5. Artifact emission paths may bypass schema-registry validation.
 
 Mitigation:
 1. Detect and patch bypasses during `CORE-IMP-01` and `CORE-IMP-03`.
 2. Add invariant tests before broader refactors.
 3. Keep slices small and gate each slice before proceeding.
+4. Centralize artifact emission through `record_artifact()`.
 
 ## Definition of Done (Program Level)
 
