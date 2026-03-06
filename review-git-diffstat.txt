@@ -1,0 +1,5 @@
+ AGENTS.md                                          | 383 ++++++++++++++++++---
+ docs/ROADMAP.md                                    |  40 ++-
+ .../application/workflows/turn_executor_runtime.py |  22 +-
+ tests/adapters/test_model_invocation.py            | 283 +++++++++++----
+ 4 files changed, 588 insertions(+), 140 deletions(-)
