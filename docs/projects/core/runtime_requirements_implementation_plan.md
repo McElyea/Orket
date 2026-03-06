@@ -1,0 +1,241 @@
+# Core Runtime Requirements Implementation Plan
+
+Last updated: 2026-03-06  
+Status: Active (implementation planning)  
+Owner: Orket Core
+
+## Purpose
+
+Define how to implement the core runtime requirements and invariants currently specified in:
+1. `runtime_invariants.md`
+2. `runtime_stability_focus_requirements.md`
+3. `core_tool_rings_compatibility_requirements.md`
+4. `tool_contract_template.md`
+
+## Slicing Strategy Decision
+
+Decision: **vertical-first slices with a thin horizontal bootstrap**.
+
+Rationale:
+1. Vertical slices give production-like proof early (behavior + artifacts + tests together).
+2. Pure horizontal layering would delay replay and determinism evidence until too late.
+3. A small bootstrap slice is still required to prevent duplicate contract definitions.
+4. This strategy reduces false-green risk by closing each slice with explicit runtime proof.
+
+## Delivery Model
+
+1. Slice IDs: `CORE-IMP-00` to `CORE-IMP-07`.
+2. Each slice must ship:
+   1. minimal code changes for the claimed behavior
+   2. contract/integration tests at the highest practical layer
+   3. updated artifacts/telemetry where required
+   4. explicit closeout note (what is proven vs not proven)
+3. No slice may weaken runtime invariants.
+
+## Phase Overview
+
+1. Phase 0 (bootstrap): `CORE-IMP-00`
+2. Phase 1 (deterministic run spine): `CORE-IMP-01` and `CORE-IMP-02`
+3. Phase 2 (governance enforcement): `CORE-IMP-03` and `CORE-IMP-04`
+4. Phase 3 (reliability and promotion controls): `CORE-IMP-05` and `CORE-IMP-06`
+5. Phase 4 (compatibility pilot): `CORE-IMP-07`
+
+## Slices
+
+### CORE-IMP-00: Contract Bootstrap (Horizontal Foundation)
+
+Scope:
+1. Establish canonical locations and loaders for:
+   1. artifact schema registry (`core/artifacts/schema_registry.yaml`)
+   2. compatibility surface map (`core/tools/compatibility_map.yaml`)
+   3. tool registry snapshot version source
+2. Add schema/version parsing utilities shared by runtime and replay flows.
+
+Deliverables:
+1. Registry files and loader modules with strict validation.
+2. Startup/runtime failure paths for missing or malformed contracts.
+
+Required proof:
+1. Unit tests for schema registry and compatibility map parsing.
+2. Contract tests for failure-closed behavior on invalid registry documents.
+
+Exit criteria:
+1. No runtime path reads ad-hoc contract definitions outside canonical locations.
+
+### CORE-IMP-01: Deterministic Run Spine
+
+Scope:
+1. Enforce execution ordering:
+   1. `ledger.record(tool_call)`
+   2. tool execution
+   3. `ledger.record(tool_result)`
+   4. artifact emission
+2. Require `tool_invocation_manifest.json` for every invocation.
+3. Emit `run_determinism_class` and `capability_manifest.json`.
+
+Deliverables:
+1. Runtime instrumentation hooks for deterministic ordering.
+2. Manifest generation integrated into run lifecycle.
+
+Required proof:
+1. Integration test asserting ledger order on successful and failing tool calls.
+2. Contract tests asserting required invocation manifest fields.
+3. Integration test asserting run-level determinism classification.
+
+Exit criteria:
+1. Runs cannot complete without required invocation manifests.
+2. Ledger order contract is mechanically enforced.
+
+### CORE-IMP-02: Golden Replay Integrity
+
+Scope:
+1. Implement `runtime_contract_hash` generation from required contract surfaces.
+2. Persist `tool_registry_version` and runtime hash with golden metadata.
+3. Enforce replay-mode behavior:
+   1. no inference
+   2. no prompt construction
+   3. no repair heuristics
+   4. recorded tool calls only
+4. Add replay compatibility checks for:
+   1. tool registry snapshot
+   2. runtime contract hash
+   3. artifact schema registry version
+5. Implement drift classifier priority ordering.
+
+Deliverables:
+1. Runtime/replay hash computation utility.
+2. Golden run metadata schema update.
+3. Drift classifier with deterministic layer precedence.
+
+Required proof:
+1. Integration replay test proving inference path is never called.
+2. Contract tests for compatibility rejection on mismatched hashes/versions.
+3. Drift-classifier tests validating priority order.
+
+Exit criteria:
+1. Replay fails closed on incompatible runtime contracts.
+2. Drift layers are classified in deterministic order.
+
+### CORE-IMP-03: Ring Policy Enforcement
+
+Scope:
+1. Static enforcement preventing compatibility/experimental imports of core internals.
+2. Runtime ring-policy enforcement in tool dispatch.
+3. Reject undeclared tools and ring violations before execution.
+
+Deliverables:
+1. Lint/static-check rule for import boundaries.
+2. Runtime policy guard in dispatcher.
+
+Required proof:
+1. Static-rule tests for forbidden import paths.
+2. Integration tests asserting pre-execution rejection semantics.
+
+Exit criteria:
+1. Ring boundary violations are impossible to execute silently.
+
+### CORE-IMP-04: Compatibility Mapping Governance
+
+Scope:
+1. Enforce mapping constraints:
+   1. expands to core tools only
+   2. no compatibility chaining
+   3. determinism propagation (least-deterministic wins)
+2. Require mapping metadata:
+   1. mapping version
+   2. schema compatibility range
+   3. determinism class
+3. Emit `compat_translation.json`.
+
+Deliverables:
+1. Compatibility map validator and dispatcher integration.
+2. Translation artifact emission path.
+
+Required proof:
+1. Contract tests for mapping validation and deterministic class propagation.
+2. Integration tests for translation artifact generation.
+
+Exit criteria:
+1. Invalid compatibility mappings fail at load-time or pre-dispatch.
+
+### CORE-IMP-05: Prompt Budget and Tokenizer Truth
+
+Scope:
+1. Implement stage-level prompt budgets and fail-closed enforcement.
+2. Bind token accounting to active backend tokenizer.
+3. Emit `prompt_budget_usage.json` and prompt structural diffs.
+
+Deliverables:
+1. Prompt budget engine with stage-aware limits.
+2. Backend tokenizer adapter contract.
+
+Required proof:
+1. Contract tests for budget exceed fail-closed semantics.
+2. Integration tests for backend-tokenizer accounting path.
+
+Exit criteria:
+1. Prompt budget decisions are deterministic for a given model backend.
+
+### CORE-IMP-06: Reliability Scoreboard and Promotion Gates
+
+Scope:
+1. Build scoreboard pipeline from ledger records only.
+2. Enforce rolling window policy (1000 invocations or 30 days default).
+3. Implement promotion gate evaluator:
+   1. reliability threshold
+   2. replay across configured `N` golden runs
+   3. no unresolved drift classifications
+
+Deliverables:
+1. Scoreboard computation module and artifact output.
+2. Promotion gate evaluator utility.
+
+Required proof:
+1. Contract tests proving scoreboard reproducibility from ledger only.
+2. Integration tests for promotion-gate pass/fail outcomes.
+
+Exit criteria:
+1. Promotion decision can be reproduced from stored evidence.
+
+### CORE-IMP-07: Compatibility Pilot Vertical Slice
+
+Scope:
+1. Implement a small reference compatibility set (2-3 mappings) from `core/tools/compatibility_map.yaml`.
+2. Execute golden parity runs in live and replay modes.
+3. Validate end-to-end observability artifacts for compatibility calls.
+
+Deliverables:
+1. Reference compatibility mappings and fixtures.
+2. Parity run evidence artifacts.
+
+Required proof:
+1. Golden parity tests for pilot mappings.
+2. Replay parity for deterministic mappings.
+
+Exit criteria:
+1. At least one compatibility mapping meets all promotion prerequisites (not necessarily promoted).
+
+## Cross-Cutting Test Policy
+
+1. Highest practical proof layer is required for runtime claims.
+2. Unit-only proof is insufficient for dispatch, replay, and ledger ordering invariants.
+3. Mock-heavy tests may exist for edge isolation but cannot be cited as runtime truth proof.
+
+## Risk Register (Execution-Blocking Risks)
+
+1. Existing runtime paths may bypass canonical dispatcher.
+2. Current ledger event model may be insufficient for strict ordering assertions.
+3. Replay path may currently rely on prompt/model helpers.
+4. Scoreboard code may currently depend on non-ledger telemetry.
+
+Mitigation:
+1. Detect and patch bypasses during `CORE-IMP-01` and `CORE-IMP-03`.
+2. Add invariant tests before broader refactors.
+3. Keep slices small and gate each slice before proceeding.
+
+## Definition of Done (Program Level)
+
+1. All invariants in `runtime_invariants.md` are implemented and enforced.
+2. Focus Items 1-7 have executable contract tests and integration proof.
+3. Replay compatibility checks prevent silent divergence.
+4. Scoreboard and promotion decisions are ledger-auditable.
