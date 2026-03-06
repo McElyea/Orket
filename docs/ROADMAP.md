@@ -3,7 +3,7 @@
 Last updated: 2026-03-05
 
 ## Priority Plan Pointer
-1. protocol-governed runtime implementation plan: `docs/projects/protocol-governed/implementation-plan.md`
+1. techdebt hardening implementation plan: `docs/projects/techdebt/TD03052026-Plan.md`
 
 ## Canonical Rule
 `docs/ROADMAP.md` is the only active roadmap source.
@@ -13,16 +13,18 @@ All process and workflow rules live in `docs/CONTRIBUTOR.md`.
 
 ## Invocation Rule
 If the user requests "follow roadmap" without naming a project, execute the highest-priority active (non-paused) item in **Priority Now**.
-Current default target: protocol-governed.
+Current default target: techdebt.
 
 ## Priority Now
-1. protocol-governed -- Runtime protocol determinism hardening (requirements v5.1 + implementation plan).
-2. marshaller -- Marshaller v0 scaffolding lane aligned to protocol-governed runtime decisions.
-3. NervousSystem -- v1 complete; hold for review and next-phase planning.
+1. techdebt -- TD03052026 boundary-hardening program (`docs/projects/techdebt/TD03052026-Plan.md`).
+2. protocol-governed -- Runtime protocol determinism hardening (requirements v5.1 + implementation plan).
+3. marshaller -- Marshaller v0 scaffolding lane aligned to protocol-governed runtime decisions.
+4. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: keep staged/replayed pre-production validation windows fresh per release candidate and major runtime-policy change; landed: network destination allowlist metadata on settings/runtime-policy surfaces, deterministic clock artifact metadata in execution capsule and replay receipt inventory diffs, enforce-phase checklist publication, local window_a/window_b strict evidence artifacts under `benchmarks/results/protocol_governed/enforce_phase/`, direct `python scripts/MidTier/...` campaign invocation hardening, local prompting Ollama strict conformance blocker closure with promotion evidence at `benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/`, enforce-window sign-off recorder automation with local sign-off artifacts, one-command enforce-window capture wrapper for staged/replayed collection paths, cutover-readiness gate automation over captured window manifests with local readiness artifact at `benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness.json`, and staged/replayed pre-production readiness artifact at `benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness_preprod.json`; production-window sign-off remains deferred until production rollout exists).
-2. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
+1. techdebt -- Execute TD03052026 from `docs/projects/techdebt/TD03052026-Plan.md` (in progress: phase-0 baseline/scope freeze and P0 boundary-seam hardening: install authority, launcher defaults, subscriber lifecycle ownership, provider close contract, with mandatory gate artifacts under `benchmarks/results/techdebt/td03052026/`).
+2. protocol-governed -- Keep enforce-phase staged/replayed pre-production validation windows fresh per release candidate and major runtime-policy change.
+3. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
@@ -31,10 +33,10 @@ Every non-archive project under `docs/projects/` must appear here.
 |---|---|---|---|---|---|
 | NervousSystem | active | P2-review | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`. |
 | marshaller | active | P2-scaffolding | `docs/projects/marshaller/` | Orket Core | Current Marshaller implementation is scaffolding and will be refit to finalized protocol-governed runtime decisions. |
+| techdebt | active | P1-active | `docs/projects/techdebt/` | Orket Core | TD03052026 hardening program is active with promotion-blocking P0 seams and mandatory machine-readable evidence gates. |
 | protocol-governed | active | P1-active | `docs/projects/protocol-governed/` | Orket Core | Primary overhaul lane; strict parser/preflight and hash/idempotency slices are landed, with append-only ledger, replay comparator, and ledger parity cutover scaffolding actively progressing against v5.1. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
 | LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |
-| techdebt | completed-archive | complete | `docs/projects/archive/TechDebt-2026-03-02/` | Orket Core | Review3 remediation lane closed (C1-C6 complete; security gates green). Deferred medium backlog documented in archive README/plan. |
 | SDK-2026-03-01-Audio | completed-archive | complete | `docs/projects/archive/SDK-2026-03-01-Audio/` | Orket Core | SDK typed audio capabilities, Piper/audio backend wiring, bridge integration, and reforger voice-profile validation completed in-repo. |
 | core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |
 | RuleSim-2026-03-01 | completed-archive | complete | `docs/projects/archive/RuleSim-2026-03-01/` | Orket Core | RuleSim v0 implemented; docs archived after completion. |
