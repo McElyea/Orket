@@ -114,6 +114,8 @@ python scripts/governance/sync_published_index.py --check
 1. Execute recurring maintenance cycles using:
    - `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
 2. Use the checklist as the command/evidence source of truth for recurring freshness work.
+3. Apply techdebt folder archive/closeout semantics from:
+   - `docs/projects/techdebt/README.md`
 
 ## Gitea CI Helper
 Requires `ORKET_GITEA_URL`, `ORKET_GITEA_OWNER`, `ORKET_GITEA_REPO`, and `ORKET_GITEA_TOKEN` in environment or `.env`.
@@ -181,3 +183,4 @@ python scripts/replay/report_failure_modes.py --log workspace/default/orket.log 
 5. `docs/ROADMAP.md`
 6. `docs/process/PUBLISHED_ARTIFACTS_POLICY.md`
 7. `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
+8. `docs/projects/techdebt/README.md`

@@ -34,6 +34,8 @@ Orket
 10. Recurring maintenance rule:
    - Recurring freshness/maintenance cycles are governed by:
      `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
+   - Techdebt folder closure/archive semantics are governed by:
+     `docs/projects/techdebt/README.md`
    - Keep recurring checks out of project execution lanes; project plans should remain closable.
 
 ## Current Focus

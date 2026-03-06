@@ -14,6 +14,8 @@ Provide one standing checklist for every techdebt/code-review/maintenance cycle 
 2. Project implementation plans remain finite and closable; recurring freshness work belongs here.
 3. Every cycle must produce machine-readable evidence artifacts.
 4. Narrative-only sign-off is not sufficient for closure of any checklist item.
+5. Folder-level closure/archiving semantics are defined in:
+   - `docs/projects/techdebt/README.md`
 
 ## Cycle Triggers
 
