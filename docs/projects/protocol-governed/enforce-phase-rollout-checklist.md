@@ -14,10 +14,10 @@ This checklist is the operational gate for moving protocol-governed runtime from
 
 ## Campaign Windows
 
-Run and retain evidence for at least two operator windows:
+Run and retain evidence for at least two operator windows using staged or replayed pre-production runs:
 
-1. Window A (baseline traffic mix)
-2. Window B (peak/variance traffic mix)
+1. Window A (baseline staged/replayed traffic mix)
+2. Window B (peak/variance staged/replayed traffic mix)
 
 For each window, capture:
 
@@ -42,6 +42,10 @@ One-command wrapper (runs all five commands in order and emits a capture manifes
 Cutover readiness gate (consumes captured window manifests):
 1. `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest <window_a_manifest_json> --manifest <window_b_manifest_json> --min-pass-windows 2 --out <cutover_readiness_out_json> --strict`
 
+Production-rollout note:
+1. Production-window operator sign-off is not required until a production rollout exists.
+2. Do not block enforce cutover readiness on unavailable production traffic inputs.
+
 ## Hard Gates
 
 All gates must be green in both windows:
@@ -63,7 +67,7 @@ All gates must be green in both windows:
 
 Rollback to compat mode if any of the following occurs:
 
-1. deterministic replay mismatch regression in production window
+1. deterministic replay mismatch regression in any enforced validation window (pre-production or production)
 2. parity mismatch regression with unexplained delta signatures
 3. sustained protocol validation failure spike causing operational instability
 4. unresolved high-severity protocol error family introduced by cutover

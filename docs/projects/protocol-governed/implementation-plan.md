@@ -259,7 +259,8 @@ Verification runs (latest batch):
 30. `python scripts/governance/check_docs_project_hygiene.py`
 
 Next execution slices (active):
-1. Execute equivalent campaign windows against production traffic and obtain operator approver sign-off using the same checklist artifacts.
+1. Execute equivalent campaign windows against staged/replayed pre-production traffic and obtain operator approver sign-off using the same checklist artifacts.
+2. Keep production-window operator sign-off deferred until production rollout exists and real production traffic is available.
 
 ## Delivery Strategy
 
