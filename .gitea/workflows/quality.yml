@@ -112,6 +112,10 @@ jobs:
           python -m pytest -q tests/application/test_orchestrator_epic.py -k closes_provider_per_turn_across_repeated_cycles
           python -m pytest -q tests/adapters/test_local_model_provider_telemetry.py -k close_is_idempotent
 
+      - name: Enforce API composition isolation
+        run: |
+          python -m pytest -q tests/interfaces/test_api_composition_isolation.py
+
       - name: Enforce kernel fire-drill suite
         run: |
           python scripts/governance/run_kernel_fire_drill.py

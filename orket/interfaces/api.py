@@ -470,19 +470,9 @@ app.add_middleware(
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 engine = _EngineProxy(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
-stream_bus = StreamBus(
-    StreamBusConfig(
-        best_effort_max_events_per_turn=int(os.getenv("ORKET_STREAM_BEST_EFFORT_MAX_EVENTS_PER_TURN", "256")),
-        bounded_max_events_per_turn=int(os.getenv("ORKET_STREAM_BOUNDED_MAX_EVENTS_PER_TURN", "128")),
-        max_bytes_per_turn_queue=int(os.getenv("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
-    )
-)
-interaction_manager = InteractionManager(
-    bus=stream_bus,
-    commit_orchestrator=CommitOrchestrator(project_root=PROJECT_ROOT),
-    project_root=PROJECT_ROOT,
-)
-extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
+stream_bus: StreamBus | None = None
+interaction_manager: InteractionManager | None = None
+extension_manager: ExtensionManager | None = None
 
 
 def _build_stream_bus_from_env() -> StreamBus:
@@ -493,6 +483,31 @@ def _build_stream_bus_from_env() -> StreamBus:
             max_bytes_per_turn_queue=int(os.getenv("ORKET_STREAM_MAX_BYTES_PER_TURN_QUEUE", "1000000")),
         )
     )
+
+
+def _get_stream_bus() -> StreamBus:
+    global stream_bus
+    if stream_bus is None:
+        stream_bus = _build_stream_bus_from_env()
+    return stream_bus
+
+
+def _get_interaction_manager() -> InteractionManager:
+    global interaction_manager
+    if interaction_manager is None:
+        interaction_manager = InteractionManager(
+            bus=_get_stream_bus(),
+            commit_orchestrator=CommitOrchestrator(project_root=PROJECT_ROOT),
+            project_root=PROJECT_ROOT,
+        )
+    return interaction_manager
+
+
+def _get_extension_manager() -> ExtensionManager:
+    global extension_manager
+    if extension_manager is None:
+        extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
+    return extension_manager
 
 # --- System Endpoints ---
 
@@ -621,8 +636,8 @@ v1_router.include_router(
 )
 v1_router.include_router(
     build_sessions_router(
-        interaction_manager_getter=lambda: interaction_manager,
-        extension_manager_getter=lambda: extension_manager,
+        interaction_manager_getter=lambda: _get_interaction_manager(),
+        extension_manager_getter=lambda: _get_extension_manager(),
         is_builtin_workload=lambda workload_id: is_builtin_workload(workload_id),
         validate_builtin_workload_start=lambda **kwargs: validate_builtin_workload_start(**kwargs),
         run_builtin_workload=lambda **kwargs: run_builtin_workload(**kwargs),
@@ -1488,8 +1503,8 @@ register_streaming_routes(
     app,
     api_key_name=API_KEY_NAME,
     api_runtime_node_getter=lambda: api_runtime_node,
-    interaction_manager_getter=lambda: interaction_manager,
-    stream_bus_getter=lambda: stream_bus,
+    interaction_manager_getter=lambda: _get_interaction_manager(),
+    stream_bus_getter=lambda: _get_stream_bus(),
     runtime_state=runtime_state,
     project_root_getter=lambda: PROJECT_ROOT,
     log_event=log_event,
