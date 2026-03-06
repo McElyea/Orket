@@ -18,7 +18,7 @@ In scope:
 Out of scope:
 1. Sprint sequencing and execution plan details.
 2. Full implementation of all compatibility tools.
-3. Roadmap reprioritization outside the active techdebt lane.
+3. Roadmap reprioritization outside the active core requirements lane.
 
 ## Focus Item 1: Split System Into Core vs Workloads
 
@@ -48,6 +48,8 @@ Behavior:
 3. Workloads may invoke only tools declared in their capability profile.
 4. Core runtime must remain deterministic regardless of workload behavior.
 5. Tool schema compatibility is validated at load time and run time.
+6. Artifact schema registry must exist at `core/artifacts/schema_registry.yaml`.
+7. `run_determinism_class` is computed per run as the least-deterministic class across invoked tools.
 
 Interfaces:
 1. Core exposes stable entrypoints:
@@ -67,7 +69,19 @@ Observability:
    2. `capability_profile.json`
    3. `workload_identity.json`
    4. `core_version.json`
+   5. `run_determinism_class` (`pure | workspace | external`)
 2. Boundary violations emit `runtime_violation.json`.
+3. Artifact schema registry must provide artifact-to-version mappings (for example `run.json: 1.0`).
+
+Artifact schema registry example:
+```yaml
+artifacts:
+  run.json: 1.0
+  tool_call.json: 1.0
+  tool_result.json: 1.0
+  tool_metrics.json: 1.0
+  run_summary.json: 1.0
+```
 
 Failure semantics:
 1. Workload exceptions cannot crash the runtime.
@@ -108,6 +122,11 @@ Behavior:
 3. Golden runs execute in:
    1. `live_mode`
    2. `replay_mode` (no LLM invocation)
+4. Replay mode must bypass:
+   1. model inference
+   2. prompt construction
+   3. tool validator repair heuristics
+5. Replay mode uses recorded tool calls only.
 
 Interfaces:
 1. `orket run golden/<test>`
@@ -124,7 +143,21 @@ Observability:
    3. `tool_schema_hash`
    4. `model_id`
    5. `orket_version`
+   6. `runtime_contract_hash`
+   7. `tool_registry_version`
 2. Drift outputs `drift_report.json`.
+3. `runtime_contract_hash` is computed from:
+   1. response protocol version
+   2. tool contract template version
+   3. artifact schema registry version
+   4. tool ring policy version
+
+Runtime contract hash example:
+```json
+{
+  "runtime_contract_hash": "orket-runtime-v1-3e4fa9"
+}
+```
 
 Failure semantics:
 1. Unexpected drift fails CI.
@@ -177,7 +210,7 @@ Failure semantics:
 
 Proof:
 1. Budget enforcement test suite.
-2. Deterministic token accounting.
+2. Deterministic token accounting using the same tokenizer as the active model backend.
 3. Prompt diff coverage for structural changes.
 
 ## Focus Item 4: Tool Reliability Scoreboard
@@ -208,6 +241,9 @@ Behavior:
    2. model
    3. workload
    4. version
+3. Reliability metrics use a rolling evaluation window:
+   1. default last 1000 invocations
+   2. or last 30 days
 
 Interfaces:
 1. Ingestion API: `record_tool_metric(event)`.
@@ -289,6 +325,7 @@ Define a deterministic baseline toolset that is small enough to stabilize and br
 Reference:
 1. `docs/projects/core/core_tool_rings_compatibility_requirements.md`
 2. `docs/projects/core/tool_contract_template.md`
+3. `docs/projects/core/runtime_invariants.md`
 
 ### Requirements
 
@@ -312,6 +349,7 @@ Interfaces:
    3. `timeout`
    4. `retry_policy`
    5. `capability_profile`
+   6. `tool_registry_version`
 
 Observability:
 1. Emit per invocation:

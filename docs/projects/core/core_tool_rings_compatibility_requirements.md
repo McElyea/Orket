@@ -12,6 +12,7 @@ Define the requirements for a tool architecture that preserves deterministic cor
 
 1. This document uses `ring` as the policy boundary term (`core`, `compatibility`, `experimental`).
 2. `compatibility ring` and `compatibility layer` are equivalent terms in this context.
+3. Determinism ordering is canonical and global: `pure > workspace > external`.
 
 ## Scope
 
@@ -58,8 +59,8 @@ Behavior:
    3. compatibility tools must interact with core tools only through canonical tool dispatch interfaces
 8. Compatibility mappings must declare determinism propagation:
    1. `mapping_determinism = least_deterministic(mapped_core_tools)`
-   2. canonical ordering is `pure > workspace > external`
-   3. mappings cannot elevate determinism class
+   2. mappings cannot elevate determinism class
+9. Compatibility mappings may expand only to `core` tools and must not chain to other compatibility mappings.
 
 Interfaces:
 1. Tool registry entries must include:
@@ -102,8 +103,9 @@ Observability:
    3. `tool_metrics.json`
    4. `tool_ring_manifest.json`
    5. `compat_translation.json` for compatibility tool translation and mapped calls
-   6. `tool_invocation_manifest.json` including ring, schema, determinism, and capability profile
+   6. `tool_invocation_manifest.json` including ring, schema, determinism, capability profile, and `tool_contract_version`
 3. Violations emit explicit artifacts/events with stable error codes.
+4. `tool_invocation_manifest.json` is required for all tool invocations.
 
 Failure semantics:
 1. `core` tool failures may fail run per normal policy.
@@ -120,6 +122,7 @@ Failure semantics:
    5. `schema_violation`
    6. `determinism_violation`
 5. `determinism_violation` must be emitted when observed side effects conflict with declared determinism class.
+6. Error codes must use `snake_case`.
 
 Proof:
 1. Conformance tests for all `core` tools.

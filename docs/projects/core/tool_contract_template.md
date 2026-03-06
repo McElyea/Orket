@@ -15,6 +15,8 @@ tool_identity:
   tool_name: file.patch
   ring: core # core | compatibility | experimental
   schema_version: 1.0.0
+  tool_contract_version: 1.0.0
+  tool_registry_version: 1.2.0
   mapping_version: null # required when ring == compatibility
 
 capability_profile:
@@ -63,6 +65,7 @@ observability:
     - tool_call.json
     - tool_result.json
     - tool_metrics.json
+    - tool_invocation_manifest.json
   optional_artifacts:
     - compat_translation.json
     - tool_debug_trace.json
@@ -100,14 +103,18 @@ conformance_tests:
 
 1. `tool_name` must be globally unique.
 2. `schema_version` follows semantic versioning.
-3. All tool arguments must be explicit in `input_schema`; no implicit runtime-only parameters.
-4. Optional input fields must have deterministic defaults.
-5. Error codes must remain stable across minor schema versions.
-6. Only deterministic tools may use retries.
-7. Retry policies must avoid repeated side effects.
-8. Compatibility mappings cannot elevate determinism class relative to mapped core tools.
-9. Compatibility mappings must produce `compat_translation.json`.
-10. Tool PRs must include contract, schemas, and conformance tests.
+3. `tool_contract_version` must be recorded in `tool_invocation_manifest.json` for every invocation.
+4. `tool_registry_version` must match the runtime registry snapshot used for dispatch.
+5. All tool arguments must be explicit in `input_schema`; no implicit runtime-only parameters.
+6. Optional input fields must have deterministic defaults.
+7. Error codes must remain stable across minor schema versions.
+8. Error codes must use `snake_case`.
+9. Only deterministic tools may use retries.
+10. Retry policies must avoid repeated side effects.
+11. Compatibility mappings cannot elevate determinism class relative to mapped core tools.
+12. Compatibility mappings may expand only to core tools and must not chain to compatibility mappings.
+13. Compatibility mappings must produce `compat_translation.json`.
+14. Tool PRs must include contract, schemas, and conformance tests.
 
 ## Suggested Stable Error Codes
 
@@ -117,6 +124,11 @@ conformance_tests:
 4. `runtime_error`
 5. `invalid_args`
 6. `determinism_violation`
+
+## Canonical Determinism Ordering
+
+1. `pure > workspace > external`
+2. Mapping or run determinism resolves to the least-deterministic class in the composed set.
 
 ## Practical Maintenance Tips
 
