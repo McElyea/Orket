@@ -1,8 +1,19 @@
 # TD03052026 Phase 0 Baseline
 
-Last updated: 2026-03-05  
-Status: Captured  
+Last updated: 2026-03-06  
+Status: Captured (historical phase-0 snapshot)  
 Owner: Orket Core
+
+## Closeout Context
+
+1. This file records the initial phase-0 baseline state only.
+2. Final non-maintenance hardening closure is recorded in:
+   - `docs/projects/techdebt/TD03052026-Plan.md`
+3. Current gate authority is:
+   - `benchmarks/results/techdebt/td03052026/readiness_checklist.json`
+   - `benchmarks/results/techdebt/td03052026/hardening_dashboard.json`
+4. Recurring maintenance execution is governed by:
+   - `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
 
 ## Scope
 
