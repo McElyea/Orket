@@ -39,6 +39,7 @@ Rationale:
 3. Phase 2 (governance enforcement): `CORE-IMP-03` and `CORE-IMP-04`
 4. Phase 3 (reliability and promotion controls): `CORE-IMP-05` and `CORE-IMP-06`
 5. Phase 4 (compatibility pilot): `CORE-IMP-07`
+6. Phase 5 (future graph reconstruction): `CORE-IMP-08` (post-`CORE-IMP-07`)
 
 ## Slices
 
@@ -101,6 +102,7 @@ Scope:
 6. Enforce artifact-ledger referential integrity at write time.
 7. Enforce `run_identity` immutability for full run duration.
 8. Enforce strict tool call/result pairing and forbid orphaned `tool_call` events.
+9. Enforce `capability_manifest.json` integrity against run-start capability snapshot and immutability.
 
 Deliverables:
 1. Runtime instrumentation hooks for deterministic ordering.
@@ -149,6 +151,7 @@ Required proof:
 9. Contract tests asserting `tool_call` to `tool_result` pairing with `call_sequence_number`.
 10. Integration tests asserting artifact emission occurs only after matching `tool_result` is recorded.
 11. Contract tests asserting `run_identity` immutability.
+12. Contract tests asserting `capability_manifest.json` matches run-start snapshot and remains immutable.
 
 Exit criteria:
 1. Runs cannot complete without required invocation manifests.
@@ -376,6 +379,51 @@ Required proof:
 
 Exit criteria:
 1. At least one compatibility mapping meets all promotion prerequisites (not necessarily promoted).
+
+### CORE-IMP-08: Run Graph Reconstruction (Future Slice)
+
+Status:
+1. Future slice (`P2-P3`) executed after `CORE-IMP-07`.
+
+Goal:
+1. Deterministically reconstruct a run DAG from ledger events and artifacts for debugging, lineage, and replay analysis.
+
+Scope:
+1. Build deterministic graph reconstruction engine from ledger + artifacts.
+2. Define graph schema with node and edge types.
+3. Emit derived `run_graph.json` artifact.
+4. Ensure graph parity between live and replay for deterministic runs.
+5. Enforce rule: ledger is source of truth, graph is derived only.
+
+Node types:
+1. `tool_call`
+2. `compat_mapping`
+3. `workload_stage`
+4. `artifact`
+
+Edge types:
+1. `call_result`
+2. `artifact_produced`
+3. `compat_expansion`
+4. `execution_order`
+
+Deliverables:
+1. `run_graph_schema.json`.
+2. `run_graph.json`.
+3. graph reconstruction engine module.
+
+Required proof:
+1. Contract test for graph reproducibility (same ledger/artifacts -> same graph).
+2. Contract test for graph determinism and idempotency.
+3. Contract test for artifact-lineage integrity.
+4. Contract test for compatibility-expansion edge correctness.
+5. Integration test for golden run graph reconstruction.
+6. Integration test for live vs replay graph parity on deterministic runs.
+
+Exit criteria:
+1. `run_graph.json` is fully derivable from ledger + artifacts.
+2. Graph output is deterministic and version-compatible.
+3. No graph path becomes a primary truth source.
 
 ## Cross-Cutting Test Policy
 

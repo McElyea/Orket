@@ -21,6 +21,7 @@ Track execution status, dependencies, and proof obligations for implementation s
 | CORE-IMP-05 | Prompt Budget and Tokenizer Truth | queued | P1 | CORE-IMP-01, CORE-IMP-02 | Budget enforcement contract tests + backend-tokenizer integration tests | `prompt_budget_tokenizer_truth_report.json` | `tests/reports/prompt_budget_tokenizer_truth_report.json` | Prevents prompt drift and accounting mismatch. |
 | CORE-IMP-06 | Reliability Scoreboard and Promotion Gates | queued | P1 | CORE-IMP-01, CORE-IMP-02, CORE-IMP-04 | Ledger-only reproducibility tests + promotion gate integration tests | `scoreboard_promotion_gate_report.json` | `tests/reports/scoreboard_promotion_gate_report.json` | Auditable reliability and promotion decisions. |
 | CORE-IMP-07 | Compatibility Pilot Vertical Slice | queued | P2 | CORE-IMP-02, CORE-IMP-04, CORE-IMP-06 | Live+replay golden parity on pilot mappings | `compat_pilot_parity_report.json` | `tests/reports/compat_pilot_parity_report.json` | First end-to-end compatibility confidence pack. |
+| CORE-IMP-08 | Run Graph Reconstruction | future | P3 | CORE-IMP-01, CORE-IMP-02, CORE-IMP-04, CORE-IMP-07 | Deterministic graph reconstruction + replay parity integration tests | `run_graph_reconstruction_report.json` | `tests/reports/run_graph_reconstruction_report.json` | Derived DAG from ledger + artifacts only; execute post compatibility pilot. |
 
 ## Status Definitions
 
@@ -28,6 +29,7 @@ Track execution status, dependencies, and proof obligations for implementation s
 2. `in_progress`: actively implementing.
 3. `blocked`: cannot proceed due to explicit blocker.
 4. `done`: implemented, verified, and closeout evidence recorded.
+5. `future`: intentionally deferred until prerequisites are complete.
 
 ## Closeout Requirements Per Slice
 

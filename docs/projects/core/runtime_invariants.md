@@ -11,7 +11,7 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 ## Invariants
 
 1. `INV-001`: Tool calls must be ledger-recorded before execution begins.
-2. `INV-002`: Tool execution must occur only through canonical tool dispatch; workloads cannot bypass dispatch.
+2. `INV-002`: Tool execution must occur only through canonical tool dispatch. Direct invocation of tool implementations by workloads, adapters, or compatibility mappings is forbidden.
 3. `INV-003`: Tools must not invoke other tools directly. Composition must occur through workload orchestration or compatibility mapping via dispatcher.
 4. `INV-004`: Every emitted artifact must have a registered schema version in `core/artifacts/schema_registry.yaml`.
 5. `INV-005`: Artifact-ledger referential integrity is mandatory:
@@ -33,7 +33,7 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 19. `INV-019`: Capability profile snapshot must remain immutable for the full run duration.
 20. `INV-020`: Replay must verify compatibility of tool registry snapshot, runtime contract hash, artifact schema snapshot, and capability profile snapshot before execution.
 21. `INV-021`: Mutable runtime state must be scoped by `run_id`; cross-run mutable sharing is forbidden.
-22. `INV-022`: Runtime must enforce `max_tool_invocations_per_run` (default `200`) and fail closed when exceeded.
+22. `INV-022`: Runtime must track tool invocation count per run and enforce `max_tool_invocations_per_run` (default `200`); execution must fail closed when exceeded.
 23. `INV-023`: If a tool declares `determinism_class = pure` but produces observable side effects, runtime must emit `determinism_violation`.
 24. `INV-024`: Ledger ordering must be monotonic:
    1. `sequence_number` strictly increases within a run
@@ -44,6 +44,7 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 28. `INV-028`: Every `tool_call` ledger event must have a corresponding `tool_result` ledger event with matching `run_id` and `tool_name`; `tool_result` must reference the originating call via `call_sequence_number`.
 29. `INV-029`: Run identity (`run_id`, workload identity, start timestamp) must remain immutable for the full run duration.
 30. `INV-030`: Tool contract definitions referenced by a run must remain immutable for the run duration and must match the tool registry snapshot used at run start.
+31. `INV-031`: `capability_manifest.json` must match the capability profile snapshot captured at run start and must remain immutable for the run duration.
 
 ## Execution Ordering
 
