@@ -86,7 +86,8 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
     assert isinstance(response, ModelResponse)
     assert response.content == "ok"
     assert response.raw["provider"] == "openai-compat"
-    assert response.raw["provider_backend"] == "lmstudio"
+    assert response.raw["provider_backend"] == "openai_compat"
+    assert response.raw["provider_name"] == "lmstudio"
     assert response.raw["orket_request_id"].startswith("orket-")
     assert bool(response.raw["orket_session_id"])
     assert bool(response.raw["prompt_fingerprint"])
