@@ -4,14 +4,26 @@ import inspect
 from typing import Any, Dict, Optional
 
 
+def _supports_runtime_context(callable_obj: Any) -> bool:
+    try:
+        parameters = inspect.signature(callable_obj).parameters
+    except (TypeError, ValueError):
+        return False
+    return "runtime_context" in parameters
+
+
 async def invoke_model_complete(model_client: Any, messages: list[dict[str, str]], context: Dict[str, Any]) -> Any:
     complete = getattr(model_client, "complete")
-    try:
-        parameters = inspect.signature(complete).parameters
-    except (TypeError, ValueError):
-        parameters = {}
-    if "runtime_context" in parameters:
+    if _supports_runtime_context(complete):
         return await complete(messages, runtime_context=context)
+
+    # Default model-client wrappers can expose provider.complete(runtime_context=...)
+    # while their own complete(...) signature does not.
+    provider = getattr(model_client, "provider", None)
+    provider_complete = getattr(provider, "complete", None)
+    if callable(provider_complete) and _supports_runtime_context(provider_complete):
+        return await provider_complete(messages, runtime_context=context)
+
     return await complete(messages)
 
 

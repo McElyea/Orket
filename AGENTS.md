@@ -1,90 +1,371 @@
-# Agent Instructions
+# AGENTS.md
+
+## Purpose
+
+This repository is exploratory, but it is not exempt from engineering discipline.
+
+Orket is used to explore local LLM workflow, orchestration, tooling, runtime behavior, and future product possibilities. Agents must support experimentation without increasing drift that would make future shipping harder.
+
+Optimize for:
+1. truthful behavior,
+2. truthful verification,
+3. preserving future shippability,
+4. reducing authority drift,
+5. minimal-scope changes,
+6. resource efficiency.
+
+Do not confuse:
+- exploratory code with low standards,
+- broad scope with lack of boundaries,
+- green tests with real proof.
+
+---
+
+## Enforcement Scope
+
+These rules are binding for all new and modified code.
+
+Existing violations may remain temporarily only when they are outside the scope of the current task. Agents must not:
+1. introduce new violations,
+2. expand the scope of an existing violation,
+3. move code further away from compliance when touching an affected area.
+
+When modifying a non-compliant file, make the smallest reasonable improvement toward compliance unless the user explicitly directs otherwise.
+
+Scope precedence rule:
+Make the smallest reasonable compliance improvement that fits inside the current task. Do not use compliance work as a reason to perform unrelated cleanup or broad refactoring.
+
+If a task is blocked by a pre-existing violation, report it under:
+`Remaining blockers or drift`.
+
+Do not treat existing violations as permission to create more.
+
+---
 
 ## Response Formatting
+
 When referencing files in chat responses, use clickable Markdown links with absolute Windows paths in URL form.
 
-Required style (preferred):
+Preferred style:
 1. `[Label](/C:/absolute/path/to/file.ext)`
 2. Example: `[Local Prompting Requirements](/C:/Source/Orket/docs/projects/protocol-governed/local-prompting-requirements.md)`
-3. Example with line suffix (only if the client supports it): `[File:120](/C:/Source/Orket/docs/projects/protocol-governed/local-prompting-requirements.md:120)`
+3. Example with line suffix when supported: `[File:120](/C:/Source/Orket/docs/projects/protocol-governed/local-prompting-requirements.md:120)`
 
 Rules:
-1. Prefer `/C:/...` (Style 2). `/c:/...` is acceptable if needed.
+1. Prefer `/C:/...`.
 2. Do not use `file://` links.
-3. Do not use plain backticked paths unless explicitly requested by the user.
+3. Do not use plain backticked paths unless the user explicitly requests plain paths.
+
+---
+
+## Repo Discipline
+
+Orket may remain broad and exploratory, but agents must not normalize preventable shipping debt.
+
+Required:
+1. Preserve future packaging and shipping options.
+2. Do not introduce avoidable install/runtime/test drift.
+3. Do not leave behind ambiguous authoritative paths when a task touches one.
+4. Do not treat "experimental" as permission for:
+   - broken dependency authority,
+   - stale docs on active paths,
+   - false-green testing,
+   - duplicated canonical behavior,
+   - unsafe fallbacks,
+   - unclear runtime entrypoints.
+
+Allowed:
+1. Broad exploratory surfaces.
+2. Incomplete product packaging in non-authoritative areas.
+3. Prototype code that is clearly labeled and does not masquerade as the canonical path.
+
+---
+
+## Authority and Drift Control (Required)
+
+Agents must protect the repository's current authoritative paths.
+
+Current authority snapshot:
+1. `CURRENT_AUTHORITY.md` is the canonical map of what is authoritative right now.
+2. If a task changes an authority item listed there, update `CURRENT_AUTHORITY.md` in the same change unless the user explicitly says not to.
+
+Before declaring a task complete, check whether it affects any of these:
+1. canonical install/bootstrap path,
+2. canonical runtime entrypoint,
+3. canonical test command,
+4. active protocol/spec documents,
+5. canonical script output locations,
+6. security boundaries,
+7. model/provider/runtime selection behavior,
+8. integration behavior.
+
+If a task changes one of those, update the corresponding source of truth in the same change unless the user explicitly says not to.
+
+Do not allow silent drift between:
+- `pyproject.toml`,
+- `requirements.txt`,
+- docs,
+- scripts,
+- tests,
+- actual runtime behavior.
+
+If drift is discovered and not fixed, report it explicitly under:
+`Remaining blockers or drift`.
+
+---
+
+## Testing the Right Layer (Required)
+
+False confidence is one of the highest-risk failure modes in this repository.
+
+Agents must prefer tests that validate real runtime behavior over tests that only validate scaffolding, mocks, or internal implementation detail.
+
+Required:
+1. Label each new or modified test by layer:
+   - unit,
+   - contract,
+   - integration,
+   - end-to-end.
+2. Do not present mock-heavy or structural tests as proof of runtime truth.
+3. When fixing a bug in a real execution path, prefer the highest practical test layer that exercises the real behavior.
+4. Flag tests that:
+   - mock away the behavior under investigation,
+   - assert implementation details instead of observable contracts,
+   - rely on synthetic fixtures that bypass the real path,
+   - pass while the live path is still broken.
+5. When higher-layer proof is impractical, state the gap explicitly.
+
+Preferred order:
+1. integration or contract proof for real behavior,
+2. targeted unit coverage for edge cases,
+3. minimal mocks only where isolation is required.
+
+Do not claim confidence the repo has not earned.
+
+---
 
 ## Live Integration Verification (Required)
-For any new or changed integration/automation (CI, APIs, webhooks, runners, external services), the agent must verify behavior with a live run against the real configured system before declaring completion.
 
-### Required Proof
-1. Run the real command/flow end-to-end (not compile-only or dry-run-only).
-2. Record observed mode/path and result (for example: primary API path vs fallback path).
-3. If live run fails, capture exact failing step/error and either fix it or report the concrete blocker.
+For any new or changed integration or automation path that changes runtime or integration behavior, the agent must verify behavior against the real configured system before declaring completion.
 
-### Testing Policy Reference
-1. `docs/CONTRIBUTOR.md` defines execution expectations.
-2. `AGENTS.md` defines execution discipline (including required live verification).
+Applies to:
+- CI,
+- APIs,
+- webhooks,
+- runners,
+- external services,
+- provider integrations,
+- cross-process orchestration paths.
+
+Required proof:
+1. Run the real command or flow end-to-end.
+2. Record the observed path:
+   - primary,
+   - fallback,
+   - degraded,
+   - blocked.
+3. Record the observed result:
+   - success,
+   - failure,
+   - partial success,
+   - environment blocker.
+4. If it fails, capture the exact failing step and exact error.
+5. Either fix it or report the blocker concretely.
+
+Insufficient proof:
+- compile-only,
+- import-only,
+- dry-run-only,
+- mocked success,
+- code inspection alone.
+
+If live verification is impossible because credentials, infrastructure, or external dependencies are unavailable, say so explicitly and do not over-claim completion.
+
+References:
+1. `[CONTRIBUTOR.md](/C:/Source/Orket/docs/CONTRIBUTOR.md)`
+2. `[AGENTS.md](/C:/Source/Orket/AGENTS.md)`
+
+---
 
 ## Script Output Conventions (Required)
-1. Any new script that writes rerunnable JSON results must use `scripts.common.rerun_diff_ledger.write_payload_with_diff_ledger` (or `write_json_with_diff_ledger` for JSON text payloads).
-2. Keep a stable canonical output file path for each script output; reruns must append `diff_ledger` entries instead of creating timestamp-only files.
-3. Default major-diff rollover policy for canonical files is:
+
+Any new script that writes rerunnable JSON results must use:
+- `scripts.common.rerun_diff_ledger.write_payload_with_diff_ledger`, or
+- `write_json_with_diff_ledger` for JSON text payloads.
+
+Rules:
+1. Keep a stable canonical output file path for each script output.
+2. Reruns must append `diff_ledger` entries instead of creating timestamp-only files.
+3. Default major-diff rollover policy:
    - `paths_total_reference <= 250`: threshold `0.93`
    - `251-1200`: threshold `0.88`
    - `>1200`: threshold `0.80`
-   - Rollover also requires `churn_paths >= 20`.
-4. If a script overrides rollover thresholds or minimum changed paths, include a short code comment explaining why.
+4. Rollover also requires `churn_paths >= 20`.
+5. If overriding thresholds or minimum changed paths, include a short code comment explaining why.
 
-## Resource Efficiency
+---
 
-Token usage matters. When delegating to subagents or choosing how to approach a task, use the minimum model tier that gets the job done.
+## Model Selection and Resource Efficiency
 
-| Task Type | Model Tier | Examples |
-|-----------|-----------|----------|
-| **Search / Retrieval** | Low (GPT-5.3-Codex:Low/Haiku) | File search, grep, reading code, exploring structure |
-| **Coding / Execution** | Medium (GPT-5.3-Codex:Medium/Sonnet) | Writing code, editing files, running tests, fixing bugs |
-| **Planning / Architecture** | High (GPT-5.3-Codex:Extra High/Opus) | Design decisions, multi-file refactors, code reviews, complex reasoning |
+Use the minimum reasoning tier that can reliably complete the task.
 
-When the agent framework supports model selection on subtasks (e.g. Claude Code subagent `model` parameter), apply these tiers explicitly. When it does not, prefer targeted reads over broad exploration to reduce context size.
+Default model guidance for this repo:
+
+1. **Search / Retrieval**
+   - Model: `gpt-5.3-codex`
+   - Effort: `low`
+   - Use for: grep, file discovery, code reading, structure exploration, locating definitions.
+
+2. **Coding / Execution**
+   - Model: `gpt-5.3-codex`
+   - Effort: `medium`
+   - Use for: writing code, editing files, running tests, fixing bugs, targeted implementation.
+
+3. **Planning / Architecture / Brutal Review**
+   - Model: `gpt-5.3-codex`
+   - Effort: `xhigh`
+   - Use for: architecture decisions, cross-file refactors, repo-wide reasoning, deep code review, drift analysis.
+
+Rules:
+1. Prefer explicit naming:
+   - `gpt-5.3-codex low`
+   - `gpt-5.3-codex medium`
+   - `gpt-5.3-codex xhigh`
+2. Do not spend `xhigh` on basic retrieval.
+3. Do not use broad file loading when targeted reads are enough.
+4. Escalate reasoning effort only when the task justifies it.
+
+---
+
+## Change Scope Discipline
+
+Prefer the smallest truthful change.
+
+Required:
+1. Do not perform broad cleanup unless the task requires it.
+2. Do not refactor unrelated areas opportunistically.
+3. If adjacent refactoring is required for safety or clarity, keep it narrow and explain why.
+4. Separate:
+   - required-for-correctness work,
+   - confidence-improving work,
+   - optional cleanup.
+
+---
 
 ## Code Discipline (Required)
 
-These rules are non-negotiable. Violations must be fixed before declaring a task complete.
+These rules are mandatory for new and modified code unless the user explicitly directs otherwise.
 
 ### Async Purity
-Orket is an **async-first codebase** (FastAPI + asyncio). Blocking calls stall the entire event loop.
 
-1. **Never use `subprocess.run()` or `subprocess.call()`** inside any code path reachable from an async context. Use `asyncio.create_subprocess_exec()` or `await asyncio.to_thread(subprocess.run, ...)` instead.
-2. **Never use `Path.read_text()`, `Path.write_text()`, or `open()`** in async code paths. Use `aiofiles` or `AsyncFileTools` or `await asyncio.to_thread()`.
-3. **Never use `requests`** (sync HTTP). Use `httpx.AsyncClient`.
-4. **Never use `time.sleep()`** in async code. Use `await asyncio.sleep()`.
-5. **Never put `lru_cache` on a function that bridges sync-to-async**. Cache at the async layer or not at all.
-6. If you are unsure whether a call site is async-reachable, assume it is.
+Assume ambiguous call paths are async-reachable.
+
+1. Never use `subprocess.run()` or `subprocess.call()` in async-reachable code. Use `asyncio.create_subprocess_exec()` or `await asyncio.to_thread(...)`.
+2. Never use `Path.read_text()`, `Path.write_text()`, or raw `open()` in async-reachable code. Use `aiofiles`, `AsyncFileTools`, or `await asyncio.to_thread(...)`.
+3. Never use sync HTTP clients such as `requests`. Use `httpx.AsyncClient`.
+4. Never use `time.sleep()` in async code. Use `await asyncio.sleep()`.
+5. Never place `lru_cache` on sync-to-async bridge functions.
+6. If unsure whether a path is async-reachable, assume it is.
 
 ### File Size Limits
-God files are the #1 maintainability killer in this codebase.
 
-1. **No Python file may exceed 400 lines.** If your change would push a file past 400 lines, split it first.
-2. **No single class may have more than 10 public methods.** If it needs more, it has more than one responsibility -- split it into focused classes.
-3. **No single function may exceed 70 lines.** Extract helpers.
-4. **API routers**: Each FastAPI router file should own one resource domain (cards, sessions, system, etc.), not all of them.
+Large files are a maintainability hazard and should be reduced over time.
+
+Required:
+1. Do not create a new Python file over 400 lines.
+2. Do not increase an existing Python file past 400 lines unless the user explicitly approves or the change is required for correctness and no reasonable split fits the task.
+3. When touching an oversized file, avoid making it larger unless unavoidable.
+4. Prefer extracting helpers or focused modules when an edited file is already oversized.
+5. No new class should expose more than 10 public methods.
+6. No new function should exceed 70 lines unless there is a clear justification.
+7. Each FastAPI router file should own one resource domain where practical.
+
+Existing oversized files are technical debt, not precedent.
 
 ### DRY / Single Source of Truth
-1. **Never duplicate a definition** (exception class, transition table, enum, constant) across files. Define once, import everywhere.
-2. **Never create a compatibility shim** (`from new_location import X; __all__ = ["X"]`) without a tracked ticket to remove it. Shims are debt.
-3. **Never copy-paste a function** and rename it. If two functions are identical, extract the common logic.
+
+1. Never duplicate definitions across files when one authoritative definition can be imported.
+2. Never add a compatibility shim without a tracked removal ticket or explicit user approval.
+3. Never copy-paste a function and rename it when common logic can be extracted.
 
 ### Exception Handling
-1. **Never use bare `except Exception`** unless the function is a top-level entry point (CLI main, API endpoint, background task loop). Document why.
-2. Catch the **narrowest reasonable exception type**. If you need to catch 5+ types, reconsider the control flow.
-3. **Never silently swallow exceptions.** At minimum, log them.
+
+1. Never use bare `except Exception` except at true top-level boundaries:
+   - CLI entrypoints,
+   - API endpoints,
+   - background task loops,
+   - process supervisors.
+2. At top-level boundaries, log enough context to diagnose the failure.
+3. Catch the narrowest reasonable exception type.
+4. Never silently swallow exceptions.
 
 ### Security Boundaries
-1. **Never embed credentials in URLs, log messages, or string interpolations.** Use credential helpers or environment variables at point of use.
-2. **Never pass unsanitized user input to `subprocess`** commands. Whitelist valid values.
-3. **Never use `importlib.exec_module()`** on user-controlled paths without OS-level sandboxing (Docker or equivalent).
-4. **Always use `Path.is_relative_to()`** for path containment checks, never `str.startswith()`.
+
+1. Never embed credentials in URLs, logs, traces, or interpolated strings.
+2. Never pass unsanitized user input to subprocess commands.
+3. Never use `importlib.exec_module()` on user-controlled paths without OS-level sandboxing.
+4. Always use `Path.is_relative_to()` for path containment checks, never `str.startswith()`.
 
 ### Naming and Proxies
-1. **Never use `__getattr__` delegation** to forward methods to another object. Define explicit methods or properties. `__getattr__` is invisible to IDEs, type checkers, and grep.
-2. Proxy/lazy-init patterns are acceptable only in module-level singletons, and must have a comment explaining why.
+
+1. Do not introduce new `__getattr__` delegation to forward methods.
+2. Existing `__getattr__` delegation must not be expanded and should be removed when the touched area is being refactored.
+3. Proxy or lazy-init patterns are allowed only for module-level singletons and must include a short explanatory comment.
+
+`__getattr__` forwarding is discouraged because it is invisible to IDEs, type checkers, and grep.
+
+---
+
+## Verification and Reporting
+
+When finishing a task, report in this order:
+
+1. what changed,
+2. what was verified,
+3. what was not verified,
+4. remaining blockers or drift,
+5. exact files touched.
+
+Be precise:
+1. If proof is structural only, say so.
+2. If proof is live, say so.
+3. If proof is absent, say so.
+
+Do not overstate certainty.
+
+---
+
+## Preferred Review Framing
+
+When asked for a review, group findings where relevant into:
+
+1. **Ship-risk debt**
+   - issues that would block safe shipping, trust, packaging, or operability.
+
+2. **Exploration-safe debt**
+   - acceptable mess while the repo remains exploratory.
+
+3. **Self-deception debt**
+   - anything that creates false confidence, including:
+     - stale docs,
+     - duplicate authority,
+     - false-green tests,
+     - mock-heavy proof of the wrong layer,
+     - compile-only proof presented as runtime proof.
+
+Prioritize self-deception debt aggressively.
+
+---
+
+## Decision Rule
+
+Default priority order:
+
+1. truthful behavior,
+2. truthful verification,
+3. preserving future shippability,
+4. reducing authority drift,
+5. minimizing scope,
+6. resource efficiency.
+
+If two approaches both work, choose the one that is easier to verify and less likely to create false confidence.
