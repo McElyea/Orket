@@ -11,12 +11,13 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 ## Invariants
 
 1. `INV-001`: Tool calls must be ledger-recorded before execution begins.
-2. `INV-002`: Tool execution must occur only through canonical tool dispatch. Direct invocation of tool implementations by workloads, adapters, or compatibility mappings is forbidden.
+2. `INV-002`: All tool execution must occur through canonical dispatcher invocation. Tool implementations must not be imported and executed directly by workloads, adapters, or compatibility mappings.
 3. `INV-003`: Tools must not invoke other tools directly. Composition must occur through workload orchestration or compatibility mapping via dispatcher.
 4. `INV-004`: Every emitted artifact must have a registered schema version in `core/artifacts/schema_registry.yaml`.
 5. `INV-005`: Artifact-ledger referential integrity is mandatory:
    1. every emitted `artifact_id` must appear in a ledger event
    2. ledger artifact references must resolve to existing artifacts
+   3. ledger artifact references must include `artifact_hash` captured at emission (`sha256(artifact_bytes)`)
 6. `INV-006`: Every tool invocation must emit `tool_invocation_manifest.json` with ring, schema version, determinism class, capability profile, and tool contract version.
 7. `INV-007`: Ring policy violations (`core`, `compatibility`, `experimental`) must fail closed before tool execution.
 8. `INV-008`: Capability profile violations must fail closed before tool execution.
@@ -46,8 +47,10 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 30. `INV-030`: Tool contract definitions referenced by a run must remain immutable for the run duration and must match the tool registry snapshot used at run start.
 31. `INV-031`: `capability_manifest.json` must match the capability profile snapshot captured at run start and must remain immutable for the run duration.
 32. `INV-032`: Artifacts emitted during a run must be immutable. Post-emission mutation or overwrite of artifacts referenced by ledger events is forbidden.
-33. `INV-033`: Tool implementations must be idempotent for identical invocation manifests unless declared `determinism_class = external`; duplicate non-external calls with identical invocation hash must be rejected or safely deduplicated.
+33. `INV-033`: Tool implementations must be idempotent for identical invocation manifests unless declared `determinism_class = external`; duplicate non-external invocation hashes must be rejected unless runtime is explicitly configured for deterministic deduplication.
 34. `INV-034`: Ledger ordering must be derived solely from `sequence_number`. Timestamp fields are informational and must not be used for execution ordering.
+35. `INV-035`: Replay execution must not perform side effects outside artifact reconstruction and ledger validation. Adapters and tools must operate in replay-safe mode.
+36. `INV-036`: Workspace-dependent runs must capture `workspace_state_snapshot` at run start, and replay must fail closed when workspace compatibility checks fail.
 
 ## Execution Ordering
 

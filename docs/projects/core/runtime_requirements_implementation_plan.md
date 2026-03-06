@@ -106,6 +106,7 @@ Scope:
 10. Enforce artifact immutability after emission; post-emission mutation is forbidden.
 11. Record deterministic `tool_call_hash` for each invocation from `tool_name`, normalized args, `tool_contract_version`, and capability profile.
 12. Enforce non-external idempotency guard for duplicate `tool_call_hash` invocations.
+13. Capture workspace state snapshot for workspace-dependent runs at run start.
 
 Deliverables:
 1. Runtime instrumentation hooks for deterministic ordering.
@@ -114,6 +115,7 @@ Deliverables:
 4. `ledger_event_schema.json`.
 5. `capability_manifest_schema.json`.
 6. Artifact immutability enforcement and hash pinning in ledger artifact references.
+7. `workspace_state_snapshot.json`.
 
 Run identity example:
 ```json
@@ -121,6 +123,16 @@ Run identity example:
   "run_id": "r-4821",
   "workload": "localclaw",
   "start_time": "2026-03-06T14:22:31Z"
+}
+```
+
+Workspace state snapshot example:
+```json
+{
+  "workspace_hash": "8a1cfe...",
+  "workspace_type": "filesystem",
+  "file_count": 412,
+  "capture_time": "2026-03-06T14:22:31Z"
 }
 ```
 
@@ -133,6 +145,21 @@ Ledger event schema minimum fields:
 6. `sequence_number`
 7. `call_sequence_number` (required on `tool_result` events)
 8. `tool_call_hash` (required on `tool_call` and echoed on `tool_result`)
+9. `artifact_hash` (required when referencing emitted artifacts)
+
+Tool call hash canonicalization rules:
+1. UTF-8 encoding
+2. canonical JSON serialization of normalized args
+   1. sorted keys
+   2. no insignificant whitespace
+   3. deterministic float formatting
+3. hash input components:
+   1. `tool_name`
+   2. canonicalized normalized args
+   3. `tool_contract_version`
+   4. capability profile snapshot id
+4. final hash:
+   1. `tool_call_hash = sha256(canonical_input_bytes)`
 
 Ledger event schema example:
 ```json
@@ -140,7 +167,8 @@ Ledger event schema example:
   "ledger_schema_version": "1.0",
   "event_type": "tool_call",
   "run_id": "r-4821",
-  "sequence_number": 14
+  "sequence_number": 14,
+  "tool_call_hash": "b6c1a5..."
 }
 ```
 
@@ -159,8 +187,10 @@ Required proof:
 12. Contract tests asserting `capability_manifest.json` matches run-start snapshot and remains immutable.
 13. Contract tests asserting artifact immutability after emission.
 14. Contract tests asserting stable `tool_call_hash` generation for identical invocation manifests.
-15. Contract tests asserting duplicate non-external `tool_call_hash` invocations fail closed or are safely deduplicated.
+15. Contract tests asserting duplicate non-external `tool_call_hash` invocations fail closed unless deterministic dedup mode is explicitly enabled.
 16. Contract tests asserting ordering logic uses `sequence_number` only (timestamps informational).
+17. Contract tests asserting `artifact_hash` pinning in ledger references.
+18. Contract tests asserting workspace state snapshot capture for workspace-dependent runs.
 
 Exit criteria:
 1. Runs cannot complete without required invocation manifests.
@@ -176,11 +206,15 @@ Scope:
    2. no prompt construction
    3. no repair heuristics or tool-validator repair paths
    4. recorded tool calls only
+   5. replay-safe adapters only (no side effects outside ledger/artifact validation and reconstruction)
+   6. network-disabled and external-tool execution blocked
+   7. filesystem writes disabled unless explicitly required for deterministic artifact reconstruction
 4. Add replay compatibility checks for:
    1. tool registry snapshot
    2. runtime contract hash
    3. artifact schema registry version
    4. capability profile snapshot
+   5. workspace state snapshot compatibility (for workspace-dependent runs)
 5. Validate replay completeness for required artifacts before execution.
 6. Implement drift classifier priority ordering.
 7. Record runtime policy versions and include them in replay metadata and runtime contract hash inputs.
@@ -192,6 +226,7 @@ Deliverables:
 3. Drift classifier with deterministic layer precedence.
 4. `drift_report.json` includes `drift_schema_version`.
 5. `runtime_policy_versions.json`.
+6. Replay isolation mode toggles and adapter guardrails.
 
 Drift schema example:
 ```json
@@ -215,6 +250,8 @@ Required proof:
 3. Drift-classifier tests validating priority order.
 4. Replay completeness tests fail closed when required artifacts are missing.
 5. Replay compatibility tests fail closed on incompatible `ledger_schema_version`.
+6. Replay isolation tests asserting no network/external side effects and no non-reconstruction filesystem writes.
+7. Replay workspace compatibility tests fail closed on mismatched workspace snapshot.
 
 Exit criteria:
 1. Replay fails closed on incompatible runtime contracts.
@@ -451,6 +488,7 @@ Exit criteria:
 7. Golden fixtures may become stale relative to tool-registry evolution.
 8. Cross-run mutable runtime state leakage may invalidate replay guarantees.
 9. Tool implementations may violate declared determinism classes or idempotency assumptions.
+10. Hidden state surfaces (workspace/env/clock/random/network) may influence execution without recorded evidence.
 
 Mitigation:
 1. Detect and patch bypasses during `CORE-IMP-01` and `CORE-IMP-03`.
@@ -461,6 +499,7 @@ Mitigation:
 6. Record `tool_registry_version` in golden fixtures and fail closed on mismatch.
 7. Enforce run-scoped mutable state boundaries in runtime adapters and caches.
 8. Add determinism/idempotency conformance checks and fail-closed duplicate-call guards for non-external tools.
+9. Capture workspace snapshots, enforce replay isolation mode, and block unrecorded side-effect surfaces during replay.
 
 ## Definition of Done (Program Level)
 
