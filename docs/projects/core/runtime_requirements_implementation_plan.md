@@ -103,6 +103,9 @@ Scope:
 7. Enforce `run_identity` immutability for full run duration.
 8. Enforce strict tool call/result pairing and forbid orphaned `tool_call` events.
 9. Enforce `capability_manifest.json` integrity against run-start capability snapshot and immutability.
+10. Enforce artifact immutability after emission; post-emission mutation is forbidden.
+11. Record deterministic `tool_call_hash` for each invocation from `tool_name`, normalized args, `tool_contract_version`, and capability profile.
+12. Enforce non-external idempotency guard for duplicate `tool_call_hash` invocations.
 
 Deliverables:
 1. Runtime instrumentation hooks for deterministic ordering.
@@ -110,6 +113,7 @@ Deliverables:
 3. `run_identity.json`.
 4. `ledger_event_schema.json`.
 5. `capability_manifest_schema.json`.
+6. Artifact immutability enforcement and hash pinning in ledger artifact references.
 
 Run identity example:
 ```json
@@ -128,6 +132,7 @@ Ledger event schema minimum fields:
 5. `run_id`
 6. `sequence_number`
 7. `call_sequence_number` (required on `tool_result` events)
+8. `tool_call_hash` (required on `tool_call` and echoed on `tool_result`)
 
 Ledger event schema example:
 ```json
@@ -152,6 +157,10 @@ Required proof:
 10. Integration tests asserting artifact emission occurs only after matching `tool_result` is recorded.
 11. Contract tests asserting `run_identity` immutability.
 12. Contract tests asserting `capability_manifest.json` matches run-start snapshot and remains immutable.
+13. Contract tests asserting artifact immutability after emission.
+14. Contract tests asserting stable `tool_call_hash` generation for identical invocation manifests.
+15. Contract tests asserting duplicate non-external `tool_call_hash` invocations fail closed or are safely deduplicated.
+16. Contract tests asserting ordering logic uses `sequence_number` only (timestamps informational).
 
 Exit criteria:
 1. Runs cannot complete without required invocation manifests.
@@ -441,6 +450,7 @@ Exit criteria:
 6. Tool registry snapshot may include tools incompatible with active capability profile.
 7. Golden fixtures may become stale relative to tool-registry evolution.
 8. Cross-run mutable runtime state leakage may invalidate replay guarantees.
+9. Tool implementations may violate declared determinism classes or idempotency assumptions.
 
 Mitigation:
 1. Detect and patch bypasses during `CORE-IMP-01` and `CORE-IMP-03`.
@@ -450,6 +460,7 @@ Mitigation:
 5. Validate registry snapshot against capability profile at run start.
 6. Record `tool_registry_version` in golden fixtures and fail closed on mismatch.
 7. Enforce run-scoped mutable state boundaries in runtime adapters and caches.
+8. Add determinism/idempotency conformance checks and fail-closed duplicate-call guards for non-external tools.
 
 ## Definition of Done (Program Level)
 

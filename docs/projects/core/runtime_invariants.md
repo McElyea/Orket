@@ -45,6 +45,9 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 29. `INV-029`: Run identity (`run_id`, workload identity, start timestamp) must remain immutable for the full run duration.
 30. `INV-030`: Tool contract definitions referenced by a run must remain immutable for the run duration and must match the tool registry snapshot used at run start.
 31. `INV-031`: `capability_manifest.json` must match the capability profile snapshot captured at run start and must remain immutable for the run duration.
+32. `INV-032`: Artifacts emitted during a run must be immutable. Post-emission mutation or overwrite of artifacts referenced by ledger events is forbidden.
+33. `INV-033`: Tool implementations must be idempotent for identical invocation manifests unless declared `determinism_class = external`; duplicate non-external calls with identical invocation hash must be rejected or safely deduplicated.
+34. `INV-034`: Ledger ordering must be derived solely from `sequence_number`. Timestamp fields are informational and must not be used for execution ordering.
 
 ## Execution Ordering
 
