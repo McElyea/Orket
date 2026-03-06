@@ -140,6 +140,7 @@ async def test_process_request_capabilities_question_returns_help():
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
     driver.prompting_mode = "fallback"
+    driver.json_parse_mode = "compatibility"
     driver.config_degraded = False
     driver.config_load_failures = []
 
@@ -148,6 +149,7 @@ async def test_process_request_capabilities_question_returns_help():
     assert "Operator CLI is available." in response
     assert "/list" in response
     assert "Active prompting mode: fallback" in response
+    assert "Active JSON parse mode: compatibility" in response
     assert "Conversation mode is on by default" in response
 
 

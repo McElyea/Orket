@@ -150,7 +150,9 @@ class DriverConversationMixin:
         if departments:
             summary.append(f"Detected departments: {', '.join(departments)}")
         prompting_mode = str(getattr(self, "prompting_mode", "unknown"))
+        json_parse_mode = str(getattr(self, "json_parse_mode", "compatibility"))
         summary.append(f"Active prompting mode: {prompting_mode}")
+        summary.append(f"Active JSON parse mode: {json_parse_mode}")
         if bool(getattr(self, "config_degraded", False)):
             failures = getattr(self, "config_load_failures", [])
             summary.append(f"Config load status: degraded ({len(failures)} dependency load failure(s)).")

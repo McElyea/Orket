@@ -4,28 +4,60 @@ from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, IssueConfig
 from orket.exceptions import CardNotFound
 
+
+def _append_load_failure(
+    hierarchy: Dict[str, Any],
+    *,
+    asset_type: str,
+    asset_name: str,
+    department: str,
+    stage: str,
+    error: Exception,
+) -> None:
+    hierarchy["load_failures"].append(
+        {
+            "asset_type": asset_type,
+            "asset_name": asset_name,
+            "department": department,
+            "stage": stage,
+            "error": str(error),
+        }
+    )
+
+
 def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dict[str, Any]:
     """
     Builds a tree: Rock -> Epic -> Issue
     Identifies orphaned Epics (no Rock) and orphaned Issues (no Epic).
     """
     loader = ConfigLoader(Path("model"), department)
-    
+
     rocks_names = loader.list_assets("rocks")
     epics_names = loader.list_assets("epics")
     issues_names = loader.list_assets("issues")
-    
+
+    artifacts = []
+    artifacts_dir = Path("model") / department / "artifacts"
+    if artifacts_dir.exists():
+        try:
+            artifacts = [f.name for f in artifacts_dir.iterdir() if f.is_file()]
+        except OSError:
+            artifacts = []
+
     hierarchy = {
         "rocks": [],
         "orphaned_epics": [],
         "orphaned_issues": [],
-        "artifacts": [f.name for f in (Path("model") / department / "artifacts").iterdir() if f.is_file()] if (Path("model") / department / "artifacts").exists() else [],
-        "alerts": []
+        "artifacts": artifacts,
+        "alerts": [],
+        "load_failures": [],
+        "result_status": "success",
     }
-    
+
     epics_in_rocks = set()
-    issues_in_epics = set()
-    
+    issue_ids_in_epics = set()
+    issue_names_in_epics = set()
+
     # 1. Process Rocks
     for rname in rocks_names:
         try:
@@ -46,14 +78,16 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                 try:
                     dept_loader = ConfigLoader(Path("model"), edept)
                     epic = dept_loader.load_asset("epics", ename, EpicConfig)
-                    
-                    # Track issues in this epic
+
+                    # Track issue identity with stable IDs first, plus names for compatibility.
                     epic_issues = []
                     for i in epic.issues:
-                        # We use summary as a weak ID for now to see if it's a 'named' standalone issue
-                        issues_in_epics.add(i.name) 
+                        if getattr(i, "id", None):
+                            issue_ids_in_epics.add(i.id)
+                        if getattr(i, "name", None):
+                            issue_names_in_epics.add(i.name)
                         issue_dict = i.model_dump(by_alias=True)
-                        issue_dict["name"] = i.name # Ensure name is present for UI
+                        issue_dict["name"] = i.name
                         epic_issues.append(issue_dict)
 
                     epic_node = {
@@ -65,11 +99,26 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                     }
                     rock_node["epics"].append(epic_node)
                 except (FileNotFoundError, ValueError, CardNotFound, KeyError) as e:
+                    _append_load_failure(
+                        hierarchy,
+                        asset_type="epic",
+                        asset_name=ename,
+                        department=edept,
+                        stage="rock_epic_link_load",
+                        error=e,
+                    )
                     rock_node["epics"].append({"id": ename, "name": ename, "error": str(e)})
-            
+
             hierarchy["rocks"].append(rock_node)
-        except (FileNotFoundError, ValueError, CardNotFound):
-            pass
+        except (FileNotFoundError, ValueError, CardNotFound) as e:
+            _append_load_failure(
+                hierarchy,
+                asset_type="rock",
+                asset_name=rname,
+                department=department,
+                stage="rock_load",
+                error=e,
+            )
 
     # 2. Find Orphaned Epics
     for ename in epics_names:
@@ -84,24 +133,44 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                     "issues": []
                 }
                 for i in epic.issues:
-                    issues_in_epics.add(i.name)
+                    if getattr(i, "id", None):
+                        issue_ids_in_epics.add(i.id)
+                    if getattr(i, "name", None):
+                        issue_names_in_epics.add(i.name)
                     issue_dict = i.model_dump(by_alias=True)
                     issue_dict["name"] = i.name
                     orph_epic["issues"].append(issue_dict)
                 hierarchy["orphaned_epics"].append(orph_epic)
-            except (FileNotFoundError, ValueError, CardNotFound):
-                pass
+            except (FileNotFoundError, ValueError, CardNotFound) as e:
+                _append_load_failure(
+                    hierarchy,
+                    asset_type="epic",
+                    asset_name=ename,
+                    department=department,
+                    stage="orphan_epic_load",
+                    error=e,
+                )
 
     # 3. Find Orphaned Issues (Standalone files not referenced in any Epic)
     for iname in issues_names:
         try:
             issue = loader.load_asset("issues", iname, IssueConfig)
-            if issue.name not in issues_in_epics:
+            issue_id = str(getattr(issue, "id", "") or "")
+            issue_name = str(getattr(issue, "name", "") or "")
+            is_referenced = issue_id in issue_ids_in_epics or (issue_name and issue_name in issue_names_in_epics)
+            if not is_referenced:
                 issue_dict = issue.model_dump(by_alias=True)
                 issue_dict["name"] = issue.name
                 hierarchy["orphaned_issues"].append(issue_dict)
-        except (FileNotFoundError, ValueError, CardNotFound):
-            pass
+        except (FileNotFoundError, ValueError, CardNotFound) as e:
+            _append_load_failure(
+                hierarchy,
+                asset_type="issue",
+                asset_name=iname,
+                department=department,
+                stage="issue_load",
+                error=e,
+            )
 
     if hierarchy["orphaned_epics"] or hierarchy["orphaned_issues"]:
         msg = f"Structure Alert: {len(hierarchy['orphaned_epics'])} Orphan Epics, {len(hierarchy['orphaned_issues'])} Orphaned Issues."
@@ -110,5 +179,15 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
             "message": msg,
             "action_required": "Assign orphans to parent structures to maintain engine integrity."
         })
-                
+
+    if hierarchy["load_failures"]:
+        hierarchy["result_status"] = "partial_success"
+        hierarchy["alerts"].append(
+            {
+                "type": "warning",
+                "message": f"Partial board load: {len(hierarchy['load_failures'])} load failure(s).",
+                "action_required": "Inspect load_failures for broken or missing assets before treating this hierarchy as complete.",
+            }
+        )
+
     return hierarchy

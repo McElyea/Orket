@@ -32,6 +32,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         fs: AsyncFileTools | None = None,
         reforger_tools: ReforgerTools | None = None,
         strict_config: bool | None = None,
+        json_parse_mode: str | None = None,
     ) -> None:
         self.fs = fs or AsyncFileTools(Path("."))
         self.reforger_tools = reforger_tools or ReforgerTools(Path("workspace/default"), [Path(".")])
@@ -57,6 +58,9 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         self.dialect: DialectConfig | None = None
         strict_from_env = str(os.getenv("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
         self.strict_config_mode = strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
+        parse_mode_from_env = str(os.getenv("ORKET_DRIVER_JSON_PARSE_MODE", "compatibility")).strip().lower()
+        selected_parse_mode = str(json_parse_mode or parse_mode_from_env).strip().lower()
+        self.json_parse_mode = "strict" if selected_parse_mode == "strict" else "compatibility"
         self.prompting_mode = "fallback"
         self.config_degraded = False
         self.config_dependency_classification: dict[str, str] = {}
@@ -213,6 +217,33 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             "Do not include commentary outside the JSON.\n"
         )
 
+    def _parse_model_plan(self, raw_text: str) -> dict[str, Any]:
+        parse_mode = str(getattr(self, "json_parse_mode", "compatibility")).strip().lower()
+        if parse_mode == "strict":
+            log_event(
+                "driver_json_parse_mode_strict",
+                {"mode": "strict"},
+                Path("workspace/default"),
+                role="DRIVER",
+            )
+            stripped = str(raw_text or "").strip()
+            if not (stripped.startswith("{") and stripped.endswith("}")):
+                raise ValueError("Strict JSON mode requires pure JSON envelope output.")
+            return json.loads(stripped)
+
+        log_event(
+            "driver_json_parse_mode_compatibility",
+            {"mode": "compatibility"},
+            Path("workspace/default"),
+            role="DRIVER",
+        )
+        text = str(raw_text or "")
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end == -1:
+            raise ValueError("Compatibility mode could not find JSON envelope in model output.")
+        return json.loads(text[start : end + 1])
+
     async def process_request(self, message: str) -> str:
         request_text = str(message or "").strip()
         self._log_operator_metric("operator_request_total", route="received")
@@ -259,14 +290,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         )
 
         try:
-            text = response.content
-            start = text.find("{")
-            end = text.rfind("}")
-            if start == -1 or end == -1:
-                self._log_operator_metric("operator_request_total", route="model_no_json")
-                return f"Driver failed to find JSON in response: {text[:100]}..."
-
-            plan = json.loads(text[start : end + 1])
+            plan = self._parse_model_plan(str(response.content or ""))
             action = str(plan.get("action") or "").strip().lower()
             if action in {"create_issue", "create_epic", "create_rock", "adopt_issue"} and not self._has_explicit_structural_intent(request_text):
                 self._log_operator_metric("operator_structural_action_blocked", action=action)
@@ -282,7 +306,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 )
             self._log_operator_metric("operator_request_total", route="model")
             return await self.execute_plan(plan)
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, ValueError) as e:
             self._log_operator_metric("operator_request_total", route="model_json_error")
             return f"Driver failed to parse JSON: {str(e)}"
         except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
