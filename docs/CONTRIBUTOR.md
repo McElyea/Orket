@@ -40,7 +40,7 @@ Orket
 5. Execute `core-pillars` by slice (`CP-1.1 -> CP-1.2 -> ...`), not by pillar batch.
 
 ## Quick Setup
-1. Install dependencies: `pip install -r requirements.txt`
+1. Install dependencies: `python -m pip install --upgrade pip && python -m pip install -e ".[dev]"`
 2. Create local `.env` for secrets.
 3. Run locally: `python main.py --rock <rock_name>`
 

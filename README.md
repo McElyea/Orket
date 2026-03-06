@@ -50,7 +50,8 @@ OPEN -> CLAIMED -> IN_PROGRESS -> REVIEW -> DONE
 ## Quick Start
 1. Install dependencies:
 ```bash
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 2. Configure environment:
 ```bash

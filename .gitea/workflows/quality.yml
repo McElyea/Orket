@@ -47,6 +47,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
+      - name: Enforce install surface convergence
+        run: |
+          python scripts/governance/check_install_surface_convergence.py
+
       - name: Enforce docs project hygiene
         run: |
           python scripts/governance/check_docs_project_hygiene.py
