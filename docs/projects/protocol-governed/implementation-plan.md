@@ -186,6 +186,9 @@ Latest completed increments:
     - `scripts/protocol/run_protocol_enforce_window_capture.py`
     - orchestrates replay/parity/rollout/error-summary/sign-off flow and writes
       `protocol_window_capture_manifest.json`
+33. Cutover readiness gate script landed:
+    - `scripts/protocol/check_protocol_enforce_cutover_readiness.py`
+    - evaluates multiple capture manifests and emits strict pass/fail readiness decision
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -221,6 +224,7 @@ Validation evidence (new test surfaces):
 31. Expanded: `tests/application/test_orchestrator_epic.py`
 32. `tests/scripts/test_record_protocol_enforce_window_signoff.py`
 33. `tests/scripts/test_run_protocol_enforce_window_capture.py`
+34. `tests/scripts/test_check_protocol_enforce_cutover_readiness.py`
 
 Verification runs (latest batch):
 1. `python -m pytest -q tests/interfaces/test_api.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
@@ -250,6 +254,9 @@ Verification runs (latest batch):
 25. `python scripts/protocol/summarize_protocol_error_codes.py --input benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json --input benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_error_code_summary.json --strict`
 26. `python scripts/protocol/record_protocol_enforce_window_signoff.py --window-id window_a --window-date 2026-03-05 --replay-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json --parity-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json --rollout-bundle benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/rollout_artifacts/protocol_rollout_bundle.latest.json --error-summary benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_error_code_summary.json --retry-spike-status pass --approver "Orket Core (local quality workspace)" --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_operator_signoff.json --strict`
 27. `python scripts/protocol/record_protocol_enforce_window_signoff.py --window-id window_b --window-date 2026-03-05 --replay-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json --parity-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json --rollout-bundle benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/rollout_artifacts/protocol_rollout_bundle.latest.json --error-summary benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json --retry-spike-status pass --approver "Orket Core (local quality workspace)" --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_operator_signoff.json --strict`
+28. `python -m pytest -q tests/scripts/test_run_protocol_enforce_window_capture.py tests/scripts/test_record_protocol_enforce_window_signoff.py tests/scripts/test_check_protocol_enforce_cutover_readiness.py`
+29. `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_default/protocol_window_capture_manifest.json --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_wrapper_live_2026-03-06/protocol_window_capture_manifest.json --min-pass-windows 2 --out benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness.json --strict`
+30. `python scripts/governance/check_docs_project_hygiene.py`
 
 Next execution slices (active):
 1. Execute equivalent campaign windows against production traffic and obtain operator approver sign-off using the same checklist artifacts.

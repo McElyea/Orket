@@ -39,6 +39,9 @@ Equivalent module form is also valid (`python -m scripts.protocol.<script_name_w
 One-command wrapper (runs all five commands in order and emits a capture manifest):
 1. `python scripts/protocol/run_protocol_enforce_window_capture.py --window-id <window_id> --window-date <yyyy-mm-dd> --workspace-root <workspace_root> --run-id <run_id> --session-id <session_id_or_blank> --retry-spike-status <pass|fail|unknown> --approver <approver_label> --out-root <window_out_root> --strict`
 
+Cutover readiness gate (consumes captured window manifests):
+1. `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest <window_a_manifest_json> --manifest <window_b_manifest_json> --min-pass-windows 2 --out <cutover_readiness_out_json> --strict`
+
 ## Hard Gates
 
 All gates must be green in both windows:
@@ -98,3 +101,8 @@ Window B:
 6. Gate status (`PASS`/`FAIL`): `PASS`
 7. Approver: `Orket Core (local quality workspace)`
 8. Operator sign-off artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_operator_signoff.json`
+
+Cutover readiness gate:
+1. Command: `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_default/protocol_window_capture_manifest.json --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_wrapper_live_2026-03-06/protocol_window_capture_manifest.json --min-pass-windows 2 --out benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness.json --strict`
+2. Output artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness.json`
+3. Gate status (`PASS`/`FAIL`): `PASS`
