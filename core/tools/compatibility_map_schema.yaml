@@ -1,0 +1,12 @@
+schema_version: "1.0"
+compatibility_map_version: "1.0"
+required_fields:
+  - mapping_version
+  - mapped_core_tools
+  - schema_compatibility_range
+  - determinism_class
+allowed_determinism_classes:
+  - pure
+  - workspace
+  - external
+allowed_target_ring: core

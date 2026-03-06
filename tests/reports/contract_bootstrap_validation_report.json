@@ -1,0 +1,25 @@
+{
+  "slice_id": "CORE-IMP-00",
+  "status": "in_progress",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/runtime/test_contract_bootstrap.py tests/runtime/test_protocol_replay.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py -q",
+    "result": "pass",
+    "passed": 19,
+    "failed": 0
+  },
+  "implemented_contract_sources": [
+    "core/artifacts/schema_registry.yaml",
+    "core/tools/tool_registry.yaml",
+    "core/tools/compatibility_map_schema.yaml",
+    "core/tools/compatibility_map.yaml"
+  ],
+  "implemented_runtime_paths": [
+    "orket/runtime/contract_bootstrap.py",
+    "orket/runtime/execution_pipeline.py",
+    "orket/runtime/protocol_replay.py"
+  ],
+  "remaining_work": [
+    "Close out CORE-IMP-00 with full lane-level evidence review and status transition to done."
+  ]
+}

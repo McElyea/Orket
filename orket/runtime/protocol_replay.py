@@ -7,6 +7,7 @@ from typing import Any, Dict
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
 
 
 def _sha256_file(path: Path) -> str:
@@ -86,6 +87,18 @@ def _receipt_execution_capsule(receipt_payload: dict[str, Any]) -> dict[str, Any
     }
 
 
+def runtime_contract_versions_snapshot() -> dict[str, Any]:
+    snapshots = load_runtime_contract_snapshots()
+    return {
+        "tool_registry_version": snapshots.tool_registry_snapshot.get("tool_registry_version"),
+        "artifact_schema_registry_version": snapshots.artifact_schema_snapshot.get("artifact_schema_registry_version"),
+        "compatibility_map_schema_version": snapshots.compatibility_map_schema_snapshot.get("schema_version"),
+        "tool_registry_snapshot_hash": snapshots.tool_registry_snapshot.get("snapshot_hash"),
+        "artifact_schema_snapshot_hash": snapshots.artifact_schema_snapshot.get("snapshot_hash"),
+        "tool_contract_snapshot_hash": snapshots.tool_contract_snapshot.get("snapshot_hash"),
+    }
+
+
 class ProtocolReplayEngine:
     """Reconstruct protocol-governed run state from append-only ledger + artifacts."""
 
@@ -123,6 +136,7 @@ class ProtocolReplayEngine:
             "status_timeline": [],
             "artifact_inventory": artifact_digest_inventory(artifact_root) if artifact_root else [],
             "receipt_inventory": receipts,
+            "runtime_contract_snapshots": runtime_contract_versions_snapshot(),
         }
 
         for event in events:
@@ -179,6 +193,7 @@ class ProtocolReplayEngine:
                 "operations": summary["operations"],
                 "artifact_inventory": summary["artifact_inventory"],
                 "receipt_inventory": summary["receipt_inventory"],
+                "runtime_contract_snapshots": summary["runtime_contract_snapshots"],
             }
         )
         return summary

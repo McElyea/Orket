@@ -1,0 +1,35 @@
+schema_version: "1.0"
+mappings:
+  openclaw.file_edit:
+    mapping_version: 1
+    mapped_core_tools:
+      - workspace.search
+      - file.patch
+    schema_compatibility_range: ">=1.0.0 <2.0.0"
+    determinism_class: workspace
+    semantic_notes: "OpenClaw file_edit compatibility route through core workspace/file tools."
+    parity_constraints:
+      - functional_output
+      - side_effect_surface
+      - error_behavior
+      - artifact_structure
+  openclaw.file_read:
+    mapping_version: 1
+    mapped_core_tools:
+      - workspace.read
+    schema_compatibility_range: ">=1.0.0 <2.0.0"
+    determinism_class: workspace
+    semantic_notes: "OpenClaw file_read compatibility route through core workspace.read."
+    parity_constraints:
+      - functional_output
+      - error_behavior
+  openclaw.workspace_list:
+    mapping_version: 1
+    mapped_core_tools:
+      - workspace.list
+    schema_compatibility_range: ">=1.0.0 <2.0.0"
+    determinism_class: workspace
+    semantic_notes: "OpenClaw workspace_list compatibility route through core workspace.list."
+    parity_constraints:
+      - functional_output
+      - error_behavior

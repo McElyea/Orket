@@ -1,0 +1,9 @@
+registry_version: "1.0"
+artifacts:
+  run.json: "1.0"
+  tool_call.json: "1.0"
+  tool_result.json: "1.0"
+  tool_metrics.json: "1.0"
+  run_summary.json: "1.0"
+  tool_invocation_manifest.json: "1.0"
+  capability_manifest.json: "1.0"

@@ -165,3 +165,17 @@ def test_protocol_replay_engine_compare_reports_divergence(tmp_path: Path) -> No
     assert "operations" in fields
     assert "receipt_inventory" in fields
     assert comparison["state_digest_a"] != comparison["state_digest_b"]
+
+
+# Layer: contract
+def test_protocol_replay_engine_includes_runtime_contract_snapshot_versions(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-contracts" / "events.log"
+    _write_run_events(events, status="incomplete", operation_ok=True)
+
+    engine = ProtocolReplayEngine()
+    replay = engine.replay_from_ledger(events_log_path=events)
+
+    contracts = replay["runtime_contract_snapshots"]
+    assert contracts["tool_registry_version"] == "1.2.0"
+    assert contracts["artifact_schema_registry_version"] == "1.0"
+    assert contracts["compatibility_map_schema_version"] == "1.0"

@@ -269,3 +269,45 @@ async def test_execution_pipeline_materializes_protocol_receipts_into_run_ledger
     receipts = await protocol_repo.list_receipts("sess-protocol-receipts")
     assert len(receipts) == 1
     assert receipts[0]["operation_id"] == "op-1"
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_bootstrap_artifacts(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "protocol_ledger_epic_contract_bootstrap")
+    protocol_repo = AsyncProtocolRunLedgerRepository(workspace)
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=protocol_repo,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export(**_kwargs):
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export)
+
+    await pipeline.run_epic(
+        "protocol_ledger_epic_contract_bootstrap",
+        build_id="build-protocol-ledger-epic-contract-bootstrap",
+        session_id="sess-protocol-contract-bootstrap",
+    )
+
+    run = await protocol_repo.get_run("sess-protocol-contract-bootstrap")
+    assert run is not None
+    artifact_json = run["artifact_json"]
+    assert artifact_json["tool_registry_snapshot"]["tool_registry_version"] == "1.2.0"
+    assert artifact_json["artifact_schema_snapshot"]["artifact_schema_registry_version"] == "1.0"
+    assert artifact_json["compatibility_map_schema_snapshot"]["mapping_count"] >= 1
+    assert Path(artifact_json["tool_registry_snapshot_path"]).exists()

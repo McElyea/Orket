@@ -186,3 +186,42 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
     assert ledger["status"] == "terminal_failure"
     assert ledger["summary_json"]["session_status"] == "terminal_failure"
     assert ledger["summary_json"]["status_counts"]["blocked"] == 1
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root, workspace, db_path, monkeypatch):
+    _write_epic_assets(test_root, "ledger_epic_contract_bootstrap")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+
+    await pipeline.run_epic(
+        "ledger_epic_contract_bootstrap",
+        build_id="build-ledger-epic-contract-bootstrap",
+        session_id="sess-ledger-contract-bootstrap",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-contract-bootstrap")
+    assert ledger is not None
+    artifact_json = ledger["artifact_json"]
+    assert artifact_json["tool_registry_snapshot"]["tool_registry_version"] == "1.2.0"
+    assert artifact_json["artifact_schema_snapshot"]["artifact_schema_registry_version"] == "1.0"
+    assert len(artifact_json["tool_contract_snapshot"]["tool_contracts"]) >= 1
+    assert artifact_json["compatibility_map_schema_snapshot"]["schema_version"] == "1.0"
+    assert Path(artifact_json["tool_registry_snapshot_path"]).exists()
+    assert Path(artifact_json["artifact_schema_snapshot_path"]).exists()
+    assert Path(artifact_json["tool_contract_snapshot_path"]).exists()

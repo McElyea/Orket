@@ -1,0 +1,27 @@
+tool_registry_version: "1.2.0"
+tools:
+  - tool_name: file.patch
+    ring: core
+    tool_contract_version: "1.0.0"
+    determinism_class: workspace
+    capability_profile: workspace
+  - tool_name: workspace.search
+    ring: core
+    tool_contract_version: "1.0.0"
+    determinism_class: workspace
+    capability_profile: workspace
+  - tool_name: workspace.read
+    ring: core
+    tool_contract_version: "1.0.0"
+    determinism_class: workspace
+    capability_profile: workspace
+  - tool_name: workspace.write
+    ring: core
+    tool_contract_version: "1.0.0"
+    determinism_class: workspace
+    capability_profile: workspace
+  - tool_name: workspace.list
+    ring: core
+    tool_contract_version: "1.0.0"
+    determinism_class: workspace
+    capability_profile: workspace

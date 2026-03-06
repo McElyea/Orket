@@ -32,6 +32,10 @@ from orket.application.services.runtime_policy import (
 )
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
+from orket.runtime.contract_bootstrap import (
+    load_runtime_contract_snapshots,
+    write_runtime_contract_snapshots,
+)
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.workload_adapters import build_cards_workload_contract
@@ -405,6 +409,7 @@ class ExecutionPipeline:
             {"epic": epic.name, "run_id": run_id, "build_id": active_build},
             workspace=self.workspace,
         )
+        run_contract_artifacts = await self._capture_run_contract_artifacts(run_id=run_id)
 
         await self.run_ledger.start_run(
             session_id=run_id,
@@ -413,7 +418,7 @@ class ExecutionPipeline:
             department=self.department,
             build_id=active_build,
             summary={"target_issue_id": target_issue_id, "resume_mode": bool(resume_mode)},
-            artifacts=self._run_artifact_refs(run_id),
+            artifacts={**self._run_artifact_refs(run_id), **dict(run_contract_artifacts)},
         )
 
         workflow_terminal_statuses = {
@@ -510,6 +515,7 @@ class ExecutionPipeline:
                 log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
 
             artifacts = self._run_artifact_refs(run_id)
+            artifacts.update(dict(run_contract_artifacts))
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection
@@ -559,6 +565,7 @@ class ExecutionPipeline:
             )
             failure_summary = self._build_run_summary(session_status="failed", backlog=backlog, transcript=legacy_transcript)
             artifacts = self._run_artifact_refs(run_id)
+            artifacts.update(dict(run_contract_artifacts))
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection
@@ -592,6 +599,19 @@ class ExecutionPipeline:
             "orket_log": str(self.workspace / "orket.log"),
             "observability_root": str(self.workspace / "observability" / sanitize_name(run_id)),
             "agent_output_root": str(self.workspace / "agent_output"),
+        }
+
+    async def _capture_run_contract_artifacts(self, *, run_id: str) -> Dict[str, Any]:
+        snapshots = await asyncio.to_thread(load_runtime_contract_snapshots)
+        snapshot_root = self.workspace / "observability" / sanitize_name(run_id) / "runtime_contracts"
+        snapshot_paths = await asyncio.to_thread(
+            write_runtime_contract_snapshots,
+            snapshots=snapshots,
+            output_dir=snapshot_root,
+        )
+        return {
+            **snapshots.as_ledger_artifacts(),
+            **snapshot_paths,
         }
 
     async def _export_run_artifacts(
