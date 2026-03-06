@@ -1,13 +1,13 @@
 # Protocol-Governed LM Studio Findings and Live Test Plan (v1)
 
-Last updated: 2026-03-05  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Archived (historical findings and test plan)  
 Owner: Orket Core
 
 References:
 1. `docs/internal/LMStudioData.txt`
 2. `docs/projects/protocol-governed/local-prompting-requirements.md`
-3. `docs/projects/protocol-governed/local-prompting-plan.md`
+3. `docs/projects/archive/protocol-governed/PG03062026/local-prompting-plan.md`
 4. `docs/CONTRIBUTOR.md`
 
 ## 1. Purpose

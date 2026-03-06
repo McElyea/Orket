@@ -1,7 +1,7 @@
 # Protocol Replay Campaign Output Schema (v1)
 
-Last updated: 2026-03-04  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Active (schema contract)  
 Owner: Orket Core
 
 This document freezes the output contract for protocol replay campaign comparisons.

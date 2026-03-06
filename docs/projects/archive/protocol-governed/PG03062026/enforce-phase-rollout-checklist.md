@@ -1,15 +1,18 @@
 # Protocol Enforce-Phase Rollout Checklist (v1)
 
-Last updated: 2026-03-05  
-Status: Active  
+Last updated: 2026-03-06  
+Status: Archived (execution complete; superseded by recurring maintenance)  
 Owner: Orket Core
 
 This checklist is the operational gate for moving protocol-governed runtime from compat observation to enforce-by-default.
 
+Recurring execution owner:
+1. `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
+
 ## Pre-Conditions
 
 1. `docs/projects/protocol-governed/requirements.md` is the active runtime contract.
-2. `docs/projects/protocol-governed/implementation-plan.md` active slices are up to date.
+2. `docs/projects/archive/protocol-governed/PG03062026/implementation-plan.md` captures the completed execution slices.
 3. `docs/projects/protocol-governed/determinism-control-surface.md` matches runtime fields in settings and receipts.
 
 ## Campaign Windows

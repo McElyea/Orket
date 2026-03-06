@@ -1,7 +1,7 @@
 # Protocol Ledger Parity Campaign Schema (v1)
 
-Last updated: 2026-03-04  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Active (schema contract)  
 Owner: Orket Core
 
 This document defines the stable output contract for ledger parity campaign artifacts emitted by:
@@ -60,4 +60,3 @@ Each row in `rows` and `mismatches` contains:
 2. Operator rollout bundles should store both:
    - this parity campaign payload
    - replay campaign payload from `replay-campaign-schema.md`
-

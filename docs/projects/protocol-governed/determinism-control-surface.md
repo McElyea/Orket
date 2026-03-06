@@ -1,7 +1,7 @@
 # Protocol Determinism Control Surface (v2)
 
-Last updated: 2026-03-05  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Active (contract baseline)  
 Owner: Orket Core
 
 This document defines runtime control knobs used to constrain nondeterminism in protocol-governed execution.

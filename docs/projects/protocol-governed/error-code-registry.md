@@ -1,7 +1,7 @@
 # Protocol Error Code Registry (v1)
 
-Last updated: 2026-03-04  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Active (registry baseline)  
 Owner: Orket Core
 
 Runtime source of truth:

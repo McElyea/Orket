@@ -42,6 +42,10 @@ Orket
      `docs/projects/techdebt/` to `docs/projects/archive/techdebt/<cycle_id>/` in the same closeout change.
    - Archive both cycle implementation artifacts and cycle requirement/review/spec files covered by that closeout.
    - Keep only standing maintenance docs (and any currently active cycle docs) under `docs/projects/techdebt/`.
+12. README discipline rule:
+   - Do not add small project-subfolder `README.md` files by default.
+   - Allowed exceptions are maintained index/gateway docs (for example root README, scripts/index readmes, or explicitly referenced governance docs with a named owner).
+   - Prefer `docs/ROADMAP.md`, `docs/CONTRIBUTOR.md`, and contract/spec documents as the durable source of truth.
 
 ## Current Focus
 1. Keep `docs/ROADMAP.md` active-only (remove completed/obsolete items at each handoff).

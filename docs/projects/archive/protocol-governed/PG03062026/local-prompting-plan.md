@@ -1,7 +1,7 @@
 # Protocol-Governed Local Prompting Plan (v1.1)
 
 Last updated: 2026-03-06  
-Status: Completed  
+Status: Archived (execution complete)  
 Owner: Orket Core
 
 References:
@@ -9,7 +9,7 @@ References:
 2. `docs/projects/protocol-governed/requirements.md`
 3. `docs/CONTRIBUTOR.md`
 4. `AGENTS.md`
-5. `docs/projects/protocol-governed/lmstudio-findings-and-live-test-plan.md`
+5. `docs/projects/archive/protocol-governed/PG03062026/lmstudio-findings-and-live-test-plan.md`
 
 ## 1. Objective
 
@@ -68,7 +68,7 @@ Completed increment:
     - smoke conformance evidence refreshed under `benchmarks/results/protocol/local_prompting/live_verification/`,
     - promotion-suite code path validated live on LM Studio using `--suite promotion` with case overrides.
 14. LM Studio-specific findings and live-test-heavy remediation plan documented at:
-    - `docs/projects/protocol-governed/lmstudio-findings-and-live-test-plan.md`
+    - `docs/projects/archive/protocol-governed/PG03062026/lmstudio-findings-and-live-test-plan.md`
 15. LM Studio session-mode live matrix expanded with high-volume runs:
     - `none` qualification: `200` strict JSON + `200` tool-call (all pass),
     - `context` qualification: `200` strict JSON + `200` tool-call (all pass),

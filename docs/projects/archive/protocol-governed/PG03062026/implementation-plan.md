@@ -1,7 +1,7 @@
 # Protocol-Governed Runtime Implementation Plan (v5.1)
 
 Last updated: 2026-03-06  
-Status: Completed  
+Status: Archived (execution complete)  
 Owner: Orket Core
 
 Reference: `docs/projects/protocol-governed/requirements.md`
@@ -58,7 +58,7 @@ Recently completed slices:
    - Added `clock_mode` and `clock_artifact_ref` resolution in determinism controls.
    - Added execution capsule fields (`clock_artifact_ref`, `clock_artifact_hash`, `network_allowlist_hash`) and replay receipt inventory exposure.
 6. PR-10 enforce-phase checklist publication landed:
-   - Added operator checklist at `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md`.
+   - Added operator checklist at `docs/projects/archive/protocol-governed/PG03062026/enforce-phase-rollout-checklist.md`.
 
 Evidence added:
 1. `tests/application/test_protocol_hashing.py`
@@ -169,7 +169,7 @@ Latest completed increments:
 26. Replay receipt inventory now surfaces execution capsule subset:
     - `network_mode`, `network_allowlist_hash`, `clock_mode`, `clock_artifact_ref`, `clock_artifact_hash`, `timezone`, `locale`, `env_allowlist_hash`
 27. Enforce-phase rollout checklist published:
-    - `docs/projects/protocol-governed/enforce-phase-rollout-checklist.md`
+    - `docs/projects/archive/protocol-governed/PG03062026/enforce-phase-rollout-checklist.md`
 28. Enforce-phase window evidence captured (local quality workspace):
     - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/*`
     - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/*`

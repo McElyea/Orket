@@ -1,7 +1,7 @@
 # Protocol-Governed Local Prompting Requirements (v1.2)
 
-Last updated: 2026-03-05  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Active (contract baseline)  
 Owner: Orket Core
 
 Reference:
