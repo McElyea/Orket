@@ -72,6 +72,7 @@ Observability:
    5. `run_determinism_class` (`pure | workspace | external`)
 2. Boundary violations emit `runtime_violation.json`.
 3. Artifact schema registry must provide artifact-to-version mappings (for example `run.json: 1.0`).
+4. Each run emits `capability_manifest.json` with allowed and used capability profiles.
 
 Artifact schema registry example:
 ```yaml
@@ -81,6 +82,15 @@ artifacts:
   tool_result.json: 1.0
   tool_metrics.json: 1.0
   run_summary.json: 1.0
+```
+
+Capability manifest example:
+```json
+{
+  "run_id": "4821",
+  "capabilities_allowed": ["workspace", "safe"],
+  "capabilities_used": ["workspace"]
+}
 ```
 
 Failure semantics:
@@ -144,7 +154,7 @@ Observability:
    4. `model_id`
    5. `orket_version`
    6. `runtime_contract_hash`
-   7. `tool_registry_version`
+   7. `tool_registry_version` (tool registry snapshot id/version)
 2. Drift outputs `drift_report.json`.
 3. `runtime_contract_hash` is computed from:
    1. response protocol version
@@ -163,6 +173,16 @@ Failure semantics:
 1. Unexpected drift fails CI.
 2. Accepted drift must be classified.
 3. Non-deterministic artifacts are rejected unless explicitly allowed.
+4. Replay must fail closed when runtime compatibility checks fail for:
+   1. `tool_registry_version`
+   2. `runtime_contract_hash`
+   3. artifact schema registry version
+5. Drift classification priority order:
+   1. runtime contract drift
+   2. tool schema drift
+   3. prompt drift
+   4. tool behavior drift
+   5. artifact formatting drift
 
 Proof:
 1. Replay of a golden fixture is artifact-identical.
@@ -265,6 +285,7 @@ Failure semantics:
 
 Proof:
 1. Scoreboard is reconstructable from ledger events only.
+2. Scoreboard metrics must not depend on derived telemetry outside ledger records.
 
 ## Focus Item 5: Run Compression (`run_summary.json`)
 

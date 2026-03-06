@@ -22,6 +22,15 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 10. All runtime/tool error codes must be machine-readable and `snake_case`.
 11. Workload failures must not crash the core runtime process.
 12. Any runtime degradation mode must be explicit in operator-visible and machine-assertable outputs.
+13. The runtime must load tools from an immutable tool registry snapshot for the duration of a run.
+14. Replay must verify compatibility of `tool_registry_version`, `runtime_contract_hash`, and artifact schema registry version before execution.
+
+## Execution Ordering
+
+1. `ledger.record(tool_call)`
+2. Tool execution
+3. `ledger.record(tool_result)`
+4. Artifact emission
 
 ## Determinism Rules
 

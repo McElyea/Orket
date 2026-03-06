@@ -16,7 +16,7 @@ tool_identity:
   ring: core # core | compatibility | experimental
   schema_version: 1.0.0
   tool_contract_version: 1.0.0
-  tool_registry_version: 1.2.0
+  tool_registry_version: 1.2.0 # immutable registry snapshot version for run/replay
   mapping_version: null # required when ring == compatibility
 
 capability_profile:
@@ -76,6 +76,7 @@ observability:
     - determinism_class
 
 compatibility_mapping:
+  compatibility_surface_map_path: core/tools/compatibility_map.yaml
   compat_tool_name: openclaw.file_edit
   mapping_version: 1
   schema_compatibility_range: ">=1.0.0 <2.0.0"
@@ -105,16 +106,17 @@ conformance_tests:
 2. `schema_version` follows semantic versioning.
 3. `tool_contract_version` must be recorded in `tool_invocation_manifest.json` for every invocation.
 4. `tool_registry_version` must match the runtime registry snapshot used for dispatch.
-5. All tool arguments must be explicit in `input_schema`; no implicit runtime-only parameters.
-6. Optional input fields must have deterministic defaults.
-7. Error codes must remain stable across minor schema versions.
-8. Error codes must use `snake_case`.
-9. Only deterministic tools may use retries.
-10. Retry policies must avoid repeated side effects.
-11. Compatibility mappings cannot elevate determinism class relative to mapped core tools.
-12. Compatibility mappings may expand only to core tools and must not chain to compatibility mappings.
-13. Compatibility mappings must produce `compat_translation.json`.
-14. Tool PRs must include contract, schemas, and conformance tests.
+5. `tool_registry_version` must resolve to an immutable snapshot for the full run duration.
+6. All tool arguments must be explicit in `input_schema`; no implicit runtime-only parameters.
+7. Optional input fields must have deterministic defaults.
+8. Error codes must remain stable across minor schema versions.
+9. Error codes must use `snake_case`.
+10. Only deterministic tools may use retries.
+11. Retry policies must avoid repeated side effects.
+12. Compatibility mappings cannot elevate determinism class relative to mapped core tools.
+13. Compatibility mappings may expand only to core tools and must not chain to compatibility mappings.
+14. Compatibility mappings must produce `compat_translation.json`.
+15. Tool PRs must include contract, schemas, and conformance tests.
 
 ## Suggested Stable Error Codes
 

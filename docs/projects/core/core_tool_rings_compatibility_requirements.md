@@ -90,6 +90,17 @@ Interfaces:
    3. error behavior
    4. artifact structure
 6. Parity does not require identical internal execution steps.
+7. Compatibility surface map must be machine-readable at `core/tools/compatibility_map.yaml`.
+
+Compatibility surface map example:
+```yaml
+openclaw.file_edit:
+  mapping_version: 1
+  mapped_core_tools:
+    - workspace.search
+    - file.patch
+  determinism_class: workspace
+```
 
 Observability:
 1. Each run must record:
@@ -97,6 +108,7 @@ Observability:
    2. compatibility mapping id/version when applicable
    3. tool schema version
    4. determinism class of invoked tool
+   5. tool registry snapshot version
 2. Standard artifacts:
    1. `tool_call.json`
    2. `tool_result.json`
