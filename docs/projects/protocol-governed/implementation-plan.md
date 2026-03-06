@@ -176,6 +176,12 @@ Latest completed increments:
     - checklist sign-off entries filled for both windows
 29. Rollout campaign scripts now support direct file invocation from repo root:
     - `python scripts/protocol/<script>.py ...` and `python -m scripts.protocol.<script>` both resolve repo imports
+30. Enforce-window operator sign-off recorder landed:
+    - `scripts/protocol/record_protocol_enforce_window_signoff.py`
+    - deterministic gate capture for replay/parity/rollout/error/retry-spike/approver
+31. Local enforce-phase windows now include explicit operator sign-off artifacts:
+    - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_operator_signoff.json`
+    - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_operator_signoff.json`
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -209,6 +215,7 @@ Validation evidence (new test surfaces):
 29. Expanded: `tests/interfaces/test_settings_protocol_determinism_controls.py`
 30. Expanded: `tests/interfaces/test_api.py`
 31. Expanded: `tests/application/test_orchestrator_epic.py`
+32. `tests/scripts/test_record_protocol_enforce_window_signoff.py`
 
 Verification runs (latest batch):
 1. `python -m pytest -q tests/interfaces/test_api.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
@@ -236,6 +243,8 @@ Verification runs (latest batch):
 23. `python scripts/protocol/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --session-id run-a --strict --out benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json`
 24. `python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict`
 25. `python scripts/protocol/summarize_protocol_error_codes.py --input benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_replay_campaign.json --input benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/enforce_phase/direct_path/protocol_error_code_summary.json --strict`
+26. `python scripts/protocol/record_protocol_enforce_window_signoff.py --window-id window_a --window-date 2026-03-05 --replay-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_replay_campaign.json --parity-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_ledger_parity_campaign.json --rollout-bundle benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/rollout_artifacts/protocol_rollout_bundle.latest.json --error-summary benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_error_code_summary.json --retry-spike-status pass --approver "Orket Core (local quality workspace)" --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_operator_signoff.json --strict`
+27. `python scripts/protocol/record_protocol_enforce_window_signoff.py --window-id window_b --window-date 2026-03-05 --replay-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_replay_campaign.json --parity-campaign benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_ledger_parity_campaign.json --rollout-bundle benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/rollout_artifacts/protocol_rollout_bundle.latest.json --error-summary benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_error_code_summary.json --retry-spike-status pass --approver "Orket Core (local quality workspace)" --out benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_operator_signoff.json --strict`
 
 Next execution slices (active):
 1. Execute equivalent campaign windows against production traffic and obtain operator approver sign-off using the same checklist artifacts.
