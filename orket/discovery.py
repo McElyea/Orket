@@ -8,6 +8,18 @@ from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig, TeamConfig, EngineRegistry
 from orket.logging import log_event
 
+
+def _model_tier_rank(tier: str) -> int:
+    normalized = str(tier or "").strip().lower()
+    return {
+        "mini": 1,
+        "base": 2,
+        "mid": 3,
+        "high": 4,
+        "ultra": 5,
+    }.get(normalized, 0)
+
+
 def get_installed_models() -> List[str]:
     try:
         result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=True)
@@ -62,27 +74,31 @@ def get_engine_recommendations():
     fs = AsyncFileTools(Path("."))
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
     suggestions = []
+    installed_lower = [str(item).strip().lower() for item in installed]
 
     for category, mapping in registry.mappings.items():
-        # Check if we already have a 'High Tier' model for this category
-        has_high_tier = False
-        for m in installed:
-            if any(k in m.lower() for k in mapping.keywords):
-                # If the installed model is in our catalog and is high tier, we're good
-                # (This is a simplification, but works for local discovery)
-                pass
+        best_installed_rank = 0
+        for installed_model in installed_lower:
+            # Prefer known catalog tier when the installed model is recognized.
+            for item in mapping.catalog:
+                model_name = str(item.model).strip().lower()
+                if model_name == installed_model or model_name in installed_model:
+                    best_installed_rank = max(best_installed_rank, _model_tier_rank(item.tier))
+            # Keyword-only match is treated as minimal baseline confidence, not catalog-tier equivalence.
+            if any(keyword in installed_model for keyword in mapping.keywords):
+                best_installed_rank = max(best_installed_rank, 1)
 
         # Find the best model in the catalog that the hardware CAN handle
         best_in_catalog = None
         for item in mapping.catalog:
             if can_handle_model_tier(item.tier, hw):
                 # If it's not installed, it's a candidate
-                if item.model not in installed:
+                if str(item.model).strip().lower() not in installed_lower:
                     # Prefer higher tiers
-                    if not best_in_catalog or item.tier > best_in_catalog.tier:
+                    if not best_in_catalog or _model_tier_rank(item.tier) > _model_tier_rank(best_in_catalog.tier):
                         best_in_catalog = item
 
-        if best_in_catalog:
+        if best_in_catalog and _model_tier_rank(best_in_catalog.tier) > best_installed_rank:
             suggestions.append({
                 "category": category,
                 "suggestion": best_in_catalog.model,

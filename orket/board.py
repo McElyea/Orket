@@ -30,6 +30,15 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
     Builds a tree: Rock -> Epic -> Issue
     Identifies orphaned Epics (no Rock) and orphaned Issues (no Epic).
     """
+    auto_fix_error: Exception | None = None
+    if auto_fix:
+        try:
+            from orket.domain.reconciler import StructuralReconciler
+
+            StructuralReconciler().reconcile_all()
+        except (RuntimeError, ValueError, OSError, ImportError) as exc:
+            auto_fix_error = exc
+
     loader = ConfigLoader(Path("model"), department)
 
     rocks_names = loader.list_assets("rocks")
@@ -53,6 +62,24 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
         "load_failures": [],
         "result_status": "success",
     }
+    if auto_fix:
+        if auto_fix_error is None:
+            hierarchy["alerts"].append(
+                {
+                    "type": "info",
+                    "message": "auto_fix requested: startup reconciliation executed before hierarchy load.",
+                    "action_required": "none",
+                }
+            )
+        else:
+            _append_load_failure(
+                hierarchy,
+                asset_type="board",
+                asset_name="auto_fix",
+                department=department,
+                stage="auto_fix",
+                error=auto_fix_error,
+            )
 
     epics_in_rocks = set()
     issue_ids_in_epics = set()

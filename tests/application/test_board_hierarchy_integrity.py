@@ -109,3 +109,57 @@ def test_get_board_hierarchy_prefers_issue_id_for_reference_matching(monkeypatch
     assert hierarchy["result_status"] == "success"
     assert hierarchy["load_failures"] == []
     assert hierarchy["orphaned_issues"] == []
+
+
+def test_get_board_hierarchy_auto_fix_executes_reconciliation(monkeypatch):
+    """Layer: integration. Verifies auto_fix executes reconciliation and reports explicit info status."""
+    calls = []
+
+    class _FakeReconciler:
+        def reconcile_all(self):
+            calls.append("reconciled")
+
+    class _FakeLoader:
+        def __init__(self, _root, _department):
+            return None
+
+        def list_assets(self, _asset_type):
+            return []
+
+        def load_asset(self, _asset_type, _asset_name, _schema):
+            raise AssertionError("load_asset should not be called for empty inventory")
+
+    monkeypatch.setattr("orket.board.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.domain.reconciler.StructuralReconciler", _FakeReconciler)
+
+    hierarchy = get_board_hierarchy("core", auto_fix=True)
+
+    assert calls == ["reconciled"]
+    assert hierarchy["result_status"] == "success"
+    assert hierarchy["load_failures"] == []
+    assert any("auto_fix requested" in alert["message"] for alert in hierarchy["alerts"])
+
+
+def test_get_board_hierarchy_auto_fix_failure_is_explicit_partial_success(monkeypatch):
+    """Layer: contract. Verifies auto_fix failures are explicit and cannot appear as complete success."""
+    class _FailingReconciler:
+        def reconcile_all(self):
+            raise ValueError("reconcile failed")
+
+    class _FakeLoader:
+        def __init__(self, _root, _department):
+            return None
+
+        def list_assets(self, _asset_type):
+            return []
+
+        def load_asset(self, _asset_type, _asset_name, _schema):
+            raise AssertionError("load_asset should not be called for empty inventory")
+
+    monkeypatch.setattr("orket.board.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.domain.reconciler.StructuralReconciler", _FailingReconciler)
+
+    hierarchy = get_board_hierarchy("core", auto_fix=True)
+
+    assert hierarchy["result_status"] == "partial_success"
+    assert any(item["stage"] == "auto_fix" for item in hierarchy["load_failures"])
