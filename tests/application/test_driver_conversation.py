@@ -139,11 +139,15 @@ async def test_process_request_capabilities_question_returns_help():
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
+    driver.prompting_mode = "fallback"
+    driver.config_degraded = False
+    driver.config_load_failures = []
 
     response = await driver.process_request("What can you do in this environment?")
 
     assert "Operator CLI is available." in response
     assert "/list" in response
+    assert "Active prompting mode: fallback" in response
     assert "Conversation mode is on by default" in response
 
 
@@ -292,3 +296,38 @@ async def test_process_request_assign_team_reports_suggestion_only():
 
     assert response.startswith("Resource Selection Suggestion:")
     assert "No runtime team switch was applied." in response
+
+
+@pytest.mark.asyncio
+async def test_process_request_reforge_bare_and_slash_forms_match_usage_contract():
+    """Layer: integration. Verifies CLI recognizer supports bare and slash reforge forms."""
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.model_root = Path("model")
+    driver.skill = None
+    driver.dialect = None
+    driver.provider = SimpleNamespace(complete=None)
+    driver.reforger_tools = SimpleNamespace()
+
+    bare = await driver.process_request("reforge")
+    slash = await driver.process_request("/reforge")
+
+    assert bare == "Usage: /reforge <inspect|run> [options]"
+    assert slash == "Usage: /reforge <inspect|run> [options]"
+
+
+@pytest.mark.asyncio
+async def test_process_request_capabilities_reports_degraded_config_status():
+    """Layer: integration. Verifies operator-visible degradation status in capabilities output."""
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.model_root = Path("model")
+    driver.skill = None
+    driver.dialect = None
+    driver.provider = SimpleNamespace(complete=None)
+    driver.prompting_mode = "fallback"
+    driver.config_degraded = True
+    driver.config_load_failures = [{"dependency": "skill.operations_lead"}]
+
+    response = await driver.process_request("what can you do in this environment?")
+
+    assert "Active prompting mode: fallback" in response
+    assert "Config load status: degraded (1 dependency load failure(s))." in response

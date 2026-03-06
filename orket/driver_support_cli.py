@@ -26,7 +26,7 @@ class DriverCliMixin:
         if text.startswith("/"):
             command_text = text[1:].strip()
 
-        known_cli_verbs = {"list", "show", "create", "add-card", "add_card", "list-cards", "list_cards"}
+        known_cli_verbs = {"list", "show", "create", "add-card", "add_card", "list-cards", "list_cards", "reforge"}
         first_word = command_text.split(" ", 1)[0].strip().lower()
         is_cli_form = text.startswith("/") or first_word in known_cli_verbs
         if not is_cli_form:

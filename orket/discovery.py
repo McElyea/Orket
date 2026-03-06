@@ -103,20 +103,44 @@ def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
 
 from orket.settings import load_user_settings, save_user_settings
 
-def perform_first_run_setup():
-    # Run Structural Reconciliation on every startup to clean up orphans
+def run_startup_reconciliation() -> str:
+    """Run every-startup structural reconciliation and emit explicit path telemetry."""
     try:
         from orket.domain.reconciler import StructuralReconciler
+
         reconciler = StructuralReconciler()
         reconciler.reconcile_all()
+        log_event("discovery_startup_path", {"path": "reconciliation", "result": "success"})
+        return "success"
     except (RuntimeError, ValueError, OSError, ImportError) as e:
+        log_event("discovery_startup_path", {"path": "reconciliation", "result": "failed", "error": str(e)})
         log_event("discovery_reconcile_failed", {"error": str(e)})
+        return "failed"
 
-    if load_user_settings().get("setup_complete"): return
+
+def perform_first_run_onboarding() -> str:
+    """Run first-run-only onboarding and emit explicit path telemetry."""
+    if load_user_settings().get("setup_complete"):
+        log_event("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"})
+        return "no_op"
     print("\n[FIRST RUN] Orket EOS Orkestrated.")
     print("  Recommendation: Orkestrate the initialization rock to optimize your models.")
     print("  Command: python main.py --rock initialize_orket")
     save_user_settings({"setup_complete": True, "hardware_profile": "auto-detected"})
+    log_event("discovery_startup_path", {"path": "first_run_setup", "result": "completed"})
+    return "first_run_setup"
+
+
+def perform_startup_checks() -> Dict[str, str]:
+    """Execute startup reconciliation plus first-run onboarding with explicit semantics."""
+    reconciliation_result = run_startup_reconciliation()
+    onboarding_result = perform_first_run_onboarding()
+    return {"reconciliation": reconciliation_result, "onboarding": onboarding_result}
+
+
+def perform_first_run_setup() -> Dict[str, str]:
+    """Backward-compatible wrapper around explicit startup checks."""
+    return perform_startup_checks()
 
 def print_orket_manifest(department: str = "core"):
     from orket.hardware import get_current_profile, can_handle_model_tier, ModelTier

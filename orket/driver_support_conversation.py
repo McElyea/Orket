@@ -149,6 +149,11 @@ class DriverConversationMixin:
         summary = [self._cli_help_text()]
         if departments:
             summary.append(f"Detected departments: {', '.join(departments)}")
+        prompting_mode = str(getattr(self, "prompting_mode", "unknown"))
+        summary.append(f"Active prompting mode: {prompting_mode}")
+        if bool(getattr(self, "config_degraded", False)):
+            failures = getattr(self, "config_load_failures", [])
+            summary.append(f"Config load status: degraded ({len(failures)} dependency load failure(s)).")
         summary.append("Conversation mode is on by default. I only run structural actions when explicitly requested.")
         return "\n".join(summary)
 

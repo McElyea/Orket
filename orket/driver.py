@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         provider: LocalModelProvider | None = None,
         fs: AsyncFileTools | None = None,
         reforger_tools: ReforgerTools | None = None,
+        strict_config: bool | None = None,
     ) -> None:
         self.fs = fs or AsyncFileTools(Path("."))
         self.reforger_tools = reforger_tools or ReforgerTools(Path("workspace/default"), [Path(".")])
@@ -53,15 +55,42 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         self.model_root = Path("model")
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
+        strict_from_env = str(os.getenv("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
+        self.strict_config_mode = strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
+        self.prompting_mode = "fallback"
+        self.config_degraded = False
+        self.config_dependency_classification: dict[str, str] = {}
+        self.config_load_failures: list[dict[str, str]] = []
         self._load_engine_configs()
 
     def _load_engine_configs(self) -> None:
+        if not hasattr(self, "config_dependency_classification"):
+            self.config_dependency_classification = {}
+        if not hasattr(self, "config_load_failures"):
+            self.config_load_failures = []
+        if not hasattr(self, "strict_config_mode"):
+            self.strict_config_mode = False
+        if not hasattr(self, "config_degraded"):
+            self.config_degraded = False
+        self.config_dependency_classification.clear()
+        self.config_load_failures.clear()
+        self.config_degraded = False
         loader = ConfigLoader(Path("model"), "core")
+        skill_dependency = "skill.operations_lead"
+        self.config_dependency_classification[skill_dependency] = "degradable"
 
         try:
             self.skill = loader.load_asset("skills", "operations_lead", SkillConfig)
-        except (FileNotFoundError, ValueError, CardNotFound):
-            pass
+        except (FileNotFoundError, ValueError, CardNotFound) as exc:
+            self.skill = None
+            self.config_degraded = True
+            failure = {
+                "dependency": skill_dependency,
+                "classification": "degradable",
+                "error": str(exc),
+            }
+            self.config_load_failures.append(failure)
+            log_event("driver_config_dependency_failed", failure, Path("workspace/default"), role="DRIVER")
 
         model_name = self.provider.model.lower()
         if "deepseek" in model_name:
@@ -75,10 +104,38 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         else:
             family = "generic"
 
+        dialect_dependency = f"dialect.{family}"
+        self.config_dependency_classification[dialect_dependency] = "degradable"
         try:
             self.dialect = loader.load_asset("dialects", family, DialectConfig)
-        except (FileNotFoundError, ValueError, CardNotFound):
-            pass
+        except (FileNotFoundError, ValueError, CardNotFound) as exc:
+            self.dialect = None
+            self.config_degraded = True
+            failure = {
+                "dependency": dialect_dependency,
+                "classification": "degradable",
+                "error": str(exc),
+            }
+            self.config_load_failures.append(failure)
+            log_event("driver_config_dependency_failed", failure, Path("workspace/default"), role="DRIVER")
+
+        self.prompting_mode = "governed" if self.skill and self.dialect else "fallback"
+        log_event(
+            "driver_prompting_mode",
+            {
+                "mode": self.prompting_mode,
+                "degraded": self.config_degraded,
+                "strict_mode": bool(self.strict_config_mode),
+                "load_failures": self.config_load_failures,
+            },
+            Path("workspace/default"),
+            role="DRIVER",
+        )
+        if bool(self.strict_config_mode) and self.prompting_mode != "governed":
+            raise RuntimeError(
+                "Driver strict config mode requires governed prompting assets. "
+                f"load_failures={self.config_load_failures}"
+            )
 
     async def _get_inventory(self) -> dict[str, Any]:
         inventory = {"departments": {}}
