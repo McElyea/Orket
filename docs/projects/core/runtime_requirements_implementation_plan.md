@@ -53,6 +53,7 @@ Scope:
 3. Capture immutable tool registry snapshot at runtime start.
 4. Capture immutable artifact schema registry snapshot at runtime start.
 5. Define and validate compatibility surface map schema.
+6. Capture immutable tool contract snapshot bound to the active tool registry snapshot.
 
 Deliverables:
 1. Registry files and loader modules with strict validation.
@@ -60,6 +61,7 @@ Deliverables:
 3. `tool_registry_snapshot.json`.
 4. `artifact_schema_snapshot.json`.
 5. `compatibility_map_schema.yaml`.
+6. `tool_contract_snapshot.json`.
 
 Tool registry snapshot example:
 ```json
@@ -97,6 +99,8 @@ Scope:
 4. Enforce `max_tool_invocations_per_run` guard (default `200`).
 5. Enforce run-scoped mutable runtime state isolation by `run_id`.
 6. Enforce artifact-ledger referential integrity at write time.
+7. Enforce `run_identity` immutability for full run duration.
+8. Enforce strict tool call/result pairing and forbid orphaned `tool_call` events.
 
 Deliverables:
 1. Runtime instrumentation hooks for deterministic ordering.
@@ -121,6 +125,7 @@ Ledger event schema minimum fields:
 4. `tool_name`
 5. `run_id`
 6. `sequence_number`
+7. `call_sequence_number` (required on `tool_result` events)
 
 Ledger event schema example:
 ```json
@@ -141,6 +146,9 @@ Required proof:
 6. Contract tests for artifact-ledger referential integrity enforcement.
 7. Contract test for `max_tool_invocations_per_run` fail-closed behavior.
 8. Integration tests proving run-scoped mutable-state isolation.
+9. Contract tests asserting `tool_call` to `tool_result` pairing with `call_sequence_number`.
+10. Integration tests asserting artifact emission occurs only after matching `tool_result` is recorded.
+11. Contract tests asserting `run_identity` immutability.
 
 Exit criteria:
 1. Runs cannot complete without required invocation manifests.
@@ -164,6 +172,7 @@ Scope:
 5. Validate replay completeness for required artifacts before execution.
 6. Implement drift classifier priority ordering.
 7. Record runtime policy versions and include them in replay metadata and runtime contract hash inputs.
+8. Validate replay compatibility against `ledger_schema_version`.
 
 Deliverables:
 1. Runtime/replay hash computation utility.
@@ -193,6 +202,7 @@ Required proof:
 2. Contract tests for compatibility rejection on mismatched hashes/versions.
 3. Drift-classifier tests validating priority order.
 4. Replay completeness tests fail closed when required artifacts are missing.
+5. Replay compatibility tests fail closed on incompatible `ledger_schema_version`.
 
 Exit criteria:
 1. Replay fails closed on incompatible runtime contracts.

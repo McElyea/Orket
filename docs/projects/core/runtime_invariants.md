@@ -38,6 +38,12 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 24. `INV-024`: Ledger ordering must be monotonic:
    1. `sequence_number` strictly increases within a run
    2. event timestamps must not move backwards.
+25. `INV-025`: Ledger events must include `ledger_schema_version`, and that version must be compatible with the active runtime contract.
+26. `INV-026`: Artifacts must not be emitted before the corresponding `tool_result` ledger event is recorded.
+27. `INV-027`: Artifact schema versions referenced by emitted artifacts must exist in the active artifact schema snapshot and must not change during run execution.
+28. `INV-028`: Every `tool_call` ledger event must have a corresponding `tool_result` ledger event with matching `run_id` and `tool_name`; `tool_result` must reference the originating call via `call_sequence_number`.
+29. `INV-029`: Run identity (`run_id`, workload identity, start timestamp) must remain immutable for the full run duration.
+30. `INV-030`: Tool contract definitions referenced by a run must remain immutable for the run duration and must match the tool registry snapshot used at run start.
 
 ## Execution Ordering
 
