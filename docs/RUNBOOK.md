@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-02-27
+Last reviewed: 2026-03-05
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -19,14 +19,25 @@ copy .env.example .env
 ```bash
 python main.py
 ```
-4. API runtime (default `http://localhost:8082`):
+4. API runtime (safe default profile, local-only bind `http://127.0.0.1:8082`):
 ```bash
 python server.py
 ```
-5. Webhook runtime (default `http://localhost:8080`):
+5. API dev runtime with reload (explicit opt-in):
+```bash
+python server.py --profile dev
+```
+6. Webhook runtime (default `http://127.0.0.1:8080`):
 ```bash
 python -m orket.webhook_server
 ```
+
+## API Launcher Precedence
+1. CLI arguments (`--host`, `--port`, `--profile`, `--reload/--no-reload`)
+2. Config values from `--config <json-path>`
+3. Environment values (`ORKET_HOST`, `ORKET_PORT`)
+4. Safe defaults (`host=127.0.0.1`, `port=8082`, `profile=safe`, `reload=false`)
+5. Reload can only be enabled when `profile=dev`.
 
 ## Health Endpoints
 1. API:

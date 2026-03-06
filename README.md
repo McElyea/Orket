@@ -65,6 +65,10 @@ python main.py
 ```bash
 python server.py
 ```
+5. Dev-only API reload profile (explicit opt-in):
+```bash
+python server.py --profile dev
+```
 
 CLI note:
 1. Running `python main.py` with no `--epic`, `--card`, or `--rock` enters interactive driver mode for local conversation with your configured model.

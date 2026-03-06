@@ -287,12 +287,12 @@ async def test_webhook(
     return JSONResponse(content=result, status_code=200)
 
 
-def start_server(host: str = "0.0.0.0", port: int = 8080):
+def start_server(host: str = "127.0.0.1", port: int = 8080):
     """
     Start the webhook server.
 
     Args:
-        host: Host to bind to (default: 0.0.0.0 for all interfaces)
+        host: Host to bind to (default: 127.0.0.1 for local-only binding)
         port: Port to bind to (default: 8080)
     """
     log_event("webhook_server", {"message": f"Starting webhook server on {host}:{port}", "level": "info"}, workspace=Path.cwd())
