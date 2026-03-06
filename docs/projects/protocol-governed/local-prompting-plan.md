@@ -74,9 +74,18 @@ Completed increment:
     - `context` qualification: `200` strict JSON + `200` tool-call (all pass),
     - `fixed` reduced qualification: `80` strict JSON + `80` tool-call (all pass),
     - zero anti-meta chatter/fence and zero summarized failures across these runs.
+16. Ollama strict JSON format binding landed for strict task classes in provider adapter:
+    - `orket/adapters/llm/local_model_provider.py` now requests `format="json"` for `strict_json` and `tool_call`,
+    - telemetry now records `ollama_request_format` and fallback usage.
+17. Ollama blocker revalidation (live) now passes:
+    - baseline evidence (pre-fix): `benchmarks/results/protocol/local_prompting/ollama_blocker_baseline_2026-03-06/` (`strict_json/tool_call=0.0`, anti-meta `1.0/1.0`),
+    - candidate smoke evidence (post-fix): `benchmarks/results/protocol/local_prompting/ollama_blocker_candidate_2026-03-06/` (`20/20` strict + `20/20` tool),
+    - qualification evidence: `benchmarks/results/protocol/local_prompting/ollama_qualification_200_2026-03-06/` (`200/200` strict + `200/200` tool),
+    - promotion evidence: `benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/` (`1000/1000` strict + `500/500` tool),
+    - failure summary: `benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/conformance/ollama/ollama.qwen.chatml.v1/failure_summary.json` (`total_failures=0`).
 
-Remaining promotion blocker:
-1. Ollama `qwen2.5-coder:7b` strict run remains below LP-12/LP-13 thresholds (current smoke evidence: strict_json/tool_call pass_rate `0.0`, anti-meta chatter/fence rate `1.0`), so promotion package cannot be finalized yet.
+Promotion blocker status:
+1. Cleared for Ollama `qwen2.5-coder:7b` under current profile and strict gates.
 
 ## 2. Scope and Non-Goals
 

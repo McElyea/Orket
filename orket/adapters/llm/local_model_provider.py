@@ -154,6 +154,10 @@ class LocalModelProvider:
         if self.seed is not None:
             options["seed"] = self.seed
         options.update(local_prompting_policy.ollama_options_overrides())
+        request_format = ""
+        format_fallback_used = False
+        if local_prompting_policy.task_class in {"strict_json", "tool_call"}:
+            request_format = "json"
 
         max_retries = 3
         retry_delay = 1
@@ -161,8 +165,15 @@ class LocalModelProvider:
         for attempt in range(max_retries):
             try:
                 started_at = time.perf_counter()
+                request_kwargs: Dict[str, Any] = {
+                    "model": self.model,
+                    "messages": messages,
+                    "options": options,
+                }
+                if request_format:
+                    request_kwargs["format"] = request_format
                 response = await asyncio.wait_for(
-                    self.client.chat(model=self.model, messages=messages, options=options),
+                    self.client.chat(**request_kwargs),
                     timeout=self.timeout,
                 )
 
@@ -198,10 +209,19 @@ class LocalModelProvider:
                     "retries": attempt,
                     "latency_ms": int((time.perf_counter() - started_at) * 1000),
                     "response_chars": len(content),
+                    "ollama_request_format": request_format or None,
+                    "ollama_format_fallback_used": format_fallback_used,
                 }
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
 
+            except TypeError as exc:
+                # Older client shims may not accept the optional `format` keyword.
+                if request_format and "format" in str(exc):
+                    format_fallback_used = True
+                    request_format = ""
+                    continue
+                raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(exc)}") from exc
             except (asyncio.TimeoutError, ModelTimeoutError):
                 if attempt == max_retries - 1:
                     raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.")

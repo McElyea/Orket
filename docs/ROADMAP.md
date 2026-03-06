@@ -3,7 +3,7 @@
 Last updated: 2026-03-05
 
 ## Priority Plan Pointer
-1. protocol-governed local prompting execution plan: `docs/projects/protocol-governed/local-prompting-plan.md`
+1. protocol-governed runtime implementation plan: `docs/projects/protocol-governed/implementation-plan.md`
 
 ## Canonical Rule
 `docs/ROADMAP.md` is the only active roadmap source.
@@ -21,7 +21,7 @@ Current default target: protocol-governed.
 3. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: production-window operator sign-off for enforce cutover; landed: network destination allowlist metadata on settings/runtime-policy surfaces, deterministic clock artifact metadata in execution capsule and replay receipt inventory diffs, enforce-phase checklist publication, local window_a/window_b strict evidence artifacts under `benchmarks/results/protocol_governed/enforce_phase/`, and direct `python scripts/MidTier/...` campaign invocation hardening).
+1. protocol-governed -- Execute implementation plan from `docs/projects/protocol-governed/implementation-plan.md` (in progress: production-window operator sign-off for enforce cutover; landed: network destination allowlist metadata on settings/runtime-policy surfaces, deterministic clock artifact metadata in execution capsule and replay receipt inventory diffs, enforce-phase checklist publication, local window_a/window_b strict evidence artifacts under `benchmarks/results/protocol_governed/enforce_phase/`, direct `python scripts/MidTier/...` campaign invocation hardening, and local prompting Ollama strict conformance blocker closure with promotion evidence at `benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/`).
 2. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
 
 ## Project Index

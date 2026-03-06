@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import httpx
 import pytest
@@ -10,7 +11,7 @@ from orket.exceptions import ModelProviderError
 
 
 class _FakeClient:
-    async def chat(self, model, messages, options):  # type: ignore[no-untyped-def]
+    async def chat(self, model, messages, options, format=None):  # type: ignore[no-untyped-def]
         return {
             "message": {"content": "ok"},
             "prompt_eval_count": 12,
@@ -42,6 +43,8 @@ async def test_local_model_provider_emits_usage_and_timings_payload(monkeypatch:
         "predicted_ms": 320.0,
         "total_ms": 500.0,
     }
+    assert response.raw["ollama_request_format"] is None
+    assert response.raw["ollama_format_fallback_used"] is False
 
 
 def test_local_model_provider_ns_to_ms_is_type_strict() -> None:
@@ -267,3 +270,32 @@ async def test_local_model_provider_applies_local_prompt_profile_overrides(monke
     assert response.raw["profile_id"] == "openai_compat.qwen.openai_messages.v1"
     assert response.raw["task_class"] == "strict_json"
     assert response.raw["template_hash_alg"] == "sha256"
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_ollama_strict_tasks_request_json_format(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
+    provider = LocalModelProvider(model="qwen2.5-coder:7b")
+    seen: dict[str, Any] = {}
+
+    class _CaptureClient:
+        async def chat(self, model, messages, options, format=None):  # type: ignore[no-untyped-def]
+            seen["format"] = format
+            return {
+                "message": {"content": '{"ok":true,"case_id":"strict-json-0000-732"}'},
+                "prompt_eval_count": 4,
+                "eval_count": 2,
+                "prompt_eval_duration": 100_000_000,
+                "eval_duration": 90_000_000,
+                "total_duration": 210_000_000,
+            }
+
+    provider.client = _CaptureClient()
+    response = await provider.complete(
+        [{"role": "user", "content": "Return strict JSON"}],
+        runtime_context={"protocol_governed_enabled": True, "local_prompt_task_class": "strict_json"},
+    )
+    assert seen["format"] == "json"
+    assert response.raw["ollama_request_format"] == "json"
+    assert response.raw["ollama_format_fallback_used"] is False
