@@ -12,7 +12,7 @@ from fastapi.security import APIKeyHeader
 import os
 
 from orket import __version__
-from orket.logging import subscribe_to_events, log_event
+from orket.logging import subscribe_to_events, unsubscribe_from_events, log_event
 from orket.state import runtime_state
 from orket.hardware import get_metrics_snapshot
 from orket.decision_nodes.registry import DecisionNodeRegistry
@@ -425,7 +425,8 @@ async def lifespan(_app: FastAPI):
     ensure_log_dir()
     broadcaster_task = asyncio.create_task(event_broadcaster())
     loop = asyncio.get_running_loop()
-    subscribe_to_events(_on_log_record_factory(loop))
+    log_subscriber = _on_log_record_factory(loop)
+    subscribe_to_events(log_subscriber)
     expected_key = os.getenv("ORKET_API_KEY", "").strip()
     insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
     log_event(
@@ -445,6 +446,7 @@ async def lifespan(_app: FastAPI):
     try:
         yield
     finally:
+        unsubscribe_from_events(log_subscriber)
         broadcaster_task.cancel()
         try:
             await broadcaster_task

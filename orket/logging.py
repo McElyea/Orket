@@ -18,11 +18,16 @@ def setup_logging(workspace: Path) -> Path:
 _subscribers: list[Callable[[dict[str, Any]], None]] = []
 
 def subscribe_to_events(callback: Callable[[dict[str, Any]], None]) -> None:
-    _subscribers.append(callback)
+    if callback not in _subscribers:
+        _subscribers.append(callback)
 
 def unsubscribe_from_events(callback: Callable[[dict[str, Any]], None]) -> None:
     if callback in _subscribers:
         _subscribers.remove(callback)
+
+
+def event_subscriber_count() -> int:
+    return len(_subscribers)
 
 from orket.naming import sanitize_name
 
