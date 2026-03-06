@@ -5,6 +5,7 @@ from pathlib import Path
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.domain.execution import ExecutionTurn, ToolCall
+from orket.runtime.error_codes import ERR_JSON_MD_FENCE, ERR_THINK_OVERFLOW, EXTRANEOUS_TEXT
 from orket.schema import RoleConfig
 
 
@@ -116,3 +117,67 @@ def test_contract_validator_allows_thinking_process_prefixed_tool_only_payload(t
         context={"verification_scope": {"consistency_tool_calls_only": True}},
     )
     assert diagnostics["violations"] == []
+
+
+def test_contract_validator_local_prompt_reports_markdown_fence_leaf_code(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content='```json\n{"ok":true}\n```',
+        raw={"task_class": "strict_json"},
+    )
+    diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context={})
+
+    violation = next(item for item in diagnostics["violations"] if item["rule_id"] == "LOCAL_PROMPT.MARKDOWN_FENCE")
+    assert violation["error_code"] == ERR_JSON_MD_FENCE
+    assert violation["error_family"] == EXTRANEOUS_TEXT
+
+
+def test_contract_validator_local_prompt_allows_leading_think_block_when_profile_permits(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content="<think>plan</think>\n{\"ok\":true}",
+        raw={
+            "task_class": "strict_json",
+            "local_prompt_allows_thinking_blocks": True,
+            "local_prompt_thinking_block_format": "xml_think_tags",
+        },
+    )
+    diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context={})
+    assert diagnostics["violations"] == []
+
+
+def test_contract_validator_local_prompt_rejects_think_block_after_payload(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content='{"ok":true}<think>extra</think>',
+        raw={
+            "task_class": "strict_json",
+            "local_prompt_allows_thinking_blocks": True,
+            "local_prompt_thinking_block_format": "xml_think_tags",
+        },
+    )
+    diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context={})
+
+    think_violation = next(item for item in diagnostics["violations"] if item["rule_id"] == "LOCAL_PROMPT.THINK_POSITION")
+    assert think_violation["error_code"] == ERR_THINK_OVERFLOW
+
+
+def test_contract_validator_local_prompt_rejects_profile_intro_denylist_prefix(tmp_path: Path) -> None:
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content='Sure {"ok":true}',
+        raw={
+            "task_class": "strict_json",
+            "local_prompt_intro_denylist": ["sure"],
+        },
+    )
+    diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context={})
+    assert any(item["rule_id"] == "LOCAL_PROMPT.INTRO_DENYLIST" for item in diagnostics["violations"])

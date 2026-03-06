@@ -148,3 +148,16 @@ def test_response_parser_strict_protocol_mode_uses_context_overrides_for_hash_me
     assert turn.raw["validator_version"] == "turn-validator/custom"
     assert turn.raw["protocol_hash"] == "p" * 64
     assert turn.raw["tool_schema_hash"] == "s" * 64
+
+
+def test_response_parser_strips_leading_thinking_blocks_for_supported_formats(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    content = (
+        "<think>first pass</think>\n"
+        "<think>second pass</think>\n"
+        '{"tool":"write_file","args":{"path":"a.txt","content":"x"}}'
+    )
+    stripped, count = parser.strip_leading_thinking_blocks(content, "xml_think_tags")
+
+    assert count == 2
+    assert stripped.strip().startswith('{"tool":"write_file"')

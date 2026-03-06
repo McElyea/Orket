@@ -1,0 +1,419 @@
+{
+  "schema_version": "local_prompt_profiles.v1",
+  "profiles": [
+    {
+      "provider": "ollama",
+      "match": {
+        "model_contains": ["qwen"]
+      },
+      "profile": {
+        "profile_id": "ollama.qwen.chatml.v1",
+        "template_family": "chatml",
+        "template_variant": "qwen_chatml",
+        "template_source": "provider_builtin",
+        "template_version": "qwen_chatml_2026_03",
+        "allowed_roles": ["system", "user", "assistant", "tool"],
+        "system_prompt_mode": "native",
+        "context_budget_tokens": 8192,
+        "history_policy": "bounded_head_tail_v1",
+        "stop_sequences_by_task_class": {
+          "strict_json": ["<|json_end|>", "<|im_end|>"],
+          "tool_call": ["<|tool_end|>", "<|im_end|>"],
+          "concise_text": ["<|im_end|>"],
+          "reasoning": ["<|im_end|>"]
+        },
+        "supports_assistant_prefill": false,
+        "prefill_strategy": "none",
+        "tool_call_mode": "json_wrapper",
+        "tool_contract": {
+          "tool_manifest_injection": "system",
+          "tool_call_schema": "tool_call.v1",
+          "tool_result_role": "tool"
+        },
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "sampling_bundles": {
+          "strict_json": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 11
+          },
+          "tool_call": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 17
+          },
+          "concise_text": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "top_k": 40,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 768,
+            "seed_policy": "provider_default"
+          },
+          "reasoning": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 60,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 1024,
+            "seed_policy": "provider_default"
+          }
+        }
+      }
+    },
+    {
+      "provider": "ollama",
+      "match": {
+        "model_contains": ["llama", "mistral"]
+      },
+      "profile": {
+        "profile_id": "ollama.llama.inst.v1",
+        "template_family": "inst",
+        "template_variant": "llama3_header",
+        "template_source": "provider_builtin",
+        "template_version": "llama_inst_2026_03",
+        "allowed_roles": ["system", "user", "assistant", "tool"],
+        "system_prompt_mode": "native",
+        "context_budget_tokens": 8192,
+        "history_policy": "bounded_head_tail_v1",
+        "stop_sequences_by_task_class": {
+          "strict_json": ["<|json_end|>", "<|eot_id|>"],
+          "tool_call": ["<|tool_end|>", "<|eot_id|>"],
+          "concise_text": ["<|eot_id|>"],
+          "reasoning": ["<|eot_id|>"]
+        },
+        "supports_assistant_prefill": false,
+        "prefill_strategy": "none",
+        "tool_call_mode": "json_wrapper",
+        "tool_contract": {
+          "tool_manifest_injection": "system",
+          "tool_call_schema": "tool_call.v1",
+          "tool_result_role": "tool"
+        },
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "sampling_bundles": {
+          "strict_json": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 11
+          },
+          "tool_call": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 17
+          },
+          "concise_text": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "top_k": 40,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 768,
+            "seed_policy": "provider_default"
+          },
+          "reasoning": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 60,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 1024,
+            "seed_policy": "provider_default"
+          }
+        }
+      }
+    },
+    {
+      "provider": "ollama",
+      "match": {
+        "model_contains": ["deepseek-r1", "deepseek:r1", "deepseek_r1"]
+      },
+      "profile": {
+        "profile_id": "ollama.deepseek_r1.custom.v1",
+        "template_family": "custom",
+        "template_variant": "deepseek_reasoning",
+        "template_source": "profile_override",
+        "template_version": "deepseek_r1_2026_03",
+        "allowed_roles": ["user", "assistant", "tool"],
+        "system_prompt_mode": "user_injection",
+        "context_budget_tokens": 12288,
+        "history_policy": "bounded_head_tail_v1",
+        "stop_sequences_by_task_class": {
+          "strict_json": ["<|json_end|>", "</think>"],
+          "tool_call": ["<|tool_end|>", "</think>"],
+          "concise_text": ["</think>"],
+          "reasoning": ["</think>"]
+        },
+        "supports_assistant_prefill": false,
+        "prefill_strategy": "none",
+        "tool_call_mode": "json_wrapper",
+        "tool_contract": {
+          "tool_manifest_injection": "user",
+          "tool_call_schema": "tool_call.v1",
+          "tool_result_role": "tool"
+        },
+        "allows_thinking_blocks": true,
+        "thinking_block_format": "xml_think_tags",
+        "sampling_bundles": {
+          "strict_json": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 31
+          },
+          "tool_call": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 37
+          },
+          "concise_text": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "top_k": 40,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 768,
+            "seed_policy": "provider_default"
+          },
+          "reasoning": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 60,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 1024,
+            "seed_policy": "provider_default"
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai_compat",
+      "match": {
+        "model_contains": ["qwen"]
+      },
+      "profile": {
+        "profile_id": "openai_compat.qwen.openai_messages.v1",
+        "template_family": "openai_messages",
+        "template_variant": "openai_chat",
+        "template_source": "runtime_metadata",
+        "template_version": "openai_chat_2026_03",
+        "allowed_roles": ["system", "user", "assistant", "tool"],
+        "system_prompt_mode": "native",
+        "context_budget_tokens": 8192,
+        "history_policy": "bounded_head_tail_v1",
+        "stop_sequences_by_task_class": {
+          "strict_json": ["<|json_end|>"],
+          "tool_call": ["<|tool_end|>"],
+          "concise_text": ["</s>"],
+          "reasoning": ["</s>"]
+        },
+        "supports_assistant_prefill": false,
+        "prefill_strategy": "none",
+        "tool_call_mode": "native",
+        "tool_contract": {
+          "tool_manifest_injection": "system",
+          "tool_call_schema": "tool_call.v1",
+          "tool_result_role": "tool"
+        },
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "sampling_bundles": {
+          "strict_json": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 41
+          },
+          "tool_call": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 43
+          },
+          "concise_text": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "top_k": 40,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 768,
+            "seed_policy": "provider_default"
+          },
+          "reasoning": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 60,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 1024,
+            "seed_policy": "provider_default"
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai_compat",
+      "match": {
+        "model_contains": ["llama", "mistral"]
+      },
+      "profile": {
+        "profile_id": "openai_compat.llama.openai_messages.v1",
+        "template_family": "openai_messages",
+        "template_variant": "openai_chat",
+        "template_source": "runtime_metadata",
+        "template_version": "openai_chat_2026_03",
+        "allowed_roles": ["system", "user", "assistant", "tool"],
+        "system_prompt_mode": "native",
+        "context_budget_tokens": 8192,
+        "history_policy": "bounded_head_tail_v1",
+        "stop_sequences_by_task_class": {
+          "strict_json": ["<|json_end|>"],
+          "tool_call": ["<|tool_end|>"],
+          "concise_text": ["</s>"],
+          "reasoning": ["</s>"]
+        },
+        "supports_assistant_prefill": false,
+        "prefill_strategy": "none",
+        "tool_call_mode": "native",
+        "tool_contract": {
+          "tool_manifest_injection": "system",
+          "tool_call_schema": "tool_call.v1",
+          "tool_result_role": "tool"
+        },
+        "allows_thinking_blocks": false,
+        "thinking_block_format": "none",
+        "sampling_bundles": {
+          "strict_json": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 47
+          },
+          "tool_call": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 53
+          },
+          "concise_text": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "top_k": 40,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 768,
+            "seed_policy": "provider_default"
+          },
+          "reasoning": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 60,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 1024,
+            "seed_policy": "provider_default"
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai_compat",
+      "match": {
+        "model_contains": ["deepseek"]
+      },
+      "profile": {
+        "profile_id": "openai_compat.deepseek.openai_messages.v1",
+        "template_family": "openai_messages",
+        "template_variant": "openai_chat",
+        "template_source": "runtime_metadata",
+        "template_version": "openai_chat_2026_03",
+        "allowed_roles": ["system", "user", "assistant", "tool"],
+        "system_prompt_mode": "native",
+        "context_budget_tokens": 12288,
+        "history_policy": "bounded_head_tail_v1",
+        "stop_sequences_by_task_class": {
+          "strict_json": ["<|json_end|>"],
+          "tool_call": ["<|tool_end|>"],
+          "concise_text": ["</s>"],
+          "reasoning": ["</s>"]
+        },
+        "supports_assistant_prefill": false,
+        "prefill_strategy": "none",
+        "tool_call_mode": "native",
+        "tool_contract": {
+          "tool_manifest_injection": "system",
+          "tool_call_schema": "tool_call.v1",
+          "tool_result_role": "tool"
+        },
+        "allows_thinking_blocks": true,
+        "thinking_block_format": "provider_native",
+        "sampling_bundles": {
+          "strict_json": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 59
+          },
+          "tool_call": {
+            "temperature": 0.0,
+            "top_p": 1.0,
+            "top_k": 1,
+            "repeat_penalty": 1.0,
+            "max_output_tokens": 512,
+            "seed_policy": "fixed",
+            "seed_value": 61
+          },
+          "concise_text": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "top_k": 40,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 768,
+            "seed_policy": "provider_default"
+          },
+          "reasoning": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 60,
+            "repeat_penalty": 1.05,
+            "max_output_tokens": 1024,
+            "seed_policy": "provider_default"
+          }
+        }
+      }
+    }
+  ]
+}

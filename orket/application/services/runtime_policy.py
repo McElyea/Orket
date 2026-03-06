@@ -47,6 +47,9 @@ DEFAULT_PROTOCOL_LOCALE = "C.UTF-8"
 DEFAULT_PROTOCOL_NETWORK_MODE = "off"
 DEFAULT_PROTOCOL_NETWORK_ALLOWLIST = ""
 DEFAULT_PROTOCOL_ENV_ALLOWLIST = ""
+DEFAULT_LOCAL_PROMPTING_MODE = "shadow"
+DEFAULT_LOCAL_PROMPTING_ALLOW_FALLBACK = False
+DEFAULT_LOCAL_PROMPTING_FALLBACK_PROFILE_ID = ""
 
 PROJECT_SURFACE_PROFILE_OPTIONS: List[Dict[str, str]] = [
     {"value": "unspecified", "label": "Unspecified (Legacy Defaults)"},
@@ -76,6 +79,11 @@ PROTOCOL_NETWORK_MODE_OPTIONS: List[Dict[str, str]] = [
 GITEA_STATE_PILOT_ENABLED_OPTIONS: List[Dict[str, str]] = [
     {"value": "enabled", "label": "Enabled"},
     {"value": "disabled", "label": "Disabled"},
+]
+LOCAL_PROMPTING_MODE_OPTIONS: List[Dict[str, str]] = [
+    {"value": "shadow", "label": "Shadow"},
+    {"value": "compat", "label": "Compat"},
+    {"value": "enforce", "label": "Enforce"},
 ]
 
 
@@ -223,6 +231,17 @@ def runtime_policy_options() -> Dict[str, Any]:
         },
         "protocol_network_allowlist": text_option(DEFAULT_PROTOCOL_NETWORK_ALLOWLIST),
         "protocol_env_allowlist": text_option(DEFAULT_PROTOCOL_ENV_ALLOWLIST),
+        "local_prompting_mode": {
+            "default": DEFAULT_LOCAL_PROMPTING_MODE,
+            "options": LOCAL_PROMPTING_MODE_OPTIONS,
+            "input_style": "radio",
+        },
+        "local_prompting_allow_fallback": {
+            "default": DEFAULT_LOCAL_PROMPTING_ALLOW_FALLBACK,
+            "options": GITEA_STATE_PILOT_ENABLED_OPTIONS,
+            "input_style": "radio",
+        },
+        "local_prompting_fallback_profile_id": text_option(DEFAULT_LOCAL_PROMPTING_FALLBACK_PROFILE_ID),
         "gitea_state_pilot_enabled": {
             "default": DEFAULT_GITEA_STATE_PILOT_ENABLED,
             "options": GITEA_STATE_PILOT_ENABLED_OPTIONS,
@@ -302,6 +321,36 @@ def resolve_protocol_network_allowlist_setting(*values: Any) -> str:
 def resolve_protocol_env_allowlist_setting(*values: Any) -> str:
     parsed = resolve_protocol_env_allowlist(*values)
     return ",".join(parsed) if parsed else ""
+
+
+def resolve_local_prompting_mode(*values: Any) -> str:
+    raw = _pick_first_non_empty(values)
+    aliases = {
+        "shadow": "shadow",
+        "compat": "compat",
+        "enforce": "enforce",
+    }
+    return aliases.get(raw, DEFAULT_LOCAL_PROMPTING_MODE)
+
+
+def resolve_local_prompting_allow_fallback(*values: Any) -> bool:
+    for value in values:
+        raw = _normalize(value)
+        if not raw:
+            continue
+        if raw in {"1", "true", "yes", "on", "enabled"}:
+            return True
+        if raw in {"0", "false", "no", "off", "disabled"}:
+            return False
+    return DEFAULT_LOCAL_PROMPTING_ALLOW_FALLBACK
+
+
+def resolve_local_prompting_fallback_profile_id(*values: Any) -> str:
+    for value in values:
+        raw = str(value or "").strip()
+        if raw:
+            return raw
+    return DEFAULT_LOCAL_PROMPTING_FALLBACK_PROFILE_ID
 
 
 def resolve_gitea_state_pilot_enabled(*values: Any) -> bool:

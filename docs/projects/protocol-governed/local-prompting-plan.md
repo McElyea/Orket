@@ -21,6 +21,55 @@ Primary outcome:
 2. no silent fallback or role/template ambiguity in strict paths,
 3. measurable conformance gates before promotion.
 
+## 1a. Execution Status (2026-03-05)
+
+Completed increment:
+1. LP-01 profile contract scaffolding landed in `orket/runtime/local_prompt_profiles.py`.
+2. Canonical profile registry seed landed in `model/core/contracts/local_prompt_profiles.json`.
+3. Resolver/schema test coverage landed in `tests/runtime/test_local_prompt_profiles.py`.
+4. Runtime call-path policy wiring landed:
+   - provider policy resolver at `orket/adapters/llm/local_prompting_policy.py`
+   - model adapter application in `orket/adapters/llm/local_model_provider.py`
+   - turn-context pass-through in `orket/application/workflows/turn_executor_ops.py`
+5. Runtime-policy/settings control surfaces landed:
+   - `local_prompting_mode`
+   - `local_prompting_allow_fallback`
+   - `local_prompting_fallback_profile_id`
+6. Conformance/drift/audit scripts landed:
+   - `scripts/protocol/run_local_prompting_conformance.py`
+   - `scripts/protocol/compare_local_prompting_profile_drift.py`
+   - `scripts/protocol/summarize_local_prompting_failures.py`
+   - `scripts/protocol/audit_prompt_templates.py`
+7. Local prompting error registry seed landed in `orket/runtime/error_codes.py`.
+8. Live verification captures landed under `benchmarks/results/protocol/local_prompting/live_verification/` for:
+   - Ollama `qwen2.5-coder:7b` (strict conformance currently failing parse/tool thresholds),
+   - LM Studio `qwen3.5-4b` (strict conformance passing in single-case smoke).
+9. LP-09/LP-10 strict validator expansion landed:
+   - profile-scoped anti-meta diagnostics with deterministic leaf/family metadata in `orket/application/workflows/turn_contract_validator.py`,
+   - thinking-block prefix stripping helper in `orket/application/workflows/turn_response_parser.py`,
+   - profile telemetry propagation for thinking policy + intro denylist in `orket/adapters/llm/local_prompting_policy.py`.
+10. LP-12/LP-13 gate hardening landed in `scripts/protocol/run_local_prompting_conformance.py`:
+    - corpus profile selector (`--suite smoke|promotion`),
+    - per-task case-count overrides,
+    - explicit threshold controls for strict-json/tool-call + anti-meta rates,
+    - deterministic anti-meta rate capture in conformance artifacts.
+11. LP-16 template-source ingestion landed in `scripts/protocol/audit_prompt_templates.py`:
+    - optional profile/template source path ingestion (`template_source_path`/`template_path`),
+    - structured evidence of loaded sources in audit artifacts.
+12. New tests landed for strict anti-meta and ingestion paths:
+    - `tests/application/test_turn_contract_validator.py`
+    - `tests/application/test_turn_response_parser.py`
+    - `tests/runtime/test_local_prompt_profiles.py`
+    - `tests/scripts/test_run_local_prompting_conformance.py`
+    - `tests/scripts/test_audit_prompt_templates.py`
+13. Live verification rerun against real providers after LP-09/LP-10 and gate updates:
+    - preflight PASS: Ollama `qwen2.5-coder:7b`, LM Studio `qwen3.5-4b`,
+    - smoke conformance evidence refreshed under `benchmarks/results/protocol/local_prompting/live_verification/`,
+    - promotion-suite code path validated live on LM Studio using `--suite promotion` with case overrides.
+
+Remaining promotion blocker:
+1. Ollama `qwen2.5-coder:7b` strict run remains below LP-12/LP-13 thresholds (current smoke evidence: strict_json/tool_call pass_rate `0.0`, anti-meta chatter/fence rate `1.0`), so promotion package cannot be finalized yet.
+
 ## 2. Scope and Non-Goals
 
 In scope:

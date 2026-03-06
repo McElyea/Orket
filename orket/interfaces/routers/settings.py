@@ -19,6 +19,9 @@ class RuntimePolicyUpdateRequest(BaseModel):
     protocol_network_mode: Optional[str] = None
     protocol_network_allowlist: Optional[str] = None
     protocol_env_allowlist: Optional[str] = None
+    local_prompting_mode: Optional[str] = None
+    local_prompting_allow_fallback: Optional[bool] = None
+    local_prompting_fallback_profile_id: Optional[str] = None
     gitea_state_pilot_enabled: Optional[bool] = None
 
 
@@ -45,6 +48,9 @@ def build_settings_router(
     resolve_protocol_network_mode_setting: Callable[[Any, Any, Any], str],
     resolve_protocol_network_allowlist_setting: Callable[[Any, Any, Any], str],
     resolve_protocol_env_allowlist_setting: Callable[[Any, Any, Any], str],
+    resolve_local_prompting_mode: Callable[[Any, Any, Any], str],
+    resolve_local_prompting_allow_fallback: Callable[[Any, Any, Any], bool],
+    resolve_local_prompting_fallback_profile_id: Callable[[Any, Any, Any], str],
     resolve_gitea_state_pilot_enabled: Callable[[Any, Any, Any], bool],
     allowed_architecture_patterns: Callable[[], list[str]],
     is_microservices_pilot_stable: Callable[[], bool],
@@ -187,6 +193,21 @@ def build_settings_router(
             process_rules.get("protocol_env_allowlist"),
             user_settings.get("protocol_env_allowlist"),
         )
+        local_prompting_mode = resolve_local_prompting_mode(
+            os.environ.get("ORKET_LOCAL_PROMPTING_MODE", ""),
+            process_rules.get("local_prompting_mode"),
+            user_settings.get("local_prompting_mode"),
+        )
+        local_prompting_allow_fallback = resolve_local_prompting_allow_fallback(
+            os.environ.get("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", ""),
+            process_rules.get("local_prompting_allow_fallback"),
+            user_settings.get("local_prompting_allow_fallback"),
+        )
+        local_prompting_fallback_profile_id = resolve_local_prompting_fallback_profile_id(
+            os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", ""),
+            process_rules.get("local_prompting_fallback_profile_id"),
+            user_settings.get("local_prompting_fallback_profile_id"),
+        )
         gitea_state_pilot_enabled = resolve_gitea_state_pilot_enabled(
             os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT", ""),
             process_rules.get("gitea_state_pilot_enabled"),
@@ -204,6 +225,9 @@ def build_settings_router(
             "protocol_network_mode": protocol_network_mode,
             "protocol_network_allowlist": protocol_network_allowlist,
             "protocol_env_allowlist": protocol_env_allowlist,
+            "local_prompting_mode": local_prompting_mode,
+            "local_prompting_allow_fallback": local_prompting_allow_fallback,
+            "local_prompting_fallback_profile_id": local_prompting_fallback_profile_id,
             "gitea_state_pilot_enabled": gitea_state_pilot_enabled,
             "default_architecture_mode": "force_monolith",
             "allowed_architecture_patterns": allowed_architecture_patterns(),
@@ -248,6 +272,18 @@ def build_settings_router(
                 None,
                 None,
             )
+        if req.local_prompting_mode is not None:
+            current["local_prompting_mode"] = resolve_local_prompting_mode(req.local_prompting_mode, None, None)
+        if req.local_prompting_allow_fallback is not None:
+            current["local_prompting_allow_fallback"] = bool(
+                resolve_local_prompting_allow_fallback(req.local_prompting_allow_fallback, None, None)
+            )
+        if req.local_prompting_fallback_profile_id is not None:
+            current["local_prompting_fallback_profile_id"] = resolve_local_prompting_fallback_profile_id(
+                req.local_prompting_fallback_profile_id,
+                None,
+                None,
+            )
         if req.gitea_state_pilot_enabled is not None:
             current["gitea_state_pilot_enabled"] = bool(
                 resolve_gitea_state_pilot_enabled(req.gitea_state_pilot_enabled, None, None)
@@ -267,6 +303,9 @@ def build_settings_router(
                 "protocol_network_mode": current.get("protocol_network_mode"),
                 "protocol_network_allowlist": current.get("protocol_network_allowlist"),
                 "protocol_env_allowlist": current.get("protocol_env_allowlist"),
+                "local_prompting_mode": current.get("local_prompting_mode"),
+                "local_prompting_allow_fallback": current.get("local_prompting_allow_fallback"),
+                "local_prompting_fallback_profile_id": current.get("local_prompting_fallback_profile_id"),
                 "gitea_state_pilot_enabled": current.get("gitea_state_pilot_enabled"),
             },
         }

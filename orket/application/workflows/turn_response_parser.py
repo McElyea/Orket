@@ -180,6 +180,26 @@ class ResponseParser:
             end -= 1
         return content[start:end]
 
+    def strip_leading_thinking_blocks(self, content: str, thinking_block_format: str = "none") -> tuple[str, int]:
+        format_token = str(thinking_block_format or "").strip().lower().replace("-", "_")
+        if format_token not in {"xml_think_tags", "provider_native"}:
+            return str(content or ""), 0
+
+        working = str(content or "")
+        consumed = 0
+        while True:
+            trimmed = working.lstrip(" \t\r\n")
+            opening = re.match(r"<\s*think\b[^>]*>", trimmed, flags=re.IGNORECASE)
+            if opening is None:
+                break
+            trailing = trimmed[opening.end() :]
+            closing = re.search(r"<\s*/\s*think\s*>", trailing, flags=re.IGNORECASE)
+            if closing is None:
+                break
+            working = trailing[closing.end() :]
+            consumed += 1
+        return working, consumed
+
     def non_json_residue(self, content: str) -> str:
         blob = ToolParser.normalize_json_stringify(content or "")
         blob = re.sub(r"```(?:json)?", " ", blob, flags=re.IGNORECASE)

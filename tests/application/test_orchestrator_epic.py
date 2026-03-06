@@ -1598,6 +1598,9 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["env_allowlist"] == {}
     assert context["env_allowlist_values"] == []
     assert len(context["env_allowlist_hash"]) == 64
+    assert context["local_prompting_mode"] == "shadow"
+    assert context["local_prompting_allow_fallback"] is False
+    assert context["local_prompting_fallback_profile_id"] == ""
 
 
 def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkeypatch):
@@ -1613,6 +1616,9 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     monkeypatch.setenv("ORKET_PROTOCOL_CLOCK_MODE", "artifact_replay")
     monkeypatch.setenv("ORKET_PROTOCOL_CLOCK_ARTIFACT_REF", "artifacts/clock/run-4.json")
     monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "enforce")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", "true")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "openai_compat.qwen.openai_messages.v1")
     issue = IssueConfig(id="ARC-4", seat="architect", summary="Design architecture")
     context = orch._build_turn_context(
         run_id="run-4",
@@ -1638,6 +1644,9 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     assert "PATH" in context["env_allowlist"]
     assert set(context["env_allowlist"].keys()).issubset({"HOME", "PATH"})
     assert len(context["env_allowlist_hash"]) == 64
+    assert context["local_prompting_mode"] == "enforce"
+    assert context["local_prompting_allow_fallback"] is True
+    assert context["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
 
 
 def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast(orchestrator, monkeypatch):

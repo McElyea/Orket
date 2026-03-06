@@ -36,6 +36,9 @@ from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
+    resolve_local_prompting_allow_fallback,
+    resolve_local_prompting_fallback_profile_id,
+    resolve_local_prompting_mode,
     resolve_project_surface_profile,
     resolve_protocol_determinism_controls,
     resolve_small_project_builder_variant,
@@ -205,6 +208,49 @@ def _resolve_protocol_determinism_context(self) -> Dict[str, Any]:
         "env_allowlist_values": list(controls.get("env_allowlist") or []),
         "env_allowlist_hash": str(controls.get("env_allowlist_hash") or ""),
     }
+
+def _resolve_local_prompting_mode(self) -> str:
+    process_rules = (
+        self.org.process_rules
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
+        else {}
+    )
+    user_settings = load_user_settings()
+    return resolve_local_prompting_mode(
+        os.environ.get("ORKET_LOCAL_PROMPTING_MODE"),
+        process_rules.get("local_prompting_mode"),
+        user_settings.get("local_prompting_mode"),
+    )
+
+
+def _resolve_local_prompting_allow_fallback(self) -> bool:
+    process_rules = (
+        self.org.process_rules
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
+        else {}
+    )
+    user_settings = load_user_settings()
+    return bool(
+        resolve_local_prompting_allow_fallback(
+            os.environ.get("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK"),
+            process_rules.get("local_prompting_allow_fallback"),
+            user_settings.get("local_prompting_allow_fallback"),
+        )
+    )
+
+
+def _resolve_local_prompting_fallback_profile_id(self) -> str:
+    process_rules = (
+        self.org.process_rules
+        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
+        else {}
+    )
+    user_settings = load_user_settings()
+    return resolve_local_prompting_fallback_profile_id(
+        os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID"),
+        process_rules.get("local_prompting_fallback_profile_id"),
+        user_settings.get("local_prompting_fallback_profile_id"),
+    )
 
 def _resolve_workflow_profile(self) -> str:
     env_raw = (os.environ.get("ORKET_WORKFLOW_PROFILE") or "").strip().lower()
@@ -1719,6 +1765,9 @@ def _build_turn_context(
     max_response_bytes = self._resolve_protocol_max_response_bytes()
     max_tool_calls = self._resolve_protocol_max_tool_calls()
     determinism_controls = self._resolve_protocol_determinism_context()
+    local_prompting_mode = self._resolve_local_prompting_mode()
+    local_prompting_allow_fallback = self._resolve_local_prompting_allow_fallback()
+    local_prompting_fallback_profile_id = self._resolve_local_prompting_fallback_profile_id()
 
     return {
         "session_id": run_id,
@@ -1795,6 +1844,9 @@ def _build_turn_context(
         "env_allowlist": determinism_controls["env_allowlist"],
         "env_allowlist_values": determinism_controls["env_allowlist_values"],
         "env_allowlist_hash": determinism_controls["env_allowlist_hash"],
+        "local_prompting_mode": local_prompting_mode,
+        "local_prompting_allow_fallback": local_prompting_allow_fallback,
+        "local_prompting_fallback_profile_id": local_prompting_fallback_profile_id,
     }
 
 async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:

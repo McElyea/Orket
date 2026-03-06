@@ -356,6 +356,9 @@ def test_runtime_policy_options(monkeypatch):
     assert data["protocol_network_mode"]["input_style"] == "radio"
     assert data["protocol_network_allowlist"]["input_style"] == "text"
     assert data["protocol_env_allowlist"]["input_style"] == "text"
+    assert data["local_prompting_mode"]["input_style"] == "radio"
+    assert data["local_prompting_allow_fallback"]["input_style"] == "radio"
+    assert data["local_prompting_fallback_profile_id"]["input_style"] == "text"
     assert data["gitea_state_pilot_enabled"]["input_style"] == "radio"
     assert data["architecture_mode"]["default"] == "force_monolith"
     assert "microservices_pilot_stable" in data["architecture_mode"]
@@ -369,6 +372,9 @@ def test_runtime_policy_options(monkeypatch):
     assert data["protocol_network_mode"]["default"] == "off"
     assert data["protocol_network_allowlist"]["default"] == ""
     assert data["protocol_env_allowlist"]["default"] == ""
+    assert data["local_prompting_mode"]["default"] == "shadow"
+    assert data["local_prompting_allow_fallback"]["default"] is False
+    assert data["local_prompting_fallback_profile_id"]["default"] == ""
     assert data["gitea_state_pilot_enabled"]["default"] is False
 
 
@@ -472,6 +478,9 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_MODE", "allowlist")
     monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_ALLOWLIST", "api.example.com,cache.example.com")
     monkeypatch.setenv("ORKET_PROTOCOL_ENV_ALLOWLIST", "HOME,PATH")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "enforce")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", "true")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "openai_compat.qwen.openai_messages.v1")
     monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
     monkeypatch.setenv("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT", "benchmarks/results/benchmarks/nonexistent_pilot_stability.json")
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
@@ -495,6 +504,9 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
         "protocol_network_mode": "allowlist",
         "protocol_network_allowlist": "api.example.com,cache.example.com",
         "protocol_env_allowlist": "HOME,PATH",
+        "local_prompting_mode": "enforce",
+        "local_prompting_allow_fallback": True,
+        "local_prompting_fallback_profile_id": "openai_compat.qwen.openai_messages.v1",
         "gitea_state_pilot_enabled": True,
         "default_architecture_mode": "force_monolith",
         "allowed_architecture_patterns": ["monolith", "microservices"],
@@ -551,6 +563,9 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
             "protocol_network_mode": "allowlist",
             "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
+            "local_prompting_mode": "compat",
+            "local_prompting_allow_fallback": True,
+            "local_prompting_fallback_profile_id": "openai_compat.qwen.openai_messages.v1",
             "gitea_state_pilot_enabled": True,
         },
         headers={"X-API-Key": "test-key"},
@@ -568,6 +583,9 @@ def test_runtime_policy_update_normalizes_and_saves(monkeypatch):
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
     assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
+    assert captured["settings"]["local_prompting_mode"] == "compat"
+    assert captured["settings"]["local_prompting_allow_fallback"] is True
+    assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
     assert captured["settings"]["gitea_state_pilot_enabled"] is True
 
 
@@ -596,6 +614,9 @@ def test_settings_get_returns_metadata_and_sources(monkeypatch):
     assert settings["protocol_network_mode"]["value"] == "off"
     assert settings["protocol_network_allowlist"]["value"] == ""
     assert settings["protocol_env_allowlist"]["value"] == ""
+    assert settings["local_prompting_mode"]["value"] == "shadow"
+    assert settings["local_prompting_allow_fallback"]["value"] is False
+    assert settings["local_prompting_fallback_profile_id"]["value"] == ""
     assert "force_monolith" in settings["architecture_mode"]["allowed_values"]
     assert settings["gitea_state_pilot_enabled"]["type"] == "boolean"
 
@@ -622,6 +643,9 @@ def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
             "protocol_network_mode": "allowlist",
             "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
+            "local_prompting_mode": "compat",
+            "local_prompting_allow_fallback": "enabled",
+            "local_prompting_fallback_profile_id": "openai_compat.qwen.openai_messages.v1",
             "gitea_state_pilot_enabled": "enabled",
         },
         headers={"X-API-Key": "test-key"},
@@ -639,6 +663,9 @@ def test_settings_patch_round_trip_persists_normalized_values(monkeypatch):
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
     assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
+    assert captured["settings"]["local_prompting_mode"] == "compat"
+    assert captured["settings"]["local_prompting_allow_fallback"] is True
+    assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
     assert captured["settings"]["gitea_state_pilot_enabled"] is True
 
 

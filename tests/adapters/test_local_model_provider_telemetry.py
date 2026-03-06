@@ -22,7 +22,9 @@ class _FakeClient:
 
 
 @pytest.mark.asyncio
-async def test_local_model_provider_emits_usage_and_timings_payload() -> None:
+async def test_local_model_provider_emits_usage_and_timings_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
     provider = LocalModelProvider(model="dummy")
     provider.client = _FakeClient()
 
@@ -152,3 +154,39 @@ async def test_local_model_provider_rejects_non_openai_roles(monkeypatch: pytest
         )
     await provider.client.aclose()
     assert called is False
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_applies_local_prompt_profile_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="qwen3.5-4b")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["max_tokens"] == 512
+        assert payload["top_p"] == 1.0
+        assert payload["temperature"] == 0.0
+        assert payload["stop"] == ["<|json_end|>", "</s>"]
+        assert payload["seed"] == 41
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-1",
+                "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [{"role": "user", "content": "hello"}],
+        runtime_context={"protocol_governed_enabled": True, "local_prompt_task_class": "strict_json"},
+    )
+    await provider.client.aclose()
+    assert response.raw["profile_id"] == "openai_compat.qwen.openai_messages.v1"
+    assert response.raw["task_class"] == "strict_json"
+    assert response.raw["template_hash_alg"] == "sha256"

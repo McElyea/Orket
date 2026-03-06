@@ -20,11 +20,17 @@ def test_runtime_policy_options_exposes_protocol_determinism_fields(monkeypatch)
     assert payload["protocol_network_mode"]["default"] == "off"
     assert payload["protocol_network_allowlist"]["default"] == ""
     assert payload["protocol_env_allowlist"]["default"] == ""
+    assert payload["local_prompting_mode"]["default"] == "shadow"
+    assert payload["local_prompting_allow_fallback"]["default"] is False
+    assert payload["local_prompting_fallback_profile_id"]["default"] == ""
     assert payload["protocol_timezone"]["input_style"] == "text"
     assert payload["protocol_locale"]["input_style"] == "text"
     assert payload["protocol_network_mode"]["input_style"] == "radio"
     assert payload["protocol_network_allowlist"]["input_style"] == "text"
     assert payload["protocol_env_allowlist"]["input_style"] == "text"
+    assert payload["local_prompting_mode"]["input_style"] == "radio"
+    assert payload["local_prompting_allow_fallback"]["input_style"] == "radio"
+    assert payload["local_prompting_fallback_profile_id"]["input_style"] == "text"
 
 
 def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch):
@@ -45,6 +51,9 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
             "protocol_network_mode": "off",
             "protocol_network_allowlist": "",
             "protocol_env_allowlist": "",
+            "local_prompting_mode": "shadow",
+            "local_prompting_allow_fallback": False,
+            "local_prompting_fallback_profile_id": "",
         },
     )
     monkeypatch.setattr(
@@ -61,6 +70,9 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
                     "protocol_network_mode": "allowlist",
                     "protocol_network_allowlist": "api.example.com",
                     "protocol_env_allowlist": "HOME",
+                    "local_prompting_mode": "compat",
+                    "local_prompting_allow_fallback": "enabled",
+                    "local_prompting_fallback_profile_id": "openai_compat.qwen.openai_messages.v1",
                 }
             },
         )(),
@@ -75,6 +87,9 @@ def test_runtime_policy_get_resolves_protocol_determinism_precedence(monkeypatch
     assert payload["protocol_network_mode"] == "allowlist"
     assert payload["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert payload["protocol_env_allowlist"] == "HOME,PATH"
+    assert payload["local_prompting_mode"] == "compat"
+    assert payload["local_prompting_allow_fallback"] is True
+    assert payload["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
 
 
 def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch):
@@ -92,6 +107,9 @@ def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch):
             "protocol_network_mode": "allowlist",
             "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
+            "local_prompting_mode": "enforce",
+            "local_prompting_allow_fallback": True,
+            "local_prompting_fallback_profile_id": "openai_compat.qwen.openai_messages.v1",
         },
         headers={"X-API-Key": "test-key"},
     )
@@ -103,6 +121,9 @@ def test_runtime_policy_update_saves_protocol_determinism_fields(monkeypatch):
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
     assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
+    assert captured["settings"]["local_prompting_mode"] == "enforce"
+    assert captured["settings"]["local_prompting_allow_fallback"] is True
+    assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
 
 
 def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch):
@@ -121,6 +142,9 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch):
             "protocol_network_mode": "allowlist",
             "protocol_network_allowlist": "api.example.com,cache.example.com",
             "protocol_env_allowlist": "HOME,PATH",
+            "local_prompting_mode": "compat",
+            "local_prompting_allow_fallback": True,
+            "local_prompting_fallback_profile_id": "openai_compat.qwen.openai_messages.v1",
         },
         headers={"X-API-Key": "test-key"},
     )
@@ -132,6 +156,9 @@ def test_settings_patch_accepts_protocol_determinism_fields(monkeypatch):
     assert captured["settings"]["protocol_network_mode"] == "allowlist"
     assert captured["settings"]["protocol_network_allowlist"] == "api.example.com,cache.example.com"
     assert captured["settings"]["protocol_env_allowlist"] == "HOME,PATH"
+    assert captured["settings"]["local_prompting_mode"] == "compat"
+    assert captured["settings"]["local_prompting_allow_fallback"] is True
+    assert captured["settings"]["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
 
 
 def test_settings_patch_rejects_invalid_protocol_network_mode(monkeypatch):
@@ -160,6 +187,7 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
             "run_ledger_mode": "dual_write",
             "protocol_network_mode": "allowlist",
             "protocol_network_allowlist": "api.example.com",
+            "local_prompting_mode": "compat",
         },
     )
     monkeypatch.setattr(
@@ -171,6 +199,7 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
             {
                 "process_rules": {
                     "protocol_env_allowlist": "HOME,PATH",
+                    "local_prompting_allow_fallback": "enabled",
                 }
             },
         )(),
@@ -185,6 +214,8 @@ def test_settings_get_reports_protocol_determinism_sources(monkeypatch):
     assert settings["protocol_network_mode"]["source"] == "user"
     assert settings["protocol_network_allowlist"]["source"] == "user"
     assert settings["protocol_env_allowlist"]["source"] == "process_rules"
+    assert settings["local_prompting_mode"]["source"] == "user"
+    assert settings["local_prompting_allow_fallback"]["source"] == "process_rules"
     assert settings["run_ledger_mode"]["source"] == "user"
 
 

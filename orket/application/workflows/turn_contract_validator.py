@@ -1,11 +1,16 @@
-from __future__ import annotations
-
+﻿from __future__ import annotations
+import hashlib
 from pathlib import Path
+import re
 from typing import Any
-
 from orket.domain.execution import ExecutionTurn
+from orket.runtime.error_codes import (
+    ERR_JSON_MD_FENCE,
+    ERR_THINK_OVERFLOW,
+    EXTRANEOUS_TEXT,
+    error_family_for_leaf,
+)
 from orket.schema import RoleConfig
-
 from .turn_contract_rules import (
     consistency_scope_diagnostics,
     hallucination_scope_diagnostics,
@@ -18,15 +23,11 @@ from .turn_contract_rules import (
     security_scope_diagnostics,
 )
 from .turn_response_parser import ResponseParser
-
-
 class ContractValidator:
     """Evaluate turn contract compliance and produce deterministic diagnostics."""
-
     def __init__(self, workspace: Path, response_parser: ResponseParser) -> None:
         self.workspace = workspace
         self.response_parser = response_parser
-
     def collect_contract_violations(
         self,
         turn: ExecutionTurn,
@@ -38,7 +39,6 @@ class ContractValidator:
         self._append_contract_violations(violations, turn, context)
         self._append_scope_violations(violations, turn, context)
         return violations
-
     def _append_progress_violations(
         self,
         violations: list[dict[str, Any]],
@@ -59,7 +59,6 @@ class ContractValidator:
                 "observed_statuses": progress_diag.get("observed_statuses", []),
             }
         )
-
     def _append_contract_violations(
         self,
         violations: list[dict[str, Any]],
@@ -97,7 +96,15 @@ class ContractValidator:
                     "stage_gate_mode": context.get("stage_gate_mode"),
                 }
             )
-
+        anti_meta = self.local_prompt_anti_meta_diagnostics(turn, context)
+        if anti_meta.get("violations"):
+            violations.append(
+                {
+                    "reason": "local_prompt_anti_meta_contract_not_met",
+                    "violations": anti_meta.get("violations", []),
+                    "task_class": anti_meta.get("task_class"),
+                }
+            )
     def _append_scope_violations(
         self,
         violations: list[dict[str, Any]],
@@ -119,7 +126,6 @@ class ContractValidator:
                     "violations": diagnostics.get("violations", []),
                 }
             )
-
     def progress_contract_diagnostics(
         self,
         turn: ExecutionTurn,
@@ -148,7 +154,6 @@ class ContractValidator:
             "missing_required_tools": missing_required,
             "observed_statuses": observed_statuses,
         }
-
     def meets_progress_contract(self, turn: ExecutionTurn, role: RoleConfig, context: dict[str, Any]) -> bool:
         allowed = set(role.tools or [])
         called_tools = {call.tool for call in (turn.tool_calls or []) if call.tool}
@@ -158,7 +163,6 @@ class ContractValidator:
         required_statuses = {str(status).strip().lower() for status in (context.get("required_statuses") or []) if status}
         observational_tools = {"get_issue_context", "read_file", "list_directory", "list_dir"}
         blocked_wait_reasons = {"resource", "dependency", "review", "input", "system"}
-
         if allowed:
             if not turn.tool_calls:
                 return False
@@ -168,13 +172,10 @@ class ContractValidator:
             pass
         elif not (turn.content or "").strip():
             return False
-
         if called_tools and called_tools.issubset(observational_tools):
             return False
-
         if required_tools and not required_tools.issubset(called_tools):
             return False
-
         if required_statuses:
             status_match = False
             for call in turn.tool_calls:
@@ -191,25 +192,20 @@ class ContractValidator:
                 break
             if not status_match:
                 return False
-
         return True
-
     def meets_write_path_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         required_paths = self.required_write_paths(context)
         if not required_paths:
             return True
-
         observed_paths = self.observed_write_paths(turn)
         if not observed_paths:
             return False
         observed_set = {p for p in observed_paths if p}
         return set(required_paths).issubset(observed_set)
-
     def meets_guard_rejection_payload_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         stage_gate_mode = str(context.get("stage_gate_mode", "")).strip().lower()
         if stage_gate_mode != "review_required":
             return True
-
         blocked_status = False
         blocked_wait_reason = ""
         for call in turn.tool_calls:
@@ -220,10 +216,8 @@ class ContractValidator:
                 blocked_status = True
                 blocked_wait_reason = str(call.args.get("wait_reason", "")).strip().lower()
                 break
-
         if not blocked_status:
             return True
-
         payload = self.extract_guard_review_payload(turn.content or "")
         rationale = str(payload.get("rationale", "") or "").strip()
         violations = [str(item).strip() for item in (payload.get("violations", []) or []) if str(item).strip()]
@@ -235,52 +229,166 @@ class ContractValidator:
                 if not unresolved:
                     return False
         return bool(rationale and violations and actions)
-
     def meets_read_path_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         required_paths = self.required_read_paths(context)
         if not required_paths:
             return True
-
         observed_paths = self.observed_read_paths(turn)
         if not observed_paths:
             return False
         observed_set = {p for p in observed_paths if p}
         return set(required_paths).issubset(observed_set)
-
     def meets_architecture_decision_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         return meets_architecture_decision_contract(turn, context)
-
     @staticmethod
     def parse_architecture_decision_payload(raw_content: str) -> dict[str, Any] | None:
         return parse_architecture_decision_payload(raw_content)
-
     def hallucination_scope_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         return hallucination_scope_diagnostics(turn, context, self.non_json_residue)
-
     @staticmethod
     def security_scope_diagnostics(turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         return security_scope_diagnostics(turn, context)
-
     def consistency_scope_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         return consistency_scope_diagnostics(turn, context, self.non_json_residue)
-
     def required_read_paths(self, context: dict[str, Any]) -> list[str]:
         return required_read_paths(context, self.workspace)
-
     @staticmethod
     def required_write_paths(context: dict[str, Any]) -> list[str]:
         return required_write_paths(context)
-
     @staticmethod
     def observed_read_paths(turn: ExecutionTurn) -> list[str]:
         return observed_read_paths(turn)
-
     @staticmethod
     def observed_write_paths(turn: ExecutionTurn) -> list[str]:
         return observed_write_paths(turn)
-
     def non_json_residue(self, content: str) -> str:
         return self.response_parser.non_json_residue(content)
-
     def extract_guard_review_payload(self, content: str) -> dict[str, Any]:
         return self.response_parser.extract_guard_review_payload(content)
+    @staticmethod
+    def _trim_ascii_whitespace_once(content: str) -> tuple[str, str]:
+        allowed = {" ", "\t", "\n", "\r"}
+        if content and content[0].isspace() and content[0] not in allowed:
+            return content, "non-ascii leading whitespace"
+        if content and content[-1].isspace() and content[-1] not in allowed:
+            return content, "non-ascii trailing whitespace"
+        start = 0
+        end = len(content)
+        while start < end and content[start] in allowed:
+            start += 1
+        while end > start and content[end - 1] in allowed:
+            end -= 1
+        return content[start:end], ""
+    @staticmethod
+    def _resolve_intro_denylist(raw: dict[str, Any], context: dict[str, Any]) -> list[str]:
+        source = (
+            raw.get("local_prompt_intro_denylist")
+            or raw.get("intro_phrase_denylist")
+            or context.get("local_prompt_intro_denylist")
+            or []
+        )
+        if not isinstance(source, list):
+            return []
+        return [str(item).strip().lower() for item in source if str(item).strip()]
+    @staticmethod
+    def _local_prompt_violation(
+        *,
+        rule_id: str,
+        detail: str,
+        excerpt: str,
+        error_code: str = "",
+        error_family: str = EXTRANEOUS_TEXT,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "rule_id": rule_id,
+            "detail": detail,
+            "error_family": error_family,
+            "short_error_detail": detail[:120],
+            "prior_output_excerpt_hash": hashlib.sha256(excerpt.encode("utf-8")).hexdigest(),
+        }
+        if error_code:
+            payload["error_code"] = error_code
+        return payload
+    def local_prompt_anti_meta_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
+        raw = turn.raw if isinstance(turn.raw, dict) else {}
+        task_class = str(context.get("local_prompt_task_class") or raw.get("task_class") or "").strip().lower()
+        if task_class not in {"strict_json", "tool_call"}:
+            return {"task_class": task_class, "violations": []}
+        content = str(turn.content or "")
+        trimmed, trim_error = self._trim_ascii_whitespace_once(content)
+        violations: list[dict[str, Any]] = []
+        if trim_error:
+            violations.append(
+                self._local_prompt_violation(
+                    rule_id="LOCAL_PROMPT.ASCII_WHITESPACE",
+                    detail=trim_error,
+                    excerpt=content[:240],
+                )
+            )
+        if "```" in content:
+            violations.append(
+                self._local_prompt_violation(
+                    rule_id="LOCAL_PROMPT.MARKDOWN_FENCE",
+                    detail="markdown fence detected",
+                    excerpt=content[:240],
+                    error_code=ERR_JSON_MD_FENCE,
+                    error_family=error_family_for_leaf(ERR_JSON_MD_FENCE) or EXTRANEOUS_TEXT,
+                )
+            )
+        allows_thinking = bool(
+            raw.get("local_prompt_allows_thinking_blocks")
+            if raw.get("local_prompt_allows_thinking_blocks") is not None
+            else raw.get("allows_thinking_blocks", context.get("local_prompt_allows_thinking_blocks", False))
+        )
+        thinking_format = str(
+            raw.get("local_prompt_thinking_block_format")
+            or raw.get("thinking_block_format")
+            or context.get("local_prompt_thinking_block_format")
+            or "none"
+        ).strip()
+        sanitized = trimmed
+        has_think_markers = bool(re.search(r"<\s*/?\s*think\b", trimmed, flags=re.IGNORECASE))
+        if has_think_markers and not allows_thinking:
+            violations.append(
+                self._local_prompt_violation(
+                    rule_id="LOCAL_PROMPT.THINK_FORBIDDEN",
+                    detail="thinking markers are not allowed",
+                    excerpt=content[:240],
+                    error_code=ERR_THINK_OVERFLOW,
+                    error_family=error_family_for_leaf(ERR_THINK_OVERFLOW) or EXTRANEOUS_TEXT,
+                )
+            )
+        if has_think_markers and allows_thinking:
+            sanitized, block_count = self.response_parser.strip_leading_thinking_blocks(trimmed, thinking_format)
+            if block_count == 0 or re.search(r"<\s*/?\s*think\b", sanitized, flags=re.IGNORECASE):
+                violations.append(
+                    self._local_prompt_violation(
+                        rule_id="LOCAL_PROMPT.THINK_POSITION",
+                        detail="thinking block appears after payload start or is malformed",
+                        excerpt=content[:240],
+                        error_code=ERR_THINK_OVERFLOW,
+                        error_family=error_family_for_leaf(ERR_THINK_OVERFLOW) or EXTRANEOUS_TEXT,
+                    )
+                )
+        denylist = self._resolve_intro_denylist(raw, context)
+        lowered = sanitized.strip().lower()
+        for token in denylist:
+            if lowered.startswith(token):
+                violations.append(
+                    self._local_prompt_violation(
+                        rule_id="LOCAL_PROMPT.INTRO_DENYLIST",
+                        detail=token,
+                        excerpt=sanitized[:240],
+                    )
+                )
+                break
+        residue = self.non_json_residue(sanitized)
+        if residue:
+            violations.append(
+                self._local_prompt_violation(
+                    rule_id="LOCAL_PROMPT.EXTRANEOUS_TEXT",
+                    detail=residue[:120],
+                    excerpt=sanitized[:240],
+                )
+            )
+        return {"task_class": task_class, "violations": violations}

@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from orket.application.services.runtime_policy import resolve_protocol_determinism_controls
+from orket.application.services.runtime_policy import (
+    resolve_local_prompting_allow_fallback,
+    resolve_local_prompting_fallback_profile_id,
+    resolve_local_prompting_mode,
+    resolve_protocol_determinism_controls,
+)
 
 
 def test_resolve_protocol_determinism_controls_defaults() -> None:
@@ -47,3 +52,19 @@ def test_resolve_protocol_determinism_controls_rejects_invalid_network_mode() ->
     with pytest.raises(ValueError) as exc:
         resolve_protocol_determinism_controls(network_mode_values=["internet"])
     assert "E_NETWORK_MODE_INVALID" in str(exc.value)
+
+
+def test_resolve_local_prompting_mode_defaults_to_shadow() -> None:
+    assert resolve_local_prompting_mode() == "shadow"
+    assert resolve_local_prompting_mode("enforce") == "enforce"
+    assert resolve_local_prompting_mode("invalid-mode") == "shadow"
+
+
+def test_resolve_local_prompting_fallback_controls() -> None:
+    assert resolve_local_prompting_allow_fallback("enabled") is True
+    assert resolve_local_prompting_allow_fallback("disabled") is False
+    assert resolve_local_prompting_allow_fallback("invalid") is False
+    assert (
+        resolve_local_prompting_fallback_profile_id("", "openai_compat.qwen.openai_messages.v1")
+        == "openai_compat.qwen.openai_messages.v1"
+    )

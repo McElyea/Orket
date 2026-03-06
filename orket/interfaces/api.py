@@ -41,6 +41,9 @@ from orket.application.services.runtime_policy import (
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
     resolve_gitea_state_pilot_enabled,
+    resolve_local_prompting_allow_fallback,
+    resolve_local_prompting_fallback_profile_id,
+    resolve_local_prompting_mode,
     resolve_project_surface_profile,
     resolve_protocol_env_allowlist_setting,
     resolve_protocol_locale_setting,
@@ -229,6 +232,23 @@ SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
     },
     "protocol_env_allowlist": {
         "env_var": "ORKET_PROTOCOL_ENV_ALLOWLIST",
+        "type": "string_freeform",
+    },
+    "local_prompting_mode": {
+        "env_var": "ORKET_LOCAL_PROMPTING_MODE",
+        "aliases": {
+            "shadow": "shadow",
+            "compat": "compat",
+            "enforce": "enforce",
+        },
+        "type": "string",
+    },
+    "local_prompting_allow_fallback": {
+        "env_var": "ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK",
+        "type": "boolean",
+    },
+    "local_prompting_fallback_profile_id": {
+        "env_var": "ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID",
         "type": "string_freeform",
     },
     "gitea_state_pilot_enabled": {
@@ -550,6 +570,21 @@ v1_router.include_router(
             process_value,
             user_value,
         ),
+        resolve_local_prompting_mode=lambda env_value, process_value, user_value: resolve_local_prompting_mode(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_local_prompting_allow_fallback=lambda env_value, process_value, user_value: resolve_local_prompting_allow_fallback(
+            env_value,
+            process_value,
+            user_value,
+        ),
+        resolve_local_prompting_fallback_profile_id=lambda env_value, process_value, user_value: resolve_local_prompting_fallback_profile_id(
+            env_value,
+            process_value,
+            user_value,
+        ),
         resolve_gitea_state_pilot_enabled=lambda env_value, process_value, user_value: resolve_gitea_state_pilot_enabled(
             env_value,
             process_value,
@@ -645,6 +680,12 @@ def _resolve_runtime_setting_value(field: str, env_value: Any, process_value: An
         return resolve_protocol_network_allowlist_setting(env_value, process_value, user_value)
     if field == "protocol_env_allowlist":
         return resolve_protocol_env_allowlist_setting(env_value, process_value, user_value)
+    if field == "local_prompting_mode":
+        return resolve_local_prompting_mode(env_value, process_value, user_value)
+    if field == "local_prompting_allow_fallback":
+        return bool(resolve_local_prompting_allow_fallback(env_value, process_value, user_value))
+    if field == "local_prompting_fallback_profile_id":
+        return resolve_local_prompting_fallback_profile_id(env_value, process_value, user_value)
     if field == "gitea_state_pilot_enabled":
         return bool(resolve_gitea_state_pilot_enabled(env_value, process_value, user_value))
     raise KeyError(f"Unsupported runtime setting '{field}'")

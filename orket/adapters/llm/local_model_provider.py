@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 import httpx
 import ollama
 
+from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult, resolve_local_prompting_policy
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
 
@@ -21,12 +22,7 @@ class ModelResponse:
 
 
 class LocalModelProvider:
-    """
-    Asynchronous local model provider.
-    Supported backends:
-    - ollama (default)
-    - openai_compat / lmstudio (via ORKET_LLM_PROVIDER)
-    """
+    """Asynchronous local model provider for ollama and openai-compatible backends."""
 
     def __init__(self, model: str, temperature: float = 0.2, seed: Optional[int] = None, timeout: int = 300):
         self.model = model
@@ -241,15 +237,30 @@ class LocalModelProvider:
                 f"[{allowed}]. Invalid message roles: {details}. Normalize upstream."
             )
 
-    async def complete(self, messages: List[Dict[str, str]]) -> ModelResponse:
+    async def complete(
+        self,
+        messages: List[Dict[str, str]],
+        runtime_context: Optional[Dict[str, Any]] = None,
+    ) -> ModelResponse:
+        policy = await resolve_local_prompting_policy(
+            provider_backend=self.provider_backend,
+            model=self.model,
+            messages=list(messages),
+            runtime_context=runtime_context,
+        )
         if self.provider_backend == "openai_compat":
-            return await self._complete_openai_compat(messages)
-        return await self._complete_ollama(messages)
+            return await self._complete_openai_compat(policy.messages, policy)
+        return await self._complete_ollama(policy.messages, policy)
 
-    async def _complete_ollama(self, messages: List[Dict[str, str]]) -> ModelResponse:
+    async def _complete_ollama(
+        self,
+        messages: List[Dict[str, str]],
+        local_prompting_policy: LocalPromptingPolicyResult,
+    ) -> ModelResponse:
         options = {"temperature": self.temperature}
         if self.seed is not None:
             options["seed"] = self.seed
+        options.update(local_prompting_policy.ollama_options_overrides())
 
         max_retries = 3
         retry_delay = 1
@@ -295,6 +306,7 @@ class LocalModelProvider:
                     "latency_ms": int((time.perf_counter() - started_at) * 1000),
                     "response_chars": len(content),
                 }
+                raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
 
             except (asyncio.TimeoutError, ModelTimeoutError):
@@ -324,7 +336,11 @@ class LocalModelProvider:
             await asyncio.sleep(retry_delay)
             retry_delay *= 2
 
-    async def _complete_openai_compat(self, messages: List[Dict[str, str]]) -> ModelResponse:
+    async def _complete_openai_compat(
+        self,
+        messages: List[Dict[str, str]],
+        local_prompting_policy: LocalPromptingPolicyResult,
+    ) -> ModelResponse:
         self._validate_openai_messages(list(messages))
         payload: Dict[str, Any] = {
             "model": self.model,
@@ -332,6 +348,7 @@ class LocalModelProvider:
             "temperature": self.temperature,
             "stream": False,
         }
+        payload.update(local_prompting_policy.openai_payload_overrides())
         if self.seed is not None:
             payload["seed"] = self.seed
         response_format = str(os.getenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
@@ -384,6 +401,7 @@ class LocalModelProvider:
                     "latency_ms": latency_ms,
                     "response_chars": len(content),
                 }
+                raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
 
             except (asyncio.TimeoutError, httpx.TimeoutException, ModelTimeoutError):
