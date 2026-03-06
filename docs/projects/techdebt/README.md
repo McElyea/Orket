@@ -13,6 +13,9 @@ Define closure semantics for `docs/projects/techdebt/` so the folder can remain 
 1. `docs/projects/techdebt/` is a permanent project folder and is not expected to be archived as a whole.
 2. Recurring maintenance remains active in this folder.
 3. Most cycle-specific remediation documents are finite and should be archived after closeout.
+4. Closure rule (if-statement form):
+   1. if implementation requirements for a techdebt cycle are complete and verified, archive the cycle docs
+   2. else keep only currently active cycle docs in this folder
 
 ## Non-Archivable Maintenance Items
 
@@ -32,6 +35,9 @@ These are closeable and should move to archive when superseded:
 
 Archive destination:
 1. `docs/projects/archive/techdebt/<cycle_id>/`
+
+Current archived cycle example:
+1. `docs/projects/archive/techdebt/TD03052026/`
 
 ## Closeout Process for a Cycle
 

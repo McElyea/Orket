@@ -110,3 +110,5 @@ Rules:
 1. If any required section is red, open or update a scoped remediation lane in roadmap with explicit closure criteria.
 2. Do not mark a project lane as active solely for recurring freshness checks; recurring checks remain in this checklist.
 3. Reference this checklist from runbook/process docs rather than duplicating command blocks across project plans.
+4. If a cycle implementation closes during this maintenance pass, archive its cycle docs per:
+   - `docs/projects/techdebt/README.md`

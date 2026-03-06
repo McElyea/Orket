@@ -5,7 +5,7 @@ Last updated: 2026-03-06
 ## Priority Plan Pointer
 1. techdebt recurring maintenance checklist: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
 2. techdebt folder governance: `docs/projects/techdebt/README.md`
-3. techdebt hardening implementation plan: `docs/projects/techdebt/TD03052026-Plan.md`
+3. latest closed techdebt cycle plan: `docs/projects/archive/techdebt/TD03052026/TD03052026-Plan.md`
 4. marshaller requirements plan: `docs/projects/marshaller/Marshaller-v0.md`
 
 ## Canonical Rule

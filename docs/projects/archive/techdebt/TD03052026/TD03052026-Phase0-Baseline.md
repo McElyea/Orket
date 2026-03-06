@@ -8,7 +8,7 @@ Owner: Orket Core
 
 1. This file records the initial phase-0 baseline state only.
 2. Final non-maintenance hardening closure is recorded in:
-   - `docs/projects/techdebt/TD03052026-Plan.md`
+   - `docs/projects/archive/techdebt/TD03052026/TD03052026-Plan.md`
 3. Current gate authority is:
    - `benchmarks/results/techdebt/td03052026/readiness_checklist.json`
    - `benchmarks/results/techdebt/td03052026/hardening_dashboard.json`

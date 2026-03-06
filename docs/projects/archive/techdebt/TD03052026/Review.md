@@ -7,7 +7,7 @@ Owner: Orket Core
 Usage note:
 1. This review is preserved as source input for TD03052026.
 2. Active execution/closure state is tracked in:
-   - `docs/projects/techdebt/TD03052026-Plan.md`
+   - `docs/projects/archive/techdebt/TD03052026/TD03052026-Plan.md`
 3. Recurring maintenance execution is tracked in:
    - `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
 

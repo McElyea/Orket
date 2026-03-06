@@ -4,8 +4,8 @@ Last updated: 2026-03-06
 Status: Historical Reference (superseded for active execution)  
 Owner: Orket Core
 
-Superseded by active execution records:
-1. `docs/projects/techdebt/TD03052026-Plan.md`
+Superseded by cycle execution records:
+1. `docs/projects/archive/techdebt/TD03052026/TD03052026-Plan.md`
 2. `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
 
 Closeout note:
@@ -15,7 +15,7 @@ Closeout note:
 
 ## Context
 
-The 2026-03-02 code review scored Orket at 6/10. This plan implements the prescribed fixes from `docs/projects/techdebt/Review.md` in priority order across 3 phases. The goal is to reach 7.5/10 through mechanical cleanup -- no rewrites, no architecture changes.
+The 2026-03-02 code review scored Orket at 6/10. This plan implements the prescribed fixes from `docs/projects/archive/techdebt/TD03052026/Review.md` in priority order across 3 phases. The goal is to reach 7.5/10 through mechanical cleanup -- no rewrites, no architecture changes.
 
 ---
 

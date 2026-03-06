@@ -37,6 +37,11 @@ Orket
    - Techdebt folder closure/archive semantics are governed by:
      `docs/projects/techdebt/README.md`
    - Keep recurring checks out of project execution lanes; project plans should remain closable.
+11. Techdebt cycle closure rule:
+   - If a techdebt cycle's implementation requirements are complete and verified, move cycle-specific docs from
+     `docs/projects/techdebt/` to `docs/projects/archive/techdebt/<cycle_id>/` in the same closeout change.
+   - Archive both cycle implementation artifacts and cycle requirement/review/spec files covered by that closeout.
+   - Keep only standing maintenance docs (and any currently active cycle docs) under `docs/projects/techdebt/`.
 
 ## Current Focus
 1. Keep `docs/ROADMAP.md` active-only (remove completed/obsolete items at each handoff).
