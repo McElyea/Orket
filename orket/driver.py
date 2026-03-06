@@ -229,8 +229,24 @@ Do not include commentary outside the JSON.
         if action == "assign_team":
             team = plan.get("suggested_team")
             dept = plan.get("suggested_department")
-            log_event("team_assignment", {"team": team, "department": dept, "reason": reasoning}, Path("workspace/default"), role="DRIVER")
-            return f"Resource Selection: Switching to Team '{team}' in '{dept}'.\nReason: {reasoning}"
+            log_event(
+                "team_assignment_suggested",
+                {
+                    "team": team,
+                    "department": dept,
+                    "reason": reasoning,
+                    "mode": "suggestion_only",
+                },
+                Path("workspace/default"),
+                role="DRIVER",
+            )
+            team_label = str(team or "unknown_team")
+            dept_label = str(dept or "unknown_department")
+            return (
+                f"Resource Selection Suggestion: Consider Team '{team_label}' in '{dept_label}'. "
+                "No runtime team switch was applied.\n"
+                f"Reason: {reasoning}"
+            )
 
         if action == "turn_directive":
             target = plan.get("target_seat")

@@ -52,6 +52,53 @@ async def test_execute_plan_unknown_action_does_not_emit_structural_fallback():
     assert "Strategic Insight:" not in result
 
 
+@pytest.mark.asyncio
+async def test_execute_plan_assign_team_missing_fields_uses_fallback_labels(monkeypatch):
+    """Layer: unit. Verifies assign_team payload parsing fallback labels."""
+    driver = OrketDriver.__new__(OrketDriver)
+    events = []
+
+    def _capture(event_name, payload, _workspace, role=None):
+        events.append((event_name, payload, role))
+
+    monkeypatch.setattr("orket.driver.log_event", _capture)
+    result = await driver.execute_plan({"action": "assign_team", "reasoning": "test suggestion"})
+
+    assert "unknown_team" in result
+    assert "unknown_department" in result
+    assert result.startswith("Resource Selection Suggestion:")
+    assert events[0][0] == "team_assignment_suggested"
+    assert events[0][1]["mode"] == "suggestion_only"
+
+
+@pytest.mark.asyncio
+async def test_execute_plan_assign_team_contract_is_suggestion_only(monkeypatch):
+    """Layer: contract. Verifies assign_team response and telemetry semantics."""
+    driver = OrketDriver.__new__(OrketDriver)
+    events = []
+
+    def _capture(event_name, payload, _workspace, role=None):
+        events.append((event_name, payload, role))
+
+    monkeypatch.setattr("orket.driver.log_event", _capture)
+    result = await driver.execute_plan(
+        {
+            "action": "assign_team",
+            "suggested_team": "runtime",
+            "suggested_department": "core",
+            "reasoning": "best fit for current incident",
+        }
+    )
+
+    assert "Resource Selection Suggestion:" in result
+    assert "No runtime team switch was applied." in result
+    assert "Switching to Team" not in result
+    assert events[0][0] == "team_assignment_suggested"
+    assert events[0][1]["team"] == "runtime"
+    assert events[0][1]["department"] == "core"
+    assert events[0][1]["mode"] == "suggestion_only"
+
+
 def test_should_handle_as_conversation_detects_structural_intent():
     driver = OrketDriver.__new__(OrketDriver)
     assert driver._should_handle_as_conversation("create epic for billing rewrite") is False
@@ -220,3 +267,28 @@ async def test_process_request_blocks_implicit_structural_action_from_model():
     response = await driver.process_request("settings")
 
     assert "please ask explicitly for a board change" in response.lower()
+
+
+@pytest.mark.asyncio
+async def test_process_request_assign_team_reports_suggestion_only():
+    """Layer: integration. Verifies model->execute_plan path keeps assign_team non-mutating."""
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.model_root = Path("model")
+    driver.skill = None
+    driver.dialect = None
+
+    class _Provider:
+        async def complete(self, _messages):
+            return SimpleNamespace(
+                content=(
+                    '{"action":"assign_team","suggested_team":"runtime","suggested_department":"core",'
+                    '"reasoning":"best fit"}'
+                )
+            )
+
+    driver.provider = _Provider()
+
+    response = await driver.process_request("assign team for incident triage")
+
+    assert response.startswith("Resource Selection Suggestion:")
+    assert "No runtime team switch was applied." in response
