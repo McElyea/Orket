@@ -1,7 +1,7 @@
 # Protocol-Governed Local Prompting Plan (v1.1)
 
-Last updated: 2026-03-05  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Active (Execution Complete; Monitor)  
 Owner: Orket Core
 
 References:
@@ -22,7 +22,7 @@ Primary outcome:
 2. no silent fallback or role/template ambiguity in strict paths,
 3. measurable conformance gates before promotion.
 
-## 1a. Execution Status (2026-03-05)
+## 1a. Execution Status (2026-03-06)
 
 Completed increment:
 1. LP-01 profile contract scaffolding landed in `orket/runtime/local_prompt_profiles.py`.
@@ -83,9 +83,18 @@ Completed increment:
     - qualification evidence: `benchmarks/results/protocol/local_prompting/ollama_qualification_200_2026-03-06/` (`200/200` strict + `200/200` tool),
     - promotion evidence: `benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/` (`1000/1000` strict + `500/500` tool),
     - failure summary: `benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/conformance/ollama/ollama.qwen.chatml.v1/failure_summary.json` (`total_failures=0`).
+18. LP-12/LP-13/LP-16 promotion decision package gate landed:
+    - script: `scripts/protocol/check_local_prompting_promotion_readiness.py`
+    - deterministic profile gate output:
+      `benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json`
+    - active provider profiles evaluated green:
+      - `ollama.qwen.chatml.v1`
+      - `openai_compat.qwen.openai_messages.v1`
 
 Promotion blocker status:
 1. Cleared for Ollama `qwen2.5-coder:7b` under current profile and strict gates.
+2. Cleared for LM Studio/OpenAI-compat `qwen3.5-4b` under current profile and strict gates.
+3. M8 promotion decision package is complete with deterministic readiness output.
 
 ## 2. Scope and Non-Goals
 
@@ -540,6 +549,7 @@ Planned script surfaces:
 1. `scripts/protocol/run_local_prompting_conformance.py`
 2. `scripts/protocol/compare_local_prompting_profile_drift.py`
 3. `scripts/protocol/summarize_local_prompting_failures.py`
+4. `scripts/protocol/check_local_prompting_promotion_readiness.py`
 
 Tests:
 1. script unit tests under `tests/scripts/`,
@@ -705,6 +715,7 @@ Promotion blockers:
 6. M6: Template integrity audit + whitelist gate complete.
 7. M7: Live verification evidence complete for active providers and rollout modes.
 8. M8: Promotion decision package complete.
+9. Milestone status (2026-03-06): M1-M8 complete for active provider profiles.
 
 ## 13. Definition of Done
 
@@ -714,3 +725,7 @@ This effort is complete when:
 3. Live runs prove real provider paths and strict contract behavior.
 4. Template audit/whitelist flow is operational.
 5. Rollback workflow is tested and documented.
+
+Current state (2026-03-06):
+1. Definition of Done is satisfied for active local providers (`ollama`, `openai_compat`/LM Studio).
+2. Remaining work is monitor-mode freshness: rerun conformance/drift/promotion-readiness gates on provider/model/runtime-policy changes.

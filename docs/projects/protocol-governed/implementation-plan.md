@@ -1,7 +1,7 @@
 # Protocol-Governed Runtime Implementation Plan (v5.1)
 
-Last updated: 2026-03-05  
-Status: Draft  
+Last updated: 2026-03-06  
+Status: Active (Execution Complete; Monitor)  
 Owner: Orket Core
 
 Reference: `docs/projects/protocol-governed/requirements.md`
@@ -32,7 +32,7 @@ Operational:
 2. Crash recovery never duplicates side effects.
 3. Determinism harness fails on any hidden nondeterminism.
 
-## Execution Status (2026-03-05)
+## Execution Status (2026-03-06)
 
 Completed slices:
 1. PR-01 strict envelope parser is wired (`E_PARSE_JSON` / duplicate-key / markdown fence / strict key set / cap checks).
@@ -195,6 +195,13 @@ Latest completed increments:
       - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b/protocol_window_capture_manifest.json`
     - strict readiness decision:
       - `benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness_preprod.json`
+35. Local prompting promotion-readiness gate landed and is green for active providers:
+    - script: `scripts/protocol/check_local_prompting_promotion_readiness.py`
+    - readiness artifact:
+      `benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json`
+    - provider profiles:
+      - `ollama.qwen.chatml.v1`
+      - `openai_compat.qwen.openai_messages.v1`
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -231,6 +238,7 @@ Validation evidence (new test surfaces):
 32. `tests/scripts/test_record_protocol_enforce_window_signoff.py`
 33. `tests/scripts/test_run_protocol_enforce_window_capture.py`
 34. `tests/scripts/test_check_protocol_enforce_cutover_readiness.py`
+35. `tests/scripts/test_check_local_prompting_promotion_readiness.py`
 
 Verification runs (latest batch):
 1. `python -m pytest -q tests/interfaces/test_api.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
@@ -266,10 +274,13 @@ Verification runs (latest batch):
 31. `python scripts/protocol/run_protocol_enforce_window_capture.py --window-id window_preprod_stage_a --window-date 2026-03-05 --workspace-root .ci/protocol_capture_wrapper_live_ws --run-id live-run-1 --retry-spike-status pass --approver "Orket Core (staged replay)" --notes "staged replay validation window A" --out-root benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_a --strict`
 32. `python scripts/protocol/run_protocol_enforce_window_capture.py --window-id window_preprod_stage_b --window-date 2026-03-05 --workspace-root .ci/protocol_capture_wrapper_live_ws --run-id live-run-1 --retry-spike-status pass --approver "Orket Core (staged replay)" --notes "staged replay validation window B" --out-root benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b --strict`
 33. `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_a/protocol_window_capture_manifest.json --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b/protocol_window_capture_manifest.json --min-pass-windows 2 --out benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness_preprod.json --strict`
+34. `python scripts/protocol/check_local_prompting_promotion_readiness.py --profile-root benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/conformance/ollama/ollama.qwen.chatml.v1 --profile-root benchmarks/results/protocol/local_prompting/lmstudio_cache_study/none/promotion/conformance/openai_compat/openai_compat.qwen.openai_messages.v1 --drift-report benchmarks/results/protocol/local_prompting/live_verification/drift/profile_delta_report.json --template-audit-root benchmarks/results/protocol/local_prompting/live_verification/template_audit --out benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json --strict`
+35. `python -m pytest -q tests/scripts/test_check_local_prompting_promotion_readiness.py tests/scripts/test_run_local_prompting_conformance.py tests/scripts/test_summarize_local_prompting_failures.py tests/scripts/test_compare_local_prompting_profile_drift.py tests/scripts/test_audit_prompt_templates.py`
 
 Next execution slices (active):
 1. Keep staged/replayed pre-production operator validation windows fresh for each release candidate and major runtime-policy change.
 2. Keep production-window operator sign-off deferred until production rollout exists and real production traffic is available.
+3. Keep local prompting promotion-readiness package (`check_local_prompting_promotion_readiness.py`) fresh on provider/model/runtime-policy changes.
 
 ## Delivery Strategy
 
