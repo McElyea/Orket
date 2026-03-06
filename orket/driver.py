@@ -148,6 +148,71 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 }
         return inventory
 
+    def _canonical_action_registry(self) -> dict[str, tuple[str, ...]]:
+        return {
+            "suggestion": ("assign_team",),
+            "directive": ("turn_directive",),
+            "conversation": ("converse", "chat", "respond", "conversation"),
+            "structural": ("create_issue", "create_epic", "create_rock", "adopt_issue"),
+        }
+
+    def _supported_plan_actions(self) -> set[str]:
+        actions: set[str] = set()
+        for group_actions in self._canonical_action_registry().values():
+            actions.update(group_actions)
+        return actions
+
+    def _build_fallback_system_prompt(self) -> str:
+        registry = self._canonical_action_registry()
+        grouped_actions = []
+        for group in ("suggestion", "directive", "conversation", "structural"):
+            actions = ", ".join(registry[group])
+            grouped_actions.append(f"- {group}: {actions}")
+        return (
+            "You are the Orket Operator.\n\n"
+            "Operate in a precise, high-context, non-repetitive reasoning mode.\n"
+            "Your job is to interpret the user's request and decide the correct action\n"
+            "within the Orket Schema. You are not a conversational assistant; you are\n"
+            "a project-board controller.\n\n"
+            "CORE RULES:\n"
+            "- Always return VALID JSON matching the Orket Schema.\n"
+            "- Never invent assets, departments, or relationships that do not exist.\n"
+            "- Never propose structural changes unless the user request clearly requires it.\n"
+            "- Never repeat instructions back to the user.\n"
+            "- Never explain JSON; just produce it.\n\n"
+            "SUPPORTED ACTIONS:\n"
+            + "\n".join(grouped_actions)
+            + "\n\n"
+            "If the request needs an unsupported action, return action='converse' with a short clarification.\n\n"
+            "THINKING STYLE:\n"
+            "- Be concise, explicit, and deterministic.\n"
+            "- Use first-principles reasoning.\n"
+            "- Prefer minimal changes over broad restructuring.\n"
+            "- If uncertain, choose the safest, least-destructive action.\n\n"
+            "MODES:\n"
+            "1. Conversational input (greeting, clarification, meta-discussion)\n"
+            "   -> respond with:\n"
+            "   {\n"
+            '     "action": "converse",\n'
+            '     "response": "<natural response>",\n'
+            '     "reasoning": "<brief explanation>"\n'
+            "   }\n\n"
+            "2. Structural request matching supported structural actions\n"
+            "   -> choose the correct Orket action and produce only the JSON.\n\n"
+            "3. Ambiguous request\n"
+            "   -> ask a single clarifying question using action: \"converse\".\n\n"
+            "CONTEXT PROVIDED:\n"
+            "- inventory: current assets\n"
+            "- active_rocks: available rocks\n"
+            "- active_epics: available epics\n"
+            "- request: the user message\n\n"
+            "Your output must always be a single JSON object with:\n"
+            "- action\n"
+            "- reasoning\n"
+            "- and any required fields for that action.\n\n"
+            "Do not include commentary outside the JSON.\n"
+        )
+
     async def process_request(self, message: str) -> str:
         request_text = str(message or "").strip()
         self._log_operator_metric("operator_request_total", route="received")
@@ -184,54 +249,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             system_prompt += "\nCONSTRAINTS:\n" + "\n".join([f"- {c}" for c in self.dialect.constraints])
             system_prompt += f"\nGUARDRAIL: {self.dialect.hallucination_guard}\n"
         else:
-            system_prompt = """You are the Orket Operator.
-
-Operate in a precise, high-context, non-repetitive reasoning mode.
-Your job is to interpret the user's request and decide the correct action
-within the Orket Schema. You are not a conversational assistant; you are
-a project-board controller.
-
-CORE RULES:
-- Always return VALID JSON matching the Orket Schema.
-- Never invent assets, departments, or relationships that do not exist.
-- Never propose structural changes unless the user request clearly requires it.
-- Never repeat instructions back to the user.
-- Never explain JSON; just produce it.
-
-THINKING STYLE:
-- Be concise, explicit, and deterministic.
-- Use first-principles reasoning.
-- Prefer minimal changes over broad restructuring.
-- If uncertain, choose the safest, least-destructive action.
-
-MODES:
-1. Conversational input (greeting, clarification, meta-discussion)
-   → respond with:
-   {
-     "action": "converse",
-     "response": "<natural response>",
-     "reasoning": "<brief explanation>"
-   }
-
-2. Structural request (create, update, move, delete, direct)
-   → choose the correct Orket action and produce only the JSON.
-
-3. Ambiguous request
-   → ask a single clarifying question using action: "converse".
-
-CONTEXT PROVIDED:
-- inventory: current assets
-- active_rocks: available rocks
-- active_epics: available epics
-- request: the user message
-
-Your output must always be a single JSON object with:
-- action
-- reasoning
-- and any required fields for that action.
-
-Do not include commentary outside the JSON.
-"""
+            system_prompt = self._build_fallback_system_prompt()
 
         response = await self.provider.complete(
             [
@@ -282,8 +300,13 @@ Do not include commentary outside the JSON.
         action = plan.get("action")
         reasoning = plan.get("reasoning", "No reasoning provided.")
         response_text = str(plan.get("response", "") or "").strip()
+        normalized_action = str(action or "").strip().lower()
 
-        if action == "assign_team":
+        if normalized_action and normalized_action not in self._supported_plan_actions():
+            supported = ", ".join(sorted(self._supported_plan_actions()))
+            return f"Unsupported action '{normalized_action}'. Supported actions: {supported}."
+
+        if normalized_action == "assign_team":
             team = plan.get("suggested_team")
             dept = plan.get("suggested_department")
             log_event(
@@ -305,17 +328,17 @@ Do not include commentary outside the JSON.
                 f"Reason: {reasoning}"
             )
 
-        if action == "turn_directive":
+        if normalized_action == "turn_directive":
             target = plan.get("target_seat")
             directive = plan.get("directive")
             return f"Tactical Directive issued to {target}: {directive}"
 
-        if action in {"converse", "chat", "respond", "conversation"}:
+        if normalized_action in {"converse", "chat", "respond", "conversation"}:
             if response_text:
                 return response_text
             return reasoning
 
-        if action in {"create_issue", "create_epic", "create_rock", "adopt_issue"}:
+        if normalized_action in {"create_issue", "create_epic", "create_rock", "adopt_issue"}:
             res = await self._execute_structural_change(plan)
             return f"{res}\n\nStrategic Insight: {reasoning}"
 
