@@ -1,6 +1,7 @@
 import json
 import logging
 import logging.handlers
+import os
 from pathlib import Path
 from typing import Any, Callable
 from orket.time_utils import now_local
@@ -17,6 +18,11 @@ def setup_logging(workspace: Path) -> Path:
 # Global list of event subscribers (e.g. for WebSockets)
 _subscribers: list[Callable[[dict[str, Any]], None]] = []
 
+MISSING_WORKSPACE_MODE_ENV = "ORKET_LOGGING_MISSING_CONTEXT_MODE"
+MISSING_WORKSPACE_MODE_LEGACY = "legacy_default"
+MISSING_WORKSPACE_MODE_FAIL_FAST = "fail_fast"
+MISSING_WORKSPACE_ERROR_CODE = "E_LOG_WORKSPACE_REQUIRED"
+
 def subscribe_to_events(callback: Callable[[dict[str, Any]], None]) -> None:
     if callback not in _subscribers:
         _subscribers.append(callback)
@@ -28,6 +34,31 @@ def unsubscribe_from_events(callback: Callable[[dict[str, Any]], None]) -> None:
 
 def event_subscriber_count() -> int:
     return len(_subscribers)
+
+
+def _resolve_missing_workspace_mode() -> str:
+    raw = str(os.getenv(MISSING_WORKSPACE_MODE_ENV, "")).strip().lower()
+    if raw == MISSING_WORKSPACE_MODE_FAIL_FAST:
+        return MISSING_WORKSPACE_MODE_FAIL_FAST
+    return MISSING_WORKSPACE_MODE_LEGACY
+
+
+def _resolve_workspace(workspace: Path | None) -> tuple[Path, dict[str, Any]]:
+    if workspace is not None:
+        return workspace, {}
+    mode = _resolve_missing_workspace_mode()
+    if mode == MISSING_WORKSPACE_MODE_FAIL_FAST:
+        raise RuntimeError(
+            f"{MISSING_WORKSPACE_ERROR_CODE}: log_event requires workspace when "
+            f"{MISSING_WORKSPACE_MODE_ENV}={MISSING_WORKSPACE_MODE_FAIL_FAST}"
+        )
+    return (
+        Path("workspace/default"),
+        {
+            "logging_context_mode": MISSING_WORKSPACE_MODE_LEGACY,
+            "logging_context_marker": "workspace_default_fallback",
+        },
+    )
 
 from orket.naming import sanitize_name
 
@@ -125,11 +156,12 @@ def log_event(
         return log_event(actual_event, actual_data, role=component, level=level)
 
     if data is None: data = {}
-    if workspace is None:
-        workspace = Path("workspace/default")
+    workspace, context_marker = _resolve_workspace(workspace)
     
     # Merge extra kwargs into data for observability
     full_data = {**data, **kwargs}
+    if context_marker:
+        full_data.update(context_marker)
     role_name = role or full_data.get("role") or "system"
     runtime_event = _build_runtime_event(event, full_data, role_name)
     full_data = {**full_data, "runtime_event": runtime_event}

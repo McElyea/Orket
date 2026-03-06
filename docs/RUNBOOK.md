@@ -39,6 +39,13 @@ python -m orket.webhook_server
 4. Safe defaults (`host=127.0.0.1`, `port=8082`, `profile=safe`, `reload=false`)
 5. Reload can only be enabled when `profile=dev`.
 
+## Logging Context Mode
+1. `ORKET_LOGGING_MISSING_CONTEXT_MODE=legacy_default` (default):
+   - writes to `workspace/default/orket.log`
+   - adds stable markers `logging_context_mode=legacy_default` and `logging_context_marker=workspace_default_fallback`
+2. `ORKET_LOGGING_MISSING_CONTEXT_MODE=fail_fast`:
+   - raises `E_LOG_WORKSPACE_REQUIRED` when workspace context is omitted
+
 ## Health Endpoints
 1. API:
 ```bash

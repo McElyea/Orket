@@ -116,6 +116,10 @@ jobs:
         run: |
           python -m pytest -q tests/interfaces/test_api_composition_isolation.py
 
+      - name: Enforce workspace logging isolation
+        run: |
+          python -m pytest -q tests/runtime/test_logging_isolation.py
+
       - name: Enforce kernel fire-drill suite
         run: |
           python scripts/governance/run_kernel_fire_drill.py
