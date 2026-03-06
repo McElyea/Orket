@@ -36,6 +36,9 @@ For each window, capture:
 
 Equivalent module form is also valid (`python -m scripts.protocol.<script_name_without_py>`).
 
+One-command wrapper (runs all five commands in order and emits a capture manifest):
+1. `python scripts/protocol/run_protocol_enforce_window_capture.py --window-id <window_id> --window-date <yyyy-mm-dd> --workspace-root <workspace_root> --run-id <run_id> --session-id <session_id_or_blank> --retry-spike-status <pass|fail|unknown> --approver <approver_label> --out-root <window_out_root> --strict`
+
 ## Hard Gates
 
 All gates must be green in both windows:

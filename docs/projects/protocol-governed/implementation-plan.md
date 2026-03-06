@@ -182,6 +182,10 @@ Latest completed increments:
 31. Local enforce-phase windows now include explicit operator sign-off artifacts:
     - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_a/protocol_operator_signoff.json`
     - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_b/protocol_operator_signoff.json`
+32. One-command enforce-window capture wrapper landed:
+    - `scripts/protocol/run_protocol_enforce_window_capture.py`
+    - orchestrates replay/parity/rollout/error-summary/sign-off flow and writes
+      `protocol_window_capture_manifest.json`
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -216,6 +220,7 @@ Validation evidence (new test surfaces):
 30. Expanded: `tests/interfaces/test_api.py`
 31. Expanded: `tests/application/test_orchestrator_epic.py`
 32. `tests/scripts/test_record_protocol_enforce_window_signoff.py`
+33. `tests/scripts/test_run_protocol_enforce_window_capture.py`
 
 Verification runs (latest batch):
 1. `python -m pytest -q tests/interfaces/test_api.py tests/interfaces/test_settings_protocol_determinism_controls.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
