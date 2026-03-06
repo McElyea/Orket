@@ -50,7 +50,8 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 33. `INV-033`: Tool implementations must be idempotent for identical invocation manifests unless declared `determinism_class = external`; duplicate non-external invocation hashes must be rejected unless runtime is explicitly configured for deterministic deduplication.
 34. `INV-034`: Ledger ordering must be derived solely from `sequence_number`. Timestamp fields are informational and must not be used for execution ordering.
 35. `INV-035`: Replay execution must not perform side effects outside artifact reconstruction and ledger validation. Adapters and tools must operate in replay-safe mode.
-36. `INV-036`: Workspace-dependent runs must capture `workspace_state_snapshot` at run start, and replay must fail closed when workspace compatibility checks fail.
+36. `INV-036`: Runs invoking tools with `determinism_class = workspace` must capture `workspace_state_snapshot` at run start. Replay must fail closed when workspace compatibility checks fail.
+37. `INV-037`: Runtime initialization must fail closed if tool registry snapshot, artifact schema snapshot, compatibility map schema, or tool contract snapshot fail validation against their declared schemas.
 
 ## Execution Ordering
 

@@ -149,16 +149,18 @@ Ledger event schema minimum fields:
 
 Tool call hash canonicalization rules:
 1. UTF-8 encoding
-2. canonical JSON serialization of normalized args
+2. argument normalization must remove runtime-only metadata fields and produce deterministic structural representation before canonical JSON serialization
+   1. example stripped metadata: `trace_id`, `debug_flags`, `retry_count`
+3. canonical JSON serialization of normalized args
    1. sorted keys
    2. no insignificant whitespace
    3. deterministic float formatting
-3. hash input components:
+4. hash input components:
    1. `tool_name`
    2. canonicalized normalized args
    3. `tool_contract_version`
    4. capability profile snapshot id
-4. final hash:
+5. final hash:
    1. `tool_call_hash = sha256(canonical_input_bytes)`
 
 Ledger event schema example:
