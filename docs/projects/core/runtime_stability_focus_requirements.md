@@ -284,9 +284,11 @@ Define a deterministic baseline toolset that is small enough to stabilize and br
 5. Retry policies.
 6. Capability profiles.
 7. Tool rings and compatibility contract.
+8. Tool contract template governance.
 
 Reference:
 1. `docs/projects/core/core_tool_rings_compatibility_requirements.md`
+2. `docs/projects/core/tool_contract_template.md`
 
 ### Requirements
 
