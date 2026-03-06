@@ -204,6 +204,8 @@ def _build_result_payload(
     all_passed = bool(assertions) and all(bool(row.get("passed")) for row in assertions) and not failures
     return {
         "schema_version": "governance.install_surface_convergence.v1",
+        "workstream_id": "WS-1",
+        "gate_id": "G1",
         "repo_root": repo_root.resolve().as_posix(),
         "status": "PASS" if all_passed else "FAIL",
         "canonical_command": canonical_command,

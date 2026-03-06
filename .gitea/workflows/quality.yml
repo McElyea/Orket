@@ -120,6 +120,10 @@ jobs:
         run: |
           python -m pytest -q tests/runtime/test_logging_isolation.py
 
+      - name: Enforce TD03052026 gate audit readiness
+        run: |
+          python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json
+
       - name: Enforce kernel fire-drill suite
         run: |
           python scripts/governance/run_kernel_fire_drill.py

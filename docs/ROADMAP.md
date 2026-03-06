@@ -13,18 +13,18 @@ All process and workflow rules live in `docs/CONTRIBUTOR.md`.
 
 ## Invocation Rule
 If the user requests "follow roadmap" without naming a project, execute the highest-priority active (non-paused) item in **Priority Now**.
-Current default target: techdebt.
+Current default target: protocol-governed.
 
 ## Priority Now
-1. techdebt -- TD03052026 boundary-hardening program (`docs/projects/techdebt/TD03052026-Plan.md`).
-2. protocol-governed -- Runtime protocol determinism hardening (requirements v5.1 + implementation plan).
+1. protocol-governed -- Runtime protocol determinism hardening (requirements v5.1 + implementation plan).
+2. techdebt -- TD03052026 boundary-hardening program (execution complete; monitor checklist freshness on gate/workflow changes).
 3. marshaller -- Marshaller v0 scaffolding lane aligned to protocol-governed runtime decisions.
 4. NervousSystem -- v1 complete; hold for review and next-phase planning.
 
 ## Active Execution
-1. techdebt -- Execute TD03052026 from `docs/projects/techdebt/TD03052026-Plan.md` (in progress: WS-7 gate enforcement and auditability closure; landed: phase-0 baseline recorder automation at `scripts/techdebt/record_td03052026_phase0_baseline.py`, WS-1 install-surface convergence with CI drift gate at `scripts/governance/check_install_surface_convergence.py`, WS-2 launcher safety hardening via `orket/interfaces/server_launcher.py` and `tests/interfaces/test_server_launcher.py`, WS-3 lifecycle subscriber symmetry via `tests/interfaces/test_api_lifecycle_subscribers.py`, WS-4 provider close contract via `orket/adapters/llm/local_model_provider.py` and `tests/application/test_orchestrator_epic.py`, WS-5 API composition singleton decoupling via `orket/interfaces/api.py` and `tests/interfaces/test_api_composition_isolation.py`, WS-6 workspace logging isolation via `orket/logging.py` and `tests/runtime/test_logging_isolation.py`, evidence sets under `benchmarks/results/techdebt/td03052026/phase0_baseline/`, `benchmarks/results/techdebt/td03052026/ws1_install_surface_convergence/`, `benchmarks/results/techdebt/td03052026/ws2_server_mode_hardening/`, `benchmarks/results/techdebt/td03052026/ws3_lifecycle_subscriber_correctness/`, `benchmarks/results/techdebt/td03052026/ws4_provider_close_contract/`, `benchmarks/results/techdebt/td03052026/ws5_api_composition_singleton_decoupling/`, and `benchmarks/results/techdebt/td03052026/ws6_workspace_logging_isolation/`, hardening dashboard at `benchmarks/results/techdebt/td03052026/hardening_dashboard.json`, and sustained `G1`-`G6` green state).
-2. protocol-governed -- Keep enforce-phase staged/replayed pre-production validation windows fresh per release candidate and major runtime-policy change.
-3. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
+1. protocol-governed -- Keep enforce-phase staged/replayed pre-production validation windows fresh per release candidate and major runtime-policy change.
+2. marshaller -- Treat current implementation as scaffolding and only adjust where protocol-governed contracts require alignment.
+3. techdebt -- TD03052026 execution complete (`G1`-`G7` green, readiness checklist current); maintain checklist/dashboard artifacts when gates/workflows change.
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
@@ -33,7 +33,7 @@ Every non-archive project under `docs/projects/` must appear here.
 |---|---|---|---|---|---|
 | NervousSystem | active | P2-review | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`. |
 | marshaller | active | P2-scaffolding | `docs/projects/marshaller/` | Orket Core | Current Marshaller implementation is scaffolding and will be refit to finalized protocol-governed runtime decisions. |
-| techdebt | active | P1-active | `docs/projects/techdebt/` | Orket Core | TD03052026 hardening program is active with promotion-blocking P0 seams and mandatory machine-readable evidence gates. |
+| techdebt | active | P1-monitor | `docs/projects/techdebt/` | Orket Core | TD03052026 hardening execution is complete (`G1`-`G7` green); keep gate evidence/checklist artifacts current as maintenance. |
 | protocol-governed | active | P1-active | `docs/projects/protocol-governed/` | Orket Core | Primary overhaul lane; strict parser/preflight and hash/idempotency slices are landed, with append-only ledger, replay comparator, and ledger parity cutover scaffolding actively progressing against v5.1. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
 | LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |
