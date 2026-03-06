@@ -7,6 +7,9 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from orket.adapters.llm.local_prompting_lmstudio_session import (
+    resolve_lmstudio_session_settings,
+)
 from orket.runtime.local_prompt_profiles import (
     DEFAULT_LOCAL_PROMPT_PROFILE_REGISTRY_PATH,
     LocalPromptProfile,
@@ -191,6 +194,8 @@ class LocalPromptingPolicyResult:
     allows_thinking_blocks: bool
     thinking_block_format: str
     intro_phrase_denylist: list[str]
+    lmstudio_session_mode: str
+    lmstudio_session_id: str
     resolution_path: str
     profile_registry_snapshot_hash: str
     warnings: list[str]
@@ -209,6 +214,8 @@ class LocalPromptingPolicyResult:
         seed_policy = str(self.sampling_bundle.get("seed_policy") or "")
         if seed_policy == "fixed" and self.sampling_bundle.get("seed_value") is not None:
             overrides["seed"] = int(self.sampling_bundle["seed_value"])
+        if self.lmstudio_session_mode != "none" and self.lmstudio_session_id:
+            overrides["session_id"] = self.lmstudio_session_id
         return overrides
     def ollama_options_overrides(self) -> dict[str, Any]:
         if not self.sampling_bundle:
@@ -248,6 +255,8 @@ class LocalPromptingPolicyResult:
             "local_prompt_allows_thinking_blocks": self.allows_thinking_blocks,
             "local_prompt_thinking_block_format": self.thinking_block_format,
             "local_prompt_intro_denylist": list(self.intro_phrase_denylist),
+            "lmstudio_session_mode": self.lmstudio_session_mode,
+            "lmstudio_session_id_present": bool(self.lmstudio_session_id),
             "profile_resolution_path": self.resolution_path,
             "profile_registry_snapshot_hash": self.profile_registry_snapshot_hash,
             "local_prompting_warnings": list(self.warnings),
@@ -289,6 +298,7 @@ async def resolve_local_prompting_policy(
         )
     )
     registry, registry_hash = await asyncio.to_thread(_profile_registry_with_hash, registry_path)
+    lmstudio_session_mode, lmstudio_session_id = resolve_lmstudio_session_settings(context, provider_backend)
     try:
         resolved = registry.resolve_profile(
             provider=provider_backend,
@@ -319,6 +329,8 @@ async def resolve_local_prompting_policy(
             allows_thinking_blocks=False,
             thinking_block_format="none",
             intro_phrase_denylist=[],
+            lmstudio_session_mode=lmstudio_session_mode,
+            lmstudio_session_id=lmstudio_session_id,
             resolution_path="unresolved",
             profile_registry_snapshot_hash=registry_hash,
             warnings=[f"{E_LOCAL_PROMPT_PROFILE_RESOLUTION}:{exc}"],
@@ -338,6 +350,8 @@ async def resolve_local_prompting_policy(
     warnings: list[str] = []
     if trimmed_count > 0:
         warnings.append(f"context_trimmed:{trimmed_count}")
+    if lmstudio_session_mode in {"context", "fixed"} and not lmstudio_session_id:
+        warnings.append("lmstudio_session_id_missing")
     effective_stops = _effective_stops(provider_backend, resolved.profile, task_class)
     sampling_bundle = _sampling_bundle(resolved.profile, task_class)
     template_hash, byte_count = _render_hash(resolved_messages)
@@ -358,6 +372,8 @@ async def resolve_local_prompting_policy(
         allows_thinking_blocks=bool(resolved.profile.allows_thinking_blocks),
         thinking_block_format=str(resolved.profile.thinking_block_format),
         intro_phrase_denylist=list(resolved.profile.intro_phrase_denylist),
+        lmstudio_session_mode=lmstudio_session_mode,
+        lmstudio_session_id=lmstudio_session_id,
         resolution_path=resolved.resolution_path,
         profile_registry_snapshot_hash=registry_hash,
         warnings=warnings,

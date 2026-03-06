@@ -61,6 +61,9 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
         payload = json.loads(request.content.decode("utf-8"))
         assert payload["model"] == "dummy"
         assert isinstance(payload["messages"], list)
+        assert request.headers["x-orket-request-id"].startswith("orket-")
+        assert bool(request.headers["x-orket-session-id"])
+        assert request.headers["x-client-session"] == request.headers["x-orket-session-id"]
         return httpx.Response(
             200,
             json={
@@ -81,6 +84,11 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
     assert response.content == "ok"
     assert response.raw["provider"] == "openai-compat"
     assert response.raw["provider_backend"] == "lmstudio"
+    assert response.raw["orket_request_id"].startswith("orket-")
+    assert bool(response.raw["orket_session_id"])
+    assert bool(response.raw["prompt_fingerprint"])
+    assert response.raw["http"]["status_code"] == 200
+    assert "content-type" in response.raw["http"]["response_headers"]
     assert response.raw["usage"] == {
         "prompt_tokens": 7,
         "completion_tokens": 3,
@@ -154,6 +162,75 @@ async def test_local_model_provider_rejects_non_openai_roles(monkeypatch: pytest
         )
     await provider.client.aclose()
     assert called is False
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_uses_runtime_context_for_orket_session_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="dummy")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["x-orket-session-id"] == "seat-42"
+        assert request.headers["x-client-session"] == "seat-42"
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-ctx",
+                "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                "usage": {"prompt_tokens": 4, "completion_tokens": 1, "total_tokens": 5},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete(
+        [{"role": "user", "content": "hello"}],
+        runtime_context={"seat_id": "seat-42"},
+    )
+    await provider.client.aclose()
+    assert response.raw["orket_session_id"] == "seat-42"
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_captures_openai_tool_calls(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="dummy")
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-tool",
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "function": {"name": "read_file", "arguments": "{\"path\":\"README.md\"}"},
+                                }
+                            ],
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 5, "completion_tokens": 2, "total_tokens": 7},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    response = await provider.complete([{"role": "user", "content": "tool"}])
+    await provider.client.aclose()
+    assert response.raw["tool_calls"][0]["id"] == "call_1"
 
 
 @pytest.mark.asyncio

@@ -9,6 +9,7 @@ References:
 2. `docs/projects/protocol-governed/requirements.md`
 3. `docs/CONTRIBUTOR.md`
 4. `AGENTS.md`
+5. `docs/projects/protocol-governed/lmstudio-findings-and-live-test-plan.md`
 
 ## 1. Objective
 
@@ -66,6 +67,13 @@ Completed increment:
     - preflight PASS: Ollama `qwen2.5-coder:7b`, LM Studio `qwen3.5-4b`,
     - smoke conformance evidence refreshed under `benchmarks/results/protocol/local_prompting/live_verification/`,
     - promotion-suite code path validated live on LM Studio using `--suite promotion` with case overrides.
+14. LM Studio-specific findings and live-test-heavy remediation plan documented at:
+    - `docs/projects/protocol-governed/lmstudio-findings-and-live-test-plan.md`
+15. LM Studio session-mode live matrix expanded with high-volume runs:
+    - `none` qualification: `200` strict JSON + `200` tool-call (all pass),
+    - `context` qualification: `200` strict JSON + `200` tool-call (all pass),
+    - `fixed` reduced qualification: `80` strict JSON + `80` tool-call (all pass),
+    - zero anti-meta chatter/fence and zero summarized failures across these runs.
 
 Remaining promotion blocker:
 1. Ollama `qwen2.5-coder:7b` strict run remains below LP-12/LP-13 thresholds (current smoke evidence: strict_json/tool_call pass_rate `0.0`, anti-meta chatter/fence rate `1.0`), so promotion package cannot be finalized yet.

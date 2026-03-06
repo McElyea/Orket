@@ -25,6 +25,8 @@ async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollam
     assert result.sampling_bundle["max_output_tokens"] > 0
     assert result.intro_phrase_denylist == []
     assert result.thinking_block_format == "none"
+    assert result.lmstudio_session_mode == "none"
+    assert result.lmstudio_session_id == ""
 
 
 @pytest.mark.asyncio
@@ -79,3 +81,40 @@ async def test_resolve_local_prompting_policy_rejects_forbidden_role_on_tool_pat
             ],
             runtime_context={"local_prompt_task_class": "tool_call", "local_prompting_mode": "compat"},
         )
+
+
+@pytest.mark.asyncio
+async def test_resolve_local_prompting_policy_lmstudio_fixed_session_injects_payload_override() -> None:
+    result = await resolve_local_prompting_policy(
+        provider_backend="openai_compat",
+        model="qwen3.5-4b",
+        messages=[{"role": "user", "content": "hello"}],
+        runtime_context={
+            "protocol_governed_enabled": True,
+            "lmstudio_session_mode": "fixed",
+            "lmstudio_session_id": "session-fixed-001",
+        },
+    )
+    overrides = result.openai_payload_overrides()
+    assert result.lmstudio_session_mode == "fixed"
+    assert result.lmstudio_session_id == "session-fixed-001"
+    assert overrides["session_id"] == "session-fixed-001"
+
+
+@pytest.mark.asyncio
+async def test_resolve_local_prompting_policy_lmstudio_context_session_uses_runtime_session_id() -> None:
+    result = await resolve_local_prompting_policy(
+        provider_backend="openai_compat",
+        model="qwen3.5-4b",
+        messages=[{"role": "user", "content": "hello"}],
+        runtime_context={
+            "protocol_governed_enabled": True,
+            "lmstudio_session_mode": "context",
+            "session_id": "run-session-42",
+        },
+    )
+    assert result.lmstudio_session_mode == "context"
+    assert result.lmstudio_session_id == "run-session-42"
+    telemetry = result.telemetry()
+    assert telemetry["lmstudio_session_mode"] == "context"
+    assert telemetry["lmstudio_session_id_present"] is True

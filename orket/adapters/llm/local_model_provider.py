@@ -4,13 +4,23 @@ import asyncio
 import os
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
+from typing import Any, Dict, List, Mapping, Optional
 
 import httpx
 import ollama
 
 from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult, resolve_local_prompting_policy
+from orket.adapters.llm.openai_compat_runtime import (
+    build_orket_session_id,
+    build_prompt_fingerprint,
+    extract_openai_content,
+    extract_openai_timings,
+    extract_openai_tool_calls,
+    extract_openai_usage,
+    normalize_openai_base_url,
+    select_response_headers,
+    validate_openai_messages,
+)
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
 
@@ -85,42 +95,6 @@ class LocalModelProvider:
             return None
         return float(value) / 1_000_000.0
 
-    @staticmethod
-    def _to_int(value: Any) -> int | None:
-        if isinstance(value, int):
-            return value
-        if isinstance(value, float) and float(value).is_integer():
-            return int(value)
-        if isinstance(value, str) and value.strip().isdigit():
-            return int(value.strip())
-        return None
-
-    @staticmethod
-    def _to_float(value: Any) -> float | None:
-        if isinstance(value, (int, float)):
-            return float(value)
-        if isinstance(value, str):
-            token = value.strip()
-            try:
-                return float(token)
-            except ValueError:
-                return None
-        return None
-
-    @staticmethod
-    def _normalize_base_url(raw: str, *, default: str) -> str:
-        value = str(raw or "").strip() or default
-        if "://" not in value:
-            value = f"http://{value}"
-        parsed = urlparse(value)
-        if not parsed.scheme or not parsed.netloc:
-            raise ValueError(f"Invalid OpenAI-compatible base URL '{value}'")
-        base = f"{parsed.scheme}://{parsed.netloc}"
-        path = parsed.path.rstrip("/")
-        if path:
-            return f"{base}{path}"
-        return f"{base}/v1"
-
     def _resolve_provider_backend(self) -> str:
         raw = str(
             os.getenv("ORKET_LLM_PROVIDER")
@@ -149,107 +123,26 @@ class LocalModelProvider:
             or os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL")
             or "http://127.0.0.1:1234/v1"
         ).strip()
-        return self._normalize_base_url(raw, default="http://127.0.0.1:1234/v1")
-
-    @staticmethod
-    def _extract_openai_content(payload: Dict[str, Any]) -> str:
-        choices = payload.get("choices")
-        if not isinstance(choices, list) or not choices:
-            return ""
-        first = choices[0]
-        if not isinstance(first, dict):
-            return ""
-        message = first.get("message")
-        if not isinstance(message, dict):
-            return ""
-        content = message.get("content")
-        if isinstance(content, str):
-            return content
-        if isinstance(content, list):
-            parts: list[str] = []
-            for item in content:
-                if isinstance(item, dict):
-                    text = item.get("text")
-                    if isinstance(text, str):
-                        parts.append(text)
-            return "".join(parts)
-        return ""
-
-    def _extract_openai_usage(self, payload: Dict[str, Any]) -> tuple[int | None, int | None, int | None]:
-        usage = payload.get("usage") if isinstance(payload.get("usage"), dict) else {}
-        prompt_tokens = self._to_int(usage.get("prompt_tokens"))
-        completion_tokens = self._to_int(usage.get("completion_tokens"))
-        total_tokens = self._to_int(usage.get("total_tokens"))
-        if total_tokens is None and isinstance(prompt_tokens, int) and isinstance(completion_tokens, int):
-            total_tokens = prompt_tokens + completion_tokens
-        return prompt_tokens, completion_tokens, total_tokens
-
-    def _extract_openai_timings(self, payload: Dict[str, Any], latency_ms: int) -> tuple[float, float, float]:
-        timings = payload.get("timings") if isinstance(payload.get("timings"), dict) else {}
-
-        prompt_ms = self._to_float(timings.get("prompt_ms"))
-        predicted_ms = self._to_float(timings.get("predicted_ms"))
-        total_ms = self._to_float(timings.get("total_ms"))
-
-        if prompt_ms is None:
-            prompt_ms = self._ns_to_ms(timings.get("prompt_eval_duration"))
-        if predicted_ms is None:
-            predicted_ms = self._ns_to_ms(timings.get("eval_duration"))
-        if total_ms is None:
-            total_ms = self._ns_to_ms(timings.get("total_duration"))
-
-        if prompt_ms is None:
-            prompt_ms = self._ns_to_ms(payload.get("prompt_eval_duration"))
-        if predicted_ms is None:
-            predicted_ms = self._ns_to_ms(payload.get("eval_duration"))
-        if total_ms is None:
-            total_ms = self._ns_to_ms(payload.get("total_duration"))
-
-        if total_ms is None:
-            total_ms = float(latency_ms)
-
-        if prompt_ms is None and predicted_ms is None:
-            prompt_ms = 0.0
-            predicted_ms = float(total_ms)
-        elif prompt_ms is None:
-            prompt_ms = max(0.0, float(total_ms) - float(predicted_ms or 0.0))
-        elif predicted_ms is None:
-            predicted_ms = max(0.0, float(total_ms) - float(prompt_ms or 0.0))
-
-        return float(prompt_ms), float(predicted_ms), float(total_ms)
-
-    @staticmethod
-    def _validate_openai_messages(messages: List[Dict[str, Any]]) -> None:
-        allowed_roles = {"system", "user", "assistant", "tool"}
-        invalid: list[str] = []
-        for index, message in enumerate(messages):
-            if not isinstance(message, dict):
-                invalid.append(f"{index}:<non-object>")
-                continue
-            role = str(message.get("role") or "").strip().lower()
-            if role not in allowed_roles:
-                invalid.append(f"{index}:{role or '<missing>'}")
-        if invalid:
-            allowed = ", ".join(sorted(allowed_roles))
-            details = ", ".join(invalid[:8])
-            raise ModelProviderError(
-                "OpenAI-compatible messages require roles in "
-                f"[{allowed}]. Invalid message roles: {details}. Normalize upstream."
-            )
+        return normalize_openai_base_url(raw, default="http://127.0.0.1:1234/v1")
 
     async def complete(
         self,
         messages: List[Dict[str, str]],
         runtime_context: Optional[Dict[str, Any]] = None,
     ) -> ModelResponse:
+        resolved_context = dict(runtime_context or {})
         policy = await resolve_local_prompting_policy(
             provider_backend=self.provider_backend,
             model=self.model,
             messages=list(messages),
-            runtime_context=runtime_context,
+            runtime_context=resolved_context,
         )
         if self.provider_backend == "openai_compat":
-            return await self._complete_openai_compat(policy.messages, policy)
+            return await self._complete_openai_compat(
+                policy.messages,
+                policy,
+                runtime_context=resolved_context,
+            )
         return await self._complete_ollama(policy.messages, policy)
 
     async def _complete_ollama(
@@ -340,8 +233,16 @@ class LocalModelProvider:
         self,
         messages: List[Dict[str, str]],
         local_prompting_policy: LocalPromptingPolicyResult,
+        *,
+        runtime_context: Mapping[str, Any],
     ) -> ModelResponse:
-        self._validate_openai_messages(list(messages))
+        invalid_roles = validate_openai_messages(list(messages))
+        if invalid_roles:
+            raise ModelProviderError(
+                "OpenAI-compatible messages require roles in "
+                "[assistant, system, tool, user]. "
+                f"Invalid message roles: {', '.join(invalid_roles[:8])}. Normalize upstream."
+            )
         payload: Dict[str, Any] = {
             "model": self.model,
             "messages": list(messages),
@@ -354,10 +255,22 @@ class LocalModelProvider:
         response_format = str(os.getenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
         if response_format in {"text", "json_schema"}:
             payload["response_format"] = {"type": response_format}
+        orket_session_id = build_orket_session_id(
+            runtime_context=runtime_context,
+            model=self.model,
+            provider_name=self.provider_name,
+            fallback_messages=list(messages),
+            preferred_session_id=str(local_prompting_policy.lmstudio_session_id or ""),
+        )
+        orket_request_id = f"orket-{time.time_ns()}"
+        prompt_fingerprint = build_prompt_fingerprint(payload)
 
         headers = {"Content-Type": "application/json"}
         if self.openai_api_key:
             headers["Authorization"] = f"Bearer {self.openai_api_key}"
+        headers["X-Orket-Session-Id"] = orket_session_id
+        headers["X-Client-Session"] = orket_session_id
+        headers["X-Orket-Request-Id"] = orket_request_id
 
         max_retries = 3
         retry_delay = 1
@@ -373,13 +286,15 @@ class LocalModelProvider:
                 parsed = response.json()
                 if not isinstance(parsed, dict):
                     raise ValueError("OpenAI-compatible response must be a JSON object.")
-                content = self._extract_openai_content(parsed)
+                content = extract_openai_content(parsed)
+                tool_calls = extract_openai_tool_calls(parsed)
                 latency_ms = int((time.perf_counter() - started_at) * 1000)
-                prompt_tokens, completion_tokens, total_tokens = self._extract_openai_usage(parsed)
-                prompt_ms, predicted_ms, total_ms = self._extract_openai_timings(parsed, latency_ms)
+                prompt_tokens, completion_tokens, total_tokens = extract_openai_usage(parsed)
+                prompt_ms, predicted_ms, total_ms = extract_openai_timings(parsed, latency_ms)
 
                 raw = {
                     "openai_compat": parsed,
+                    "tool_calls": tool_calls,
                     "input_tokens": prompt_tokens,
                     "output_tokens": completion_tokens,
                     "total_tokens": total_tokens,
@@ -400,6 +315,17 @@ class LocalModelProvider:
                     "retries": attempt,
                     "latency_ms": latency_ms,
                     "response_chars": len(content),
+                    "orket_session_id": orket_session_id,
+                    "orket_request_id": orket_request_id,
+                    "prompt_fingerprint": prompt_fingerprint,
+                    "orket_trace": {
+                        "provider_backend": self.provider_backend,
+                        "provider_name": self.provider_name,
+                    },
+                    "http": {
+                        "status_code": int(response.status_code),
+                        "response_headers": select_response_headers(response.headers),
+                    },
                 }
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
