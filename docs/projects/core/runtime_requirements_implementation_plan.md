@@ -52,12 +52,14 @@ Scope:
 2. Add schema/version parsing utilities shared by runtime and replay flows.
 3. Capture immutable tool registry snapshot at runtime start.
 4. Capture immutable artifact schema registry snapshot at runtime start.
+5. Define and validate compatibility surface map schema.
 
 Deliverables:
 1. Registry files and loader modules with strict validation.
 2. Startup/runtime failure paths for missing or malformed contracts.
 3. `tool_registry_snapshot.json`.
 4. `artifact_schema_snapshot.json`.
+5. `compatibility_map_schema.yaml`.
 
 Tool registry snapshot example:
 ```json
@@ -92,12 +94,16 @@ Scope:
    4. artifact emission
 2. Require `tool_invocation_manifest.json` for every invocation.
 3. Emit `run_determinism_class` and `capability_manifest.json`.
+4. Enforce `max_tool_invocations_per_run` guard (default `200`).
+5. Enforce run-scoped mutable runtime state isolation by `run_id`.
+6. Enforce artifact-ledger referential integrity at write time.
 
 Deliverables:
 1. Runtime instrumentation hooks for deterministic ordering.
 2. Manifest generation integrated into run lifecycle.
 3. `run_identity.json`.
 4. `ledger_event_schema.json`.
+5. `capability_manifest_schema.json`.
 
 Run identity example:
 ```json
@@ -109,17 +115,32 @@ Run identity example:
 ```
 
 Ledger event schema minimum fields:
-1. `event_type`
-2. `timestamp`
-3. `tool_name`
-4. `run_id`
-5. `sequence_number`
+1. `ledger_schema_version`
+2. `event_type`
+3. `timestamp`
+4. `tool_name`
+5. `run_id`
+6. `sequence_number`
+
+Ledger event schema example:
+```json
+{
+  "ledger_schema_version": "1.0",
+  "event_type": "tool_call",
+  "run_id": "r-4821",
+  "sequence_number": 14
+}
+```
 
 Required proof:
 1. Integration test asserting ledger order on successful and failing tool calls.
 2. Contract tests asserting required invocation manifest fields.
 3. Integration test asserting run-level determinism classification.
 4. Concurrency test asserting ledger ordering remains correct under parallel tool invocation attempts.
+5. Contract tests for monotonic `sequence_number` and non-backwards timestamps.
+6. Contract tests for artifact-ledger referential integrity enforcement.
+7. Contract test for `max_tool_invocations_per_run` fail-closed behavior.
+8. Integration tests proving run-scoped mutable-state isolation.
 
 Exit criteria:
 1. Runs cannot complete without required invocation manifests.
@@ -140,13 +161,16 @@ Scope:
    2. runtime contract hash
    3. artifact schema registry version
    4. capability profile snapshot
-5. Implement drift classifier priority ordering.
+5. Validate replay completeness for required artifacts before execution.
+6. Implement drift classifier priority ordering.
+7. Record runtime policy versions and include them in replay metadata and runtime contract hash inputs.
 
 Deliverables:
 1. Runtime/replay hash computation utility.
 2. Golden run metadata schema update.
 3. Drift classifier with deterministic layer precedence.
 4. `drift_report.json` includes `drift_schema_version`.
+5. `runtime_policy_versions.json`.
 
 Drift schema example:
 ```json
@@ -155,10 +179,20 @@ Drift schema example:
 }
 ```
 
+Runtime policy versions example:
+```json
+{
+  "prompt_budget_policy": "1.0",
+  "retry_policy": "1.1",
+  "promotion_gate_policy": "1.0"
+}
+```
+
 Required proof:
 1. Integration replay test proving inference path is never called.
 2. Contract tests for compatibility rejection on mismatched hashes/versions.
 3. Drift-classifier tests validating priority order.
+4. Replay completeness tests fail closed when required artifacts are missing.
 
 Exit criteria:
 1. Replay fails closed on incompatible runtime contracts.
@@ -172,6 +206,8 @@ Scope:
 3. Reject undeclared tools and ring violations before execution.
 4. Validate active capability profile against tool capability requirements before execution.
 5. Validate tool determinism class compatibility with active run determinism policy.
+6. Enforce tool invocation boundary (`tool -> tool` direct calls forbidden).
+7. Verify determinism declarations at runtime and emit `determinism_violation` on violations.
 
 Deliverables:
 1. Lint/static-check rule for import boundaries.
@@ -180,6 +216,8 @@ Deliverables:
 Required proof:
 1. Static-rule tests for forbidden import paths.
 2. Integration tests asserting pre-execution rejection semantics.
+3. Integration tests asserting tool-to-tool direct invocation rejection.
+4. Contract tests asserting `determinism_violation` emission when pure tools produce side effects.
 
 Exit criteria:
 1. Ring boundary violations are impossible to execute silently.
@@ -262,19 +300,35 @@ Scope:
    1. reliability threshold
    2. replay across configured `N` golden runs
    3. no unresolved drift classifications
+4. Define artifact retention tiers for long-lived evidence management.
 
 Deliverables:
 1. Scoreboard computation module and artifact output.
 2. Promotion gate evaluator utility.
-3. `tool_scoreboard.json` includes `scoreboard_schema_version`.
+3. `tool_scoreboard.json` includes `scoreboard_schema_version` and `scoreboard_policy_version`.
+4. `artifact_retention_tiers.yaml`.
 
 Scoreboard schema example:
 ```json
 {
   "scoreboard_schema_version": "1.0",
+  "scoreboard_policy_version": "1.0",
   "tool": "file.patch",
   "success_rate": 0.97
 }
+```
+
+Artifact retention tiers example:
+```yaml
+tier_1:
+  - run_summary.json
+tier_2:
+  - tool_call.json
+  - tool_result.json
+  - tool_invocation_manifest.json
+tier_3:
+  - tool_debug_trace.json
+  - compat_latency_profile.json
 ```
 
 Required proof:
@@ -328,6 +382,7 @@ Exit criteria:
 5. Artifact emission paths may bypass schema-registry validation.
 6. Tool registry snapshot may include tools incompatible with active capability profile.
 7. Golden fixtures may become stale relative to tool-registry evolution.
+8. Cross-run mutable runtime state leakage may invalidate replay guarantees.
 
 Mitigation:
 1. Detect and patch bypasses during `CORE-IMP-01` and `CORE-IMP-03`.
@@ -336,6 +391,7 @@ Mitigation:
 4. Centralize artifact emission through `record_artifact()`.
 5. Validate registry snapshot against capability profile at run start.
 6. Record `tool_registry_version` in golden fixtures and fail closed on mismatch.
+7. Enforce run-scoped mutable state boundaries in runtime adapters and caches.
 
 ## Definition of Done (Program Level)
 
