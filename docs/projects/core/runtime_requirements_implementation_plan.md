@@ -51,17 +51,27 @@ Scope:
    3. tool registry snapshot version source
 2. Add schema/version parsing utilities shared by runtime and replay flows.
 3. Capture immutable tool registry snapshot at runtime start.
+4. Capture immutable artifact schema registry snapshot at runtime start.
 
 Deliverables:
 1. Registry files and loader modules with strict validation.
 2. Startup/runtime failure paths for missing or malformed contracts.
 3. `tool_registry_snapshot.json`.
+4. `artifact_schema_snapshot.json`.
 
 Tool registry snapshot example:
 ```json
 {
   "tool_registry_version": "1.2.0",
   "tools": ["file.patch", "workspace.search"]
+}
+```
+
+Artifact schema snapshot example:
+```json
+{
+  "artifact_schema_registry_version": "1.0",
+  "artifacts": ["run.json", "tool_call.json", "tool_result.json", "run_summary.json"]
 }
 ```
 
@@ -86,6 +96,24 @@ Scope:
 Deliverables:
 1. Runtime instrumentation hooks for deterministic ordering.
 2. Manifest generation integrated into run lifecycle.
+3. `run_identity.json`.
+4. `ledger_event_schema.json`.
+
+Run identity example:
+```json
+{
+  "run_id": "r-4821",
+  "workload": "localclaw",
+  "start_time": "2026-03-06T14:22:31Z"
+}
+```
+
+Ledger event schema minimum fields:
+1. `event_type`
+2. `timestamp`
+3. `tool_name`
+4. `run_id`
+5. `sequence_number`
 
 Required proof:
 1. Integration test asserting ledger order on successful and failing tool calls.
@@ -111,6 +139,7 @@ Scope:
    1. tool registry snapshot
    2. runtime contract hash
    3. artifact schema registry version
+   4. capability profile snapshot
 5. Implement drift classifier priority ordering.
 
 Deliverables:
@@ -142,6 +171,7 @@ Scope:
 2. Runtime ring-policy enforcement in tool dispatch.
 3. Reject undeclared tools and ring violations before execution.
 4. Validate active capability profile against tool capability requirements before execution.
+5. Validate tool determinism class compatibility with active run determinism policy.
 
 Deliverables:
 1. Lint/static-check rule for import boundaries.
@@ -171,6 +201,16 @@ Scope:
 Deliverables:
 1. Compatibility map validator and dispatcher integration.
 2. Translation artifact emission path.
+3. `compat_translation.json` includes `mapping_version` and `mapping_determinism`.
+
+Compatibility translation example:
+```json
+{
+  "compat_tool": "openclaw.file_edit",
+  "mapping_version": 1,
+  "mapping_determinism": "workspace"
+}
+```
 
 Required proof:
 1. Contract tests for mapping validation and deterministic class propagation.
@@ -190,10 +230,21 @@ Scope:
 1. Implement stage-level prompt budgets and fail-closed enforcement.
 2. Bind token accounting to active backend tokenizer.
 3. Emit `prompt_budget_usage.json` and prompt structural diffs.
+4. Emit `prompt_structure.json` with prompt/template/tokenizer/budget policy versions.
 
 Deliverables:
 1. Prompt budget engine with stage-aware limits.
 2. Backend tokenizer adapter contract.
+3. `prompt_structure.json`.
+
+Prompt structure example:
+```json
+{
+  "prompt_template_version": "1.0",
+  "tokenizer_id": "qwen2-tokenizer",
+  "budget_policy_version": "1.0"
+}
+```
 
 Required proof:
 1. Contract tests for budget exceed fail-closed semantics.
@@ -229,6 +280,7 @@ Scoreboard schema example:
 Required proof:
 1. Contract tests proving scoreboard reproducibility from ledger only.
 2. Integration tests for promotion-gate pass/fail outcomes.
+3. Scoreboard generation fails closed on incomplete ledger coverage (for example missing `tool_result` event).
 
 Exit criteria:
 1. Promotion decision can be reproduced from stored evidence.
@@ -243,6 +295,16 @@ Scope:
 Deliverables:
 1. Reference compatibility mappings and fixtures.
 2. Parity run evidence artifacts.
+3. `compat_latency_profile.json`.
+
+Compatibility latency example:
+```json
+{
+  "compat_tool": "openclaw.file_edit",
+  "core_tools_used": ["workspace.search", "file.patch"],
+  "latency_ms": 82
+}
+```
 
 Required proof:
 1. Golden parity tests for pilot mappings.
@@ -264,12 +326,16 @@ Exit criteria:
 3. Replay path may currently rely on prompt/model helpers.
 4. Scoreboard code may currently depend on non-ledger telemetry.
 5. Artifact emission paths may bypass schema-registry validation.
+6. Tool registry snapshot may include tools incompatible with active capability profile.
+7. Golden fixtures may become stale relative to tool-registry evolution.
 
 Mitigation:
 1. Detect and patch bypasses during `CORE-IMP-01` and `CORE-IMP-03`.
 2. Add invariant tests before broader refactors.
 3. Keep slices small and gate each slice before proceeding.
 4. Centralize artifact emission through `record_artifact()`.
+5. Validate registry snapshot against capability profile at run start.
+6. Record `tool_registry_version` in golden fixtures and fail closed on mismatch.
 
 ## Definition of Done (Program Level)
 
