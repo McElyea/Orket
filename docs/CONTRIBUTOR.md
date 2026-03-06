@@ -31,13 +31,17 @@ Orket
      1) `python scripts/governance/sync_published_index.py --write`
      2) `python scripts/governance/sync_published_index.py --check`
    - Commit `index.json`, generated `README.md`, and artifact files together.
+10. Recurring maintenance rule:
+   - Recurring freshness/maintenance cycles are governed by:
+     `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
+   - Keep recurring checks out of project execution lanes; project plans should remain closable.
 
 ## Current Focus
 1. Keep `docs/ROADMAP.md` active-only (remove completed/obsolete items at each handoff).
 2. Preserve deterministic green gates (`pytest`, dependency direction, volatility boundaries).
 3. Keep pilot evidence artifacts current (`architecture_pilot_matrix*`, `microservices_pilot_stability_check.json`).
-4. Execute `core-pillars` as the default active roadmap lane unless the user redirects.
-5. Execute `core-pillars` by slice (`CP-1.1 -> CP-1.2 -> ...`), not by pillar batch.
+4. Execute the highest-priority active roadmap lane unless the user redirects.
+5. For recurring maintenance cycles, execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`.
 
 ## Quick Setup
 1. Install dependencies: `python -m pip install --upgrade pip && python -m pip install -e ".[dev]"`

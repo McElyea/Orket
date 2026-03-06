@@ -1,7 +1,7 @@
 # Protocol-Governed Local Prompting Plan (v1.1)
 
 Last updated: 2026-03-06  
-Status: Active (Execution Complete; Monitor)  
+Status: Completed  
 Owner: Orket Core
 
 References:
@@ -728,4 +728,5 @@ This effort is complete when:
 
 Current state (2026-03-06):
 1. Definition of Done is satisfied for active local providers (`ollama`, `openai_compat`/LM Studio).
-2. Remaining work is monitor-mode freshness: rerun conformance/drift/promotion-readiness gates on provider/model/runtime-policy changes.
+2. Recurring freshness work moved to:
+   - `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`

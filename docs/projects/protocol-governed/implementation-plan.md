@@ -1,7 +1,7 @@
 # Protocol-Governed Runtime Implementation Plan (v5.1)
 
 Last updated: 2026-03-06  
-Status: Active (Execution Complete; Monitor)  
+Status: Completed  
 Owner: Orket Core
 
 Reference: `docs/projects/protocol-governed/requirements.md`
@@ -277,10 +277,10 @@ Verification runs (latest batch):
 34. `python scripts/protocol/check_local_prompting_promotion_readiness.py --profile-root benchmarks/results/protocol/local_prompting/ollama_promotion_2026-03-06/conformance/ollama/ollama.qwen.chatml.v1 --profile-root benchmarks/results/protocol/local_prompting/lmstudio_cache_study/none/promotion/conformance/openai_compat/openai_compat.qwen.openai_messages.v1 --drift-report benchmarks/results/protocol/local_prompting/live_verification/drift/profile_delta_report.json --template-audit-root benchmarks/results/protocol/local_prompting/live_verification/template_audit --out benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json --strict`
 35. `python -m pytest -q tests/scripts/test_check_local_prompting_promotion_readiness.py tests/scripts/test_run_local_prompting_conformance.py tests/scripts/test_summarize_local_prompting_failures.py tests/scripts/test_compare_local_prompting_profile_drift.py tests/scripts/test_audit_prompt_templates.py`
 
-Next execution slices (active):
-1. Keep staged/replayed pre-production operator validation windows fresh for each release candidate and major runtime-policy change.
-2. Keep production-window operator sign-off deferred until production rollout exists and real production traffic is available.
-3. Keep local prompting promotion-readiness package (`check_local_prompting_promotion_readiness.py`) fresh on provider/model/runtime-policy changes.
+Post-completion maintenance note:
+1. Recurring freshness execution moved to:
+   - `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
+2. Production-window operator sign-off remains deferred until production rollout exists and real production traffic is available.
 
 ## Delivery Strategy
 
