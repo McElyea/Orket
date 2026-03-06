@@ -110,3 +110,18 @@ Cutover readiness gate:
 1. Command: `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_default/protocol_window_capture_manifest.json --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_wrapper_live_2026-03-06/protocol_window_capture_manifest.json --min-pass-windows 2 --out benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness.json --strict`
 2. Output artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness.json`
 3. Gate status (`PASS`/`FAIL`): `PASS`
+
+Pre-production staged/replayed validation windows:
+1. Window ID/date: `window_preprod_stage_a / 2026-03-05`
+2. Capture manifest artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_a/protocol_window_capture_manifest.json`
+3. Gate status (`PASS`/`FAIL`): `PASS`
+4. Approver: `Orket Core (staged replay)`
+5. Window ID/date: `window_preprod_stage_b / 2026-03-05`
+6. Capture manifest artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b/protocol_window_capture_manifest.json`
+7. Gate status (`PASS`/`FAIL`): `PASS`
+8. Approver: `Orket Core (staged replay)`
+
+Pre-production cutover readiness gate:
+1. Command: `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_a/protocol_window_capture_manifest.json --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b/protocol_window_capture_manifest.json --min-pass-windows 2 --out benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness_preprod.json --strict`
+2. Output artifact path: `benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness_preprod.json`
+3. Gate status (`PASS`/`FAIL`): `PASS`

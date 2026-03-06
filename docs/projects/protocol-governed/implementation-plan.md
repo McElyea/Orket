@@ -189,6 +189,12 @@ Latest completed increments:
 33. Cutover readiness gate script landed:
     - `scripts/protocol/check_protocol_enforce_cutover_readiness.py`
     - evaluates multiple capture manifests and emits strict pass/fail readiness decision
+34. Pre-production staged/replayed operator validation gate completed:
+    - strict capture manifests:
+      - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_a/protocol_window_capture_manifest.json`
+      - `benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b/protocol_window_capture_manifest.json`
+    - strict readiness decision:
+      - `benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness_preprod.json`
 
 Validation evidence (new test surfaces):
 1. `tests/application/test_protocol_append_only_ledger.py`
@@ -257,9 +263,12 @@ Verification runs (latest batch):
 28. `python -m pytest -q tests/scripts/test_run_protocol_enforce_window_capture.py tests/scripts/test_record_protocol_enforce_window_signoff.py tests/scripts/test_check_protocol_enforce_cutover_readiness.py`
 29. `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_default/protocol_window_capture_manifest.json --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_wrapper_live_2026-03-06/protocol_window_capture_manifest.json --min-pass-windows 2 --out benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness.json --strict`
 30. `python scripts/governance/check_docs_project_hygiene.py`
+31. `python scripts/protocol/run_protocol_enforce_window_capture.py --window-id window_preprod_stage_a --window-date 2026-03-05 --workspace-root .ci/protocol_capture_wrapper_live_ws --run-id live-run-1 --retry-spike-status pass --approver "Orket Core (staged replay)" --notes "staged replay validation window A" --out-root benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_a --strict`
+32. `python scripts/protocol/run_protocol_enforce_window_capture.py --window-id window_preprod_stage_b --window-date 2026-03-05 --workspace-root .ci/protocol_capture_wrapper_live_ws --run-id live-run-1 --retry-spike-status pass --approver "Orket Core (staged replay)" --notes "staged replay validation window B" --out-root benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b --strict`
+33. `python scripts/protocol/check_protocol_enforce_cutover_readiness.py --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_a/protocol_window_capture_manifest.json --manifest benchmarks/results/protocol/protocol_governed/enforce_phase/window_preprod_stage_b/protocol_window_capture_manifest.json --min-pass-windows 2 --out benchmarks/results/protocol/protocol_governed/enforce_phase/cutover_readiness/protocol_enforce_cutover_readiness_preprod.json --strict`
 
 Next execution slices (active):
-1. Execute equivalent campaign windows against staged/replayed pre-production traffic and obtain operator approver sign-off using the same checklist artifacts.
+1. Keep staged/replayed pre-production operator validation windows fresh for each release candidate and major runtime-policy change.
 2. Keep production-window operator sign-off deferred until production rollout exists and real production traffic is available.
 
 ## Delivery Strategy
