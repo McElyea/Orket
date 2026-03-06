@@ -609,17 +609,27 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
             return None
 
     class _Provider:
+        def __init__(self, owner):
+            self._owner = owner
+
+        async def complete(self, _messages):
+            return SimpleNamespace(content="ok", raw={})
+
         async def clear_context(self):
             return None
+
+        async def close(self):
+            self._owner.close_calls += 1
 
     class CustomModelClientNode:
         def __init__(self):
             self.provider_calls = 0
             self.client_calls = 0
+            self.close_calls = 0
 
         def create_provider(self, selected_model, env):
             self.provider_calls += 1
-            return _Provider()
+            return _Provider(self)
 
         def create_client(self, provider):
             self.client_calls += 1
@@ -664,6 +674,113 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
 
     assert orch.model_client_node.provider_calls == 1
     assert orch.model_client_node.client_calls == 1
+    assert orch.model_client_node.close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycles(orchestrator, monkeypatch):
+    orch, cards, loader = orchestrator
+    issue = IssueConfig(id="I1", seat="dev", summary="Test")
+    issue_data = SimpleNamespace(model_dump=lambda: issue.model_dump())
+    epic = SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1")
+    team = SimpleNamespace(seats={"dev": SimpleNamespace(roles=["lead_architect"])})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+
+    loader.queue_assets(
+        [
+            SimpleNamespace(name="dev", description="role", tools=[]),
+            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+        ]
+        * 20
+    )
+
+    class _Memory:
+        async def search(self, _query):
+            return []
+
+        async def remember(self, content, metadata):
+            return None
+
+    class _Provider:
+        def __init__(self, owner):
+            self._owner = owner
+
+        async def complete(self, _messages):
+            return SimpleNamespace(content="ok", raw={})
+
+        async def clear_context(self):
+            return None
+
+        async def close(self):
+            self._owner.close_calls += 1
+
+    class _Client:
+        def __init__(self, provider, owner):
+            self._provider = provider
+            self._owner = owner
+
+        async def complete(self, _messages):
+            self._owner.complete_calls += 1
+            return await self._provider.complete(_messages)
+
+    class _ModelClientNode:
+        def __init__(self):
+            self.provider_calls = 0
+            self.client_calls = 0
+            self.close_calls = 0
+            self.complete_calls = 0
+
+        def create_provider(self, selected_model, env):
+            self.provider_calls += 1
+            return _Provider(self)
+
+        def create_client(self, provider):
+            self.client_calls += 1
+            return _Client(provider, self)
+
+    class _PromptStrategy:
+        def select_model(self, role, asset_config):
+            return "dummy-model"
+
+        def select_dialect(self, model):
+            return "generic"
+
+    class _Executor:
+        async def execute_turn(self, issue, role_config, client, toolbox, context, system_prompt=None):
+            await client.complete([{"role": "user", "content": "ping"}])
+            return TurnResult(
+                success=True,
+                turn=SimpleNamespace(content="done", role=context["role"], issue_id=context["issue_id"], note=""),
+            )
+
+    async def _noop(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect: "SYSTEM")
+
+    orch.memory = _Memory()
+    orch._save_checkpoint = _noop
+    orch._trigger_sandbox = _noop
+    orch.model_client_node = _ModelClientNode()
+    cards.get_by_id = AsyncSpy(return_value=SimpleNamespace(status=CardStatus.DONE))
+
+    for cycle in range(20):
+        await orch._execute_issue_turn(
+            issue_data=issue_data,
+            epic=epic,
+            team=team,
+            env=env,
+            run_id=f"run-{cycle}",
+            active_build="build-1",
+            prompt_strategy_node=_PromptStrategy(),
+            executor=_Executor(),
+            toolbox=SimpleNamespace(),
+        )
+
+    assert orch.model_client_node.provider_calls == 20
+    assert orch.model_client_node.client_calls == 20
+    assert orch.model_client_node.complete_calls == 20
+    assert orch.model_client_node.close_calls == 20
 
 
 @pytest.mark.asyncio

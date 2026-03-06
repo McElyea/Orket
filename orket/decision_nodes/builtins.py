@@ -667,6 +667,11 @@ class _DefaultAsyncModelClient:
     async def complete(self, messages):
         return await self.provider.complete(messages)
 
+    async def close(self) -> None:
+        close_method = getattr(self.provider, "close", None)
+        if callable(close_method):
+            await close_method()
+
 
 class DefaultModelClientPolicyNode:
     """

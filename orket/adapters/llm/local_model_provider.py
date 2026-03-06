@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import os
 import time
 from dataclasses import dataclass
@@ -60,6 +61,7 @@ class LocalModelProvider:
             )
         else:
             self.client = ollama.AsyncClient(host=self.ollama_host) if self.ollama_host else ollama.AsyncClient()
+        self._closed = False
 
     @staticmethod
     def _resolve_temperature_override(default_temperature: float) -> float:
@@ -388,3 +390,13 @@ class LocalModelProvider:
     async def clear_context(self):
         # Chat-completion calls are stateless unless explicit sessions are used.
         pass
+
+    async def close(self) -> None:
+        if self._closed:
+            return
+        close_method = getattr(self.client, "aclose", None) or getattr(self.client, "close", None)
+        if callable(close_method):
+            maybe_awaitable = close_method()
+            if inspect.isawaitable(maybe_awaitable):
+                await maybe_awaitable
+        self._closed = True

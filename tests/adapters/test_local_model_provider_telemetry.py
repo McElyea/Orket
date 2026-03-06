@@ -81,7 +81,7 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
         transport=httpx.MockTransport(_handler),
     )
     response = await provider.complete([{"role": "user", "content": "hello"}])
-    await provider.client.aclose()
+    await provider.close()
 
     assert isinstance(response, ModelResponse)
     assert response.content == "ok"
@@ -129,7 +129,7 @@ async def test_local_model_provider_honors_bench_overrides(monkeypatch: pytest.M
         transport=httpx.MockTransport(_handler),
     )
     response = await provider.complete([{"role": "user", "content": "hello"}])
-    await provider.client.aclose()
+    await provider.close()
     assert isinstance(response, ModelResponse)
 
 
@@ -163,7 +163,7 @@ async def test_local_model_provider_rejects_non_openai_roles(monkeypatch: pytest
                 {"role": "developer", "content": "system hint"},
             ]
         )
-    await provider.client.aclose()
+    await provider.close()
     assert called is False
 
 
@@ -193,7 +193,7 @@ async def test_local_model_provider_uses_runtime_context_for_orket_session_id(mo
         [{"role": "user", "content": "hello"}],
         runtime_context={"seat_id": "seat-42"},
     )
-    await provider.client.aclose()
+    await provider.close()
     assert response.raw["orket_session_id"] == "seat-42"
 
 
@@ -232,7 +232,7 @@ async def test_local_model_provider_captures_openai_tool_calls(monkeypatch: pyte
         transport=httpx.MockTransport(_handler),
     )
     response = await provider.complete([{"role": "user", "content": "tool"}])
-    await provider.client.aclose()
+    await provider.close()
     assert response.raw["tool_calls"][0]["id"] == "call_1"
 
 
@@ -266,7 +266,7 @@ async def test_local_model_provider_applies_local_prompt_profile_overrides(monke
         [{"role": "user", "content": "hello"}],
         runtime_context={"protocol_governed_enabled": True, "local_prompt_task_class": "strict_json"},
     )
-    await provider.client.aclose()
+    await provider.close()
     assert response.raw["profile_id"] == "openai_compat.qwen.openai_messages.v1"
     assert response.raw["task_class"] == "strict_json"
     assert response.raw["template_hash_alg"] == "sha256"
@@ -299,3 +299,25 @@ async def test_local_model_provider_ollama_strict_tasks_request_json_format(monk
     assert seen["format"] == "json"
     assert response.raw["ollama_request_format"] == "json"
     assert response.raw["ollama_format_fallback_used"] is False
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_close_is_idempotent_for_openai_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _FakeClient:
+        def __init__(self):
+            self.close_calls = 0
+
+        async def aclose(self) -> None:
+            self.close_calls += 1
+
+    fake_client = _FakeClient()
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "openai_compat")
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider.httpx.AsyncClient",
+        lambda *args, **kwargs: fake_client,
+    )
+
+    provider = LocalModelProvider(model="qwen3.5-4b")
+    await provider.close()
+    await provider.close()
+    assert fake_client.close_calls == 1

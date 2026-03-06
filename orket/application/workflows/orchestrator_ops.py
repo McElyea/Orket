@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import json
 import uuid
 import re
@@ -57,6 +58,15 @@ from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.verification_scope import build_verification_scope
 from orket.utils import sanitize_name
 from orket.settings import load_user_settings, load_user_preferences
+
+
+async def _close_provider_transport(provider: Any) -> None:
+    close_method = getattr(provider, "close", None)
+    if not callable(close_method):
+        return
+    maybe_awaitable = close_method()
+    if inspect.isawaitable(maybe_awaitable):
+        await maybe_awaitable
 
 
 def _resolve_architecture_mode(self) -> str:
@@ -1269,9 +1279,6 @@ async def _execute_issue_turn(
     dialect_name = prompt_strategy_node.select_dialect(selected_model)
     dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
 
-    provider = self.model_client_node.create_provider(selected_model, env)
-    client = self.model_client_node.create_client(provider)
-
     # Compile Prompt
     skill = SkillConfig(
         name=role_config.name or seat_name,
@@ -1394,132 +1401,137 @@ async def _execute_issue_turn(
         skill_tool_bindings=skill_tool_bindings,
     )
 
-    log_event(
-        "orchestrator_dispatch",
-        {"run_id": run_id, "seat": seat_name, "issue_id": issue.id, "status": issue.status.value},
-        self.workspace,
-    )
-    result = await self._dispatch_turn(
-        executor=executor,
-        issue=issue,
-        role_config=role_config,
-        client=client,
-        toolbox=toolbox,
-        context=context,
-        system_prompt=system_desc,
-    )
+    provider = self.model_client_node.create_provider(selected_model, env)
+    client = self.model_client_node.create_client(provider)
+    try:
+        log_event(
+            "orchestrator_dispatch",
+            {"run_id": run_id, "seat": seat_name, "issue_id": issue.id, "status": issue.status.value},
+            self.workspace,
+        )
+        result = await self._dispatch_turn(
+            executor=executor,
+            issue=issue,
+            role_config=role_config,
+            client=client,
+            toolbox=toolbox,
+            context=context,
+            system_prompt=system_desc,
+        )
 
-    if result.success:
-        self.transcript.append(result.turn)
-        updated_issue = await self.async_cards.get_by_id(issue.id)
-        if is_guard_turn:
-            guard_payload = self._extract_guard_review_payload(result.turn.content or "")
-            guard_event = self._resolve_guard_event(updated_issue.status)
-            if guard_event == "guard_rejected":
-                guard_validation = self._validate_guard_rejection_payload(guard_payload)
-                if not guard_validation.get("valid", False):
-                    request_id = await self._create_pending_gate_request(
-                        run_id=run_id,
-                        issue_id=issue.id,
-                        seat_name=seat_name,
-                        reason=str(guard_validation.get("reason") or "invalid_guard_payload"),
-                        payload=guard_payload.model_dump(),
-                        issue=issue,
-                        turn_status=turn_status,
-                    )
+        if result.success:
+            self.transcript.append(result.turn)
+            updated_issue = await self.async_cards.get_by_id(issue.id)
+            if is_guard_turn:
+                guard_payload = self._extract_guard_review_payload(result.turn.content or "")
+                guard_event = self._resolve_guard_event(updated_issue.status)
+                if guard_event == "guard_rejected":
+                    guard_validation = self._validate_guard_rejection_payload(guard_payload)
+                    if not guard_validation.get("valid", False):
+                        request_id = await self._create_pending_gate_request(
+                            run_id=run_id,
+                            issue_id=issue.id,
+                            seat_name=seat_name,
+                            reason=str(guard_validation.get("reason") or "invalid_guard_payload"),
+                            payload=guard_payload.model_dump(),
+                            issue=issue,
+                            turn_status=turn_status,
+                        )
+                        log_event(
+                            "gate_request_created",
+                            {
+                                "run_id": run_id,
+                                "request_id": request_id,
+                                "issue_id": issue.id,
+                                "seat": seat_name,
+                                "request_type": "guard_rejection_payload",
+                            },
+                            self.workspace,
+                        )
+                        log_event(
+                            "guard_payload_invalid",
+                            {
+                                "run_id": run_id,
+                                "issue_id": issue.id,
+                                "seat": seat_name,
+                                "request_id": request_id,
+                                "reason": guard_validation.get("reason"),
+                                "payload": guard_payload.model_dump(),
+                            },
+                            self.workspace,
+                        )
+                        failure_result = SimpleNamespace(
+                            error=(
+                                "Deterministic failure: invalid guard rejection payload "
+                                f"({guard_validation.get('reason')})."
+                            ),
+                            violations=[],
+                        )
+                        await self._handle_failure(issue, failure_result, run_id, roles_to_load)
+                        return
+                if guard_event:
                     log_event(
-                        "gate_request_created",
+                        guard_event,
                         {
                             "run_id": run_id,
-                            "request_id": request_id,
                             "issue_id": issue.id,
                             "seat": seat_name,
-                            "request_type": "guard_rejection_payload",
+                            "review_payload": guard_payload.model_dump(),
                         },
                         self.workspace,
                     )
                     log_event(
-                        "guard_payload_invalid",
+                        "guard_review_payload",
                         {
                             "run_id": run_id,
                             "issue_id": issue.id,
-                            "seat": seat_name,
-                            "request_id": request_id,
-                            "reason": guard_validation.get("reason"),
                             "payload": guard_payload.model_dump(),
                         },
                         self.workspace,
                     )
-                    failure_result = SimpleNamespace(
-                        error=(
-                            "Deterministic failure: invalid guard rejection payload "
-                            f"({guard_validation.get('reason')})."
-                        ),
-                        violations=[],
-                    )
-                    await self._handle_failure(issue, failure_result, run_id, roles_to_load)
-                    return
-            if guard_event:
-                log_event(
-                    guard_event,
-                    {
-                        "run_id": run_id,
-                        "issue_id": issue.id,
-                        "seat": seat_name,
-                        "review_payload": guard_payload.model_dump(),
-                    },
-                    self.workspace,
-                )
-                log_event(
-                    "guard_review_payload",
-                    {
-                        "run_id": run_id,
-                        "issue_id": issue.id,
-                        "payload": guard_payload.model_dump(),
-                    },
-                    self.workspace,
-                )
 
-        success_eval = self.evaluator_node.evaluate_success(
-            issue=issue,
-            updated_issue=updated_issue,
-            turn=result.turn,
-            seat_name=seat_name,
-            is_review_turn=is_review_turn,
-        )
-
-        # Record significant turns in memory
-        if success_eval.get("remember_decision"):
-            await self.memory.remember(
-                content=f"Decision by {seat_name} on {issue.id}: {result.turn.content[:200]}...",
-                metadata={"issue_id": issue.id, "role": seat_name, "type": "decision"}
+            success_eval = self.evaluator_node.evaluate_success(
+                issue=issue,
+                updated_issue=updated_issue,
+                turn=result.turn,
+                seat_name=seat_name,
+                is_review_turn=is_review_turn,
             )
 
-        # Sandbox triggering
-        success_actions = self.evaluator_node.success_post_actions(success_eval)
-        if self.evaluator_node.should_trigger_sandbox(success_actions):
-            if self._is_sandbox_disabled():
-                log_event(
-                    "sandbox_trigger_skipped_policy",
-                    {"run_id": run_id, "issue_id": issue.id, "seat": seat_name},
-                    self.workspace,
-                )
-            else:
-                await self._trigger_sandbox(epic, run_id=run_id)
-            next_status = self.evaluator_node.next_status_after_success(success_actions)
-            if next_status is not None:
-                await self._request_issue_transition(
-                    issue=issue,
-                    target_status=next_status,
-                    reason="post_success_evaluator",
-                    metadata={"run_id": run_id, "seat": seat_name},
-                    roles=roles_to_load,
+            # Record significant turns in memory
+            if success_eval.get("remember_decision"):
+                await self.memory.remember(
+                    content=f"Decision by {seat_name} on {issue.id}: {result.turn.content[:200]}...",
+                    metadata={"issue_id": issue.id, "role": seat_name, "type": "decision"}
                 )
 
-        await provider.clear_context()
-        await self._save_checkpoint(run_id, epic, team, env, active_build)
-    else:
-        await self._handle_failure(issue, result, run_id, roles_to_load)
+            # Sandbox triggering
+            success_actions = self.evaluator_node.success_post_actions(success_eval)
+            if self.evaluator_node.should_trigger_sandbox(success_actions):
+                if self._is_sandbox_disabled():
+                    log_event(
+                        "sandbox_trigger_skipped_policy",
+                        {"run_id": run_id, "issue_id": issue.id, "seat": seat_name},
+                        self.workspace,
+                    )
+                else:
+                    await self._trigger_sandbox(epic, run_id=run_id)
+                next_status = self.evaluator_node.next_status_after_success(success_actions)
+                if next_status is not None:
+                    await self._request_issue_transition(
+                        issue=issue,
+                        target_status=next_status,
+                        reason="post_success_evaluator",
+                        metadata={"run_id": run_id, "seat": seat_name},
+                        roles=roles_to_load,
+                    )
+
+            await provider.clear_context()
+            await self._save_checkpoint(run_id, epic, team, env, active_build)
+        else:
+            await self._handle_failure(issue, result, run_id, roles_to_load)
+    finally:
+        await _close_provider_transport(provider)
 
 def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> Dict[str, Any]:
     validate_fn = getattr(self.loop_policy_node, "validate_guard_rejection_payload", None)
