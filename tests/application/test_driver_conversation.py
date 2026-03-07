@@ -134,6 +134,7 @@ async def test_process_request_handles_cool_as_conversation():
 
 @pytest.mark.asyncio
 async def test_process_request_capabilities_question_returns_help():
+    """Layer: integration. Verifies capabilities output states the exact supported action surface."""
     driver = OrketDriver.__new__(OrketDriver)
     driver.model_root = Path("model")
     driver.skill = None
@@ -148,6 +149,9 @@ async def test_process_request_capabilities_question_returns_help():
 
     assert "Operator CLI is available." in response
     assert "/list" in response
+    assert "Supported model-directed actions:" in response
+    assert "assign_team (suggestion only; no runtime team switch)" in response
+    assert "structural changes: create_issue, create_epic, create_rock, adopt_issue" in response
     assert "Active prompting mode: fallback" in response
     assert "Active JSON parse mode: compatibility" in response
     assert "Conversation mode is on by default" in response

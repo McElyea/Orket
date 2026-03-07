@@ -16,6 +16,7 @@ def test_fallback_prompt_advertises_only_canonical_actions():
     for action in driver._supported_plan_actions():
         assert action in prompt
     assert "create, update, move, delete, direct" not in prompt
+    assert "constrained action router" in prompt.lower()
 
 
 @pytest.mark.asyncio
@@ -64,3 +65,5 @@ async def test_process_request_returns_stable_unsupported_action_error():
     response = await driver.process_request("settings")
 
     assert response.startswith("Unsupported action 'delete_issue'.")
+    assert "assign_team (suggestion only" in response
+    assert "structural changes: create_issue, create_epic, create_rock, adopt_issue" in response

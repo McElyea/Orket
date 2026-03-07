@@ -100,6 +100,11 @@ class _DummyExtensionManager:
         return None
 
 
+def _bypass_startup_for_protocol_path_test(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: test-truthfulness cleanup. Protocol tests bypass startup; startup truth is covered elsewhere."""
+    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+
+
 async def _write_sqlite_run(db_path: Path, run_id: str, *, status: str) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     repo = AsyncRunLedgerRepository(db_path)
@@ -156,10 +161,11 @@ def _write_campaign_run(workspace: Path, run_id: str, *, session_id: str, status
 
 @pytest.mark.asyncio
 async def test_cli_protocol_replay_prints_summary(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies protocol replay output while intentionally bypassing startup semantics."""
     workspace = tmp_path / "workspace" / "default"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -181,11 +187,12 @@ async def test_cli_protocol_replay_prints_summary(monkeypatch, tmp_path: Path, c
 
 @pytest.mark.asyncio
 async def test_cli_protocol_compare_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies protocol compare strict mismatch reporting on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
     _write_run(workspace, "run-b", status="failed", ok=False)
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -209,12 +216,13 @@ async def test_cli_protocol_compare_strict_reports_mismatch(monkeypatch, tmp_pat
 
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_prints_parity_result(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies protocol parity output while startup is intentionally bypassed."""
     workspace = tmp_path / "workspace" / "default"
     sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -236,12 +244,13 @@ async def test_cli_protocol_parity_prints_parity_result(monkeypatch, tmp_path: P
 
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies parity strict-mode mismatch reporting on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"
     sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_run(workspace, "run-a", status="failed", ok=False)
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -265,11 +274,12 @@ async def test_cli_protocol_parity_strict_reports_mismatch(monkeypatch, tmp_path
 
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_missing_sqlite_reports_error(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies parity command surfaces missing-SQLite errors on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
 
     missing_db = workspace / "missing.db"
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -291,11 +301,12 @@ async def test_cli_protocol_parity_missing_sqlite_reports_error(monkeypatch, tmp
 
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_prints_match_summary(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies replay campaign output while startup is intentionally bypassed."""
     workspace = tmp_path / "workspace" / "default"
     _write_campaign_run(workspace, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
     _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -317,11 +328,12 @@ async def test_cli_protocol_campaign_prints_match_summary(monkeypatch, tmp_path:
 
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies replay campaign strict mismatch reporting on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"
     _write_campaign_run(workspace, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
     _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="failed", ok=False)
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -344,12 +356,13 @@ async def test_cli_protocol_campaign_strict_reports_mismatch(monkeypatch, tmp_pa
 
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_supports_explicit_run_id_filter(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies campaign filtering semantics without treating the test as startup proof."""
     workspace = tmp_path / "workspace" / "default"
     _write_campaign_run(workspace, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
     _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
     _write_campaign_run(workspace, "run-c", session_id="sess-campaign", status="failed", ok=False)
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -373,12 +386,13 @@ async def test_cli_protocol_campaign_supports_explicit_run_id_filter(monkeypatch
 
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_uses_explicit_runs_root(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies explicit runs-root support on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"
     custom_root = tmp_path / "custom-root"
     _write_campaign_run(custom_root, "run-a", session_id="sess-campaign", status="incomplete", ok=True)
     _write_campaign_run(custom_root, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(

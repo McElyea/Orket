@@ -10,6 +10,7 @@ import pytest
 from orket.adapters.llm import local_model_provider as local_model_provider_module
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.application.workflows.turn_executor_runtime import invoke_model_complete
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
 from orket.schema import IssueConfig, RoleConfig
@@ -55,6 +56,69 @@ class _Toolbox:
     async def execute(self, tool_name: str, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         _ = (tool_name, args, context)
         return {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_invoke_model_complete_passes_runtime_context_to_direct_complete() -> None:
+    """Layer: contract. Verifies direct model-client complete() receives runtime_context on success."""
+
+    class _DirectClient:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, Any]] = []
+
+        async def complete(
+            self,
+            messages: list[dict[str, str]],
+            runtime_context: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            self.calls.append({"messages": messages, "runtime_context": runtime_context})
+            return {"content": "ok"}
+
+    client = _DirectClient()
+    messages = [{"role": "user", "content": "bridge"}]
+    context = {"session_id": "run-ctx-direct", "turn_index": 3}
+
+    result = await invoke_model_complete(client, messages, context)
+
+    assert result == {"content": "ok"}
+    assert client.calls == [{"messages": messages, "runtime_context": context}]
+
+
+@pytest.mark.asyncio
+async def test_invoke_model_complete_uses_provider_fallback_when_wrapper_omits_runtime_context() -> None:
+    """Layer: contract. Verifies wrapped clients fall back to provider.complete(..., runtime_context=...)."""
+
+    class _Provider:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, Any]] = []
+
+        async def complete(
+            self,
+            messages: list[dict[str, str]],
+            runtime_context: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            self.calls.append({"messages": messages, "runtime_context": runtime_context})
+            return {"content": "provider-ok"}
+
+    class _WrappedClient:
+        def __init__(self, provider: _Provider) -> None:
+            self.provider = provider
+            self.wrapper_calls = 0
+
+        async def complete(self, messages: list[dict[str, str]]) -> dict[str, Any]:
+            self.wrapper_calls += 1
+            return {"content": "wrapper-ok"}
+
+    provider = _Provider()
+    client = _WrappedClient(provider)
+    messages = [{"role": "user", "content": "bridge"}]
+    context = {"session_id": "run-ctx-provider", "turn_index": 4}
+
+    result = await invoke_model_complete(client, messages, context)
+
+    assert result == {"content": "provider-ok"}
+    assert client.wrapper_calls == 0
+    assert provider.calls == [{"messages": messages, "runtime_context": context}]
 
 
 @pytest.mark.asyncio

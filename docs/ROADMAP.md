@@ -3,12 +3,13 @@
 Last updated: 2026-03-07
 
 ## Priority Plan Pointer
-1. techdebt recurring maintenance checklist (maintenance lane): `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
-2. techdebt folder governance: `docs/projects/techdebt/README.md`
-3. core runtime requirements implementation plan (completed lane reference): `docs/projects/core/runtime_requirements_implementation_plan.md`
-4. core runtime requirements slice workboard (completed lane tracker): `docs/projects/core/runtime_requirements_slice_workboard.md`
-5. protocol-governed staged/waiting source: `docs/projects/archive/protocol-governed/PG03062026/implementation-plan.md`
-6. protocol-governed future compatibility source: `docs/projects/protocol-governed/local-prompting-requirements.md`
+1. techdebt behavioral-truth follow-up closeout (completed cycle reference): `docs/projects/archive/techdebt/OBT03072026/Closeout.md`
+2. techdebt recurring maintenance checklist (maintenance lane): `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
+3. techdebt folder governance: `docs/projects/techdebt/README.md`
+4. core runtime requirements implementation plan (completed lane reference): `docs/projects/core/runtime_requirements_implementation_plan.md`
+5. core runtime requirements slice workboard (completed lane tracker): `docs/projects/core/runtime_requirements_slice_workboard.md`
+6. protocol-governed staged/waiting source: `docs/projects/archive/protocol-governed/PG03062026/implementation-plan.md`
+7. protocol-governed future compatibility source: `docs/projects/protocol-governed/local-prompting-requirements.md`
 
 ## Canonical Rule
 `docs/ROADMAP.md` is the only active roadmap source.
@@ -24,10 +25,10 @@ If the user requests "follow roadmap" without naming a project:
 Current default target: techdebt maintenance lane.
 
 ## Priority Now
-Intentionally empty. Core runtime requirements implementation lane is complete (`CORE-IMP-00` through `CORE-IMP-08` all done with proof artifacts).
+Intentionally empty. `OBT03072026` is complete and archived at `docs/projects/archive/techdebt/OBT03072026/`; recurring techdebt work remains in **Maintenance (Non-Priority)**.
 
 ## Maintenance (Non-Priority)
-1. techdebt -- Execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md` each cycle; keep recurring checks curated and archive closed cycle docs per `docs/projects/techdebt/README.md`. Latest cycle evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json` (Section A pass via the recurring maintenance runner; Section B and Section C skipped by trigger rules for this cycle; canonical `pytest` passed: 1824 passed, 9 skipped).
+1. techdebt -- Execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md` each cycle; keep recurring checks curated and archive closed cycle docs per `docs/projects/techdebt/README.md`. Latest recurring evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json` (Section A pass via the recurring maintenance runner; Section B and Section C skipped by trigger rules for this cycle; canonical `pytest` passed: 1824 passed, 9 skipped). Latest closed cycle archive: `docs/projects/archive/techdebt/OBT03072026/`.
 
 ## Staged / Waiting (Externally Gated)
 1. protocol-governed production-window operator sign-off -- Waiting for real production traffic; review cadence monthly; next review `2026-04-06`.
@@ -46,7 +47,7 @@ Every non-archive project under `docs/projects/` must appear here.
 | NervousSystem | future-hold | P3-hold | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan is implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`; keep parked until rollout timing is explicitly scheduled. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Marshaller remains scaffolding-only; requirements are not mature enough for priority execution and the lane stays parked until explicit requirements hardening approval. |
 | core | completed-requirements | P1-complete | `docs/projects/core/` | Orket Core | Core runtime stability requirements lane is complete (`CORE-IMP-00` through `CORE-IMP-08`). Canonical requirement sources remain `runtime_stability_focus_requirements.md`, `core_tool_rings_compatibility_requirements.md`, `tool_contract_template.md`, and `runtime_invariants.md`; implementation closeout evidence remains in `runtime_requirements_implementation_plan.md` and `runtime_requirements_slice_workboard.md`. |
-| techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Run `Recurring-Maintenance-Checklist.md` each cycle, keep `G1`-`G7`/protocol/local-prompting freshness artifacts current, and apply `techdebt/README.md` archive semantics so non-maintenance cycle docs can close out (latest archive: `docs/projects/archive/techdebt/OBT03062026/`). |
+| techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Run `Recurring-Maintenance-Checklist.md` each cycle, keep `G1`-`G7`/protocol/local-prompting freshness artifacts current, and apply `techdebt/README.md` archive semantics so non-maintenance cycle docs can close out (latest archive: `docs/projects/archive/techdebt/OBT03072026/`). |
 | protocol-governed | staged-waiting | P3-waiting | `docs/projects/protocol-governed/` | Orket Core | Runtime execution is complete and archived at `docs/projects/archive/protocol-governed/PG03062026/`; remaining reopen conditions are externally gated (real production traffic and six-month post-production evidence). Review monthly; next review `2026-04-06`. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
 | LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |

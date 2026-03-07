@@ -8,6 +8,7 @@ import orket.interfaces.cli as cli_module
 from tests.interfaces.test_cli_protocol_replay import (
     _DummyExtensionManager,
     _args,
+    _bypass_startup_for_protocol_path_test,
     _write_run,
     _write_sqlite_run,
 )
@@ -15,6 +16,7 @@ from tests.interfaces.test_cli_protocol_replay import (
 
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_campaign_prints_summary(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies parity-campaign output while startup is intentionally bypassed."""
     workspace = tmp_path / "workspace" / "default"
     sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
@@ -22,7 +24,7 @@ async def test_cli_protocol_parity_campaign_prints_summary(monkeypatch, tmp_path
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
     await _write_sqlite_run(sqlite_db, "run-b", status="incomplete")
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -45,12 +47,13 @@ async def test_cli_protocol_parity_campaign_prints_summary(monkeypatch, tmp_path
 
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_campaign_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies parity-campaign strict mismatch reporting on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"
     sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_run(workspace, "run-a", status="failed", ok=False)
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
 
-    monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
+    _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -70,4 +73,3 @@ async def test_cli_protocol_parity_campaign_strict_reports_mismatch(monkeypatch,
     out = capsys.readouterr().out
     assert '"all_match": false' in out.lower()
     assert "Run ledger parity campaign mismatch detected under --protocol-strict." in out
-

@@ -147,6 +147,7 @@ class DriverConversationMixin:
     def _capabilities_summary(self) -> str:
         departments = sorted([p.name for p in self.model_root.iterdir() if p.is_dir()]) if self.model_root.exists() else []
         summary = [self._cli_help_text()]
+        summary.append("\n".join(self._supported_action_summary_lines()))
         if departments:
             summary.append(f"Detected departments: {', '.join(departments)}")
         prompting_mode = str(getattr(self, "prompting_mode", "unknown"))

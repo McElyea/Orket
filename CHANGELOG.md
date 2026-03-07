@@ -5,7 +5,7 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.0] - 2026-02-11 - "The Dogfood Cut"
+## [0.3.16] - 2026-02-11 - "The Dogfood Cut"
 
 ### Added
 - **Decision Node Architecture**: Introduced planner, router, prompt-strategy, and evaluator decision-node contracts with plugin registry and default built-ins.
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Orchestrator Decomposition**: Candidate planning, seat routing, model/dialect strategy, and success/failure evaluation now route through decision-node boundaries.
-- **Governance Hardening**: Removed broad `except Exception` handlers across `orket/` and replaced with typed exception handling.
+- **Governance Hardening**: Replaced broad exception handling across the main `orket/` runtime paths with typed handling where practical; true CLI/API entry boundaries still retain top-level crash logging handlers by policy.
 - **Release Pipeline**: Added CI Docker smoke and migration smoke jobs, plus runbook release checklist alignment.
 
 ### Removed
@@ -145,4 +145,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version Strategy
 
 - **v0.3.x**: Backend stabilization and improvements
-- **v0.4.0**: Will mark transition to frontend focus (when backend is solid)
+- **Future target `v0.4.0`**: Reserved for a frontend-focus transition once backend truth and stability are ready

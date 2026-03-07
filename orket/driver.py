@@ -166,6 +166,22 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             actions.update(group_actions)
         return actions
 
+    def _supported_action_summary_lines(self) -> list[str]:
+        registry = self._canonical_action_registry()
+        structural = ", ".join(registry["structural"])
+        conversation = ", ".join(registry["conversation"])
+        return [
+            "Supported model-directed actions:",
+            "- assign_team (suggestion only; no runtime team switch)",
+            "- turn_directive",
+            f"- conversation replies: {conversation}",
+            f"- structural changes: {structural}",
+        ]
+
+    def _supported_action_error_text(self, attempted_action: str) -> str:
+        summary = "\n".join(self._supported_action_summary_lines())
+        return f"Unsupported action '{attempted_action}'.\n{summary}"
+
     def _build_fallback_system_prompt(self) -> str:
         registry = self._canonical_action_registry()
         grouped_actions = []
@@ -176,8 +192,8 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             "You are the Orket Operator.\n\n"
             "Operate in a precise, high-context, non-repetitive reasoning mode.\n"
             "Your job is to interpret the user's request and decide the correct action\n"
-            "within the Orket Schema. You are not a conversational assistant; you are\n"
-            "a project-board controller.\n\n"
+            "within the Orket Schema. You are a constrained action router, not a general\n"
+            "project-board controller.\n\n"
             "CORE RULES:\n"
             "- Always return VALID JSON matching the Orket Schema.\n"
             "- Never invent assets, departments, or relationships that do not exist.\n"
@@ -327,8 +343,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         normalized_action = str(action or "").strip().lower()
 
         if normalized_action and normalized_action not in self._supported_plan_actions():
-            supported = ", ".join(sorted(self._supported_plan_actions()))
-            return f"Unsupported action '{normalized_action}'. Supported actions: {supported}."
+            return self._supported_action_error_text(normalized_action)
 
         if normalized_action == "assign_team":
             team = plan.get("suggested_team")
