@@ -55,6 +55,7 @@ product/**/*.log
 
 # Temp
 .env
+extractor.py
 project_dumper*
 project_dump*
 project_dump.py
