@@ -1,0 +1,37 @@
+{
+  "cycle_id": "2026-03-06_cycle-b",
+  "status": "partial_success",
+  "generated_on": "2026-03-06",
+  "sections_executed": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "evidence": {
+    "commands": [
+      "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+      "python scripts/governance/check_docs_project_hygiene.py",
+      "python scripts/protocol/run_protocol_enforce_window_capture.py --window-id window_maint_2026_03_06 --window-date 2026-03-06 --workspace-root . --run-id maintenance-placeholder-run --retry-spike-status unknown --approver orket-core --out-root benchmarks/results/protocol/enforce_phase/window_maint_2026_03_06 --strict",
+      "python scripts/protocol/check_local_prompting_promotion_readiness.py --profile-root benchmarks/results/protocol/local_prompting/live_verification/conformance/ollama/ollama.qwen.chatml.v1 --profile-root benchmarks/results/protocol/local_prompting/live_verification/conformance/openai_compat/openai_compat.qwen.openai_messages.v1 --drift-report benchmarks/results/protocol/local_prompting/live_verification/drift/profile_delta_report.json --template-audit-root benchmarks/results/protocol/local_prompting/live_verification/template_audit --out benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json --strict"
+    ],
+    "results": {
+      "td03052026_gate_audit": "PASS",
+      "docs_project_hygiene": "PASS",
+      "protocol_enforce_window_capture": "BLOCKED (Baseline events.log not found: C:/Source/Orket/runs/maintenance-placeholder-run/events.log)",
+      "local_prompting_promotion_readiness": "FAIL (ready=false; errors=profile_not_ready:ollama.qwen.chatml.v1, profile_not_ready:openai_compat.qwen.openai_messages.v1)"
+    },
+    "tracked_artifacts": [
+      "benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+      "benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json"
+    ]
+  },
+  "remaining_blockers_or_drift": [
+    "Section B blocked because enforce-window capture requires real replay/parity run evidence under runs/<run_id>/events.log.",
+    "Section C is red because profile promotion gates are not yet met; minimum conformance case volume and ollama anti-meta/failure gates are currently below threshold."
+  ],
+  "notes": [
+    "Section A remains green (G1-G7).",
+    "Section D curation completed by archiving OBT03062026 cycle documents."
+  ]
+}

@@ -27,14 +27,14 @@ Current default target: techdebt maintenance lane.
 Intentionally empty. Core runtime requirements implementation lane is complete (`CORE-IMP-00` through `CORE-IMP-08` all done with proof artifacts).
 
 ## Maintenance (Non-Priority)
-1. techdebt -- Execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md` each cycle; keep recurring checks curated and archive closed cycle docs per `docs/projects/techdebt/README.md`.
+1. techdebt -- Execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md` each cycle; keep recurring checks curated and archive closed cycle docs per `docs/projects/techdebt/README.md`. Latest cycle evidence: `tests/reports/techdebt_recurring_cycle_2026-03-06_b_report.json` (Section A pass; Section B blocked by missing live run events; Section C promotion readiness red).
 
 ## Staged / Waiting (Externally Gated)
 1. protocol-governed production-window operator sign-off -- Waiting for real production traffic; review cadence monthly; next review `2026-04-06`.
 2. protocol-governed post-production six-month evidence -- Waiting for production start date + six-month soak period; review cadence monthly; next review `2026-04-06`.
 
 ## Future Lanes (Non-Priority Backlog)
-1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Future lane only; reopen with explicit scoped implementation request.
+1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Future lane only; reopen with explicit scoped implementation request. Latest readiness evidence (`benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json`) remains `ready=false`.
 2. NervousSystem next-phase planning -- Keep in future lane until production rollout timing is explicitly scheduled.
 3. marshaller requirements hardening -- Keep parked until requirements are mature and explicitly approved for execution.
 
