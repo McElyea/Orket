@@ -102,9 +102,19 @@ class AsyncProtocolRunLedgerRepository:
             kind=normalized_kind,
             event_type=normalized_kind,
         )
+        protected_fields = {
+            "kind",
+            "session_id",
+            "run_id",
+            "ledger_schema_version",
+            "event_type",
+            "sequence_number",
+            "event_seq",
+            "timestamp",
+        }
         for key, value in normalized_payload.items():
             key_name = str(key).strip()
-            if not key_name or key_name in {"kind", "session_id"}:
+            if not key_name or key_name in protected_fields:
                 continue
             event[key_name] = value
         if (not str(event.get("tool_name") or "").strip()) and "tool" in event:
@@ -169,6 +179,12 @@ class AsyncProtocolRunLedgerRepository:
         session_id: str,
         event: dict[str, Any],
     ) -> dict[str, Any]:
+        existing = await asyncio.to_thread(self._ledger(session_id).replay_events)
+        if existing:
+            previous_ts = str(existing[-1].get("timestamp") or "").strip()
+            current_ts = str(event.get("timestamp") or "").strip()
+            if previous_ts and current_ts and current_ts < previous_ts:
+                raise ValueError("E_LEDGER_TIMESTAMP_NON_MONOTONIC")
         next_seq = await asyncio.to_thread(self._ledger(session_id).next_event_seq)
         payload = dict(event)
         if int(payload.get("sequence_number") or 0) <= 0:

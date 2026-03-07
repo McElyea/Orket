@@ -266,3 +266,56 @@ async def test_async_protocol_run_ledger_enforces_max_tool_invocations_per_run(t
     assert third["max_tool_invocations_per_run"] == 2
     events = await repo.list_events("sess-limit")
     assert len(events) == 2
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_append_event_ignores_protected_payload_fields(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    appended = await repo.append_event(
+        session_id="sess-protected",
+        kind="event_a",
+        payload={
+            "run_id": "forged",
+            "session_id": "forged",
+            "ledger_schema_version": "9.9",
+            "event_type": "forged",
+            "sequence_number": 999,
+            "event_seq": 999,
+            "timestamp": "1970-01-01T00:00:00+00:00",
+            "x": 1,
+        },
+    )
+
+    assert appended["run_id"] == "sess-protected"
+    assert appended["session_id"] == "sess-protected"
+    assert appended["ledger_schema_version"] == "1.0"
+    assert appended["event_type"] == "event_a"
+    assert appended["sequence_number"] == 1
+    assert appended["event_seq"] == 1
+    assert appended["timestamp"] != "1970-01-01T00:00:00+00:00"
+    assert appended["x"] == 1
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_rejects_non_monotonic_timestamps(tmp_path: Path, monkeypatch) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    _ = await repo.append_event(session_id="sess-ts", kind="event_a", payload={"x": 1})
+
+    def _fake_build_event(*, session_id: str, kind: str, event_type: str, **extra):
+        return {
+            "ledger_schema_version": "1.0",
+            "kind": kind,
+            "event_type": event_type,
+            "session_id": session_id,
+            "run_id": session_id,
+            "timestamp": "1970-01-01T00:00:00+00:00",
+            "tool_name": "",
+            **dict(extra),
+        }
+
+    monkeypatch.setattr(repo, "_build_event", _fake_build_event)
+
+    with pytest.raises(ValueError, match="E_LEDGER_TIMESTAMP_NON_MONOTONIC"):
+        _ = await repo.append_event(session_id="sess-ts", kind="event_b", payload={"x": 2})
