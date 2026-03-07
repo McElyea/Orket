@@ -14,6 +14,7 @@ from orket.runtime.protocol_replay import (
     runtime_contract_hash,
 )
 from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
+from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 
 
 def _write_run_events(
@@ -75,6 +76,42 @@ def _write_receipts(path: Path, *, operation_id: str = "op-1", receipt_seq: int 
         },
     }
     path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+
+def _matching_run_started_artifacts(*, workspace: Path | None = None) -> dict[str, object]:
+    current_contracts = runtime_contract_versions_snapshot()
+    current_policies = runtime_policy_versions_snapshot()
+    capability_manifest = {
+        "run_id": "sess-1",
+        "capabilities_allowed": ["workspace"],
+        "capabilities_used": [],
+        "run_determinism_class": "workspace",
+        "source_tool_registry_version": current_contracts["tool_registry_version"],
+        "source_tool_contract_snapshot_hash": current_contracts["tool_contract_snapshot_hash"],
+    }
+    artifacts: dict[str, object] = {
+        "tool_registry_snapshot": {
+            "tool_registry_version": current_contracts["tool_registry_version"],
+            "snapshot_hash": current_contracts["tool_registry_snapshot_hash"],
+        },
+        "artifact_schema_snapshot": {
+            "artifact_schema_registry_version": current_contracts["artifact_schema_registry_version"],
+            "snapshot_hash": current_contracts["artifact_schema_snapshot_hash"],
+        },
+        "compatibility_map_schema_snapshot": {
+            "schema_version": current_contracts["compatibility_map_schema_version"],
+        },
+        "tool_contract_snapshot": {
+            "snapshot_hash": current_contracts["tool_contract_snapshot_hash"],
+        },
+        "runtime_policy_versions": dict(current_policies),
+        "runtime_contract_hash": runtime_contract_hash(current_contracts, current_policies),
+        "capability_manifest": capability_manifest,
+        "run_determinism_class": "workspace",
+    }
+    if workspace is not None:
+        artifacts["workspace_state_snapshot"] = capture_workspace_state_snapshot(workspace=workspace)
+    return artifacts
 
 
 def test_artifact_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
@@ -315,3 +352,63 @@ def test_protocol_replay_engine_requires_contract_artifacts_when_enforced(tmp_pa
         )
     assert "E_REPLAY_ARTIFACTS_MISSING:" in str(exc.value)
     assert "tool_registry_version" in str(exc.value)
+
+
+# Layer: contract
+def test_protocol_replay_engine_rejects_capability_manifest_source_mismatch_when_enforced(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-capability-mismatch" / "events.log"
+    workspace = tmp_path / "workspace-capability"
+    workspace.mkdir(parents=True, exist_ok=True)
+    (workspace / "a.txt").write_text("ok", encoding="utf-8")
+    run_started_artifacts = _matching_run_started_artifacts(workspace=workspace)
+    capability_manifest = dict(run_started_artifacts["capability_manifest"] or {})
+    capability_manifest["source_tool_contract_snapshot_hash"] = "f" * 64
+    run_started_artifacts["capability_manifest"] = capability_manifest
+    _write_run_events(events, status="incomplete", operation_ok=True, run_started_artifacts=run_started_artifacts)
+
+    engine = ProtocolReplayEngine()
+    with pytest.raises(ValueError) as exc:
+        _ = engine.replay_from_ledger(
+            events_log_path=events,
+            enforce_runtime_contract_compatibility=True,
+        )
+    assert "E_REPLAY_COMPATIBILITY_MISMATCH:" in str(exc.value)
+    assert "capability_manifest_source_tool_contract_snapshot_hash" in str(exc.value)
+
+
+# Layer: contract
+def test_protocol_replay_engine_requires_workspace_snapshot_for_workspace_runs_when_enforced(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-workspace-snapshot-missing" / "events.log"
+    run_started_artifacts = _matching_run_started_artifacts(workspace=None)
+    _write_run_events(events, status="incomplete", operation_ok=True, run_started_artifacts=run_started_artifacts)
+
+    engine = ProtocolReplayEngine()
+    with pytest.raises(ValueError) as exc:
+        _ = engine.replay_from_ledger(
+            events_log_path=events,
+            enforce_runtime_contract_compatibility=True,
+            require_replay_artifact_completeness=True,
+        )
+    assert "E_REPLAY_ARTIFACTS_MISSING:" in str(exc.value)
+    assert "workspace_state_snapshot.workspace_hash" in str(exc.value)
+
+
+# Layer: contract
+def test_protocol_replay_engine_rejects_workspace_snapshot_hash_mismatch_when_enforced(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-workspace-snapshot-mismatch" / "events.log"
+    workspace = tmp_path / "workspace-snapshot"
+    workspace.mkdir(parents=True, exist_ok=True)
+    tracked = workspace / "tracked.txt"
+    tracked.write_text("before", encoding="utf-8")
+    run_started_artifacts = _matching_run_started_artifacts(workspace=workspace)
+    tracked.write_text("after", encoding="utf-8")
+    _write_run_events(events, status="incomplete", operation_ok=True, run_started_artifacts=run_started_artifacts)
+
+    engine = ProtocolReplayEngine()
+    with pytest.raises(ValueError) as exc:
+        _ = engine.replay_from_ledger(
+            events_log_path=events,
+            enforce_runtime_contract_compatibility=True,
+        )
+    assert "E_REPLAY_COMPATIBILITY_MISMATCH:" in str(exc.value)
+    assert "workspace_state_snapshot.workspace_hash" in str(exc.value)

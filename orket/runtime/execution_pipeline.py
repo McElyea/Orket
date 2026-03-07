@@ -412,6 +412,27 @@ class ExecutionPipeline:
             run_id=run_id,
             workload=epic.name,
         )
+        capability_manifest = run_contract_artifacts.get("capability_manifest")
+        if isinstance(capability_manifest, dict):
+            active_capabilities_allowed = [
+                str(token).strip().lower()
+                for token in (capability_manifest.get("capabilities_allowed") or [])
+                if str(token).strip()
+            ]
+            active_run_determinism_class = str(
+                capability_manifest.get("run_determinism_class")
+                or run_contract_artifacts.get("run_determinism_class")
+                or "workspace"
+            ).strip().lower()
+        else:
+            active_capabilities_allowed = ["workspace"]
+            active_run_determinism_class = str(
+                run_contract_artifacts.get("run_determinism_class") or "workspace"
+            ).strip().lower()
+        if active_run_determinism_class not in {"pure", "workspace", "external"}:
+            active_run_determinism_class = "workspace"
+        self.orchestrator.active_capabilities_allowed = active_capabilities_allowed or ["workspace"]
+        self.orchestrator.active_run_determinism_class = active_run_determinism_class
 
         await self.run_ledger.start_run(
             session_id=run_id,

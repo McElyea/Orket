@@ -328,5 +328,8 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     assert artifact_json["run_identity"]["workload"] == "protocol_ledger_epic_contract_bootstrap"
     assert artifact_json["run_determinism_class"] == "workspace"
     assert artifact_json["capability_manifest"]["run_id"] == "sess-protocol-contract-bootstrap"
+    assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
+    assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
     assert Path(artifact_json["tool_registry_snapshot_path"]).exists()
     assert Path(artifact_json["run_identity_path"]).exists()
+    assert Path(artifact_json["workspace_state_snapshot_path"]).exists()

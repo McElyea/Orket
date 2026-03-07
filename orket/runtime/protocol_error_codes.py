@@ -18,6 +18,11 @@ E_MAX_TOOL_CALLS_PREFIX: Final[str] = "E_MAX_TOOL_CALLS"
 E_WORKSPACE_CONSTRAINT_PREFIX: Final[str] = "E_WORKSPACE_CONSTRAINT"
 E_MISSING_REQUIRED_TOOL_PREFIX: Final[str] = "E_MISSING_REQUIRED_TOOL"
 E_TOOL_CARDINALITY_PREFIX: Final[str] = "E_TOOL_CARDINALITY"
+E_RING_POLICY_VIOLATION_PREFIX: Final[str] = "E_RING_POLICY_VIOLATION"
+E_CAPABILITY_VIOLATION_PREFIX: Final[str] = "E_CAPABILITY_VIOLATION"
+E_DETERMINISM_POLICY_VIOLATION_PREFIX: Final[str] = "E_DETERMINISM_POLICY_VIOLATION"
+E_TOOL_INVOCATION_BOUNDARY_PREFIX: Final[str] = "E_TOOL_INVOCATION_BOUNDARY"
+E_DETERMINISM_VIOLATION_PREFIX: Final[str] = "E_DETERMINISM_VIOLATION"
 
 E_LEDGER_RECORD_TOO_LARGE: Final[str] = "E_LEDGER_RECORD_TOO_LARGE"
 E_LEDGER_CORRUPT: Final[str] = "E_LEDGER_CORRUPT"
@@ -63,6 +68,11 @@ _PREFIX_CODES: Final[dict[str, str]] = {
     E_WORKSPACE_CONSTRAINT_PREFIX: "Workspace path safety constraint violation.",
     E_MISSING_REQUIRED_TOOL_PREFIX: "A required tool call was not present in the proposal.",
     E_TOOL_CARDINALITY_PREFIX: "Required tool cardinality was not exactly one.",
+    E_RING_POLICY_VIOLATION_PREFIX: "Tool call violated active ring policy.",
+    E_CAPABILITY_VIOLATION_PREFIX: "Tool capability profile is not allowed for this run.",
+    E_DETERMINISM_POLICY_VIOLATION_PREFIX: "Tool determinism class exceeds active run determinism policy.",
+    E_TOOL_INVOCATION_BOUNDARY_PREFIX: "Direct tool-to-tool invocation is not allowed.",
+    E_DETERMINISM_VIOLATION_PREFIX: "Observed tool side effects conflict with declared determinism.",
     E_RECEIPT_SEQ_INVALID_PREFIX: "Receipt sequence value is invalid.",
     E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX: "Receipt sequence is not strictly increasing.",
     E_RECEIPT_LOG_PARSE_PREFIX: "Receipt log line failed JSON parsing.",

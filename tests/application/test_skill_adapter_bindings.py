@@ -46,6 +46,10 @@ def test_build_tool_profile_bindings_from_manifest() -> None:
     assert row["tool_profile_version"] == "1.1.0"
     assert row["runtime_limits"]["max_execution_time"] == 10
     assert row["required_permissions"] == {"filesystem": ["write"]}
+    assert row["ring"] == "core"
+    assert row["determinism_class"] == "workspace"
+    assert row["capability_profile"] == "workspace"
+    assert row["tool_contract_version"] == "1.0.0"
 
 
 def test_build_tool_profile_bindings_rejects_duplicate_tool_profile_ids() -> None:
@@ -64,3 +68,7 @@ def test_synthesize_role_tool_profile_bindings_creates_deterministic_defaults() 
     bindings = synthesize_role_tool_profile_bindings(["write_file", "read_file", "write_file"])
     assert sorted(bindings.keys()) == ["read_file", "write_file"]
     assert bindings["write_file"]["tool_profile_version"] == "role-tools.v1"
+    assert bindings["write_file"]["ring"] == "core"
+    assert bindings["write_file"]["determinism_class"] == "workspace"
+    assert bindings["write_file"]["capability_profile"] == "workspace"
+    assert bindings["write_file"]["tool_contract_version"] == "1.0.0"

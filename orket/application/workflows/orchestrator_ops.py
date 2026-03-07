@@ -1750,6 +1750,38 @@ def _build_turn_context(
         if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
         else {}
     )
+    allowed_tool_rings = [
+        str(token).strip().lower()
+        for token in (process_rules.get("allowed_tool_rings") or ["core"])
+        if str(token).strip()
+    ]
+    if not allowed_tool_rings:
+        allowed_tool_rings = ["core"]
+
+    raw_active_capabilities = getattr(self, "active_capabilities_allowed", None)
+    if isinstance(raw_active_capabilities, list) and raw_active_capabilities:
+        allowed_capability_profiles = [
+            str(token).strip().lower()
+            for token in raw_active_capabilities
+            if str(token).strip()
+        ]
+    else:
+        allowed_capability_profiles = [
+            str(token).strip().lower()
+            for token in (process_rules.get("allowed_capability_profiles") or ["workspace"])
+            if str(token).strip()
+        ]
+    if not allowed_capability_profiles:
+        allowed_capability_profiles = ["workspace"]
+
+    run_determinism_class = str(
+        getattr(self, "active_run_determinism_class", None)
+        or process_rules.get("run_determinism_class")
+        or "workspace"
+    ).strip().lower()
+    if run_determinism_class not in {"pure", "workspace", "external"}:
+        run_determinism_class = "workspace"
+
     raw_max_tool_execution_time = process_rules.get("skill_max_execution_time")
     raw_max_tool_memory = process_rules.get("skill_max_memory")
     try:
@@ -1840,6 +1872,11 @@ def _build_turn_context(
         "skill_contract_enforced": bool(resolved_skill_tool_bindings),
         "skill_tool_bindings": resolved_skill_tool_bindings,
         "tool_profile_version": tool_profile_version,
+        "allowed_tool_rings": allowed_tool_rings,
+        "allowed_capability_profiles": allowed_capability_profiles,
+        "capabilities_allowed": allowed_capability_profiles,
+        "run_determinism_class": run_determinism_class,
+        "run_determinism_policy": run_determinism_class,
         "max_tool_execution_time": max_tool_execution_time,
         "max_tool_memory": max_tool_memory,
         "protocol_governed_enabled": protocol_governed_enabled,

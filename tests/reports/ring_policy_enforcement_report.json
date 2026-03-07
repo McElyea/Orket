@@ -1,0 +1,26 @@
+{
+  "slice_id": "CORE-IMP-03",
+  "status": "in_progress",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/application/test_skill_adapter_bindings.py tests/application/test_turn_tool_dispatcher.py tests/application/test_turn_tool_dispatcher_replay_isolation.py tests/application/test_turn_tool_dispatcher_support.py tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py -q",
+    "result": "pass",
+    "passed": 43,
+    "failed": 0
+  },
+  "implemented_now": [
+    "protocol preflight rejects ring policy violations before execution with E_RING_POLICY_VIOLATION",
+    "protocol preflight rejects capability profile violations before execution with E_CAPABILITY_VIOLATION",
+    "protocol preflight rejects determinism policy mismatches before execution with E_DETERMINISM_POLICY_VIOLATION",
+    "protocol preflight rejects direct tool-to-tool invocation boundary violations with E_TOOL_INVOCATION_BOUNDARY",
+    "dispatcher runtime post-execution check emits E_DETERMINISM_VIOLATION when declared pure tools expose side-effect signals",
+    "protocol error-code registry now includes ring/capability/determinism/boundary families with descriptions",
+    "role/skill tool bindings now carry explicit ring, determinism_class, capability_profile, and tool_contract_version defaults for pre-execution policy checks",
+    "turn context now carries run_determinism_class and allowed capability/ring policy derived from active run contract artifacts and process rules"
+  ],
+  "remaining_for_slice_completion": [
+    "add static import-boundary enforcement for compatibility/experimental runtime policy",
+    "add broader integration proof for tool-to-tool invocation rejection through real multi-tool paths",
+    "add deterministic violation observability artifact/event contract coverage beyond error-code emission"
+  ]
+}

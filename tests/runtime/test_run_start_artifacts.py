@@ -11,6 +11,8 @@ from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 # Layer: unit
 def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
+    (workspace / "a.txt").parent.mkdir(parents=True, exist_ok=True)
+    (workspace / "a.txt").write_text("alpha", encoding="utf-8")
     payload = capture_run_start_artifacts(
         workspace=workspace,
         run_id="run-1",
@@ -26,6 +28,12 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
+    assert Path(payload["workspace_state_snapshot_path"]).exists()
+    workspace_snapshot = payload["workspace_state_snapshot"]
+    assert workspace_snapshot["workspace_type"] == "filesystem"
+    assert workspace_snapshot["workspace_path"] == str(workspace.resolve())
+    assert workspace_snapshot["file_count"] == 1
+    assert len(str(workspace_snapshot["workspace_hash"])) == 64
 
 
 # Layer: contract

@@ -1704,6 +1704,11 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["protocol_governed_enabled"] is False
     assert context["max_response_bytes"] == 8192
     assert context["max_tool_calls"] == 8
+    assert context["allowed_tool_rings"] == ["core"]
+    assert context["allowed_capability_profiles"] == ["workspace"]
+    assert context["capabilities_allowed"] == ["workspace"]
+    assert context["run_determinism_class"] == "workspace"
+    assert context["run_determinism_policy"] == "workspace"
     assert context["timezone"] == "UTC"
     assert context["locale"] == "C.UTF-8"
     assert context["network_mode"] == "off"
@@ -1782,6 +1787,30 @@ def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast
             selected_model="dummy-model",
             resume_mode=False,
         )
+
+def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={"allowed_tool_rings": ["core", "compatibility"]})
+    orch.active_capabilities_allowed = ["workspace", "external"]
+    orch.active_run_determinism_class = "external"
+    issue = IssueConfig(id="ARC-4C", seat="architect", summary="Design architecture")
+
+    context = orch._build_turn_context(
+        run_id="run-4c",
+        issue=issue,
+        seat_name="architect",
+        roles_to_load=["architect"],
+        turn_status=CardStatus.IN_PROGRESS,
+        selected_model="dummy-model",
+        resume_mode=False,
+    )
+
+    assert context["allowed_tool_rings"] == ["core", "compatibility"]
+    assert context["allowed_capability_profiles"] == ["workspace", "external"]
+    assert context["capabilities_allowed"] == ["workspace", "external"]
+    assert context["run_determinism_class"] == "external"
+    assert context["run_determinism_policy"] == "external"
+
 
 
 def test_resolve_runtime_modes_honor_user_settings_when_process_rules_unset(orchestrator, monkeypatch):

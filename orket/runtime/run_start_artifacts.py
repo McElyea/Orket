@@ -10,6 +10,7 @@ from orket.runtime.contract_bootstrap import (
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
+from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
 _DETERMINISM_RANK = {
@@ -77,6 +78,12 @@ def capture_run_start_artifacts(
         payload=capability_manifest,
         error_code="E_RUN_CAPABILITY_MANIFEST_IMMUTABLE",
     )
+    workspace_state_snapshot_path = runtime_root / "workspace_state_snapshot.json"
+    workspace_state_snapshot = _resolve_workspace_state_snapshot(
+        path=workspace_state_snapshot_path,
+        workspace=workspace,
+        now=now,
+    )
 
     return {
         **contract_snapshots.as_ledger_artifacts(),
@@ -89,8 +96,25 @@ def capture_run_start_artifacts(
         "capability_manifest_schema_path": str(capability_manifest_schema_path),
         "capability_manifest": capability_manifest,
         "capability_manifest_path": str(capability_manifest_path),
+        "workspace_state_snapshot": workspace_state_snapshot,
+        "workspace_state_snapshot_path": str(workspace_state_snapshot_path),
         "run_determinism_class": capability_manifest["run_determinism_class"],
     }
+
+
+def _resolve_workspace_state_snapshot(
+    *,
+    path: Path,
+    workspace: Path,
+    now: datetime | None,
+) -> dict[str, Any]:
+    existing = _load_json_dict(path)
+    if existing is not None:
+        return existing
+
+    payload = capture_workspace_state_snapshot(workspace=workspace, now=now)
+    _write_json(path, payload)
+    return payload
 
 
 def _resolve_run_identity(

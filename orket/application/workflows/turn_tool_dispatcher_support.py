@@ -5,13 +5,22 @@ import platform
 from typing import Any
 
 from orket.runtime.protocol_error_codes import (
+    E_CAPABILITY_VIOLATION_PREFIX,
+    E_DETERMINISM_POLICY_VIOLATION_PREFIX,
+    E_DETERMINISM_VIOLATION_PREFIX,
     E_MISSING_REQUIRED_TOOL_PREFIX,
+    E_RING_POLICY_VIOLATION_PREFIX,
     E_TOOL_CARDINALITY_PREFIX,
+    E_TOOL_INVOCATION_BOUNDARY_PREFIX,
     E_TOOL_SEQUENCE,
     format_protocol_error,
 )
 
 from .protocol_hashing import hash_clock_artifact_ref, hash_env_allowlist, hash_network_allowlist
+
+_VALID_TOOL_RINGS = {"core", "compatibility", "experimental"}
+_VALID_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
+_DETERMINISM_RANK = {"pure": 0, "workspace": 1, "external": 2}
 
 
 def resolve_skill_tool_binding(context: dict[str, Any], tool_name: str) -> dict[str, Any] | None:
@@ -124,6 +133,115 @@ def required_sequence_violation(*, observed_tool_names: list[str], context: dict
     if filtered != sequence:
         return E_TOOL_SEQUENCE
     return None
+
+
+def tool_policy_violation(
+    *,
+    tool_name: str,
+    binding: dict[str, Any] | None,
+    context: dict[str, Any],
+) -> str | None:
+    if bool(context.get("invoked_from_tool")):
+        return format_protocol_error(E_TOOL_INVOCATION_BOUNDARY_PREFIX, tool_name)
+
+    policy_binding = dict(binding or {})
+    ring = str(policy_binding.get("ring") or "core").strip().lower()
+    if ring not in _VALID_TOOL_RINGS:
+        return format_protocol_error(E_RING_POLICY_VIOLATION_PREFIX, f"{tool_name}:ring={ring}")
+
+    allowed_rings = _normalized_tokens(context.get("allowed_tool_rings"))
+    if not allowed_rings:
+        allowed_rings = {"core"}
+    if ring not in allowed_rings:
+        allowed = ",".join(sorted(allowed_rings))
+        return format_protocol_error(E_RING_POLICY_VIOLATION_PREFIX, f"{tool_name}:ring={ring}:allowed={allowed}")
+
+    capability_profile = str(policy_binding.get("capability_profile") or "workspace").strip().lower()
+    allowed_capabilities = _normalized_tokens(context.get("capabilities_allowed"))
+    if not allowed_capabilities:
+        allowed_capabilities = _normalized_tokens(context.get("allowed_capability_profiles"))
+    if not allowed_capabilities:
+        allowed_capabilities = {"workspace"}
+    if capability_profile not in allowed_capabilities:
+        allowed = ",".join(sorted(allowed_capabilities))
+        return format_protocol_error(
+            E_CAPABILITY_VIOLATION_PREFIX,
+            f"{tool_name}:capability={capability_profile}:allowed={allowed}",
+        )
+
+    determinism_class = str(policy_binding.get("determinism_class") or "workspace").strip().lower()
+    if determinism_class not in _VALID_DETERMINISM_CLASSES:
+        return format_protocol_error(
+            E_DETERMINISM_POLICY_VIOLATION_PREFIX,
+            f"{tool_name}:determinism_class={determinism_class}",
+        )
+
+    run_determinism_class = str(
+        context.get("run_determinism_class") or context.get("run_determinism_policy") or "workspace"
+    ).strip().lower()
+    if run_determinism_class not in _VALID_DETERMINISM_CLASSES:
+        run_determinism_class = "workspace"
+    if _DETERMINISM_RANK[determinism_class] > _DETERMINISM_RANK[run_determinism_class]:
+        return format_protocol_error(
+            E_DETERMINISM_POLICY_VIOLATION_PREFIX,
+            f"{tool_name}:{determinism_class}>{run_determinism_class}",
+        )
+    return None
+
+
+def determinism_violation_for_result(
+    *,
+    tool_name: str,
+    binding: dict[str, Any] | None,
+    result: dict[str, Any] | None,
+) -> str | None:
+    determinism_class = str((binding or {}).get("determinism_class") or "workspace").strip().lower()
+    if determinism_class != "pure":
+        return None
+
+    side_effect_signals = False
+    pure_conflict_tools = {
+        "write_file",
+        "delete_file",
+        "create_issue",
+        "update_issue_status",
+        "add_issue_comment",
+    }
+    if str(tool_name).strip() in pure_conflict_tools:
+        side_effect_signals = True
+
+    payload = result if isinstance(result, dict) else {}
+    for key in (
+        "side_effects",
+        "side_effect",
+        "writes",
+        "mutations",
+        "touched_paths",
+        "changed_files",
+        "external_calls",
+    ):
+        value = payload.get(key)
+        if value:
+            side_effect_signals = True
+            break
+
+    if not side_effect_signals:
+        return None
+    return format_protocol_error(E_DETERMINISM_VIOLATION_PREFIX, f"{tool_name}:declared_pure")
+
+
+def _normalized_tokens(value: Any) -> set[str]:
+    if value is None:
+        return set()
+    if isinstance(value, str):
+        return {token.strip().lower() for token in value.split(",") if token.strip()}
+    if isinstance(value, list):
+        return {str(token).strip().lower() for token in value if str(token).strip()}
+    if isinstance(value, tuple):
+        return {str(token).strip().lower() for token in value if str(token).strip()}
+    if isinstance(value, set):
+        return {str(token).strip().lower() for token in value if str(token).strip()}
+    return set()
 
 
 def build_execution_capsule(context: dict[str, Any]) -> dict[str, Any]:

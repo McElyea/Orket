@@ -16,6 +16,7 @@ from .turn_path_resolver import PathResolver
 from .turn_tool_dispatcher_support import (
     required_sequence_violation,
     required_tools_violation,
+    tool_policy_violation,
 )
 
 
@@ -57,6 +58,16 @@ def collect_protocol_preflight_violations(
 
     for index, tool_call in enumerate(turn.tool_calls):
         tool_name = str(tool_call.tool or "").strip()
+        binding = resolve_skill_tool_binding(context, tool_name)
+
+        policy_violation = tool_policy_violation(
+            tool_name=tool_name,
+            binding=binding,
+            context=context,
+        )
+        if policy_violation:
+            return [policy_violation]
+
         workspace_violation = PathResolver.workspace_constraint_violation(
             tool_name=tool_name,
             args=dict(tool_call.args or {}),
@@ -75,7 +86,6 @@ def collect_protocol_preflight_violations(
             return [f"Governance Violation: {gate_violation}"]
 
         if bool(context.get("skill_contract_enforced")):
-            binding = resolve_skill_tool_binding(context, tool_name)
             if binding is None:
                 return [f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'."]
             missing_permissions = missing_required_permissions(binding, context)

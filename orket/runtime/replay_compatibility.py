@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
+
+from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 
 REPLAY_COMPATIBILITY_REQUIRED_FIELDS = (
     "tool_registry_version",
@@ -9,6 +12,8 @@ REPLAY_COMPATIBILITY_REQUIRED_FIELDS = (
     "tool_registry_snapshot_hash",
     "artifact_schema_snapshot_hash",
     "tool_contract_snapshot_hash",
+    "capability_manifest_source_tool_registry_version",
+    "capability_manifest_source_tool_contract_snapshot_hash",
 )
 
 
@@ -55,7 +60,7 @@ def evaluate_replay_compatibility(
         recorded_value = str(recorded.get(field) or "").strip()
         if not recorded_value:
             continue
-        current_value = str(current_contract_snapshots.get(field) or "").strip()
+        current_value = _current_compatibility_value(field=field, current_contract_snapshots=current_contract_snapshots)
         if recorded_value != current_value:
             mismatch_fields.append(field)
 
@@ -70,6 +75,16 @@ def evaluate_replay_compatibility(
     recorded_contract_hash = str(recorded.get("runtime_contract_hash") or "").strip()
     if recorded_contract_hash and recorded_contract_hash != str(current_runtime_contract_hash):
         mismatch_fields.append("runtime_contract_hash")
+
+    run_determinism_class = str(recorded.get("run_determinism_class") or "").strip().lower()
+    workspace_required = run_determinism_class in {"workspace", "external"}
+    if workspace_required:
+        missing_contract_fields.extend(_workspace_missing_fields(recorded))
+        if enforce_runtime_contract_compatibility:
+            mismatch_fields.extend(_workspace_mismatch_fields(recorded))
+
+    missing_contract_fields = sorted(set(missing_contract_fields))
+    mismatch_fields = sorted(set(mismatch_fields))
 
     if mismatch_fields and enforce_runtime_contract_compatibility:
         raise ValueError(f"E_REPLAY_COMPATIBILITY_MISMATCH:{','.join(mismatch_fields)}")
@@ -87,6 +102,7 @@ def evaluate_replay_compatibility(
         "missing_contract_fields": missing_contract_fields,
         "mismatch_fields": mismatch_fields,
         "lifecycle_missing": lifecycle_missing,
+        "run_determinism_class": run_determinism_class,
     }
 
 
@@ -105,7 +121,13 @@ def _recorded_replay_contract_surface(artifacts: dict[str, Any]) -> dict[str, An
     artifact_schema = artifacts.get("artifact_schema_snapshot")
     compatibility_map_schema = artifacts.get("compatibility_map_schema_snapshot")
     tool_contract_snapshot = artifacts.get("tool_contract_snapshot")
+    capability_manifest = artifacts.get("capability_manifest")
     policies = artifacts.get("runtime_policy_versions")
+    run_determinism_class = ""
+    if isinstance(capability_manifest, dict):
+        run_determinism_class = str(capability_manifest.get("run_determinism_class") or "").strip().lower()
+    if not run_determinism_class:
+        run_determinism_class = str(artifacts.get("run_determinism_class") or "").strip().lower()
     return {
         "tool_registry_version": str((tool_registry or {}).get("tool_registry_version") or "")
         if isinstance(tool_registry, dict)
@@ -125,6 +147,92 @@ def _recorded_replay_contract_surface(artifacts: dict[str, Any]) -> dict[str, An
         "tool_contract_snapshot_hash": str((tool_contract_snapshot or {}).get("snapshot_hash") or "")
         if isinstance(tool_contract_snapshot, dict)
         else "",
+        "capability_manifest_source_tool_registry_version": str(
+            (capability_manifest or {}).get("source_tool_registry_version") or ""
+        )
+        if isinstance(capability_manifest, dict)
+        else "",
+        "capability_manifest_source_tool_contract_snapshot_hash": str(
+            (capability_manifest or {}).get("source_tool_contract_snapshot_hash") or ""
+        )
+        if isinstance(capability_manifest, dict)
+        else "",
         "runtime_policy_versions": dict(policies) if isinstance(policies, dict) else {},
         "runtime_contract_hash": str(artifacts.get("runtime_contract_hash") or ""),
+        "run_determinism_class": run_determinism_class,
+        "workspace_state_snapshot": _workspace_snapshot_payload(artifacts),
     }
+
+
+def _workspace_snapshot_payload(artifacts: dict[str, Any]) -> dict[str, Any]:
+    payload = artifacts.get("workspace_state_snapshot")
+    if not isinstance(payload, dict):
+        payload = {}
+    snapshot = dict(payload)
+    workspace_path = str(snapshot.get("workspace_path") or artifacts.get("workspace") or "").strip()
+    if workspace_path:
+        snapshot["workspace_path"] = workspace_path
+    return snapshot
+
+
+def _current_compatibility_value(
+    *,
+    field: str,
+    current_contract_snapshots: dict[str, Any],
+) -> str:
+    if field == "capability_manifest_source_tool_registry_version":
+        return str(current_contract_snapshots.get("tool_registry_version") or "").strip()
+    if field == "capability_manifest_source_tool_contract_snapshot_hash":
+        return str(current_contract_snapshots.get("tool_contract_snapshot_hash") or "").strip()
+    return str(current_contract_snapshots.get(field) or "").strip()
+
+
+def _workspace_missing_fields(recorded: dict[str, Any]) -> list[str]:
+    snapshot = recorded.get("workspace_state_snapshot")
+    if not isinstance(snapshot, dict):
+        return ["workspace_state_snapshot"]
+
+    missing: list[str] = []
+    if not str(snapshot.get("workspace_path") or "").strip():
+        missing.append("workspace_state_snapshot.workspace_path")
+    if not str(snapshot.get("workspace_hash") or "").strip():
+        missing.append("workspace_state_snapshot.workspace_hash")
+    if not str(snapshot.get("workspace_type") or "").strip():
+        missing.append("workspace_state_snapshot.workspace_type")
+    try:
+        _ = int(snapshot.get("file_count"))
+    except (TypeError, ValueError):
+        missing.append("workspace_state_snapshot.file_count")
+    return missing
+
+
+def _workspace_mismatch_fields(recorded: dict[str, Any]) -> list[str]:
+    snapshot = recorded.get("workspace_state_snapshot")
+    if not isinstance(snapshot, dict):
+        return []
+
+    workspace_path = Path(str(snapshot.get("workspace_path") or "").strip())
+    expected_hash = str(snapshot.get("workspace_hash") or "").strip()
+    expected_type = str(snapshot.get("workspace_type") or "").strip()
+    try:
+        expected_count = int(snapshot.get("file_count"))
+    except (TypeError, ValueError):
+        expected_count = -1
+
+    if not str(workspace_path).strip():
+        return []
+    if not workspace_path.exists() or not workspace_path.is_dir():
+        return ["workspace_state_snapshot.workspace_path"]
+    try:
+        observed = capture_workspace_state_snapshot(workspace=workspace_path)
+    except (OSError, ValueError):
+        return ["workspace_state_snapshot.workspace_path"]
+
+    mismatch: list[str] = []
+    if expected_type and str(observed.get("workspace_type") or "") != expected_type:
+        mismatch.append("workspace_state_snapshot.workspace_type")
+    if expected_hash and str(observed.get("workspace_hash") or "") != expected_hash:
+        mismatch.append("workspace_state_snapshot.workspace_hash")
+    if expected_count >= 0 and int(observed.get("file_count") or 0) != expected_count:
+        mismatch.append("workspace_state_snapshot.file_count")
+    return mismatch

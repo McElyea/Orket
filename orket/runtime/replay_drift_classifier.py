@@ -29,6 +29,8 @@ TOOL_SCHEMA_DRIFT_FIELDS: Final[frozenset[str]] = frozenset(
         "tool_registry_snapshot_hash",
         "artifact_schema_snapshot_hash",
         "tool_contract_snapshot_hash",
+        "capability_manifest_source_tool_registry_version",
+        "capability_manifest_source_tool_contract_snapshot_hash",
     }
 )
 
@@ -103,6 +105,12 @@ def _classify_compatibility_validation_difference(
             continue
         if field in TOOL_SCHEMA_DRIFT_FIELDS:
             layer_hits["tool_schema_drift"].add(f"compatibility_validation.{field}")
+            continue
+        if field.startswith("capability_manifest."):
+            layer_hits["tool_schema_drift"].add(f"compatibility_validation.{field}")
+            continue
+        if field.startswith("workspace_state_snapshot."):
+            layer_hits["artifact_formatting_drift"].add(f"compatibility_validation.{field}")
             continue
         if field == "lifecycle_missing":
             layer_hits["runtime_contract_drift"].add("compatibility_validation.lifecycle_missing")

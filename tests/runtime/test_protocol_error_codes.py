@@ -26,6 +26,11 @@ def test_is_registered_protocol_error_code_accepts_registered_prefixes() -> None
     assert codes.is_registered_protocol_error_code("E_TOOL_CARDINALITY:write_file:2") is True
     assert codes.is_registered_protocol_error_code("E_RECEIPT_LOG_PARSE:line=4") is True
     assert codes.is_registered_protocol_error_code("E_NETWORK_MODE_INVALID:internet") is True
+    assert codes.is_registered_protocol_error_code("E_RING_POLICY_VIOLATION:write_file") is True
+    assert codes.is_registered_protocol_error_code("E_CAPABILITY_VIOLATION:write_file") is True
+    assert codes.is_registered_protocol_error_code("E_DETERMINISM_POLICY_VIOLATION:write_file") is True
+    assert codes.is_registered_protocol_error_code("E_TOOL_INVOCATION_BOUNDARY:write_file") is True
+    assert codes.is_registered_protocol_error_code("E_DETERMINISM_VIOLATION:write_file") is True
 
 
 def test_is_registered_protocol_error_code_rejects_unknown_values() -> None:
@@ -44,6 +49,11 @@ def test_error_description_returns_specific_messages() -> None:
     assert "cardinality" in codes.error_description("E_TOOL_CARDINALITY:write_file:2")
     assert "Workspace path safety" in codes.error_description("E_WORKSPACE_CONSTRAINT:path")
     assert "Unsupported protocol network mode." == codes.error_description("E_NETWORK_MODE_INVALID:internet")
+    assert "ring policy" in codes.error_description("E_RING_POLICY_VIOLATION:tool")
+    assert "capability profile" in codes.error_description("E_CAPABILITY_VIOLATION:tool")
+    assert "determinism class" in codes.error_description("E_DETERMINISM_POLICY_VIOLATION:tool")
+    assert "tool-to-tool invocation" in codes.error_description("E_TOOL_INVOCATION_BOUNDARY:tool")
+    assert "declared determinism" in codes.error_description("E_DETERMINISM_VIOLATION:tool")
 
 
 def test_format_protocol_error_requires_code() -> None:
