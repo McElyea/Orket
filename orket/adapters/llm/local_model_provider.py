@@ -391,11 +391,11 @@ class LocalModelProvider:
     async def clear_context(self):
         # Chat-completion calls are stateless unless explicit sessions are used.
         pass
-
     async def close(self) -> None:
-        if self._closed:
+        if bool(getattr(self, "_closed", False)):
             return
-        close_method = getattr(self.client, "aclose", None) or getattr(self.client, "close", None)
+        client = getattr(self, "client", None)
+        close_method = (getattr(client, "aclose", None) or getattr(client, "close", None)) if client is not None else None
         if callable(close_method):
             maybe_awaitable = close_method()
             if inspect.isawaitable(maybe_awaitable):

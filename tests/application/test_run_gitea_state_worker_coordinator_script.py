@@ -4,7 +4,7 @@ import argparse
 import asyncio
 import json
 
-from scripts import run_gitea_state_worker_coordinator as script
+from scripts.gitea import run_gitea_state_worker_coordinator as script
 
 
 def _args(**overrides) -> argparse.Namespace:

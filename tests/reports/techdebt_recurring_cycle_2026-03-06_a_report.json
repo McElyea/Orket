@@ -9,11 +9,13 @@
   "evidence": {
     "commands": [
       "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
-      "python scripts/governance/check_docs_project_hygiene.py"
+      "python scripts/governance/check_docs_project_hygiene.py",
+      "python -m pytest -q"
     ],
     "results": {
       "td03052026_gate_audit": "PASS",
-      "docs_project_hygiene": "PASS"
+      "docs_project_hygiene": "PASS",
+      "pytest": "PASS (1821 passed, 9 skipped)"
     },
     "cycle_root": "benchmarks/results/techdebt/recurring/2026-03-06_cycle-a",
     "tracked_artifact": "benchmarks/results/techdebt/td03052026/readiness_checklist.json"
@@ -30,6 +32,7 @@
   ],
   "notes": [
     "Priority lane shifted to maintenance after core runtime requirements closeout.",
-    "Recurring Section A gates remain green (G1-G7) with docs project hygiene passing."
+    "Recurring Section A gates remain green (G1-G7) with docs project hygiene passing.",
+    "Maintenance remediation fixed full-suite collection/runtime regressions (scripts import drift, test module namespacing, provider close-path guard under monkeypatched init)."
   ]
 }
