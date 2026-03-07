@@ -32,6 +32,10 @@ E_RECEIPT_LOG_SCHEMA_PREFIX: Final[str] = "E_RECEIPT_LOG_SCHEMA"
 E_NETWORK_MODE_INVALID_PREFIX: Final[str] = "E_NETWORK_MODE_INVALID"
 E_LEASE_EXPIRED: Final[str] = "E_LEASE_EXPIRED"
 E_DUPLICATE_OPERATION: Final[str] = "E_DUPLICATE_OPERATION"
+E_REPLAY_OPERATION_MISSING: Final[str] = "E_REPLAY_OPERATION_MISSING"
+E_REPLAY_COMPATIBILITY_MISMATCH_PREFIX: Final[str] = "E_REPLAY_COMPATIBILITY_MISMATCH"
+E_REPLAY_ARTIFACTS_MISSING_PREFIX: Final[str] = "E_REPLAY_ARTIFACTS_MISSING"
+E_REPLAY_INCOMPLETE_PREFIX: Final[str] = "E_REPLAY_INCOMPLETE"
 
 
 _EXACT_CODES: Final[dict[str, str]] = {
@@ -49,6 +53,7 @@ _EXACT_CODES: Final[dict[str, str]] = {
     E_LEDGER_PARSE: "Ledger payload bytes were not a valid JSON object.",
     E_LEASE_EXPIRED: "Worker lease expired or failed CAS renewal.",
     E_DUPLICATE_OPERATION: "Later operation commit lost first-commit-wins race.",
+    E_REPLAY_OPERATION_MISSING: "Replay mode could not find a recorded operation result.",
 }
 
 _PREFIX_CODES: Final[dict[str, str]] = {
@@ -63,6 +68,9 @@ _PREFIX_CODES: Final[dict[str, str]] = {
     E_RECEIPT_LOG_PARSE_PREFIX: "Receipt log line failed JSON parsing.",
     E_RECEIPT_LOG_SCHEMA_PREFIX: "Receipt log line is not a JSON object.",
     E_NETWORK_MODE_INVALID_PREFIX: "Unsupported protocol network mode.",
+    E_REPLAY_COMPATIBILITY_MISMATCH_PREFIX: "Replay compatibility contract mismatch.",
+    E_REPLAY_ARTIFACTS_MISSING_PREFIX: "Replay required artifact metadata is missing.",
+    E_REPLAY_INCOMPLETE_PREFIX: "Replay required lifecycle events are incomplete.",
 }
 
 

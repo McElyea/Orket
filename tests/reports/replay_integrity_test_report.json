@@ -3,22 +3,22 @@
   "status": "in_progress",
   "generated_on": "2026-03-06",
   "evidence": {
-    "test_command": "python -m pytest tests/runtime/test_protocol_replay.py tests/runtime/test_protocol_determinism_campaign.py tests/scripts/test_run_protocol_replay_compare.py tests/scripts/test_run_protocol_determinism_campaign.py -q",
+    "test_command": "python -m pytest tests/application/test_turn_tool_dispatcher.py tests/runtime/test_protocol_replay.py tests/runtime/test_protocol_determinism_campaign.py tests/runtime/test_protocol_error_codes.py tests/scripts/test_run_protocol_replay_compare.py tests/scripts/test_run_protocol_determinism_campaign.py -q",
     "result": "pass",
-    "passed": 20,
+    "passed": 45,
     "failed": 0
   },
   "implemented_now": [
-    "protocol replay summary now emits runtime_contract_hash derived from runtime contract snapshot versions/hashes",
-    "runtime_policy_versions snapshot is now emitted in replay summaries and included in runtime_contract_hash inputs",
-    "protocol replay now resolves and enforces single compatible ledger_schema_version and fails closed on incompatible/mixed schema versions",
-    "protocol replay comparison now surfaces ledger_schema_version and runtime_contract_hash drift as first-class deterministic differences",
-    "new contract test covers replay fail-closed behavior for incompatible ledger schema versions"
+    "protocol replay summary emits runtime_contract_hash derived from runtime contract snapshot versions/hashes and runtime_policy_versions",
+    "protocol replay resolves and enforces a single compatible ledger_schema_version and fails closed on incompatible/mixed schema versions",
+    "protocol replay comparison surfaces ledger_schema_version, runtime_contract_hash, runtime_policy_versions, and compatibility_validation drift as deterministic differences",
+    "dispatcher replay isolation now enforces recorded operation results only and fails closed with E_REPLAY_OPERATION_MISSING when an operation record is absent",
+    "replay compatibility evaluation now emits compatibility_validation and supports strict fail-closed gates for runtime contract mismatch, required artifact metadata missing, and incomplete lifecycle events",
+    "new contract/integration tests prove replay-mode operation isolation, strict compatibility mismatch rejection, strict completeness rejection, and replay error-code registration/description"
   ],
   "pending_for_slice_completion": [
-    "replay-mode isolation guards to ensure no inference/prompt-construction/repair paths execute during replay",
-    "fail-closed compatibility checks for tool registry snapshot, artifact schema registry version, capability profile snapshot, and workspace snapshot",
-    "replay completeness validation for required artifacts before execution",
-    "drift classifier deterministic precedence ordering and drift_schema_versioned drift report output"
+    "drift classifier deterministic precedence ordering and drift_schema_versioned drift report output",
+    "strict replay compatibility checks for capability profile snapshot and workspace state snapshot surfaces",
+    "explicit replay isolation guardrails for network/external side effects and non-reconstruction filesystem writes"
   ]
 }

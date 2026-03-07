@@ -8,6 +8,10 @@ from typing import Any, Dict
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
+from orket.runtime.replay_compatibility import (
+    evaluate_replay_compatibility,
+    resolve_ledger_schema_version,
+)
 from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
 
 
@@ -118,22 +122,6 @@ def runtime_contract_hash(
     return hash_canonical_json(payload)
 
 
-def resolve_ledger_schema_version(events: list[dict[str, Any]]) -> str:
-    observed = {
-        str(event.get("ledger_schema_version") or "1.0").strip()
-        for event in events
-        if str(event.get("ledger_schema_version") or "1.0").strip()
-    }
-    if not observed:
-        return "1.0"
-    if len(observed) > 1:
-        raise ValueError("E_REPLAY_LEDGER_SCHEMA_INCOMPATIBLE:multiple_versions")
-    version = next(iter(observed))
-    if version != "1.0":
-        raise ValueError(f"E_REPLAY_LEDGER_SCHEMA_INCOMPATIBLE:{version}")
-    return version
-
-
 class ProtocolReplayEngine:
     """Reconstruct protocol-governed run state from append-only ledger + artifacts."""
 
@@ -143,6 +131,8 @@ class ProtocolReplayEngine:
         events_log_path: Path,
         artifact_root: Path | None = None,
         receipts_log_path: Path | None = None,
+        enforce_runtime_contract_compatibility: bool = False,
+        require_replay_artifact_completeness: bool = False,
     ) -> dict[str, Any]:
         ledger = AppendOnlyRunLedger(events_log_path)
         events = ledger.replay_events()
@@ -179,6 +169,14 @@ class ProtocolReplayEngine:
         summary["runtime_contract_hash"] = runtime_contract_hash(
             summary["runtime_contract_snapshots"],
             summary["runtime_policy_versions"],
+        )
+        summary["compatibility_validation"] = evaluate_replay_compatibility(
+            events=events,
+            current_contract_snapshots=summary["runtime_contract_snapshots"],
+            current_policy_versions=summary["runtime_policy_versions"],
+            current_runtime_contract_hash=str(summary["runtime_contract_hash"]),
+            enforce_runtime_contract_compatibility=bool(enforce_runtime_contract_compatibility),
+            require_replay_artifact_completeness=bool(require_replay_artifact_completeness),
         )
 
         for event in events:
@@ -239,6 +237,7 @@ class ProtocolReplayEngine:
                 "runtime_contract_snapshots": summary["runtime_contract_snapshots"],
                 "runtime_policy_versions": summary["runtime_policy_versions"],
                 "runtime_contract_hash": summary["runtime_contract_hash"],
+                "compatibility_validation": summary["compatibility_validation"],
             }
         )
         return summary
@@ -252,16 +251,22 @@ class ProtocolReplayEngine:
         run_b_artifact_root: Path | None = None,
         run_a_receipts_path: Path | None = None,
         run_b_receipts_path: Path | None = None,
+        enforce_runtime_contract_compatibility: bool = False,
+        require_replay_artifact_completeness: bool = False,
     ) -> dict[str, Any]:
         replay_a = self.replay_from_ledger(
             events_log_path=run_a_events_path,
             artifact_root=run_a_artifact_root,
             receipts_log_path=run_a_receipts_path,
+            enforce_runtime_contract_compatibility=bool(enforce_runtime_contract_compatibility),
+            require_replay_artifact_completeness=bool(require_replay_artifact_completeness),
         )
         replay_b = self.replay_from_ledger(
             events_log_path=run_b_events_path,
             artifact_root=run_b_artifact_root,
             receipts_log_path=run_b_receipts_path,
+            enforce_runtime_contract_compatibility=bool(enforce_runtime_contract_compatibility),
+            require_replay_artifact_completeness=bool(require_replay_artifact_completeness),
         )
 
         differences: list[dict[str, Any]] = []
@@ -286,6 +291,12 @@ class ProtocolReplayEngine:
             "runtime_policy_versions",
             replay_a["runtime_policy_versions"],
             replay_b["runtime_policy_versions"],
+        )
+        self._maybe_add_difference(
+            differences,
+            "compatibility_validation",
+            replay_a["compatibility_validation"],
+            replay_b["compatibility_validation"],
         )
         self._maybe_add_difference(differences, "operations", replay_a["operations"], replay_b["operations"])
         self._maybe_add_difference(

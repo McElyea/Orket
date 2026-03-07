@@ -347,6 +347,92 @@ async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_resu
     assert len(receipt_rows) == 2
 
 
+# Layer: integration
+@pytest.mark.asyncio
+async def test_tool_dispatcher_replay_mode_uses_operation_record_and_skips_execution(tmp_path: Path) -> None:
+    operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] = {}
+    dispatcher = _dispatcher(tmp_path, operation_store=operation_store)
+
+    class _Toolbox:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def execute(self, tool_name, args, context):
+            self.calls += 1
+            return {"ok": True, "call_count": self.calls}
+
+    toolbox = _Toolbox()
+    context = {
+        "roles": ["coder"],
+        "session_id": "s1",
+        "turn_index": 1,
+        "protocol_governed_enabled": True,
+    }
+    live_turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
+    )
+    await dispatcher.execute_tools(turn=live_turn, toolbox=toolbox, context=context, issue=None)
+    assert toolbox.calls == 1
+
+    replay_turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
+    )
+    await dispatcher.execute_tools(
+        turn=replay_turn,
+        toolbox=toolbox,
+        context={**context, "protocol_replay_mode": True},
+        issue=None,
+    )
+    assert toolbox.calls == 1
+    assert replay_turn.tool_calls[0].result == {"ok": True, "call_count": 1}
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_tool_dispatcher_replay_mode_missing_operation_fails_closed(tmp_path: Path) -> None:
+    replay_store = {
+        ("write_file", str({"path": "a.txt", "content": "x"})): {"ok": True, "source": "legacy-replay-store"},
+    }
+    dispatcher = _dispatcher(tmp_path, replay_store=replay_store)
+
+    class _Toolbox:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def execute(self, tool_name, args, context):
+            self.calls += 1
+            return {"ok": True}
+
+    toolbox = _Toolbox()
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
+    )
+    with pytest.raises(RuntimeError) as exc:
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=toolbox,
+            context={
+                "roles": ["coder"],
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "protocol_replay_mode": True,
+            },
+            issue=None,
+        )
+    assert "E_REPLAY_OPERATION_MISSING" in str(exc.value)
+    assert toolbox.calls == 0
+
+
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path: Path) -> None:
     receipt_rows: list[dict[str, Any]] = []

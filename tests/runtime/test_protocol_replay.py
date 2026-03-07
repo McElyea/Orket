@@ -3,29 +3,39 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.runtime.protocol_replay import (
     ProtocolReplayEngine,
     artifact_digest_inventory,
     receipt_digest_inventory,
+    runtime_contract_versions_snapshot,
     runtime_contract_hash,
 )
 from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
 
 
-def _write_run_events(path: Path, *, status: str, operation_ok: bool) -> None:
+def _write_run_events(
+    path: Path,
+    *,
+    status: str,
+    operation_ok: bool,
+    run_started_artifacts: dict[str, object] | None = None,
+) -> None:
     ledger = AppendOnlyRunLedger(path)
-    ledger.append_event(
-        {
-            "kind": "run_started",
-            "session_id": "sess-1",
-            "run_type": "epic",
-            "run_name": "Protocol Replay",
-            "department": "core",
-            "build_id": "build-1",
-            "status": "running",
-        }
-    )
+    run_started_event = {
+        "kind": "run_started",
+        "session_id": "sess-1",
+        "run_type": "epic",
+        "run_name": "Protocol Replay",
+        "department": "core",
+        "build_id": "build-1",
+        "status": "running",
+    }
+    if isinstance(run_started_artifacts, dict):
+        run_started_event["artifacts"] = dict(run_started_artifacts)
+    ledger.append_event(run_started_event)
     ledger.append_event(
         {
             "kind": "operation_result",
@@ -216,3 +226,82 @@ def test_protocol_replay_engine_rejects_incompatible_ledger_schema_version(tmp_p
         assert "E_REPLAY_LEDGER_SCHEMA_INCOMPATIBLE" in str(exc)
     else:
         raise AssertionError("expected ledger schema incompatibility failure")
+
+
+# Layer: contract
+def test_protocol_replay_engine_requires_complete_lifecycle_when_enabled(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-incomplete-lifecycle" / "events.log"
+    ledger = AppendOnlyRunLedger(events)
+    ledger.append_event(
+        {
+            "kind": "run_started",
+            "session_id": "sess-incomplete-lifecycle",
+            "run_type": "epic",
+            "run_name": "Protocol Replay",
+            "department": "core",
+            "build_id": "build-1",
+            "status": "running",
+        }
+    )
+
+    engine = ProtocolReplayEngine()
+    with pytest.raises(ValueError) as exc:
+        _ = engine.replay_from_ledger(
+            events_log_path=events,
+            require_replay_artifact_completeness=True,
+        )
+    assert "E_REPLAY_INCOMPLETE:" in str(exc.value)
+    assert "run_finalized" in str(exc.value)
+
+
+# Layer: contract
+def test_protocol_replay_engine_rejects_runtime_contract_mismatch_when_enforced(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-compat-mismatch" / "events.log"
+    current_contracts = runtime_contract_versions_snapshot()
+    current_policies = runtime_policy_versions_snapshot()
+    recorded_contracts = dict(current_contracts)
+    recorded_contracts["tool_registry_version"] = "0.0.0-mismatch"
+    run_started_artifacts = {
+        "tool_registry_snapshot": {
+            "tool_registry_version": recorded_contracts["tool_registry_version"],
+            "snapshot_hash": recorded_contracts["tool_registry_snapshot_hash"],
+        },
+        "artifact_schema_snapshot": {
+            "artifact_schema_registry_version": recorded_contracts["artifact_schema_registry_version"],
+            "snapshot_hash": recorded_contracts["artifact_schema_snapshot_hash"],
+        },
+        "compatibility_map_schema_snapshot": {
+            "schema_version": recorded_contracts["compatibility_map_schema_version"],
+        },
+        "tool_contract_snapshot": {
+            "snapshot_hash": recorded_contracts["tool_contract_snapshot_hash"],
+        },
+        "runtime_policy_versions": dict(current_policies),
+        "runtime_contract_hash": runtime_contract_hash(recorded_contracts, current_policies),
+    }
+    _write_run_events(events, status="incomplete", operation_ok=True, run_started_artifacts=run_started_artifacts)
+
+    engine = ProtocolReplayEngine()
+    with pytest.raises(ValueError) as exc:
+        _ = engine.replay_from_ledger(
+            events_log_path=events,
+            enforce_runtime_contract_compatibility=True,
+        )
+    assert "E_REPLAY_COMPATIBILITY_MISMATCH:" in str(exc.value)
+    assert "tool_registry_version" in str(exc.value)
+
+
+# Layer: contract
+def test_protocol_replay_engine_requires_contract_artifacts_when_enforced(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-artifacts-missing" / "events.log"
+    _write_run_events(events, status="incomplete", operation_ok=True)
+
+    engine = ProtocolReplayEngine()
+    with pytest.raises(ValueError) as exc:
+        _ = engine.replay_from_ledger(
+            events_log_path=events,
+            enforce_runtime_contract_compatibility=True,
+            require_replay_artifact_completeness=True,
+        )
+    assert "E_REPLAY_ARTIFACTS_MISSING:" in str(exc.value)
+    assert "tool_registry_version" in str(exc.value)

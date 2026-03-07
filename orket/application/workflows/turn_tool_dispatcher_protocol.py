@@ -119,6 +119,21 @@ async def load_or_execute_tool(
     load_operation_result: Callable[..., dict[str, Any] | None],
     load_replay_tool_result: Callable[..., dict[str, Any] | None],
 ) -> tuple[dict[str, Any], bool]:
+    if bool(context.get("protocol_replay_mode")):
+        operation_record = await asyncio.to_thread(
+            load_operation_result,
+            session_id=session_id,
+            issue_id=turn.issue_id,
+            role_name=turn.role,
+            turn_index=turn_index,
+            operation_id=operation_id,
+        )
+        if isinstance(operation_record, dict):
+            replay_result = operation_record.get("result")
+            if isinstance(replay_result, dict):
+                return replay_result, True
+        raise ValueError("E_REPLAY_OPERATION_MISSING")
+
     if protocol_enabled:
         operation_record = await asyncio.to_thread(
             load_operation_result,
