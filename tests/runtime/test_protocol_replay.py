@@ -10,6 +10,7 @@ from orket.runtime.protocol_replay import (
     receipt_digest_inventory,
     runtime_contract_hash,
 )
+from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
 
 
 def _write_run_events(path: Path, *, status: str, operation_ok: bool) -> None:
@@ -180,8 +181,25 @@ def test_protocol_replay_engine_includes_runtime_contract_snapshot_versions(tmp_
     assert contracts["tool_registry_version"] == "1.2.0"
     assert contracts["artifact_schema_registry_version"] == "1.0"
     assert contracts["compatibility_map_schema_version"] == "1.0"
+    assert replay["runtime_policy_versions"] == runtime_policy_versions_snapshot()
     assert replay["ledger_schema_version"] == "1.0"
-    assert replay["runtime_contract_hash"] == runtime_contract_hash(contracts)
+    assert replay["runtime_contract_hash"] == runtime_contract_hash(contracts, replay["runtime_policy_versions"])
+
+
+# Layer: contract
+def test_runtime_contract_hash_changes_when_runtime_policy_versions_change() -> None:
+    base_contracts = {
+        "tool_registry_version": "1.2.0",
+        "artifact_schema_registry_version": "1.0",
+        "compatibility_map_schema_version": "1.0",
+        "tool_registry_snapshot_hash": "a" * 64,
+        "artifact_schema_snapshot_hash": "b" * 64,
+        "tool_contract_snapshot_hash": "c" * 64,
+    }
+    base_policies = runtime_policy_versions_snapshot()
+    changed_policies = dict(base_policies)
+    changed_policies["retry_policy"] = "2.0"
+    assert runtime_contract_hash(base_contracts, base_policies) != runtime_contract_hash(base_contracts, changed_policies)
 
 
 # Layer: contract

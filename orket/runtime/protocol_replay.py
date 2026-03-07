@@ -8,6 +8,7 @@ from typing import Any, Dict
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
+from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
 
 
 def _sha256_file(path: Path) -> str:
@@ -101,8 +102,10 @@ def runtime_contract_versions_snapshot() -> dict[str, Any]:
 
 def runtime_contract_hash(
     versions_snapshot: dict[str, Any] | None = None,
+    policy_versions: dict[str, Any] | None = None,
 ) -> str:
     snapshot = dict(versions_snapshot or runtime_contract_versions_snapshot())
+    policies = dict(policy_versions or runtime_policy_versions_snapshot())
     payload = {
         "tool_registry_version": snapshot.get("tool_registry_version"),
         "artifact_schema_registry_version": snapshot.get("artifact_schema_registry_version"),
@@ -110,6 +113,7 @@ def runtime_contract_hash(
         "tool_registry_snapshot_hash": snapshot.get("tool_registry_snapshot_hash"),
         "artifact_schema_snapshot_hash": snapshot.get("artifact_schema_snapshot_hash"),
         "tool_contract_snapshot_hash": snapshot.get("tool_contract_snapshot_hash"),
+        "runtime_policy_versions": policies,
     }
     return hash_canonical_json(payload)
 
@@ -169,9 +173,13 @@ class ProtocolReplayEngine:
             "artifact_inventory": artifact_digest_inventory(artifact_root) if artifact_root else [],
             "receipt_inventory": receipts,
             "runtime_contract_snapshots": runtime_contract_versions_snapshot(),
+            "runtime_policy_versions": runtime_policy_versions_snapshot(),
             "ledger_schema_version": ledger_schema_version,
         }
-        summary["runtime_contract_hash"] = runtime_contract_hash(summary["runtime_contract_snapshots"])
+        summary["runtime_contract_hash"] = runtime_contract_hash(
+            summary["runtime_contract_snapshots"],
+            summary["runtime_policy_versions"],
+        )
 
         for event in events:
             event_seq = int(event.get("event_seq") or 0)
@@ -229,6 +237,7 @@ class ProtocolReplayEngine:
                 "receipt_inventory": summary["receipt_inventory"],
                 "ledger_schema_version": summary["ledger_schema_version"],
                 "runtime_contract_snapshots": summary["runtime_contract_snapshots"],
+                "runtime_policy_versions": summary["runtime_policy_versions"],
                 "runtime_contract_hash": summary["runtime_contract_hash"],
             }
         )
@@ -271,6 +280,12 @@ class ProtocolReplayEngine:
             "runtime_contract_hash",
             replay_a["runtime_contract_hash"],
             replay_b["runtime_contract_hash"],
+        )
+        self._maybe_add_difference(
+            differences,
+            "runtime_policy_versions",
+            replay_a["runtime_policy_versions"],
+            replay_b["runtime_policy_versions"],
         )
         self._maybe_add_difference(differences, "operations", replay_a["operations"], replay_b["operations"])
         self._maybe_add_difference(
