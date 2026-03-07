@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 ## Priority Plan Pointer
 1. techdebt recurring maintenance checklist (maintenance lane): `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
@@ -27,7 +27,7 @@ Current default target: techdebt maintenance lane.
 Intentionally empty. Core runtime requirements implementation lane is complete (`CORE-IMP-00` through `CORE-IMP-08` all done with proof artifacts).
 
 ## Maintenance (Non-Priority)
-1. techdebt -- Execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md` each cycle; keep recurring checks curated and archive closed cycle docs per `docs/projects/techdebt/README.md`. Latest cycle evidence: `tests/reports/techdebt_recurring_cycle_2026-03-06_b_report.json` (Section A pass; Section B blocked by missing live run events; Section C promotion readiness red).
+1. techdebt -- Execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md` each cycle; keep recurring checks curated and archive closed cycle docs per `docs/projects/techdebt/README.md`. Latest cycle evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json` (Section A pass via the recurring maintenance runner; Section B and Section C skipped by trigger rules for this cycle; canonical `pytest` passed: 1824 passed, 9 skipped).
 
 ## Staged / Waiting (Externally Gated)
 1. protocol-governed production-window operator sign-off -- Waiting for real production traffic; review cadence monthly; next review `2026-04-06`.

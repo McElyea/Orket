@@ -1,6 +1,6 @@
 # Tech Debt Recurring Maintenance Checklist
 
-Last updated: 2026-03-06  
+Last updated: 2026-03-07  
 Status: Active (living document)  
 Owner: Orket Core
 
@@ -51,6 +51,11 @@ Objective:
 Commands:
 1. `python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json`
 2. `python scripts/governance/check_docs_project_hygiene.py`
+
+Automation helper for Section A + Section D evidence:
+1. `python scripts/techdebt/run_recurring_maintenance_cycle.py --cycle-id <cycle_id> --strict`
+   - This runner records `commands.txt`, `environment.json`, `result.json`, `stdout.log`, `stderr.log`, and the summarized cycle report.
+   - Conditional Sections B and C remain separately triggered by the checklist rules.
 
 Pass criteria:
 1. Gate audit status is `PASS`.

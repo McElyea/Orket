@@ -2,28 +2,25 @@ from __future__ import annotations
 
 import argparse
 import json
-import platform
-from datetime import UTC, datetime
 from pathlib import Path
 import sys
 from typing import Any
 
 try:
+    from scripts.common.evidence_environment import DEFAULT_EVIDENCE_ENV_KEYS
+    from scripts.common.evidence_environment import collect_environment_metadata
+    from scripts.common.evidence_environment import utc_now_iso
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from common.evidence_environment import DEFAULT_EVIDENCE_ENV_KEYS
+    from common.evidence_environment import collect_environment_metadata
+    from common.evidence_environment import utc_now_iso
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
 DEFAULT_OUT_ROOT = Path("benchmarks/results/techdebt/td03052026")
 DEFAULT_PHASE_ID = "phase0_baseline"
-DEFAULT_ENV_KEYS = (
-    "ORKET_HOST",
-    "ORKET_PORT",
-    "ORKET_API_KEY",
-    "ORKET_ALLOW_INSECURE_NO_API_KEY",
-    "ORKET_LLM_PROVIDER",
-)
 GATE_IDS = ("G1", "G2", "G3", "G4", "G5", "G6", "G7")
 P0_GATES = {"G1", "G2", "G3", "G4"}
 GATE_STATES = {"green", "red", "waived"}
@@ -53,47 +50,17 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _utc_now() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
-
-
 def _status_to_bool(status: str) -> bool:
     return str(status or "").strip().lower() == "pass"
 
 
-def _redact_env_value(key: str, value: str) -> str:
-    key_upper = str(key or "").upper()
-    if any(token in key_upper for token in ("KEY", "TOKEN", "PASSWORD", "SECRET")):
-        return "<redacted>"
-    if len(value) > 256:
-        return value[:253] + "..."
-    return value
-
-
 def _collect_environment(*, install_mode: str, canonical_source: str, env_keys: list[str]) -> dict[str, Any]:
-    toggles: dict[str, dict[str, Any]] = {}
-    for key in env_keys:
-        raw = str(sys.modules["os"].environ.get(key, ""))
-        toggles[key] = {
-            "set": bool(raw),
-            "value": _redact_env_value(key, raw) if raw else "",
-        }
-    return {
-        "schema_version": "td03052026.environment.v1",
-        "recorded_at_utc": _utc_now(),
-        "platform": {
-            "system": platform.system(),
-            "release": platform.release(),
-            "version": platform.version(),
-            "machine": platform.machine(),
-            "python_version": platform.python_version(),
-            "python_implementation": platform.python_implementation(),
-            "python_executable": sys.executable,
-        },
-        "install_mode": str(install_mode or "").strip(),
-        "canonical_dependency_source": str(canonical_source or "").strip(),
-        "env_toggles": toggles,
-    }
+    return collect_environment_metadata(
+        schema_version="td03052026.environment.v1",
+        package_mode=str(install_mode or "").strip(),
+        env_keys=env_keys,
+        extra_fields={"canonical_dependency_source": str(canonical_source or "").strip()},
+    )
 
 
 def _write_commands(path: Path, commands: list[str]) -> None:
@@ -150,7 +117,7 @@ def _build_result(
     all_passed = all(bool(item["passed"]) for item in assertions)
     return {
         "schema_version": "td03052026.phase_result.v1",
-        "recorded_at_utc": _utc_now(),
+        "recorded_at_utc": utc_now_iso(),
         "phase_id": str(phase_id),
         "status": "PASS" if all_passed else "FAIL",
         "assertions": assertions,
@@ -163,7 +130,7 @@ def _empty_gate_map() -> dict[str, dict[str, Any]]:
             "state": "red",
             "detail": "not yet verified",
             "evidence": [],
-            "updated_at_utc": _utc_now(),
+            "updated_at_utc": utc_now_iso(),
         }
         for gate_id in GATE_IDS
     }
@@ -171,7 +138,7 @@ def _empty_gate_map() -> dict[str, dict[str, Any]]:
 
 def _normalize_gate_entry(raw: Any, *, gate_id: str) -> dict[str, Any]:
     if not isinstance(raw, dict):
-        return {"state": "red", "detail": "not yet verified", "evidence": [], "updated_at_utc": _utc_now()}
+        return {"state": "red", "detail": "not yet verified", "evidence": [], "updated_at_utc": utc_now_iso()}
     state = str(raw.get("state") or "red").strip().lower()
     if state not in GATE_STATES:
         state = "red"
@@ -180,7 +147,7 @@ def _normalize_gate_entry(raw: Any, *, gate_id: str) -> dict[str, Any]:
         "state": state,
         "detail": str(raw.get("detail") or "not yet verified"),
         "evidence": [str(item) for item in evidence],
-        "updated_at_utc": str(raw.get("updated_at_utc") or _utc_now()),
+        "updated_at_utc": str(raw.get("updated_at_utc") or utc_now_iso()),
     }
 
 
@@ -256,7 +223,7 @@ def _upsert_gate(
     entry = gate_map.get(gate_id) or {"state": "red", "detail": "", "evidence": []}
     entry["state"] = state
     entry["detail"] = detail
-    entry["updated_at_utc"] = _utc_now()
+    entry["updated_at_utc"] = utc_now_iso()
     if evidence is not None:
         entry["evidence"] = list(evidence)
     gate_map[gate_id] = entry
@@ -305,7 +272,7 @@ def _build_dashboard_payload(
     _enforce_g7_prerequisites(gate_map)
     return {
         "schema_version": "td03052026.hardening_dashboard.v1",
-        "updated_at_utc": _utc_now(),
+        "updated_at_utc": utc_now_iso(),
         "phase_id": str(phase_id),
         "out_root": _to_forward_slashes(out_root),
         "latest_phase_result": _to_forward_slashes(result_path),
@@ -329,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
         result_path = phase_root / "result.json"
         dashboard_path = out_root / "hardening_dashboard.json"
 
-        env_keys = sorted(set(DEFAULT_ENV_KEYS) | {str(key).strip() for key in list(args.env_key or []) if str(key).strip()})
+        env_keys = sorted(set(DEFAULT_EVIDENCE_ENV_KEYS) | {str(key).strip() for key in list(args.env_key or []) if str(key).strip()})
         _write_commands(commands_path, commands)
 
         environment_payload = _collect_environment(
@@ -372,4 +339,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
