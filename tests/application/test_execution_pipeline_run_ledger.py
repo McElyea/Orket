@@ -231,3 +231,49 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert Path(artifact_json["tool_contract_snapshot_path"]).exists()
     assert Path(artifact_json["run_identity_path"]).exists()
     assert Path(artifact_json["capability_manifest_path"]).exists()
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_keeps_run_identity_immutable_across_same_session_reentry(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_identity_immutable")
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+
+    await pipeline.run_epic(
+        "ledger_epic_identity_immutable",
+        build_id="build-ledger-epic-identity-immutable-1",
+        session_id="sess-ledger-identity-immutable",
+    )
+    first = await pipeline.run_ledger.get_run("sess-ledger-identity-immutable")
+    assert first is not None
+    first_identity = dict(first["artifact_json"]["run_identity"])
+
+    await pipeline.run_epic(
+        "ledger_epic_identity_immutable",
+        build_id="build-ledger-epic-identity-immutable-2",
+        session_id="sess-ledger-identity-immutable",
+    )
+    second = await pipeline.run_ledger.get_run("sess-ledger-identity-immutable")
+    assert second is not None
+    second_identity = dict(second["artifact_json"]["run_identity"])
+
+    assert second_identity == first_identity

@@ -55,15 +55,8 @@ product/**/*.log
 
 # Temp
 .env
-.claude/
-.gemini/
-project_dumper_small.py
-project_dump_small.txt
-project_dumper_small.txt
-**/project_dumper_small.py
-**/project_dumper_small.txt
-Agents/
-AGENTS.md
+project_dumper*
+project_dump*
 model/core/rocks/run_the_business.json
 docs/projects/OS/archive/idea.md
 
