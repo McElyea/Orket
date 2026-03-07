@@ -1,0 +1,13 @@
+tier_1:
+  - run_summary.json
+  - tool_scoreboard.json
+tier_2:
+  - tool_call.json
+  - tool_result.json
+  - tool_invocation_manifest.json
+  - compat_translation.json
+  - prompt_budget_usage.json
+  - prompt_structure.json
+tier_3:
+  - prompt_diff.txt
+  - tool_metrics.json

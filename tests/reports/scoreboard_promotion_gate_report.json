@@ -1,0 +1,20 @@
+{
+  "slice_id": "CORE-IMP-06",
+  "status": "done",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/runtime/test_tool_scoreboard.py tests/platform/test_generate_tool_scoreboard.py tests/runtime/test_protocol_error_codes.py -q",
+    "result": "pass",
+    "passed": 16,
+    "failed": 0
+  },
+  "implemented_now": [
+    "runtime scoreboard module computes tool reliability strictly from ledger events",
+    "scoreboard generation fails closed with E_SCOREBOARD_INCOMPLETE_LEDGER when tool call/result coverage is incomplete",
+    "promotion gate evaluator emits deterministic eligibility results with explicit reason codes",
+    "governance script generates rerunnable tool_scoreboard.json payloads from append-only ledger events",
+    "artifact retention tiers are now defined in core/policies/artifact_retention_tiers.yaml",
+    "protocol error code registry includes scoreboard incomplete-ledger error family"
+  ],
+  "remaining_for_slice_completion": []
+}

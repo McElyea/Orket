@@ -10,4 +10,5 @@ artifacts:
   prompt_budget_usage.json: "1.0"
   prompt_structure.json: "1.0"
   prompt_diff.txt: "1.0"
+  tool_scoreboard.json: "1.0"
   capability_manifest.json: "1.0"

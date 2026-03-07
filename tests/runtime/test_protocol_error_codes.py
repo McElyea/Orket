@@ -33,6 +33,7 @@ def test_is_registered_protocol_error_code_accepts_registered_prefixes() -> None
     assert codes.is_registered_protocol_error_code("E_DETERMINISM_VIOLATION:write_file") is True
     assert codes.is_registered_protocol_error_code("E_PROMPT_BUDGET_EXCEEDED:executor:max_tokens") is True
     assert codes.is_registered_protocol_error_code("E_TOKENIZER_ACCOUNTING:backend_counter_unavailable") is True
+    assert codes.is_registered_protocol_error_code("E_SCOREBOARD_INCOMPLETE_LEDGER:missing_tool_result_event") is True
     assert codes.is_registered_protocol_error_code("E_COMPAT_MAPPING_MISSING:openclaw.file_read") is True
     assert codes.is_registered_protocol_error_code("E_COMPAT_MAPPING_POLICY_VIOLATION:openclaw.file_read") is True
     assert codes.is_registered_protocol_error_code("E_COMPAT_PARITY_VIOLATION:mapped_tool_failed") is True
@@ -61,6 +62,7 @@ def test_error_description_returns_specific_messages() -> None:
     assert "declared determinism" in codes.error_description("E_DETERMINISM_VIOLATION:tool")
     assert "token budget exceeded" in codes.error_description("E_PROMPT_BUDGET_EXCEEDED:tool")
     assert "token accounting" in codes.error_description("E_TOKENIZER_ACCOUNTING:tool")
+    assert "incomplete ledger tool call/result coverage" in codes.error_description("E_SCOREBOARD_INCOMPLETE_LEDGER:tool")
     assert "mapping for the requested tool was not found" in codes.error_description("E_COMPAT_MAPPING_MISSING:tool")
     assert "mapping violated governance constraints" in codes.error_description("E_COMPAT_MAPPING_POLICY_VIOLATION:tool")
     assert "execution failed parity expectations" in codes.error_description("E_COMPAT_PARITY_VIOLATION:tool")
