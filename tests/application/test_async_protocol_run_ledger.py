@@ -5,6 +5,53 @@ from pathlib import Path
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.application.workflows.tool_invocation_contracts import (
+    build_tool_invocation_manifest,
+    compute_tool_call_hash,
+)
+
+
+def _tool_call_payload(
+    *,
+    session_id: str,
+    operation_id: str,
+    tool_name: str = "write_file",
+    tool_args: dict | None = None,
+) -> dict:
+    args = dict(tool_args or {"path": f"agent_output/{operation_id}.txt", "content": "ok"})
+    manifest = build_tool_invocation_manifest(run_id=session_id, tool_name=tool_name)
+    return {
+        "operation_id": operation_id,
+        "tool": tool_name,
+        "tool_args": args,
+        "tool_invocation_manifest": manifest,
+        "tool_call_hash": compute_tool_call_hash(
+            tool_name=tool_name,
+            tool_args=args,
+            tool_contract_version=str(manifest["tool_contract_version"]),
+            capability_profile=str(manifest["capability_profile"]),
+        ),
+    }
+
+
+def _tool_result_payload(
+    *,
+    call_payload: dict,
+    call_sequence_number: int,
+    result: dict,
+    step_id: str | None = None,
+) -> dict:
+    payload = {
+        "operation_id": str(call_payload.get("operation_id") or ""),
+        "tool": str(call_payload.get("tool") or ""),
+        "result": dict(result or {}),
+        "call_sequence_number": int(call_sequence_number),
+        "tool_invocation_manifest": dict(call_payload.get("tool_invocation_manifest") or {}),
+        "tool_call_hash": str(call_payload.get("tool_call_hash") or ""),
+    }
+    if step_id:
+        payload["step_id"] = step_id
+    return payload
 
 
 @pytest.mark.asyncio
@@ -99,39 +146,51 @@ async def test_async_protocol_run_ledger_isolated_by_session(tmp_path: Path) -> 
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_operation_commit_is_first_wins(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    call_payload = _tool_call_payload(session_id="sess-op", operation_id="op-1")
+    call = await repo.append_event(
+        session_id="sess-op",
+        kind="tool_call",
+        payload=call_payload,
+    )
     first = await repo.append_event(
         session_id="sess-op",
         kind="operation_result",
-        payload={
-            "operation_id": "op-1",
-            "tool": "write_file",
-            "result": {"ok": True, "value": 1},
-        },
+        payload=_tool_result_payload(
+            call_payload=call_payload,
+            call_sequence_number=int(call["event_seq"]),
+            result={"ok": True, "value": 1},
+        ),
     )
     second = await repo.append_event(
         session_id="sess-op",
         kind="operation_result",
-        payload={
-            "operation_id": "op-1",
-            "tool": "write_file",
-            "result": {"ok": True, "value": 2},
-        },
+        payload=_tool_result_payload(
+            call_payload=call_payload,
+            call_sequence_number=int(call["event_seq"]),
+            result={"ok": True, "value": 2},
+        ),
     )
-    assert first["event_seq"] == 1
+    assert first["event_seq"] == 2
     assert second["kind"] == "operation_rejected"
     assert second["error_code"] == "E_DUPLICATE_OPERATION"
-    assert second["winner_event_seq"] == 1
+    assert second["winner_event_seq"] == 2
     assert second["idempotent_reuse"] is False
 
 
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_duplicate_same_payload_marks_idempotent_reuse(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
-    first_payload = {
-        "operation_id": "op-1",
-        "tool": "write_file",
-        "result": {"ok": True, "value": 1},
-    }
+    call_payload = _tool_call_payload(session_id="sess-op-idem", operation_id="op-1")
+    call = await repo.append_event(
+        session_id="sess-op-idem",
+        kind="tool_call",
+        payload=call_payload,
+    )
+    first_payload = _tool_result_payload(
+        call_payload=call_payload,
+        call_sequence_number=int(call["event_seq"]),
+        result={"ok": True, "value": 1},
+    )
     _ = await repo.append_event(session_id="sess-op-idem", kind="operation_result", payload=first_payload)
     second = await repo.append_event(session_id="sess-op-idem", kind="operation_result", payload=first_payload)
     assert second["kind"] == "operation_rejected"
@@ -142,15 +201,21 @@ async def test_async_protocol_run_ledger_duplicate_same_payload_marks_idempotent
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_event_flattens_payload_fields(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    call_payload = _tool_call_payload(session_id="sess-flat", operation_id="op-flat")
+    call = await repo.append_event(
+        session_id="sess-flat",
+        kind="tool_call",
+        payload=call_payload,
+    )
     appended = await repo.append_event(
         session_id="sess-flat",
         kind="operation_result",
-        payload={
-            "operation_id": "op-flat",
-            "tool": "write_file",
-            "result": {"ok": True, "value": 9},
-            "step_id": "ISSUE-1:1",
-        },
+        payload=_tool_result_payload(
+            call_payload=call_payload,
+            call_sequence_number=int(call["event_seq"]),
+            result={"ok": True, "value": 9},
+            step_id="ISSUE-1:1",
+        ),
     )
     assert appended["kind"] == "operation_result"
     assert appended["operation_id"] == "op-flat"
@@ -158,8 +223,8 @@ async def test_async_protocol_run_ledger_append_event_flattens_payload_fields(tm
     assert appended["tool_name"] == "write_file"
     assert appended["result"]["ok"] is True
     events = await repo.list_events("sess-flat")
-    assert events[0]["operation_id"] == "op-flat"
-    assert events[0]["step_id"] == "ISSUE-1:1"
+    assert events[1]["operation_id"] == "op-flat"
+    assert events[1]["step_id"] == "ISSUE-1:1"
 
 
 @pytest.mark.asyncio
@@ -243,23 +308,28 @@ async def test_async_protocol_run_ledger_append_receipt_rejects_non_monotonic_se
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_enforces_max_tool_invocations_per_run(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path, max_tool_invocations_per_run=2)
+    call_payload = _tool_call_payload(session_id="sess-limit", operation_id="op-1")
     first = await repo.append_event(
         session_id="sess-limit",
-        kind="operation_result",
-        payload={"operation_id": "op-1", "tool": "write_file", "result": {"ok": True}},
+        kind="tool_call",
+        payload=call_payload,
     )
     second = await repo.append_event(
         session_id="sess-limit",
         kind="operation_result",
-        payload={"operation_id": "op-2", "tool": "write_file", "result": {"ok": True}},
+        payload=_tool_result_payload(
+            call_payload=call_payload,
+            call_sequence_number=int(first["event_seq"]),
+            result={"ok": True},
+        ),
     )
     third = await repo.append_event(
         session_id="sess-limit",
-        kind="operation_result",
-        payload={"operation_id": "op-3", "tool": "write_file", "result": {"ok": True}},
+        kind="tool_call",
+        payload=_tool_call_payload(session_id="sess-limit", operation_id="op-2"),
     )
 
-    assert first["kind"] == "operation_result"
+    assert first["kind"] == "tool_call"
     assert second["kind"] == "operation_result"
     assert third["kind"] == "tool_invocation_rejected"
     assert third["error_code"] == "E_MAX_TOOL_INVOCATIONS_EXCEEDED"
@@ -325,14 +395,11 @@ async def test_async_protocol_run_ledger_rejects_non_monotonic_timestamps(tmp_pa
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_events(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    call_payload = _tool_call_payload(session_id="sess-manifest", operation_id="op-1")
     appended = await repo.append_event(
         session_id="sess-manifest",
-        kind="operation_result",
-        payload={
-            "operation_id": "op-1",
-            "tool": "write_file",
-            "result": {"ok": True},
-        },
+        kind="tool_call",
+        payload=call_payload,
     )
 
     manifest = appended["tool_invocation_manifest"]
@@ -340,6 +407,7 @@ async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_
     assert manifest["run_id"] == "sess-manifest"
     assert manifest["determinism_class"] == "workspace"
     assert len(str(manifest["manifest_hash"])) == 64
+    assert len(str(appended["tool_call_hash"])) == 64
 
 
 # Layer: contract
@@ -348,7 +416,7 @@ async def test_async_protocol_run_ledger_rejects_invalid_tool_invocation_manifes
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
     rejected = await repo.append_event(
         session_id="sess-manifest-invalid",
-        kind="operation_result",
+        kind="tool_call",
         payload={
             "operation_id": "op-1",
             "tool_invocation_manifest": {
@@ -362,3 +430,114 @@ async def test_async_protocol_run_ledger_rejects_invalid_tool_invocation_manifes
 
     assert rejected["kind"] == "tool_invocation_rejected"
     assert rejected["error_code"] == "E_TOOL_INVOCATION_MANIFEST_INVALID"
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_requires_manifest_for_tool_invocation_events(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    rejected = await repo.append_event(
+        session_id="sess-manifest-required",
+        kind="tool_call",
+        payload={"operation_id": "op-1", "tool": "write_file", "tool_args": {"path": "a.txt"}},
+    )
+    assert rejected["kind"] == "tool_invocation_rejected"
+    assert rejected["error_code"] == "E_TOOL_INVOCATION_MANIFEST_INVALID"
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_requires_call_sequence_for_result_events(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    call_payload = _tool_call_payload(session_id="sess-call-seq", operation_id="op-1")
+    _ = await repo.append_event(session_id="sess-call-seq", kind="tool_call", payload=call_payload)
+    rejected = await repo.append_event(
+        session_id="sess-call-seq",
+        kind="operation_result",
+        payload={
+            "operation_id": "op-1",
+            "tool": "write_file",
+            "result": {"ok": True},
+            "tool_invocation_manifest": dict(call_payload["tool_invocation_manifest"]),
+            "tool_call_hash": str(call_payload["tool_call_hash"]),
+        },
+    )
+    assert rejected["kind"] == "ledger_contract_rejected"
+    assert rejected["error_code"] == "E_CALL_SEQUENCE_REQUIRED"
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_rejects_artifact_emission_before_result(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    call_payload = _tool_call_payload(session_id="sess-artifact-before-result", operation_id="op-1")
+    call = await repo.append_event(
+        session_id="sess-artifact-before-result",
+        kind="tool_call",
+        payload=call_payload,
+    )
+    rejected = await repo.append_event(
+        session_id="sess-artifact-before-result",
+        kind="artifact_emitted",
+        payload={
+            "call_sequence_number": int(call["event_seq"]),
+            "artifact_hash": "a" * 64,
+            "artifact_path": "runs/sess-artifact-before-result/out.txt",
+        },
+    )
+    assert rejected["kind"] == "ledger_contract_rejected"
+    assert rejected["error_code"] == "E_ARTIFACT_EMIT_BEFORE_RESULT"
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_allows_artifact_emission_after_result(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    call_payload = _tool_call_payload(session_id="sess-artifact-after-result", operation_id="op-1")
+    call = await repo.append_event(
+        session_id="sess-artifact-after-result",
+        kind="tool_call",
+        payload=call_payload,
+    )
+    result = await repo.append_event(
+        session_id="sess-artifact-after-result",
+        kind="operation_result",
+        payload=_tool_result_payload(
+            call_payload=call_payload,
+            call_sequence_number=int(call["event_seq"]),
+            result={"ok": True},
+        ),
+    )
+    appended = await repo.append_event(
+        session_id="sess-artifact-after-result",
+        kind="artifact_emitted",
+        payload={
+            "call_sequence_number": int(call["event_seq"]),
+            "artifact_hash": "b" * 64,
+            "artifact_path": "runs/sess-artifact-after-result/out.txt",
+        },
+    )
+    assert result["kind"] == "operation_result"
+    assert appended["kind"] == "artifact_emitted"
+    assert appended["call_sequence_number"] == int(call["event_seq"])
+    assert appended["artifact_hash"] == "b" * 64
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_rejects_finalize_when_tool_call_orphaned(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    await repo.start_run(
+        session_id="sess-orphan",
+        run_type="epic",
+        run_name="Orphan",
+        department="core",
+        build_id="build-orphan",
+    )
+    _ = await repo.append_event(
+        session_id="sess-orphan",
+        kind="tool_call",
+        payload=_tool_call_payload(session_id="sess-orphan", operation_id="op-1"),
+    )
+    with pytest.raises(ValueError, match="E_ORPHANED_TOOL_CALL"):
+        await repo.finalize_run(session_id="sess-orphan", status="failed")

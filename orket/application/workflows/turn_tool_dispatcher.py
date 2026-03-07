@@ -19,6 +19,10 @@ from .protocol_hashing import (
     derive_step_seed,
     hash_canonical_json,
 )
+from .tool_invocation_contracts import (
+    build_tool_invocation_manifest,
+    compute_tool_call_hash,
+)
 from .turn_tool_dispatcher_protocol import (
     collect_protocol_preflight_violations,
     load_or_execute_tool,
@@ -286,6 +290,21 @@ class ToolDispatcher:
                 )
 
                 if protocol_enabled:
+                    invocation_manifest = build_tool_invocation_manifest(
+                        run_id=session_id,
+                        tool_name=tool_name,
+                        ring=str((binding or {}).get("ring") or "core"),
+                        schema_version=str((binding or {}).get("schema_version") or "1.0.0"),
+                        determinism_class=str((binding or {}).get("determinism_class") or "workspace"),
+                        capability_profile=str((binding or {}).get("capability_profile") or "workspace"),
+                        tool_contract_version=str((binding or {}).get("tool_contract_version") or "1.0.0"),
+                    )
+                    tool_call_hash = compute_tool_call_hash(
+                        tool_name=tool_name,
+                        tool_args=dict(tool_call.args or {}),
+                        tool_contract_version=str(invocation_manifest.get("tool_contract_version") or ""),
+                        capability_profile=str(invocation_manifest.get("capability_profile") or ""),
+                    )
                     await asyncio.to_thread(
                         self.persist_operation_result,
                         session_id=session_id,
@@ -316,6 +335,8 @@ class ToolDispatcher:
                             "tool": tool_name,
                             "tool_args": dict(tool_call.args or {}),
                             "execution_result": result if isinstance(result, dict) else {},
+                            "tool_invocation_manifest": invocation_manifest,
+                            "tool_call_hash": tool_call_hash,
                             "artifact_digests": [],
                             "retry_count": int(context.get("retry_count") or 0),
                             "validator_duration_ms": int(context.get("validator_duration_ms") or 0),

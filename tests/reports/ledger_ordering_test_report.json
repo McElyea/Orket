@@ -1,11 +1,11 @@
 {
   "slice_id": "CORE-IMP-01",
-  "status": "in_progress",
+  "status": "done",
   "generated_on": "2026-03-06",
   "evidence": {
-    "test_command": "python -m pytest tests/application/test_async_protocol_run_ledger.py tests/runtime/test_contract_bootstrap.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_protocol_replay.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py -q",
+    "test_command": "python -m pytest tests/application/test_async_protocol_run_ledger.py tests/runtime/test_contract_bootstrap.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_protocol_replay.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py tests/runtime/test_protocol_receipt_materializer.py tests/application/test_turn_artifact_writer.py tests/application/test_turn_tool_dispatcher.py tests/scripts/test_publish_protocol_rollout_artifacts.py -q",
     "result": "pass",
-    "passed": 38,
+    "passed": 62,
     "failed": 0
   },
   "implemented_now": [
@@ -17,12 +17,12 @@
     "protocol ledger event envelope now includes ledger_schema_version, event_type, run_id, timestamp, and monotonic sequence_number",
     "protocol ledger append path enforces max_tool_invocations_per_run with fail-closed rejection",
     "protocol ledger append path protects runtime-owned envelope fields and rejects non-monotonic event timestamps",
-    "protocol tool events now require or auto-synthesize tool_invocation_manifest payloads and reject invalid manifests",
-    "pipeline integration test now verifies run_identity immutability across same-session reentry"
+    "protocol tool events now require explicit tool_invocation_manifest payloads and reject missing/invalid manifests",
+    "pipeline and artifact writer paths now emit and validate per-invocation tool_call_hash + manifest contracts",
+    "protocol receipt materializer now writes strict tool_call -> operation_result pairs with call_sequence_number linkage",
+    "protocol ledger enforces strict call/result sequencing, orphaned-call rejection on finalize, and artifact emission post-result ordering contracts",
+    "pipeline integration test now verifies run_identity immutability across same-session reentry",
+    "new contract tests cover call_sequence enforcement, artifact ordering enforcement, and required manifest/hash runtime receipt contracts"
   ],
-  "pending_for_slice_completion": [
-    "strict ledger call/result ordering enforcement with sequence_number contracts",
-    "runtime-wide (non-protocol) required-per-invocation manifest enforcement",
-    "call/result pairing constraints and artifact emission post-result ordering contracts"
-  ]
+  "pending_for_slice_completion": []
 }

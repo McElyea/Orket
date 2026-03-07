@@ -392,6 +392,11 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
     assert row["validator_version"] == "turn-validator/custom"
     assert row["protocol_hash"] == "b" * 64
     assert row["tool_schema_hash"] == "c" * 64
+    manifest = row["tool_invocation_manifest"]
+    assert manifest["run_id"] == "s1"
+    assert manifest["tool_name"] == "write_file"
+    assert len(str(manifest["manifest_hash"])) == 64
+    assert len(str(row["tool_call_hash"])) == 64
     capsule = row["execution_capsule"]
     assert capsule["network_mode"] == "allowlist"
     assert capsule["clock_mode"] == "artifact_replay"

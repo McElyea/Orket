@@ -6,6 +6,10 @@ from pathlib import Path
 import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.application.workflows.tool_invocation_contracts import (
+    build_tool_invocation_manifest,
+    compute_tool_call_hash,
+)
 from orket.exceptions import ExecutionFailed
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus
@@ -62,6 +66,8 @@ def _write_protocol_turn_receipts(workspace: Path, *, session_id: str) -> None:
         / "protocol_receipts.log"
     )
     path.parent.mkdir(parents=True, exist_ok=True)
+    tool_args = {"path": "agent_output/main.py", "content": "ok"}
+    manifest = build_tool_invocation_manifest(run_id=session_id, tool_name="write_file")
     path.write_text(
         json.dumps(
             {
@@ -70,7 +76,15 @@ def _write_protocol_turn_receipts(workspace: Path, *, session_id: str) -> None:
                 "operation_id": "op-1",
                 "tool": "write_file",
                 "tool_index": 0,
+                "tool_args": tool_args,
                 "execution_result": {"ok": True},
+                "tool_invocation_manifest": manifest,
+                "tool_call_hash": compute_tool_call_hash(
+                    tool_name="write_file",
+                    tool_args=tool_args,
+                    tool_contract_version=str(manifest["tool_contract_version"]),
+                    capability_profile=str(manifest["capability_profile"]),
+                ),
             },
             separators=(",", ":"),
         )

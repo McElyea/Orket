@@ -675,6 +675,8 @@ class ExecutionPipeline:
             return None
         if not hasattr(self.run_ledger, "append_event"):
             return None
+        if not hasattr(self.run_ledger, "list_events"):
+            return None
         try:
             summary = await materialize_protocol_receipts(
                 workspace=self.workspace,

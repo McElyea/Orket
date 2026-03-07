@@ -3,7 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.application.workflows.tool_invocation_contracts import (
+    build_tool_invocation_manifest,
+    compute_tool_call_hash,
+)
 
 
 def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:
@@ -82,12 +88,28 @@ def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> Non
 
 def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
+    manifest = build_tool_invocation_manifest(run_id="s1", tool_name="write_file")
+    tool_args = {"path": "agent_output/main.py"}
+    tool_call_hash = compute_tool_call_hash(
+        tool_name="write_file",
+        tool_args=tool_args,
+        tool_contract_version=str(manifest["tool_contract_version"]),
+        capability_profile=str(manifest["capability_profile"]),
+    )
     receipt = writer.append_protocol_receipt(
         session_id="s1",
         issue_id="ISSUE-1",
         role_name="coder",
         turn_index=4,
-        receipt={"run_id": "s1", "step_id": "ISSUE-1:4", "receipt_seq": 1},
+        receipt={
+            "run_id": "s1",
+            "step_id": "ISSUE-1:4",
+            "receipt_seq": 1,
+            "tool": "write_file",
+            "tool_args": tool_args,
+            "tool_invocation_manifest": manifest,
+            "tool_call_hash": tool_call_hash,
+        },
     )
     assert isinstance(receipt.get("receipt_digest"), str)
     assert len(receipt["receipt_digest"]) == 64
@@ -96,3 +118,15 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
     rows = [json.loads(line) for line in receipt_log.read_text(encoding="utf-8").splitlines() if line.strip()]
     assert rows[0]["receipt_seq"] == 1
     assert rows[0]["receipt_digest"] == receipt["receipt_digest"]
+
+
+def test_turn_artifact_writer_append_protocol_receipt_rejects_missing_manifest(tmp_path: Path) -> None:
+    writer = TurnArtifactWriter(tmp_path)
+    with pytest.raises(ValueError, match="E_TOOL_INVOCATION_MANIFEST_REQUIRED"):
+        writer.append_protocol_receipt(
+            session_id="s1",
+            issue_id="ISSUE-1",
+            role_name="coder",
+            turn_index=4,
+            receipt={"run_id": "s1", "step_id": "ISSUE-1:4", "receipt_seq": 1, "tool": "write_file"},
+        )

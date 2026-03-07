@@ -8,6 +8,10 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from orket.application.workflows.protocol_hashing import hash_canonical_json
+from orket.application.workflows.tool_invocation_contracts import (
+    compute_tool_call_hash,
+    normalize_tool_invocation_manifest,
+)
 from orket.runtime.operation_commit_registry import OperationCommitRegistry
 from orket.runtime.protocol_error_codes import (
     E_RECEIPT_LOG_PARSE_PREFIX,
@@ -17,6 +21,9 @@ from orket.runtime.protocol_error_codes import (
 )
 
 from .protocol_append_only_ledger import AppendOnlyRunLedger
+
+_TOOL_INVOCATION_KINDS = {"tool_call", "operation_result", "tool_result"}
+_TOOL_RESULT_KINDS = {"operation_result", "tool_result"}
 
 
 class AsyncProtocolRunLedgerRepository:
@@ -86,7 +93,21 @@ class AsyncProtocolRunLedgerRepository:
             artifacts=dict(artifacts or {}),
         )
         async with self._lock:
-            return await self._append_event_locked(session_id=session_id, event=event)
+            existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            rejection = self._validate_ordering_contract(
+                session_id=session_id,
+                kind="run_finalized",
+                payload={},
+                event=event,
+                existing_events=existing_events,
+            )
+            if rejection is not None:
+                raise ValueError(str(rejection.get("error_code") or "E_LEDGER_CALL_RESULT_ORDER"))
+            return await self._append_event_locked(
+                session_id=session_id,
+                event=event,
+                existing_events=existing_events,
+            )
 
     async def append_event(
         self,
@@ -119,7 +140,7 @@ class AsyncProtocolRunLedgerRepository:
             event[key_name] = value
         if (not str(event.get("tool_name") or "").strip()) and "tool" in event:
             event["tool_name"] = str(event.get("tool") or "")
-        if normalized_kind in {"tool_call", "operation_result", "tool_result"}:
+        if normalized_kind in _TOOL_INVOCATION_KINDS:
             manifest = self._resolve_tool_invocation_manifest(
                 session_id=str(session_id),
                 payload=normalized_payload,
@@ -134,9 +155,26 @@ class AsyncProtocolRunLedgerRepository:
                 }
             event["tool_invocation_manifest"] = manifest
             event["tool_name"] = str(manifest.get("tool_name") or "")
+            if normalized_kind == "tool_call":
+                raw_tool_args = normalized_payload.get("tool_args")
+                if not isinstance(raw_tool_args, dict):
+                    raw_tool_args = normalized_payload.get("args")
+                tool_args = dict(raw_tool_args) if isinstance(raw_tool_args, dict) else {}
+                event["tool_args"] = tool_args
+                event["tool_call_hash"] = compute_tool_call_hash(
+                    tool_name=str(manifest.get("tool_name") or ""),
+                    tool_args=tool_args,
+                    tool_contract_version=str(manifest.get("tool_contract_version") or ""),
+                    capability_profile=str(manifest.get("capability_profile") or ""),
+                )
+            else:
+                tool_call_hash = str(normalized_payload.get("tool_call_hash") or "").strip()
+                if tool_call_hash:
+                    event["tool_call_hash"] = tool_call_hash
         async with self._lock:
-            if normalized_kind in {"tool_call", "operation_result", "tool_result"}:
-                invocation_count = await self._tool_invocation_count_locked(session_id=session_id)
+            existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+            if normalized_kind in _TOOL_INVOCATION_KINDS:
+                invocation_count = self._tool_invocation_count(existing_events)
                 if invocation_count >= self.max_tool_invocations_per_run:
                     return {
                         "kind": "tool_invocation_rejected",
@@ -146,7 +184,41 @@ class AsyncProtocolRunLedgerRepository:
                         "max_tool_invocations_per_run": int(self.max_tool_invocations_per_run),
                         "invocation_count": int(invocation_count),
                     }
-            if normalized_kind in {"operation_result", "tool_result"}:
+            if normalized_kind in _TOOL_RESULT_KINDS:
+                operation_id = str(normalized_payload.get("operation_id") or "").strip()
+                if operation_id:
+                    duplicate = await self._duplicate_operation_rejection_locked(
+                        session_id=session_id,
+                        operation_id=operation_id,
+                        kind=normalized_kind,
+                        payload=normalized_payload,
+                    )
+                    if duplicate is not None:
+                        return duplicate
+            rejection = self._validate_ordering_contract(
+                session_id=session_id,
+                kind=normalized_kind,
+                payload=normalized_payload,
+                event=event,
+                existing_events=existing_events,
+            )
+            if rejection is not None:
+                return rejection
+            if normalized_kind == "tool_call":
+                operation_id = str(normalized_payload.get("operation_id") or "").strip()
+                if operation_id:
+                    winner = await asyncio.to_thread(self._operation_registry(str(session_id)).winner, operation_id)
+                    if winner is not None:
+                        return {
+                            "kind": "operation_rejected",
+                            "session_id": str(session_id),
+                            "operation_id": operation_id,
+                            "error_code": "E_DUPLICATE_OPERATION",
+                            "winner_event_seq": winner.get("event_seq"),
+                            "winner_entry_digest": winner.get("entry_digest"),
+                            "idempotent_reuse": True,
+                        }
+            if normalized_kind in _TOOL_RESULT_KINDS:
                 operation_id = str(normalized_payload.get("operation_id") or "").strip()
                 if operation_id:
                     decision = await self._reserve_operation_commit_locked(
@@ -165,7 +237,11 @@ class AsyncProtocolRunLedgerRepository:
                             "winner_entry_digest": decision.get("winner_entry_digest"),
                             "idempotent_reuse": bool(decision.get("idempotent_reuse", False)),
                         }
-            return await self._append_event_locked(session_id=session_id, event=event)
+            return await self._append_event_locked(
+                session_id=session_id,
+                event=event,
+                existing_events=existing_events,
+            )
 
     def _build_event(
         self,
@@ -195,51 +271,188 @@ class AsyncProtocolRunLedgerRepository:
         payload: dict[str, Any],
         event: dict[str, Any],
     ) -> dict[str, Any] | None:
-        provided = payload.get("tool_invocation_manifest")
-        candidate = dict(provided) if isinstance(provided, dict) else {}
-        if not candidate:
-            candidate = {
-                "manifest_version": "1.0",
-                "tool_name": str(event.get("tool_name") or event.get("tool") or ""),
-                "ring": "core",
-                "schema_version": "1.0.0",
-                "determinism_class": "workspace",
-                "capability_profile": "workspace",
-                "tool_contract_version": "1.0.0",
-                "run_id": str(session_id),
-            }
-        else:
-            candidate["manifest_version"] = str(candidate.get("manifest_version") or "1.0")
-            candidate["tool_name"] = str(
-                candidate.get("tool_name") or event.get("tool_name") or event.get("tool") or ""
-            )
-            candidate["ring"] = str(candidate.get("ring") or "core").strip().lower()
-            candidate["schema_version"] = str(candidate.get("schema_version") or "1.0.0")
-            candidate["determinism_class"] = str(
-                candidate.get("determinism_class") or "workspace"
-            ).strip().lower()
-            candidate["capability_profile"] = str(candidate.get("capability_profile") or "workspace")
-            candidate["tool_contract_version"] = str(candidate.get("tool_contract_version") or "1.0.0")
-            candidate["run_id"] = str(candidate.get("run_id") or session_id)
+        return normalize_tool_invocation_manifest(
+            manifest=payload.get("tool_invocation_manifest")
+            if isinstance(payload.get("tool_invocation_manifest"), dict)
+            else None,
+            run_id=str(session_id),
+            tool_name_fallback=str(event.get("tool_name") or event.get("tool") or ""),
+        )
 
-        if not str(candidate.get("tool_name") or "").strip():
-            return None
-        if str(candidate.get("run_id") or "").strip() != str(session_id):
-            return None
-        if str(candidate.get("ring") or "").strip().lower() not in {"core", "compatibility", "experimental"}:
-            return None
-        if str(candidate.get("determinism_class") or "").strip().lower() not in {"pure", "workspace", "external"}:
-            return None
-        candidate["manifest_hash"] = hash_canonical_json(candidate)
-        return candidate
+    def _validate_ordering_contract(
+        self,
+        *,
+        session_id: str,
+        kind: str,
+        payload: dict[str, Any],
+        event: dict[str, Any],
+        existing_events: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        normalized_kind = str(kind or "").strip()
+        open_tool_calls = self._open_tool_calls(existing_events)
+        next_seq = 1
+        if existing_events:
+            next_seq = max(self._event_sequence(row) for row in existing_events) + 1
+
+        if normalized_kind == "run_finalized" and open_tool_calls:
+            first_open = sorted(open_tool_calls)[0]
+            return self._contract_rejection(
+                session_id=session_id,
+                error_code="E_ORPHANED_TOOL_CALL",
+                open_call_sequence_number=first_open,
+            )
+
+        if normalized_kind == "tool_call" and open_tool_calls:
+            first_open = sorted(open_tool_calls)[0]
+            return self._contract_rejection(
+                session_id=session_id,
+                error_code="E_LEDGER_CALL_RESULT_ORDER",
+                open_call_sequence_number=first_open,
+            )
+
+        if normalized_kind in _TOOL_RESULT_KINDS:
+            raw_call_seq = payload.get("call_sequence_number")
+            try:
+                call_seq = int(raw_call_seq)
+            except (TypeError, ValueError):
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_CALL_SEQUENCE_REQUIRED",
+                )
+            if call_seq <= 0 or call_seq >= int(next_seq):
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_CALL_SEQUENCE_INVALID",
+                    call_sequence_number=call_seq,
+                )
+            call_event = self._event_by_sequence(existing_events, call_seq)
+            if call_event is None or str(call_event.get("kind") or "") != "tool_call":
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_CALL_SEQUENCE_UNKNOWN",
+                    call_sequence_number=call_seq,
+                )
+            if call_seq not in open_tool_calls:
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_CALL_SEQUENCE_ALREADY_CLOSED",
+                    call_sequence_number=call_seq,
+                )
+            expected_tool_call_hash = str(call_event.get("tool_call_hash") or "").strip()
+            observed_tool_call_hash = str(event.get("tool_call_hash") or payload.get("tool_call_hash") or "").strip()
+            if not observed_tool_call_hash:
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_TOOL_CALL_HASH_REQUIRED",
+                )
+            if expected_tool_call_hash and observed_tool_call_hash != expected_tool_call_hash:
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_TOOL_CALL_HASH_MISMATCH",
+                )
+            event["call_sequence_number"] = int(call_seq)
+            event["tool_call_hash"] = observed_tool_call_hash
+            if not str(event.get("tool_name") or "").strip():
+                event["tool_name"] = str(call_event.get("tool_name") or "")
+
+        artifact_hash = str(event.get("artifact_hash") or payload.get("artifact_hash") or "").strip()
+        if artifact_hash and normalized_kind not in _TOOL_RESULT_KINDS:
+            raw_call_seq = payload.get("call_sequence_number")
+            try:
+                call_seq = int(raw_call_seq)
+            except (TypeError, ValueError):
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_ARTIFACT_CALL_SEQUENCE_REQUIRED",
+                )
+            if call_seq <= 0:
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_ARTIFACT_CALL_SEQUENCE_REQUIRED",
+                )
+            if call_seq in open_tool_calls:
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_ARTIFACT_EMIT_BEFORE_RESULT",
+                    call_sequence_number=call_seq,
+                )
+            result_event = self._result_event_by_call_sequence(existing_events, call_seq)
+            if result_event is None:
+                return self._contract_rejection(
+                    session_id=session_id,
+                    error_code="E_ARTIFACT_RESULT_MISSING",
+                    call_sequence_number=call_seq,
+                )
+            event["artifact_hash"] = artifact_hash
+            event["call_sequence_number"] = int(call_seq)
+        return None
+
+    def _contract_rejection(
+        self,
+        *,
+        session_id: str,
+        error_code: str,
+        **extra: Any,
+    ) -> dict[str, Any]:
+        return {
+            "kind": "ledger_contract_rejected",
+            "session_id": str(session_id),
+            "run_id": str(session_id),
+            "error_code": str(error_code),
+            **dict(extra),
+        }
+
+    @staticmethod
+    def _event_sequence(event: dict[str, Any]) -> int:
+        return int(event.get("event_seq") or event.get("sequence_number") or 0)
+
+    def _open_tool_calls(self, events: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+        open_calls: dict[int, dict[str, Any]] = {}
+        for row in events:
+            kind = str(row.get("kind") or "")
+            event_seq = self._event_sequence(row)
+            if event_seq <= 0:
+                continue
+            if kind == "tool_call":
+                open_calls[event_seq] = dict(row)
+                continue
+            if kind in _TOOL_RESULT_KINDS:
+                call_seq = int(row.get("call_sequence_number") or 0)
+                if call_seq > 0:
+                    open_calls.pop(call_seq, None)
+        return open_calls
+
+    def _event_by_sequence(self, events: list[dict[str, Any]], sequence_number: int) -> dict[str, Any] | None:
+        target = int(sequence_number)
+        for row in events:
+            if self._event_sequence(row) == target:
+                return dict(row)
+        return None
+
+    def _result_event_by_call_sequence(
+        self,
+        events: list[dict[str, Any]],
+        call_sequence_number: int,
+    ) -> dict[str, Any] | None:
+        target = int(call_sequence_number)
+        for row in events:
+            kind = str(row.get("kind") or "")
+            if kind not in _TOOL_RESULT_KINDS:
+                continue
+            if int(row.get("call_sequence_number") or 0) == target:
+                return dict(row)
+        return None
 
     async def _append_event_locked(
         self,
         *,
         session_id: str,
         event: dict[str, Any],
+        existing_events: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        existing = await asyncio.to_thread(self._ledger(session_id).replay_events)
+        existing = existing_events
+        if existing is None:
+            existing = await asyncio.to_thread(self._ledger(session_id).replay_events)
         if existing:
             previous_ts = str(existing[-1].get("timestamp") or "").strip()
             current_ts = str(event.get("timestamp") or "").strip()
@@ -253,12 +466,11 @@ class AsyncProtocolRunLedgerRepository:
         appended["sequence_number"] = int(appended.get("event_seq") or appended.get("sequence_number") or next_seq)
         return appended
 
-    async def _tool_invocation_count_locked(self, *, session_id: str) -> int:
-        events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+    def _tool_invocation_count(self, events: list[dict[str, Any]]) -> int:
         return sum(
             1
             for row in events
-            if str(row.get("kind") or "") in {"tool_call", "operation_result", "tool_result"}
+            if str(row.get("kind") or "") in _TOOL_INVOCATION_KINDS
         )
 
     async def append_receipt(
@@ -361,6 +573,35 @@ class AsyncProtocolRunLedgerRepository:
             event_seq=int(event_seq),
             entry_digest=entry_digest,
         )
+
+    async def _duplicate_operation_rejection_locked(
+        self,
+        *,
+        session_id: str,
+        operation_id: str,
+        kind: str,
+        payload: Dict[str, Any],
+    ) -> dict[str, Any] | None:
+        registry = self._operation_registry(session_id)
+        winner = await asyncio.to_thread(registry.winner, operation_id)
+        if winner is None:
+            return None
+        entry_digest = hash_canonical_json(
+            {
+                "kind": str(kind),
+                "payload": dict(payload or {}),
+            }
+        )
+        winner_entry_digest = str(winner.get("entry_digest") or "")
+        return {
+            "kind": "operation_rejected",
+            "session_id": str(session_id),
+            "operation_id": str(operation_id),
+            "error_code": "E_DUPLICATE_OPERATION",
+            "winner_event_seq": winner.get("event_seq"),
+            "winner_entry_digest": winner.get("entry_digest"),
+            "idempotent_reuse": bool(entry_digest == winner_entry_digest),
+        }
 
     def _append_receipt_sync(
         self,

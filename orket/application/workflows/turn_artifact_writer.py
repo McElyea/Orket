@@ -10,6 +10,10 @@ from orket.naming import sanitize_name
 from orket.schema import IssueConfig, RoleConfig
 
 from .protocol_hashing import ProtocolCanonicalizationError, hash_canonical_json, hash_framed_fields
+from .tool_invocation_contracts import (
+    compute_tool_call_hash,
+    normalize_tool_invocation_manifest,
+)
 
 
 class TurnArtifactWriter:
@@ -387,6 +391,27 @@ class TurnArtifactWriter:
         receipt: dict[str, Any],
     ) -> dict[str, Any]:
         base_receipt = dict(receipt or {})
+        manifest = normalize_tool_invocation_manifest(
+            manifest=base_receipt.get("tool_invocation_manifest")
+            if isinstance(base_receipt.get("tool_invocation_manifest"), dict)
+            else None,
+            run_id=str(session_id),
+            tool_name_fallback=str(base_receipt.get("tool") or ""),
+        )
+        if manifest is None:
+            raise ValueError("E_TOOL_INVOCATION_MANIFEST_REQUIRED")
+        base_receipt["tool_invocation_manifest"] = manifest
+        observed_tool_call_hash = str(base_receipt.get("tool_call_hash") or "").strip()
+        if not observed_tool_call_hash:
+            raise ValueError("E_TOOL_CALL_HASH_REQUIRED")
+        expected_tool_call_hash = compute_tool_call_hash(
+            tool_name=str(manifest.get("tool_name") or ""),
+            tool_args=dict(base_receipt.get("tool_args") or {}) if isinstance(base_receipt.get("tool_args"), dict) else {},
+            tool_contract_version=str(manifest.get("tool_contract_version") or ""),
+            capability_profile=str(manifest.get("capability_profile") or ""),
+        )
+        if observed_tool_call_hash != expected_tool_call_hash:
+            raise ValueError("E_TOOL_CALL_HASH_MISMATCH")
         receipt_digest = hash_canonical_json(base_receipt)
         base_receipt["receipt_digest"] = receipt_digest
         line = json.dumps(base_receipt, ensure_ascii=False, separators=(",", ":"))

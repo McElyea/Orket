@@ -6,6 +6,10 @@ from pathlib import Path
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
+from orket.application.workflows.tool_invocation_contracts import (
+    build_tool_invocation_manifest,
+    compute_tool_call_hash,
+)
 from scripts.protocol.publish_protocol_rollout_artifacts import main
 
 
@@ -38,10 +42,37 @@ async def _seed_run(
         department="core",
         build_id="build-1",
     )
+    manifest = build_tool_invocation_manifest(run_id=run_id, tool_name="write_file")
+    tool_args = {"path": f"agent_output/{run_id}.txt", "content": "ok"}
+    tool_call_hash = compute_tool_call_hash(
+        tool_name="write_file",
+        tool_args=tool_args,
+        tool_contract_version=str(manifest["tool_contract_version"]),
+        capability_profile=str(manifest["capability_profile"]),
+    )
+    call_event = await protocol_repo.append_event(
+        session_id=run_id,
+        kind="tool_call",
+        payload={
+            "operation_id": "op-1",
+            "tool": "write_file",
+            "tool_args": tool_args,
+            "tool_invocation_manifest": manifest,
+            "tool_call_hash": tool_call_hash,
+        },
+    )
+    call_seq = int(call_event.get("event_seq") or call_event.get("sequence_number") or 0)
     await protocol_repo.append_event(
         session_id=run_id,
         kind="operation_result",
-        payload={"operation_id": "op-1", "tool": "write_file", "result": {"ok": operation_ok}},
+        payload={
+            "operation_id": "op-1",
+            "tool": "write_file",
+            "result": {"ok": operation_ok},
+            "call_sequence_number": call_seq,
+            "tool_invocation_manifest": manifest,
+            "tool_call_hash": tool_call_hash,
+        },
     )
     await protocol_repo.finalize_run(
         session_id=run_id,
