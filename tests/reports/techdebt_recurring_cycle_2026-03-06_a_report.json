@@ -1,0 +1,35 @@
+{
+  "cycle_id": "2026-03-06_cycle-a",
+  "status": "pass",
+  "generated_on": "2026-03-06",
+  "sections_executed": [
+    "A",
+    "D"
+  ],
+  "evidence": {
+    "commands": [
+      "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+      "python scripts/governance/check_docs_project_hygiene.py"
+    ],
+    "results": {
+      "td03052026_gate_audit": "PASS",
+      "docs_project_hygiene": "PASS"
+    },
+    "cycle_root": "benchmarks/results/techdebt/recurring/2026-03-06_cycle-a",
+    "tracked_artifact": "benchmarks/results/techdebt/td03052026/readiness_checklist.json"
+  },
+  "sections_skipped": [
+    {
+      "section": "B",
+      "reason": "not a release-candidate or enforce-window refresh cycle"
+    },
+    {
+      "section": "C",
+      "reason": "no provider/model/template-local-prompting promotion campaign in this cycle"
+    }
+  ],
+  "notes": [
+    "Priority lane shifted to maintenance after core runtime requirements closeout.",
+    "Recurring Section A gates remain green (G1-G7) with docs project hygiene passing."
+  ]
+}
