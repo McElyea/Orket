@@ -67,6 +67,23 @@ def test_compare_protocol_determinism_campaign_detects_mismatch(tmp_path: Path) 
     assert any(row["run_id"] == "run-b" and row["deterministic_match"] is False for row in payload["comparisons"])
 
 
+# Layer: integration
+def test_compare_protocol_determinism_campaign_surfaces_primary_drift_layer(tmp_path: Path) -> None:
+    runs_root = tmp_path / "runs"
+    _write_run(runs_root / "run-a", status="incomplete", ok=True)
+    _write_run(runs_root / "run-b", status="failed", ok=False)
+    payload = compare_protocol_determinism_campaign(
+        runs_root=runs_root,
+        run_ids=[],
+        baseline_run_id="run-a",
+    )
+    run_b = next(row for row in payload["comparisons"] if row["run_id"] == "run-b")
+    assert run_b["primary_drift_layer"] == "tool_behavior_drift"
+    drift_report = run_b["drift_report"]
+    assert drift_report["drift_schema_version"] == "1.0"
+    assert drift_report["drift_detected"] is True
+
+
 def test_compare_protocol_determinism_campaign_supports_explicit_run_id_filter(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     _write_run(runs_root / "run-a", status="incomplete", ok=True)

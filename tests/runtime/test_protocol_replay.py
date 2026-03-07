@@ -144,6 +144,7 @@ def test_protocol_replay_engine_reconstructs_summary(tmp_path: Path) -> None:
     assert len(replay["artifact_inventory"]) == 1
 
 
+# Layer: integration
 def test_protocol_replay_engine_compare_reports_match_for_identical_runs(tmp_path: Path) -> None:
     run_a = tmp_path / "run_a" / "events.log"
     run_b = tmp_path / "run_b" / "events.log"
@@ -158,8 +159,13 @@ def test_protocol_replay_engine_compare_reports_match_for_identical_runs(tmp_pat
     assert comparison["deterministic_match"] is True
     assert comparison["differences"] == []
     assert comparison["state_digest_a"] == comparison["state_digest_b"]
+    drift_report = comparison["drift_report"]
+    assert drift_report["drift_schema_version"] == "1.0"
+    assert drift_report["drift_detected"] is False
+    assert drift_report["primary_layer"] == "none"
 
 
+# Layer: integration
 def test_protocol_replay_engine_compare_reports_divergence(tmp_path: Path) -> None:
     run_a = tmp_path / "run_a" / "events.log"
     run_b = tmp_path / "run_b" / "events.log"
@@ -177,6 +183,10 @@ def test_protocol_replay_engine_compare_reports_divergence(tmp_path: Path) -> No
     assert "operations" in fields
     assert "receipt_inventory" in fields
     assert comparison["state_digest_a"] != comparison["state_digest_b"]
+    drift_report = comparison["drift_report"]
+    assert drift_report["drift_schema_version"] == "1.0"
+    assert drift_report["drift_detected"] is True
+    assert drift_report["primary_layer"] == "tool_behavior_drift"
 
 
 # Layer: contract

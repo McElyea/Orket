@@ -12,6 +12,7 @@ from orket.runtime.replay_compatibility import (
     evaluate_replay_compatibility,
     resolve_ledger_schema_version,
 )
+from orket.runtime.replay_drift_classifier import classify_replay_drift
 from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
 
 
@@ -313,11 +314,13 @@ class ProtocolReplayEngine:
         )
 
         deterministic_match = replay_a["state_digest"] == replay_b["state_digest"]
+        drift_report = classify_replay_drift(differences=differences)
         return {
             "deterministic_match": deterministic_match and not differences,
             "state_digest_a": replay_a["state_digest"],
             "state_digest_b": replay_b["state_digest"],
             "differences": differences,
+            "drift_report": drift_report,
             "run_a": replay_a,
             "run_b": replay_b,
         }

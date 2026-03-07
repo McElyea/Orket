@@ -69,6 +69,7 @@ def compare_protocol_determinism_campaign(
             run_b_artifact_root=(candidate_dir / "artifacts") if (candidate_dir / "artifacts").exists() else None,
         )
         deterministic_match = bool(comparison.get("deterministic_match", False))
+        drift_report = dict(comparison.get("drift_report") or {})
         if run_id == baseline:
             deterministic_match = True
         if not deterministic_match:
@@ -82,6 +83,8 @@ def compare_protocol_determinism_campaign(
                 "state_digest_a": comparison.get("state_digest_a"),
                 "state_digest_b": comparison.get("state_digest_b"),
                 "differences": comparison.get("differences") or [],
+                "primary_drift_layer": str(drift_report.get("primary_layer") or "none"),
+                "drift_report": drift_report,
             }
         )
 

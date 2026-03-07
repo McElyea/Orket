@@ -3,9 +3,9 @@
   "status": "in_progress",
   "generated_on": "2026-03-06",
   "evidence": {
-    "test_command": "python -m pytest tests/application/test_turn_tool_dispatcher.py tests/runtime/test_protocol_replay.py tests/runtime/test_protocol_determinism_campaign.py tests/runtime/test_protocol_error_codes.py tests/scripts/test_run_protocol_replay_compare.py tests/scripts/test_run_protocol_determinism_campaign.py -q",
+    "test_command": "python -m pytest tests/runtime/test_replay_drift_classifier.py tests/runtime/test_protocol_replay.py tests/runtime/test_protocol_determinism_campaign.py tests/scripts/test_run_protocol_replay_compare.py tests/scripts/test_run_protocol_determinism_campaign.py tests/application/test_turn_tool_dispatcher.py tests/runtime/test_protocol_error_codes.py -q",
     "result": "pass",
-    "passed": 45,
+    "passed": 51,
     "failed": 0
   },
   "implemented_now": [
@@ -14,10 +14,11 @@
     "protocol replay comparison surfaces ledger_schema_version, runtime_contract_hash, runtime_policy_versions, and compatibility_validation drift as deterministic differences",
     "dispatcher replay isolation now enforces recorded operation results only and fails closed with E_REPLAY_OPERATION_MISSING when an operation record is absent",
     "replay compatibility evaluation now emits compatibility_validation and supports strict fail-closed gates for runtime contract mismatch, required artifact metadata missing, and incomplete lifecycle events",
-    "new contract/integration tests prove replay-mode operation isolation, strict compatibility mismatch rejection, strict completeness rejection, and replay error-code registration/description"
+    "replay comparison now emits drift_report with drift_schema_version 1.0 and deterministic layer precedence (runtime_contract -> tool_schema -> prompt -> tool_behavior -> artifact_formatting)",
+    "determinism campaign output now includes primary_drift_layer and per-run drift_report from replay comparison output",
+    "new contract/integration/unit tests prove replay-mode operation isolation, strict compatibility mismatch rejection, strict completeness rejection, replay error-code registration/description, and drift classifier priority ordering"
   ],
   "pending_for_slice_completion": [
-    "drift classifier deterministic precedence ordering and drift_schema_versioned drift report output",
     "strict replay compatibility checks for capability profile snapshot and workspace state snapshot surfaces",
     "explicit replay isolation guardrails for network/external side effects and non-reconstruction filesystem writes"
   ]
