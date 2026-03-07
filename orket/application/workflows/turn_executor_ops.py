@@ -9,6 +9,8 @@ from typing import Any, Dict, Optional
 from orket.logging import log_event
 from orket.core.domain.state_machine import StateMachineError
 from orket.schema import IssueConfig, RoleConfig
+from .prompt_budget_guard import maybe_record_prompt_budget
+from .turn_failure_traces import emit_turn_failure_traces
 from .turn_executor_runtime import invoke_model_complete as _invoke_model_complete
 
 
@@ -31,25 +33,19 @@ async def execute_turn(
     started_at = time.perf_counter()
     current_turn = None
 
-    async def emit_failure_traces(error: str, failure_type: str) -> None:
-        executor._append_memory_event(
-            context,
+    async def emit_failure(error: str, failure_type: str) -> None:
+        await emit_turn_failure_traces(
+            executor=executor,
+            context=context,
             role_name=role_name,
-            interceptor="on_turn_failure",
-            decision_type=str(failure_type).strip() or "turn_failed",
-        )
-        await asyncio.to_thread(
-            executor._emit_memory_traces,
             session_id=session_id,
             issue_id=issue_id,
-            role_name=role_name,
             turn_index=turn_index,
             issue=issue,
             role=role,
-            context=context,
-            turn=current_turn,
-            failure_reason=str(error or "").strip() or "turn_failed",
-            failure_type=str(failure_type or "").strip() or "turn_failed",
+            current_turn=current_turn,
+            error=error,
+            failure_type=failure_type,
         )
 
     try:
@@ -66,7 +62,7 @@ async def execute_turn(
         )
         if middleware_outcome and middleware_outcome.short_circuit:
             reason = middleware_outcome.reason or "short-circuit before_prompt"
-            await emit_failure_traces(reason, "before_prompt_short_circuit")
+            await emit_failure(reason, "before_prompt_short_circuit")
             return TurnResult.failed(reason, should_retry=False)
         executor._append_memory_event(
             context,
@@ -75,6 +71,35 @@ async def execute_turn(
             decision_type="prompt_ready",
         )
         prompt_hash = executor._message_hash(messages)
+        prompt_budget_result = await maybe_record_prompt_budget(
+            workspace=executor.workspace,
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            prompt_hash=prompt_hash,
+            messages=messages,
+            context=context,
+            model_client=model_client,
+        )
+        if isinstance(prompt_budget_result, dict) and not bool(prompt_budget_result.get("ok", False)):
+            budget_error = str(prompt_budget_result.get("error") or "E_PROMPT_BUDGET_EXCEEDED")
+            log_event(
+                "turn_failed",
+                {
+                    "issue_id": issue_id,
+                    "role": role_name,
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
+                    "type": "prompt_budget_exceeded",
+                    "error": budget_error,
+                    "prompt_budget_usage": prompt_budget_result,
+                },
+                executor.workspace,
+            )
+            await emit_failure(budget_error, "prompt_budget_exceeded")
+            return TurnResult.failed(budget_error, should_retry=False)
 
         log_event(
             "turn_start",
@@ -94,6 +119,8 @@ async def execute_turn(
                 "selection_policy": (context.get("prompt_metadata") or {}).get("selection_policy"),
                 "role_status": (context.get("prompt_metadata") or {}).get("role_status"),
                 "dialect_status": (context.get("prompt_metadata") or {}).get("dialect_status"),
+                "prompt_budget_stage": (prompt_budget_result or {}).get("stage"),
+                "prompt_budget_tokenizer_id": (prompt_budget_result or {}).get("tokenizer_id"),
             },
             executor.workspace,
         )
@@ -125,7 +152,7 @@ async def execute_turn(
         )
         if middleware_outcome and middleware_outcome.short_circuit:
             reason = middleware_outcome.reason or "short-circuit after_model"
-            await emit_failure_traces(reason, "after_model_short_circuit")
+            await emit_failure(reason, "after_model_short_circuit")
             return TurnResult.failed(reason, should_retry=False)
         executor._append_memory_event(
             context,
@@ -193,7 +220,7 @@ async def execute_turn(
             )
             if middleware_outcome and middleware_outcome.short_circuit:
                 reason = middleware_outcome.reason or "short-circuit after_model"
-                await emit_failure_traces(reason, "after_model_short_circuit")
+                await emit_failure(reason, "after_model_short_circuit")
                 return TurnResult.failed(reason, should_retry=False)
             executor._append_memory_event(
                 context,
@@ -227,7 +254,7 @@ async def execute_turn(
                     },
                     executor.workspace,
                 )
-                await emit_failure_traces(primary_reason, "contract_violation")
+                await emit_failure(primary_reason, "contract_violation")
                 return TurnResult.failed(executor._deterministic_failure_message(primary_reason), should_retry=False)
 
         await asyncio.to_thread(
@@ -312,7 +339,7 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        await emit_failure_traces(str(exc), "state_violation")
+        await emit_failure(str(exc), "state_violation")
         return TurnResult.failed(f"State violation: {exc}", should_retry=False)
 
     except ToolValidationError as exc:
@@ -329,7 +356,7 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        await emit_failure_traces(str(exc), "tool_violation")
+        await emit_failure(str(exc), "tool_violation")
         return TurnResult.governance_violation(exc.violations)
 
     except ModelTimeoutError as exc:
@@ -346,7 +373,7 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        await emit_failure_traces(str(exc), "timeout")
+        await emit_failure(str(exc), "timeout")
         return TurnResult.failed(str(exc), should_retry=True)
 
     except (ValueError, TypeError, KeyError, RuntimeError, OSError, AttributeError) as exc:
@@ -366,12 +393,8 @@ async def execute_turn(
             },
             executor.workspace,
         )
-        await emit_failure_traces(str(exc), type(exc).__name__)
+        await emit_failure(str(exc), type(exc).__name__)
         return TurnResult.failed(f"Unexpected error: {exc}", should_retry=False)
 
 
-from .turn_executor_runtime import (
-    runtime_tokens_payload,
-    state_delta_from_tool_calls,
-    synthesize_required_status_tool_call,
-)
+from .turn_executor_runtime import runtime_tokens_payload, state_delta_from_tool_calls, synthesize_required_status_tool_call

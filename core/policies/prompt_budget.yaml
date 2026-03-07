@@ -1,0 +1,18 @@
+schema_version: "1.0"
+budget_policy_version: "1.0"
+stages:
+  planner:
+    max_tokens: 6000
+    protocol_tokens: 2000
+    tool_schema_tokens: 2000
+    task_tokens: 3000
+  executor:
+    max_tokens: 7000
+    protocol_tokens: 2200
+    tool_schema_tokens: 2200
+    task_tokens: 3500
+  reviewer:
+    max_tokens: 5000
+    protocol_tokens: 2200
+    tool_schema_tokens: 1600
+    task_tokens: 2600

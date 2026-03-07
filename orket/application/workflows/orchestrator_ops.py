@@ -1821,6 +1821,25 @@ def _build_turn_context(
     local_prompting_mode = self._resolve_local_prompting_mode()
     local_prompting_allow_fallback = self._resolve_local_prompting_allow_fallback()
     local_prompting_fallback_profile_id = self._resolve_local_prompting_fallback_profile_id()
+    prompt_budget_enabled = bool(protocol_governed_enabled)
+    prompt_budget_enabled_raw = process_rules.get("prompt_budget_enabled")
+    if isinstance(prompt_budget_enabled_raw, bool):
+        prompt_budget_enabled = prompt_budget_enabled_raw
+    elif isinstance(prompt_budget_enabled_raw, str):
+        prompt_budget_enabled = prompt_budget_enabled_raw.strip().lower() in {"1", "true", "yes", "on", "enabled"}
+
+    prompt_budget_require_backend_tokenizer = False
+    prompt_budget_require_backend_tokenizer_raw = process_rules.get("prompt_budget_require_backend_tokenizer")
+    if isinstance(prompt_budget_require_backend_tokenizer_raw, bool):
+        prompt_budget_require_backend_tokenizer = prompt_budget_require_backend_tokenizer_raw
+    elif isinstance(prompt_budget_require_backend_tokenizer_raw, str):
+        prompt_budget_require_backend_tokenizer = (
+            prompt_budget_require_backend_tokenizer_raw.strip().lower() in {"1", "true", "yes", "on", "enabled"}
+        )
+    prompt_budget_policy_path = (
+        str(process_rules.get("prompt_budget_policy_path") or "core/policies/prompt_budget.yaml").strip()
+        or "core/policies/prompt_budget.yaml"
+    )
 
     return {
         "session_id": run_id,
@@ -1906,6 +1925,9 @@ def _build_turn_context(
         "local_prompting_mode": local_prompting_mode,
         "local_prompting_allow_fallback": local_prompting_allow_fallback,
         "local_prompting_fallback_profile_id": local_prompting_fallback_profile_id,
+        "prompt_budget_enabled": prompt_budget_enabled,
+        "prompt_budget_require_backend_tokenizer": prompt_budget_require_backend_tokenizer,
+        "prompt_budget_policy_path": prompt_budget_policy_path,
     }
 
 async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:

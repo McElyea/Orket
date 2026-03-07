@@ -1724,6 +1724,9 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["local_prompting_mode"] == "shadow"
     assert context["local_prompting_allow_fallback"] is False
     assert context["local_prompting_fallback_profile_id"] == ""
+    assert context["prompt_budget_enabled"] is False
+    assert context["prompt_budget_require_backend_tokenizer"] is False
+    assert context["prompt_budget_policy_path"] == "core/policies/prompt_budget.yaml"
 
 
 def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkeypatch):
@@ -1770,6 +1773,8 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     assert context["local_prompting_mode"] == "enforce"
     assert context["local_prompting_allow_fallback"] is True
     assert context["local_prompting_fallback_profile_id"] == "openai_compat.qwen.openai_messages.v1"
+    assert context["prompt_budget_enabled"] is True
+    assert context["prompt_budget_policy_path"] == "core/policies/prompt_budget.yaml"
 
 
 def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast(orchestrator, monkeypatch):

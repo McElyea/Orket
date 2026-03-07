@@ -23,6 +23,8 @@ E_CAPABILITY_VIOLATION_PREFIX: Final[str] = "E_CAPABILITY_VIOLATION"
 E_DETERMINISM_POLICY_VIOLATION_PREFIX: Final[str] = "E_DETERMINISM_POLICY_VIOLATION"
 E_TOOL_INVOCATION_BOUNDARY_PREFIX: Final[str] = "E_TOOL_INVOCATION_BOUNDARY"
 E_DETERMINISM_VIOLATION_PREFIX: Final[str] = "E_DETERMINISM_VIOLATION"
+E_PROMPT_BUDGET_EXCEEDED_PREFIX: Final[str] = "E_PROMPT_BUDGET_EXCEEDED"
+E_TOKENIZER_ACCOUNTING_PREFIX: Final[str] = "E_TOKENIZER_ACCOUNTING"
 E_COMPAT_MAPPING_MISSING_PREFIX: Final[str] = "E_COMPAT_MAPPING_MISSING"
 E_COMPAT_MAPPING_POLICY_VIOLATION_PREFIX: Final[str] = "E_COMPAT_MAPPING_POLICY_VIOLATION"
 E_COMPAT_PARITY_VIOLATION_PREFIX: Final[str] = "E_COMPAT_PARITY_VIOLATION"
@@ -76,6 +78,8 @@ _PREFIX_CODES: Final[dict[str, str]] = {
     E_DETERMINISM_POLICY_VIOLATION_PREFIX: "Tool determinism class exceeds active run determinism policy.",
     E_TOOL_INVOCATION_BOUNDARY_PREFIX: "Direct tool-to-tool invocation is not allowed.",
     E_DETERMINISM_VIOLATION_PREFIX: "Observed tool side effects conflict with declared determinism.",
+    E_PROMPT_BUDGET_EXCEEDED_PREFIX: "Prompt token budget exceeded configured stage limits.",
+    E_TOKENIZER_ACCOUNTING_PREFIX: "Prompt token accounting could not use required tokenizer path.",
     E_COMPAT_MAPPING_MISSING_PREFIX: "Compatibility mapping for the requested tool was not found.",
     E_COMPAT_MAPPING_POLICY_VIOLATION_PREFIX: "Compatibility mapping violated governance constraints.",
     E_COMPAT_PARITY_VIOLATION_PREFIX: "Compatibility mapping execution failed parity expectations.",

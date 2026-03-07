@@ -1,0 +1,20 @@
+{
+  "slice_id": "CORE-IMP-05",
+  "status": "done",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/runtime/test_contract_bootstrap.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_protocol_replay.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py tests/application/test_turn_tool_dispatcher.py tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_replay_isolation.py tests/application/test_turn_tool_dispatcher_compatibility.py tests/application/test_turn_artifact_writer.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py tests/runtime/test_prompt_budget_policy.py tests/application/test_prompt_budget_guard.py tests/application/test_turn_executor_context.py tests/application/test_turn_executor_runtime_context_bridge.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_skill_contract.py tests/application/test_turn_executor_middleware.py -q && python -m pytest tests/application/test_orchestrator_epic.py -k \"build_turn_context_protocol_governed_defaults or build_turn_context_protocol_governed_env_overrides or build_turn_context_uses_active_run_policy_overrides or build_turn_context_protocol_determinism_invalid_network_mode_fails_fast\" -q",
+    "result": "pass",
+    "passed": 140,
+    "failed": 0
+  },
+  "implemented_now": [
+    "canonical prompt budget policy source added at core/policies/prompt_budget.yaml with stage-level limits",
+    "runtime prompt budget policy loader validates schema, stage coverage, and deterministic stage selection",
+    "turn execution enforces fail-closed prompt budget validation before model inference and emits E_PROMPT_BUDGET_EXCEEDED on violations",
+    "token accounting integrates backend tokenizer counters via model/provider count_tokens paths and emits E_TOKENIZER_ACCOUNTING when strict backend binding is required",
+    "turn artifacts now emit prompt_budget_usage.json and prompt_structure.json, plus prompt_diff.txt on prompt-structure drift across adjacent turns",
+    "artifact schema registry now includes prompt budget and prompt structure artifact schema entries"
+  ],
+  "remaining_for_slice_completion": []
+}

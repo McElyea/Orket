@@ -10,6 +10,34 @@ from orket.core.policies.tool_gate import ToolGate
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 
+def _write_prompt_budget_policy(path: Path, *, max_tokens: int) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"""
+schema_version: "1.0"
+budget_policy_version: "1.0"
+stages:
+  planner:
+    max_tokens: {max_tokens}
+    protocol_tokens: {max_tokens}
+    tool_schema_tokens: {max_tokens}
+    task_tokens: {max_tokens}
+  executor:
+    max_tokens: {max_tokens}
+    protocol_tokens: {max_tokens}
+    tool_schema_tokens: {max_tokens}
+    task_tokens: {max_tokens}
+  reviewer:
+    max_tokens: {max_tokens}
+    protocol_tokens: {max_tokens}
+    tool_schema_tokens: {max_tokens}
+    task_tokens: {max_tokens}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 @pytest.mark.asyncio
 async def test_prepare_messages_includes_dependency_context_block(tmp_path):
     executor = TurnExecutor(
@@ -113,4 +141,128 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
     assert layers["role_base"]["name"] == "developer"
     assert checkpoint["prompt_metadata"]["prompt_id"] == "role.developer+dialect.generic"
     assert checkpoint["prompt_metadata"]["resolver_policy"] == "resolver_v1"
+
+
+@pytest.mark.asyncio
+async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["update_issue_status"])
+    policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
+    _write_prompt_budget_policy(policy_path, max_tokens=5000)
+
+    class _ModelClient:
+        async def count_tokens(self, messages):
+            total_chars = sum(len(str((row or {}).get("content") or "")) for row in messages if isinstance(row, dict))
+            return {"token_count": max(1, total_chars // 4), "tokenizer_id": "test-tokenizer"}
+
+        async def complete(self, messages):
+            return SimpleNamespace(
+                content='{"tool":"update_issue_status","args":{"issue_id":"ISSUE-1","status":"done"}}',
+                raw={"total_tokens": 7},
+            )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context=None):
+            return {"ok": True}
+
+    context = {
+        "session_id": "sess-2",
+        "turn_index": 1,
+        "issue_id": "ISSUE-1",
+        "role": "developer",
+        "roles": ["developer"],
+        "current_status": "ready",
+        "selected_model": "dummy-model",
+        "dependency_context": {},
+        "required_action_tools": [],
+        "required_statuses": [],
+        "required_read_paths": [],
+        "required_write_paths": [],
+        "stage_gate_mode": "auto",
+        "history": [],
+        "prompt_budget_enabled": True,
+        "prompt_budget_require_backend_tokenizer": True,
+        "prompt_budget_policy_path": str(policy_path),
+    }
+
+    result = await executor.execute_turn(
+        issue=issue,
+        role=role,
+        model_client=_ModelClient(),
+        toolbox=_Toolbox(),
+        context=context,
+        system_prompt="SYSTEM",
+    )
+
+    assert result.success is True
+    out_dir = Path(tmp_path) / "observability" / "sess-2" / "ISSUE-1" / "001_developer"
+    budget = json.loads((out_dir / "prompt_budget_usage.json").read_text(encoding="utf-8"))
+    structure = json.loads((out_dir / "prompt_structure.json").read_text(encoding="utf-8"))
+    assert budget["ok"] is True
+    assert budget["tokenizer_source"] == "backend"
+    assert structure["tokenizer_id"] == "test-tokenizer"
+
+
+@pytest.mark.asyncio
+async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["update_issue_status"])
+    policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
+    _write_prompt_budget_policy(policy_path, max_tokens=10)
+    call_count = {"value": 0}
+
+    class _ModelClient:
+        async def complete(self, messages):
+            call_count["value"] += 1
+            return SimpleNamespace(
+                content='{"tool":"update_issue_status","args":{"issue_id":"ISSUE-1","status":"done"}}',
+                raw={"total_tokens": 7},
+            )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context=None):
+            return {"ok": True}
+
+    context = {
+        "session_id": "sess-3",
+        "turn_index": 1,
+        "issue_id": "ISSUE-1",
+        "role": "developer",
+        "roles": ["developer"],
+        "current_status": "ready",
+        "selected_model": "dummy-model",
+        "dependency_context": {},
+        "required_action_tools": [],
+        "required_statuses": [],
+        "required_read_paths": [],
+        "required_write_paths": [],
+        "stage_gate_mode": "auto",
+        "history": [],
+        "prompt_budget_enabled": True,
+        "prompt_budget_require_backend_tokenizer": False,
+        "prompt_budget_policy_path": str(policy_path),
+    }
+
+    result = await executor.execute_turn(
+        issue=issue,
+        role=role,
+        model_client=_ModelClient(),
+        toolbox=_Toolbox(),
+        context=context,
+        system_prompt="SYSTEM",
+    )
+
+    assert result.success is False
+    assert "E_PROMPT_BUDGET_EXCEEDED" in str(result.error or "")
+    assert call_count["value"] == 0
 
