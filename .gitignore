@@ -57,9 +57,18 @@ product/**/*.log
 .env
 project_dumper*
 project_dump*
+project_dump.py
+project_dump*.txt
+project_dump*.zip
+review-git-status.txt
+review-git-head.txt
+review-git-diffstat.txt
+review-working-tree.patch
+orket-review-packet.zip
 _review_stage/
 model/core/rocks/run_the_business.json
 docs/projects/OS/archive/idea.md
+docs/projects/future/high-level-ideas.md
 
 # Infrastructure (Gitea, MySQL, Sandboxes)
 infrastructure/gitea/
