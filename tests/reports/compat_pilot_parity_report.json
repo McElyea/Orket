@@ -1,0 +1,19 @@
+{
+  "slice_id": "CORE-IMP-07",
+  "status": "done",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/application/test_turn_tool_dispatcher.py tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_replay_isolation.py tests/application/test_turn_tool_dispatcher_compatibility.py tests/application/test_turn_artifact_writer.py tests/application/test_compatibility_pilot_parity.py -q",
+    "result": "pass",
+    "passed": 31,
+    "failed": 0
+  },
+  "implemented_now": [
+    "compatibility pilot mappings now execute as deterministic dispatcher translations for openclaw.file_read, openclaw.workspace_list, and openclaw.file_edit",
+    "live and replay parity is verified for pilot mappings via operation-record replay without mapped-tool re-execution",
+    "compat translation artifacts now include mapping metadata and per-call latency",
+    "compat_latency_profile.json artifacts are emitted for compatibility calls and include compat_tool, core_tools_used, and latency_ms",
+    "artifact schema registry now includes compat_latency_profile.json"
+  ],
+  "remaining_for_slice_completion": []
+}

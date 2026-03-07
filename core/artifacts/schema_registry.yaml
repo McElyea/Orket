@@ -7,6 +7,7 @@ artifacts:
   run_summary.json: "1.0"
   tool_invocation_manifest.json: "1.0"
   compat_translation.json: "1.0"
+  compat_latency_profile.json: "1.0"
   prompt_budget_usage.json: "1.0"
   prompt_structure.json: "1.0"
   prompt_diff.txt: "1.0"

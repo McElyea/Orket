@@ -211,6 +211,7 @@ async def _execute_compatibility_translation(
     execution_context: dict[str, Any],
     compatibility_translation: dict[str, Any],
 ) -> dict[str, Any]:
+    started = asyncio.get_running_loop().time()
     translated_calls = compatibility_translation.get("translated_calls")
     translated_calls = translated_calls if isinstance(translated_calls, list) else []
     artifact = compatibility_translation.get("artifact")
@@ -245,7 +246,9 @@ async def _execute_compatibility_translation(
         call_context = dict(execution_context)
         call_context["compatibility_parent_tool"] = str(artifact.get("compat_tool_name") or "")
         call_context["compatibility_mapping_version"] = artifact.get("mapping_version")
+        mapped_started = asyncio.get_running_loop().time()
         mapped_result_raw = await toolbox.execute(mapped_tool, mapped_args, call_context)
+        mapped_latency_ms = int((asyncio.get_running_loop().time() - mapped_started) * 1000)
         mapped_result = (
             dict(mapped_result_raw)
             if isinstance(mapped_result_raw, dict)
@@ -256,6 +259,7 @@ async def _execute_compatibility_translation(
                 "tool_name": mapped_tool,
                 "tool_args": mapped_args,
                 "result": dict(mapped_result),
+                "latency_ms": mapped_latency_ms,
             }
         )
         if not bool(mapped_result.get("ok", False)):
@@ -266,6 +270,8 @@ async def _execute_compatibility_translation(
                 "mapped_results": mapped_results,
             }
 
+    total_latency_ms = int((asyncio.get_running_loop().time() - started) * 1000)
+    artifact["latency_ms"] = total_latency_ms
     return {
         "ok": True,
         "compat_translation": artifact,

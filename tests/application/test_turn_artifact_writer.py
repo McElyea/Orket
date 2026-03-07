@@ -151,6 +151,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_
                 "schema_compatibility_range": ">=1.0.0 <2.0.0",
                 "mapped_core_tools": ["workspace.read"],
                 "translation_hash": "a" * 64,
+                "latency_ms": 12,
             },
         },
     )
@@ -161,6 +162,11 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_
     assert payload["schema_version"] == "1.0"
     assert payload["translations"][0]["compat_tool_name"] == "openclaw.file_read"
     assert payload["translations"][0]["operation_id"] == "op-1"
+    latency_profile_path = tmp_path / "observability" / "s1" / "ISSUE-1" / "004_coder" / "compat_latency_profile.json"
+    assert latency_profile_path.exists()
+    latency_payload = json.loads(latency_profile_path.read_text(encoding="utf-8"))
+    assert latency_payload["profiles"][0]["compat_tool"] == "openclaw.file_read"
+    assert latency_payload["profiles"][0]["latency_ms"] == 12
 
 
 def test_turn_artifact_writer_append_protocol_receipt_rejects_missing_manifest(tmp_path: Path) -> None:
