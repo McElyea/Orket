@@ -319,3 +319,46 @@ async def test_async_protocol_run_ledger_rejects_non_monotonic_timestamps(tmp_pa
 
     with pytest.raises(ValueError, match="E_LEDGER_TIMESTAMP_NON_MONOTONIC"):
         _ = await repo.append_event(session_id="sess-ts", kind="event_b", payload={"x": 2})
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_events(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    appended = await repo.append_event(
+        session_id="sess-manifest",
+        kind="operation_result",
+        payload={
+            "operation_id": "op-1",
+            "tool": "write_file",
+            "result": {"ok": True},
+        },
+    )
+
+    manifest = appended["tool_invocation_manifest"]
+    assert manifest["tool_name"] == "write_file"
+    assert manifest["run_id"] == "sess-manifest"
+    assert manifest["determinism_class"] == "workspace"
+    assert len(str(manifest["manifest_hash"])) == 64
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_rejects_invalid_tool_invocation_manifest(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    rejected = await repo.append_event(
+        session_id="sess-manifest-invalid",
+        kind="operation_result",
+        payload={
+            "operation_id": "op-1",
+            "tool_invocation_manifest": {
+                "tool_name": "",
+                "run_id": "sess-manifest-invalid",
+                "ring": "core",
+                "determinism_class": "workspace",
+            },
+        },
+    )
+
+    assert rejected["kind"] == "tool_invocation_rejected"
+    assert rejected["error_code"] == "E_TOOL_INVOCATION_MANIFEST_INVALID"

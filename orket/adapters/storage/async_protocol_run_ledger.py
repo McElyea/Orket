@@ -119,6 +119,21 @@ class AsyncProtocolRunLedgerRepository:
             event[key_name] = value
         if (not str(event.get("tool_name") or "").strip()) and "tool" in event:
             event["tool_name"] = str(event.get("tool") or "")
+        if normalized_kind in {"tool_call", "operation_result", "tool_result"}:
+            manifest = self._resolve_tool_invocation_manifest(
+                session_id=str(session_id),
+                payload=normalized_payload,
+                event=event,
+            )
+            if manifest is None:
+                return {
+                    "kind": "tool_invocation_rejected",
+                    "session_id": str(session_id),
+                    "run_id": str(session_id),
+                    "error_code": "E_TOOL_INVOCATION_MANIFEST_INVALID",
+                }
+            event["tool_invocation_manifest"] = manifest
+            event["tool_name"] = str(manifest.get("tool_name") or "")
         async with self._lock:
             if normalized_kind in {"tool_call", "operation_result", "tool_result"}:
                 invocation_count = await self._tool_invocation_count_locked(session_id=session_id)
@@ -172,6 +187,51 @@ class AsyncProtocolRunLedgerRepository:
             "tool_name": "",
             **dict(extra),
         }
+
+    def _resolve_tool_invocation_manifest(
+        self,
+        *,
+        session_id: str,
+        payload: dict[str, Any],
+        event: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        provided = payload.get("tool_invocation_manifest")
+        candidate = dict(provided) if isinstance(provided, dict) else {}
+        if not candidate:
+            candidate = {
+                "manifest_version": "1.0",
+                "tool_name": str(event.get("tool_name") or event.get("tool") or ""),
+                "ring": "core",
+                "schema_version": "1.0.0",
+                "determinism_class": "workspace",
+                "capability_profile": "workspace",
+                "tool_contract_version": "1.0.0",
+                "run_id": str(session_id),
+            }
+        else:
+            candidate["manifest_version"] = str(candidate.get("manifest_version") or "1.0")
+            candidate["tool_name"] = str(
+                candidate.get("tool_name") or event.get("tool_name") or event.get("tool") or ""
+            )
+            candidate["ring"] = str(candidate.get("ring") or "core").strip().lower()
+            candidate["schema_version"] = str(candidate.get("schema_version") or "1.0.0")
+            candidate["determinism_class"] = str(
+                candidate.get("determinism_class") or "workspace"
+            ).strip().lower()
+            candidate["capability_profile"] = str(candidate.get("capability_profile") or "workspace")
+            candidate["tool_contract_version"] = str(candidate.get("tool_contract_version") or "1.0.0")
+            candidate["run_id"] = str(candidate.get("run_id") or session_id)
+
+        if not str(candidate.get("tool_name") or "").strip():
+            return None
+        if str(candidate.get("run_id") or "").strip() != str(session_id):
+            return None
+        if str(candidate.get("ring") or "").strip().lower() not in {"core", "compatibility", "experimental"}:
+            return None
+        if str(candidate.get("determinism_class") or "").strip().lower() not in {"pure", "workspace", "external"}:
+            return None
+        candidate["manifest_hash"] = hash_canonical_json(candidate)
+        return candidate
 
     async def _append_event_locked(
         self,
