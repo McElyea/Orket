@@ -8,6 +8,7 @@ from orket.runtime.protocol_replay import (
     ProtocolReplayEngine,
     artifact_digest_inventory,
     receipt_digest_inventory,
+    runtime_contract_hash,
 )
 
 
@@ -179,3 +180,21 @@ def test_protocol_replay_engine_includes_runtime_contract_snapshot_versions(tmp_
     assert contracts["tool_registry_version"] == "1.2.0"
     assert contracts["artifact_schema_registry_version"] == "1.0"
     assert contracts["compatibility_map_schema_version"] == "1.0"
+    assert replay["ledger_schema_version"] == "1.0"
+    assert replay["runtime_contract_hash"] == runtime_contract_hash(contracts)
+
+
+# Layer: contract
+def test_protocol_replay_engine_rejects_incompatible_ledger_schema_version(tmp_path: Path) -> None:
+    events = tmp_path / "runs" / "sess-schema-mismatch" / "events.log"
+    ledger = AppendOnlyRunLedger(events)
+    ledger.append_event({"kind": "run_started", "session_id": "sess-schema-mismatch", "ledger_schema_version": "1.0"})
+    ledger.append_event({"kind": "run_finalized", "session_id": "sess-schema-mismatch", "ledger_schema_version": "2.0"})
+
+    engine = ProtocolReplayEngine()
+    try:
+        _ = engine.replay_from_ledger(events_log_path=events)
+    except ValueError as exc:
+        assert "E_REPLAY_LEDGER_SCHEMA_INCOMPATIBLE" in str(exc)
+    else:
+        raise AssertionError("expected ledger schema incompatibility failure")

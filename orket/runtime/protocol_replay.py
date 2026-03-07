@@ -99,6 +99,37 @@ def runtime_contract_versions_snapshot() -> dict[str, Any]:
     }
 
 
+def runtime_contract_hash(
+    versions_snapshot: dict[str, Any] | None = None,
+) -> str:
+    snapshot = dict(versions_snapshot or runtime_contract_versions_snapshot())
+    payload = {
+        "tool_registry_version": snapshot.get("tool_registry_version"),
+        "artifact_schema_registry_version": snapshot.get("artifact_schema_registry_version"),
+        "compatibility_map_schema_version": snapshot.get("compatibility_map_schema_version"),
+        "tool_registry_snapshot_hash": snapshot.get("tool_registry_snapshot_hash"),
+        "artifact_schema_snapshot_hash": snapshot.get("artifact_schema_snapshot_hash"),
+        "tool_contract_snapshot_hash": snapshot.get("tool_contract_snapshot_hash"),
+    }
+    return hash_canonical_json(payload)
+
+
+def resolve_ledger_schema_version(events: list[dict[str, Any]]) -> str:
+    observed = {
+        str(event.get("ledger_schema_version") or "1.0").strip()
+        for event in events
+        if str(event.get("ledger_schema_version") or "1.0").strip()
+    }
+    if not observed:
+        return "1.0"
+    if len(observed) > 1:
+        raise ValueError("E_REPLAY_LEDGER_SCHEMA_INCOMPATIBLE:multiple_versions")
+    version = next(iter(observed))
+    if version != "1.0":
+        raise ValueError(f"E_REPLAY_LEDGER_SCHEMA_INCOMPATIBLE:{version}")
+    return version
+
+
 class ProtocolReplayEngine:
     """Reconstruct protocol-governed run state from append-only ledger + artifacts."""
 
@@ -111,6 +142,7 @@ class ProtocolReplayEngine:
     ) -> dict[str, Any]:
         ledger = AppendOnlyRunLedger(events_log_path)
         events = ledger.replay_events()
+        ledger_schema_version = resolve_ledger_schema_version(events)
         resolved_receipts_path = receipts_log_path
         if resolved_receipts_path is None:
             candidate = events_log_path.with_name("receipts.log")
@@ -137,7 +169,9 @@ class ProtocolReplayEngine:
             "artifact_inventory": artifact_digest_inventory(artifact_root) if artifact_root else [],
             "receipt_inventory": receipts,
             "runtime_contract_snapshots": runtime_contract_versions_snapshot(),
+            "ledger_schema_version": ledger_schema_version,
         }
+        summary["runtime_contract_hash"] = runtime_contract_hash(summary["runtime_contract_snapshots"])
 
         for event in events:
             event_seq = int(event.get("event_seq") or 0)
@@ -193,7 +227,9 @@ class ProtocolReplayEngine:
                 "operations": summary["operations"],
                 "artifact_inventory": summary["artifact_inventory"],
                 "receipt_inventory": summary["receipt_inventory"],
+                "ledger_schema_version": summary["ledger_schema_version"],
                 "runtime_contract_snapshots": summary["runtime_contract_snapshots"],
+                "runtime_contract_hash": summary["runtime_contract_hash"],
             }
         )
         return summary
@@ -224,6 +260,18 @@ class ProtocolReplayEngine:
         self._maybe_add_difference(differences, "failure_class", replay_a["failure_class"], replay_b["failure_class"])
         self._maybe_add_difference(differences, "failure_reason", replay_a["failure_reason"], replay_b["failure_reason"])
         self._maybe_add_difference(differences, "last_event_seq", replay_a["last_event_seq"], replay_b["last_event_seq"])
+        self._maybe_add_difference(
+            differences,
+            "ledger_schema_version",
+            replay_a["ledger_schema_version"],
+            replay_b["ledger_schema_version"],
+        )
+        self._maybe_add_difference(
+            differences,
+            "runtime_contract_hash",
+            replay_a["runtime_contract_hash"],
+            replay_b["runtime_contract_hash"],
+        )
         self._maybe_add_difference(differences, "operations", replay_a["operations"], replay_b["operations"])
         self._maybe_add_difference(
             differences,
