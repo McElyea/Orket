@@ -130,6 +130,45 @@ async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: 
 
 # Layer: integration
 @pytest.mark.asyncio
+async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(tmp_path: Path) -> None:
+    dispatcher = _dispatcher(tmp_path)
+    toolbox = _NoOpToolbox()
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="openclaw.file_read", args={"path": "a.txt"})],
+    )
+
+    with pytest.raises(RuntimeError) as exc:
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=toolbox,
+            context={
+                "roles": ["coder"],
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "skill_contract_enforced": True,
+                "allowed_tool_rings": ["core", "compatibility"],
+                "skill_tool_bindings": {
+                    "openclaw.file_read": {
+                        "entrypoint_id": "openclaw.file_read",
+                        "ring": "compatibility",
+                        "determinism_class": "workspace",
+                        "capability_profile": "workspace",
+                    }
+                },
+            },
+            issue=None,
+        )
+
+    assert "E_COMPAT_MAPPING_MISSING" in str(exc.value)
+    assert toolbox.calls == 0
+
+
+# Layer: integration
+@pytest.mark.asyncio
 async def test_tool_dispatcher_emits_determinism_violation_for_declared_pure_side_effect_tool(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     toolbox = _NoOpToolbox()

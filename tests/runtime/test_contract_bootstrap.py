@@ -81,6 +81,8 @@ mappings:
     assert snapshots.tool_registry_snapshot["tool_registry_version"] == "1.2.0"
     assert snapshots.tool_contract_snapshot["tool_contracts"][0]["tool_name"] == "workspace.search"
     assert snapshots.compatibility_map_schema_snapshot["mapping_count"] == 1
+    assert snapshots.compatibility_map_snapshot["mapping_count"] == 1
+    assert snapshots.compatibility_map_snapshot["mappings"]["openclaw.file_search"]["mapping_version"] == 1
     assert len(str(snapshots.tool_registry_snapshot["snapshot_hash"])) == 64
 
 
@@ -201,6 +203,72 @@ mappings:
     )
 
     with pytest.raises(ValueError, match="non-core tool"):
+        _ = load_runtime_contract_snapshots(
+            artifact_schema_registry_path=tmp_path / "core" / "artifacts" / "schema_registry.yaml",
+            compatibility_map_path=tmp_path / "core" / "tools" / "compatibility_map.yaml",
+            compatibility_map_schema_path=tmp_path / "core" / "tools" / "compatibility_map_schema.yaml",
+            tool_registry_path=tmp_path / "core" / "tools" / "tool_registry.yaml",
+        )
+
+
+# Layer: contract
+def test_load_runtime_contract_snapshots_rejects_compat_mapping_determinism_elevation(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "core" / "artifacts" / "schema_registry.yaml",
+        """
+registry_version: "1.0"
+artifacts:
+  run.json: "1.0"
+""".strip()
+        + "\n",
+    )
+    _write(
+        tmp_path / "core" / "tools" / "tool_registry.yaml",
+        """
+tool_registry_version: "1.2.0"
+tools:
+  - tool_name: workspace.search
+    ring: core
+    tool_contract_version: "1.0.0"
+    determinism_class: workspace
+    capability_profile: workspace
+""".strip()
+        + "\n",
+    )
+    _write(
+        tmp_path / "core" / "tools" / "compatibility_map_schema.yaml",
+        """
+schema_version: "1.0"
+compatibility_map_version: "1.0"
+required_fields:
+  - mapping_version
+  - mapped_core_tools
+  - schema_compatibility_range
+  - determinism_class
+allowed_determinism_classes:
+  - pure
+  - workspace
+  - external
+allowed_target_ring: core
+""".strip()
+        + "\n",
+    )
+    _write(
+        tmp_path / "core" / "tools" / "compatibility_map.yaml",
+        """
+schema_version: "1.0"
+mappings:
+  openclaw.file_search:
+    mapping_version: 1
+    mapped_core_tools:
+      - workspace.search
+    schema_compatibility_range: ">=1.0.0 <2.0.0"
+    determinism_class: pure
+""".strip()
+        + "\n",
+    )
+
+    with pytest.raises(ValueError, match="least mapped determinism"):
         _ = load_runtime_contract_snapshots(
             artifact_schema_registry_path=tmp_path / "core" / "artifacts" / "schema_registry.yaml",
             compatibility_map_path=tmp_path / "core" / "tools" / "compatibility_map.yaml",

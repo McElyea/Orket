@@ -431,8 +431,20 @@ class ExecutionPipeline:
             ).strip().lower()
         if active_run_determinism_class not in {"pure", "workspace", "external"}:
             active_run_determinism_class = "workspace"
+        compatibility_map_snapshot = run_contract_artifacts.get("compatibility_map_snapshot")
+        if isinstance(compatibility_map_snapshot, dict):
+            raw_mappings = compatibility_map_snapshot.get("mappings")
+            raw_mappings = raw_mappings if isinstance(raw_mappings, dict) else {}
+            active_compatibility_mappings = {
+                str(tool_name).strip(): dict(mapping or {})
+                for tool_name, mapping in raw_mappings.items()
+                if str(tool_name).strip() and isinstance(mapping, dict)
+            }
+        else:
+            active_compatibility_mappings = {}
         self.orchestrator.active_capabilities_allowed = active_capabilities_allowed or ["workspace"]
         self.orchestrator.active_run_determinism_class = active_run_determinism_class
+        self.orchestrator.active_compatibility_mappings = active_compatibility_mappings
 
         await self.run_ledger.start_run(
             session_id=run_id,

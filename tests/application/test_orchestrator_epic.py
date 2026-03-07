@@ -1709,6 +1709,7 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
     assert context["capabilities_allowed"] == ["workspace"]
     assert context["run_determinism_class"] == "workspace"
     assert context["run_determinism_policy"] == "workspace"
+    assert context["compatibility_mappings"] == {}
     assert context["timezone"] == "UTC"
     assert context["locale"] == "C.UTF-8"
     assert context["network_mode"] == "off"
@@ -1793,6 +1794,14 @@ def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
     orch.org = SimpleNamespace(process_rules={"allowed_tool_rings": ["core", "compatibility"]})
     orch.active_capabilities_allowed = ["workspace", "external"]
     orch.active_run_determinism_class = "external"
+    orch.active_compatibility_mappings = {
+        "openclaw.file_read": {
+            "mapping_version": 1,
+            "mapped_core_tools": ["workspace.read"],
+            "schema_compatibility_range": ">=1.0.0 <2.0.0",
+            "determinism_class": "workspace",
+        }
+    }
     issue = IssueConfig(id="ARC-4C", seat="architect", summary="Design architecture")
 
     context = orch._build_turn_context(
@@ -1810,6 +1819,7 @@ def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
     assert context["capabilities_allowed"] == ["workspace", "external"]
     assert context["run_determinism_class"] == "external"
     assert context["run_determinism_policy"] == "external"
+    assert "openclaw.file_read" in context["compatibility_mappings"]
 
 
 

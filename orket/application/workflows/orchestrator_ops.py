@@ -1781,6 +1781,15 @@ def _build_turn_context(
     ).strip().lower()
     if run_determinism_class not in {"pure", "workspace", "external"}:
         run_determinism_class = "workspace"
+    raw_compatibility_mappings = getattr(self, "active_compatibility_mappings", None)
+    if isinstance(raw_compatibility_mappings, dict):
+        compatibility_mappings = {
+            str(tool_name).strip(): dict(mapping or {})
+            for tool_name, mapping in raw_compatibility_mappings.items()
+            if str(tool_name).strip() and isinstance(mapping, dict)
+        }
+    else:
+        compatibility_mappings = {}
 
     raw_max_tool_execution_time = process_rules.get("skill_max_execution_time")
     raw_max_tool_memory = process_rules.get("skill_max_memory")
@@ -1877,6 +1886,7 @@ def _build_turn_context(
         "capabilities_allowed": allowed_capability_profiles,
         "run_determinism_class": run_determinism_class,
         "run_determinism_policy": run_determinism_class,
+        "compatibility_mappings": compatibility_mappings,
         "max_tool_execution_time": max_tool_execution_time,
         "max_tool_memory": max_tool_memory,
         "protocol_governed_enabled": protocol_governed_enabled,

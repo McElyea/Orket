@@ -23,6 +23,7 @@ from .tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
+from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_protocol import (
     collect_protocol_preflight_violations,
     load_or_execute_tool,
@@ -233,6 +234,16 @@ class ToolDispatcher:
                     violations.append(f"Approval required for tool '{tool_name}' before execution.")
                     continue
 
+                compatibility_translation, compatibility_violation = resolve_compatibility_translation(
+                    tool_name=tool_name,
+                    tool_args=dict(tool_call.args or {}),
+                    binding=binding,
+                    context=context,
+                )
+                if compatibility_violation:
+                    violations.append(compatibility_violation)
+                    continue
+
                 if not protocol_replay_mode:
                     log_event(
                         "tool_call_start",
@@ -264,6 +275,7 @@ class ToolDispatcher:
                     validator_version=validator_version,
                     protocol_hash=protocol_hash,
                     tool_schema_hash=tool_schema_hash,
+                    compatibility_translation=compatibility_translation,
                     load_operation_result=self.load_operation_result,
                     load_replay_tool_result=self.load_replay_tool_result,
                 )
@@ -374,6 +386,13 @@ class ToolDispatcher:
                                 "validator_duration_ms": int(context.get("validator_duration_ms") or 0),
                                 "execution_capsule": execution_capsule,
                                 "replayed": bool(replayed),
+                                **(
+                                    {
+                                        "compat_translation": dict(result.get("compat_translation") or {})
+                                    }
+                                    if isinstance(result, dict) and isinstance(result.get("compat_translation"), dict)
+                                    else {}
+                                ),
                             },
                         )
                 elif not protocol_replay_mode:

@@ -120,6 +120,49 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
     assert rows[0]["receipt_digest"] == receipt["receipt_digest"]
 
 
+def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_artifact(tmp_path: Path) -> None:
+    writer = TurnArtifactWriter(tmp_path)
+    manifest = build_tool_invocation_manifest(run_id="s1", tool_name="openclaw.file_read", ring="compatibility")
+    tool_args = {"path": "agent_output/main.py"}
+    tool_call_hash = compute_tool_call_hash(
+        tool_name="openclaw.file_read",
+        tool_args=tool_args,
+        tool_contract_version=str(manifest["tool_contract_version"]),
+        capability_profile=str(manifest["capability_profile"]),
+    )
+    writer.append_protocol_receipt(
+        session_id="s1",
+        issue_id="ISSUE-1",
+        role_name="coder",
+        turn_index=4,
+        receipt={
+            "run_id": "s1",
+            "step_id": "ISSUE-1:4",
+            "receipt_seq": 1,
+            "operation_id": "op-1",
+            "tool": "openclaw.file_read",
+            "tool_args": tool_args,
+            "tool_invocation_manifest": manifest,
+            "tool_call_hash": tool_call_hash,
+            "compat_translation": {
+                "compat_tool_name": "openclaw.file_read",
+                "mapping_version": 1,
+                "mapping_determinism": "workspace",
+                "schema_compatibility_range": ">=1.0.0 <2.0.0",
+                "mapped_core_tools": ["workspace.read"],
+                "translation_hash": "a" * 64,
+            },
+        },
+    )
+
+    compat_translation_path = tmp_path / "observability" / "s1" / "ISSUE-1" / "004_coder" / "compat_translation.json"
+    assert compat_translation_path.exists()
+    payload = json.loads(compat_translation_path.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == "1.0"
+    assert payload["translations"][0]["compat_tool_name"] == "openclaw.file_read"
+    assert payload["translations"][0]["operation_id"] == "op-1"
+
+
 def test_turn_artifact_writer_append_protocol_receipt_rejects_missing_manifest(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     with pytest.raises(ValueError, match="E_TOOL_INVOCATION_MANIFEST_REQUIRED"):

@@ -17,6 +17,7 @@ DEFAULT_TOOL_REGISTRY_PATH = Path("core/tools/tool_registry.yaml")
 
 TOOL_DETERMINISM_CLASSES = {"pure", "workspace", "external"}
 TOOL_RING_CLASSES = {"core", "compatibility", "experimental"}
+DETERMINISM_RANK = {"pure": 0, "workspace": 1, "external": 2}
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,7 @@ class RuntimeContractSnapshots:
     artifact_schema_snapshot: dict[str, Any]
     tool_contract_snapshot: dict[str, Any]
     compatibility_map_schema_snapshot: dict[str, Any]
+    compatibility_map_snapshot: dict[str, Any]
 
     def as_ledger_artifacts(self) -> dict[str, Any]:
         return {
@@ -32,6 +34,7 @@ class RuntimeContractSnapshots:
             "artifact_schema_snapshot": dict(self.artifact_schema_snapshot),
             "tool_contract_snapshot": dict(self.tool_contract_snapshot),
             "compatibility_map_schema_snapshot": dict(self.compatibility_map_schema_snapshot),
+            "compatibility_map_snapshot": dict(self.compatibility_map_snapshot),
         }
 
 
@@ -104,11 +107,27 @@ def load_runtime_contract_snapshots(
     }
     compatibility_map_schema_snapshot["snapshot_hash"] = hash_canonical_json(compatibility_map_schema_snapshot)
 
+    compatibility_map_snapshot = {
+        "schema_version": parsed_compatibility_schema["compatibility_map_version"],
+        "mapping_count": len(parsed_compatibility_map),
+        "mappings": {
+            row["compat_tool_name"]: {
+                "mapping_version": row["mapping_version"],
+                "mapped_core_tools": list(row["mapped_core_tools"]),
+                "schema_compatibility_range": row["schema_compatibility_range"],
+                "determinism_class": row["determinism_class"],
+            }
+            for row in parsed_compatibility_map
+        },
+    }
+    compatibility_map_snapshot["snapshot_hash"] = hash_canonical_json(compatibility_map_snapshot)
+
     return RuntimeContractSnapshots(
         tool_registry_snapshot=tool_registry_snapshot,
         artifact_schema_snapshot=artifact_snapshot,
         tool_contract_snapshot=tool_contract_snapshot,
         compatibility_map_schema_snapshot=compatibility_map_schema_snapshot,
+        compatibility_map_snapshot=compatibility_map_snapshot,
     )
 
 
@@ -125,12 +144,14 @@ def write_runtime_contract_snapshots(
         "artifact_schema_snapshot_path": destination / "artifact_schema_snapshot.json",
         "tool_contract_snapshot_path": destination / "tool_contract_snapshot.json",
         "compatibility_map_schema_snapshot_path": destination / "compatibility_map_schema_snapshot.json",
+        "compatibility_map_snapshot_path": destination / "compatibility_map_snapshot.json",
     }
     payloads = {
         "tool_registry_snapshot_path": snapshots.tool_registry_snapshot,
         "artifact_schema_snapshot_path": snapshots.artifact_schema_snapshot,
         "tool_contract_snapshot_path": snapshots.tool_contract_snapshot,
         "compatibility_map_schema_snapshot_path": snapshots.compatibility_map_schema_snapshot,
+        "compatibility_map_snapshot_path": snapshots.compatibility_map_snapshot,
     }
 
     for key, path in file_map.items():
@@ -298,6 +319,7 @@ def _parse_compatibility_map(
             mapping.get("mapped_core_tools"),
             field_name=f"mapped_core_tools for {normalized_compat_tool_name}",
         )
+        mapped_tool_determinism: list[str] = []
         for mapped_tool in mapped_core_tools:
             tool_entry = tool_index.get(mapped_tool)
             if tool_entry is None:
@@ -309,12 +331,20 @@ def _parse_compatibility_map(
                     f"compatibility mapping '{normalized_compat_tool_name}' maps to non-{allowed_target_ring} tool "
                     f"'{mapped_tool}'"
                 )
+            mapped_tool_determinism.append(str(tool_entry["determinism_class"]))
 
         determinism_class = str(mapping.get("determinism_class") or "").strip().lower()
         if determinism_class not in allowed_determinism:
             raise ValueError(
                 f"compatibility mapping '{normalized_compat_tool_name}' has unsupported determinism_class "
                 f"'{determinism_class}'"
+            )
+        least_mapped_determinism = _least_deterministic(mapped_tool_determinism)
+        if determinism_class != least_mapped_determinism:
+            raise ValueError(
+                "compatibility mapping "
+                f"'{normalized_compat_tool_name}' determinism_class '{determinism_class}' does not match "
+                f"least mapped determinism '{least_mapped_determinism}'"
             )
 
         schema_compatibility_range = str(mapping.get("schema_compatibility_range") or "").strip()
@@ -349,3 +379,10 @@ def _parse_non_empty_string_list(value: Any, *, field_name: str) -> list[str]:
         seen.add(token)
         rows.append(token)
     return rows
+
+
+def _least_deterministic(classes: list[str]) -> str:
+    resolved = [value for value in classes if value in DETERMINISM_RANK]
+    if not resolved:
+        return "pure"
+    return max(resolved, key=lambda value: DETERMINISM_RANK[value])

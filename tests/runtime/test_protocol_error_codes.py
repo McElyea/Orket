@@ -31,6 +31,9 @@ def test_is_registered_protocol_error_code_accepts_registered_prefixes() -> None
     assert codes.is_registered_protocol_error_code("E_DETERMINISM_POLICY_VIOLATION:write_file") is True
     assert codes.is_registered_protocol_error_code("E_TOOL_INVOCATION_BOUNDARY:write_file") is True
     assert codes.is_registered_protocol_error_code("E_DETERMINISM_VIOLATION:write_file") is True
+    assert codes.is_registered_protocol_error_code("E_COMPAT_MAPPING_MISSING:openclaw.file_read") is True
+    assert codes.is_registered_protocol_error_code("E_COMPAT_MAPPING_POLICY_VIOLATION:openclaw.file_read") is True
+    assert codes.is_registered_protocol_error_code("E_COMPAT_PARITY_VIOLATION:mapped_tool_failed") is True
 
 
 def test_is_registered_protocol_error_code_rejects_unknown_values() -> None:
@@ -54,6 +57,9 @@ def test_error_description_returns_specific_messages() -> None:
     assert "determinism class" in codes.error_description("E_DETERMINISM_POLICY_VIOLATION:tool")
     assert "tool-to-tool invocation" in codes.error_description("E_TOOL_INVOCATION_BOUNDARY:tool")
     assert "declared determinism" in codes.error_description("E_DETERMINISM_VIOLATION:tool")
+    assert "mapping for the requested tool was not found" in codes.error_description("E_COMPAT_MAPPING_MISSING:tool")
+    assert "mapping violated governance constraints" in codes.error_description("E_COMPAT_MAPPING_POLICY_VIOLATION:tool")
+    assert "execution failed parity expectations" in codes.error_description("E_COMPAT_PARITY_VIOLATION:tool")
 
 
 def test_format_protocol_error_requires_code() -> None:

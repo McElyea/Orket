@@ -412,6 +412,16 @@ class TurnArtifactWriter:
         )
         if observed_tool_call_hash != expected_tool_call_hash:
             raise ValueError("E_TOOL_CALL_HASH_MISMATCH")
+        compat_translation = base_receipt.get("compat_translation")
+        if isinstance(compat_translation, dict):
+            self._append_compat_translation_artifact(
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+                operation_id=str(base_receipt.get("operation_id") or ""),
+                translation=compat_translation,
+            )
         receipt_digest = hash_canonical_json(base_receipt)
         base_receipt["receipt_digest"] = receipt_digest
         line = json.dumps(base_receipt, ensure_ascii=False, separators=(",", ":"))
@@ -426,6 +436,38 @@ class TurnArtifactWriter:
             handle.write(line)
             handle.write("\n")
         return base_receipt
+
+    def _append_compat_translation_artifact(
+        self,
+        *,
+        session_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        operation_id: str,
+        translation: dict[str, Any],
+    ) -> None:
+        artifact_path = self._turn_output_dir(
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+        ) / "compat_translation.json"
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {"schema_version": "1.0", "translations": []}
+        if artifact_path.exists():
+            existing = json.loads(artifact_path.read_text(encoding="utf-8"))
+            if isinstance(existing, dict):
+                existing_rows = existing.get("translations")
+                existing_rows = existing_rows if isinstance(existing_rows, list) else []
+                payload = {
+                    "schema_version": str(existing.get("schema_version") or "1.0"),
+                    "translations": [dict(row) for row in existing_rows if isinstance(row, dict)],
+                }
+        row = dict(translation)
+        row["operation_id"] = str(operation_id or "")
+        payload["translations"].append(row)
+        artifact_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def _turn_output_dir(
         self,

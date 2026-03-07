@@ -28,6 +28,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
+    assert Path(payload["compatibility_map_snapshot_path"]).exists()
     assert Path(payload["workspace_state_snapshot_path"]).exists()
     workspace_snapshot = payload["workspace_state_snapshot"]
     assert workspace_snapshot["workspace_type"] == "filesystem"

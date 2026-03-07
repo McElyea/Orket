@@ -1,0 +1,20 @@
+{
+  "slice_id": "CORE-IMP-04",
+  "status": "done",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/runtime/test_contract_bootstrap.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_protocol_replay.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py tests/application/test_turn_tool_dispatcher.py tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_replay_isolation.py tests/application/test_turn_tool_dispatcher_compatibility.py tests/application/test_turn_artifact_writer.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py -q && python -m pytest tests/application/test_orchestrator_epic.py -k \"build_turn_context_protocol_governed_defaults or build_turn_context_uses_active_run_policy_overrides or build_turn_context_protocol_determinism_invalid_network_mode_fails_fast\" -q",
+    "result": "pass",
+    "passed": 81,
+    "failed": 0
+  },
+  "implemented_now": [
+    "runtime contract bootstrap now emits immutable compatibility_map_snapshot with mapping metadata and snapshot hash",
+    "compatibility map validation enforces mapping determinism equals least deterministic mapped core tool determinism",
+    "dispatcher preflight fails closed when compatibility mappings are missing or violate mapping policy constraints",
+    "compatibility tool execution performs deterministic mapping translation and emits stable translation hash for identical inputs",
+    "compatibility execution writes compat_translation.json artifact entries including compat_tool_name, mapping_version, mapping_determinism, and mapped_core_tools",
+    "protocol error code registry now includes compat_mapping_missing, compat_mapping_policy_violation, and compat_parity_violation families"
+  ],
+  "remaining_for_slice_completion": []
+}

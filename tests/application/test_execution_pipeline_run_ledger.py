@@ -222,6 +222,7 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert artifact_json["artifact_schema_snapshot"]["artifact_schema_registry_version"] == "1.0"
     assert len(artifact_json["tool_contract_snapshot"]["tool_contracts"]) >= 1
     assert artifact_json["compatibility_map_schema_snapshot"]["schema_version"] == "1.0"
+    assert artifact_json["compatibility_map_snapshot"]["mapping_count"] >= 1
     assert artifact_json["run_identity"]["run_id"] == "sess-ledger-contract-bootstrap"
     assert artifact_json["run_identity"]["workload"] == "ledger_epic_contract_bootstrap"
     assert artifact_json["run_determinism_class"] == "workspace"
@@ -231,6 +232,7 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert Path(artifact_json["tool_registry_snapshot_path"]).exists()
     assert Path(artifact_json["artifact_schema_snapshot_path"]).exists()
     assert Path(artifact_json["tool_contract_snapshot_path"]).exists()
+    assert Path(artifact_json["compatibility_map_snapshot_path"]).exists()
     assert Path(artifact_json["run_identity_path"]).exists()
     assert Path(artifact_json["capability_manifest_path"]).exists()
     assert Path(artifact_json["workspace_state_snapshot_path"]).exists()

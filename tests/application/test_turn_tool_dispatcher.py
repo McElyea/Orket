@@ -490,3 +490,72 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
     assert len(capsule["network_allowlist_hash"]) == 64
     assert len(capsule["clock_artifact_hash"]) == 64
     assert len(capsule["env_allowlist_hash"]) == 64
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_tool_dispatcher_executes_compatibility_mapping_and_records_translation(tmp_path: Path) -> None:
+    receipt_rows: list[dict[str, Any]] = []
+    dispatcher = _dispatcher(tmp_path, receipt_rows=receipt_rows)
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="openclaw.file_read", args={"path": "a.txt"})],
+    )
+
+    class _Toolbox:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        async def execute(self, tool_name, args, context):
+            self.calls.append(str(tool_name))
+            if tool_name == "workspace.read":
+                return {"ok": True, "content": "alpha"}
+            return {"ok": False, "error": f"unexpected:{tool_name}"}
+
+    toolbox = _Toolbox()
+    await dispatcher.execute_tools(
+        turn=turn,
+        toolbox=toolbox,
+        context={
+            "roles": ["coder"],
+            "session_id": "s1",
+            "turn_index": 1,
+            "protocol_governed_enabled": True,
+            "skill_contract_enforced": True,
+            "allowed_tool_rings": ["core", "compatibility"],
+            "skill_tool_bindings": {
+                "openclaw.file_read": {
+                    "entrypoint_id": "openclaw.file_read",
+                    "ring": "compatibility",
+                    "determinism_class": "workspace",
+                    "capability_profile": "workspace",
+                },
+                "workspace.read": {
+                    "entrypoint_id": "workspace.read",
+                    "ring": "core",
+                    "determinism_class": "workspace",
+                    "capability_profile": "workspace",
+                },
+            },
+            "compatibility_mappings": {
+                "openclaw.file_read": {
+                    "mapping_version": 1,
+                    "mapped_core_tools": ["workspace.read"],
+                    "schema_compatibility_range": ">=1.0.0 <2.0.0",
+                    "determinism_class": "workspace",
+                }
+            },
+        },
+        issue=None,
+    )
+
+    assert toolbox.calls == ["workspace.read"]
+    result = turn.tool_calls[0].result
+    assert isinstance(result, dict)
+    assert result.get("ok") is True
+    assert isinstance(result.get("compat_translation"), dict)
+    assert result["compat_translation"]["compat_tool_name"] == "openclaw.file_read"
+    assert len(receipt_rows) == 1
+    assert isinstance(receipt_rows[0].get("compat_translation"), dict)
