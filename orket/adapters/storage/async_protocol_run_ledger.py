@@ -19,6 +19,10 @@ from orket.runtime.protocol_error_codes import (
     E_RECEIPT_SEQ_INVALID_PREFIX,
     E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX,
 )
+from orket.runtime.run_graph_reconstruction import (
+    reconstruct_run_graph,
+    write_run_graph_artifact,
+)
 
 from .protocol_append_only_ledger import AppendOnlyRunLedger
 
@@ -103,6 +107,25 @@ class AsyncProtocolRunLedgerRepository:
             )
             if rejection is not None:
                 raise ValueError(str(rejection.get("error_code") or "E_LEDGER_CALL_RESULT_ORDER"))
+            next_seq = 1
+            if existing_events:
+                next_seq = max(self._event_sequence(row) for row in existing_events) + 1
+            pending_events = [dict(row) for row in existing_events]
+            pending_finalized_event = dict(event)
+            pending_finalized_event["event_seq"] = int(next_seq)
+            pending_finalized_event["sequence_number"] = int(next_seq)
+            pending_events.append(pending_finalized_event)
+            run_graph_payload = await asyncio.to_thread(
+                reconstruct_run_graph,
+                pending_events,
+                session_id=str(session_id),
+            )
+            await asyncio.to_thread(
+                write_run_graph_artifact,
+                root=self.root,
+                session_id=str(session_id),
+                payload=run_graph_payload,
+            )
             return await self._append_event_locked(
                 session_id=session_id,
                 event=event,

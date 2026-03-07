@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "orket://core/artifacts/run_graph_schema.json",
+  "title": "Run Graph Artifact",
+  "type": "object",
+  "required": [
+    "run_graph_schema_version",
+    "run_id",
+    "derived_from",
+    "graph_digest",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "run_graph_schema_version": {
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "derived_from": {
+      "type": "object",
+      "required": [
+        "source_of_truth",
+        "ledger_event_count",
+        "ledger_schema_version"
+      ],
+      "properties": {
+        "source_of_truth": {
+          "const": "ledger+artifacts"
+        },
+        "ledger_event_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ledger_schema_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "graph_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "tool_call",
+            "compat_mapping",
+            "workload_stage",
+            "artifact"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "edge": {
+      "type": "object",
+      "required": [
+        "type",
+        "source",
+        "target",
+        "ordinal"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "call_result",
+            "artifact_produced",
+            "compat_expansion",
+            "execution_order"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

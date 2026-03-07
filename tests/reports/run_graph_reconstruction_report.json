@@ -1,0 +1,18 @@
+{
+  "slice_id": "CORE-IMP-08",
+  "status": "done",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/runtime/test_run_graph_reconstruction.py tests/application/test_async_protocol_run_ledger.py tests/application/test_async_dual_write_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py tests/runtime/test_protocol_replay.py tests/runtime/test_contract_bootstrap.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py -q && python scripts/governance/check_docs_project_hygiene.py",
+    "result": "pass",
+    "passed": 68,
+    "failed": 0
+  },
+  "implemented_now": [
+    "added deterministic run-graph reconstruction engine that derives a DAG strictly from ledger events plus run artifact metadata and validates node/edge contracts",
+    "protocol run-ledger finalize now emits run-level run_graph.json artifacts under runs/<session_id>/run_graph.json using reconstructed run-finalized event state",
+    "added canonical run graph schema contract at core/artifacts/run_graph_schema.json and registered run_graph.json in the artifact schema registry",
+    "added contract and integration coverage for reproducibility/idempotency, artifact-lineage integrity, compatibility-expansion edges, golden reconstruction, and deterministic live-vs-replay parity"
+  ],
+  "remaining_for_slice_completion": []
+}

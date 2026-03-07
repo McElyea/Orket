@@ -24,7 +24,7 @@ Rationale:
 
 ## Delivery Model
 
-1. Slice IDs: `CORE-IMP-00` to `CORE-IMP-07`.
+1. Slice IDs: `CORE-IMP-00` to `CORE-IMP-08`.
 2. Each slice must ship:
    1. minimal code changes for the claimed behavior
    2. contract/integration tests at the highest practical layer
@@ -39,7 +39,7 @@ Rationale:
 3. Phase 2 (governance enforcement): `CORE-IMP-03` and `CORE-IMP-04`
 4. Phase 3 (reliability and promotion controls): `CORE-IMP-05` and `CORE-IMP-06`
 5. Phase 4 (compatibility pilot): `CORE-IMP-07`
-6. Phase 5 (future graph reconstruction): `CORE-IMP-08` (post-`CORE-IMP-07`)
+6. Phase 5 (run graph reconstruction): `CORE-IMP-08`
 
 ## Slices
 
@@ -428,10 +428,7 @@ Required proof:
 Exit criteria:
 1. At least one compatibility mapping meets all promotion prerequisites (not necessarily promoted).
 
-### CORE-IMP-08: Run Graph Reconstruction (Future Slice)
-
-Status:
-1. Future slice (`P2-P3`) executed after `CORE-IMP-07`.
+### CORE-IMP-08: Run Graph Reconstruction
 
 Goal:
 1. Deterministically reconstruct a run DAG from ledger events and artifacts for debugging, lineage, and replay analysis.
