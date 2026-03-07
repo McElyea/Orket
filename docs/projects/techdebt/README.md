@@ -36,8 +36,9 @@ These are closeable and should move to archive when superseded:
 Archive destination:
 1. `docs/projects/archive/techdebt/<cycle_id>/`
 
-Current archived cycle example:
+Current archived cycle examples:
 1. `docs/projects/archive/techdebt/TD03052026/`
+2. `docs/projects/archive/techdebt/OBT03062026/`
 
 ## Closeout Process for a Cycle
 

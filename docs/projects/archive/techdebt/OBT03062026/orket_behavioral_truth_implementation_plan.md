@@ -1,7 +1,7 @@
 # Orket Behavioral Truth Implementation Plan
 
 Last updated: 2026-03-06  
-Status: Active (proposed)  
+Status: Archived  
 Owner: Orket Core
 
 ## Purpose
@@ -10,7 +10,7 @@ Convert `orket_behavioral_truth_review.md` findings into a minimal-scope hardeni
 
 ## Source Input
 
-1. `docs/projects/techdebt/orket_behavioral_truth_review.md`
+1. `docs/projects/archive/techdebt/OBT03062026/orket_behavioral_truth_review.md`
 
 ## Scope
 
