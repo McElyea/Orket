@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -21,9 +22,10 @@ from .protocol_append_only_ledger import AppendOnlyRunLedger
 class AsyncProtocolRunLedgerRepository:
     """Async wrapper over append-only LPJ-C32 run ledger files."""
 
-    def __init__(self, root: str | Path) -> None:
+    def __init__(self, root: str | Path, *, max_tool_invocations_per_run: int = 200) -> None:
         self.root = Path(root)
         self._lock = asyncio.Lock()
+        self.max_tool_invocations_per_run = max(int(max_tool_invocations_per_run), 1)
 
     def _events_path(self, session_id: str) -> Path:
         return self.root / "runs" / str(session_id).strip() / "events.log"
@@ -48,19 +50,20 @@ class AsyncProtocolRunLedgerRepository:
         summary: Optional[Dict[str, Any]] = None,
         artifacts: Optional[Dict[str, Any]] = None,
     ) -> dict[str, Any]:
-        event = {
-            "kind": "run_started",
-            "session_id": session_id,
-            "run_type": run_type,
-            "run_name": run_name,
-            "department": department,
-            "build_id": build_id,
-            "status": "running",
-            "summary": dict(summary or {}),
-            "artifacts": dict(artifacts or {}),
-        }
+        event = self._build_event(
+            session_id=session_id,
+            kind="run_started",
+            event_type="run_started",
+            run_type=run_type,
+            run_name=run_name,
+            department=department,
+            build_id=build_id,
+            status="running",
+            summary=dict(summary or {}),
+            artifacts=dict(artifacts or {}),
+        )
         async with self._lock:
-            return await asyncio.to_thread(self._ledger(session_id).append_event, event)
+            return await self._append_event_locked(session_id=session_id, event=event)
 
     async def finalize_run(
         self,
@@ -72,17 +75,18 @@ class AsyncProtocolRunLedgerRepository:
         summary: Optional[Dict[str, Any]] = None,
         artifacts: Optional[Dict[str, Any]] = None,
     ) -> dict[str, Any]:
-        event = {
-            "kind": "run_finalized",
-            "session_id": session_id,
-            "status": str(status),
-            "failure_class": failure_class,
-            "failure_reason": failure_reason,
-            "summary": dict(summary or {}),
-            "artifacts": dict(artifacts or {}),
-        }
+        event = self._build_event(
+            session_id=session_id,
+            kind="run_finalized",
+            event_type="run_finalized",
+            status=str(status),
+            failure_class=failure_class,
+            failure_reason=failure_reason,
+            summary=dict(summary or {}),
+            artifacts=dict(artifacts or {}),
+        )
         async with self._lock:
-            return await asyncio.to_thread(self._ledger(session_id).append_event, event)
+            return await self._append_event_locked(session_id=session_id, event=event)
 
     async def append_event(
         self,
@@ -93,16 +97,30 @@ class AsyncProtocolRunLedgerRepository:
     ) -> dict[str, Any]:
         normalized_kind = str(kind)
         normalized_payload = dict(payload or {})
-        event: dict[str, Any] = {
-            "kind": normalized_kind,
-            "session_id": str(session_id),
-        }
+        event: dict[str, Any] = self._build_event(
+            session_id=session_id,
+            kind=normalized_kind,
+            event_type=normalized_kind,
+        )
         for key, value in normalized_payload.items():
             key_name = str(key).strip()
             if not key_name or key_name in {"kind", "session_id"}:
                 continue
             event[key_name] = value
+        if (not str(event.get("tool_name") or "").strip()) and "tool" in event:
+            event["tool_name"] = str(event.get("tool") or "")
         async with self._lock:
+            if normalized_kind in {"tool_call", "operation_result", "tool_result"}:
+                invocation_count = await self._tool_invocation_count_locked(session_id=session_id)
+                if invocation_count >= self.max_tool_invocations_per_run:
+                    return {
+                        "kind": "tool_invocation_rejected",
+                        "session_id": str(session_id),
+                        "run_id": str(session_id),
+                        "error_code": "E_MAX_TOOL_INVOCATIONS_EXCEEDED",
+                        "max_tool_invocations_per_run": int(self.max_tool_invocations_per_run),
+                        "invocation_count": int(invocation_count),
+                    }
             if normalized_kind in {"operation_result", "tool_result"}:
                 operation_id = str(normalized_payload.get("operation_id") or "").strip()
                 if operation_id:
@@ -122,7 +140,50 @@ class AsyncProtocolRunLedgerRepository:
                             "winner_entry_digest": decision.get("winner_entry_digest"),
                             "idempotent_reuse": bool(decision.get("idempotent_reuse", False)),
                         }
-            return await asyncio.to_thread(self._ledger(session_id).append_event, event)
+            return await self._append_event_locked(session_id=session_id, event=event)
+
+    def _build_event(
+        self,
+        *,
+        session_id: str,
+        kind: str,
+        event_type: str,
+        **extra: Any,
+    ) -> dict[str, Any]:
+        resolved_session_id = str(session_id or "").strip()
+        timestamp = datetime.now(UTC).isoformat()
+        return {
+            "ledger_schema_version": "1.0",
+            "kind": str(kind),
+            "event_type": str(event_type),
+            "session_id": resolved_session_id,
+            "run_id": resolved_session_id,
+            "timestamp": timestamp,
+            "tool_name": "",
+            **dict(extra),
+        }
+
+    async def _append_event_locked(
+        self,
+        *,
+        session_id: str,
+        event: dict[str, Any],
+    ) -> dict[str, Any]:
+        next_seq = await asyncio.to_thread(self._ledger(session_id).next_event_seq)
+        payload = dict(event)
+        if int(payload.get("sequence_number") or 0) <= 0:
+            payload["sequence_number"] = int(next_seq)
+        appended = await asyncio.to_thread(self._ledger(session_id).append_event, payload)
+        appended["sequence_number"] = int(appended.get("event_seq") or appended.get("sequence_number") or next_seq)
+        return appended
+
+    async def _tool_invocation_count_locked(self, *, session_id: str) -> int:
+        events = await asyncio.to_thread(self._ledger(session_id).replay_events)
+        return sum(
+            1
+            for row in events
+            if str(row.get("kind") or "") in {"tool_call", "operation_result", "tool_result"}
+        )
 
     async def append_receipt(
         self,

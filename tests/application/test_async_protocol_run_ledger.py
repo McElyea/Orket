@@ -37,6 +37,14 @@ async def test_async_protocol_run_ledger_start_and_finalize(tmp_path: Path) -> N
     assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
     assert run["started_event_seq"] == 1
     assert run["ended_event_seq"] == 2
+    events = await repo.list_events("sess-1")
+    assert events[0]["ledger_schema_version"] == "1.0"
+    assert events[0]["run_id"] == "sess-1"
+    assert events[0]["event_type"] == "run_started"
+    assert events[0]["sequence_number"] == events[0]["event_seq"]
+    assert str(events[0]["timestamp"]).strip() != ""
+    assert events[1]["event_type"] == "run_finalized"
+    assert events[1]["sequence_number"] == events[1]["event_seq"]
 
 
 @pytest.mark.asyncio
@@ -47,7 +55,12 @@ async def test_async_protocol_run_ledger_append_event_is_monotonic(tmp_path: Pat
     events = await repo.list_events("sess-2")
     assert first["event_seq"] == 1
     assert second["event_seq"] == 2
+    assert first["sequence_number"] == 1
+    assert second["sequence_number"] == 2
+    assert first["ledger_schema_version"] == "1.0"
+    assert first["run_id"] == "sess-2"
     assert [row["event_seq"] for row in events] == [1, 2]
+    assert [row["sequence_number"] for row in events] == [1, 2]
     assert [row["kind"] for row in events] == ["event_a", "event_b"]
 
 
@@ -142,6 +155,7 @@ async def test_async_protocol_run_ledger_append_event_flattens_payload_fields(tm
     assert appended["kind"] == "operation_result"
     assert appended["operation_id"] == "op-flat"
     assert appended["tool"] == "write_file"
+    assert appended["tool_name"] == "write_file"
     assert appended["result"]["ok"] is True
     events = await repo.list_events("sess-flat")
     assert events[0]["operation_id"] == "op-flat"
@@ -223,3 +237,32 @@ async def test_async_protocol_run_ledger_append_receipt_rejects_non_monotonic_se
                 "receipt_seq": 1,
             },
         )
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_enforces_max_tool_invocations_per_run(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path, max_tool_invocations_per_run=2)
+    first = await repo.append_event(
+        session_id="sess-limit",
+        kind="operation_result",
+        payload={"operation_id": "op-1", "tool": "write_file", "result": {"ok": True}},
+    )
+    second = await repo.append_event(
+        session_id="sess-limit",
+        kind="operation_result",
+        payload={"operation_id": "op-2", "tool": "write_file", "result": {"ok": True}},
+    )
+    third = await repo.append_event(
+        session_id="sess-limit",
+        kind="operation_result",
+        payload={"operation_id": "op-3", "tool": "write_file", "result": {"ok": True}},
+    )
+
+    assert first["kind"] == "operation_result"
+    assert second["kind"] == "operation_result"
+    assert third["kind"] == "tool_invocation_rejected"
+    assert third["error_code"] == "E_MAX_TOOL_INVOCATIONS_EXCEEDED"
+    assert third["max_tool_invocations_per_run"] == 2
+    events = await repo.list_events("sess-limit")
+    assert len(events) == 2

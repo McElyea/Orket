@@ -1,0 +1,25 @@
+{
+  "slice_id": "CORE-IMP-01",
+  "status": "in_progress",
+  "generated_on": "2026-03-06",
+  "evidence": {
+    "test_command": "python -m pytest tests/application/test_async_protocol_run_ledger.py tests/runtime/test_contract_bootstrap.py tests/runtime/test_run_start_artifacts.py tests/runtime/test_protocol_replay.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py -q",
+    "result": "pass",
+    "passed": 33,
+    "failed": 0
+  },
+  "implemented_now": [
+    "run_identity.json emission with immutability enforcement for the same run_id",
+    "run_determinism_class derivation at run start from tool contract determinism declarations",
+    "capability_manifest.json + capability_manifest_schema.json emission and immutability checks",
+    "ledger_event_schema.json emission and immutability checks",
+    "pipeline integration for run-start artifact capture via orket/runtime/run_start_artifacts.py",
+    "protocol ledger event envelope now includes ledger_schema_version, event_type, run_id, timestamp, and monotonic sequence_number",
+    "protocol ledger append path enforces max_tool_invocations_per_run with fail-closed rejection"
+  ],
+  "pending_for_slice_completion": [
+    "strict ledger call/result ordering enforcement with sequence_number contracts",
+    "tool_invocation_manifest.json required-per-invocation enforcement",
+    "call/result pairing constraints and artifact emission post-result ordering contracts"
+  ]
+}

@@ -310,4 +310,9 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     assert artifact_json["tool_registry_snapshot"]["tool_registry_version"] == "1.2.0"
     assert artifact_json["artifact_schema_snapshot"]["artifact_schema_registry_version"] == "1.0"
     assert artifact_json["compatibility_map_schema_snapshot"]["mapping_count"] >= 1
+    assert artifact_json["run_identity"]["run_id"] == "sess-protocol-contract-bootstrap"
+    assert artifact_json["run_identity"]["workload"] == "protocol_ledger_epic_contract_bootstrap"
+    assert artifact_json["run_determinism_class"] == "workspace"
+    assert artifact_json["capability_manifest"]["run_id"] == "sess-protocol-contract-bootstrap"
     assert Path(artifact_json["tool_registry_snapshot_path"]).exists()
+    assert Path(artifact_json["run_identity_path"]).exists()

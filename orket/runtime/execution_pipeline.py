@@ -32,12 +32,9 @@ from orket.application.services.runtime_policy import (
 )
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
-from orket.runtime.contract_bootstrap import (
-    load_runtime_contract_snapshots,
-    write_runtime_contract_snapshots,
-)
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
+from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.runtime.workload_adapters import build_cards_workload_contract
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_runtime_db_path
@@ -409,7 +406,12 @@ class ExecutionPipeline:
             {"epic": epic.name, "run_id": run_id, "build_id": active_build},
             workspace=self.workspace,
         )
-        run_contract_artifacts = await self._capture_run_contract_artifacts(run_id=run_id)
+        run_contract_artifacts = await asyncio.to_thread(
+            capture_run_start_artifacts,
+            workspace=self.workspace,
+            run_id=run_id,
+            workload=epic.name,
+        )
 
         await self.run_ledger.start_run(
             session_id=run_id,
@@ -599,19 +601,6 @@ class ExecutionPipeline:
             "orket_log": str(self.workspace / "orket.log"),
             "observability_root": str(self.workspace / "observability" / sanitize_name(run_id)),
             "agent_output_root": str(self.workspace / "agent_output"),
-        }
-
-    async def _capture_run_contract_artifacts(self, *, run_id: str) -> Dict[str, Any]:
-        snapshots = await asyncio.to_thread(load_runtime_contract_snapshots)
-        snapshot_root = self.workspace / "observability" / sanitize_name(run_id) / "runtime_contracts"
-        snapshot_paths = await asyncio.to_thread(
-            write_runtime_contract_snapshots,
-            snapshots=snapshots,
-            output_dir=snapshot_root,
-        )
-        return {
-            **snapshots.as_ledger_artifacts(),
-            **snapshot_paths,
         }
 
     async def _export_run_artifacts(
