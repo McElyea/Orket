@@ -282,6 +282,20 @@ class ToolDispatcher:
                     result=result if isinstance(result, dict) else None,
                 )
                 if determinism_violation:
+                    if not protocol_replay_mode:
+                        log_event(
+                            "determinism_violation",
+                            {
+                                "issue_id": turn.issue_id,
+                                "role": turn.role,
+                                "session_id": session_id,
+                                "turn_index": turn_index,
+                                "tool": tool_name,
+                                "operation_id": operation_id,
+                                "error": determinism_violation,
+                            },
+                            self.workspace,
+                        )
                     result = {
                         "ok": False,
                         "error": determinism_violation,

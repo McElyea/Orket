@@ -1,11 +1,11 @@
 {
   "slice_id": "CORE-IMP-03",
-  "status": "in_progress",
+  "status": "done",
   "generated_on": "2026-03-06",
   "evidence": {
-    "test_command": "python -m pytest tests/application/test_skill_adapter_bindings.py tests/application/test_turn_tool_dispatcher.py tests/application/test_turn_tool_dispatcher_replay_isolation.py tests/application/test_turn_tool_dispatcher_support.py tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py -q",
+    "test_command": "python -m pytest tests/runtime/test_run_start_artifacts.py tests/runtime/test_protocol_replay.py tests/application/test_execution_pipeline_run_ledger.py tests/application/test_execution_pipeline_protocol_run_ledger.py tests/application/test_turn_tool_dispatcher.py tests/application/test_turn_tool_dispatcher_replay_isolation.py tests/application/test_turn_tool_dispatcher_support.py tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_skill_adapter_bindings.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py tests/platform/test_ring_import_boundary_policy.py tests/platform/test_dependency_policy_contract.py -q && python -m pytest tests/application/test_orchestrator_epic.py -k \"build_turn_context_protocol_governed_defaults or build_turn_context_uses_active_run_policy_overrides or build_turn_context_protocol_determinism_invalid_network_mode_fails_fast\" -q",
     "result": "pass",
-    "passed": 43,
+    "passed": 83,
     "failed": 0
   },
   "implemented_now": [
@@ -13,14 +13,11 @@
     "protocol preflight rejects capability profile violations before execution with E_CAPABILITY_VIOLATION",
     "protocol preflight rejects determinism policy mismatches before execution with E_DETERMINISM_POLICY_VIOLATION",
     "protocol preflight rejects direct tool-to-tool invocation boundary violations with E_TOOL_INVOCATION_BOUNDARY",
-    "dispatcher runtime post-execution check emits E_DETERMINISM_VIOLATION when declared pure tools expose side-effect signals",
-    "protocol error-code registry now includes ring/capability/determinism/boundary families with descriptions",
-    "role/skill tool bindings now carry explicit ring, determinism_class, capability_profile, and tool_contract_version defaults for pre-execution policy checks",
-    "turn context now carries run_determinism_class and allowed capability/ring policy derived from active run contract artifacts and process rules"
+    "dispatcher runtime emits determinism_violation telemetry and fails with E_DETERMINISM_VIOLATION when declared pure tools expose side-effect signals",
+    "protocol error-code registry includes ring/capability/determinism/boundary families with descriptions",
+    "role/skill tool bindings carry explicit ring, determinism_class, capability_profile, and tool_contract_version defaults for pre-execution policy checks",
+    "turn context carries run_determinism_class and allowed capability/ring policy derived from active run contract artifacts and process rules",
+    "static ring import boundary governance check fails closed when compatibility/experimental paths import forbidden runtime internals"
   ],
-  "remaining_for_slice_completion": [
-    "add static import-boundary enforcement for compatibility/experimental runtime policy",
-    "add broader integration proof for tool-to-tool invocation rejection through real multi-tool paths",
-    "add deterministic violation observability artifact/event contract coverage beyond error-code emission"
-  ]
+  "remaining_for_slice_completion": []
 }
