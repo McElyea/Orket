@@ -57,6 +57,7 @@ product/**/*.log
 .env
 project_dumper*
 project_dump*
+_review_stage/
 model/core/rocks/run_the_business.json
 docs/projects/OS/archive/idea.md
 
