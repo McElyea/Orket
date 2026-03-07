@@ -1,7 +1,7 @@
 # Tech Debt Requirements
 
 Source: `docs/internal/ClaudeReview.md` (2026-02-28 audit)
-Status: Active
+Status: Archived
 
 ---
 
