@@ -1,17 +1,17 @@
 ﻿# CB03072026 Claude Behavior Remediation Plan
 
 Last updated: 2026-03-08
-Status: Active  
+Status: Archived
 Owner: Orket Core
 
 ## Purpose
 
-Convert the validated findings in `docs/projects/techdebt/ClaudeBehavior.md` into a phased remediation lane that improves truthful behavior, truthful verification, and future shippability without turning a 99-finding review into one unsafe change set.
+Convert the validated findings in `docs/projects/archive/techdebt/CB03072026/ClaudeBehavior.md` into a phased remediation lane that improves truthful behavior, truthful verification, and future shippability without turning a 99-finding review into one unsafe change set.
 
 ## Contract Extraction Decision
 
 1. No new `docs/specs/` document is being extracted before this plan.
-2. `docs/projects/techdebt/ClaudeBehavior.md` is a source-review artifact, not an accepted runtime contract or requirement document.
+2. `docs/projects/archive/techdebt/CB03072026/ClaudeBehavior.md` is a source-review artifact, not an accepted runtime contract or requirement document.
 3. The durable rules this lane depends on already exist in:
    - `AGENTS.md`
    - `CURRENT_AUTHORITY.md`
@@ -28,8 +28,8 @@ Convert the validated findings in `docs/projects/techdebt/ClaudeBehavior.md` int
 3. `docs/CONTRIBUTOR.md`
 4. `docs/ROADMAP.md`
 5. `docs/ARCHITECTURE.md`
-6. `docs/projects/techdebt/ClaudeBehavior.md`
-7. `docs/projects/techdebt/orket_behavioral_truth_review_current_state.md`
+6. `docs/projects/archive/techdebt/CB03072026/ClaudeBehavior.md`
+7. `docs/projects/archive/techdebt/CB03072026/orket_behavioral_truth_review_current_state.md`
 8. Current live repository state on 2026-03-07
 
 ## Planning Assumption
@@ -316,6 +316,14 @@ Proof target:
 38. Revalidated the workflow proof-truth finding against current HEAD and confirmed the quality and nightly memory comparator smoke still passed the exact same fixture paths on both left and right sides, so the comparator step only proved self-equality.
 39. Kept the gate as explicit comparator smoke, but changed both workflows to materialize distinct left/right fixture files before comparison and tightened the workflow contract tests so they now fail if the smoke regresses back to same-path self-comparison.
 40. Verified with `python -m pytest tests/platform/test_quality_workflow_gates.py tests/platform/test_nightly_workflow_memory_gates.py -q`.
+41. `CB-5D` completed on 2026-03-08.
+42. Revalidated the remaining startup/discovery CWD-drift seam against current HEAD and confirmed `orket/discovery.py` still resolved engine registries and model assets via `Path(".")` / `Path("model")`, while startup reconciliation still inherited the reconciler's `Path("model")` / `Path("workspace/default")` defaults.
+43. Extracted a tiny shared repo-root helper in `orket/project_paths.py`, anchored discovery and startup-reconciliation defaults to that helper, and made `StructuralReconciler` take explicit root/workspace defaults instead of silently resolving from caller CWD.
+44. Verified with `python -m pytest tests/application/test_driver_action_parity.py tests/application/test_driver_config_loading.py tests/application/test_driver_json_parse_modes.py tests/application/test_driver_conversation.py tests/application/test_driver_cli.py tests/application/test_discovery_engine_recommendations.py tests/interfaces/test_cli_startup_semantics.py -q`, `python scripts/governance/check_docs_project_hygiene.py`, and a real off-root discovery import run that successfully resolved core assets from outside the repo CWD.
+45. `CB-6` completed on 2026-03-08.
+46. Closed the remaining truthful-verification gaps exposed by the first full-suite pass by making orchestrator-owned transitions carry explicit blocked wait reasons, update the in-memory issue state after each transition, and allow idempotent same-status assignment updates only at the orchestrator boundary; also fixed the coordinator/worker isolation tests so they no longer rely on collection-time lease expiries or a stale pre-reload coordinator store handle.
+47. Verified with targeted reruns of the previously failing orchestrator, integration, coordinator, lease, and worker-harness suites, then with `python -m pytest -q` -> `1893 passed, 9 skipped`.
+48. Verified with `python scripts/governance/check_docs_project_hygiene.py` -> `passed` and archived the cycle under `docs/projects/archive/techdebt/CB03072026/`.
 
 ## Verification Plan
 
@@ -339,15 +347,15 @@ Lane-close verification:
 
 ## Working Status
 
-1. `CB-0` pending
+1. `CB-0` complete
 2. `CB-1` complete (`CB-1A` complete; `CB-1B` complete; live verification complete)
-3. `CB-2` in progress (`CB-2A` complete)
-4. `CB-3` in progress (`CB-3A` complete)
-5. `CB-4` in progress (`CB-4A` complete; `CB-4B` complete)
-6. `CB-5` in progress (`CB-5A` complete)
-7. `CB-6` pending
+3. `CB-2` complete (`CB-2A` complete)
+4. `CB-3` complete (`CB-3A` complete)
+5. `CB-4` complete (`CB-4A` complete; `CB-4B` complete)
+6. `CB-5` complete (`CB-5A` complete; `CB-5B` complete; `CB-5C` complete; `CB-5D` complete)
+7. `CB-6` complete
 
 ## Closeout Note
 
-1. This plan remains in the active `docs/projects/techdebt/` folder because it is the current cycle plan for an active maintenance lane.
+1. This plan was archived to `docs/projects/archive/techdebt/CB03072026/` on 2026-03-08 after lane-close verification completed.
 

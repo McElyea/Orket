@@ -42,9 +42,12 @@ class ParallelDummyProvider(LocalModelProvider):
 async def test_parallel_execution_throughput(tmp_path, monkeypatch):
     """
     Verifies that independent issues are executed in parallel.
-    We create 3 independent issues. If running in parallel, they should finish 
+    We create 3 independent issues. If running in parallel, they should finish
     their first turns in ~0.5s instead of 1.5s.
     """
+    monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "true")
+
     root = tmp_path
     (root / "config").mkdir()
     (root / "model" / "core").mkdir(parents=True)

@@ -15,7 +15,12 @@ class StateMachine:
 
     _TRANSITIONS: Dict[CardType, Dict[CardStatus, Set[CardStatus]]] = {
         CardType.ISSUE: {
-            CardStatus.READY: {CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.READY: {
+                CardStatus.IN_PROGRESS,
+                CardStatus.BLOCKED,
+                CardStatus.CANCELED,
+                CardStatus.ARCHIVED,
+            },
             CardStatus.IN_PROGRESS: {
                 CardStatus.BLOCKED,
                 CardStatus.WAITING_FOR_DEVELOPER,
@@ -34,7 +39,9 @@ class StateMachine:
             },
             CardStatus.CODE_REVIEW: {
                 CardStatus.DONE,
+                CardStatus.READY,
                 CardStatus.IN_PROGRESS,
+                CardStatus.BLOCKED,
                 CardStatus.READY_FOR_TESTING,
                 CardStatus.AWAITING_GUARD_REVIEW,
                 CardStatus.GUARD_APPROVED,

@@ -20,8 +20,13 @@ async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsy
     """Layer: integration. Verifies CLI startup executes reconciliation and emits path markers."""
     startup_events = []
     reconcile_calls = []
+    captures = {}
 
     class _FakeReconciler:
+        def __init__(self, root_path=None, workspace=None):
+            captures["root_path"] = root_path
+            captures["workspace"] = workspace
+
         def reconcile_all(self):
             reconcile_calls.append("called")
 
@@ -31,6 +36,8 @@ async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsy
     monkeypatch.setattr(reconciler_module, "StructuralReconciler", _FakeReconciler)
     monkeypatch.setattr(discovery_module, "load_user_settings", lambda: {"setup_complete": True})
     monkeypatch.setattr(discovery_module, "log_event", _capture_event)
+    monkeypatch.setattr(discovery_module, "_default_model_root", lambda: Path("/fake-root/model"))
+    monkeypatch.setattr(discovery_module, "_default_workspace_root", lambda: Path("/fake-root/workspace/default"))
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
@@ -44,6 +51,8 @@ async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsy
 
     assert "No extensions installed." in out
     assert reconcile_calls == ["called"]
+    assert captures["root_path"] == Path("/fake-root/model")
+    assert captures["workspace"] == Path("/fake-root/workspace/default")
     assert ("discovery_startup_path", {"path": "reconciliation", "result": "success"}) in startup_events
     assert ("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"}) in startup_events
 

@@ -11,6 +11,7 @@ from orket.adapters.tools.families.reforger_tools import ReforgerTools
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.orket import ConfigLoader
+from orket.project_paths import default_model_root, default_project_root, default_workspace_root
 from orket.schema import DialectConfig, SkillConfig
 
 from orket.driver_support_cli import DriverCliMixin
@@ -19,7 +20,15 @@ from orket.driver_support_resources import DriverResourceMixin
 
 
 def _default_project_root() -> Path:
-    return Path(__file__).resolve().parent.parent
+    return default_project_root()
+
+
+def _default_model_root() -> Path:
+    return default_model_root()
+
+
+def _default_workspace_root() -> Path:
+    return default_workspace_root()
 
 
 class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
@@ -40,8 +49,8 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         project_root: Path | None = None,
     ) -> None:
         self.project_root = Path(project_root).resolve() if project_root is not None else _default_project_root()
-        self.model_root = self.project_root / "model"
-        self.workspace_root = self.project_root / "workspace" / "default"
+        self.model_root = default_model_root(self.project_root)
+        self.workspace_root = default_workspace_root(self.project_root)
         self.fs = fs or AsyncFileTools(self.project_root)
         self.reforger_tools = reforger_tools or ReforgerTools(self.workspace_root, [self.project_root])
 
@@ -78,10 +87,10 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         )
 
     def _operator_workspace_root(self) -> Path:
-        return Path(getattr(self, "workspace_root", _default_project_root() / "workspace" / "default"))
+        return Path(getattr(self, "workspace_root", _default_workspace_root()))
 
     def _operator_model_root(self) -> Path:
-        return Path(getattr(self, "model_root", _default_project_root() / "model"))
+        return Path(getattr(self, "model_root", _default_model_root()))
 
     def _compatibility_parse_warning(self) -> str:
         if not bool(getattr(self, "_compatibility_parse_fallback_used", False)):

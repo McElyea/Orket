@@ -60,6 +60,16 @@ def test_state_machine_allows_blocked_with_wait_reason():
     )
 
 
+def test_state_machine_allows_ready_to_blocked_with_dependency_wait_reason():
+    """Layer: contract. Verifies dependency propagation can block untouched work before execution starts."""
+    StateMachine.validate_transition(
+        card_type=CardType.ISSUE,
+        current=CardStatus.READY,
+        requested=CardStatus.BLOCKED,
+        wait_reason=WaitReason.DEPENDENCY,
+    )
+
+
 def test_state_machine_allows_waiting_with_wait_reason():
     """Test that WAITING_FOR_DEVELOPER transition succeeds with wait_reason."""
     # Should not raise

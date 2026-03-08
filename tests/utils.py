@@ -7,8 +7,8 @@ from typing import Callable
 
 from fastapi.testclient import TestClient
 
+import orket.interfaces.coordinator_api as coordinator_api_module
 from orket.core.domain.coordinator_card import Card
-from orket.interfaces.coordinator_api import app, store
 
 
 class DelayedTestClient:
@@ -67,12 +67,12 @@ def make_delay(seed: int, minimum: float = 0.001, maximum: float = 0.005) -> Cal
 
 
 def make_client(seed: int = 7) -> DelayedTestClient:
-    base_client = TestClient(app)
+    base_client = TestClient(coordinator_api_module.app)
     return DelayedTestClient(base_client, delay_fn=make_delay(seed))
 
 
 def reset_store_with_cards(cards: list[Card]) -> None:
-    store.reset(cards)
+    coordinator_api_module.store.reset(cards)
 
 
 def wait_until(predicate: Callable[[], bool], timeout: float = 2.0, interval: float = 0.01) -> bool:

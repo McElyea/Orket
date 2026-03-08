@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
-from orket.discovery import get_engine_recommendations
+from orket.discovery import discover_project_assets, get_engine_recommendations
 
 
 def _patch_engine_registry(monkeypatch, payload: dict) -> None:
@@ -80,3 +80,32 @@ def test_get_engine_recommendations_suggests_higher_missing_tier(monkeypatch):
     assert recommendations[0]["category"] == "coder"
     assert recommendations[0]["suggestion"] == "qwen2.5-coder-14b"
     assert recommendations[0]["tier"] == "mid"
+
+
+def test_discover_project_assets_anchors_model_root_to_project_root(monkeypatch, tmp_path):
+    """Layer: contract. Verifies asset discovery resolves the model root from project root, not caller CWD."""
+    captures = {}
+
+    class _FakeLoader:
+        def __init__(self, root, department):
+            captures["root"] = Path(root)
+            captures["department"] = department
+
+        def list_assets(self, asset_type):
+            return [f"{asset_type}-fixture"]
+
+    off_root_cwd = tmp_path / "other_cwd"
+    off_root_cwd.mkdir()
+    monkeypatch.chdir(off_root_cwd)
+    monkeypatch.setattr("orket.discovery.ConfigLoader", _FakeLoader)
+    monkeypatch.setattr("orket.discovery._default_model_root", lambda: tmp_path / "model")
+
+    assets = discover_project_assets("core")
+
+    assert captures["root"] == tmp_path / "model"
+    assert captures["department"] == "core"
+    assert assets == {
+        "rocks": ["rocks-fixture"],
+        "epics": ["epics-fixture"],
+        "teams": ["teams-fixture"],
+    }

@@ -42,6 +42,19 @@ def test_legacy_cards_profile_parity() -> None:
     assert to_review.new_status == "code_review"
 
 
+def test_legacy_cards_profile_allows_review_retry_to_ready() -> None:
+    """Layer: contract. Verifies review-stage retries can return an issue to the build queue."""
+    service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
+    retry = service.request_transition(
+        action="set_status",
+        current_status=CardStatus.CODE_REVIEW,
+        payload={"status": "ready"},
+        roles=["developer"],
+    )
+    assert retry.ok is True
+    assert retry.new_status == "ready"
+
+
 def test_project_task_profile_core_flow() -> None:
     service = WorkItemTransitionService(workflow_profile="project_task_v1")
     start = service.request_transition(

@@ -5,8 +5,21 @@ from pathlib import Path
 from typing import List, Dict, Any
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader
+from orket.project_paths import default_model_root, default_project_root, default_workspace_root
 from orket.schema import RockConfig, EpicConfig, TeamConfig, EngineRegistry
 from orket.logging import log_event
+
+
+def _default_project_root() -> Path:
+    return default_project_root()
+
+
+def _default_model_root() -> Path:
+    return default_model_root()
+
+
+def _default_workspace_root() -> Path:
+    return default_workspace_root()
 
 
 def _model_tier_rank(tier: str) -> int:
@@ -37,10 +50,10 @@ def refresh_engine_mappings():
     hw = get_current_profile()
     models = get_installed_models()
     
-    registry_path = Path("model/core/engines.json")
+    registry_path = _default_model_root() / "core" / "engines.json"
     if not registry_path.exists(): return {}
-    
-    fs = AsyncFileTools(Path("."))
+
+    fs = AsyncFileTools(_default_project_root())
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
     recommendations = {}
 
@@ -68,10 +81,10 @@ def get_engine_recommendations():
     hw = get_current_profile()
     installed = get_installed_models()
     
-    registry_path = Path("model/core/engines.json")
+    registry_path = _default_model_root() / "core" / "engines.json"
     if not registry_path.exists(): return []
-    
-    fs = AsyncFileTools(Path("."))
+
+    fs = AsyncFileTools(_default_project_root())
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
     suggestions = []
     installed_lower = [str(item).strip().lower() for item in installed]
@@ -110,7 +123,7 @@ def get_engine_recommendations():
     return suggestions
 
 def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
-    loader = ConfigLoader(Path("model"), department)
+    loader = ConfigLoader(_default_model_root(), department)
     return {
         "rocks": loader.list_assets("rocks"),
         "epics": loader.list_assets("epics"),
@@ -124,7 +137,10 @@ def run_startup_reconciliation() -> str:
     try:
         from orket.domain.reconciler import StructuralReconciler
 
-        reconciler = StructuralReconciler()
+        reconciler = StructuralReconciler(
+            root_path=_default_model_root(),
+            workspace=_default_workspace_root(),
+        )
         reconciler.reconcile_all()
         log_event("discovery_startup_path", {"path": "reconciliation", "result": "success"})
         return "success"
@@ -161,7 +177,7 @@ def perform_first_run_setup() -> Dict[str, str]:
 def print_orket_manifest(department: str = "core"):
     from orket.hardware import get_current_profile, can_handle_model_tier, ModelTier
     models, assets, hw = get_installed_models(), discover_project_assets(department), get_current_profile()
-    loader = ConfigLoader(Path("model"), department)
+    loader = ConfigLoader(_default_model_root(), department)
     
     print(f"\n{'='*60}\n ORKET EOS MANIFEST (Dept: {department})\n Hardware: {hw.cpu_cores} Cores | {hw.ram_gb:.1f}GB RAM | {hw.vram_gb:.1f}GB VRAM\n{'='*60}")
     
@@ -193,7 +209,7 @@ def print_orket_manifest(department: str = "core"):
                     
                     # Load the Epic to see the Seats
                     try:
-                        dept_loader = ConfigLoader(Path("model"), dept)
+                        dept_loader = ConfigLoader(_default_model_root(), dept)
                         epic = dept_loader.load_asset("epics", epic_name, EpicConfig)
                         team = dept_loader.load_asset("teams", epic.team, TeamConfig)
                         

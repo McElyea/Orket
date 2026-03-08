@@ -2,6 +2,15 @@
 from pathlib import Path
 from typing import List, Dict, Any
 from orket.logging import log_event
+from orket.project_paths import default_model_root, default_workspace_root
+
+
+def _default_model_root() -> Path:
+    return default_model_root()
+
+
+def _default_workspace_root() -> Path:
+    return default_workspace_root()
 
 
 class StructuralReconciler:
@@ -10,15 +19,15 @@ class StructuralReconciler:
     Finds orphans and adopts them into 'Run the Business' or 'unplanned support'.
     """
 
-    def __init__(self, root_path: Path = Path("model")):
-        # Resolve against repo cwd once, so reads stay stable across temp workspace runs.
-        self.root_path = root_path.resolve()
+    def __init__(self, root_path: Path | None = None, workspace: Path | None = None):
+        self.root_path = Path(root_path).resolve() if root_path is not None else _default_model_root()
+        self.workspace = Path(workspace).resolve() if workspace is not None else _default_workspace_root()
         self.default_rock_id = "run_the_business"
         self.default_epic_id = "unplanned_support"
 
     def reconcile_all(self):
         """Runs the full reconciliation sweep across all departments."""
-        log_event("reconciler_start", {"root_path": str(self.root_path)}, workspace=Path("workspace/default"))
+        log_event("reconciler_start", {"root_path": str(self.root_path)}, workspace=self.workspace)
 
         # 1. Gather all linked assets to identify orphans
         linked_epics = set()
@@ -39,7 +48,7 @@ class StructuralReconciler:
                         log_event(
                             "reconciler_rock_parse_failed",
                             {"file": rf.name, "error": str(e)},
-                            workspace=Path("workspace/default"),
+                            workspace=self.workspace,
                         )
                         continue
 
@@ -58,7 +67,7 @@ class StructuralReconciler:
                         log_event(
                             "reconciler_epic_parse_failed",
                             {"file": ef.name, "error": str(e)},
-                            workspace=Path("workspace/default"),
+                            workspace=self.workspace,
                         )
                         continue
 
@@ -94,7 +103,7 @@ class StructuralReconciler:
                                 "department": dept_dir.name,
                                 "target_rock": self.default_rock_id,
                             },
-                            workspace=Path("workspace/default"),
+                            workspace=self.workspace,
                         )
                         rtb_data.setdefault("epics", []).append({
                             "epic": epic_id,
@@ -129,7 +138,7 @@ class StructuralReconciler:
                                 "department": dept_dir.name,
                                 "target_epic": self.default_epic_id,
                             },
-                            workspace=Path("workspace/default"),
+                            workspace=self.workspace,
                         )
                         try:
                             issue_data = json.loads(isf.read_text(encoding="utf-8"))
@@ -139,7 +148,7 @@ class StructuralReconciler:
                             log_event(
                                 "reconciler_issue_parse_failed",
                                 {"file": isf.name, "error": str(e)},
-                                workspace=Path("workspace/default"),
+                                workspace=self.workspace,
                             )
                             continue
 

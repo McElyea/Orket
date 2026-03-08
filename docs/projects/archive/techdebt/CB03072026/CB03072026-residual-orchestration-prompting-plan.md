@@ -1,12 +1,12 @@
 # CB03072026 Residual Orchestration And Prompting Plan
 
 Last updated: 2026-03-08
-Status: Active  
+Status: Archived
 Owner: Orket Core
 
 ## Purpose
 
-Cover the orchestration and prompt/contract findings from `docs/projects/techdebt/ClaudeBehavior.md` that were not explicitly enumerated in `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`.
+Cover the orchestration and prompt/contract findings from `docs/projects/archive/techdebt/CB03072026/ClaudeBehavior.md` that were not explicitly enumerated in `docs/projects/archive/techdebt/CB03072026/CB03072026-claude-behavior-remediation-plan.md`.
 
 ## Relationship To Primary Plan
 
@@ -26,8 +26,8 @@ Cover the orchestration and prompt/contract findings from `docs/projects/techdeb
 2. `CURRENT_AUTHORITY.md`
 3. `docs/CONTRIBUTOR.md`
 4. `docs/ARCHITECTURE.md`
-5. `docs/projects/techdebt/ClaudeBehavior.md`
-6. `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`
+5. `docs/projects/archive/techdebt/CB03072026/ClaudeBehavior.md`
+6. `docs/projects/archive/techdebt/CB03072026/CB03072026-claude-behavior-remediation-plan.md`
 
 ## Residual Coverage
 

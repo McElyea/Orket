@@ -12,7 +12,7 @@ from collections import defaultdict
 
 from orket.schema import (
     EpicConfig, TeamConfig, EnvironmentConfig, IssueConfig,
-    CardStatus, RoleConfig, DialectConfig, SkillConfig, SeatConfig
+    CardStatus, RoleConfig, DialectConfig, SkillConfig, SeatConfig, WaitReason
 )
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.orchestration.models import ModelSelector
@@ -67,6 +67,51 @@ async def _close_provider_transport(provider: Any) -> None:
     maybe_awaitable = close_method()
     if inspect.isawaitable(maybe_awaitable):
         await maybe_awaitable
+
+
+def _normalize_wait_reason_token(value: Any) -> str | None:
+    if value is None:
+        return None
+    token = value.value if hasattr(value, "value") else value
+    normalized = str(token).strip().lower()
+    return normalized or None
+
+
+def _resolve_transition_wait_reason(
+    *,
+    target_status: CardStatus,
+    reason: str,
+    metadata: Optional[Dict[str, Any]],
+) -> str | None:
+    if isinstance(metadata, dict):
+        explicit = _normalize_wait_reason_token(metadata.get("wait_reason"))
+        if explicit is not None:
+            return explicit
+
+    if target_status == CardStatus.BLOCKED:
+        mapping = {
+            "dependency_blocked": WaitReason.DEPENDENCY.value,
+            "runtime_guard_terminal_failure": WaitReason.REVIEW.value,
+            "catastrophic_failure": WaitReason.SYSTEM.value,
+            "governance_violation": WaitReason.SYSTEM.value,
+            "team_replan_limit_exceeded": WaitReason.SYSTEM.value,
+        }
+        return mapping.get(reason, WaitReason.SYSTEM.value)
+
+    return None
+
+
+def _apply_issue_transition_locally(
+    *,
+    issue: IssueConfig,
+    target_status: CardStatus,
+    assignee: Optional[str],
+    wait_reason: str | None,
+) -> None:
+    issue.status = target_status
+    if assignee is not None:
+        issue.assignee = assignee
+    issue.wait_reason = WaitReason(wait_reason) if wait_reason else None
 
 
 def _resolve_architecture_mode(self) -> str:
@@ -294,13 +339,35 @@ async def _request_issue_transition(
     allow_policy_override: bool = True,
 ) -> None:
     current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status).strip().lower())
+    wait_reason = _resolve_transition_wait_reason(
+        target_status=target_status,
+        reason=reason,
+        metadata=metadata,
+    )
+    metadata_payload = dict(metadata or {})
+    if wait_reason is not None and "wait_reason" not in metadata_payload:
+        metadata_payload["wait_reason"] = wait_reason
+
+    if current_status == target_status:
+        await self.async_cards.update_status(
+            issue.id,
+            target_status,
+            assignee=assignee,
+            reason=reason,
+            metadata=metadata_payload or None,
+        )
+        _apply_issue_transition_locally(
+            issue=issue,
+            target_status=target_status,
+            assignee=assignee,
+            wait_reason=wait_reason,
+        )
+        return
+
     transition_service = WorkItemTransitionService(
         workflow_profile=self._resolve_workflow_profile(),
     )
-    payload = {
-        "status": target_status.value,
-        "wait_reason": (metadata or {}).get("wait_reason") if isinstance(metadata, dict) else None,
-    }
+    payload = {"status": target_status.value, "wait_reason": wait_reason}
     transition = transition_service.request_transition(
         action="set_status",
         current_status=current_status,
@@ -311,7 +378,7 @@ async def _request_issue_transition(
         transition = transition_service.request_transition(
             action="system_set_status",
             current_status=current_status,
-            payload={"status": target_status.value, "reason": reason},
+            payload={"status": target_status.value, "reason": reason, "wait_reason": wait_reason},
             roles=["system"],
         )
     if not transition.ok:
@@ -326,7 +393,13 @@ async def _request_issue_transition(
         target_status,
         assignee=assignee,
         reason=reason,
-        metadata=metadata,
+        metadata=metadata_payload or None,
+    )
+    _apply_issue_transition_locally(
+        issue=issue,
+        target_status=target_status,
+        assignee=assignee,
+        wait_reason=wait_reason,
     )
     issue.status = target_status
 
