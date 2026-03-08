@@ -10,7 +10,7 @@ Intentionally empty.
 
 ## Maintenance (Non-Priority)
 1. techdebt -- Standing recurring maintenance only. Source: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Folder governance: `docs/projects/techdebt/README.md`. Latest evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json`.
-2. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`.
+2. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`. Current status: `CB-1` complete after live Gitea verification; next slice `CB-3A`.
    1. `CB-0` revalidate critical/high finding inventory against current HEAD; mark duplicates, already-fixed items, and blockers before code changes.
    2. `CB-3A` repair `coordinator_store` async/service-boundary behavior.
    3. `CB-ROP-0` revalidate residual orchestration/prompting findings.

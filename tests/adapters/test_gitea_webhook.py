@@ -9,15 +9,23 @@ from orket.adapters.vcs.webhook_db import WebhookDatabase
 
 
 class _FakeResponse:
-    def __init__(self, status_code=200, text=""):
+    def __init__(self, status_code=200, text="", json_payload=None):
         self.status_code = status_code
         self.text = text
+        self._json_payload = json_payload
+
+    def json(self):
+        if self._json_payload is not None:
+            return self._json_payload
+        raise ValueError("No JSON payload configured")
 
 
 class _FakeClient:
-    def __init__(self, *, post_responses=None, patch_responses=None):
+    def __init__(self, *, get_responses=None, post_responses=None, patch_responses=None):
+        self.get_calls = []
         self.post_calls = []
         self.patch_calls = []
+        self.get_responses = get_responses or {}
         self.post_responses = post_responses or {}
         self.patch_responses = patch_responses or {}
 
@@ -31,6 +39,12 @@ class _FakeClient:
     async def post(self, url, **kwargs):
         self.post_calls.append((url, kwargs))
         return self._resolve_response(url, self.post_responses)
+
+    async def get(self, url, **kwargs):
+        self.get_calls.append((url, kwargs))
+        if "/labels" in url and not self.get_responses:
+            return _FakeResponse(status_code=200, json_payload=[])
+        return self._resolve_response(url, self.get_responses)
 
     async def patch(self, url, **kwargs):
         self.patch_calls.append((url, kwargs))
@@ -355,7 +369,17 @@ async def test_auto_reject_creates_requirements_review_issue(monkeypatch, tmp_pa
 
     handler = GiteaWebhookHandler(workspace=tmp_path)
     handler.db = WebhookDatabase(db_path=db_path)
-    handler.client = _FakeClient()
+    handler.client = _FakeClient(
+        get_responses={
+            "/labels": _FakeResponse(
+                status_code=200,
+                json_payload=[
+                    {"id": 11, "name": "requirements-review"},
+                    {"id": 12, "name": "auto-rejected"},
+                ],
+            )
+        }
+    )
 
     payload = {
         "pull_request": {"number": 21},
@@ -368,7 +392,36 @@ async def test_auto_reject_creates_requirements_review_issue(monkeypatch, tmp_pa
 
     await handler.close()
 
-    assert any(call[0].endswith("/api/v1/repos/org/repo/issues") for call in handler.client.post_calls)
+    issue_call = next(call for call in handler.client.post_calls if call[0].endswith("/api/v1/repos/org/repo/issues"))
+    assert issue_call[1]["json"]["labels"] == [11, 12]
+
+
+@pytest.mark.asyncio
+async def test_auto_reject_creates_unlabeled_requirements_issue_when_repo_labels_missing(monkeypatch, tmp_path):
+    """Layer: integration. Verifies auto-reject still creates the follow-up issue when the repo does not define the expected labels."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    db_path = tmp_path / "requirements_issue_missing_labels.db"
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler.db = WebhookDatabase(db_path=db_path)
+    handler.client = _FakeClient(
+        get_responses={"/labels": _FakeResponse(status_code=200, json_payload=[])},
+    )
+
+    payload = {
+        "pull_request": {"number": 22},
+        "review": {"user": {"login": "guard"}, "state": "changes_requested", "body": "still failing"},
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    for _ in range(4):
+        result = await handler.handle_webhook("pull_request_review", payload)
+
+    await handler.close()
+
+    issue_call = next(call for call in handler.client.post_calls if call[0].endswith("/api/v1/repos/org/repo/issues"))
+    assert result["status"] == "rejected"
+    assert "labels" not in issue_call[1]["json"]
 
 
 @pytest.mark.asyncio

@@ -288,7 +288,7 @@ Proof target:
 10. Revalidated API/webhook findings 3, 4, and 22 against current HEAD and confirmed merge, escalation/rejection comment, requirements-issue, and sandbox deployment paths could still report success after downstream failure.
 11. Made webhook merge/reject/deployment handlers return real downstream outcomes, fail closed on HTTP failures, and surface degraded sandbox deployment results instead of unconditional success messages.
 12. Verified with `python -m pytest tests/adapters/test_gitea_webhook.py -q`.
-13. Live verification for the real Gitea webhook flow remains blocked in this environment because `GITEA_ADMIN_PASSWORD` is not configured, even though `http://localhost:3000` responds.
+13. Live verification rerun on 2026-03-07 against local Gitea and the primary signed `/webhook/gitea` path succeeded for merge, escalation, and auto-reject after fixing requirements-issue label ID resolution; the merged deployment path truthfully reported a degraded sandbox deployment caused by missing generated backend/frontend paths.
 14. `CB-4A` completed on 2026-03-07.
 15. Revalidated orchestration findings 3 and 5 against current HEAD and confirmed explicit-false env values still fell through to org/default config while the runtime verifier still claimed profile defaults that did not exist and accepted shell-string commands.
 16. Fixed `_resolve_bool_flag` precedence so explicit false env values win over org config, gave Python/polyglot runtime verification one real builtin command, and made shell-string verifier commands fail explicitly instead of executing with `shell=True`.
@@ -317,7 +317,7 @@ Lane-close verification:
 ## Working Status
 
 1. `CB-0` pending
-2. `CB-1` in progress (`CB-1A` complete; `CB-1B` complete; live verification blocked by missing `GITEA_ADMIN_PASSWORD`)
+2. `CB-1` complete (`CB-1A` complete; `CB-1B` complete; live verification complete`)
 3. `CB-2` in progress (`CB-2A` complete)
 4. `CB-3` pending
 5. `CB-4` in progress (`CB-4A` complete)

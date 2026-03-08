@@ -243,15 +243,18 @@ class PRLifecycleHandler:
             f"Original PR: #{pr_number} (closed)\n\n"
             f"Rejection Reasons:\n{reasons_text}\n"
         )
+        label_ids = await self._resolve_issue_label_ids(owner, repo_name, ["requirements-review", "auto-rejected"])
+        issue_payload: Dict[str, Any] = {
+            "title": f"Requirements Review: PR #{pr_number} failed after 4 cycles",
+            "body": body,
+        }
+        if label_ids:
+            issue_payload["labels"] = label_ids
 
         response = await self.handler.client.post(
             url,
             headers={"Content-Type": "application/json"},
-            json={
-                "title": f"Requirements Review: PR #{pr_number} failed after 4 cycles",
-                "body": body,
-                "labels": ["requirements-review", "auto-rejected"],
-            },
+            json=issue_payload,
         )
         error = _response_error(action=f"requirements issue creation for PR #{pr_number}", response=response)
         if error is not None:
@@ -262,6 +265,55 @@ class PRLifecycleHandler:
             )
             return error
         return None
+
+    async def _resolve_issue_label_ids(self, owner: str, repo_name: str, label_names: list[str]) -> list[int]:
+        labels_url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/labels"
+        response = await self.handler.client.get(labels_url)
+        error = _response_error(action=f"requirements issue label lookup for {owner}/{repo_name}", response=response)
+        if error is not None:
+            log_event(
+                "requirements_issue_label_lookup_failed",
+                {"repo": f"{owner}/{repo_name}", "error": error},
+                self.handler.workspace,
+            )
+            return []
+        try:
+            payload = response.json()
+        except (TypeError, ValueError, AttributeError):
+            log_event(
+                "requirements_issue_label_lookup_failed",
+                {"repo": f"{owner}/{repo_name}", "error": "label lookup returned invalid json"},
+                self.handler.workspace,
+            )
+            return []
+        if not isinstance(payload, list):
+            log_event(
+                "requirements_issue_label_lookup_failed",
+                {"repo": f"{owner}/{repo_name}", "error": "label lookup returned non-list payload"},
+                self.handler.workspace,
+            )
+            return []
+
+        label_ids: list[int] = []
+        matched_names: set[str] = set()
+        expected_names = {name.lower(): name for name in label_names}
+        for entry in payload:
+            if not isinstance(entry, dict):
+                continue
+            name = str(entry.get("name") or "").strip().lower()
+            label_id = entry.get("id")
+            if name in expected_names and isinstance(label_id, int) and label_id > 0:
+                label_ids.append(label_id)
+                matched_names.add(name)
+
+        missing = [name for name in label_names if name.lower() not in matched_names]
+        if missing:
+            log_event(
+                "requirements_issue_labels_missing",
+                {"repo": f"{owner}/{repo_name}", "missing_labels": missing},
+                self.handler.workspace,
+            )
+        return label_ids
 
 
 class SandboxDeploymentHandler:
