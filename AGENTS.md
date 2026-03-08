@@ -115,7 +115,8 @@ Required:
 3. Treat `docs/ROADMAP.md` as an active execution index, not a session journal, narrative handoff log, or duplicate process guide.
 4. Treat `docs/ROADMAP.md` sections by execution semantics, not by heading name alone:
    - `Priority Now` empty means no priority lane, not no work.
-   - active items in `Maintenance (Non-Priority)` are still executable roadmap work and become the default queue when no priority lane exists.
+   - active items in `Maintenance (Non-Priority)` are still executable roadmap work when no priority lane exists.
+   - standing recurring maintenance entries remain active but are fallback work; they should not outrank active finite maintenance items by default and should be listed last within the section unless they are the only active maintenance work.
 5. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
 6. When creating a new active implementation plan, follow the roadmap-entry rule in `docs/CONTRIBUTOR.md` and update `docs/ROADMAP.md` in the same change.
 7. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.

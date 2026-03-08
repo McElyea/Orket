@@ -49,6 +49,7 @@ class ToolParser:
             return []
 
         recovered: List[Dict[str, Any]] = []
+        skipped_tools: List[Dict[str, str]] = []
         for idx, marker in enumerate(tool_markers):
             tool_name = marker.group("tool")
             segment_start = marker.start()
@@ -59,14 +60,18 @@ class ToolParser:
                 status_match = re.search(r'"status"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
                 if status_match:
                     recovered.append({"tool": tool_name, "args": {"status": status_match.group(1)}})
+                else:
+                    skipped_tools.append({"tool": tool_name, "reason": "missing_status"})
                 continue
 
             if tool_name != "write_file":
+                skipped_tools.append({"tool": tool_name, "reason": "unsupported_tool"})
                 continue
 
             path_match = re.search(r'"path"\s*:\s*"([^"]+)"', segment, flags=re.DOTALL)
             content_match = re.search(r'"content"\s*:\s*"', segment, flags=re.DOTALL)
             if not path_match or not content_match:
+                skipped_tools.append({"tool": tool_name, "reason": "missing_path_or_content"})
                 continue
 
             content_start = content_match.end()
@@ -77,6 +82,7 @@ class ToolParser:
             raw_content = trailing[: terminator.start()] if terminator else trailing
             raw_content = raw_content.strip().replace("```", "").rstrip()
             if not raw_content:
+                skipped_tools.append({"tool": tool_name, "reason": "empty_content"})
                 continue
 
             recovered.append(
@@ -89,15 +95,15 @@ class ToolParser:
                 }
             )
 
-        if recovered and diagnostics is not None:
-            diagnostics(
-                "parse_partial_recovery",
-                {
-                    "strategy": "truncated_json_recovery",
-                    "count": len(recovered),
-                    "tools": [item.get("tool") for item in recovered],
-                },
-            )
+        if diagnostics is not None and (recovered or skipped_tools):
+            payload: Dict[str, Any] = {
+                "strategy": "truncated_json_recovery",
+                "count": len(recovered),
+                "tools": [item.get("tool") for item in recovered],
+            }
+            if skipped_tools:
+                payload["skipped_tools"] = skipped_tools
+            diagnostics("parse_partial_recovery", payload)
         return recovered
     
     @staticmethod
