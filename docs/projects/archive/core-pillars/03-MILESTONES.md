@@ -3,7 +3,7 @@
 Date: 2026-02-24
 
 Canonical slice execution detail:
-`docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`
+`docs/projects/archive/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`
 
 ## Status Snapshot
 1. CP-1.1 Transaction Shell Foundation: completed.

@@ -7,9 +7,9 @@ Status: active
 Ship a practical, modular product direction focused on code generation, correctness, replayability, and sovereign local operation.
 
 Detailed command-level and memory requirements:
-1. `docs/projects/core-pillars/04-V1-COMMAND-AND-SAFETY-REQUIREMENTS.md`
-2. `docs/projects/core-pillars/05-BUCKET-D-FAILURE-LESSONS-REQUIREMENTS.md`
-3. `docs/projects/core-pillars/07-API-GENERATION-CONTRACT.md`
+1. `docs/projects/archive/core-pillars/04-V1-COMMAND-AND-SAFETY-REQUIREMENTS.md`
+2. `docs/projects/archive/core-pillars/05-BUCKET-D-FAILURE-LESSONS-REQUIREMENTS.md`
+3. `docs/projects/archive/core-pillars/07-API-GENERATION-CONTRACT.md`
 
 ## Product Layers
 1. Build Layer:

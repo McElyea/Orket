@@ -37,7 +37,7 @@ jobs:
           --raw-out benchmarks/results/benchmarks/nightly_phase5_determinism_report.json
           --scored-out benchmarks/results/benchmarks/nightly_phase5_scored_report.json
 
-      - name: Enforce Memory Determinism Contract
+      - name: Enforce Memory Trace Fixture Contract And Comparator Smoke
         run: |
           python - <<'PY'
           from pathlib import Path

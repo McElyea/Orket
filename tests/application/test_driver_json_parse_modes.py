@@ -25,6 +25,70 @@ def test_parse_model_plan_compatibility_mode_accepts_wrapped_json(monkeypatch):
     assert ("driver_json_parse_mode_compatibility", {"mode": "compatibility"}) in events
 
 
+def test_driver_defaults_to_strict_json_for_governed_prompting(monkeypatch):
+    """Layer: contract. Verifies governed driver construction defaults to strict JSON parsing."""
+
+    class _FakeProvider:
+        def __init__(self, model, temperature=0.1):  # type: ignore[no-untyped-def]
+            self.model = model
+
+    class _FakeSelector:
+        def __init__(self, organization=None):  # type: ignore[no-untyped-def]
+            _ = organization
+
+        def select(self, role, override=None):  # type: ignore[no-untyped-def]
+            _ = role
+            return override or "qwen3.5-coder"
+
+    def _fake_load_engine_configs(self) -> None:
+        self.skill = object()
+        self.dialect = object()
+        self.prompting_mode = "governed"
+        self.config_degraded = False
+        self.config_dependency_classification = {}
+        self.config_load_failures = []
+
+    monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr("orket.orchestration.models.ModelSelector", _FakeSelector)
+    monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
+
+    driver = OrketDriver(model="qwen3.5-coder")
+
+    assert driver.json_parse_mode == "strict"
+
+
+def test_driver_explicit_compatibility_override_survives_governed_prompting(monkeypatch):
+    """Layer: unit. Verifies explicit compatibility mode stays opt-in even on governed paths."""
+
+    class _FakeProvider:
+        def __init__(self, model, temperature=0.1):  # type: ignore[no-untyped-def]
+            self.model = model
+
+    class _FakeSelector:
+        def __init__(self, organization=None):  # type: ignore[no-untyped-def]
+            _ = organization
+
+        def select(self, role, override=None):  # type: ignore[no-untyped-def]
+            _ = role
+            return override or "qwen3.5-coder"
+
+    def _fake_load_engine_configs(self) -> None:
+        self.skill = object()
+        self.dialect = object()
+        self.prompting_mode = "governed"
+        self.config_degraded = False
+        self.config_dependency_classification = {}
+        self.config_load_failures = []
+
+    monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr("orket.orchestration.models.ModelSelector", _FakeSelector)
+    monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
+
+    driver = OrketDriver(model="qwen3.5-coder", json_parse_mode="compatibility")
+
+    assert driver.json_parse_mode == "compatibility"
+
+
 def test_parse_model_plan_strict_mode_rejects_wrapped_json(monkeypatch):
     """Layer: unit. Verifies strict mode rejects non-envelope output and emits strict mode telemetry."""
     events = []

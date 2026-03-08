@@ -291,11 +291,8 @@ class DriverCliMixin:
         path = self._find_asset_path("epic", epic_name, department)
         if path is None or not path.exists():
             return f"Epic '{epic_name}' not found in {department}."
-        epic_data = json.loads(self.fs.read_file_sync(str(path)))
-        key = "cards" if "cards" in epic_data else "issues"
-        if key not in epic_data:
-            key = "cards"
-            epic_data[key] = []
-        epic_data[key].append({"summary": summary, "seat": seat, "priority": priority})
+        epic_data, migrated = self._load_epic_payload_for_write(path)
+        epic_data["issues"].append({"summary": summary, "seat": seat, "priority": priority})
         self.fs.write_file_sync(str(path), epic_data)
-        return f"Added card to epic '{epic_name}' in {department}: [{seat}] p={priority} {summary}"
+        migration_note = " Legacy epic child key was normalized to 'issues'." if migrated else ""
+        return f"Added card to epic '{epic_name}' in {department}: [{seat}] p={priority} {summary}{migration_note}"

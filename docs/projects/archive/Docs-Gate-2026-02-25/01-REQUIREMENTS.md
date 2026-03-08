@@ -29,7 +29,7 @@ Provide a deterministic docs verification gate for mutation workflows (`orket re
 
 ## Check Contracts (v1)
 1. `DL1` Relative Link Integrity:
-- Scan markdown under `docs/projects/core-pillars/`.
+- Scan markdown under `docs/projects/archive/core-pillars/`.
 - Validate relative links and image paths.
 - Ignore `http://`, `https://`, `mailto:`, and pure `#anchor` links.
 - For `file.md#anchor`, validate file existence only in v1.

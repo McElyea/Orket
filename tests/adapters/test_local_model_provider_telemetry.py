@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# Layer: contract
+
 import json
 from typing import Any
 
@@ -8,6 +10,7 @@ import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.exceptions import ModelProviderError
+from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
 
 
 class _FakeClient:
@@ -58,6 +61,29 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
     provider = LocalModelProvider(model="dummy")
+
+    async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
+        _ = kwargs
+        return ProviderRuntimeTarget(
+            requested_provider="lmstudio",
+            canonical_provider="openai_compat",
+            requested_model="dummy",
+            model_id="dummy",
+            base_url="http://127.0.0.1:1234/v1",
+            resolution_mode="requested",
+            inventory_source="test",
+            available_models=("dummy",),
+            loaded_models_before=("dummy",),
+            loaded_models_after=("dummy",),
+            auto_load_attempted=False,
+            auto_load_performed=False,
+            status="OK",
+        )
+
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider_runtime_target.resolve_provider_runtime_target",
+        _fake_resolve,
+    )
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/v1/chat/completions"
@@ -110,6 +136,29 @@ async def test_local_model_provider_honors_bench_overrides(monkeypatch: pytest.M
     monkeypatch.setenv("ORKET_BENCH_SEED", "1337")
     monkeypatch.setenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "text")
     provider = LocalModelProvider(model="dummy", temperature=0.7, seed=None)
+
+    async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
+        _ = kwargs
+        return ProviderRuntimeTarget(
+            requested_provider="lmstudio",
+            canonical_provider="openai_compat",
+            requested_model="dummy",
+            model_id="dummy",
+            base_url="http://127.0.0.1:1234/v1",
+            resolution_mode="requested",
+            inventory_source="test",
+            available_models=("dummy",),
+            loaded_models_before=("dummy",),
+            loaded_models_after=("dummy",),
+            auto_load_attempted=False,
+            auto_load_performed=False,
+            status="OK",
+        )
+
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider_runtime_target.resolve_provider_runtime_target",
+        _fake_resolve,
+    )
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content.decode("utf-8"))
@@ -196,6 +245,7 @@ async def test_local_model_provider_uses_runtime_context_for_orket_session_id(mo
     )
     await provider.close()
     assert response.raw["orket_session_id"] == "seat-42"
+    assert response.raw["orket_session_epoch"] == 0
 
 
 @pytest.mark.asyncio
@@ -300,6 +350,119 @@ async def test_local_model_provider_ollama_strict_tasks_request_json_format(monk
     assert seen["format"] == "json"
     assert response.raw["ollama_request_format"] == "json"
     assert response.raw["ollama_format_fallback_used"] is False
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_clear_context_rotates_openai_session_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    provider = LocalModelProvider(model="dummy")
+    seen_session_ids: list[str] = []
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        seen_session_ids.append(request.headers["x-orket-session-id"])
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-ctx",
+                "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                "usage": {"prompt_tokens": 4, "completion_tokens": 1, "total_tokens": 5},
+            },
+        )
+
+    provider.client = httpx.AsyncClient(
+        base_url="http://127.0.0.1:1234/v1",
+        transport=httpx.MockTransport(_handler),
+    )
+    first = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"seat_id": "seat-42"})
+    await provider.clear_context()
+    second = await provider.complete([{"role": "user", "content": "hello"}], runtime_context={"seat_id": "seat-42"})
+    await provider.close()
+
+    assert seen_session_ids == ["seat-42", "seat-42-ctx1"]
+    assert first.raw["orket_session_epoch"] == 0
+    assert second.raw["orket_session_epoch"] == 1
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_uses_shared_runtime_target_before_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
+    seen: dict[str, Any] = {}
+
+    async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
+        seen.update(kwargs)
+        return ProviderRuntimeTarget(
+            requested_provider="lmstudio",
+            canonical_provider="openai_compat",
+            requested_model="qwen3.5-coder",
+            model_id="qwen3.5-4b",
+            base_url="http://127.0.0.1:1234/v1",
+            resolution_mode="auto_selected_from_disk",
+            inventory_source="lms_cli",
+            available_models=("qwen3.5-0.8b", "qwen3.5-4b"),
+            loaded_models_before=(),
+            loaded_models_after=("qwen3.5-4b",),
+            auto_load_attempted=True,
+            auto_load_performed=True,
+            status="OK",
+        )
+
+    async def _handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["model"] == "qwen3.5-4b"
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-target",
+                "choices": [{"message": {"role": "assistant", "content": "ok"}}],
+                "usage": {"prompt_tokens": 4, "completion_tokens": 1, "total_tokens": 5},
+            },
+        )
+
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider_runtime_target.resolve_provider_runtime_target",
+        _fake_resolve,
+    )
+    real_async_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        "orket.adapters.llm.local_model_provider.httpx.AsyncClient",
+        lambda *args, **kwargs: real_async_client(
+            base_url="http://127.0.0.1:1234/v1",
+            transport=httpx.MockTransport(_handler),
+        ),
+    )
+    provider = LocalModelProvider(model="qwen3.5-coder")
+
+    response = await provider.complete([{"role": "user", "content": "hello"}])
+    await provider.close()
+
+    assert seen["provider"] == "lmstudio"
+    assert response.raw["requested_model"] == "qwen3.5-coder"
+    assert response.raw["model"] == "qwen3.5-4b"
+    assert response.raw["runtime_target"]["resolution_mode"] == "auto_selected_from_disk"
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_ollama_strict_format_failure_is_blocking(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
+    provider = LocalModelProvider(model="qwen2.5-coder:7b")
+
+    class _NoFormatClient:
+        async def chat(self, model, messages, options):  # type: ignore[no-untyped-def]
+            _ = (model, messages, options)
+            return {"message": {"content": "ok"}}
+
+    provider.client = _NoFormatClient()
+
+    with pytest.raises(ModelProviderError, match="does not support format='json'"):
+        await provider.complete(
+            [{"role": "user", "content": "Return strict JSON"}],
+            runtime_context={"protocol_governed_enabled": True, "local_prompt_task_class": "strict_json"},
+        )
 
 
 @pytest.mark.asyncio

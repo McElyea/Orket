@@ -118,6 +118,13 @@ def print_board(hierarchy: dict):
                 print(f"    * [{issue['id']}] {summary} ({issue['seat']}) [Priority: {issue.get('priority', 'Medium')}, Status: {issue.get('status', 'ready')}]")
     print(f"\n{'='*60}\n")
 
+
+def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
+    if not isinstance(startup_status, dict):
+        return
+    if str(startup_status.get("reconciliation") or "").strip().lower() == "failed":
+        print("[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.", file=sys.stderr)
+
 async def run_cli():
     # Force UTF-8
     if sys.platform == "win32":
@@ -125,7 +132,8 @@ async def run_cli():
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
     try:
-        perform_first_run_setup()
+        startup_status = perform_first_run_setup()
+        _emit_startup_status(startup_status)
         args = parse_args()
         extension_manager = ExtensionManager()
 

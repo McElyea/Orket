@@ -109,6 +109,10 @@ async def test_cli_create_environment_and_list(tmp_path: Path):
 async def test_cli_add_card_and_list_cards(tmp_path: Path):
     driver = _build_driver(tmp_path)
     await driver.process_request("/create epic payments_upgrade core")
+    epic_path = tmp_path / "model" / "core" / "epics" / "payments_upgrade.json"
+    created_epic = json.loads(epic_path.read_text(encoding="utf-8"))
+    assert "issues" in created_epic
+    assert "cards" not in created_epic
 
     added = await driver.process_request('/add-card payments_upgrade coder 2.5 "Implement retry policy" --department core')
     assert "Added card to epic 'payments_upgrade'" in added
@@ -116,6 +120,60 @@ async def test_cli_add_card_and_list_cards(tmp_path: Path):
     listed = await driver.process_request("/list-cards payments_upgrade core")
     assert "Implement retry policy" in listed
     assert "[coder]" in listed
+    updated_epic = json.loads(epic_path.read_text(encoding="utf-8"))
+    assert "cards" not in updated_epic
+    assert updated_epic["issues"][0]["summary"] == "Implement retry policy"
+
+
+@pytest.mark.asyncio
+async def test_cli_list_cards_surfaces_legacy_epic_child_key(tmp_path: Path):
+    """Layer: integration. Verifies list/add operations do not silently normalize legacy epic shape on read."""
+    driver = _build_driver(tmp_path)
+    epic_path = tmp_path / "model" / "core" / "epics" / "legacy_epic.json"
+    epic_path.write_text(
+        json.dumps(
+            {
+                "name": "legacy_epic",
+                "description": "legacy shape",
+                "team": "standard",
+                "environment": "standard",
+                "cards": [{"summary": "legacy task", "seat": "coder", "priority": 1.0}],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    listed = await driver.process_request("/list-cards legacy_epic core")
+
+    assert "legacy child key 'cards'" in listed
+
+
+@pytest.mark.asyncio
+async def test_cli_add_card_migrates_legacy_epic_child_key_to_issues(tmp_path: Path):
+    """Layer: integration. Verifies write paths normalize touched legacy epic payloads to `issues`."""
+    driver = _build_driver(tmp_path)
+    epic_path = tmp_path / "model" / "core" / "epics" / "legacy_epic.json"
+    epic_path.write_text(
+        json.dumps(
+            {
+                "name": "legacy_epic",
+                "description": "legacy shape",
+                "team": "standard",
+                "environment": "standard",
+                "cards": [{"summary": "legacy task", "seat": "coder", "priority": 1.0}],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    added = await driver.process_request('/add-card legacy_epic coder 2 "new task" --department core')
+    payload = json.loads(epic_path.read_text(encoding="utf-8"))
+
+    assert "normalized to 'issues'" in added
+    assert "cards" not in payload
+    assert [issue["summary"] for issue in payload["issues"]] == ["legacy task", "new task"]
 
 
 @pytest.mark.asyncio

@@ -40,7 +40,6 @@ async def test_execute_plan_handles_all_advertised_actions(monkeypatch):
         "create_issue": {"action": "create_issue", "reasoning": "structural"},
         "create_epic": {"action": "create_epic", "reasoning": "structural"},
         "create_rock": {"action": "create_rock", "reasoning": "structural"},
-        "adopt_issue": {"action": "adopt_issue", "reasoning": "structural"},
     }
 
     for action in driver._supported_plan_actions():
@@ -66,4 +65,23 @@ async def test_process_request_returns_stable_unsupported_action_error():
 
     assert response.startswith("Unsupported action 'delete_issue'.")
     assert "assign_team (suggestion only" in response
-    assert "structural changes: create_issue, create_epic, create_rock, adopt_issue" in response
+    assert "structural changes: create_issue, create_epic, create_rock" in response
+
+
+@pytest.mark.asyncio
+async def test_process_request_treats_adopt_issue_as_unsupported_action():
+    """Layer: integration. Verifies `adopt_issue` is no longer advertised as executable runtime behavior."""
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.model_root = Path("model")
+    driver.skill = None
+    driver.dialect = None
+
+    class _Provider:
+        async def complete(self, _messages):
+            return SimpleNamespace(content='{"action":"adopt_issue","reasoning":"move it"}')
+
+    driver.provider = _Provider()
+
+    response = await driver.process_request("adopt issue orphaned_bug into support")
+
+    assert response.startswith("Unsupported action 'adopt_issue'.")

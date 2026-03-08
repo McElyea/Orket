@@ -1,9 +1,9 @@
 {
   "name": "ui_update",
   "description": "General UI maintenance and updates.",
-  "team": "standard",
+  "team": "enterprise",
   "environment": "standard",
-  "cards": [
+  "issues": [
     { "summary": "Audit current UI components.", "seat": "lead_architect" },
     { "summary": "Apply visual polish to the dashboard.", "seat": "ux_artisan" }
   ]

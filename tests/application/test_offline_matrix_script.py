@@ -5,14 +5,14 @@ import subprocess
 from pathlib import Path
 
 
-def test_check_offline_matrix_passes_with_core_doc() -> None:
+def test_check_offline_matrix_passes_with_offline_spec() -> None:
     out_path = Path("benchmarks/results/benchmarks/offline_matrix_check_test.json")
     result = subprocess.run(
         [
             "python",
             "scripts/benchmarks/check_offline_matrix.py",
             "--matrix-doc",
-            "docs/projects/core-pillars/09-OFFLINE-CAPABILITY-MATRIX.md",
+            "docs/specs/OFFLINE_CAPABILITY_MATRIX.md",
             "--out",
             str(out_path),
             "--require-default-offline",

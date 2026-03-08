@@ -11,6 +11,10 @@ import httpx
 import ollama
 
 from orket.adapters.llm.local_prompting_policy import LocalPromptingPolicyResult, resolve_local_prompting_policy
+from orket.adapters.llm.local_model_provider_runtime_target import (
+    ensure_provider_runtime_target,
+    provider_runtime_target_payload,
+)
 from orket.adapters.llm.openai_compat_runtime import (
     build_orket_session_id,
     build_prompt_fingerprint,
@@ -24,6 +28,7 @@ from orket.adapters.llm.openai_compat_runtime import (
 )
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
+from orket.runtime.provider_runtime_target import ProviderRuntimeTarget
 
 
 @dataclass
@@ -36,7 +41,8 @@ class LocalModelProvider:
     """Asynchronous local model provider for ollama and openai-compatible backends."""
 
     def __init__(self, model: str, temperature: float = 0.2, seed: Optional[int] = None, timeout: int = 300):
-        self.model = model
+        self.requested_model = str(model or "").strip()
+        self.model = self.requested_model
         self.temperature = self._resolve_temperature_override(temperature)
         self.seed = self._resolve_seed_override(seed)
         self.timeout = timeout
@@ -62,6 +68,8 @@ class LocalModelProvider:
         else:
             self.client = ollama.AsyncClient(host=self.ollama_host) if self.ollama_host else ollama.AsyncClient()
         self._closed = False
+        self._openai_session_epoch = 0
+        self._runtime_target: ProviderRuntimeTarget | None = None
 
     @staticmethod
     def _resolve_temperature_override(default_temperature: float) -> float:
@@ -96,6 +104,14 @@ class LocalModelProvider:
         if not isinstance(value, (int, float)):
             return None
         return float(value) / 1_000_000.0
+
+    def _resolve_request_session_id(self, base_session_id: str) -> str:
+        if self.provider_backend != "openai_compat":
+            return base_session_id
+        epoch = max(0, int(getattr(self, "_openai_session_epoch", 0) or 0))
+        if epoch == 0:
+            return base_session_id
+        return f"{base_session_id}-ctx{epoch}"
 
     def _resolve_provider_backend(self) -> str:
         raw = str(
@@ -133,9 +149,10 @@ class LocalModelProvider:
         runtime_context: Optional[Dict[str, Any]] = None,
     ) -> ModelResponse:
         resolved_context = dict(runtime_context or {})
+        effective_model = await ensure_provider_runtime_target(self)
         policy = await resolve_local_prompting_policy(
             provider_backend=self.provider_backend,
-            model=self.model,
+            model=effective_model,
             messages=list(messages),
             runtime_context=resolved_context,
         )
@@ -157,7 +174,6 @@ class LocalModelProvider:
             options["seed"] = self.seed
         options.update(local_prompting_policy.ollama_options_overrides())
         request_format = ""
-        format_fallback_used = False
         if local_prompting_policy.task_class in {"strict_json", "tool_call"}:
             request_format = "json"
 
@@ -208,21 +224,23 @@ class LocalModelProvider:
                     "provider": "ollama-async",
                     "provider_backend": "ollama",
                     "model": self.model,
+                    "requested_model": self.requested_model,
                     "retries": attempt,
                     "latency_ms": int((time.perf_counter() - started_at) * 1000),
                     "response_chars": len(content),
                     "ollama_request_format": request_format or None,
-                    "ollama_format_fallback_used": format_fallback_used,
+                    "ollama_format_fallback_used": False,
+                    "runtime_target": provider_runtime_target_payload(self),
                 }
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
 
             except TypeError as exc:
-                # Older client shims may not accept the optional `format` keyword.
                 if request_format and "format" in str(exc):
-                    format_fallback_used = True
-                    request_format = ""
-                    continue
+                    raise ModelProviderError(
+                        "Ollama client does not support format='json' for strict task "
+                        f"class '{local_prompting_policy.task_class}'."
+                    ) from exc
                 raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(exc)}") from exc
             except (asyncio.TimeoutError, ModelTimeoutError):
                 if attempt == max_retries - 1:
@@ -277,13 +295,15 @@ class LocalModelProvider:
         response_format = str(os.getenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
         if response_format in {"text", "json_schema"}:
             payload["response_format"] = {"type": response_format}
-        orket_session_id = build_orket_session_id(
+        base_session_id = build_orket_session_id(
             runtime_context=runtime_context,
             model=self.model,
             provider_name=self.provider_name,
             fallback_messages=list(messages),
             preferred_session_id=str(local_prompting_policy.lmstudio_session_id or ""),
         )
+        orket_session_id = self._resolve_request_session_id(base_session_id)
+        orket_session_epoch = max(0, int(getattr(self, "_openai_session_epoch", 0) or 0))
         orket_request_id = f"orket-{time.time_ns()}"
         prompt_fingerprint = build_prompt_fingerprint(payload)
 
@@ -335,10 +355,12 @@ class LocalModelProvider:
                     "provider_name": self.provider_name,
                     "base_url": self.openai_base_url,
                     "model": self.model,
+                    "requested_model": self.requested_model,
                     "retries": attempt,
                     "latency_ms": latency_ms,
                     "response_chars": len(content),
                     "orket_session_id": orket_session_id,
+                    "orket_session_epoch": orket_session_epoch,
                     "orket_request_id": orket_request_id,
                     "prompt_fingerprint": prompt_fingerprint,
                     "orket_trace": {
@@ -349,6 +371,7 @@ class LocalModelProvider:
                         "status_code": int(response.status_code),
                         "response_headers": select_response_headers(response.headers),
                     },
+                    "runtime_target": provider_runtime_target_payload(self),
                 }
                 raw.update(local_prompting_policy.telemetry())
                 return ModelResponse(content=content, raw=raw)
@@ -389,8 +412,9 @@ class LocalModelProvider:
             retry_delay *= 2
 
     async def clear_context(self):
-        # Chat-completion calls are stateless unless explicit sessions are used.
-        pass
+        if str(getattr(self, "provider_backend", "") or "") == "openai_compat":
+            self._openai_session_epoch = max(0, int(getattr(self, "_openai_session_epoch", 0) or 0)) + 1
+
     async def close(self) -> None:
         if bool(getattr(self, "_closed", False)):
             return

@@ -151,7 +151,7 @@ async def test_process_request_capabilities_question_returns_help():
     assert "/list" in response
     assert "Supported model-directed actions:" in response
     assert "assign_team (suggestion only; no runtime team switch)" in response
-    assert "structural changes: create_issue, create_epic, create_rock, adopt_issue" in response
+    assert "structural changes: create_issue, create_epic, create_rock" in response
     assert "Active prompting mode: fallback" in response
     assert "Active JSON parse mode: compatibility" in response
     assert "Conversation mode is on by default" in response

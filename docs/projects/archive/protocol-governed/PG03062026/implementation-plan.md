@@ -4,7 +4,7 @@ Last updated: 2026-03-06
 Status: Archived (execution complete)  
 Owner: Orket Core
 
-Reference: `docs/projects/protocol-governed/requirements.md`
+Reference: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
 
 ## Objective
 
@@ -128,7 +128,7 @@ Latest completed increments:
     - replay comparator now includes `receipt_inventory` in state digest and diffs
 15. Replay campaign output schema lock landed:
     - canonical campaign output contract published at
-      `docs/projects/protocol-governed/replay-campaign-schema.md`
+      `docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md`
 16. Fault-injection replay coverage expanded:
     - truncation tail boundaries across multiple byte cuts
     - checksum corruption vectors for first/middle/final records
@@ -136,12 +136,12 @@ Latest completed increments:
 17. Protocol error-code registry landed:
     - centralized constants/prefix registry in `orket/runtime/protocol_error_codes.py`
     - parser/ledger/replay-facing codes mapped to stable identifiers
-    - registry reference published at `docs/projects/protocol-governed/error-code-registry.md`
+    - registry reference published at `docs/specs/PROTOCOL_ERROR_CODE_REGISTRY.md`
 18. Determinism control-surface settings wiring landed:
     - protocol timezone/locale/network/allowlist controls resolved into turn context
     - settings and runtime-policy surfaces expose protocol determinism knobs
     - control surface contract published at
-      `docs/projects/protocol-governed/determinism-control-surface.md`
+      `docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md`
 19. Protocol ledger parity campaign surfaces landed:
     - runtime campaign comparator (`protocol_ledger_parity_campaign`)
     - script harness `scripts/protocol/run_protocol_ledger_parity_campaign.py`
@@ -562,4 +562,4 @@ Mitigation: dual-write during compat window and add parity comparators before cu
 1. All PR acceptance checks pass.
 2. Determinism harness is green for repeated replay campaigns.
 3. Enforce mode is default with documented rollback.
-4. Runtime behavior conforms to `docs/projects/protocol-governed/requirements.md` v5.1.
+4. Runtime behavior conforms to `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md` v5.1.

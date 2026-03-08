@@ -189,8 +189,8 @@ Protocol rollout evidence bundles are published via:
 
 Bundle outputs include:
 
-1. replay campaign (`replay-campaign-schema.md`)
-2. ledger parity campaign (`ledger-parity-campaign-schema.md`)
+1. replay campaign (`PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md`)
+2. ledger parity campaign (`PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md`)
 3. latest pointer artifacts for operator review and rollback readiness
 
 ## Operator Checklist

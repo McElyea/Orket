@@ -28,7 +28,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--baseline-run-id", default="", help="Optional replay campaign baseline run id.")
     parser.add_argument("--session-id", action="append", default=[], help="Optional parity campaign session id filter (repeatable).")
     parser.add_argument("--discover-limit", type=int, default=200, help="Parity campaign SQLite discovery limit.")
-    parser.add_argument("--out-dir", default="docs/projects/protocol-governed/artifacts", help="Output artifact directory.")
+    parser.add_argument("--out-dir", default="docs/projects/archive/protocol-governed/artifacts", help="Output artifact directory.")
     parser.add_argument("--allow-missing-sqlite", action="store_true", help="Allow publishing even when SQLite DB is absent.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero on replay/parity mismatches.")
     return parser

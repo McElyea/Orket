@@ -6,7 +6,7 @@ Owner: Orket Core
 
 References:
 1. `docs/internal/LMStudioData.txt`
-2. `docs/projects/protocol-governed/local-prompting-requirements.md`
+2. `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
 3. `docs/projects/archive/protocol-governed/PG03062026/local-prompting-plan.md`
 4. `docs/CONTRIBUTOR.md`
 

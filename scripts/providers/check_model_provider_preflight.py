@@ -18,6 +18,7 @@ try:
         clear_loaded_models,
         default_lmstudio_base_url,
     )
+    from scripts.providers.provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     from provider_model_resolver import choose_model, list_provider_models
     from lmstudio_model_cache import (
@@ -25,6 +26,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
         clear_loaded_models,
         default_lmstudio_base_url,
     )
+    from provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
 
 
 def _stream_smoke_ollama(*, base_url: str, model_id: str, timeout_s: float) -> tuple[bool, str]:
@@ -243,6 +245,31 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Also run a minimal streaming generation smoke check (num_predict=1).",
     )
     parser.add_argument(
+        "--auto-load-local-model",
+        dest="auto_load_local_model",
+        action="store_true",
+        default=True,
+        help="For local LM Studio/OpenAI-compatible checks, load a discovered model when none is active.",
+    )
+    parser.add_argument(
+        "--no-auto-load-local-model",
+        dest="auto_load_local_model",
+        action="store_false",
+        help="Disable local LM Studio model auto-load warmup.",
+    )
+    parser.add_argument(
+        "--model-load-timeout-sec",
+        type=float,
+        default=180.0,
+        help="Timeout in seconds for local model load warmup commands.",
+    )
+    parser.add_argument(
+        "--model-ttl-sec",
+        type=int,
+        default=600,
+        help="TTL in seconds for LM Studio warmup-loaded models.",
+    )
+    parser.add_argument(
         "--sanitize-model-cache",
         dest="sanitize_model_cache",
         action="store_true",
@@ -292,6 +319,34 @@ def main() -> int:
         if pre_code != 0:
             print(f"PREFLIGHT=FAIL reason=cache_sanitize_pre_failed detail={pre_error}")
             return 1
+    try:
+        warmup = warmup_provider_model(
+            provider=requested_provider,
+            requested_model=requested_model,
+            base_url=args.base_url,
+            timeout_s=float(args.timeout),
+            auto_select_model=bool(args.auto_select_model) or not bool(requested_model),
+            auto_load_local_model=bool(args.auto_load_local_model),
+            model_load_timeout_s=float(args.model_load_timeout_sec),
+            model_ttl_sec=int(args.model_ttl_sec),
+        )
+    except ProviderRuntimeWarmupError as exc:
+        print(f"PREFLIGHT=FAIL reason=warmup_failed detail={exc}")
+        return 1
+    resolved_from_warmup = str(warmup.get("resolved_model") or "").strip()
+    if resolved_from_warmup:
+        requested_model = resolved_from_warmup
+    print(
+        "WARMUP_STATUS="
+        f"{warmup.get('status')} source={warmup.get('inventory_source') or 'n/a'} "
+        f"resolution_mode={warmup.get('resolution_mode')} resolved_model={requested_model or '(unset)'}"
+    )
+    available_models = [str(model) for model in (warmup.get("available_models") or []) if str(model).strip()]
+    if available_models:
+        print(f"WARMUP_AVAILABLE_MODELS={','.join(available_models)}")
+    loaded_after = [str(model) for model in (warmup.get("loaded_models_after") or []) if str(model).strip()]
+    if loaded_after:
+        print(f"WARMUP_LOADED_MODELS={','.join(loaded_after)}")
     exit_code = _run_preflight_core(
         requested_provider=requested_provider,
         requested_model=requested_model,

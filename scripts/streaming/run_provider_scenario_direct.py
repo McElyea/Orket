@@ -44,10 +44,22 @@ def _int(value: Any, default: int) -> int:
         return default
 
 
-def _provider_identity() -> dict[str, Any]:
+def _resolved_model_id_from_events(events: list[dict[str, Any]]) -> str:
+    for event in events:
+        event_type = str(event.get("event_type") or "").strip().lower()
+        if event_type not in {"model_selected", "model_ready"}:
+            continue
+        payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+        token = str(payload.get("model_id") or "").strip()
+        if token:
+            return token
+    return ""
+
+
+def _provider_identity(*, resolved_model_id: str = "") -> dict[str, Any]:
     mode = str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
     provider_name = str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
-    model_id = str(os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
+    model_id = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
     if provider_name == "lmstudio":
         provider_name = "openai_compat"
     if provider_name == "ollama":
@@ -267,7 +279,7 @@ async def _run(scenario_path: Path, timeout_s: float) -> int:
             "event_count": len(events),
             "token_delta_count": token_delta_count,
             "stream_digest": _stream_digest(events),
-            **_provider_identity(),
+            **_provider_identity(resolved_model_id=_resolved_model_id_from_events(events)),
         },
         "law_checker_passed": not any(v.get("kind") == "law" for v in violations),
         "law_checker_violations_count": sum(1 for v in violations if v.get("kind") == "law"),

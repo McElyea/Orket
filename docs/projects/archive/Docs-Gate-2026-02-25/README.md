@@ -12,7 +12,7 @@ Define and deliver a deterministic documentation verification gate for Orket so 
 4. `docs/projects/archive/Docs-Gate-2026-02-25/03-MILESTONES.md`
 
 ## Scope
-1. Deterministic linting for docs under `docs/projects/core-pillars/`.
+1. Deterministic linting for docs under `docs/projects/archive/core-pillars/`.
 2. Contract checks for relative links, canonical document presence, and required active-doc headers.
 3. Acceptance tests that are executable and non-interactive.
 4. CI-ready command contract for docs verification profiles.

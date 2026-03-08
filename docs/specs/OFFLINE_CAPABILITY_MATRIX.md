@@ -1,4 +1,4 @@
-# Core Pillars Offline Capability Matrix
+# Offline Capability Matrix
 
 Date: 2026-02-24  
 Status: active

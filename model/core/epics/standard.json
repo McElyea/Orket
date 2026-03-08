@@ -3,7 +3,7 @@
   "description": "Standard development flow.",
   "team": "standard",
   "environment": "standard",
-  "cards": [
+  "issues": [
     { "summary": "Design the solution", "seat": "lead_architect" },
     { "summary": "Implement the code", "seat": "senior_developer" },
     { "summary": "Verify the results", "seat": "quality_assurance" }

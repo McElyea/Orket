@@ -123,13 +123,25 @@ def _mono_delta_ms(start: dict[str, Any] | None, end: dict[str, Any] | None) -> 
     return delta if delta >= 0 else None
 
 
-def _provider_identity() -> dict[str, Any]:
+def _resolved_model_id_from_events(events: list[dict[str, Any]]) -> str:
+    for event in events:
+        event_type = str(event.get("event_type") or "").strip().lower()
+        if event_type not in {"model_selected", "model_ready"}:
+            continue
+        payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+        token = str(payload.get("model_id") or "").strip()
+        if token:
+            return token
+    return ""
+
+
+def _provider_identity(*, resolved_model_id: str = "") -> dict[str, Any]:
     mode = str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
     if mode == "real":
         provider_name = str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
         if provider_name == "lmstudio":
             provider_name = "openai_compat"
-        model_id = str(os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
+        model_id = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
         if provider_name == "ollama":
             base_url = str(os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).strip()
         else:
@@ -469,7 +481,7 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
         "model_loading_to_model_ready": _mono_delta_ms(model_loading_event, model_ready_event),
         "model_ready_to_first_token_delta": _mono_delta_ms(model_ready_event, token_delta_event),
     }
-    provider_identity = _provider_identity()
+    provider_identity = _provider_identity(resolved_model_id=_resolved_model_id_from_events(events))
 
     verdict_status = "PASS" if not violations else "FAIL"
     verdict = {

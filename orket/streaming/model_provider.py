@@ -153,13 +153,14 @@ class StubModelStreamProvider(ModelStreamProvider):
 
 
 class OllamaModelStreamProvider(ModelStreamProvider):
-    def __init__(self, *, model_id: str, timeout_s: float = 60.0) -> None:
+    def __init__(self, *, model_id: str, base_url: str | None = None, timeout_s: float = 60.0) -> None:
         try:
             import ollama  # type: ignore
         except ModuleNotFoundError as exc:  # pragma: no cover - environment-dependent
             raise RuntimeError("Real model provider requires 'ollama' python package.") from exc
         self._ollama = ollama
-        self._client = ollama.AsyncClient()
+        self._base_url = str(base_url or "").strip()
+        self._client = ollama.AsyncClient(host=self._base_url) if self._base_url else ollama.AsyncClient()
         self._model_id = model_id
         self._timeout_s = max(1.0, float(timeout_s))
         self._canceled: dict[str, asyncio.Event] = {}
@@ -262,7 +263,7 @@ class OllamaModelStreamProvider(ModelStreamProvider):
         canceled.set()
 
     async def health(self) -> dict[str, Any]:
-        return {"ok": True, "provider": "ollama", "model_id": self._model_id}
+        return {"ok": True, "provider": "ollama", "model_id": self._model_id, "base_url": self._base_url or None}
 
     async def _is_canceled(self, provider_turn_id: str) -> asyncio.Event:
         async with self._lock:

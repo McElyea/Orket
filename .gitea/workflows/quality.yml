@@ -157,9 +157,10 @@ jobs:
         run: |
           python scripts/benchmarks/check_offline_matrix.py --require-default-offline --out benchmarks/results/benchmarks/offline_matrix_check.json
 
-      - name: Enforce docs gate contract
+      - name: Enforce docs gate fixture contract
         run: |
-          python scripts/governance/docs_lint.py --project core-pillars --strict --json
+          bash tests/acceptance/docs_gate/run.sh
+          python -m pytest -q tests/application/test_docs_lint_script.py
 
       - name: Enforce protocol-governed parity campaign smoke
         run: |
@@ -302,15 +303,16 @@ jobs:
         run: |
           python scripts/benchmarks/check_offline_matrix.py --require-default-offline --out benchmarks/results/benchmarks/offline_matrix_check.json
 
-      - name: Enforce docs gate contract
+      - name: Enforce docs gate fixture contract
         run: |
-          python scripts/governance/docs_lint.py --project core-pillars --strict --json
+          bash tests/acceptance/docs_gate/run.sh
+          python -m pytest -q tests/application/test_docs_lint_script.py
 
       - name: Enforce roadmap pytest metrics
         run: |
           python scripts/governance/check_roadmap_metrics.py
 
-      - name: Enforce memory determinism contract smoke
+      - name: Enforce memory trace fixture contract and comparator smoke
         run: |
           mkdir -p benchmarks/results/benchmarks/memory
           python - <<'PY'

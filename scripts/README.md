@@ -39,11 +39,13 @@ Entry scripts should depend on this package instead of duplicating quant orchest
 
 ## Provider Boundaries
 
-Provider-specific behavior stays explicit:
+Provider-specific behavior stays explicit, but run-path provider/model preparation now shares one authority path:
 
+- Canonical provider runtime target resolution lives in `orket/runtime/provider_runtime_target.py`.
+- Runtime entrypoints and provider verification scripts should reuse that module instead of duplicating provider aliasing, base-URL selection, model ranking, or local warmup logic.
 - LM Studio sanitation uses `scripts/providers/lmstudio_model_cache.py`.
 - Sweeps only invoke sanitation when provider is `lmstudio`.
-- Opaque "one-size-fits-all provider adapters" are intentionally avoided.
+- Provider-specific execution still stays explicit after target resolution (for example Ollama chat versus OpenAI-compatible chat/stream behavior).
 
 ## Provider-Model Quickstart
 
@@ -55,6 +57,7 @@ Use provider-aware helpers to avoid mismatches:
   - `python scripts/providers/list_real_provider_models.py --provider ollama --recommend-model`
 - Validate real-provider wiring with optional auto model selection:
   - `python scripts/providers/check_model_provider_preflight.py --provider lmstudio --auto-select-model`
+  - For local verification, preflight now uses `lms ls` / `lms ps` / `lms load` and `ollama list` as warmup inventory sources so it can auto-select a runnable installed model and load a local LM Studio model when needed.
 - Run the quant tuner with provider-aware model resolution (no setup wizard required):
   - `python scripts/quant/tune_quant_sweep_provider_ready.py --matrix-config <path> --provider lmstudio --auto-model-count 1`
 

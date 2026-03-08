@@ -1,9 +1,9 @@
 {
   "name": "branding",
   "description": "Establish the brand identity.",
-  "team": "standard",
+  "team": "ui_experts",
   "environment": "standard",
-  "cards": [
+  "issues": [
     { "summary": "Define the prompt for the logo.", "seat": "creative_director" },
     { "summary": "Generate the logo using image_generate.", "seat": "frontend_artisan" }
   ]

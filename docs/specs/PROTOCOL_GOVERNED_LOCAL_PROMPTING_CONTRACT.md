@@ -1,11 +1,11 @@
-# Protocol-Governed Local Prompting Requirements (v1.2)
+# Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
 Last updated: 2026-03-06  
 Status: Active (contract baseline)  
 Owner: Orket Core
 
 Reference:
-1. `docs/projects/protocol-governed/requirements.md` (runtime governance authority)
+1. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md` (runtime governance authority)
 
 ## 1. Purpose
 

@@ -5,8 +5,8 @@ Status: Archived (execution complete)
 Owner: Orket Core
 
 References:
-1. `docs/projects/protocol-governed/local-prompting-requirements.md`
-2. `docs/projects/protocol-governed/requirements.md`
+1. `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
+2. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
 3. `docs/CONTRIBUTOR.md`
 4. `AGENTS.md`
 5. `docs/projects/archive/protocol-governed/PG03062026/lmstudio-findings-and-live-test-plan.md`
@@ -120,8 +120,8 @@ Out of scope:
 
 ## 4. Source-of-Truth Boundaries
 
-1. Runtime governance: `docs/projects/protocol-governed/requirements.md`
-2. Local prompting contract: `docs/projects/protocol-governed/local-prompting-requirements.md`
+1. Runtime governance: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
+2. Local prompting contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
 3. Plan of execution: this file
 4. Runtime policy persistence and precedence: `orket/application/services/runtime_policy.py`
 5. Provider invocation behavior:

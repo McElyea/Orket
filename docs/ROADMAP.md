@@ -2,56 +2,29 @@
 
 Last updated: 2026-03-07
 
-## Priority Plan Pointer
-1. techdebt behavioral-truth follow-up closeout (completed cycle reference): `docs/projects/archive/techdebt/OBT03072026/Closeout.md`
-2. techdebt recurring maintenance checklist (maintenance lane): `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
-3. techdebt folder governance: `docs/projects/techdebt/README.md`
-4. core runtime requirements implementation plan (completed lane reference): `docs/projects/core/runtime_requirements_implementation_plan.md`
-5. core runtime requirements slice workboard (completed lane tracker): `docs/projects/core/runtime_requirements_slice_workboard.md`
-6. protocol-governed staged/waiting source: `docs/projects/archive/protocol-governed/PG03062026/implementation-plan.md`
-7. protocol-governed future compatibility source: `docs/projects/protocol-governed/local-prompting-requirements.md`
-
-## Canonical Rule
-`docs/ROADMAP.md` is the only active roadmap source.
-
-## Process Source
-All process and workflow rules live in `docs/CONTRIBUTOR.md`.
-
-## Invocation Rule
-If the user requests "follow roadmap" without naming a project:
-1. Execute the highest-priority active (non-paused) item in **Priority Now**.
-2. If **Priority Now** is intentionally empty, execute item 1 in **Maintenance (Non-Priority)**.
-3. Do not execute **Staged / Waiting** items unless explicitly requested or performing a scheduled review.
-Current default target: techdebt maintenance lane.
+## Operating Rule
+Use `docs/CONTRIBUTOR.md` for contributor workflow and roadmap-selection rules. This file stays focused on active lane status and execution order.
 
 ## Priority Now
-Intentionally empty. `OBT03072026` is complete and archived at `docs/projects/archive/techdebt/OBT03072026/`; recurring techdebt work remains in **Maintenance (Non-Priority)**.
+Intentionally empty.
 
 ## Maintenance (Non-Priority)
-1. techdebt -- Execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md` each cycle; keep recurring checks curated and archive closed cycle docs per `docs/projects/techdebt/README.md`. Latest recurring evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json` (Section A pass via the recurring maintenance runner; Section B and Section C skipped by trigger rules for this cycle; canonical `pytest` passed: 1824 passed, 9 skipped). Latest closed cycle archive: `docs/projects/archive/techdebt/OBT03072026/`.
+1. techdebt -- Standing recurring maintenance only. Source: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Folder governance: `docs/projects/techdebt/README.md`. Latest evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json`.
 
 ## Staged / Waiting (Externally Gated)
-1. protocol-governed production-window operator sign-off -- Waiting for real production traffic; review cadence monthly; next review `2026-04-06`.
-2. protocol-governed post-production six-month evidence -- Waiting for production start date + six-month soak period; review cadence monthly; next review `2026-04-06`.
+1. protocol-governed production-window operator sign-off -- Runtime contract: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`. Implementation archive: `docs/projects/archive/protocol-governed/PG03062026/`. Next review `2026-04-06`.
+2. protocol-governed post-production six-month evidence -- Local provider compatibility contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Next review `2026-04-06`.
 
 ## Future Lanes (Non-Priority Backlog)
-1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Future lane only; reopen with explicit scoped implementation request. Latest readiness evidence (`benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json`) remains `ready=false`.
-2. NervousSystem next-phase planning -- Keep in future lane until production rollout timing is explicitly scheduled.
-3. marshaller requirements hardening -- Keep parked until requirements are mature and explicitly approved for execution.
+1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract source: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Reopen only with an explicit scoped implementation request. Readiness evidence: `benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json` (`ready=false`).
+2. NervousSystem next-phase planning -- Hold until production rollout timing is explicitly scheduled.
+3. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.
 
 ## Project Index
 Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| NervousSystem | future-hold | P3-hold | `docs/projects/future/NervousSystem/` | Orket Core | Locked v1 action-path plan is implemented with live evidence at `benchmarks/results/nervous_system_live_evidence.json` and verification notes in `docs/projects/future/NervousSystem/LIVE_VERIFICATION.md`; keep parked until rollout timing is explicitly scheduled. |
-| marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Marshaller remains scaffolding-only; requirements are not mature enough for priority execution and the lane stays parked until explicit requirements hardening approval. |
-| core | completed-requirements | P1-complete | `docs/projects/core/` | Orket Core | Core runtime stability requirements lane is complete (`CORE-IMP-00` through `CORE-IMP-08`). Canonical requirement sources remain `runtime_stability_focus_requirements.md`, `core_tool_rings_compatibility_requirements.md`, `tool_contract_template.md`, and `runtime_invariants.md`; implementation closeout evidence remains in `runtime_requirements_implementation_plan.md` and `runtime_requirements_slice_workboard.md`. |
-| techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Run `Recurring-Maintenance-Checklist.md` each cycle, keep `G1`-`G7`/protocol/local-prompting freshness artifacts current, and apply `techdebt/README.md` archive semantics so non-maintenance cycle docs can close out (latest archive: `docs/projects/archive/techdebt/OBT03072026/`). |
-| protocol-governed | staged-waiting | P3-waiting | `docs/projects/protocol-governed/` | Orket Core | Runtime execution is complete and archived at `docs/projects/archive/protocol-governed/PG03062026/`; remaining reopen conditions are externally gated (real production traffic and six-month post-production evidence). Review monthly; next review `2026-04-06`. |
+| marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
+| techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Source: `Recurring-Maintenance-Checklist.md`. Folder governance: `README.md`. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
-| LieDetector | completed-archive | complete | `docs/projects/archive/LieDetector/` | Orket Core | Archived project lane; v1 completed and moved to archive. |
-| SDK-2026-03-01-Audio | completed-archive | complete | `docs/projects/archive/SDK-2026-03-01-Audio/` | Orket Core | SDK typed audio capabilities, Piper/audio backend wiring, bridge integration, and reforger voice-profile validation completed in-repo. |
-| core-pillars | completed | P1-complete | `docs/projects/core-pillars/` | Orket Core | CP-1 through CP-4 complete; non-OS/non-ideas roadmap execution is closed out. |
-| RuleSim-2026-03-01 | completed-archive | complete | `docs/projects/archive/RuleSim-2026-03-01/` | Orket Core | RuleSim v0 implemented; docs archived after completion. |
-| archive | archive-root | n/a | `docs/projects/archive/` | Orket Core | Completed projects only. |

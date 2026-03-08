@@ -44,17 +44,36 @@ Do not treat existing violations as permission to create more.
 
 ## Response Formatting
 
-When referencing files in chat responses, use clickable Markdown links with absolute Windows paths in URL form.
+When referencing files in chat responses, choose link format by client surface.
+
+### VS Code Extension / CLI Surface
+
+Use clickable Markdown links with absolute Windows paths in URL form.
 
 Preferred style:
 1. `[Label](/C:/absolute/path/to/file.ext)`
-2. Example: `[Local Prompting Requirements](/C:/Source/Orket/docs/projects/protocol-governed/local-prompting-requirements.md)`
-3. Example with line suffix when supported: `[File:120](/C:/Source/Orket/docs/projects/protocol-governed/local-prompting-requirements.md:120)`
+2. Example: `[Local Prompting Contract](/C:/Source/Orket/docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md)`
+3. Example with line suffix when supported: `[File:120](/C:/Source/Orket/docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md:120)`
 
 Rules:
 1. Prefer `/C:/...`.
 2. Do not use `file://` links.
 3. Do not use plain backticked paths unless the user explicitly requests plain paths.
+
+### Codex App Surface
+
+If the active surface is the Codex app and file links are meant to open inside VS Code from the app, use workspace-relative Markdown links instead of absolute Windows-path URL links.
+
+Preferred style:
+1. `[CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)`
+2. `[Provider Runtime Target](orket/runtime/provider_runtime_target.py)`
+3. `[Contributor Guide](docs/CONTRIBUTOR.md)`
+
+Rules:
+1. Prefer repo-relative targets rooted at the current workspace.
+2. Do not use `/C:/...` targets in the Codex app surface unless the user explicitly confirms they work again.
+3. Do not use `./` or `.\` prefixes unless required by a specific client quirk.
+4. If the user reports link translation drift, fall back to plain backticked Windows paths for that thread until a working style is re-confirmed.
 
 ---
 
@@ -78,6 +97,22 @@ Allowed:
 1. Broad exploratory surfaces.
 2. Incomplete product packaging in non-authoritative areas.
 3. Prototype code that is clearly labeled and does not masquerade as the canonical path.
+
+---
+
+## Contributor Process Authority (Required)
+
+`docs/CONTRIBUTOR.md` is the canonical contributor workflow for this repository. Agents must follow it, not re-invent it in ad hoc roadmap prose.
+
+Required:
+1. Read and follow `docs/CONTRIBUTOR.md` when executing roadmap-driven work or updating documentation process.
+2. Treat `docs/ROADMAP.md` as an active execution index, not a session journal, narrative handoff log, or duplicate process guide.
+3. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
+4. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
+5. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
+6. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
+
+Do not use `docs/ROADMAP.md` to restate process that already lives in `docs/CONTRIBUTOR.md`.
 
 ---
 

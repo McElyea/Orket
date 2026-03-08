@@ -14,7 +14,8 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/governance/retention_plan.py --out benchmarks/results/governance/retention_plan.json",
         "python scripts/governance/check_retention_policy.py --plan benchmarks/results/governance/retention_plan.json --out benchmarks/results/governance/retention_policy_check.json --require-safety",
         "python scripts/benchmarks/check_offline_matrix.py --require-default-offline --out benchmarks/results/benchmarks/offline_matrix_check.json",
-        "python scripts/governance/docs_lint.py --project core-pillars --strict --json",
+        "bash tests/acceptance/docs_gate/run.sh",
+        "python -m pytest -q tests/application/test_docs_lint_script.py",
         "python scripts/protocol/run_protocol_ledger_parity_campaign.py --sqlite-db .ci/protocol_quality_workspace/.orket/durable/db/orket_persistence.db --protocol-root .ci/protocol_quality_workspace --strict --out benchmarks/results/protocol/protocol_governed/protocol_ledger_parity_campaign.json",
         "python scripts/protocol/run_protocol_determinism_campaign.py --runs-root .ci/protocol_quality_workspace/runs --run-id run-a --baseline-run-id run-a --strict --out benchmarks/results/protocol/protocol_governed/protocol_replay_campaign.json",
         "python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict",
@@ -39,6 +40,8 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]
     assert not missing, "quality workflow missing required architecture gates: " + ", ".join(missing)
+    assert "Enforce memory trace fixture contract and comparator smoke" in text
+    assert "Enforce memory determinism contract smoke" not in text
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
@@ -47,7 +50,8 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "python scripts/governance/retention_plan.py --out benchmarks/results/governance/retention_plan.json",
         "python scripts/governance/check_retention_policy.py --plan benchmarks/results/governance/retention_plan.json --out benchmarks/results/governance/retention_policy_check.json --require-safety",
         "python scripts/benchmarks/check_offline_matrix.py --require-default-offline --out benchmarks/results/benchmarks/offline_matrix_check.json",
-        "python scripts/governance/docs_lint.py --project core-pillars --strict --json",
+        "bash tests/acceptance/docs_gate/run.sh",
+        "python -m pytest -q tests/application/test_docs_lint_script.py",
     ]
     missing_dupes = [cmd for cmd in duplicated_in_both_jobs if text.count(cmd) < 2]
     assert not missing_dupes, (

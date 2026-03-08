@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -26,14 +26,16 @@ It defines only the currently authoritative paths that agents and contributors m
 6. Active docs index: `docs/README.md`
 7. Active roadmap: `docs/ROADMAP.md`
 8. Active contributor workflow: `docs/CONTRIBUTOR.md`
-9. Published artifact index: `benchmarks/published/index.json`
+9. Long-lived specs root: `docs/specs/`
+10. Published artifact index: `benchmarks/published/index.json`
+11. Canonical provider runtime target selection: `orket/runtime/provider_runtime_target.py`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-06",
+  "last_updated": "2026-03-07",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -84,12 +86,29 @@ It defines only the currently authoritative paths that agents and contributors m
     },
     "active_spec_index": {
       "root_docs_index": "docs/README.md",
+      "specs_root": "docs/specs/",
       "active_roadmap_source": "docs/ROADMAP.md",
       "process_source": "docs/CONTRIBUTOR.md",
-      "local_prompting_contract_source": "docs/projects/protocol-governed/local-prompting-requirements.md",
+      "core_runtime_contract_sources": [
+        "docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md",
+        "docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md",
+        "docs/specs/RUNTIME_INVARIANTS.md",
+        "docs/specs/TOOL_CONTRACT_TEMPLATE.md"
+      ],
+      "offline_capability_matrix_source": "docs/specs/OFFLINE_CAPABILITY_MATRIX.md",
+      "protocol_governed_contract_sources": [
+        "docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md",
+        "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
+        "docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md",
+        "docs/specs/PROTOCOL_ERROR_CODE_REGISTRY.md",
+        "docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md",
+        "docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md"
+      ],
+      "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
       "sources": [
         "docs/README.md",
-        "docs/ROADMAP.md"
+        "docs/ROADMAP.md",
+        "docs/CONTRIBUTOR.md"
       ]
     },
     "canonical_script_output_locations": {
@@ -97,6 +116,22 @@ It defines only the currently authoritative paths that agents and contributors m
       "published_artifacts_readme": "benchmarks/published/README.md",
       "sources": [
         "docs/CONTRIBUTOR.md"
+      ]
+    },
+    "model_provider_runtime_selection": {
+      "primary": "orket/runtime/provider_runtime_target.py",
+      "runtime_consumers": [
+        "orket/adapters/llm/local_model_provider.py",
+        "orket/workloads/model_stream_v1.py"
+      ],
+      "verification_consumers": [
+        "scripts/providers/check_model_provider_preflight.py",
+        "scripts/providers/list_real_provider_models.py"
+      ],
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/CONTRIBUTOR.md",
+        "scripts/README.md"
       ]
     }
   }

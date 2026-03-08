@@ -11,9 +11,9 @@ Recurring execution owner:
 
 ## Pre-Conditions
 
-1. `docs/projects/protocol-governed/requirements.md` is the active runtime contract.
+1. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md` is the active runtime contract.
 2. `docs/projects/archive/protocol-governed/PG03062026/implementation-plan.md` captures the completed execution slices.
-3. `docs/projects/protocol-governed/determinism-control-surface.md` matches runtime fields in settings and receipts.
+3. `docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md` matches runtime fields in settings and receipts.
 
 ## Campaign Windows
 

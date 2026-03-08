@@ -344,9 +344,9 @@ Define a deterministic baseline toolset that is small enough to stabilize and br
 8. Tool contract template governance.
 
 Reference:
-1. `docs/projects/core/core_tool_rings_compatibility_requirements.md`
-2. `docs/projects/core/tool_contract_template.md`
-3. `docs/projects/core/runtime_invariants.md`
+1. `docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md`
+2. `docs/specs/TOOL_CONTRACT_TEMPLATE.md`
+3. `docs/specs/RUNTIME_INVARIANTS.md`
 
 ### Requirements
 
@@ -394,4 +394,4 @@ Proof:
 1. Do not hard-cap baseline capability at exactly 10 tools.
 2. Treat 10 as a stabilization floor for deterministic core coverage.
 3. Expand breadth via compatibility ring first, then promote to core only after reliability and parity gates pass.
-4. Promotion gates are defined in `core_tool_rings_compatibility_requirements.md`.
+4. Promotion gates are defined in `docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md`.

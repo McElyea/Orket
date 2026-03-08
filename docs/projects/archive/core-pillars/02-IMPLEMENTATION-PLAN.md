@@ -4,7 +4,7 @@ Date: 2026-02-24
 Execution mode: vertical-slice, deterministic gates first
 
 Canonical detailed execution ordering and slice DoR/DoD:
-`docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`
+`docs/projects/archive/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`
 
 ## Phase 1: Build Layer Foundation
 1. Implement command transaction shell requirements from `04-V1-COMMAND-AND-SAFETY-REQUIREMENTS.md`.

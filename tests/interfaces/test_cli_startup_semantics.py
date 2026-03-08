@@ -82,3 +82,26 @@ def test_perform_first_run_onboarding_no_op_when_complete(monkeypatch) -> None:
 
     assert result == "no_op"
     assert ("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"}) in startup_events
+
+
+@pytest.mark.asyncio
+async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys) -> None:
+    """Layer: integration. Verifies CLI surfaces degraded startup when reconciliation fails."""
+    monkeypatch.setattr(
+        cli_module,
+        "perform_first_run_setup",
+        lambda: {"reconciliation": "failed", "onboarding": "no_op"},
+    )
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: SimpleNamespace(command="extensions", subcommand="list"),
+    )
+
+    await cli_module.run_cli()
+    captured = capsys.readouterr()
+
+    assert "No extensions installed." in captured.out
+    assert "Structural reconciliation failed; continuing in degraded mode." in captured.err

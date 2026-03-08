@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-03-01
+Last reviewed: 2026-03-07
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
@@ -23,6 +23,27 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 ## Requirements
 1. `docs/requirements/sdk/VERSIONING.md`
    - SDK version source-of-truth and tag policy.
+
+## Specifications
+1. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
+2. `docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md`
+3. `docs/specs/RUNTIME_INVARIANTS.md`
+4. `docs/specs/TOOL_CONTRACT_TEMPLATE.md`
+5. `docs/specs/OFFLINE_CAPABILITY_MATRIX.md`
+6. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
+7. `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
+8. `docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md`
+9. `docs/specs/PROTOCOL_ERROR_CODE_REGISTRY.md`
+10. `docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md`
+11. `docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md`
+12. `docs/specs/WORKLOAD_CONTRACT_V1.md`
+13. `docs/specs/workload-contract-v1.schema.json`
+14. `docs/specs/SIDECAR_PARSE_SCHEMA.md`
+15. `docs/specs/REVIEW_RUN_V0.md`
+16. `docs/specs/EXPLORER_SCHEMA_POLICY.md`
+17. `docs/specs/EXPLORER_FRONTIER_SCHEMA.md`
+18. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`
+19. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -61,3 +82,4 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 ## Projects
 1. Active plans: `docs/projects/<project>/`
 2. Historical records: `docs/projects/archive/`
+3. Long-lived contracts and schemas: `docs/specs/`

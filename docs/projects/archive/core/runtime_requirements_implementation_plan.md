@@ -7,10 +7,10 @@ Owner: Orket Core
 ## Purpose
 
 Define how to implement the core runtime requirements and invariants currently specified in:
-1. `runtime_invariants.md`
-2. `runtime_stability_focus_requirements.md`
-3. `core_tool_rings_compatibility_requirements.md`
-4. `tool_contract_template.md`
+1. `docs/specs/RUNTIME_INVARIANTS.md`
+2. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
+3. `docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md`
+4. `docs/specs/TOOL_CONTRACT_TEMPLATE.md`
 
 ## Slicing Strategy Decision
 
@@ -502,7 +502,7 @@ Mitigation:
 
 ## Definition of Done (Program Level)
 
-1. All invariants in `runtime_invariants.md` are implemented and enforced.
+1. All invariants in `docs/specs/RUNTIME_INVARIANTS.md` are implemented and enforced.
 2. Focus Items 1-7 have executable contract tests and integration proof.
 3. Replay compatibility checks prevent silent divergence.
 4. Scoreboard and promotion decisions are ledger-auditable.

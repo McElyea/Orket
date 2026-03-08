@@ -9,40 +9,45 @@ Orket
    - `docs/ROADMAP.md`
    - `docs/ARCHITECTURE.md`
 2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
-   - If a project is complete, move its plan/spec docs to `docs/projects/archive/<ProjectName>/` and update links.
-   - Project-owned docs that become long-lived contracts/specifications must move to `docs/specs/` when the project is archived.
+   - If a non-maintenance project or project lane is complete, move its closeout/plan/history docs to `docs/projects/archive/<ProjectName>/` and update links in the same change.
+   - Project-owned docs that remain long-lived contracts/specifications must move to `docs/specs/` when the project or lane is archived.
+   - Completed non-maintenance project folders must not remain under `docs/projects/` unless the folder is still intentionally active as a maintenance lane or externally gated authority surface.
    - Keep `docs/ROADMAP.md` as the only active roadmap source; do not create parallel active backlog docs.
+   - Keep `docs/ROADMAP.md` active-only: do not leave completed or archived project roots in active roadmap sections or the Project Index.
    - Run anti-orphan checks at handoff:
-     1) every non-archive folder in `docs/projects/` appears in roadmap Project Index
+     1) every remaining non-archive folder in `docs/projects/` appears in roadmap Project Index
      2) every active/queued roadmap entry points to an existing path
      3) run `python scripts/governance/check_docs_project_hygiene.py` and fix all failures before handoff
-3. Keep runtime paths in `orket/` async-safe and governance mechanical.
-4. Do not scan dependency/vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
-5. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.
-6. No session narrative here. Use temporary scratch notes if needed.
-7. The roadmap has the next steps, no need to journal them here.
-8. Command intent rule:
+3. Contract extraction prework rule:
+   - When requirements for a project or lane are accepted and durable contracts/specifications are now clear, extract those contract/spec portions into `docs/specs/` before creating the implementation plan.
+   - Requirement documents may keep narrative, rationale, scope, and acceptance framing, but implementation plans should cite the extracted spec/contract files as authority instead of depending on requirement docs that will later be archived.
+   - Do not wait until archive/closeout time to discover and move long-lived authority out of `docs/projects/`.
+4. Keep runtime paths in `orket/` async-safe and governance mechanical.
+5. Do not scan dependency/vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
+6. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.
+7. No session narrative here. Use temporary scratch notes if needed.
+8. The roadmap has the next steps, no need to journal them here.
+9. Command intent rule:
    - If the user says "follow roadmap" (or equivalent) without naming a project, execute the highest-priority active item in `docs/ROADMAP.md`.
    - Do not switch to paused/deferred projects unless the user explicitly requests it.
-   - For `core-pillars`, execute in the exact order defined by `docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`.
-9. Published artifacts rule:
+10. Published artifacts rule:
    - `benchmarks/published/index.json` is canonical.
    - After any published artifact change, run:
      1) `python scripts/governance/sync_published_index.py --write`
      2) `python scripts/governance/sync_published_index.py --check`
    - Commit `index.json`, generated `README.md`, and artifact files together.
-10. Recurring maintenance rule:
+11. Recurring maintenance rule:
    - Recurring freshness/maintenance cycles are governed by:
      `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
    - Techdebt folder closure/archive semantics are governed by:
      `docs/projects/techdebt/README.md`
    - Keep recurring checks out of project execution lanes; project plans should remain closable.
-11. Techdebt cycle closure rule:
+12. Techdebt cycle closure rule:
    - If a techdebt cycle's implementation requirements are complete and verified, move cycle-specific docs from
      `docs/projects/techdebt/` to `docs/projects/archive/techdebt/<cycle_id>/` in the same closeout change.
    - Archive both cycle implementation artifacts and cycle requirement/review/spec files covered by that closeout.
    - Keep only standing maintenance docs (and any currently active cycle docs) under `docs/projects/techdebt/`.
-12. README discipline rule:
+13. README discipline rule:
    - Do not add small project-subfolder `README.md` files by default.
    - Allowed exceptions are maintained index/gateway docs (for example root README, scripts/index readmes, or explicitly referenced governance docs with a named owner).
    - Prefer `docs/ROADMAP.md`, `docs/CONTRIBUTOR.md`, and contract/spec documents as the durable source of truth.
@@ -79,7 +84,6 @@ Orket
 ## How To Work
 1. Pick one roadmap item.
    - Default selection: highest-priority active (non-paused) roadmap item.
-   - If that item is `core-pillars`, use `08-DETAILED-SLICE-EXECUTION-PLAN.md` as the implementation source of truth.
 2. Implement the smallest complete slice.
 3. Add/update tests for behavior changed.
 4. Run targeted tests first, then broader tests.
@@ -89,6 +93,7 @@ Orket
 1. Real-world first: prefer temporary real filesystems/databases over mocks.
 2. Keep tests deterministic and isolated.
 3. For refactors, prove parity with regression tests.
+4. Provider-backed runtime selection and local warmup are authoritative in `orket/runtime/provider_runtime_target.py`; runtime paths and provider verification scripts must reuse that shared path instead of carrying separate provider/model resolution logic.
 
 ## Common Additions
 1. New role: add `model/core/roles/<role>.json`.

@@ -51,4 +51,4 @@ Capture spec-grade items from ideas intake, separate speculation, and preserve a
 
 ## Disposition
 1. `ideas/Ideas.md` remains intake-retired and should not carry active requirements.
-2. Active requirements now live under `docs/projects/core-pillars/`.
+2. Archived project records now live under `docs/projects/archive/core-pillars/`.

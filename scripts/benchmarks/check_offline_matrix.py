@@ -27,7 +27,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate offline capability matrix contract.")
     parser.add_argument(
         "--matrix-doc",
-        default="docs/projects/core-pillars/09-OFFLINE-CAPABILITY-MATRIX.md",
+        default="docs/specs/OFFLINE_CAPABILITY_MATRIX.md",
         help="Offline capability matrix document path.",
     )
     parser.add_argument("--out", default="benchmarks/results/benchmarks/offline_matrix_check.json")

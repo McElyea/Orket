@@ -1,9 +1,9 @@
 {
   "name": "web_dev",
   "description": "Develop the web landing page.",
-  "team": "standard",
+  "team": "ui_experts",
   "environment": "standard",
-  "cards": [
+  "issues": [
     { "summary": "Design and plan the landing page.", "seat": "creative_director" },
     { "summary": "Implement CSS and link the logo.png.", "seat": "frontend_artisan" }
   ]

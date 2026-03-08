@@ -22,7 +22,7 @@ CHECK_DL4 = "DL4"
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Deterministic docs gate lint checks.")
     parser.add_argument("--root", default="docs", help="Docs root path.")
-    parser.add_argument("--project", default="", help="Project slug under docs/projects (v1 supports core-pillars).")
+    parser.add_argument("--project", default="", help="Project slug under docs/projects.")
     parser.add_argument("--strict", action="store_true", help="Enable strict active-doc coverage checks.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON report.")
     return parser.parse_args()
@@ -289,7 +289,7 @@ def _human_report(payload: Dict[str, Any]) -> str:
 def main() -> int:
     args = _parse_args()
     project = str(args.project or "").strip()
-    if project != "core-pillars":
+    if not project:
         payload = {
             "status": "FAIL",
             "project": project,
@@ -300,7 +300,7 @@ def main() -> int:
                     code=ERROR_DOCS_USAGE,
                     check_id="USAGE",
                     path="scripts/governance/docs_lint.py",
-                    message="--project core-pillars is required in v1",
+                    message="--project <slug> is required",
                 )
             ],
         }
@@ -312,6 +312,27 @@ def main() -> int:
 
     docs_root = Path(str(args.root)).resolve()
     project_root = docs_root / "projects" / project
+    if not project_root.exists():
+        payload = {
+            "status": "FAIL",
+            "project": project,
+            "checked_files": 0,
+            "violation_count": 1,
+            "violations": [
+                _violation(
+                    code=ERROR_DOCS_USAGE,
+                    check_id="USAGE",
+                    path=str(project_root).replace("\\", "/"),
+                    message="project folder not found under docs/projects",
+                )
+            ],
+        }
+        if args.json:
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+        else:
+            print(_human_report(payload))
+        return 2
+
     files = _iter_markdown_files(project_root)
 
     violations: List[Dict[str, str]] = []

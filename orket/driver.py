@@ -58,14 +58,23 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         self.dialect: DialectConfig | None = None
         strict_from_env = str(os.getenv("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
         self.strict_config_mode = strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
-        parse_mode_from_env = str(os.getenv("ORKET_DRIVER_JSON_PARSE_MODE", "compatibility")).strip().lower()
-        selected_parse_mode = str(json_parse_mode or parse_mode_from_env).strip().lower()
-        self.json_parse_mode = "strict" if selected_parse_mode == "strict" else "compatibility"
+        parse_mode_from_env = str(os.getenv("ORKET_DRIVER_JSON_PARSE_MODE", "")).strip().lower()
+        self.json_parse_mode = "compatibility"
         self.prompting_mode = "fallback"
         self.config_degraded = False
         self.config_dependency_classification: dict[str, str] = {}
         self.config_load_failures: list[dict[str, str]] = []
         self._load_engine_configs()
+        self.json_parse_mode = self._resolve_json_parse_mode(
+            explicit_mode=json_parse_mode,
+            env_mode=parse_mode_from_env,
+        )
+
+    def _resolve_json_parse_mode(self, *, explicit_mode: str | None, env_mode: str) -> str:
+        selected_parse_mode = str(explicit_mode or env_mode or "").strip().lower()
+        if selected_parse_mode in {"strict", "compatibility"}:
+            return selected_parse_mode
+        return "strict" if self.prompting_mode == "governed" else "compatibility"
 
     def _load_engine_configs(self) -> None:
         if not hasattr(self, "config_dependency_classification"):
@@ -157,7 +166,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             "suggestion": ("assign_team",),
             "directive": ("turn_directive",),
             "conversation": ("converse", "chat", "respond", "conversation"),
-            "structural": ("create_issue", "create_epic", "create_rock", "adopt_issue"),
+            "structural": ("create_issue", "create_epic", "create_rock"),
         }
 
     def _supported_plan_actions(self) -> set[str]:
@@ -308,7 +317,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         try:
             plan = self._parse_model_plan(str(response.content or ""))
             action = str(plan.get("action") or "").strip().lower()
-            if action in {"create_issue", "create_epic", "create_rock", "adopt_issue"} and not self._has_explicit_structural_intent(request_text):
+            if action in {"create_issue", "create_epic", "create_rock"} and not self._has_explicit_structural_intent(request_text):
                 self._log_operator_metric("operator_structural_action_blocked", action=action)
                 log_event(
                     "operator_structural_action_blocked",
@@ -377,7 +386,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 return response_text
             return reasoning
 
-        if normalized_action in {"create_issue", "create_epic", "create_rock", "adopt_issue"}:
+        if normalized_action in {"create_issue", "create_epic", "create_rock"}:
             res = await self._execute_structural_change(plan)
             return f"{res}\n\nStrategic Insight: {reasoning}"
 

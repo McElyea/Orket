@@ -59,4 +59,4 @@ Each row in `rows` and `mismatches` contains:
 1. CI strict mode should fail when `mismatch_count > 0` unless an explicit temporary threshold is approved.
 2. Operator rollout bundles should store both:
    - this parity campaign payload
-   - replay campaign payload from `replay-campaign-schema.md`
+   - replay campaign payload from `PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md`

@@ -4,17 +4,19 @@ import json
 import subprocess
 from pathlib import Path
 
+PROJECT_SLUG = "fixture-project"
+
 
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
 
 
-def _seed_core_pillars_project(root: Path) -> None:
-    docs_root = root / "docs" / "projects" / "core-pillars"
+def _seed_docs_gate_project(root: Path) -> None:
+    docs_root = root / "docs" / "projects" / PROJECT_SLUG
     _write(
         docs_root / "README.md",
-        "# Core Pillars Project\n\n## Canonical Docs\n1. `docs/projects/core-pillars/README.md`\n2. `docs/projects/core-pillars/01-REQUIREMENTS.md`\n",
+        f"# Fixture Project\n\n## Canonical Docs\n1. `docs/projects/{PROJECT_SLUG}/README.md`\n2. `docs/projects/{PROJECT_SLUG}/01-REQUIREMENTS.md`\n",
     )
     _write(
         docs_root / "01-REQUIREMENTS.md",
@@ -22,16 +24,16 @@ def _seed_core_pillars_project(root: Path) -> None:
     )
 
 
-def _seed_core_pillars_project_strict(root: Path) -> None:
-    docs_root = root / "docs" / "projects" / "core-pillars"
+def _seed_docs_gate_project_strict(root: Path) -> None:
+    docs_root = root / "docs" / "projects" / PROJECT_SLUG
     _write(
         docs_root / "README.md",
-        "# Core Pillars Project\n\n## Canonical Docs\n"
-        "1. `docs/projects/core-pillars/README.md`\n"
-        "2. `docs/projects/core-pillars/04-V1-COMMAND-AND-SAFETY-REQUIREMENTS.md`\n"
-        "3. `docs/projects/core-pillars/05-BUCKET-D-FAILURE-LESSONS-REQUIREMENTS.md`\n"
-        "4. `docs/projects/core-pillars/07-API-GENERATION-CONTRACT.md`\n"
-        "5. `docs/projects/core-pillars/08-DETAILED-SLICE-EXECUTION-PLAN.md`\n",
+        "# Fixture Project\n\n## Canonical Docs\n"
+        f"1. `docs/projects/{PROJECT_SLUG}/README.md`\n"
+        f"2. `docs/projects/{PROJECT_SLUG}/04-V1-COMMAND-AND-SAFETY-REQUIREMENTS.md`\n"
+        f"3. `docs/projects/{PROJECT_SLUG}/05-BUCKET-D-FAILURE-LESSONS-REQUIREMENTS.md`\n"
+        f"4. `docs/projects/{PROJECT_SLUG}/07-API-GENERATION-CONTRACT.md`\n"
+        f"5. `docs/projects/{PROJECT_SLUG}/08-DETAILED-SLICE-EXECUTION-PLAN.md`\n",
     )
     _write(
         docs_root / "04-V1-COMMAND-AND-SAFETY-REQUIREMENTS.md",
@@ -52,9 +54,9 @@ def _seed_core_pillars_project_strict(root: Path) -> None:
 
 
 def test_docs_lint_passes_clean_fixture(tmp_path: Path) -> None:
-    _seed_core_pillars_project(tmp_path)
+    _seed_docs_gate_project(tmp_path)
     result = subprocess.run(
-        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", "core-pillars", "--json"],
+        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", PROJECT_SLUG, "--json"],
         capture_output=True,
         text=True,
     )
@@ -64,14 +66,14 @@ def test_docs_lint_passes_clean_fixture(tmp_path: Path) -> None:
 
 
 def test_docs_lint_dl1_broken_link(tmp_path: Path) -> None:
-    _seed_core_pillars_project(tmp_path)
-    bad = tmp_path / "docs" / "projects" / "core-pillars" / "bad.md"
+    _seed_docs_gate_project(tmp_path)
+    bad = tmp_path / "docs" / "projects" / PROJECT_SLUG / "bad.md"
     _write(
         bad,
         "# Bad\n\nDate: 2026-02-24\nStatus: active\n\n## Objective\nBroken.\n\n[broken](./missing.md)\n",
     )
     result = subprocess.run(
-        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", "core-pillars", "--json"],
+        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", PROJECT_SLUG, "--json"],
         capture_output=True,
         text=True,
     )
@@ -81,10 +83,10 @@ def test_docs_lint_dl1_broken_link(tmp_path: Path) -> None:
 
 
 def test_docs_lint_dl2_missing_canonical_file(tmp_path: Path) -> None:
-    _seed_core_pillars_project(tmp_path)
-    (tmp_path / "docs" / "projects" / "core-pillars" / "01-REQUIREMENTS.md").unlink()
+    _seed_docs_gate_project(tmp_path)
+    (tmp_path / "docs" / "projects" / PROJECT_SLUG / "01-REQUIREMENTS.md").unlink()
     result = subprocess.run(
-        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", "core-pillars", "--json"],
+        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", PROJECT_SLUG, "--json"],
         capture_output=True,
         text=True,
     )
@@ -94,11 +96,11 @@ def test_docs_lint_dl2_missing_canonical_file(tmp_path: Path) -> None:
 
 
 def test_docs_lint_dl3_missing_objective_header(tmp_path: Path) -> None:
-    _seed_core_pillars_project(tmp_path)
-    broken = tmp_path / "docs" / "projects" / "core-pillars" / "broken_active.md"
+    _seed_docs_gate_project(tmp_path)
+    broken = tmp_path / "docs" / "projects" / PROJECT_SLUG / "broken_active.md"
     _write(broken, "# Broken\n\nDate: 2026-02-24\nStatus: active\n\n## NotObjective\n")
     result = subprocess.run(
-        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", "core-pillars", "--json"],
+        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", PROJECT_SLUG, "--json"],
         capture_output=True,
         text=True,
     )
@@ -108,7 +110,7 @@ def test_docs_lint_dl3_missing_objective_header(tmp_path: Path) -> None:
 
 
 def test_docs_lint_strict_crossref_passes_when_tokens_declared(tmp_path: Path) -> None:
-    _seed_core_pillars_project_strict(tmp_path)
+    _seed_docs_gate_project_strict(tmp_path)
     result = subprocess.run(
         [
             "python",
@@ -116,7 +118,7 @@ def test_docs_lint_strict_crossref_passes_when_tokens_declared(tmp_path: Path) -
             "--root",
             str(tmp_path / "docs"),
             "--project",
-            "core-pillars",
+            PROJECT_SLUG,
             "--strict",
             "--json",
         ],
@@ -129,8 +131,8 @@ def test_docs_lint_strict_crossref_passes_when_tokens_declared(tmp_path: Path) -
 
 
 def test_docs_lint_strict_crossref_fails_on_undeclared_token(tmp_path: Path) -> None:
-    _seed_core_pillars_project_strict(tmp_path)
-    extra = tmp_path / "docs" / "projects" / "core-pillars" / "extra.md"
+    _seed_docs_gate_project_strict(tmp_path)
+    extra = tmp_path / "docs" / "projects" / PROJECT_SLUG / "extra.md"
     _write(
         extra,
         "# Extra\n\nDate: 2026-02-24\nStatus: active\n\n## Objective\nStrict check.\n\nReference undeclared `E_NOT_DECLARED`.\n",
@@ -142,7 +144,7 @@ def test_docs_lint_strict_crossref_fails_on_undeclared_token(tmp_path: Path) -> 
             "--root",
             str(tmp_path / "docs"),
             "--project",
-            "core-pillars",
+            PROJECT_SLUG,
             "--strict",
             "--json",
         ],
@@ -152,3 +154,14 @@ def test_docs_lint_strict_crossref_fails_on_undeclared_token(tmp_path: Path) -> 
     assert result.returncode == 1
     payload = json.loads(result.stdout)
     assert any(row["code"] == "E_DOCS_CROSSREF_MISSING" for row in payload["violations"])
+
+
+def test_docs_lint_fails_when_project_folder_is_missing(tmp_path: Path) -> None:
+    result = subprocess.run(
+        ["python", "scripts/governance/docs_lint.py", "--root", str(tmp_path / "docs"), "--project", PROJECT_SLUG, "--json"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    payload = json.loads(result.stdout)
+    assert payload["violations"][0]["code"] == "E_DOCS_USAGE"

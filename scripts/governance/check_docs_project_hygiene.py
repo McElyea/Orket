@@ -7,9 +7,6 @@ from pathlib import Path
 
 ROADMAP_PATH = Path("docs/ROADMAP.md")
 PROJECTS_ROOT = Path("docs/projects")
-NON_ARCHIVE_COMPLETED_ALLOWLIST = {"core-pillars"}
-
-
 def _project_rows(roadmap_text: str) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     pattern = re.compile(
@@ -62,13 +59,9 @@ def main() -> int:
         status = row["status"]
         path = row["path"]
 
-        if status == "completed":
+        if status.startswith("completed"):
             if path.startswith("docs/projects/") and "/archive/" not in path.replace("\\", "/"):
-                if project not in NON_ARCHIVE_COMPLETED_ALLOWLIST:
-                    failures.append(
-                        "Completed project should be archived or explicitly allowlisted: "
-                        f"{project} -> {path}"
-                    )
+                failures.append(f"Completed project should be archived: {project} -> {path}")
         if not path.startswith("docs/projects/") and not path.startswith("docs/specs/"):
             continue
         if "/archive/" in path.replace("\\", "/"):
