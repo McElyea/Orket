@@ -4,9 +4,10 @@ Last updated: 2026-03-08
 
 ## Operating Rule
 Use `docs/CONTRIBUTOR.md` for contributor workflow and roadmap-selection rules. This file stays focused on active lane status and execution order. `Priority Now` empty means there is no priority lane; it does not mean there is no work. Active items under `Maintenance (Non-Priority)` remain executable when no priority lane exists. Standing recurring maintenance stays active but is a fallback lane and should be listed last within the section unless it is the only active maintenance work.
+Active lane entries should link the canonical implementation plan path only; requirement docs are project-local authority inputs, not the roadmap execution pointer.
 
 ## Priority Now
-Intentionally empty.
+1. controller-workload -- SDK-first controller workload initiative. Implementation plan: `docs/projects/controller-workload/02-IMPLEMENTATION-PLAN.md`.
 
 ## Maintenance (Non-Priority)
 These items are active executable work. They are non-priority, not deferred.
@@ -27,6 +28,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
+| controller-workload | active | P1-initiative | `docs/projects/controller-workload/` | Orket Core | SDK-first controller workload lane; child dispatch governed through ExtensionManager. |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Source: `Recurring-Maintenance-Checklist.md`. Folder governance: `README.md`. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |

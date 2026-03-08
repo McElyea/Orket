@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import inspect
 import json
 from pathlib import Path
 from typing import Any, Callable
 
+from orket_extension_sdk.result import WorkloadResult
 from orket_extension_sdk.workload import run_workload as sdk_run_workload
 from orket.streaming.contracts import CommitIntent, StreamEventType
 
@@ -129,11 +131,10 @@ class WorkloadExecutor:
         if interaction_context is not None:
             await self._emit_default_model_events(interaction_context, sdk=True)
 
-        result = sdk_run_workload(
-            sdk_workload,
-            self._build_sdk_context(extension, workload, input_config, workspace, artifact_root, capability_registry, input_digest),
-            dict(input_config),
+        sdk_ctx = self._build_sdk_context(
+            extension, workload, input_config, workspace, artifact_root, capability_registry, input_digest
         )
+        result = await self._invoke_sdk_workload(sdk_workload, sdk_ctx, dict(input_config))
         self.artifacts.validate_sdk_artifacts(result, artifact_root)
 
         run_result: dict[str, Any] = {
@@ -261,3 +262,13 @@ class WorkloadExecutor:
             seed=int(input_config.get("seed", 0) or 0),
             config=dict(input_config),
         )
+
+    @staticmethod
+    async def _invoke_sdk_workload(sdk_workload: Any, sdk_ctx: Any, input_payload: dict[str, Any]) -> WorkloadResult:
+        run_method = getattr(sdk_workload, "run", None)
+        if run_method is not None and inspect.iscoroutinefunction(run_method):
+            result = await run_method(sdk_ctx, input_payload)
+            if not isinstance(result, WorkloadResult):
+                raise ValueError("E_SDK_WORKLOAD_RESULT_INVALID")
+            return result
+        return await asyncio.to_thread(sdk_run_workload, sdk_workload, sdk_ctx, input_payload)

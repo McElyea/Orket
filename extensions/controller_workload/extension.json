@@ -1,0 +1,12 @@
+{
+  "manifest_version": "v0",
+  "extension_id": "controller.workload.bootstrap",
+  "extension_version": "0.1.0",
+  "workloads": [
+    {
+      "workload_id": "controller_workload_v1",
+      "entrypoint": "workload_entrypoint:ControllerWorkload",
+      "required_capabilities": []
+    }
+  ]
+}

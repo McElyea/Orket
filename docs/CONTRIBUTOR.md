@@ -21,6 +21,8 @@ Orket
    - Completed non-maintenance project folders must not remain under `docs/projects/` unless the folder is still intentionally active as a maintenance lane or externally gated authority surface.
    - Keep `docs/ROADMAP.md` as the only active roadmap source; do not create parallel active backlog docs.
    - When creating a new active implementation plan, add or update the corresponding `docs/ROADMAP.md` entry in the same change so the plan is discoverable from the active execution index.
+   - Roadmap entries for active lanes must point to the canonical implementation plan path (single plan pointer), not requirement docs.
+   - Requirement docs may exist in the project lane, but roadmap entries should not use requirement docs as the active execution pointer.
    - Roadmap entries for active plans should stay terse and point to the canonical plan path instead of restating the plan body.
    - Keep `docs/ROADMAP.md` active-only: do not leave completed or archived project roots in active roadmap sections or the Project Index.
    - Formal closeout handshake for any completed project lane or techdebt cycle:

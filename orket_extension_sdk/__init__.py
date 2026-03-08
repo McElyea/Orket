@@ -9,6 +9,17 @@ from .capabilities import (
     load_capability_vocab,
     validate_capabilities,
 )
+from .controller import (
+    ControllerChildCall,
+    ControllerChildResult,
+    ControllerChildStatus,
+    ControllerPolicyCaps,
+    ControllerRunEnvelope,
+    ControllerRunStatus,
+    ControllerRunSummary,
+    canonical_digest_sha256,
+    canonical_json,
+)
 from .manifest import ExtensionManifest, WorkloadManifest, load_manifest
 from .result import ArtifactRef, Issue, WorkloadResult
 from .testing import DeterminismHarness, FakeCapabilities, GoldenArtifact
@@ -35,6 +46,15 @@ __all__ = [
     "CapabilityRegistry",
     "load_capability_vocab",
     "validate_capabilities",
+    "ControllerChildCall",
+    "ControllerChildResult",
+    "ControllerChildStatus",
+    "ControllerPolicyCaps",
+    "ControllerRunEnvelope",
+    "ControllerRunStatus",
+    "ControllerRunSummary",
+    "canonical_digest_sha256",
+    "canonical_json",
     "ExtensionManifest",
     "WorkloadManifest",
     "load_manifest",

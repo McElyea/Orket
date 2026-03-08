@@ -123,13 +123,15 @@ Required:
    - standing recurring maintenance entries remain active but are fallback work; they should not outrank active finite maintenance items by default and should be listed last within the section unless they are the only active maintenance work.
 5. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
 6. When creating a new active implementation plan, follow the roadmap-entry rule in `docs/CONTRIBUTOR.md` and update `docs/ROADMAP.md` in the same change.
-7. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
-8. Closeout handshake requirement:
+7. For active lanes, roadmap entries must point to the canonical implementation plan path (single plan pointer), not requirement docs.
+8. Requirement docs may exist in project folders, but they are not the active roadmap execution pointer.
+9. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
+10. Closeout handshake requirement:
    - when a project lane or techdebt cycle completes, update `docs/ROADMAP.md`, archive the cycle/project docs, and remove completed/archived cycle docs from active `docs/projects/` scope in the same change.
    - do not preserve convenience access by leaving a `Status: Completed` or `Status: Archived` cycle doc in an active folder; preserve discoverability via archive links instead.
-9. For `docs/projects/techdebt/`, only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain outside archive.
-10. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
-11. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
+11. For `docs/projects/techdebt/`, only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain outside archive.
+12. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
+13. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
 
 Do not use `docs/ROADMAP.md` to restate process that already lives in `docs/CONTRIBUTOR.md`.
 
