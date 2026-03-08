@@ -10,7 +10,7 @@ Phase authority:
 
 Executed commands:
 1. `python -m pytest -q tests/runtime/test_controller_replay_parity.py tests/scripts/test_compare_controller_replay_parity.py tests/runtime/test_controller_observability.py tests/sdk/test_controller.py`
-2. `python -m py_compile orket/runtime/controller_replay_parity.py scripts/extensions/compare_controller_replay_parity.py docs/projects/controller-workload/templates/controller_workload_external/workload_entrypoint.py`
+2. `python -m py_compile orket/runtime/controller_replay_parity.py scripts/extensions/compare_controller_replay_parity.py docs/templates/controller_workload_external/workload_entrypoint.py`
 3. `python scripts/governance/check_docs_project_hygiene.py`
 
 Observed results:
@@ -37,9 +37,9 @@ Observed results:
 ## 4. Step 16 Evidence (Externalization Template)
 
 Template scaffold delivered:
-1. `docs/projects/controller-workload/templates/controller_workload_external/manifest.json`
-2. `docs/projects/controller-workload/templates/controller_workload_external/extension.json`
-3. `docs/projects/controller-workload/templates/controller_workload_external/workload_entrypoint.py`
+1. `docs/templates/controller_workload_external/manifest.json`
+2. `docs/templates/controller_workload_external/extension.json`
+3. `docs/templates/controller_workload_external/workload_entrypoint.py`
 
 Migration guidance delivered:
-1. `docs/projects/controller-workload/06-EXTERNALIZATION-TEMPLATE.md`
+1. `docs/projects/archive/controller-workload/CW03082026-Initiative-Closeout/06-EXTERNALIZATION-TEMPLATE.md`

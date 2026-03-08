@@ -1,10 +1,10 @@
 # Controller Workload Reliability Hardening Report (Phase 2D)
 
 Last updated: 2026-03-08
-Status: Active
+Status: Completed (Archived)
 Owner: Orket Core
 Phase authority:
-`docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
+`docs/projects/archive/controller-workload/CW03082026-Phase2D/05-IMPLEMENTATION-PLAN-Phase-2D.md`
 
 ## 1. Scope
 

@@ -4,7 +4,7 @@ import argparse
 import shutil
 from pathlib import Path
 
-_TEMPLATE_DIR = Path("docs/projects/controller-workload/templates/controller_workload_external")
+_TEMPLATE_DIR = Path("docs/templates/controller_workload_external")
 _TEMPLATE_FILES = ("manifest.json", "extension.json", "workload_entrypoint.py")
 
 

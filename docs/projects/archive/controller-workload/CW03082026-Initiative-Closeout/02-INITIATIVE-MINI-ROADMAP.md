@@ -1,7 +1,7 @@
 # Controller Workload Initiative Mini-Roadmap (SDK-First)
 
 Last updated: 2026-03-08
-Status: Active
+Status: Completed (Archived)
 Owner: Orket Core
 
 ## Summary
@@ -11,16 +11,16 @@ Locked v0:
 1. SDK-only children
 2. Sequential execution
 3. Hybrid caps (payload request + runtime hard caps)
-4. Active lane in Priority Now
+4. Stable fail-closed controller behavior with deterministic observability and parity checks
 
-Active execution pointer:
-1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
+Final execution pointer (archived):
+1. `docs/projects/archive/controller-workload/CW03082026-Phase2D/05-IMPLEMENTATION-PLAN-Phase-2D.md`
 
-Active requirements slice:
-1. `docs/projects/controller-workload/04-REQUIREMENTS-Phase-2D.md`
+Final requirements slice (archived):
+1. `docs/projects/archive/controller-workload/CW03082026-Phase2D/04-REQUIREMENTS-Phase-2D.md`
 
-Active implementation slice:
-1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
+Final planning handoff (archived):
+1. `docs/projects/archive/controller-workload/CW03082026-Phase2D/07-V1-PLANNING-HANDOFF.md`
 
 Naming convention for continuing slices:
 1. Requirements: `NN-REQUIREMENTS-Phase-<phase>.md`
@@ -28,7 +28,7 @@ Naming convention for continuing slices:
 
 Phase status:
 1. Phase 1 (steps 1-10): completed and archived under `docs/projects/archive/controller-workload/CW03082026/`
-2. Phase 2 (steps 11+): active
+2. Phase 2 (steps 11-22): completed and archived under `docs/projects/archive/controller-workload/CW03082026-Phase2A/`, `docs/projects/archive/controller-workload/CW03082026-Phase2B/`, `docs/projects/archive/controller-workload/CW03082026-Phase2C/`, and `docs/projects/archive/controller-workload/CW03082026-Phase2D/`
 
 ## Next 10 Steps
 1. Bootstrap initiative lane in `docs/projects/controller-workload/` and register in roadmap.
@@ -54,14 +54,14 @@ Phase status:
 19. Completed 2026-03-08: Added environment rollout controls (`ORKET_CONTROLLER_ENABLED`, `ORKET_CONTROLLER_ALLOWED_DEPARTMENTS`) with blocked fail-closed behavior.
 20. Completed 2026-03-08: Verified end-to-end external-style install-path execution through real `ExtensionManager.run_workload` integration flow.
 21. Completed 2026-03-08: Ran reliability hardening pass with repeated controller test runs and published reliability report.
-22. In progress 2026-03-08: Published v1 planning handoff draft for bounded parallelism and broader child-type support.
+22. Completed 2026-03-08: Published v1 planning handoff packet for bounded parallelism and broader child-type support.
 
 ## Milestones
 1. M1 Foundation Complete: steps 1-3.
 2. M2 SDK + Runtime Core Complete: steps 4-8.
 3. M3 Verified v0 Complete: steps 9-10.
 4. M4 Externalization Complete: steps 16-20.
-5. M5 v1 Readiness: steps 21-22.
+5. M5 v1 Readiness Complete: steps 21-22.
 
 ## Assumptions
 - Active execution authority remains `docs/ROADMAP.md`, `docs/CONTRIBUTOR.md`, and `CURRENT_AUTHORITY.md`.

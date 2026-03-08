@@ -3,7 +3,7 @@
 Last updated: 2026-03-08
 Status: Accepted
 Owner: Orket Core
-Initiative authority: `docs/projects/controller-workload/02-INITIATIVE-MINI-ROADMAP.md`
+Initiative authority: `docs/projects/archive/controller-workload/CW03082026-Initiative-Closeout/02-INITIATIVE-MINI-ROADMAP.md`
 Runtime contract authority: `docs/specs/CONTROLLER_WORKLOAD_V1.md`
 Observability contract authority: `docs/specs/CONTROLLER_OBSERVABILITY_V1.md`
 

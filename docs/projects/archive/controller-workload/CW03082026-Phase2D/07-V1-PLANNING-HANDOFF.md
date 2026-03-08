@@ -1,10 +1,10 @@
 # Controller Workload v1 Planning Handoff
 
 Last updated: 2026-03-08
-Status: Draft
+Status: Published (Archived)
 Owner: Orket Core
 Phase authority:
-`docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
+`docs/projects/archive/controller-workload/CW03082026-Phase2D/05-IMPLEMENTATION-PLAN-Phase-2D.md`
 
 ## 1. Purpose
 

@@ -1,9 +1,9 @@
 # Controller Workload Phase 2D Requirements (Reliability Hardening + v1 Planning)
 
 Last updated: 2026-03-08
-Status: Accepted
+Status: Completed (Archived)
 Owner: Orket Core
-Initiative authority: `docs/projects/controller-workload/02-INITIATIVE-MINI-ROADMAP.md`
+Initiative authority: `docs/projects/archive/controller-workload/CW03082026-Initiative-Closeout/02-INITIATIVE-MINI-ROADMAP.md`
 Runtime contract authority: `docs/specs/CONTROLLER_WORKLOAD_V1.md`
 Observability contract authority: `docs/specs/CONTROLLER_OBSERVABILITY_V1.md`
 
@@ -41,7 +41,7 @@ Acceptance:
 3. document migration constraints and rollback boundaries
 
 Acceptance:
-1. planning packet is actionable and linked from active roadmap lane
+1. planning packet is actionable and linked from staged handoff lane
 
 ## 4. Verification Requirements
 
@@ -58,4 +58,4 @@ Acceptance:
 ## 6. Implementation Pointer
 
 Accepted implementation plan for this slice:
-1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
+1. `docs/projects/archive/controller-workload/CW03082026-Phase2D/05-IMPLEMENTATION-PLAN-Phase-2D.md`

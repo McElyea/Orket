@@ -1,11 +1,11 @@
 # Controller Workload Externalization Template
 
 Last updated: 2026-03-08
-Status: Active
+Status: Completed (Archived)
 Owner: Orket Core
 
 Source slice authority:
-`docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2B.md`
+`docs/projects/archive/controller-workload/CW03082026-Phase2B/05-IMPLEMENTATION-PLAN-Phase-2B.md`
 
 ## 1. Purpose
 
@@ -14,9 +14,9 @@ Provide a bootstrap template for moving `extensions/controller_workload` into an
 ## 2. Template Path
 
 Template files:
-1. `docs/projects/controller-workload/templates/controller_workload_external/manifest.json`
-2. `docs/projects/controller-workload/templates/controller_workload_external/extension.json`
-3. `docs/projects/controller-workload/templates/controller_workload_external/workload_entrypoint.py`
+1. `docs/templates/controller_workload_external/manifest.json`
+2. `docs/templates/controller_workload_external/extension.json`
+3. `docs/templates/controller_workload_external/workload_entrypoint.py`
 
 ## 3. Migration Rules
 

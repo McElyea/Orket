@@ -23,4 +23,4 @@ Observed result:
 ## Archive Notes
 1. Active lane docs moved from `docs/projects/controller-workload/` to this archive folder.
 2. At phase-1 handoff time, the roadmap priority lane was cleared and recurring maintenance remained executable fallback work.
-3. The initiative was later re-activated with a new active lane slice; active authority now lives under `docs/projects/controller-workload/`.
+3. The initiative was later re-activated for Phase 2 work and is now fully closed under `docs/projects/archive/controller-workload/CW03082026-Initiative-Closeout/`.

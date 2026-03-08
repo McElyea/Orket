@@ -15,8 +15,8 @@ Owner: Orket Core
 2. `tests/scripts/test_bootstrap_controller_external_repo.py`
 3. `tests/runtime/test_controller_replay_parity.py`
 4. `extensions/controller_workload/workload_entrypoint.py`
-5. `docs/projects/controller-workload/templates/controller_workload_external/workload_entrypoint.py`
-6. `docs/projects/controller-workload/06-EXTERNALIZATION-TEMPLATE.md`
+5. `docs/templates/controller_workload_external/workload_entrypoint.py`
+6. `docs/projects/archive/controller-workload/CW03082026-Initiative-Closeout/06-EXTERNALIZATION-TEMPLATE.md`
 7. `docs/specs/CONTROLLER_WORKLOAD_V1.md`
 8. `docs/specs/CONTROLLER_OBSERVABILITY_V1.md`
 9. `docs/runbooks/controller-workload-operator.md`

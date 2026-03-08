@@ -10,7 +10,7 @@ Phase authority:
 
 Executed commands:
 1. `python -m pytest -q tests/runtime/test_controller_replay_parity.py tests/scripts/test_bootstrap_controller_external_repo.py tests/scripts/test_compare_controller_replay_parity.py tests/runtime/test_controller_observability.py tests/sdk/test_controller.py`
-2. `python -m py_compile extensions/controller_workload/workload_entrypoint.py docs/projects/controller-workload/templates/controller_workload_external/workload_entrypoint.py scripts/extensions/bootstrap_controller_external_repo.py`
+2. `python -m py_compile extensions/controller_workload/workload_entrypoint.py docs/templates/controller_workload_external/workload_entrypoint.py scripts/extensions/bootstrap_controller_external_repo.py`
 3. `python scripts/governance/check_docs_project_hygiene.py`
 
 Observed outcomes:
@@ -33,7 +33,7 @@ Delivered integration proof:
 ## 3. Step 18 Evidence (Migration Guidance)
 
 Published guidance:
-1. `docs/projects/controller-workload/06-EXTERNALIZATION-TEMPLATE.md`
+1. `docs/projects/archive/controller-workload/CW03082026-Initiative-Closeout/06-EXTERNALIZATION-TEMPLATE.md`
 
 Guidance includes:
 1. bootstrap command flow

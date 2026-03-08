@@ -8,7 +8,7 @@ Runtime contract authority:
 `docs/specs/CONTROLLER_WORKLOAD_V1.md`
 
 Phase authority:
-`docs/projects/controller-workload/04-REQUIREMENTS-Phase-2D.md`
+`docs/projects/archive/controller-workload/CW03082026-Phase2D/04-REQUIREMENTS-Phase-2D.md`
 
 Machine-readable schema:
 `schemas/controller_observability_v1.json`
@@ -580,10 +580,12 @@ docs/specs/
 schemas/
     controller_observability_v1.json
 
-docs/projects/controller-workload/
-    02-INITIATIVE-MINI-ROADMAP.md
-    03-IMPLEMENTATION-PLAN.md
-    04-REQUIREMENTS-Phase-2C.md
+docs/projects/archive/controller-workload/
+    CW03082026-Phase2D/
+        04-REQUIREMENTS-Phase-2D.md
+        05-IMPLEMENTATION-PLAN-Phase-2D.md
+        06-RELIABILITY-HARDENING-Phase-2D.md
+        07-V1-PLANNING-HANDOFF.md
 
 docs/runbooks/
     controller-workload-operator.md

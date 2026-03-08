@@ -15,8 +15,8 @@ Owner: Orket Core
 3. `tests/runtime/test_controller_replay_parity.py`
 4. `tests/scripts/test_compare_controller_replay_parity.py`
 5. `.gitea/workflows/quality.yml`
-6. `docs/projects/controller-workload/templates/controller_workload_external/*`
-7. `docs/projects/controller-workload/06-EXTERNALIZATION-TEMPLATE.md`
+6. `docs/templates/controller_workload_external/*`
+7. `docs/projects/archive/controller-workload/CW03082026-Initiative-Closeout/06-EXTERNALIZATION-TEMPLATE.md`
 
 ## Verification Summary
 1. Targeted tests and compile checks passed.

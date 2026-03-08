@@ -1,11 +1,16 @@
 # Controller Workload Phase 2D Implementation Plan
 
 Last updated: 2026-03-08
-Status: Active
+Status: Completed (Archived)
 Owner: Orket Core
-Source requirements: `docs/projects/controller-workload/04-REQUIREMENTS-Phase-2D.md`
+Source requirements: `docs/projects/archive/controller-workload/CW03082026-Phase2D/04-REQUIREMENTS-Phase-2D.md`
 Runtime contract authority: `docs/specs/CONTROLLER_WORKLOAD_V1.md`
 Observability contract authority: `docs/specs/CONTROLLER_OBSERVABILITY_V1.md`
+
+Completion outcome:
+1. Step 21 reliability hardening completed with recorded evidence.
+2. Step 22 v1 planning handoff packet published.
+3. Phase 2D closeout completed; initiative lane moved to staged handoff state.
 
 ## 1. Objective
 
