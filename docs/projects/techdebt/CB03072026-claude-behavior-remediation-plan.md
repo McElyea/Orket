@@ -286,9 +286,9 @@ Proof target:
 8. Verified with `python -m pytest tests/core/test_workitem_transition_contract.py tests/core/test_card_management_state_machine.py tests/core/test_tool_gate_state_change_contract.py -q` and `python -m pytest tests/integration/test_tool_gating.py -q`.
 9. `CB-1B` completed on 2026-03-07.
 10. Revalidated API/webhook findings 3, 4, and 22 against current HEAD and confirmed merge, escalation/rejection comment, requirements-issue, and sandbox deployment paths could still report success after downstream failure.
-11. Made webhook merge/reject/deployment handlers return real downstream outcomes, fail closed on HTTP failures, and surface degraded sandbox deployment results instead of unconditional success messages.
+11. Made webhook merge/reject/deployment handlers return real downstream outcomes, fail closed on HTTP failures, and skip merge-time sandbox deployment explicitly because the current system is not yet positioned to produce deployable code projects from that path.
 12. Verified with `python -m pytest tests/adapters/test_gitea_webhook.py -q`.
-13. Live verification rerun on 2026-03-07 against local Gitea and the primary signed `/webhook/gitea` path succeeded for merge, escalation, and auto-reject after fixing requirements-issue label ID resolution; the merged deployment path truthfully reported a degraded sandbox deployment caused by missing generated backend/frontend paths.
+13. Live verification rerun on 2026-03-07 against local Gitea and the primary signed `/webhook/gitea` path succeeded for merge, escalation, and auto-reject after fixing requirements-issue label ID resolution; merged webhook handling now skips sandbox deployment explicitly because the current system is not yet positioned to produce deployable code projects from that path.
 14. `CB-4A` completed on 2026-03-07.
 15. Revalidated orchestration findings 3 and 5 against current HEAD and confirmed explicit-false env values still fell through to org/default config while the runtime verifier still claimed profile defaults that did not exist and accepted shell-string commands.
 16. Fixed `_resolve_bool_flag` precedence so explicit false env values win over org config, gave Python/polyglot runtime verification one real builtin command, and made shell-string verifier commands fail explicitly instead of executing with `shell=True`.

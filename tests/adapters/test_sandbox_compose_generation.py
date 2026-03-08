@@ -45,17 +45,18 @@ def test_fastapi_react_postgres_compose():
     compose_content = orchestrator._generate_compose_file(sandbox, db_password="test-password")
 
     # Verify content
-    assert "version:" in compose_content
     assert "services:" in compose_content
     assert "api:" in compose_content
     assert "frontend:" in compose_content
     assert "db:" in compose_content
     assert "pgadmin:" in compose_content
+    assert "context: ../../" in compose_content
+    assert "dockerfile: agent_output/deployment/Dockerfile" in compose_content
+    assert "../frontend:/usr/share/nginx/html:ro" in compose_content
     assert f"{ports.api}:8000" in compose_content
-    assert f"{ports.frontend}:3000" in compose_content
+    assert f"{ports.frontend}:80" in compose_content
     assert f"{ports.database}:5432" in compose_content
     assert f"{ports.admin_tool}:80" in compose_content
-    assert "REACT_APP_API_URL" in compose_content
 
     print("\nâœ… FastAPI + React + Postgres compose generation test passed")
     print(f"\nGenerated compose file:\n{compose_content}")
@@ -95,8 +96,10 @@ def test_fastapi_vue_mongo_compose():
 
     assert "mongo:" in compose_content
     assert "mongo-express:" in compose_content
-    assert "VUE_APP_API_URL" in compose_content
+    assert "dockerfile: agent_output/deployment/Dockerfile" in compose_content
+    assert "../frontend:/usr/share/nginx/html:ro" in compose_content
     assert f"{ports.database}:27017" in compose_content
+    assert f"{ports.frontend}:80" in compose_content
 
     print("\nâœ… FastAPI + Vue + MongoDB compose generation test passed")
 
@@ -159,6 +162,8 @@ def test_csharp_razor_ef_compose():
 
     compose_content = orchestrator._generate_compose_file(sandbox, db_password="test-password")
 
+    assert "context: ../../" in compose_content
+    assert "dockerfile: agent_output/deployment/Dockerfile" in compose_content
     assert "mcr.microsoft.com/mssql/server:2022-latest" in compose_content
     assert "ConnectionStrings__DefaultConnection" in compose_content
     assert "SA_PASSWORD=test-password" in compose_content
@@ -199,6 +204,7 @@ async def test_create_sandbox_uses_generated_password_in_database_url_and_compos
     )
 
     assert "db-pass-123" in sandbox.database_url
+    assert captured["path"] == str(tmp_path / "agent_output" / "deployment" / "docker-compose.sandbox.yml")
     assert captured["content"] is not None
     assert "POSTGRES_PASSWORD=db-pass-123" in str(captured["content"])
     assert "PGADMIN_DEFAULT_PASSWORD=admin-pass-456" in str(captured["content"])

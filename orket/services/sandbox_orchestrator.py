@@ -22,6 +22,7 @@ from orket.domain.sandbox import (
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.domain.verification import AGENT_OUTPUT_DIR
 from orket.logging import log_event
 
 
@@ -63,6 +64,7 @@ class SandboxOrchestrator:
             "mongo",
             "mongo-express",
         }
+        self._optional_health_services = {"pgadmin", "mongo-express"}
 
     async def create_sandbox(
         self,
@@ -101,9 +103,8 @@ class SandboxOrchestrator:
         self.registry.register(sandbox)
 
         # 4. Generate docker-compose.yml
-        from orket.domain.verification import AGENT_OUTPUT_DIR
         compose_content = self._generate_compose_file(sandbox, db_password)
-        compose_path = Path(workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"
+        compose_path = self._compose_path(workspace_path)
         await self.fs.write_file(str(compose_path), compose_content)
 
         log_event("sandbox_create", {
@@ -143,8 +144,7 @@ class SandboxOrchestrator:
 
         sandbox.status = SandboxStatus.STOPPING
 
-        from orket.domain.verification import AGENT_OUTPUT_DIR
-        compose_path = Path(sandbox.workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"
+        compose_path = self._compose_path(sandbox.workspace_path)
 
         try:
             result = await self.command_runner.run_async(
@@ -191,11 +191,10 @@ class SandboxOrchestrator:
             return False
 
         try:
-            from orket.domain.verification import AGENT_OUTPUT_DIR
             result = await self.command_runner.run_async(
                 "docker-compose",
                 "-f",
-                str(Path(sandbox.workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"),
+                str(self._compose_path(sandbox.workspace_path)),
                 "-p",
                 sandbox.compose_project,
                 "ps",
@@ -208,9 +207,15 @@ class SandboxOrchestrator:
                 sandbox.last_health_check = datetime.now(UTC).isoformat()
                 return False
 
-            # Parse container status
-            containers = json.loads(result.stdout) if result.stdout else []
-            all_running = all(c.get("State") == "running" for c in containers)
+            # Docker Compose emits either a JSON array or newline-delimited JSON objects.
+            containers = self._parse_compose_ps_output(result.stdout)
+            core_containers = [
+                container
+                for container in containers
+                if str(container.get("Service") or "").strip() not in self._optional_health_services
+            ]
+            tracked = core_containers or containers
+            all_running = all(c.get("State") == "running" for c in tracked)
 
             if all_running:
                 sandbox.health_checks_passed += 1
@@ -244,8 +249,7 @@ class SandboxOrchestrator:
         if not sandbox:
             raise ValueError(f"Sandbox {sandbox_id} not found")
 
-        from orket.domain.verification import AGENT_OUTPUT_DIR
-        compose_path = Path(sandbox.workspace_path) / AGENT_OUTPUT_DIR / "docker-compose.sandbox.yml"
+        compose_path = self._compose_path(sandbox.workspace_path)
 
         cmd = [
             "docker-compose",
@@ -280,6 +284,28 @@ class SandboxOrchestrator:
 
     def _get_database_url(self, tech_stack: TechStack, ports: PortAllocation, db_password: str = "") -> str:
         return self.sandbox_policy_node.get_database_url(tech_stack, ports, db_password)
+
+    @staticmethod
+    def _compose_path(workspace_path: str | Path) -> Path:
+        return Path(workspace_path) / AGENT_OUTPUT_DIR / "deployment" / "docker-compose.sandbox.yml"
+
+    @staticmethod
+    def _parse_compose_ps_output(raw: str) -> list[dict[str, Any]]:
+        payload = str(raw or "").strip()
+        if not payload:
+            return []
+        if payload.startswith("["):
+            parsed = json.loads(payload)
+            return parsed if isinstance(parsed, list) else []
+        rows: list[dict[str, Any]] = []
+        for line in payload.splitlines():
+            token = line.strip()
+            if not token:
+                continue
+            parsed_line = json.loads(token)
+            if isinstance(parsed_line, dict):
+                rows.append(parsed_line)
+        return rows
 
     async def _deploy_sandbox(self, sandbox: Sandbox, compose_path: Path) -> None:
         """Execute docker-compose up -d."""

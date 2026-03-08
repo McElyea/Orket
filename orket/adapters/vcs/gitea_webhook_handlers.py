@@ -4,9 +4,6 @@ import asyncio
 import re
 from typing import Any, Dict
 
-import httpx
-
-from orket.domain.sandbox import TechStack
 from orket.logging import log_event
 from orket.schema import CardStatus
 
@@ -219,6 +216,14 @@ class PRLifecycleHandler:
         )
         await self.handler.db.close_pr_cycle(repo_full_name, pr_number, status="merged")
         deployment_result = await self.handler.sandbox.trigger_sandbox_deployment(owner, repo_name, pr)
+        if deployment_result.get("skipped", False):
+            return {
+                "status": "skipped",
+                "message": (
+                    f"PR #{pr_number} merged. Sandbox deployment skipped: "
+                    f"{deployment_result.get('reason', 'unsupported capability')}"
+                ),
+            }
         if not deployment_result.get("ok", False):
             return {
                 "status": "degraded",
@@ -319,46 +324,30 @@ class PRLifecycleHandler:
 class SandboxDeploymentHandler:
     """Handles sandbox deployment and PR comment publication."""
 
+    _UNSUPPORTED_REASON = (
+        "Orket is not yet positioned to produce deployable code projects from this merge path."
+    )
+
     def __init__(self, handler: Any) -> None:
         self.handler = handler
 
     async def trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: Dict[str, Any]) -> Dict[str, Any]:
         repo_full_name = f"{owner}/{repo_name}"
         pr_number = pr["number"]
-        workspace_path = self.handler.workspace / "sandboxes" / repo_name
-
-        try:
-            sandbox = await self.handler.sandbox_orchestrator.create_sandbox(
-                rock_id=f"{repo_name}-pr{pr_number}",
-                project_name=f"{repo_name} (PR #{pr_number})",
-                tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-                workspace_path=str(workspace_path),
-            )
-            log_event(
-                "sandbox_deployed",
-                {
-                    "repo": repo_full_name,
-                    "pr": pr_number,
-                    "sandbox_id": sandbox.id,
-                    "api_url": sandbox.api_url,
-                    "frontend_url": sandbox.frontend_url,
-                },
-                self.handler.workspace,
-            )
-            await self.add_sandbox_comment(owner, repo_name, pr_number, sandbox)
-            return {
-                "ok": True,
-                "sandbox_id": sandbox.id,
-                "api_url": sandbox.api_url,
-                "frontend_url": sandbox.frontend_url,
-            }
-        except (RuntimeError, ValueError, OSError, httpx.HTTPError) as exc:
-            log_event(
-                "sandbox_deployment_failed",
-                {"repo": repo_full_name, "pr": pr_number, "error": str(exc)},
-                self.handler.workspace,
-            )
-            return {"ok": False, "error": str(exc)}
+        log_event(
+            "sandbox_deployment_skipped",
+            {
+                "repo": repo_full_name,
+                "pr": pr_number,
+                "reason": self._UNSUPPORTED_REASON,
+            },
+            self.handler.workspace,
+        )
+        return {
+            "ok": False,
+            "skipped": True,
+            "reason": self._UNSUPPORTED_REASON,
+        }
 
     async def add_sandbox_comment(self, owner: str, repo_name: str, pr_number: int, sandbox: Any) -> None:
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues/{pr_number}/comments"

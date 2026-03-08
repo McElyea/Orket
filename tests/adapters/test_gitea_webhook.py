@@ -1,5 +1,4 @@
 import asyncio
-from types import SimpleNamespace
 
 import aiosqlite
 import pytest
@@ -277,7 +276,7 @@ async def test_pr_review_escalation_failure_is_reported(monkeypatch, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_pr_merged_closes_cycle_and_triggers_sandbox_comment(monkeypatch, tmp_path):
+async def test_pr_merged_closes_cycle_and_skips_sandbox_deployment_with_explicit_reason(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "merged_test.db"
 
@@ -287,15 +286,10 @@ async def test_pr_merged_closes_cycle_and_triggers_sandbox_comment(monkeypatch, 
 
     await handler.db.increment_pr_cycle("org/repo", 11)
 
-    async def _fake_create_sandbox(**_kwargs):
-        return SimpleNamespace(
-            id="sandbox-repo-pr11",
-            api_url="http://localhost:8001",
-            frontend_url="http://localhost:3001",
-            tech_stack=SimpleNamespace(value="fastapi-react-postgres"),
-        )
+    async def _raise_if_called(**_kwargs):
+        raise AssertionError("sandbox creation should be skipped for merged webhook events")
 
-    handler.sandbox_orchestrator.create_sandbox = _fake_create_sandbox
+    handler.sandbox_orchestrator.create_sandbox = _raise_if_called
 
     payload = {
         "action": "closed",
@@ -316,14 +310,15 @@ async def test_pr_merged_closes_cycle_and_triggers_sandbox_comment(monkeypatch, 
 
     await handler.close()
 
-    assert result["status"] == "success"
+    assert result["status"] == "skipped"
+    assert "sandbox deployment skipped" in result["message"].lower()
     assert row["status"] == "merged"
-    assert any("/issues/11/comments" in call[0] for call in handler.client.post_calls)
+    assert not any("/issues/11/comments" in call[0] for call in handler.client.post_calls)
 
 
 @pytest.mark.asyncio
-async def test_pr_merged_reports_sandbox_deployment_failure(monkeypatch, tmp_path):
-    """Layer: integration. Verifies merged PR handling reports deployment degradation when sandbox creation fails."""
+async def test_pr_merged_skip_does_not_attempt_sandbox_creation(monkeypatch, tmp_path):
+    """Layer: integration. Verifies merged PR handling explicitly skips unsupported sandbox deployment instead of attempting a failing deploy."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "merged_failure.db"
 
@@ -334,7 +329,7 @@ async def test_pr_merged_reports_sandbox_deployment_failure(monkeypatch, tmp_pat
     await handler.db.increment_pr_cycle("org/repo", 12)
 
     async def _raise_create_sandbox(**_kwargs):
-        raise RuntimeError("sandbox unavailable")
+        raise AssertionError("sandbox creation should not be attempted")
 
     handler.sandbox_orchestrator.create_sandbox = _raise_create_sandbox
 
@@ -357,8 +352,8 @@ async def test_pr_merged_reports_sandbox_deployment_failure(monkeypatch, tmp_pat
 
     await handler.close()
 
-    assert result["status"] == "degraded"
-    assert "sandbox deployment failed" in result["message"].lower()
+    assert result["status"] == "skipped"
+    assert "not yet positioned to produce deployable code projects" in result["message"].lower()
     assert row["status"] == "merged"
 
 

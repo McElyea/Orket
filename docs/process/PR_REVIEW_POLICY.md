@@ -29,7 +29,7 @@ Implementation locations:
 ## Approval Behavior
 When required review is approved:
 1. PR may be merged by automation flow.
-2. Follow-on deployment/sandbox behavior depends on enabled runtime policies.
+2. Merge-time sandbox deployment is intentionally skipped in the current system because Orket is not yet positioned to produce deployable code projects from this webhook path.
 3. Events are logged into webhook DB tables for audit.
 
 ## Configuration

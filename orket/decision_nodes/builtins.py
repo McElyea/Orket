@@ -230,13 +230,11 @@ class DefaultSandboxPolicyNode:
 
     def generate_compose_file(self, sandbox: Any, db_password: str, admin_password: str) -> str:
         if sandbox.tech_stack.value == "fastapi-react-postgres":
-            return f"""version: "3.8"
-
-services:
+            return f"""services:
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: agent_output/deployment/Dockerfile
     ports:
       - "{sandbox.ports.api}:8000"
     environment:
@@ -246,13 +244,11 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: nginx:alpine
     ports:
-      - "{sandbox.ports.frontend}:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:{sandbox.ports.api}
+      - "{sandbox.ports.frontend}:80"
+    volumes:
+      - ../frontend:/usr/share/nginx/html:ro
     depends_on:
       - api
     restart: unless-stopped
@@ -285,13 +281,11 @@ volumes:
 """
 
         if sandbox.tech_stack.value == "fastapi-vue-mongo":
-            return f"""version: "3.8"
-
-services:
+            return f"""services:
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: agent_output/deployment/Dockerfile
     ports:
       - "{sandbox.ports.api}:8000"
     environment:
@@ -301,13 +295,11 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: nginx:alpine
     ports:
-      - "{sandbox.ports.frontend}:3000"
-    environment:
-      - VUE_APP_API_URL=http://localhost:{sandbox.ports.api}
+      - "{sandbox.ports.frontend}:80"
+    volumes:
+      - ../frontend:/usr/share/nginx/html:ro
     depends_on:
       - api
     restart: unless-stopped
@@ -342,13 +334,11 @@ volumes:
 """
 
         if sandbox.tech_stack.value == "csharp-razor-ef":
-            return f"""version: "3.8"
-
-services:
+            return f"""services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: agent_output/deployment/Dockerfile
     ports:
       - "{sandbox.ports.api}:8080"
       - "{sandbox.ports.frontend}:8443"
