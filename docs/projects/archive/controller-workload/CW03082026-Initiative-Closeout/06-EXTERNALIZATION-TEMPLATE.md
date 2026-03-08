@@ -24,6 +24,7 @@ Template files:
 2. Keep controller runtime semantics sourced from in-repo modules:
    - `orket.extensions.controller_dispatcher`
    - `orket.extensions.controller_observability`
+   - `orket_extension_sdk.workloads.controller`
 3. Do not add direct child entrypoint calls in the external package.
 4. Preserve stable controller error codes and fail-closed behavior.
 

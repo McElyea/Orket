@@ -20,6 +20,11 @@ Owner: Orket Core
 6. Error surfaces use stable error codes.
 7. Equivalent inputs must produce identical canonical summary serialization.
 
+## SDK Layering (Normative)
+1. SDK exposes controller orchestration as an optional layer at `orket_extension_sdk.workloads.controller`.
+2. Host runtime remains authoritative for child dispatch, policy gates, and observability emission.
+3. Extension entrypoints may remain as compatibility adapters that delegate to this SDK layer.
+
 ## Envelope Contract
 
 Required top-level fields:

@@ -20,6 +20,13 @@ from .controller import (
     canonical_digest_sha256,
     canonical_json,
 )
+from .workloads import (
+    ControllerWorkloadRunner,
+    ControllerWorkloadRuntime,
+    build_controller_envelope_payload,
+    canonical_observability_projection,
+    resolve_controller_department,
+)
 from .manifest import ExtensionManifest, WorkloadManifest, load_manifest
 from .result import ArtifactRef, Issue, WorkloadResult
 from .testing import DeterminismHarness, FakeCapabilities, GoldenArtifact
@@ -55,6 +62,11 @@ __all__ = [
     "ControllerRunSummary",
     "canonical_digest_sha256",
     "canonical_json",
+    "ControllerWorkloadRunner",
+    "ControllerWorkloadRuntime",
+    "build_controller_envelope_payload",
+    "canonical_observability_projection",
+    "resolve_controller_department",
     "ExtensionManifest",
     "WorkloadManifest",
     "load_manifest",
