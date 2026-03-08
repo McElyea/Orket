@@ -11,6 +11,9 @@ Orket
    - Complete this startup read before beginning work in the repository.
    - Agent-specific enforcement details live in `AGENTS.md`.
 2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
+   - Interpretation rule:
+     1) `Priority Now` empty means no priority lane, not no work
+     2) active items in `Maintenance (Non-Priority)` remain executable and are the default queue when no priority lane exists
    - If a non-maintenance project or project lane is complete, move its closeout/plan/history docs to `docs/projects/archive/<ProjectName>/` and update links in the same change.
    - Project-owned docs that remain long-lived contracts/specifications must move to `docs/specs/` when the project or lane is archived.
    - Completed non-maintenance project folders must not remain under `docs/projects/` unless the folder is still intentionally active as a maintenance lane or externally gated authority surface.
@@ -18,6 +21,12 @@ Orket
    - When creating a new active implementation plan, add or update the corresponding `docs/ROADMAP.md` entry in the same change so the plan is discoverable from the active execution index.
    - Roadmap entries for active plans should stay terse and point to the canonical plan path instead of restating the plan body.
    - Keep `docs/ROADMAP.md` active-only: do not leave completed or archived project roots in active roadmap sections or the Project Index.
+   - Formal closeout handshake for any completed project lane or techdebt cycle:
+     1) update roadmap status and next-slice selection in the same change
+     2) move completed cycle/project docs into the proper archive folder in the same change
+     3) leave no `Status: Completed` or `Status: Archived` cycle doc in active `docs/projects/` scope after handoff
+     4) for `docs/projects/techdebt/`, leave only standing maintenance docs plus docs for cycle ids still listed as active in `docs/ROADMAP.md`
+     5) preserve discoverability with archive links, not by leaving completed docs in active folders
    - Run anti-orphan checks at handoff:
      1) every remaining non-archive folder in `docs/projects/` appears in roadmap Project Index
      2) every active/queued roadmap entry points to an existing path
@@ -33,6 +42,7 @@ Orket
 8. The roadmap has the next steps, no need to journal them here.
 9. Command intent rule:
    - If the user says "follow roadmap" (or equivalent) without naming a project, execute the highest-priority active item in `docs/ROADMAP.md`.
+   - If `Priority Now` is empty, execute the highest-priority active item under `Maintenance (Non-Priority)` before considering staged or future lanes.
    - Do not switch to paused/deferred projects unless the user explicitly requests it.
 10. Published artifacts rule:
    - `benchmarks/published/index.json` is canonical.

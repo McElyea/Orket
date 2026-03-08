@@ -113,11 +113,18 @@ Required:
 1. Session-start gate: before any substantive work in this repository, read `docs/CONTRIBUTOR.md` in the current session. "Substantive work" includes planning, implementation, editing, running tests, reviewing code, creating implementation plans, and updating roadmap or process docs. Reading `AGENTS.md` is not a substitute. If this has not happened in the current session, stop and do it before proceeding.
 2. After reading `docs/CONTRIBUTOR.md`, follow its startup protocol exactly, including reading `docs/ROADMAP.md` and `docs/ARCHITECTURE.md`.
 3. Treat `docs/ROADMAP.md` as an active execution index, not a session journal, narrative handoff log, or duplicate process guide.
-4. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
-5. When creating a new active implementation plan, follow the roadmap-entry rule in `docs/CONTRIBUTOR.md` and update `docs/ROADMAP.md` in the same change.
-6. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
-7. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
-8. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
+4. Treat `docs/ROADMAP.md` sections by execution semantics, not by heading name alone:
+   - `Priority Now` empty means no priority lane, not no work.
+   - active items in `Maintenance (Non-Priority)` are still executable roadmap work and become the default queue when no priority lane exists.
+5. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
+6. When creating a new active implementation plan, follow the roadmap-entry rule in `docs/CONTRIBUTOR.md` and update `docs/ROADMAP.md` in the same change.
+7. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
+8. Closeout handshake requirement:
+   - when a project lane or techdebt cycle completes, update `docs/ROADMAP.md`, archive the cycle/project docs, and remove completed/archived cycle docs from active `docs/projects/` scope in the same change.
+   - do not preserve convenience access by leaving a `Status: Completed` or `Status: Archived` cycle doc in an active folder; preserve discoverability via archive links instead.
+9. For `docs/projects/techdebt/`, only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain outside archive.
+10. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
+11. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
 
 Do not use `docs/ROADMAP.md` to restate process that already lives in `docs/CONTRIBUTOR.md`.
 

@@ -3,7 +3,14 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict
 
-from orket.application.services.coordinator_store import InMemoryCoordinatorStore
+from orket.application.services.coordinator_store import (
+    CoordinatorConflictError,
+    CoordinatorNotFoundError,
+    CoordinatorPermissionError,
+    CoordinatorStoreError,
+    CoordinatorValidationError,
+    InMemoryCoordinatorStore,
+)
 from orket.core.domain.coordinator_card import Card
 
 
@@ -54,28 +61,55 @@ store.reset(
 app = FastAPI()
 
 
+def _http_exception_for_store_error(exc: CoordinatorStoreError) -> HTTPException:
+    if isinstance(exc, CoordinatorValidationError):
+        return HTTPException(status_code=400, detail=str(exc))
+    if isinstance(exc, CoordinatorNotFoundError):
+        return HTTPException(status_code=404, detail=str(exc))
+    if isinstance(exc, CoordinatorPermissionError):
+        return HTTPException(status_code=403, detail=str(exc))
+    if isinstance(exc, CoordinatorConflictError):
+        return HTTPException(status_code=409, detail=str(exc))
+    return HTTPException(status_code=500, detail="unexpected coordinator store error")
+
+
 @app.get("/cards", response_model=list[Card])
 def get_cards(state: str = Query(default="open")) -> list[Card]:
     if state.lower() != "open":
         raise HTTPException(status_code=400, detail='only "open" supported')
-    return store.list_open_cards()
+    try:
+        return store.list_open_cards()
+    except CoordinatorStoreError as exc:
+        raise _http_exception_for_store_error(exc) from exc
 
 
 @app.post("/cards/{id}/claim", response_model=Card)
 def claim_card(id: str, request: ClaimRequest) -> Card:
-    return store.claim(id, request.node_id, request.lease_duration)
+    try:
+        return store.claim(id, request.node_id, request.lease_duration)
+    except CoordinatorStoreError as exc:
+        raise _http_exception_for_store_error(exc) from exc
 
 
 @app.post("/cards/{id}/renew", response_model=Card)
 def renew_card(id: str, request: RenewRequest) -> Card:
-    return store.renew(id, request.node_id, request.lease_duration)
+    try:
+        return store.renew(id, request.node_id, request.lease_duration)
+    except CoordinatorStoreError as exc:
+        raise _http_exception_for_store_error(exc) from exc
 
 
 @app.post("/cards/{id}/complete", response_model=Card)
 def complete_card(id: str, request: CompleteRequest) -> Card:
-    return store.complete(id, request.node_id, request.result)
+    try:
+        return store.complete(id, request.node_id, request.result)
+    except CoordinatorStoreError as exc:
+        raise _http_exception_for_store_error(exc) from exc
 
 
 @app.post("/cards/{id}/fail", response_model=Card)
 def fail_card(id: str, request: FailRequest) -> Card:
-    return store.fail(id, request.node_id, request.result)
+    try:
+        return store.fail(id, request.node_id, request.result)
+    except CoordinatorStoreError as exc:
+        raise _http_exception_for_store_error(exc) from exc

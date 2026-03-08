@@ -13,7 +13,11 @@ Define closure semantics for `docs/projects/techdebt/` so the folder can remain 
 1. `docs/projects/techdebt/` is a permanent project folder and is not expected to be archived as a whole.
 2. Recurring maintenance remains active in this folder.
 3. Most cycle-specific remediation documents are finite and should be archived after closeout.
-4. Closure rule (if-statement form):
+4. Active-folder rule:
+   1. only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain here
+   2. no `Status: Completed` or `Status: Archived` cycle doc may remain here after closeout
+   3. preserve discoverability with archive links and closeout references, not by keeping completed docs in the active folder
+5. Closure rule (if-statement form):
    1. if implementation requirements for a techdebt cycle are complete and verified, archive the cycle docs
    2. else keep only currently active cycle docs in this folder
 
@@ -48,8 +52,10 @@ Current archived cycle examples:
 3. Move superseded cycle docs to `docs/projects/archive/techdebt/<cycle_id>/`.
 4. Keep only maintenance docs and currently active cycle references in `docs/projects/techdebt/`.
 5. Update links in roadmap/checklist docs after any move.
+6. If a completed cycle must stay easy to find, link the archive location from roadmap or closeout docs instead of leaving the cycle doc here.
 
 ## Anti-Bloat Rule
 
 1. No cycle document should remain in active `techdebt` scope once superseded and archived.
 2. New recurring items must be added to `Recurring-Maintenance-Checklist.md` only when they represent ongoing risk boundaries, not one-off incidents.
+3. `python scripts/governance/check_docs_project_hygiene.py` is expected to enforce the active-folder rule mechanically.

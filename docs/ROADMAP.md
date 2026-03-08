@@ -3,14 +3,16 @@
 Last updated: 2026-03-07
 
 ## Operating Rule
-Use `docs/CONTRIBUTOR.md` for contributor workflow and roadmap-selection rules. This file stays focused on active lane status and execution order.
+Use `docs/CONTRIBUTOR.md` for contributor workflow and roadmap-selection rules. This file stays focused on active lane status and execution order. `Priority Now` empty means there is no priority lane; it does not mean there is no work. Active items under `Maintenance (Non-Priority)` remain executable and are the default queue when no priority lane exists.
 
 ## Priority Now
 Intentionally empty.
 
 ## Maintenance (Non-Priority)
+These items are active executable work. They are non-priority, not deferred.
+
 1. techdebt -- Standing recurring maintenance only. Source: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Folder governance: `docs/projects/techdebt/README.md`. Latest evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json`.
-2. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`. Current status: `CB-1` complete after live Gitea verification; next slice `CB-3A`.
+2. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`. Current status: `CB-1` complete; `CB-2A`, `CB-3A`, and `CB-4A` complete; next slice `CB-ROP-0`.
    1. `CB-0` revalidate critical/high finding inventory against current HEAD; mark duplicates, already-fixed items, and blockers before code changes.
    2. `CB-3A` repair `coordinator_store` async/service-boundary behavior.
    3. `CB-ROP-0` revalidate residual orchestration/prompting findings.

@@ -31,7 +31,8 @@ This cycle closed the validated follow-up behavioral-truth gaps from `orket_beha
 ## Archived Documents
 
 1. `OBT03072026-implementation-plan.md`
-2. `orket_behavioral_truth_review_full.docx`
+2. `OBT03072026-current-state-implementation-plan.md`
+3. `orket_behavioral_truth_review_full.docx`
 
 ## Residual Risk
 

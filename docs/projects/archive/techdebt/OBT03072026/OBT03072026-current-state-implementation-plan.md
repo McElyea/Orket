@@ -1,7 +1,7 @@
 # OBT03072026 Current-State Implementation Plan
 
 Last updated: 2026-03-07  
-Status: Completed  
+Status: Archived  
 Owner: Orket Core
 
 ## Purpose
@@ -227,11 +227,11 @@ Live verification blocked where infrastructure was not ready:
 ## Closeout Status
 
 1. Completed on 2026-03-07.
-2. The driver no longer advertises `adopt_issue` as a real executable structural action.
-3. Touched epic create/list/write paths now treat `issues` as authoritative, and canonical core epic fixtures no longer encode `cards`.
-4. OpenAI-compatible `clear_context()` now rotates emitted session identity for the next request, while Ollama strict-format requests fail closed when the client cannot honor `format="json"`.
-5. Governed driver construction now defaults to strict JSON parsing unless compatibility mode is explicitly requested.
-6. CLI startup now surfaces reconciliation failure to operators, and workflow labels now describe memory comparator steps as fixture-contract/comparator smoke rather than runtime determinism proof.
-7. Local provider live verification now has a shared warmup/preflight path that uses `ollama list`, `lms ls --json`, `lms ps --json`, and `lms load` to auto-select runnable installed models and load LM Studio models when needed.
-8. Provider-backed runtime execution no longer carries separate model-selection logic in runtime versus verification paths; `orket/runtime/provider_runtime_target.py` is now the shared authority consumed by `LocalModelProvider`, `model_stream_v1`, and the provider verification scripts.
-9. This completed cycle plan remains in the active `techdebt` folder because the user explicitly requested the plan be created there.
+2. Archived on 2026-03-07 under `docs/projects/archive/techdebt/OBT03072026/`.
+3. The driver no longer advertises `adopt_issue` as a real executable structural action.
+4. Touched epic create/list/write paths now treat `issues` as authoritative, and canonical core epic fixtures no longer encode `cards`.
+5. OpenAI-compatible `clear_context()` now rotates emitted session identity for the next request, while Ollama strict-format requests fail closed when the client cannot honor `format="json"`.
+6. Governed driver construction now defaults to strict JSON parsing unless compatibility mode is explicitly requested.
+7. CLI startup now surfaces reconciliation failure to operators, and workflow labels now describe memory comparator steps as fixture-contract/comparator smoke rather than runtime determinism proof.
+8. Local provider live verification now has a shared warmup/preflight path that uses `ollama list`, `lms ls --json`, `lms ps --json`, and `lms load` to auto-select runnable installed models and load LM Studio models when needed.
+9. Provider-backed runtime execution no longer carries separate model-selection logic in runtime versus verification paths; `orket/runtime/provider_runtime_target.py` is now the shared authority consumed by `LocalModelProvider`, `model_stream_v1`, and the provider verification scripts.

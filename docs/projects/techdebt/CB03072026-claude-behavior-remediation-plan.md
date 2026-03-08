@@ -293,6 +293,11 @@ Proof target:
 15. Revalidated orchestration findings 3 and 5 against current HEAD and confirmed explicit-false env values still fell through to org/default config while the runtime verifier still claimed profile defaults that did not exist and accepted shell-string commands.
 16. Fixed `_resolve_bool_flag` precedence so explicit false env values win over org config, gave Python/polyglot runtime verification one real builtin command, and made shell-string verifier commands fail explicitly instead of executing with `shell=True`.
 17. Verified with `python -m pytest tests/application/test_runtime_verifier_service.py tests/application/test_orchestrator_bool_flag_resolution.py -q`.
+18. `CB-3A` completed on 2026-03-07.
+19. Revalidated findings 7 and 22 against current HEAD and confirmed the original async-lock finding no longer reproduced because `coordinator_store` is currently reached only through synchronous coordinator API handlers, while the service-layer `HTTPException` coupling remained open.
+20. Replaced `HTTPException` usage in `orket/application/services/coordinator_store.py` with service-specific exceptions and translated them in `orket/interfaces/coordinator_api.py` so transport semantics stay at the interface boundary.
+21. Verified with `python -m pytest tests/application/test_coordinator_store.py tests/interfaces/test_coordinator_api.py tests/platform/test_leases.py tests/platform/test_hedged.py -q`.
+22. Live local verification on 2026-03-07 against a real `uvicorn` instance of `orket.interfaces.coordinator_api:app` succeeded on the primary path for successful claim, missing-card 404, and non-claimant renew 403 responses.
 
 ## Verification Plan
 
@@ -317,9 +322,9 @@ Lane-close verification:
 ## Working Status
 
 1. `CB-0` pending
-2. `CB-1` complete (`CB-1A` complete; `CB-1B` complete; live verification complete`)
+2. `CB-1` complete (`CB-1A` complete; `CB-1B` complete; live verification complete)
 3. `CB-2` in progress (`CB-2A` complete)
-4. `CB-3` pending
+4. `CB-3` in progress (`CB-3A` complete)
 5. `CB-4` in progress (`CB-4A` complete)
 6. `CB-5` pending
 7. `CB-6` pending

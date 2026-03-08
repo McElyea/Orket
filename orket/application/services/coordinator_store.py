@@ -4,12 +4,32 @@ import threading
 import time
 from typing import Any
 
-from fastapi import HTTPException
-
 from orket.core.domain.coordinator_card import Card
 
 
+class CoordinatorStoreError(RuntimeError):
+    """Base error for the in-process coordinator store."""
+
+
+class CoordinatorValidationError(CoordinatorStoreError):
+    pass
+
+
+class CoordinatorNotFoundError(CoordinatorStoreError):
+    pass
+
+
+class CoordinatorConflictError(CoordinatorStoreError):
+    pass
+
+
+class CoordinatorPermissionError(CoordinatorStoreError):
+    pass
+
+
 class InMemoryCoordinatorStore:
+    """Sync in-process coordinator store used by the standalone API and worker harness tests."""
+
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._cards: dict[str, Card] = {}
@@ -49,13 +69,13 @@ class InMemoryCoordinatorStore:
     def _get_meta(self, card_id: str) -> dict[str, Any]:
         meta = self._lease_meta.get(card_id)
         if meta is None:
-            raise HTTPException(status_code=404, detail="card not found")
+            raise CoordinatorNotFoundError("card not found")
         return meta
 
     def _get_card(self, card_id: str) -> Card:
         card = self._cards.get(card_id)
         if card is None:
-            raise HTTPException(status_code=404, detail="card not found")
+            raise CoordinatorNotFoundError("card not found")
         return card
 
     def _is_expired(self, card: Card, now: float) -> bool:
@@ -103,7 +123,7 @@ class InMemoryCoordinatorStore:
 
     def claim(self, card_id: str, node_id: str, lease_duration: float) -> Card:
         if lease_duration <= 0:
-            raise HTTPException(status_code=400, detail="lease_duration must be > 0")
+            raise CoordinatorValidationError("lease_duration must be > 0")
 
         with self._lock:
             now = self._now()
@@ -112,7 +132,7 @@ class InMemoryCoordinatorStore:
 
             self._reopen_if_expired(card, meta, now)
             if card.state == "DONE" or card.state == "FAILED":
-                raise HTTPException(status_code=409, detail="card is finalized")
+                raise CoordinatorConflictError("card is finalized")
 
             if card.state == "OPEN":
                 card.state = "CLAIMED"
@@ -132,11 +152,11 @@ class InMemoryCoordinatorStore:
                 card.lease_expires_at = now + lease_duration
                 return card.model_copy(deep=True)
 
-            raise HTTPException(status_code=409, detail="card is already claimed")
+            raise CoordinatorConflictError("card is already claimed")
 
     def renew(self, card_id: str, node_id: str, lease_duration: float) -> Card:
         if lease_duration <= 0:
-            raise HTTPException(status_code=400, detail="lease_duration must be > 0")
+            raise CoordinatorValidationError("lease_duration must be > 0")
 
         with self._lock:
             now = self._now()
@@ -145,7 +165,7 @@ class InMemoryCoordinatorStore:
 
             self._reopen_if_expired(card, meta, now)
             if card.state != "CLAIMED":
-                raise HTTPException(status_code=409, detail="card is not claimed")
+                raise CoordinatorConflictError("card is not claimed")
 
             if card.hedged_execution:
                 allowed = node_id in meta["claimants"]
@@ -153,7 +173,7 @@ class InMemoryCoordinatorStore:
                 allowed = card.claimed_by == node_id
 
             if not allowed:
-                raise HTTPException(status_code=403, detail="only claimant may renew")
+                raise CoordinatorPermissionError("only claimant may renew")
 
             card.lease_expires_at = now + lease_duration
             meta["last_renew_at"] = now
@@ -170,18 +190,18 @@ class InMemoryCoordinatorStore:
             if card.state == "DONE":
                 return card.model_copy(deep=True)
             if card.state == "FAILED":
-                raise HTTPException(status_code=409, detail="card already failed")
+                raise CoordinatorConflictError("card already failed")
             if card.state != "CLAIMED":
-                raise HTTPException(status_code=409, detail="card is not claimed")
+                raise CoordinatorConflictError("card is not claimed")
 
             if card.hedged_execution:
                 if node_id not in meta["claimants"]:
-                    raise HTTPException(status_code=403, detail="only claimant may complete")
+                    raise CoordinatorPermissionError("only claimant may complete")
                 if meta["winner"] is not None:
                     return card.model_copy(deep=True)
                 meta["winner"] = node_id
             elif card.claimed_by != node_id:
-                raise HTTPException(status_code=403, detail="only claimant may complete")
+                raise CoordinatorPermissionError("only claimant may complete")
 
             card.state = "DONE"
             card.result = result
@@ -200,14 +220,14 @@ class InMemoryCoordinatorStore:
             if card.state == "DONE" or card.state == "FAILED":
                 return card.model_copy(deep=True)
             if card.state != "CLAIMED":
-                raise HTTPException(status_code=409, detail="card is not claimed")
+                raise CoordinatorConflictError("card is not claimed")
 
             if card.hedged_execution:
                 allowed = node_id in meta["claimants"]
             else:
                 allowed = card.claimed_by == node_id
             if not allowed:
-                raise HTTPException(status_code=403, detail="only claimant may fail")
+                raise CoordinatorPermissionError("only claimant may fail")
 
             card.state = "FAILED"
             card.result = result
@@ -215,3 +235,13 @@ class InMemoryCoordinatorStore:
             card.lease_expires_at = None
             meta["claimants"] = set()
             return card.model_copy(deep=True)
+
+
+__all__ = [
+    "CoordinatorConflictError",
+    "CoordinatorNotFoundError",
+    "CoordinatorPermissionError",
+    "CoordinatorStoreError",
+    "CoordinatorValidationError",
+    "InMemoryCoordinatorStore",
+]
