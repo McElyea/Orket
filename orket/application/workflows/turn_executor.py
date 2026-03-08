@@ -237,6 +237,8 @@ class TurnExecutor:
     def _validate_preconditions(self, issue: IssueConfig, role: RoleConfig, context: Dict[str, Any]) -> None:
         if "session_id" not in context:
             raise ValueError("session_id required in context")
+        if "current_status" not in context:
+            raise ValueError("current_status required in context")
 
         allowed_types = role.capabilities.get("issue_types")
         if allowed_types is None:
@@ -246,14 +248,27 @@ class TurnExecutor:
         if current_type not in allowed_types:
             raise ValueError(f"Role {role.name} cannot handle {current_type} issues (Allowed: {allowed_types})")
 
-        current_status = CardStatus(issue.status)
-        if current_status not in [
-            CardStatus.READY,
+        issue_status = CardStatus(issue.status)
+        try:
+            context_status = CardStatus(str(context.get("current_status")).strip().lower())
+        except ValueError as exc:
+            raise ValueError(f"Invalid current_status in context: {context.get('current_status')}") from exc
+
+        if context_status not in [
             CardStatus.IN_PROGRESS,
             CardStatus.CODE_REVIEW,
             CardStatus.AWAITING_GUARD_REVIEW,
         ]:
-            raise StateMachineError(f"Issue {issue.id} in status {current_status} cannot be executed")
+            raise StateMachineError(
+                f"Issue {issue.id} cannot execute turn from context status {context_status.value}"
+            )
+
+        if issue_status != context_status:
+            raise StateMachineError(
+                "Issue "
+                f"{issue.id} status/context mismatch: issue.status={issue_status.value}, "
+                f"context.current_status={context_status.value}"
+            )
 
 
 class ToolValidationError(Exception):

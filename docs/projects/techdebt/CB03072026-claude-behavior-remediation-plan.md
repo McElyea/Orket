@@ -1,4 +1,4 @@
-# CB03072026 Claude Behavior Remediation Plan
+﻿# CB03072026 Claude Behavior Remediation Plan
 
 Last updated: 2026-03-08
 Status: Active  
@@ -301,9 +301,9 @@ Proof target:
 23. `CB-4B` completed on 2026-03-08.
 24. Removed dead `TurnExecutor.__getattr__` delegation entries for `_prepare_messages`, `_parse_response`, and `_execute_tools` so the executor no longer advertises an alternate helper path for methods already declared explicitly on the class.
 25. Verified with `python -m pytest tests/application/test_turn_executor_delegate_surface.py -q` and `python -m pytest tests/application/test_turn_executor_context.py -q -k "prepare_messages_includes_dependency_context_block"`.
-26. Revalidated the broader direct `TurnExecutor` application suites on 2026-03-08 after the stricter `ToolGate` transition enforcement and confirmed the failures were stale test scaffolding: direct executor fixtures were still passing persisted issue status (`ready`) where the real orchestrator now passes per-turn status (`in_progress` or `awaiting_guard_review`) in `context["current_status"]`.
-27. Aligned the direct executor test helpers with the current turn-status contract and removed incidental invalid terminal transitions from the prompt-artifact coverage so those tests exercise artifact-writing and executor behavior instead of obsolete transition assumptions.
-28. Verified with `python -m pytest tests/application/test_turn_executor_context.py tests/application/test_turn_executor_delegate_surface.py tests/application/test_turn_executor_middleware.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_runtime_context_bridge.py tests/application/test_turn_executor_skill_contract.py tests/application/test_turn_executor_timeout_error.py tests/application/test_turn_executor_token_states.py -q`.
+26. Revalidated the broader direct `TurnExecutor` application proof on 2026-03-08 after the stricter `ToolGate` transition enforcement and found the earlier "cleared" note was too narrow: it only covered `test_turn_executor*.py` and missed `tests/application/test_memory_trace_emission.py`, which still relied on stale direct-executor status scaffolding and an invalid developer-to-`done` transition.
+27. Made `TurnExecutor._validate_preconditions` fail fast when `context["current_status"]` is missing, not an active turn status, or mismatched with `issue.status`, then aligned the direct executor application tests with the real orchestrator turn-status contract (`in_progress` / `awaiting_guard_review`) and replaced incidental invalid state changes in memory-trace coverage with valid tool actions.
+28. Verified with `python -m pytest tests/application/test_turn_executor_context.py tests/application/test_turn_executor_delegate_surface.py tests/application/test_turn_executor_middleware.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_runtime_context_bridge.py tests/application/test_turn_executor_skill_contract.py tests/application/test_turn_executor_timeout_error.py tests/application/test_turn_executor_token_states.py tests/application/test_memory_trace_emission.py -q` and `python -m pytest tests/application/test_orchestrator_epic.py -q -k "turn_status or current_status or required_statuses_for_seat or preserves_deferred_architecture_mode_for_stabilizers or resolve_architecture_pattern_preserves_architect_decides or passes_microservices_pattern_to_stabilizers"`.
 
 ## Verification Plan
 
@@ -338,3 +338,4 @@ Lane-close verification:
 ## Closeout Note
 
 1. This plan remains in the active `docs/projects/techdebt/` folder because it is the current cycle plan for an active maintenance lane.
+

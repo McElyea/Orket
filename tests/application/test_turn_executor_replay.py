@@ -8,7 +8,7 @@ import pytest
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
-from orket.schema import IssueConfig, RoleConfig
+from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 
 class _Model:
@@ -43,7 +43,7 @@ def _context(resume_mode: bool):
 
 
 def _issue():
-    return IssueConfig(id="ISSUE-1", summary="Implement feature", seat="developer")
+    return IssueConfig(id="ISSUE-1", summary="Implement feature", seat="developer", status=CardStatus.IN_PROGRESS)
 
 
 def _role():

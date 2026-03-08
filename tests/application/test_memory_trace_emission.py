@@ -20,13 +20,13 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
     )
-    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
-    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["update_issue_status"])
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 
     class _ModelClient:
         async def complete(self, _messages):
             return SimpleNamespace(
-                content='{"tool":"update_issue_status","args":{"issue_id":"ISSUE-1","status":"done"}}',
+                content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}',
                 raw={"total_tokens": 7},
             )
 
@@ -40,7 +40,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "dummy-model",
         "required_action_tools": [],
         "required_statuses": [],
@@ -108,8 +108,8 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_before_prompt_shor
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_ShortCircuitHooks()]),
     )
-    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
-    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["update_issue_status"])
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 
     class _ModelClient:
         async def complete(self, _messages):
@@ -125,7 +125,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_before_prompt_shor
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "dummy-model",
         "required_action_tools": [],
         "required_statuses": [],
@@ -165,8 +165,8 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_runtime_exception(
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
     )
-    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
-    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["update_issue_status"])
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 
     class _FailingModelClient:
         async def complete(self, _messages):
@@ -182,7 +182,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_runtime_exception(
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "dummy-model",
         "required_action_tools": [],
         "required_statuses": [],

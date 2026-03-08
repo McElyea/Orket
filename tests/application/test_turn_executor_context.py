@@ -76,7 +76,7 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
     )
-    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(
         id="DEV",
         summary="developer",
@@ -150,7 +150,7 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
     )
-    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
     _write_prompt_budget_policy(policy_path, max_tokens=5000)
@@ -215,7 +215,7 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
     )
-    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
     _write_prompt_budget_policy(policy_path, max_tokens=10)
@@ -265,4 +265,106 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
     assert result.success is False
     assert "E_PROMPT_BUDGET_EXCEEDED" in str(result.error or "")
     assert call_count["value"] == 0
+
+
+@pytest.mark.asyncio
+async def test_execute_turn_rejects_ready_turn_context(tmp_path):
+    """Layer: contract. Verifies execute_turn requires an active turn status instead of READY."""
+
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
+
+    class _ModelClient:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def complete(self, messages):
+            self.calls += 1
+            return SimpleNamespace(
+                content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}',
+                raw={"total_tokens": 7},
+            )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context=None):
+            return {"ok": True}
+
+    model = _ModelClient()
+    result = await executor.execute_turn(
+        issue=issue,
+        role=role,
+        model_client=model,
+        toolbox=_Toolbox(),
+        context={
+            "session_id": "sess-ready",
+            "turn_index": 0,
+            "issue_id": "ISSUE-1",
+            "role": "developer",
+            "roles": ["developer"],
+            "current_status": "ready",
+            "selected_model": "dummy-model",
+            "history": [],
+        },
+        system_prompt="SYSTEM",
+    )
+
+    assert result.success is False
+    assert "cannot execute turn from context status ready" in str(result.error or "")
+    assert model.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_execute_turn_rejects_status_context_mismatch(tmp_path):
+    """Layer: contract. Verifies execute_turn fails fast when issue.status and context.current_status diverge."""
+
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
+
+    class _ModelClient:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def complete(self, messages):
+            self.calls += 1
+            return SimpleNamespace(
+                content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}',
+                raw={"total_tokens": 7},
+            )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context=None):
+            return {"ok": True}
+
+    model = _ModelClient()
+    result = await executor.execute_turn(
+        issue=issue,
+        role=role,
+        model_client=model,
+        toolbox=_Toolbox(),
+        context={
+            "session_id": "sess-mismatch",
+            "turn_index": 0,
+            "issue_id": "ISSUE-1",
+            "role": "developer",
+            "roles": ["developer"],
+            "current_status": "code_review",
+            "selected_model": "dummy-model",
+            "history": [],
+        },
+        system_prompt="SYSTEM",
+    )
+
+    assert result.success is False
+    assert "status/context mismatch" in str(result.error or "")
+    assert model.calls == 0
 

@@ -13,7 +13,7 @@ from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_runtime import invoke_model_complete
 from orket.core.domain.state_machine import StateMachine
 from orket.core.policies.tool_gate import ToolGate
-from orket.schema import IssueConfig, RoleConfig
+from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 
 class _FakeOpenAIClient:
@@ -138,7 +138,7 @@ async def test_turn_executor_bridges_runtime_context_through_wrapped_model_clien
         tool_gate=ToolGate(organization=None, workspace_root=tmp_path),
         workspace=tmp_path,
     )
-    issue = IssueConfig(id="ISSUE-1", summary="Bridge runtime context", seat="developer")
+    issue = IssueConfig(id="ISSUE-1", summary="Bridge runtime context", seat="developer", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Build", tools=["write_file"])
     context = {
         "session_id": "run-ctx-1",
