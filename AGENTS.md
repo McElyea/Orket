@@ -86,6 +86,10 @@ Rules:
 
 Orket may remain broad and exploratory, but agents must not normalize preventable shipping debt.
 
+Git workflow for this repository:
+1. Work directly on `main` by default.
+2. Do not create or switch to task branches unless the user explicitly requests a branch-based workflow.
+
 Required:
 1. Preserve future packaging and shipping options.
 2. Do not introduce avoidable install/runtime/test drift.
