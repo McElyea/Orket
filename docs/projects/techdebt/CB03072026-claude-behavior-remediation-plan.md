@@ -301,6 +301,9 @@ Proof target:
 23. `CB-4B` completed on 2026-03-08.
 24. Removed dead `TurnExecutor.__getattr__` delegation entries for `_prepare_messages`, `_parse_response`, and `_execute_tools` so the executor no longer advertises an alternate helper path for methods already declared explicitly on the class.
 25. Verified with `python -m pytest tests/application/test_turn_executor_delegate_surface.py -q` and `python -m pytest tests/application/test_turn_executor_context.py -q -k "prepare_messages_includes_dependency_context_block"`.
+26. Revalidated the broader direct `TurnExecutor` application suites on 2026-03-08 after the stricter `ToolGate` transition enforcement and confirmed the failures were stale test scaffolding: direct executor fixtures were still passing persisted issue status (`ready`) where the real orchestrator now passes per-turn status (`in_progress` or `awaiting_guard_review`) in `context["current_status"]`.
+27. Aligned the direct executor test helpers with the current turn-status contract and removed incidental invalid terminal transitions from the prompt-artifact coverage so those tests exercise artifact-writing and executor behavior instead of obsolete transition assumptions.
+28. Verified with `python -m pytest tests/application/test_turn_executor_context.py tests/application/test_turn_executor_delegate_surface.py tests/application/test_turn_executor_middleware.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_runtime_context_bridge.py tests/application/test_turn_executor_skill_contract.py tests/application/test_turn_executor_timeout_error.py tests/application/test_turn_executor_token_states.py -q`.
 
 ## Verification Plan
 

@@ -81,13 +81,13 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
         id="DEV",
         summary="developer",
         description="Builds code",
-        tools=["read_file", "update_issue_status"],
+        tools=["write_file"],
     )
 
     class _ModelClient:
         async def complete(self, messages):
             return SimpleNamespace(
-                content='{"tool":"update_issue_status","args":{"issue_id":"ISSUE-1","status":"done"}}',
+                content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}',
                 raw={"total_tokens": 7},
             )
 
@@ -101,7 +101,7 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "dummy-model",
         "dependency_context": {},
         "required_action_tools": [],
@@ -151,7 +151,7 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
         workspace=Path(tmp_path),
     )
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
-    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["update_issue_status"])
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
     _write_prompt_budget_policy(policy_path, max_tokens=5000)
 
@@ -162,7 +162,7 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
 
         async def complete(self, messages):
             return SimpleNamespace(
-                content='{"tool":"update_issue_status","args":{"issue_id":"ISSUE-1","status":"done"}}',
+                content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}',
                 raw={"total_tokens": 7},
             )
 
@@ -176,7 +176,7 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "dummy-model",
         "dependency_context": {},
         "required_action_tools": [],
@@ -216,7 +216,7 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
         workspace=Path(tmp_path),
     )
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
-    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["update_issue_status"])
+    role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
     _write_prompt_budget_policy(policy_path, max_tokens=10)
     call_count = {"value": 0}
@@ -225,7 +225,7 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
         async def complete(self, messages):
             call_count["value"] += 1
             return SimpleNamespace(
-                content='{"tool":"update_issue_status","args":{"issue_id":"ISSUE-1","status":"done"}}',
+                content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}',
                 raw={"total_tokens": 7},
             )
 
@@ -239,7 +239,7 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "dummy-model",
         "dependency_context": {},
         "required_action_tools": [],

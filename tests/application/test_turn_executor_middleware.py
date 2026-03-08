@@ -31,17 +31,36 @@ class _Model:
         return {"content": self.outputs[idx], "raw": {"total_tokens": 1}}
 
 
+def _current_status_for_role(role: str) -> str:
+    if str(role or "").strip().lower() == "integrity_guard":
+        return "awaiting_guard_review"
+    return "in_progress"
+
+
+class _TurnContext(dict):
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        if key == "role":
+            super().__setitem__("current_status", _current_status_for_role(str(value)))
+        elif key == "roles" and value:
+            first_role = next(iter(value), None)
+            if first_role:
+                super().__setitem__("current_status", _current_status_for_role(str(first_role)))
+
+
 def _context():
-    return {
+    return _TurnContext(
+        {
         "session_id": "sess-1",
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": _current_status_for_role("developer"),
         "selected_model": "dummy",
         "turn_index": 1,
         "history": [],
-    }
+        }
+    )
 
 
 def _issue():

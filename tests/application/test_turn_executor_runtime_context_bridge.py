@@ -145,7 +145,7 @@ async def test_turn_executor_bridges_runtime_context_through_wrapped_model_clien
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "unknown-unmapped-model",
         "turn_index": 1,
         "history": [],

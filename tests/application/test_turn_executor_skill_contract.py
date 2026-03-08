@@ -33,7 +33,7 @@ def _context() -> dict:
         "issue_id": "ISSUE-1",
         "role": "developer",
         "roles": ["developer"],
-        "current_status": "ready",
+        "current_status": "in_progress",
         "selected_model": "dummy",
         "turn_index": 1,
         "history": [],
