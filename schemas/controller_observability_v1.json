@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/controller_observability_v1.json",
+  "title": "Controller Observability V1 Event",
+  "description": "Canonical schema for controller_run and controller_child observability events.",
+  "type": "object",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/controllerRunEvent"
+    },
+    {
+      "$ref": "#/$defs/controllerChildEvent"
+    }
+  ],
+  "$defs": {
+    "capsObject": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "controllerRunEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "run_id",
+        "controller_workload",
+        "execution_depth",
+        "declared_fanout",
+        "accepted_fanout",
+        "requested_caps",
+        "enforced_caps",
+        "result",
+        "error_code"
+      ],
+      "properties": {
+        "event": {
+          "const": "controller_run"
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controller_workload": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution_depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "declared_fanout": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "accepted_fanout": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requested_caps": {
+          "$ref": "#/$defs/capsObject"
+        },
+        "enforced_caps": {
+          "$ref": "#/$defs/capsObject"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failed",
+            "blocked"
+          ]
+        },
+        "error_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result": {
+                "const": "success"
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error_code": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result": {
+                "enum": [
+                  "failed",
+                  "blocked"
+                ]
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error_code": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "controllerChildEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "run_id",
+        "child_index",
+        "execution_order",
+        "child_workload",
+        "status",
+        "requested_timeout",
+        "enforced_timeout",
+        "error_code"
+      ],
+      "properties": {
+        "event": {
+          "const": "controller_child"
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "child_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "execution_order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "child_workload": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure",
+            "not_attempted"
+          ]
+        },
+        "requested_timeout": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "enforced_timeout": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "error_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "success",
+                  "not_attempted"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error_code": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "failure"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error_code": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+

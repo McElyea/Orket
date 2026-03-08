@@ -31,6 +31,11 @@ Orket
      3) leave no `Status: Completed` or `Status: Archived` cycle doc in active `docs/projects/` scope after handoff
      4) for `docs/projects/techdebt/`, leave only standing maintenance docs plus docs for cycle ids still listed as active in `docs/ROADMAP.md`
      5) preserve discoverability with archive links, not by leaving completed docs in active folders
+   - Phase-vs-initiative closeout rule:
+     1) if a lane has a multi-phase initiative mini-roadmap, treat that mini-roadmap as initiative-level authority, not phase-scoped collateral
+     2) do not archive the initiative mini-roadmap when a single phase closes; archive only the completed phase docs
+     3) do not archive the entire project folder while roadmap still lists pending or in-progress work for that lane
+     4) if any phase remains, keep an active lane folder with the initiative mini-roadmap plus the current canonical implementation plan
    - Run anti-orphan checks at handoff:
      1) every remaining non-archive folder in `docs/projects/` appears in roadmap Project Index
      2) every active/queued roadmap entry points to an existing path
@@ -60,6 +65,8 @@ Orket
      `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
    - Techdebt folder closure/archive semantics are governed by:
      `docs/projects/techdebt/README.md`
+   - In `docs/ROADMAP.md`, standing recurring-maintenance entries must stay static and include only durable authority pointers (for example checklist + folder-governance path).
+   - Do not append volatile pointers such as "Latest evidence" or "Latest completed archive" to roadmap recurring-maintenance entries.
    - Keep recurring checks out of project execution lanes; project plans should remain closable.
 12. Techdebt cycle closure rule:
    - If a techdebt cycle's implementation requirements are complete and verified, move cycle-specific docs from

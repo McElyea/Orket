@@ -13,6 +13,23 @@ Locked v0:
 3. Hybrid caps (payload request + runtime hard caps)
 4. Active lane in Priority Now
 
+Active execution pointer:
+1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2A.md`
+
+Active requirements slice:
+1. `docs/projects/controller-workload/04-REQUIREMENTS-Phase-2A.md`
+
+Active implementation slice:
+1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2A.md`
+
+Naming convention for continuing slices:
+1. Requirements: `NN-REQUIREMENTS-Phase-<phase>.md`
+2. Implementation plan: `NN-IMPLEMENTATION-PLAN-Phase-<phase>.md`
+
+Phase status:
+1. Phase 1 (steps 1-10): completed and archived under `docs/projects/archive/controller-workload/CW03082026/`
+2. Phase 2 (steps 11+): active
+
 ## Next 10 Steps
 1. Bootstrap initiative lane in `docs/projects/controller-workload/` and register in roadmap.
 2. Write `01-REQUIREMENTS.md` with explicit v0 decisions, non-goals, and acceptance gates.

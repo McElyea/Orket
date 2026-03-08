@@ -121,6 +121,7 @@ Required:
    - `Priority Now` empty means no priority lane, not no work.
    - active items in `Maintenance (Non-Priority)` are still executable roadmap work when no priority lane exists.
    - standing recurring maintenance entries remain active but are fallback work; they should not outrank active finite maintenance items by default and should be listed last within the section unless they are the only active maintenance work.
+   - standing recurring maintenance roadmap entries must remain static authority pointers only; do not append volatile "latest evidence" or "latest archive" references.
 5. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
 6. When creating a new active implementation plan, follow the roadmap-entry rule in `docs/CONTRIBUTOR.md` and update `docs/ROADMAP.md` in the same change.
 7. For active lanes, roadmap entries must point to the canonical implementation plan path (single plan pointer), not requirement docs.
@@ -129,9 +130,14 @@ Required:
 10. Closeout handshake requirement:
    - when a project lane or techdebt cycle completes, update `docs/ROADMAP.md`, archive the cycle/project docs, and remove completed/archived cycle docs from active `docs/projects/` scope in the same change.
    - do not preserve convenience access by leaving a `Status: Completed` or `Status: Archived` cycle doc in an active folder; preserve discoverability via archive links instead.
-11. For `docs/projects/techdebt/`, only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain outside archive.
-12. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
-13. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
+11. Phase-vs-initiative closeout requirement:
+   - if a lane has a multi-phase initiative mini-roadmap, treat that mini-roadmap as initiative-level authority rather than phase-scoped collateral.
+   - closing one phase must archive only phase-scoped docs; do not archive the initiative mini-roadmap unless the full initiative is complete.
+   - do not archive an entire non-maintenance project folder while roadmap still lists pending or in-progress work for that lane.
+   - if any phase remains, keep an active `docs/projects/<lane>/` folder containing the initiative mini-roadmap and the current canonical implementation plan.
+12. For `docs/projects/techdebt/`, only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain outside archive.
+13. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
+14. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
 
 Do not use `docs/ROADMAP.md` to restate process that already lives in `docs/CONTRIBUTOR.md`.
 

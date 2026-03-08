@@ -79,6 +79,18 @@ Runtime must record:
 5. Remaining children are marked `not_attempted`.
 6. Summary status is `failed` when any child fails or a contract guard fails.
 
+## Run Result Vocabulary (Observability Alignment)
+Run-level result vocabulary for observability surfaces is:
+1. `success`
+2. `failed`
+3. `blocked`
+
+Normative alignment rules:
+1. `success` means controller execution completed with no child failure and no contract denial.
+2. `failed` means execution began but did not complete successfully, or a runtime-adjacent authoritative contract failed.
+3. `blocked` means execution terminated without any child workload successfully completing.
+4. If any child status is `success`, run result must not be `blocked`.
+
 ## Stable Error Codes
 1. `controller.envelope_invalid`
 2. `controller.child_sdk_required`
@@ -88,6 +100,7 @@ Runtime must record:
 6. `controller.recursion_denied`
 7. `controller.cycle_denied`
 8. `controller.child_execution_failed`
+9. `controller.observability_emit_failed`
 
 ## Provenance Contract
 

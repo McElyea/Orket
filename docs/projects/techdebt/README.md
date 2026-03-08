@@ -61,3 +61,11 @@ Current archived cycle examples:
 1. No cycle document should remain in active `techdebt` scope once superseded and archived.
 2. New recurring items must be added to `Recurring-Maintenance-Checklist.md` only when they represent ongoing risk boundaries, not one-off incidents.
 3. `python scripts/governance/check_docs_project_hygiene.py` is expected to enforce the active-folder rule mechanically.
+
+## Roadmap Hygiene for Recurring Entry
+
+1. Keep the `techdebt` recurring entry in `docs/ROADMAP.md` static:
+   1. checklist source pointer
+   2. folder governance pointer
+2. Do not add volatile pointers (for example "latest evidence" or "latest completed archive") to the roadmap recurring entry.
+3. Put cycle-specific evidence and closeout links in cycle artifacts/closeout docs under `docs/projects/archive/techdebt/<cycle_id>/`, not in the active roadmap line.

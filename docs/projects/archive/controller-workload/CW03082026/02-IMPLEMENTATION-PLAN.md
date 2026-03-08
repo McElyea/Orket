@@ -1,9 +1,9 @@
 ﻿# Controller Workload Phase 1 Implementation Plan
 
 Last updated: 2026-03-08
-Status: Active
+Status: Completed
 Owner: Orket Core
-Source requirements: `docs/projects/controller-workload/01-REQUIREMENTS.md`
+Source requirements: `docs/projects/archive/controller-workload/CW03082026/01-REQUIREMENTS.md`
 
 ## 1. Objective
 
@@ -325,3 +325,19 @@ Phase 1 is complete when:
 4. Non-SDK workloads are denied with stable error codes.
 5. Provenance output includes all required fields in deterministic order.
 6. Contract, unit, and integration tests pass for the authoritative runtime path.
+
+## 7. Completion Evidence
+
+Status: Completed (2026-03-08)
+
+Delivered artifacts:
+1. `docs/specs/CONTROLLER_WORKLOAD_V1.md`
+2. `orket_extension_sdk/controller.py`
+3. `orket/extensions/controller_dispatcher.py`
+4. `extensions/controller_workload/`
+5. `tests/sdk/test_controller.py`
+6. `tests/runtime/test_controller_dispatcher.py`
+
+Verification runs:
+1. `python -m pytest tests/runtime/test_controller_dispatcher.py tests/runtime/test_extension_manager.py tests/sdk/test_controller.py`
+2. `python -m pytest tests/sdk tests/runtime/test_controller_dispatcher.py`
