@@ -13,7 +13,9 @@ Orket
 2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
    - Interpretation rule:
      1) `Priority Now` empty means no priority lane, not no work
-     2) active items in `Maintenance (Non-Priority)` remain executable and are the default queue when no priority lane exists
+     2) active items in `Maintenance (Non-Priority)` remain executable when no priority lane exists
+     3) standing recurring maintenance entries remain active but are fallback work, not the default pick ahead of active finite remediation or implementation items
+     4) within `Maintenance (Non-Priority)`, list standing recurring maintenance entries last unless they are the only active maintenance work
    - If a non-maintenance project or project lane is complete, move its closeout/plan/history docs to `docs/projects/archive/<ProjectName>/` and update links in the same change.
    - Project-owned docs that remain long-lived contracts/specifications must move to `docs/specs/` when the project or lane is archived.
    - Completed non-maintenance project folders must not remain under `docs/projects/` unless the folder is still intentionally active as a maintenance lane or externally gated authority surface.
@@ -42,7 +44,8 @@ Orket
 8. The roadmap has the next steps, no need to journal them here.
 9. Command intent rule:
    - If the user says "follow roadmap" (or equivalent) without naming a project, execute the highest-priority active item in `docs/ROADMAP.md`.
-   - If `Priority Now` is empty, execute the highest-priority active item under `Maintenance (Non-Priority)` before considering staged or future lanes.
+   - If `Priority Now` is empty, execute the highest-priority active non-recurring item under `Maintenance (Non-Priority)` before considering staged or future lanes.
+   - Execute standing recurring maintenance only when no other active maintenance item remains or when the user explicitly requests the recurring cycle.
    - Do not switch to paused/deferred projects unless the user explicitly requests it.
 10. Published artifacts rule:
    - `benchmarks/published/index.json` is canonical.
@@ -71,7 +74,7 @@ Orket
 2. Preserve deterministic green gates (`pytest`, dependency direction, volatility boundaries).
 3. Keep pilot evidence artifacts current (`architecture_pilot_matrix*`, `microservices_pilot_stability_check.json`).
 4. Execute the highest-priority active roadmap lane unless the user redirects.
-5. For recurring maintenance cycles, execute `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`.
+5. Keep recurring maintenance available as a fallback lane via `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`, but do not let it outrank active finite maintenance work by default.
 
 ## Quick Setup
 1. Install dependencies: `python -m pip install --upgrade pip && python -m pip install -e ".[dev]"`

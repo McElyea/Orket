@@ -163,3 +163,46 @@ def test_parse_truncated_tool_batch_recovery():
     assert results[1]["tool"] == "update_issue_status"
     assert results[1]["args"]["status"] == "code_review"
 
+
+# Layer: unit
+def test_parse_truncated_json_recovery_reports_unsupported_tools():
+    diagnostics = []
+
+    def _capture(stage, data):
+        diagnostics.append((stage, data))
+
+    text = """
+```json
+{"tool":"create_issue","args":{"title":"Ship it"}
+```"""
+    results = ToolParser.parse(text, diagnostics=_capture)
+
+    assert results == []
+    recovery_events = [data for stage, data in diagnostics if stage == "parse_partial_recovery"]
+    assert len(recovery_events) == 1
+    assert recovery_events[0]["count"] == 0
+    assert recovery_events[0]["skipped_tools"] == [{"tool": "create_issue", "reason": "unsupported_tool"}]
+
+
+# Layer: unit
+def test_parse_truncated_json_recovery_includes_skipped_tools_when_partial_recovery_succeeds():
+    diagnostics = []
+
+    def _capture(stage, data):
+        diagnostics.append((stage, data))
+
+    text = """
+```json
+{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)\\n"}}
+{"tool":"create_issue","args":{"title":"Ship it"}
+```"""
+    results = ToolParser.parse(text, diagnostics=_capture)
+
+    assert len(results) == 1
+    assert results[0]["tool"] == "write_file"
+    recovery_events = [data for stage, data in diagnostics if stage == "parse_partial_recovery"]
+    assert len(recovery_events) == 1
+    assert recovery_events[0]["count"] == 1
+    assert recovery_events[0]["tools"] == ["write_file"]
+    assert recovery_events[0]["skipped_tools"] == [{"tool": "create_issue", "reason": "unsupported_tool"}]
+

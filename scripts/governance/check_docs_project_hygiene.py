@@ -47,7 +47,11 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 
 def _status_value(path: Path) -> str | None:
-    match = STATUS_PATTERN.search(path.read_text(encoding="utf-8"))
+    try:
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return None
+    match = STATUS_PATTERN.search(text)
     if match is None:
         return None
     return match.group("status").strip()
@@ -62,7 +66,7 @@ def _techdebt_file_failures(techdebt_root: Path, active_cycle_ids: set[str]) -> 
     if not techdebt_root.exists():
         return failures
 
-    for path in sorted(p for p in techdebt_root.iterdir() if p.is_file()):
+    for path in sorted(p for p in techdebt_root.iterdir() if p.is_file() and p.suffix.lower() == ".md"):
         if path.name in TECHDEBT_MAINTENANCE_FILES:
             continue
 

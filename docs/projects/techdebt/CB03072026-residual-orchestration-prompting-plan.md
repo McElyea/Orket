@@ -178,10 +178,20 @@ Proof target:
 
 ## Working Status
 
-1. `CB-ROP-0` pending
+1. `CB-ROP-0` complete
 2. `CB-ROP-1` pending
-3. `CB-ROP-2` pending
+3. `CB-ROP-2` in progress (`CB-ROP-2A` complete)
 4. `CB-ROP-3` pending
+
+## Progress Update
+
+1. `CB-ROP-0` completed on 2026-03-07.
+2. Revalidated the residual seams described in this plan against current HEAD instead of relying on the stale numbered finding mapping alone.
+3. Confirmed still open: `orket/application/workflows/orchestrator_ops.py` still collapses non-forced architecture resolution to `monolith`; `orket/application/services/tool_parser.py` still hid unsupported truncated tool calls behind silent skips; `orket/application/workflows/turn_tool_dispatcher.py` still assumes dict-shaped post-middleware tool results.
+4. Already aligned or no longer reproducing on the authoritative path: the strict-envelope `content == ""` rule already matches `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`; prompt-budget partitioning already separates protocol, tool-schema, and task buckets; the earlier prompt-diff turn-index concern no longer reproduces on the live orchestrator path because `_build_turn_context` emits 1-based turn indices; `MessageBuilder.prepare_messages` remains intentionally async to match the `TurnExecutor` contract; the semaphore wrapper binds each candidate explicitly, so the earlier closure-mutation concern does not reproduce in current `orchestrator_ops`.
+5. `CB-ROP-2A` completed on 2026-03-07.
+6. Added parser diagnostics for truncated-recovery paths that skip unsupported or malformed tool payloads so degraded recovery is auditable instead of silently dropping tool intents.
+7. Verified with `python -m pytest tests/application/test_tool_parser.py -q`.
 
 ## Closeout Note
 
