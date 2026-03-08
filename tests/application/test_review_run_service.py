@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
+import orket.application.review.run_service as run_service_module
 from orket.application.review.run_service import ReviewRunService, _resolve_token
-from orket.application.review.models import ReviewSnapshot, SnapshotBounds
+from orket.application.review.models import ChangedFile, ReviewSnapshot, SnapshotBounds, TruncationReport
 
 
 def _git(repo: Path, *args: str) -> None:
@@ -98,3 +100,82 @@ def test_run_diff_defaults_to_code_only_scope(tmp_path: Path) -> None:
     changed_paths = [row["path"] for row in snapshot.get("changed_files", [])]
     assert "README.md" not in changed_paths
     assert "app/x.py" in changed_paths
+
+
+def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: Path) -> None:
+    """Layer: contract. Verifies code-only PR reviews filter the fetched snapshot locally instead of reloading it."""
+    workspace = tmp_path / "workspace" / "default"
+    service = ReviewRunService(workspace=workspace)
+    calls: list[set[str] | None] = []
+    captured: dict[str, list[str]] = {}
+
+    snapshot = ReviewSnapshot(
+        source="pr",
+        repo={"remote": "https://example.test", "repo_id": "org/repo"},
+        base_ref="base",
+        head_ref="head",
+        bounds=SnapshotBounds(),
+        truncation=TruncationReport(
+            files_truncated=0,
+            diff_bytes_original=0,
+            diff_bytes_kept=0,
+            diff_truncated=False,
+            blob_bytes_original=0,
+            blob_bytes_kept=0,
+            blob_truncated=False,
+            notes=[],
+        ),
+        changed_files=[
+            ChangedFile(path="app/main.py", status="modified", additions=1, deletions=0),
+            ChangedFile(path="README.md", status="modified", additions=1, deletions=0),
+        ],
+        diff_unified=(
+            "diff --git a/app/main.py b/app/main.py\n"
+            "--- a/app/main.py\n"
+            "+++ b/app/main.py\n"
+            "@@ -1 +1 @@\n"
+            "-print('old')\n"
+            "+print('new')\n"
+            "diff --git a/README.md b/README.md\n"
+            "--- a/README.md\n"
+            "+++ b/README.md\n"
+            "@@ -1 +1 @@\n"
+            "-old\n"
+            "+new\n"
+        ),
+        context_blobs=[],
+        metadata={"title": "PR"},
+    )
+    snapshot.compute_snapshot_digest()
+
+    monkeypatch.setattr(
+        run_service_module,
+        "resolve_review_policy",
+        lambda **_kwargs: SimpleNamespace(
+            payload={"input_scope": {"mode": "code_only", "code_extensions": [".py"]}},
+            policy_digest="policy",
+        ),
+    )
+
+    def _fake_load_from_pr(**kwargs):  # type: ignore[no-untyped-def]
+        calls.append(kwargs.get("include_paths"))
+        return snapshot
+
+    def _fake_execute(self, *, snapshot, **_kwargs):  # type: ignore[no-untyped-def]
+        captured["paths"] = [row.path for row in snapshot.changed_files]
+        return "ok"
+
+    monkeypatch.setattr(run_service_module, "load_from_pr", _fake_load_from_pr)
+    monkeypatch.setattr(ReviewRunService, "_execute", _fake_execute)
+
+    result = service.run_pr(
+        remote="https://example.test",
+        repo="org/repo",
+        pr=7,
+        repo_root=tmp_path,
+        bounds=SnapshotBounds(),
+    )
+
+    assert result == "ok"
+    assert calls == [None]
+    assert captured["paths"] == ["app/main.py"]

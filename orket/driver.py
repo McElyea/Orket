@@ -104,14 +104,6 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         return "strict" if self.prompting_mode == "governed" else "compatibility"
 
     def _load_engine_configs(self) -> None:
-        if not hasattr(self, "config_dependency_classification"):
-            self.config_dependency_classification = {}
-        if not hasattr(self, "config_load_failures"):
-            self.config_load_failures = []
-        if not hasattr(self, "strict_config_mode"):
-            self.strict_config_mode = False
-        if not hasattr(self, "config_degraded"):
-            self.config_degraded = False
         workspace_root = self._operator_workspace_root()
         self.config_dependency_classification.clear()
         self.config_load_failures.clear()
@@ -282,9 +274,12 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 role="DRIVER",
             )
             stripped = str(raw_text or "").strip()
-            if not (stripped.startswith("{") and stripped.endswith("}")):
-                raise ValueError("Strict JSON mode requires pure JSON envelope output.")
-            return json.loads(stripped)
+            try:
+                return json.loads(stripped)
+            except json.JSONDecodeError as exc:
+                raise ValueError("Strict JSON mode requires pure JSON envelope output.") from exc
+            except TypeError as exc:
+                raise ValueError("Strict JSON mode requires pure JSON envelope output.") from exc
 
         log_event(
             "driver_json_parse_mode_compatibility",
@@ -433,6 +428,8 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
 
         if normalized_action in {"create_issue", "create_epic", "create_rock"}:
             res = await self._execute_structural_change(plan)
+            if str(res).strip().lower().startswith("error:"):
+                return res
             return f"{res}\n\nStrategic Insight: {reasoning}"
 
         if response_text:

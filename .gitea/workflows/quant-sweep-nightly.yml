@@ -32,56 +32,30 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
-      - name: Quant Sweep Dry Run
+      - name: Generate Quant Sweep Dry Run Plan
         run: |
+          mkdir -p benchmarks/results/quant/quant_sweep
           python scripts/quant/run_quant_sweep.py \
             --model-id placeholder-model \
             --quant-tags Q8_0 \
             --matrix-config "${{ github.event.inputs.matrix_config || 'benchmarks/configs/quant_sweep_common_sessions.json' }}" \
             --task-limit "${{ github.event.inputs.task_limit || '1' }}" \
-            --dry-run
+            --dry-run > benchmarks/results/quant/quant_sweep/nightly_dry_run_plan.json
 
-      - name: Build KPI Sample Artifact
+      - name: Validate Quant Sweep Dry Run Plan
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          path = Path("benchmarks/results/quant/quant_sweep/nightly_sample_summary.json")
-          path.parent.mkdir(parents=True, exist_ok=True)
-          payload = {
-              "schema_version": "1.1.3",
-              "stability_kpis": {
-                  "determinism_rate": 1.0,
-                  "missing_telemetry_rate": 0.0,
-                  "polluted_run_rate": 0.0,
-                  "frontier_success_rate": 1.0,
-                  "quant_rows": 1,
-                  "sessions": 1,
-                  "weighted_runs": 1
-              }
-          }
-          path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+          path = Path("benchmarks/results/quant/quant_sweep/nightly_dry_run_plan.json")
+          payload = json.loads(path.read_text(encoding="utf-8"))
+          if not isinstance(payload, dict) or "dry_run" not in payload:
+              raise SystemExit("nightly quant dry-run plan is missing the expected 'dry_run' payload")
           PY
 
-      - name: Extract KPI Report
-        run: |
-          python scripts/quant/quant_sweep_kpi_report.py \
-            --summary benchmarks/results/quant/quant_sweep/nightly_sample_summary.json \
-            --out benchmarks/results/quant/quant_sweep/nightly_sample_kpis.json
-
-      - name: Enforce KPI Thresholds
-        run: |
-          python scripts/quant/check_quant_sweep_kpis.py \
-            --summary benchmarks/results/quant/quant_sweep/nightly_sample_summary.json \
-            --max-missing-telemetry-rate 0.01 \
-            --max-polluted-run-rate 0.1 \
-            --min-frontier-success-rate 0.8 \
-            --min-determinism-rate 1.0
-
-      - name: Upload Quant Sweep Artifacts
+      - name: Upload Quant Sweep Dry Run Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: quant-sweep-nightly-artifacts
+          name: quant-sweep-nightly-dry-run-artifacts
           path: |
-            benchmarks/results/quant/quant_sweep/nightly_sample_summary.json
-            benchmarks/results/quant/quant_sweep/nightly_sample_kpis.json
+            benchmarks/results/quant/quant_sweep/nightly_dry_run_plan.json

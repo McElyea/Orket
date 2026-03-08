@@ -52,20 +52,28 @@ def resolve_live_acceptance_db_path(db_path: str | None = None) -> str:
     return str(target)
 
 
-def resolve_user_settings_path(path: Path | None = None) -> Path:
+def resolve_user_settings_path(
+    path: Path | None = None,
+    *,
+    create_parent: bool = True,
+    migrate_legacy: bool = True,
+) -> Path:
     if path is not None:
         return path
     target = durable_root() / "config" / "user_settings.json"
-    _migrate_legacy_file(legacy=Path.cwd() / "user_settings.json", target=target)
-    target.parent.mkdir(parents=True, exist_ok=True)
+    if migrate_legacy:
+        _migrate_legacy_file(legacy=Path.cwd() / "user_settings.json", target=target)
+    if create_parent:
+        target.parent.mkdir(parents=True, exist_ok=True)
     return target
 
 
-def resolve_user_preferences_path(path: Path | None = None) -> Path:
+def resolve_user_preferences_path(path: Path | None = None, *, create_parent: bool = True) -> Path:
     if path is not None:
         return path
     target = durable_root() / "config" / "preferences.json"
-    target.parent.mkdir(parents=True, exist_ok=True)
+    if create_parent:
+        target.parent.mkdir(parents=True, exist_ok=True)
     return target
 
 

@@ -28,6 +28,9 @@ def test_load_engine_configs_marks_degraded_and_emits_mode_event(monkeypatch):
     driver = OrketDriver.__new__(OrketDriver)
     driver.provider = SimpleNamespace(model="qwen2.5-coder")
     driver.strict_config_mode = False
+    driver.config_degraded = False
+    driver.config_dependency_classification = {}
+    driver.config_load_failures = []
 
     driver._load_engine_configs()
 
@@ -46,6 +49,9 @@ def test_load_engine_configs_strict_mode_fails_closed(monkeypatch):
     driver = OrketDriver.__new__(OrketDriver)
     driver.provider = SimpleNamespace(model="llama3.1")
     driver.strict_config_mode = True
+    driver.config_degraded = False
+    driver.config_dependency_classification = {}
+    driver.config_load_failures = []
 
     with pytest.raises(RuntimeError, match="strict config mode"):
         driver._load_engine_configs()

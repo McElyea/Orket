@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 from orket.logging import get_member_metrics, log_event
@@ -71,6 +72,32 @@ def test_log_event_isolated_per_workspace(tmp_path: Path) -> None:
     assert not any('"event": "event_b"' in line for line in lines_a)
     assert any('"event": "event_b"' in line for line in lines_b)
     assert not any('"event": "event_a"' in line for line in lines_b)
+
+
+def test_log_event_routes_legacy_level_through_stdlib_logger(tmp_path: Path, monkeypatch) -> None:
+    """Layer: contract. Verifies legacy level routing drives stdlib logging and a first-class log level field."""
+    monkeypatch.chdir(tmp_path)
+    logger = logging.getLogger("orket")
+    captured: list[logging.LogRecord] = []
+
+    class _Capture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            captured.append(record)
+
+    handler = _Capture()
+    logger.addHandler(handler)
+    try:
+        log_event("error", "webhook_db", "legacy_event", {"message": "boom"})
+    finally:
+        logger.removeHandler(handler)
+
+    record = _load_last_log_record(tmp_path / "workspace" / "default" / "orket.log")
+    assert captured
+    assert captured[-1].levelno == logging.ERROR
+    assert captured[-1].orket_record["level"] == "error"
+    assert record["level"] == "error"
+    assert record["role"] == "webhook_db"
+    assert record["event"] == "legacy_event"
 
 
 def test_get_member_metrics_returns_aggregated_roles(tmp_path: Path) -> None:

@@ -22,6 +22,19 @@ class DriverResourceMixin:
         epic_data["issues"] = []
         return epic_data, False
 
+    async def _load_epic_payload_for_write_async(self, path: Path) -> tuple[Dict[str, Any], bool]:
+        epic_data = json.loads(await self.fs.read_file(str(path)))
+        issues = epic_data.get("issues")
+        if isinstance(issues, list):
+            epic_data.pop("cards", None)
+            return epic_data, False
+        cards = epic_data.pop("cards", None)
+        if isinstance(cards, list):
+            epic_data["issues"] = list(cards)
+            return epic_data, True
+        epic_data["issues"] = []
+        return epic_data, False
+
     async def _execute_structural_change(self, plan: Dict[str, Any]) -> str:
         action = plan.get("action")
         new_asset = plan.get("new_asset", {})
@@ -39,7 +52,7 @@ class DriverResourceMixin:
                 path = self.model_root / "core" / "epics" / f"{parent_epic}.json"
 
             if path.exists():
-                epic_data, migrated = self._load_epic_payload_for_write(path)
+                epic_data, migrated = await self._load_epic_payload_for_write_async(path)
                 issue_entry = {
                     "summary": new_asset.get("summary", "New Task"),
                     "seat": new_asset.get("seat", "senior_developer"),
@@ -47,7 +60,7 @@ class DriverResourceMixin:
                     "note": new_asset.get("note", ""),
                 }
                 epic_data["issues"].append(issue_entry)
-                self.fs.write_file_sync(str(path), epic_data)
+                await self.fs.write_file(str(path), epic_data)
                 log_event("create_issue", {"epic": parent_epic, "summary": issue_entry["summary"]}, workspace_path, role="DRIVER")
                 migration_note = " Legacy epic child key was normalized to 'issues'." if migrated else ""
                 return f"Added issue '{issue_entry['summary']}' to Epic '{parent_epic}' in {path.parent.parent.name}.{migration_note}"
@@ -56,8 +69,7 @@ class DriverResourceMixin:
         if action == "create_epic":
             epic_name = new_asset.get("name", "new_epic")
             epic_path = dept_root / "epics" / f"{epic_name}.json"
-            epic_path.parent.mkdir(parents=True, exist_ok=True)
-            self.fs.write_file_sync(str(epic_path), new_asset)
+            await self.fs.write_file(str(epic_path), new_asset)
 
             parent_rock = plan.get("target_parent")
             rock_path = dept_root / "rocks" / f"{parent_rock}.json"
@@ -67,30 +79,28 @@ class DriverResourceMixin:
             if not parent_rock or not rock_path.exists():
                 parent_rock = f"Rock-Nomination-{epic_name}"
                 nom_path = dept_root / "rocks" / f"{parent_rock}.json"
-                nom_path.parent.mkdir(parents=True, exist_ok=True)
                 rock_data = {
                     "name": parent_rock,
                     "description": f"Strategic parent for {new_asset.get('description', 'new initiative')}",
                     "owner_department": suggested_dept,
                     "epics": [{"epic": epic_name, "department": suggested_dept}],
                 }
-                self.fs.write_file_sync(str(nom_path), rock_data)
+                await self.fs.write_file(str(nom_path), rock_data)
                 log_event("create_epic", {"name": epic_name, "rock": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
                 log_event("create_rock", {"name": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
                 return f"Created Epic '{epic_name}' and nominated new parent Rock '{parent_rock}' in {suggested_dept}."
-            rock_data = json.loads(self.fs.read_file_sync(str(rock_path)))
+            rock_data = json.loads(await self.fs.read_file(str(rock_path)))
             if "epics" not in rock_data:
                 rock_data["epics"] = []
             rock_data["epics"].append({"epic": epic_name, "department": suggested_dept})
-            self.fs.write_file_sync(str(rock_path), rock_data)
+            await self.fs.write_file(str(rock_path), rock_data)
             log_event("create_epic", {"name": epic_name, "rock": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
             return f"Created Epic '{epic_name}' and linked to existing Rock '{parent_rock}' in {rock_path.parent.parent.name}."
 
         if action == "create_rock":
             rock_name = new_asset.get("name", "new_rock")
             path = dept_root / "rocks" / f"{rock_name}.json"
-            path.parent.mkdir(parents=True, exist_ok=True)
-            self.fs.write_file_sync(str(path), new_asset)
+            await self.fs.write_file(str(path), new_asset)
             log_event("create_rock", {"name": rock_name, "dept": suggested_dept}, workspace_path, role="DRIVER")
             return f"Nominated new Rock: '{rock_name}' in {suggested_dept}."
 

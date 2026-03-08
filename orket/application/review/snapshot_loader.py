@@ -359,3 +359,29 @@ def load_from_pr(
     )
     snapshot.compute_snapshot_digest()
     return snapshot
+
+
+def filter_snapshot_paths(snapshot: ReviewSnapshot, include_paths: set[str]) -> ReviewSnapshot:
+    changed_files = [row for row in snapshot.changed_files if row.path in include_paths]
+    context_blobs = [blob for blob in snapshot.context_blobs if blob.path in include_paths]
+    diff_unified = _filter_diff_to_paths(snapshot.diff_unified, include_paths) if include_paths else ""
+    bounded_files, bounded_diff, bounded_blobs, truncation = _apply_bounds(
+        changed_files=changed_files,
+        diff_unified=diff_unified,
+        context_blobs=context_blobs,
+        bounds=snapshot.bounds,
+    )
+    filtered = ReviewSnapshot(
+        source=snapshot.source,
+        repo=dict(snapshot.repo),
+        base_ref=snapshot.base_ref,
+        head_ref=snapshot.head_ref,
+        bounds=snapshot.bounds,
+        truncation=truncation,
+        changed_files=bounded_files,
+        diff_unified=bounded_diff,
+        context_blobs=bounded_blobs,
+        metadata=dict(snapshot.metadata),
+    )
+    filtered.compute_snapshot_digest()
+    return filtered

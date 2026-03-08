@@ -16,7 +16,7 @@ from orket.application.review.models import (
     SnapshotBounds,
 )
 from orket.application.review.policy_resolver import resolve_review_policy
-from orket.application.review.snapshot_loader import load_from_diff, load_from_files, load_from_pr
+from orket.application.review.snapshot_loader import filter_snapshot_paths, load_from_diff, load_from_files, load_from_pr
 
 
 def _ulid() -> str:
@@ -125,15 +125,7 @@ class ReviewRunService:
         )
         if scope_mode == "code_only":
             code_paths = _filter_code_paths([item.path for item in snapshot.changed_files], ext_set)
-            snapshot = load_from_pr(
-                remote=remote,
-                repo=repo,
-                pr_number=pr,
-                bounds=bounds,
-                token=resolved_token,
-                include_paths=set(code_paths),
-                metadata={"pr_number": int(pr)},
-            )
+            snapshot = filter_snapshot_paths(snapshot, set(code_paths))
         return self._execute(
             snapshot=snapshot,
             resolved_policy=resolved_policy,

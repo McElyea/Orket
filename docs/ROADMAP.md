@@ -11,7 +11,7 @@ Intentionally empty.
 ## Maintenance (Non-Priority)
 These items are active executable work. They are non-priority, not deferred.
 
-1. techdebt -- Standing recurring maintenance only. Source: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Folder governance: `docs/projects/techdebt/README.md`. Latest evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json`. Latest completed finite cycle archive: `docs/projects/archive/techdebt/CB03072026/Closeout.md`.
+1. techdebt -- Standing recurring maintenance only. Source: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Folder governance: `docs/projects/techdebt/README.md`. Latest evidence: `tests/reports/techdebt_recurring_cycle_2026-03-07_a_report.json`. Latest completed finite cycle archive: `docs/projects/archive/techdebt/OBT03082026/Closeout.md`.
 
 ## Staged / Waiting (Externally Gated)
 1. protocol-governed production-window operator sign-off -- Runtime contract: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`. Implementation archive: `docs/projects/archive/protocol-governed/PG03062026/`. Next review `2026-04-06`.

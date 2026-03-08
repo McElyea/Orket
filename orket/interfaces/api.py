@@ -1106,6 +1106,9 @@ async def get_session_status(session_id: str):
 
 @v1_router.post("/sessions/{session_id}/halt")
 async def halt_session(session_id: str):
+    run_record = await engine.run_ledger.get_run(session_id)
+    if run_record is None:
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
     await engine.halt_session(session_id)
     task = await runtime_state.get_task(session_id)
     return {

@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
+    """Layer: contract. Verifies the quality workflow labels comparator identity checks truthfully while keeping the required gates present."""
     workflow_path = Path(".gitea/workflows/quality.yml")
     text = workflow_path.read_text(encoding="utf-8")
 
@@ -40,7 +41,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
     ]
     missing = [cmd for cmd in required_commands if cmd not in text]
     assert not missing, "quality workflow missing required architecture gates: " + ", ".join(missing)
-    assert "Enforce memory trace fixture contract and comparator smoke" in text
+    assert "Smoke: memory trace fixture contract and comparator identity check" in text
     assert "Enforce memory determinism contract smoke" not in text
     assert "--left benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json" in text
     assert "--right benchmarks/results/benchmarks/memory/memory_trace_fixture_right.json" in text

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 
@@ -13,15 +12,18 @@ class AsyncExecutorService:
     behavior is explicit and reusable across adapters.
     """
 
-    def __init__(self) -> None:
-        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="orket-async-bridge")
-
     def run_coroutine_blocking(self, coro: Any) -> Any:
         try:
             asyncio.get_running_loop()
         except RuntimeError:
             return asyncio.run(coro)
-        return self._executor.submit(lambda: asyncio.run(coro)).result()
+        close = getattr(coro, "close", None)
+        if callable(close):
+            close()
+        raise RuntimeError(
+            "run_coroutine_blocking() cannot be used from a running event loop; "
+            "convert the caller to async and await the coroutine directly."
+        )
 
 
 _DEFAULT_EXECUTOR_SERVICE = AsyncExecutorService()

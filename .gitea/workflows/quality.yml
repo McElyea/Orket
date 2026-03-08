@@ -312,7 +312,7 @@ jobs:
         run: |
           python scripts/governance/check_roadmap_metrics.py
 
-      - name: Enforce memory trace fixture contract and comparator smoke
+      - name: Smoke: memory trace fixture contract and comparator identity check
         run: |
           mkdir -p benchmarks/results/benchmarks/memory
           python - <<'PY'

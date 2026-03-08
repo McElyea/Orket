@@ -45,6 +45,7 @@ Current archived cycle examples:
 2. `docs/projects/archive/techdebt/OBT03062026/`
 3. `docs/projects/archive/techdebt/OBT03072026/`
 4. `docs/projects/archive/techdebt/CB03072026/`
+5. `docs/projects/archive/techdebt/OBT03082026/`
 
 ## Closeout Process for a Cycle
 

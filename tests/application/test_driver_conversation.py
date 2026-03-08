@@ -4,6 +4,7 @@ from types import MethodType, SimpleNamespace
 import pytest
 
 from orket.driver import OrketDriver
+from orket.exceptions import ModelConnectionError
 
 
 @pytest.mark.asyncio
@@ -191,6 +192,35 @@ async def test_process_request_general_conversation_uses_model_reply():
 
 
 @pytest.mark.asyncio
+async def test_conversation_model_reply_logs_provider_failures(monkeypatch):
+    """Layer: contract. Verifies swallowed conversation provider errors are recorded before the fallback path is used."""
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.provider = SimpleNamespace()
+    driver.workspace_root = Path("workspace/default")
+    events = []
+
+    async def _boom(_messages):
+        raise ModelConnectionError("provider offline")
+
+    def _capture(event_name, payload, _workspace, role=None):
+        events.append((event_name, payload, role))
+
+    driver.provider.complete = _boom
+    monkeypatch.setattr("orket.driver_support_conversation.log_event", _capture)
+
+    response = await driver._conversation_model_reply("Can we discuss tradeoffs in this design?")
+
+    assert response is None
+    assert events == [
+        (
+            "conversation_model_error",
+            {"error": "provider offline", "error_type": "ModelConnectionError"},
+            "DRIVER",
+        )
+    ]
+
+
+@pytest.mark.asyncio
 async def test_process_request_about_application_question():
     driver = OrketDriver.__new__(OrketDriver)
     driver.model_root = Path("model")
@@ -338,3 +368,18 @@ async def test_process_request_capabilities_reports_degraded_config_status():
 
     assert "Active prompting mode: fallback" in response
     assert "Config load status: degraded (1 dependency load failure(s))." in response
+
+
+@pytest.mark.asyncio
+async def test_execute_plan_structural_error_omits_strategic_insight():
+    """Layer: unit. Verifies structural failure text is returned plainly without success-flavored strategic narration."""
+    driver = OrketDriver.__new__(OrketDriver)
+
+    async def _fake_structural_change(_self, _plan):
+        return "Error: epic not found"
+
+    driver._execute_structural_change = MethodType(_fake_structural_change, driver)
+
+    result = await driver.execute_plan({"action": "create_epic", "reasoning": "build a new roadmap lane"})
+
+    assert result == "Error: epic not found"

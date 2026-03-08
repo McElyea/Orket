@@ -25,7 +25,7 @@ class OrganizationLoop:
         log_event("organization_loop_started", {"mode": "critical_path"}, workspace=Path("workspace/default"))
         while self.running:
             # 1. Scan for next priority work based on Critical Path
-            next_card = self._find_next_critical_card()
+            next_card = await asyncio.to_thread(self._find_next_critical_card)
             
             if next_card:
                 log_event(
@@ -38,6 +38,7 @@ class OrganizationLoop:
             else:
                 # Idle jitter
                 await asyncio.sleep(10)
+            await asyncio.sleep(0)
 
     def _find_next_critical_card(self) -> Optional[dict]:
         """Finds the most critical READY card across all departments."""
@@ -77,4 +78,3 @@ class OrganizationLoop:
         candidates.sort(key=lambda x: (-x["weight"], p_map.get(x["priority"], 3)))
         
         return candidates[0]
-

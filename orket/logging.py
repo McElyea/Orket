@@ -1,19 +1,103 @@
+import asyncio
 import json
 import logging
 import logging.handlers
 import os
+import queue
+import threading
 from pathlib import Path
 from typing import Any, Callable
+
 from orket.time_utils import now_local
 
 # Initialize system logger
 _logger = logging.getLogger("orket")
 _logger.setLevel(logging.INFO)
 
+_LOG_LEVELS = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warn": logging.WARNING,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
+}
+_prepared_log_dirs: set[Path] = set()
+_prepared_log_dirs_lock = threading.Lock()
+_log_write_queue: queue.SimpleQueue[tuple[Path, str]] = queue.SimpleQueue()
+_log_writer_lock = threading.Lock()
+_log_writer_started = False
+
+
+def _start_log_writer() -> None:
+    global _log_writer_started
+    if _log_writer_started:
+        return
+    with _log_writer_lock:
+        if _log_writer_started:
+            return
+        thread = threading.Thread(target=_log_writer_loop, name="orket-log-writer", daemon=True)
+        thread.start()
+        _log_writer_started = True
+
+
+def _log_writer_loop() -> None:
+    while True:
+        path, line = _log_write_queue.get()
+        try:
+            _append_line_sync(path, line)
+        except OSError:
+            continue
+
+
+def _append_line_sync(path: Path, line: str) -> None:
+    _ensure_log_parent(path)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(line)
+
+
+def _ensure_log_parent(path: Path) -> None:
+    directory = path.parent.resolve()
+    with _prepared_log_dirs_lock:
+        if directory in _prepared_log_dirs:
+            return
+        directory.mkdir(parents=True, exist_ok=True)
+        _prepared_log_dirs.add(directory)
+
+
+def _running_on_event_loop() -> bool:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return False
+    return True
+
+
+def _append_json_record(path: Path, payload: dict[str, Any]) -> None:
+    line = json.dumps(payload, ensure_ascii=False, default=str) + "\n"
+    if _running_on_event_loop():
+        _start_log_writer()
+        _log_write_queue.put((path, line))
+        return
+    _append_line_sync(path, line)
+
+
+def _resolve_level_name(level: Any) -> str:
+    token = str(level or "").strip().lower()
+    if token in _LOG_LEVELS:
+        return "warning" if token == "warn" else token
+    return "info"
+
+
+def _emit_stdlib_record(level_name: str, event: str, record: dict[str, Any]) -> None:
+    _logger.log(_LOG_LEVELS[level_name], str(event or "").strip(), extra={"orket_record": record})
+
+
 def setup_logging(workspace: Path) -> Path:
     """Ensures workspace log directory exists and returns the target log file."""
-    workspace.mkdir(parents=True, exist_ok=True)
-    return workspace / "orket.log"
+    path = workspace / "orket.log"
+    _ensure_log_parent(path)
+    return path
 
 # Global list of event subscribers (e.g. for WebSockets)
 _subscribers: list[Callable[[dict[str, Any]], None]] = []
@@ -126,9 +210,7 @@ def _append_runtime_event_artifact(workspace: Path, runtime_event: dict[str, Any
     if event_name not in RUNTIME_EVENT_ARTIFACT_EVENTS:
         return
     path = workspace / "agent_output" / "observability" / "runtime_events.jsonl"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(runtime_event, ensure_ascii=False, default=str) + "\n")
+    _append_json_record(path, runtime_event)
 
 
 def log_event(
@@ -155,9 +237,11 @@ def log_event(
         # Recurse with unified signature
         return log_event(actual_event, actual_data, role=component, level=level)
 
-    if data is None: data = {}
+    if data is None:
+        data = {}
     workspace, context_marker = _resolve_workspace(workspace)
-    
+    level_name = _resolve_level_name(kwargs.pop("level", None))
+
     # Merge extra kwargs into data for observability
     full_data = {**data, **kwargs}
     if context_marker:
@@ -168,35 +252,36 @@ def log_event(
     
     record = {
         "timestamp": now_local().isoformat(),
+        "level": level_name,
         "role": role_name,
         "event": event,
         "data": full_data,
     }
-    
-    # 1. Ensure workspace log path exists
+
+    _emit_stdlib_record(level_name, event, record)
     log_file = setup_logging(workspace)
 
-    # 2. Emit JSON record to this workspace only.
-    with log_file.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    # 1. Emit JSON record to this workspace only.
+    _append_json_record(log_file, record)
     try:
         _append_runtime_event_artifact(workspace, runtime_event)
     except (RuntimeError, ValueError, TypeError, OSError):
         pass
 
-    # 3. Notify subscribers (for WebSockets)
+    # 2. Notify subscribers (for WebSockets)
     for subscriber in _subscribers:
         try:
             subscriber(record)
         except (RuntimeError, ValueError, TypeError, OSError) as e:
             failure_record = {
                 "timestamp": now_local().isoformat(),
+                "level": "error",
                 "role": "system",
                 "event": "logging_subscriber_failed",
                 "data": {"error": str(e)},
             }
-            with log_file.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(failure_record, ensure_ascii=False) + "\n")
+            _emit_stdlib_record("error", "logging_subscriber_failed", failure_record)
+            _append_json_record(log_file, failure_record)
 
 
 def log_model_selected(role: str, model: str, temperature: float, seed, epic: str, workspace: Path) -> None:

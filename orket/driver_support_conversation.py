@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
+from orket.exceptions import ModelProviderError
 from orket.logging import log_event
 
 
@@ -118,7 +119,14 @@ class DriverConversationMixin:
             if not content:
                 return None
             return self._normalize_conversation_model_output(content)
-        except (RuntimeError, ValueError, TypeError, KeyError, OSError):
+        except (ModelProviderError, RuntimeError, ValueError, TypeError, KeyError, OSError) as exc:
+            workspace = Path(getattr(self, "workspace_root", Path("workspace/default")))
+            log_event(
+                "conversation_model_error",
+                {"error": str(exc), "error_type": type(exc).__name__},
+                workspace,
+                role="DRIVER",
+            )
             return None
 
     def _conversation_system_prompt(self) -> str:

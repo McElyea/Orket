@@ -1568,6 +1568,7 @@ async def test_run_detail_and_session_status_real_runtime(monkeypatch, tmp_path)
 
 @pytest.mark.asyncio
 async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path):
+    """Layer: integration. Verifies session halt succeeds for an existing run-backed session and cancels the runtime task."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
     from orket.state import runtime_state
@@ -1585,6 +1586,15 @@ async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path)
 
     task = asyncio.create_task(_sleepy())
     session_id = "HALT-REAL-1"
+    await real_engine.run_ledger.start_run(
+        session_id=session_id,
+        run_type="epic",
+        run_name="halt-test",
+        department="core",
+        build_id="BUILD-HALT",
+        summary={"phase": "execute"},
+        artifacts={},
+    )
     await runtime_state.add_task(session_id, task)
 
     response = client.post(f"/v1/sessions/{session_id}/halt", headers={"X-API-Key": "test-key"})
@@ -1596,6 +1606,26 @@ async def test_session_halt_endpoint_cancels_runtime_task(monkeypatch, tmp_path)
     assert task.cancelled() or task.done()
 
     await runtime_state.remove_task(session_id)
+
+
+@pytest.mark.asyncio
+async def test_session_halt_endpoint_returns_404_for_missing_session(monkeypatch, tmp_path):
+    """Layer: integration. Verifies halt rejects unknown session ids instead of returning false success."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    from orket.orchestration.engine import OrchestrationEngine
+
+    workspace_root = Path(tmp_path) / "workspace"
+    workspace_root.mkdir(parents=True, exist_ok=True)
+    real_engine = OrchestrationEngine(
+        workspace_root=workspace_root,
+        db_path=str(Path(tmp_path) / "runtime.db"),
+    )
+    monkeypatch.setattr(api_module, "engine", real_engine)
+
+    response = client.post("/v1/sessions/NOPE-HALT/halt", headers={"X-API-Key": "test-key"})
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Session 'NOPE-HALT' not found."
 
 
 @pytest.mark.asyncio
