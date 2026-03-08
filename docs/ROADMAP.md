@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-03-07
+Last updated: 2026-03-08
 
 ## Operating Rule
 Use `docs/CONTRIBUTOR.md` for contributor workflow and roadmap-selection rules. This file stays focused on active lane status and execution order. `Priority Now` empty means there is no priority lane; it does not mean there is no work. Active items under `Maintenance (Non-Priority)` remain executable when no priority lane exists. Standing recurring maintenance stays active but is a fallback lane and should be listed last within the section unless it is the only active maintenance work.
@@ -11,7 +11,7 @@ Intentionally empty.
 ## Maintenance (Non-Priority)
 These items are active executable work. They are non-priority, not deferred.
 
-1. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`. Current status: `CB-1` complete; `CB-2A`, `CB-3A`, and `CB-4A` complete; `CB-ROP-0` complete; `CB-ROP-2A` complete; next slice `CB-ROP-1`.
+1. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`. Current status: `CB-1` complete; `CB-2A`, `CB-3A`, `CB-4A`, and `CB-4B` complete; `CB-ROP-0`, `CB-ROP-1`, `CB-ROP-2A`, `CB-ROP-2B`, and `CB-ROP-3` complete; `CB-RSD-0`, `CB-RSD-1`, `CB-RSD-2`, and `CB-RSD-3` complete; next slice `CB-5`.
    1. `CB-0` revalidate critical/high finding inventory against current HEAD; mark duplicates, already-fixed items, and blockers before code changes.
    2. `CB-3A` repair `coordinator_store` async/service-boundary behavior.
    3. `CB-ROP-0` revalidate residual orchestration/prompting findings.

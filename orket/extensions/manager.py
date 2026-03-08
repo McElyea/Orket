@@ -76,40 +76,77 @@ class ExtensionManager:
             registry_factory=_WorkloadRegistry,
         )
 
-    def __getattr__(self, name: str) -> Any:
-        delegated = {
-            "_load_catalog_payload": self.catalog.load_catalog_payload,
-            "_save_catalog_payload": self.catalog.save_catalog_payload,
-            "_row_from_record": self.catalog.row_from_record,
-            "_discover_entry_point_rows": self.catalog.discover_entry_point_rows,
-            "_load_manifest": self.manifest_parser.load_manifest,
-            "_record_from_manifest": self.manifest_parser.record_from_manifest,
-            "_legacy_record_from_manifest": self.manifest_parser.legacy_record_from_manifest,
-            "_sdk_record_from_manifest": self.manifest_parser.sdk_record_from_manifest,
-            "_run_legacy_workload": self.workload_executor.run_legacy_workload,
-            "_run_sdk_workload": self.workload_executor.run_sdk_workload,
-            "_load_legacy_workload": self.workload_executor.loader.load_legacy_workload,
-            "_load_sdk_workload": self.workload_executor.loader.load_sdk_workload,
-            "_parse_sdk_entrypoint": self.workload_executor.loader.parse_sdk_entrypoint,
-            "_validate_extension_imports": self.workload_executor.loader.validate_extension_imports,
-            "_build_sdk_capability_registry": self.workload_executor.artifacts.build_sdk_capability_registry,
-            "_validate_sdk_artifacts": self.workload_executor.artifacts.validate_sdk_artifacts,
-            "_artifact_root": self.workload_executor.artifacts.artifact_root,
-            "_run_validators": self.workload_executor.artifacts.run_validators,
-            "_build_provenance": self.workload_executor.artifacts.build_provenance,
-            "_build_sdk_provenance": self.workload_executor.artifacts.build_sdk_provenance,
-            "_build_artifact_manifest": self.workload_executor.artifacts.build_artifact_manifest,
-            "_reliable_mode_enabled": self.reproducibility.reliable_mode_enabled,
-            "_validate_required_materials": self.reproducibility.validate_required_materials,
-            "_validate_clean_git_if_required": self.reproducibility.validate_clean_git_if_required,
-            "_resolve_commit_sha": self._resolve_commit_sha,
-            "_sha256_file": self._sha256_file,
-            "_verify_extension_integrity": self._verify_extension_integrity,
-        }
-        target = delegated.get(name)
-        if target is not None:
-            return target
-        raise AttributeError(name)
+    def _load_catalog_payload(self) -> dict[str, Any]:
+        return self.catalog.load_catalog_payload()
+
+    def _save_catalog_payload(self, *args: Any, **kwargs: Any) -> None:
+        self.catalog.save_catalog_payload(*args, **kwargs)
+
+    def _row_from_record(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return self.catalog.row_from_record(*args, **kwargs)
+
+    def _discover_entry_point_rows(self) -> list[dict[str, Any]]:
+        return self.catalog.discover_entry_point_rows()
+
+    def _load_manifest(self, *args: Any, **kwargs: Any) -> LoadedManifest:
+        return self.manifest_parser.load_manifest(*args, **kwargs)
+
+    def _record_from_manifest(self, *args: Any, **kwargs: Any) -> ExtensionRecord:
+        return self.manifest_parser.record_from_manifest(*args, **kwargs)
+
+    def _legacy_record_from_manifest(self, *args: Any, **kwargs: Any) -> ExtensionRecord:
+        return self.manifest_parser.legacy_record_from_manifest(*args, **kwargs)
+
+    def _sdk_record_from_manifest(self, *args: Any, **kwargs: Any) -> ExtensionRecord:
+        return self.manifest_parser.sdk_record_from_manifest(*args, **kwargs)
+
+    async def _run_legacy_workload(self, *args: Any, **kwargs: Any) -> ExtensionRunResult:
+        return await self.workload_executor.run_legacy_workload(*args, **kwargs)
+
+    async def _run_sdk_workload(self, *args: Any, **kwargs: Any) -> ExtensionRunResult:
+        return await self.workload_executor.run_sdk_workload(*args, **kwargs)
+
+    def _load_legacy_workload(self, *args: Any, **kwargs: Any) -> Any:
+        return self.workload_executor.loader.load_legacy_workload(*args, **kwargs)
+
+    def _load_sdk_workload(self, *args: Any, **kwargs: Any) -> Any:
+        return self.workload_executor.loader.load_sdk_workload(*args, **kwargs)
+
+    def _parse_sdk_entrypoint(self, *args: Any, **kwargs: Any) -> tuple[str, str]:
+        return self.workload_executor.loader.parse_sdk_entrypoint(*args, **kwargs)
+
+    def _validate_extension_imports(self, *args: Any, **kwargs: Any) -> None:
+        self.workload_executor.loader.validate_extension_imports(*args, **kwargs)
+
+    def _build_sdk_capability_registry(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return self.workload_executor.artifacts.build_sdk_capability_registry(*args, **kwargs)
+
+    def _validate_sdk_artifacts(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return self.workload_executor.artifacts.validate_sdk_artifacts(*args, **kwargs)
+
+    def _artifact_root(self, *args: Any, **kwargs: Any) -> Path:
+        return self.workload_executor.artifacts.artifact_root(*args, **kwargs)
+
+    def _run_validators(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+        return self.workload_executor.artifacts.run_validators(*args, **kwargs)
+
+    def _build_provenance(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return self.workload_executor.artifacts.build_provenance(*args, **kwargs)
+
+    def _build_sdk_provenance(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return self.workload_executor.artifacts.build_sdk_provenance(*args, **kwargs)
+
+    def _build_artifact_manifest(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return self.workload_executor.artifacts.build_artifact_manifest(*args, **kwargs)
+
+    def _reliable_mode_enabled(self) -> bool:
+        return self.reproducibility.reliable_mode_enabled()
+
+    def _validate_required_materials(self, *args: Any, **kwargs: Any) -> None:
+        self.reproducibility.validate_required_materials(*args, **kwargs)
+
+    def _validate_clean_git_if_required(self, *args: Any, **kwargs: Any) -> None:
+        self.reproducibility.validate_clean_git_if_required(*args, **kwargs)
 
     def list_extensions(self) -> list[ExtensionRecord]:
         rows = self._discover_entry_point_rows()

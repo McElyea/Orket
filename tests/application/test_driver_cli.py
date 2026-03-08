@@ -93,6 +93,8 @@ async def test_cli_create_and_show_team(tmp_path: Path):
     payload = json.loads(show)
     assert payload["name"] == "platform_ops"
     assert "code_reviewer" in payload["roles"]
+    assert "integrity_guard" in payload["roles"]
+    assert payload["seats"]["integrity_guard"]["roles"] == ["integrity_guard"]
 
 
 @pytest.mark.asyncio

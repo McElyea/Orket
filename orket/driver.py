@@ -278,7 +278,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             self._log_operator_metric("operator_request_total", route="cli")
             return cli_response
 
-        if self._should_handle_as_conversation(message):
+        if self._should_route_to_conversation(message):
             self._log_operator_metric("operator_request_total", route="conversation")
             rule_reply = self._conversation_reply(message)
             if rule_reply is not None:

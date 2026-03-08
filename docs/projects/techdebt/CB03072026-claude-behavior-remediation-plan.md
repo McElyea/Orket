@@ -1,6 +1,6 @@
 # CB03072026 Claude Behavior Remediation Plan
 
-Last updated: 2026-03-07  
+Last updated: 2026-03-08
 Status: Active  
 Owner: Orket Core
 
@@ -298,6 +298,9 @@ Proof target:
 20. Replaced `HTTPException` usage in `orket/application/services/coordinator_store.py` with service-specific exceptions and translated them in `orket/interfaces/coordinator_api.py` so transport semantics stay at the interface boundary.
 21. Verified with `python -m pytest tests/application/test_coordinator_store.py tests/interfaces/test_coordinator_api.py tests/platform/test_leases.py tests/platform/test_hedged.py -q`.
 22. Live local verification on 2026-03-07 against a real `uvicorn` instance of `orket.interfaces.coordinator_api:app` succeeded on the primary path for successful claim, missing-card 404, and non-claimant renew 403 responses.
+23. `CB-4B` completed on 2026-03-08.
+24. Removed dead `TurnExecutor.__getattr__` delegation entries for `_prepare_messages`, `_parse_response`, and `_execute_tools` so the executor no longer advertises an alternate helper path for methods already declared explicitly on the class.
+25. Verified with `python -m pytest tests/application/test_turn_executor_delegate_surface.py -q` and `python -m pytest tests/application/test_turn_executor_context.py -q -k "prepare_messages_includes_dependency_context_block"`.
 
 ## Verification Plan
 
@@ -325,7 +328,7 @@ Lane-close verification:
 2. `CB-1` complete (`CB-1A` complete; `CB-1B` complete; live verification complete)
 3. `CB-2` in progress (`CB-2A` complete)
 4. `CB-3` in progress (`CB-3A` complete)
-5. `CB-4` in progress (`CB-4A` complete)
+5. `CB-4` in progress (`CB-4A` complete; `CB-4B` complete)
 6. `CB-5` pending
 7. `CB-6` pending
 

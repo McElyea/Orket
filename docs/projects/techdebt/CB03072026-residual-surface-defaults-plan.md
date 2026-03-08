@@ -1,6 +1,6 @@
 # CB03072026 Residual Surface And Defaults Plan
 
-Last updated: 2026-03-07  
+Last updated: 2026-03-08
 Status: Active  
 Owner: Orket Core
 
@@ -178,10 +178,26 @@ Proof target:
 
 ## Working Status
 
-1. `CB-RSD-0` pending
-2. `CB-RSD-1` pending
-3. `CB-RSD-2` pending
-4. `CB-RSD-3` pending
+1. `CB-RSD-0` complete
+2. `CB-RSD-1` complete
+3. `CB-RSD-2` complete
+4. `CB-RSD-3` complete
+
+## Progress Update
+
+1. `CB-RSD-0` completed on 2026-03-08.
+2. Revalidated the residual surface/default findings against current HEAD instead of relying on the stale numbered mapping alone.
+3. Confirmed still open on the touched surface before code changes: `orket/extensions/manager.py` still hid helper APIs behind `__getattr__`; driver fallback routing still used a helper name that mislabeled non-structural input as inherently conversational; `orket/hardware.py` still filled the global VRAM cache without synchronization; `DefaultSandboxPolicyNode.get_database_url` still advertised a Postgres default for unsupported tech stacks; `orket/webhook_server.py` still logged missing webhook secrets as if authentication were disabled while rejecting the request.
+4. Already aligned or no longer reproducing on the authoritative path: truncated-tool recovery now emits diagnostics in `orket/application/services/tool_parser.py`; `LocalModelProvider.clear_context()` now rotates the OpenAI-compatible session epoch and is contract-covered; `_epic_template` writes `issues` and touched write/list paths normalize or reject legacy `cards` shapes explicitly; merged webhook handling already skips sandbox deployment explicitly rather than pretending to deploy.
+5. `CB-RSD-1` completed on 2026-03-08.
+6. Added the missing `integrity_guard` role to the driver team template and removed demo-card seeding from the coordinator API singleton import path.
+7. Verified with `python -m pytest tests/application/test_driver_cli.py -q` and `python -m pytest tests/interfaces/test_coordinator_api.py -q`.
+8. `CB-RSD-2` completed on 2026-03-08.
+9. Replaced `ExtensionManager.__getattr__` helper delegation with explicit wrapper methods and renamed the driver fallback heuristic to `_should_route_to_conversation` so the surface no longer labels every non-structural request as inherently conversational.
+10. Verified with `python -m pytest tests/runtime/test_extension_manager.py -q` and `python -m pytest tests/application/test_driver_conversation.py -q`.
+11. `CB-RSD-3` completed on 2026-03-08.
+12. Serialized global VRAM cache fills, made unsupported sandbox database-url resolution fail explicitly, clarified `clear_context` semantics for stateless backends, and changed missing-webhook-secret logging to the truthful reject-by-default message.
+13. Verified with `python -m pytest tests/platform/test_hardware_metrics_cache.py -q`, `python -m pytest tests/application/test_sandbox_policy_node.py -q`, `python -m pytest tests/adapters/test_sandbox_compose_generation.py -q`, and `python -m pytest tests/interfaces/test_webhook_factory.py -q`.
 
 ## Closeout Note
 

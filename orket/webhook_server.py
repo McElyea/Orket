@@ -148,7 +148,7 @@ def validate_signature(payload: bytes, signature: str) -> bool:
     if not secret:
         log_event(
             "webhook",
-            {"message": "GITEA_WEBHOOK_SECRET not set. Authentication disabled.", "level": "error"},
+            {"message": "GITEA_WEBHOOK_SECRET not set. All webhooks will be rejected.", "level": "error"},
             workspace=Path.cwd(),
         )
         return False  # Reject if not configured

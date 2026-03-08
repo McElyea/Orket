@@ -41,10 +41,12 @@ class GuardDecision:
 
 class GuardEvaluator:
     """
-    Guard check evaluator boundary.
+    Placeholder guard-evaluation boundary.
 
-    This class owns check evaluation output and emits GuardContract.
-    Current baseline accepts an already-built GuardContract from upstream guards.
+    Current Orket runtime does not perform a second evaluation pass here.
+    Upstream guards already emit the authoritative GuardContract, so this
+    boundary is intentionally an identity pass-through until a real
+    normalization/evaluation stage exists.
     """
 
     def evaluate_contract(self, *, contract: GuardContract) -> GuardContract:
@@ -190,8 +192,8 @@ class GuardAgent:
     """
     Non-generative guard evaluator.
 
-    Evaluates GuardContract outcomes and returns deterministic loop decisions
-    (pass/retry/terminal_failure) based on bounded retry policy.
+    Passes through the authoritative GuardContract and returns deterministic
+    loop decisions (pass/retry/terminal_failure) based on bounded retry policy.
     """
 
     def __init__(self, organization: Any = None):

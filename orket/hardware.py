@@ -3,6 +3,7 @@ import psutil
 import subprocess
 import time
 import os
+import threading
 from dataclasses import dataclass
 from datetime import datetime, UTC
 from typing import Optional, Dict, Any
@@ -13,6 +14,7 @@ _VRAM_CACHE = {
     "total": 0.0,
     "used": 0.0,
 }
+_VRAM_CACHE_LOCK = threading.Lock()
 
 @dataclass
 class HardwareProfile:
@@ -68,17 +70,18 @@ def get_metrics_snapshot() -> Dict[str, Any]:
 
 
 def _cached_vram_metrics(cache_ttl_sec: float) -> Dict[str, float]:
-    now = time.monotonic()
-    age = now - _VRAM_CACHE["ts"]
-    if age <= cache_ttl_sec:
-        return {"total": _VRAM_CACHE["total"], "used": _VRAM_CACHE["used"]}
+    with _VRAM_CACHE_LOCK:
+        now = time.monotonic()
+        age = now - _VRAM_CACHE["ts"]
+        if age <= cache_ttl_sec:
+            return {"total": _VRAM_CACHE["total"], "used": _VRAM_CACHE["used"]}
 
-    total = get_vram_info()
-    used = get_vram_usage()
-    _VRAM_CACHE["ts"] = now
-    _VRAM_CACHE["total"] = total
-    _VRAM_CACHE["used"] = used
-    return {"total": total, "used": used}
+        total = get_vram_info()
+        used = get_vram_usage()
+        _VRAM_CACHE["ts"] = now
+        _VRAM_CACHE["total"] = total
+        _VRAM_CACHE["used"] = used
+        return {"total": total, "used": used}
 
 def get_vram_usage() -> float:
     try:

@@ -86,11 +86,8 @@ class TurnExecutor:
 
     def __getattr__(self, name: str) -> Any:
         delegated = {
-            "_prepare_messages": self.message_builder.prepare_messages,
-            "_parse_response": self.response_parser.parse_response,
             "_non_json_residue": self.response_parser.non_json_residue,
             "_extract_guard_review_payload": self.response_parser.extract_guard_review_payload,
-            "_execute_tools": self.tool_dispatcher.execute_tools,
             "_resolve_skill_tool_binding": self.tool_dispatcher.resolve_skill_tool_binding,
             "_missing_required_permissions": self.tool_dispatcher.missing_required_permissions,
             "_permission_values": self.tool_dispatcher.permission_values,

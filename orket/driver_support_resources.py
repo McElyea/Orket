@@ -175,6 +175,11 @@ class DriverResourceMixin:
                     "description": "Code reviewer role for governance and quality review.",
                     "tools": ["read_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"],
                 },
+                "integrity_guard": {
+                    "name": "integrity_guard",
+                    "description": "Guard review role for final runtime and governance validation.",
+                    "tools": ["read_file", "list_directory", "get_issue_context", "update_issue_status"],
+                },
             },
             "seats": {
                 "coder": {"name": "Coder", "roles": ["coder"]},

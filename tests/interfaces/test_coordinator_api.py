@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import importlib
 import time
 
 import pytest
 from fastapi.testclient import TestClient
 
 from orket.core.domain.coordinator_card import Card
+import orket.interfaces.coordinator_api as coordinator_api_module
 from orket.interfaces.coordinator_api import app, store
 
 
@@ -54,3 +56,9 @@ def test_coordinator_api_maps_store_errors_to_http_responses(
 
     assert response.status_code == expected_status
     assert response.json()["detail"] == expected_detail
+
+
+def test_coordinator_api_module_import_does_not_seed_demo_cards() -> None:
+    reloaded = importlib.reload(coordinator_api_module)
+
+    assert reloaded.store.list_open_cards() == []

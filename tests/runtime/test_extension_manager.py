@@ -402,6 +402,19 @@ def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
     assert rows[0].workloads[0].workload_id == "demo_v1"
 
 
+def test_extension_manager_exposes_helper_methods_explicitly():
+    """Layer: unit. Verifies helper methods are statically discoverable instead of hidden behind `__getattr__`."""
+    explicit_helpers = {
+        "_discover_entry_point_rows",
+        "_load_manifest",
+        "_record_from_manifest",
+        "_run_legacy_workload",
+        "_run_sdk_workload",
+        "_validate_extension_imports",
+    }
+    assert explicit_helpers.issubset(ExtensionManager.__dict__)
+
+
 @pytest.mark.asyncio
 async def test_run_workload_emits_provenance(tmp_path):
     repo = tmp_path / "ext_repo"

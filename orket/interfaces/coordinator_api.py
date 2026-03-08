@@ -43,20 +43,6 @@ class FailRequest(BaseModel):
 
 
 store = InMemoryCoordinatorStore()
-store.reset(
-    [
-        Card(
-            id="card-1",
-            payload={"task": "demo"},
-            state="OPEN",
-            claimed_by=None,
-            lease_expires_at=None,
-            result=None,
-            attempts=0,
-            hedged_execution=False,
-        )
-    ]
-)
 
 app = FastAPI()
 

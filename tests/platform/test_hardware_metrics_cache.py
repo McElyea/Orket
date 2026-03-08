@@ -1,4 +1,5 @@
-﻿import types
+import threading
+import types
 
 import orket.hardware as hardware
 
@@ -20,6 +21,7 @@ def test_metrics_snapshot_uses_vram_cache(monkeypatch):
     monkeypatch.setattr(hardware.psutil, "virtual_memory", lambda: types.SimpleNamespace(percent=42.0))
     monkeypatch.setattr(hardware.psutil, "cpu_percent", lambda interval=None: 11.0)
     monkeypatch.setattr(hardware, "_VRAM_CACHE", {"ts": 0.0, "total": 0.0, "used": 0.0})
+    monkeypatch.setattr(hardware, "_VRAM_CACHE_LOCK", threading.Lock())
 
     # First call warms cache; second call should not re-query VRAM subprocess paths.
     first = hardware.get_metrics_snapshot()
@@ -39,8 +41,42 @@ def test_metrics_snapshot_invalid_cache_ttl_falls_back(monkeypatch):
     monkeypatch.setattr(hardware, "get_vram_info", lambda: 0.0)
     monkeypatch.setattr(hardware, "get_vram_usage", lambda: 0.0)
     monkeypatch.setattr(hardware, "_VRAM_CACHE", {"ts": 0.0, "total": 0.0, "used": 0.0})
+    monkeypatch.setattr(hardware, "_VRAM_CACHE_LOCK", threading.Lock())
 
     snapshot = hardware.get_metrics_snapshot()
     assert snapshot["vram_total_gb"] == 0.0
     assert snapshot["vram_gb_used"] == 0.0
 
+
+def test_cached_vram_metrics_serializes_cache_fill(monkeypatch):
+    """Layer: unit. Verifies concurrent cache fills do not duplicate VRAM probes."""
+    calls = {"count": 0}
+    start = threading.Barrier(3)
+    results: list[dict[str, float]] = []
+
+    def fake_vram_info():
+        calls["count"] += 1
+        return 12.0
+
+    def fake_vram_usage():
+        calls["count"] += 1
+        return 4.0
+
+    def worker() -> None:
+        start.wait()
+        results.append(hardware._cached_vram_metrics(60.0))
+
+    monkeypatch.setattr(hardware, "get_vram_info", fake_vram_info)
+    monkeypatch.setattr(hardware, "get_vram_usage", fake_vram_usage)
+    monkeypatch.setattr(hardware, "_VRAM_CACHE", {"ts": 0.0, "total": 0.0, "used": 0.0})
+    monkeypatch.setattr(hardware, "_VRAM_CACHE_LOCK", threading.Lock())
+
+    threads = [threading.Thread(target=worker) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    start.wait()
+    for thread in threads:
+        thread.join()
+
+    assert results == [{"total": 12.0, "used": 4.0}, {"total": 12.0, "used": 4.0}]
+    assert calls["count"] == 2

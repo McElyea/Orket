@@ -241,6 +241,53 @@ async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestr
 
 
 @pytest.mark.asyncio
+async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers(orchestrator, tmp_path, monkeypatch):
+    orch, cards, _loader = orchestrator
+    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    orch.org = SimpleNamespace(
+        process_rules={
+            "architecture_mode": "architect_decides",
+            "disable_dependency_manager": True,
+            "disable_deployment_planner": True,
+        }
+    )
+    epic = SimpleNamespace(name="Deferred Architecture Epic", issues=[], references=[])
+    team = SimpleNamespace(seats={})
+    env = SimpleNamespace(temperature=0.1, timeout=30)
+    cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
+    cards.get_independent_ready_issues.side_effect = [[]]
+    (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
+
+    captured = {}
+
+    class _FakeScaffolder:
+        def __init__(
+            self,
+            workspace_root,
+            file_tools,
+            organization,
+            project_surface_profile=None,
+            architecture_pattern=None,
+        ):
+            captured["architecture_pattern"] = architecture_pattern
+
+        async def ensure(self):
+            return {"created_directories": [], "created_files": []}
+
+    monkeypatch.setattr("orket.application.workflows.orchestrator.Scaffolder", _FakeScaffolder)
+
+    await orch.execute_epic(
+        active_build="build-scaffold-deferred",
+        run_id="run-scaffold-deferred",
+        epic=epic,
+        team=team,
+        env=env,
+    )
+
+    assert captured["architecture_pattern"] is None
+
+
+@pytest.mark.asyncio
 async def test_execute_epic_fails_on_scaffolder_validation_error(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Scaffold Fail Epic", issues=[], references=[])
@@ -1686,6 +1733,14 @@ def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
     assert context["frontend_framework_mode"] == "force_vue"
     assert context["frontend_framework_forced"] == "vue"
     assert context["project_surface_profile"] == "unspecified"
+
+
+def test_resolve_architecture_pattern_preserves_architect_decides(orchestrator):
+    orch, _cards, _loader = orchestrator
+    orch.org = SimpleNamespace(process_rules={"architecture_mode": "architect_decides"})
+
+    assert orch._resolve_architecture_mode() == "architect_decides"
+    assert orch._resolve_architecture_pattern() is None
 
 
 def test_build_turn_context_protocol_governed_defaults(orchestrator):

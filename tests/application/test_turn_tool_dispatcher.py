@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.policies.tool_gate import ToolGate
 from orket.domain.execution import ExecutionTurn, ToolCall
@@ -17,6 +17,7 @@ def _dispatcher(
     operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] | None = None,
     replay_store: dict[tuple[str, str], dict[str, Any]] | None = None,
     receipt_rows: list[dict[str, Any]] | None = None,
+    middleware: TurnLifecycleInterceptors | None = None,
 ) -> ToolDispatcher:
     operation_store = operation_store if operation_store is not None else {}
     replay_store = replay_store if replay_store is not None else {}
@@ -61,7 +62,7 @@ def _dispatcher(
 
     return ToolDispatcher(
         tool_gate=ToolGate(organization=None, workspace_root=tmp_path),
-        middleware=TurnLifecycleInterceptors([]),
+        middleware=middleware or TurnLifecycleInterceptors([]),
         workspace=tmp_path,
         append_memory_event=lambda *args, **kwargs: None,
         hash_payload=lambda payload: "hash",
@@ -345,6 +346,47 @@ async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_resu
     assert toolbox.calls == 1
     assert second_turn.tool_calls[0].result == {"ok": True, "call_count": 1}
     assert len(receipt_rows) == 2
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_tool_dispatcher_treats_non_dict_middleware_result_as_explicit_failure(tmp_path: Path) -> None:
+    class _BadAfterTool:
+        def after_tool(self, tool_name, args, result, *, issue, role_name, context):
+            return MiddlewareOutcome(replacement="broken-result")
+
+    dispatcher = _dispatcher(
+        tmp_path,
+        middleware=TurnLifecycleInterceptors([_BadAfterTool()]),
+    )
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
+    )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context):
+            return {"ok": True}
+
+    with pytest.raises(RuntimeError) as exc:
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=_Toolbox(),
+            context={
+                "roles": ["coder"],
+                "session_id": "s1",
+                "turn_index": 1,
+            },
+            issue=None,
+        )
+
+    assert "non-dict result (str)" in str(exc.value)
+    assert turn.tool_calls[0].result == {
+        "ok": False,
+        "error": "tool middleware returned non-dict result (str)",
+    }
 
 
 # Layer: integration

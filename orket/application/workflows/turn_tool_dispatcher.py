@@ -288,10 +288,30 @@ class ToolDispatcher:
                     role_name=turn.role,
                     context=context,
                 )
+                if not isinstance(result, dict):
+                    raw_type = type(result).__name__
+                    if not protocol_replay_mode:
+                        log_event(
+                            "tool_result_invalid",
+                            {
+                                "issue_id": turn.issue_id,
+                                "role": turn.role,
+                                "session_id": session_id,
+                                "turn_index": turn_index,
+                                "tool": tool_name,
+                                "operation_id": operation_id,
+                                "result_type": raw_type,
+                            },
+                            self.workspace,
+                        )
+                    result = {
+                        "ok": False,
+                        "error": f"tool middleware returned non-dict result ({raw_type})",
+                    }
                 determinism_violation = determinism_violation_for_result(
                     tool_name=tool_name,
                     binding=binding,
-                    result=result if isinstance(result, dict) else None,
+                    result=result,
                 )
                 if determinism_violation:
                     if not protocol_replay_mode:
@@ -358,7 +378,7 @@ class ToolDispatcher:
                             operation_id=operation_id,
                             tool_name=tool_name,
                             tool_args=dict(tool_call.args or {}),
-                            result=result if isinstance(result, dict) else {"ok": False, "error": "non_dict_result"},
+                            result=result,
                         )
                         await asyncio.to_thread(
                             self.append_protocol_receipt,
@@ -378,7 +398,7 @@ class ToolDispatcher:
                                 "tool_index": index,
                                 "tool": tool_name,
                                 "tool_args": dict(tool_call.args or {}),
-                                "execution_result": result if isinstance(result, dict) else {},
+                                "execution_result": result,
                                 "tool_invocation_manifest": invocation_manifest,
                                 "tool_call_hash": tool_call_hash,
                                 "artifact_digests": [],

@@ -85,11 +85,13 @@ def _resolve_frontend_framework_mode(self) -> str:
     user_raw = str(load_user_settings().get("frontend_framework_mode", "")).strip()
     return resolve_frontend_framework_mode(env_raw, process_raw, user_raw)
 
-def _resolve_architecture_pattern(self) -> str:
+def _resolve_architecture_pattern(self) -> str | None:
     mode = self._resolve_architecture_mode()
     if mode == "force_microservices":
         return "microservices"
-    return "monolith"
+    if mode == "force_monolith":
+        return "monolith"
+    return None
 
 def _resolve_project_surface_profile(self) -> str:
     env_raw = (os.environ.get("ORKET_PROJECT_SURFACE_PROFILE") or "").strip()

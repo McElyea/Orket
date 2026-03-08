@@ -49,7 +49,7 @@ class TurnLifecycleInterceptor(Protocol):
         self,
         tool_name: str,
         args: Dict[str, Any],
-        result: Dict[str, Any],
+        result: Any,
         *,
         issue: Any,
         role_name: str,
@@ -149,12 +149,12 @@ class TurnLifecycleInterceptors:
         self,
         tool_name: str,
         args: Dict[str, Any],
-        result: Dict[str, Any],
+        result: Any,
         *,
         issue: Any,
         role_name: str,
         context: Dict[str, Any],
-    ) -> Dict[str, Any]:
+    ) -> Any:
         current = result
         for interceptor in self._iter():
             handler = getattr(interceptor, "after_tool", None)

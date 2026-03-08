@@ -137,3 +137,13 @@ def test_guard_evaluator_and_controller_split_contract_and_policy():
     evaluated = evaluator.evaluate_contract(contract=contract)
     decision = controller.decide(contract=evaluated, retry_count=0, max_retries=1, output_text="failed")
     assert decision.action == "retry"
+
+
+# Layer: unit
+def test_guard_evaluator_is_currently_an_identity_boundary():
+    contract = _failing_contract()
+    evaluator = GuardEvaluator()
+
+    evaluated = evaluator.evaluate_contract(contract=contract)
+
+    assert evaluated is contract

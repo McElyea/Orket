@@ -412,6 +412,7 @@ class LocalModelProvider:
             retry_delay *= 2
 
     async def clear_context(self):
+        """Rotate context for stateful OpenAI-compatible backends; stateless backends remain no-op."""
         if str(getattr(self, "provider_backend", "") or "") == "openai_compat":
             self._openai_session_epoch = max(0, int(getattr(self, "_openai_session_epoch", 0) or 0)) + 1
 

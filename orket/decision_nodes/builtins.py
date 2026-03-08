@@ -222,11 +222,13 @@ class DefaultSandboxPolicyNode:
 
     def get_database_url(self, tech_stack: Any, ports: Any, db_password: str = "") -> str:
         value = tech_stack.value if hasattr(tech_stack, "value") else str(tech_stack)
-        if "mongo" in value:
+        if value == "fastapi-vue-mongo":
             return f"mongodb://localhost:{ports.database}/appdb"
-        if "csharp" in value:
+        if value == "csharp-razor-ef":
             return f"Server=localhost,{ports.database};Database=appdb;User=sa;Password={db_password}"
-        return f"postgresql://postgres:{db_password}@localhost:{ports.database}/appdb"
+        if value == "fastapi-react-postgres":
+            return f"postgresql://postgres:{db_password}@localhost:{ports.database}/appdb"
+        raise ValueError(f"Unsupported tech stack: {tech_stack}")
 
     def generate_compose_file(self, sandbox: Any, db_password: str, admin_password: str) -> str:
         if sandbox.tech_stack.value == "fastapi-react-postgres":

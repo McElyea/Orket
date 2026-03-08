@@ -1,6 +1,6 @@
 # CB03072026 Residual Orchestration And Prompting Plan
 
-Last updated: 2026-03-07  
+Last updated: 2026-03-08
 Status: Active  
 Owner: Orket Core
 
@@ -179,9 +179,9 @@ Proof target:
 ## Working Status
 
 1. `CB-ROP-0` complete
-2. `CB-ROP-1` pending
-3. `CB-ROP-2` in progress (`CB-ROP-2A` complete)
-4. `CB-ROP-3` pending
+2. `CB-ROP-1` complete
+3. `CB-ROP-2` complete (`CB-ROP-2A` complete; `CB-ROP-2B` complete)
+4. `CB-ROP-3` complete
 
 ## Progress Update
 
@@ -192,6 +192,15 @@ Proof target:
 5. `CB-ROP-2A` completed on 2026-03-07.
 6. Added parser diagnostics for truncated-recovery paths that skip unsupported or malformed tool payloads so degraded recovery is auditable instead of silently dropping tool intents.
 7. Verified with `python -m pytest tests/application/test_tool_parser.py -q`.
+8. `CB-ROP-1` completed on 2026-03-08.
+9. Changed `orket/application/workflows/orchestrator_ops.py` so `architect_decides` preserves a deferred architecture pattern instead of silently passing `monolith` into scaffolder/runtime-verifier stabilization paths before the architect turn resolves the design.
+10. Verified with `python -m pytest tests/application/test_orchestrator_epic.py -q -k "passes_microservices_pattern_to_stabilizers or preserves_deferred_architecture_mode_for_stabilizers or resolve_architecture_pattern_preserves_architect_decides"` and `python -m pytest tests/integration/test_idesign_enforcement.py -q -k "architect_decides_policy_allows_non_idesign_above_threshold"`.
+11. `CB-ROP-2B` completed on 2026-03-08.
+12. Hardened `orket/application/workflows/turn_tool_dispatcher.py` so non-dict `after_tool` middleware replacements become explicit failed tool results with observability instead of surfacing later as misleading attribute errors; updated the middleware hook typing to match the real replacement surface.
+13. Verified with `python -m pytest tests/application/test_turn_tool_dispatcher.py -q`.
+14. `CB-ROP-3` completed on 2026-03-08.
+15. Marked `GuardEvaluator` as an explicit placeholder identity boundary in `orket/application/services/guard_agent.py` and added unit coverage proving the current pass-through behavior so the code no longer implies a distinct second guard-evaluation stage.
+16. Verified with `python -m pytest tests/application/test_guard_agent_service.py -q`.
 
 ## Closeout Note
 

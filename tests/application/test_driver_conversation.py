@@ -99,10 +99,11 @@ async def test_execute_plan_assign_team_contract_is_suggestion_only(monkeypatch)
     assert events[0][1]["mode"] == "suggestion_only"
 
 
-def test_should_handle_as_conversation_detects_structural_intent():
+def test_should_route_to_conversation_detects_structural_intent():
+    """Layer: unit. Verifies the conversation route is only the fallback when no explicit structural intent is present."""
     driver = OrketDriver.__new__(OrketDriver)
-    assert driver._should_handle_as_conversation("create epic for billing rewrite") is False
-    assert driver._should_handle_as_conversation("you are not set up to converse anymore") is True
+    assert driver._should_route_to_conversation("create epic for billing rewrite") is False
+    assert driver._should_route_to_conversation("you are not set up to converse anymore") is True
     assert driver._has_explicit_structural_intent("/create epic billing_rewrite core") is True
 
 

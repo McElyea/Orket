@@ -10,7 +10,7 @@ from orket.logging import log_event
 
 
 class DriverConversationMixin:
-    def _should_handle_as_conversation(self, message: str) -> bool:
+    def _should_route_to_conversation(self, message: str) -> bool:
         text = str(message or "").strip().lower()
         if not text:
             return True
