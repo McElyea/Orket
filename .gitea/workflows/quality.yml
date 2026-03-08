@@ -221,6 +221,12 @@ jobs:
           python scripts/protocol/publish_protocol_rollout_artifacts.py --workspace-root .ci/protocol_quality_workspace --out-dir benchmarks/results/protocol/protocol_governed/rollout_artifacts --run-id run-a --session-id run-a --baseline-run-id run-a --strict
           python scripts/protocol/summarize_protocol_error_codes.py --input benchmarks/results/protocol/protocol_governed/protocol_ledger_parity_campaign.json --out benchmarks/results/protocol/protocol_governed/protocol_error_code_summary.json
 
+      - name: Enforce controller workload parity gate
+        run: |
+          python -m pytest -q tests/sdk/test_controller.py
+          python -m pytest -q tests/runtime/test_controller_observability.py tests/runtime/test_controller_replay_parity.py
+          python -m pytest -q tests/scripts/test_compare_controller_replay_parity.py
+
       - name: Enforce roadmap metrics (quick gate)
         run: |
           python scripts/governance/check_roadmap_metrics.py --quick

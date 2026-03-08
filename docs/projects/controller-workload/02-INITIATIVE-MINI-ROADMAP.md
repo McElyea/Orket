@@ -14,13 +14,13 @@ Locked v0:
 4. Active lane in Priority Now
 
 Active execution pointer:
-1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2A.md`
+1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
 
 Active requirements slice:
-1. `docs/projects/controller-workload/04-REQUIREMENTS-Phase-2A.md`
+1. `docs/projects/controller-workload/04-REQUIREMENTS-Phase-2D.md`
 
 Active implementation slice:
-1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2A.md`
+1. `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
 
 Naming convention for continuing slices:
 1. Requirements: `NN-REQUIREMENTS-Phase-<phase>.md`
@@ -43,18 +43,18 @@ Phase status:
 10. Add unit/contract/integration tests and phase evidence report.
 
 ## Remaining Steps After 10
-11. Add operator authoring/runbook docs.
-12. Harden recursion/cycle detection behavior and error schema.
-13. Add observability metrics/events for controller runs.
-14. Add protocol replay and ledger parity checks for controller-child runs.
-15. Add CI conformance gate for controller contracts/integration tests.
-16. Add bootstrap template for externalizing `extensions/controller_workload`.
-17. Migrate controller extension to external repo install path.
-18. Publish migration guidance for in-repo bootstrap to external extension.
-19. Add environment rollout controls/feature flags for controller enablement.
-20. Run live end-to-end integration verification with external install path.
-21. Run reliability hardening cycle (flake, retry boundaries, failure taxonomy).
-22. Cut v1 planning for bounded parallel and broader child-type support.
+11. Completed 2026-03-08: Added operator runbook (`docs/runbooks/controller-workload-operator.md`) and authoring guide (`docs/guides/controller-workload-authoring.md`).
+12. Completed 2026-03-08: Hardened recursion/cycle/error handling and blocked run-result semantics in dispatcher/runtime models.
+13. Completed 2026-03-08: Added controller observability helper + deterministic batch emission path with schema validation and fail-closed handling.
+14. Completed 2026-03-08: Added controller replay/parity comparator + script path with deterministic mismatch reporting.
+15. Completed 2026-03-08: Added controller parity checks to `.gitea/workflows/quality.yml` fail-closed gate.
+16. Completed 2026-03-08: Added externalization bootstrap template scaffold and template guidance.
+17. Completed 2026-03-08: Added external-repo bootstrap utility and verified install-path execution through integration tests.
+18. Completed 2026-03-08: Published migration guidance with executable bootstrap/install/parity validation steps.
+19. Completed 2026-03-08: Added environment rollout controls (`ORKET_CONTROLLER_ENABLED`, `ORKET_CONTROLLER_ALLOWED_DEPARTMENTS`) with blocked fail-closed behavior.
+20. Completed 2026-03-08: Verified end-to-end external-style install-path execution through real `ExtensionManager.run_workload` integration flow.
+21. Completed 2026-03-08: Ran reliability hardening pass with repeated controller test runs and published reliability report.
+22. In progress 2026-03-08: Published v1 planning handoff draft for bounded parallelism and broader child-type support.
 
 ## Milestones
 1. M1 Foundation Complete: steps 1-3.

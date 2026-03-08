@@ -5,7 +5,7 @@ import json
 import math
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 def _normalize_timeout_seconds(value: Any) -> int | None:
@@ -112,7 +112,7 @@ class ControllerRunEnvelope(BaseModel):
         return canonical_json(self.canonical_payload())
 
 
-ControllerRunStatus = Literal["success", "failed"]
+ControllerRunStatus = Literal["success", "failed", "blocked"]
 
 
 class ControllerRunSummary(BaseModel):
@@ -126,6 +126,16 @@ class ControllerRunSummary(BaseModel):
     child_results: list[ControllerChildResult] = Field(default_factory=list)
     error_code: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _validate_result_error_invariants(self) -> "ControllerRunSummary":
+        if self.status == "success" and self.error_code is not None:
+            raise ValueError("controller.run_result_invariant_invalid")
+        if self.status in {"failed", "blocked"} and not self.error_code:
+            raise ValueError("controller.run_result_invariant_invalid")
+        if self.status == "blocked" and any(item.status == "success" for item in self.child_results):
+            raise ValueError("controller.run_result_invariant_invalid")
+        return self
 
     def canonical_payload(self) -> dict[str, Any]:
         payload = self.model_dump(exclude_none=True)

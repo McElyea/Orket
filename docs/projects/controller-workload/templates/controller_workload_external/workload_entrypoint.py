@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 from typing import Any
 
-from orket.extensions import controller_observability
 from orket.extensions import ExtensionManager
+from orket.extensions import controller_observability
 from orket.extensions.controller_dispatcher import ControllerDispatcher
 from orket.extensions.controller_dispatcher_contract import (
     ERROR_DISABLED_BY_POLICY,

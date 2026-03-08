@@ -1,14 +1,14 @@
 ﻿# CONTROLLER_OBSERVABILITY_V1
 
 Last updated: 2026-03-08
-Status: Draft
+Status: Active
 Owner: Orket Core
 
 Runtime contract authority:
 `docs/specs/CONTROLLER_WORKLOAD_V1.md`
 
 Phase authority:
-`docs/projects/controller-workload/04-REQUIREMENTS-Phase-2A.md`
+`docs/projects/controller-workload/04-REQUIREMENTS-Phase-2D.md`
 
 Machine-readable schema:
 `schemas/controller_observability_v1.json`
@@ -155,6 +155,7 @@ The following invariants are normative:
 | `controller.child_timeout_invalid` | `blocked` | failing child = `failure`; later children = `not_attempted` |
 | `controller.recursion_denied` | `blocked` | failing child = `failure`; later children = `not_attempted` |
 | `controller.cycle_denied` | `blocked` | failing child = `failure`; later children = `not_attempted` |
+| `controller.disabled_by_policy` | `blocked` | no child events |
 | `controller.child_execution_failed` | `failed` | failing child = `failure`; later children = `not_attempted` |
 | `controller.observability_emit_failed` | `failed` | child statuses unchanged if already computed; no partial event stream may be emitted |
 
@@ -479,6 +480,10 @@ For `controller.max_fanout_exceeded`, the deterministic event stream is:
 1. `controller_run`
 2. child event count is `0`
 
+For `controller.disabled_by_policy`, the deterministic event stream is:
+1. `controller_run`
+2. child event count is `0`
+
 ## 13. Test Requirements
 
 ### 13.1 Contract Tests
@@ -578,7 +583,7 @@ schemas/
 docs/projects/controller-workload/
     02-INITIATIVE-MINI-ROADMAP.md
     03-IMPLEMENTATION-PLAN.md
-    04-REQUIREMENTS-Phase-2A.md
+    04-REQUIREMENTS-Phase-2C.md
 
 docs/runbooks/
     controller-workload-operator.md

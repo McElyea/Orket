@@ -8,7 +8,7 @@ Active lane entries should link the canonical implementation plan path only; req
 Phase closeout is not initiative closeout: if a lane's initiative mini-roadmap still has pending phases, keep the lane active and archive only completed phase docs.
 
 ## Priority Now
-1. controller-workload -- SDK-first controller workload initiative. Implementation plan: `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2A.md`.
+1. controller-workload -- SDK-first controller workload initiative. Implementation plan: `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`.
 
 ## Maintenance (Non-Priority)
 These items are active executable work. They are non-priority, not deferred.

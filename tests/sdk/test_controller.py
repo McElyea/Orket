@@ -123,3 +123,20 @@ def test_summary_canonical_json_is_deterministic_for_equivalent_inputs() -> None
 
     assert summary_one.canonical_json() == summary_two.canonical_json()
     assert summary_one.summary_digest_sha256() == summary_two.summary_digest_sha256()
+
+
+def test_summary_enforces_result_error_and_blocked_invariants() -> None:
+    """Layer: contract."""
+    with pytest.raises(ValidationError, match="controller.run_result_invariant_invalid"):
+        ControllerRunSummary(controller_workload_id="controller_workload", status="success", error_code="controller.x")
+
+    with pytest.raises(ValidationError, match="controller.run_result_invariant_invalid"):
+        ControllerRunSummary(controller_workload_id="controller_workload", status="blocked", error_code=None)
+
+    with pytest.raises(ValidationError, match="controller.run_result_invariant_invalid"):
+        ControllerRunSummary(
+            controller_workload_id="controller_workload",
+            status="blocked",
+            error_code="controller.max_depth_exceeded",
+            child_results=[ControllerChildResult(target_workload="child.alpha", status="success")],
+        )

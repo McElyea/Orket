@@ -5,8 +5,8 @@ Status: Active (Initiative Umbrella)
 Owner: Orket Core
 Source initiative roadmap: `docs/projects/controller-workload/02-INITIATIVE-MINI-ROADMAP.md`
 Contract authority: `docs/specs/CONTROLLER_WORKLOAD_V1.md`
-Current requirements slice: `docs/projects/controller-workload/04-REQUIREMENTS-Phase-2A.md`
-Current phase implementation slice: `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2A.md`
+Current requirements slice: `docs/projects/controller-workload/04-REQUIREMENTS-Phase-2D.md`
+Current phase implementation slice: `docs/projects/controller-workload/05-IMPLEMENTATION-PLAN-Phase-2D.md`
 
 ## 1. Objective
 
@@ -15,8 +15,8 @@ Execute the next active initiative slice after Phase 1 closeout: operational har
 Execution note:
 1. This document is the active initiative-level plan.
 2. Execution proceeds in bounded, explicitly named slices.
-3. Current bounded slice is Phase 2A, defined in `04-REQUIREMENTS-Phase-2A.md`.
-4. Direct implementation authority for the current slice is `05-IMPLEMENTATION-PLAN-Phase-2A.md`.
+3. Current bounded slice is Phase 2D, defined in `04-REQUIREMENTS-Phase-2D.md`.
+4. Direct implementation authority for the current slice is `05-IMPLEMENTATION-PLAN-Phase-2D.md`.
 
 Non-negotiable carry-forward invariants:
 1. Child execution remains sequential unless a future spec explicitly supersedes v1.

@@ -79,6 +79,15 @@ Runtime must record:
 5. Remaining children are marked `not_attempted`.
 6. Summary status is `failed` when any child fails or a contract guard fails.
 
+## Controller Enablement Controls
+1. Runtime supports environment rollout controls:
+   - `ORKET_CONTROLLER_ENABLED`
+   - `ORKET_CONTROLLER_ALLOWED_DEPARTMENTS`
+2. If controller execution is disabled by policy, run must fail closed with:
+   - `status = blocked`
+   - `error_code = controller.disabled_by_policy`
+3. Policy-disabled runs emit zero child results.
+
 ## Run Result Vocabulary (Observability Alignment)
 Run-level result vocabulary for observability surfaces is:
 1. `success`
@@ -101,6 +110,7 @@ Normative alignment rules:
 7. `controller.cycle_denied`
 8. `controller.child_execution_failed`
 9. `controller.observability_emit_failed`
+10. `controller.disabled_by_policy`
 
 ## Provenance Contract
 

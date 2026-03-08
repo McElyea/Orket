@@ -27,11 +27,17 @@ from .controller_dispatcher_contract import (
     ERROR_ENVELOPE_INVALID,
     ERROR_MAX_DEPTH_EXCEEDED,
     ERROR_MAX_FANOUT_EXCEEDED,
+    ERROR_OBSERVABILITY_EMIT_FAILED,
     ERROR_RECURSION_DENIED,
+    enforced_timeout,
     failed_child_result,
     failed_summary,
+    guard_child,
     normalize_controller_error,
     not_attempted_results,
+    parse_envelope,
+    read_env_int,
+    requested_timeout,
 )
 
 
@@ -66,7 +72,7 @@ class ControllerDispatcher:
         workspace: Path,
         department: str,
     ) -> ControllerRunSummary:
-        envelope, envelope_error = self._parse_envelope(payload)
+        envelope, envelope_error = parse_envelope(payload)
         if envelope is None:
             return failed_summary(
                 controller_workload_id=str((payload or {}).get("controller_workload_id") or "controller"),
@@ -144,10 +150,7 @@ class ControllerDispatcher:
             child_results.extend(
                 not_attempted_results(
                     children=envelope.children[index + 1 :],
-                    requested_timeout=caps.requested.child_timeout_seconds,
-                    enforced_timeout=caps.enforced.child_timeout_seconds,
                     requested_caps=caps.requested,
-                    enforced_caps=caps.enforced,
                 )
             )
             return failed_summary(
@@ -179,10 +182,10 @@ class ControllerDispatcher:
         workspace: Path,
         department: str,
     ) -> _ChildOutcome:
-        requested_timeout = self._requested_timeout(caps.requested, child)
-        enforced_timeout = self._enforced_timeout(caps.enforced, requested_timeout)
+        requested_timeout_value = requested_timeout(caps.requested, child)
+        enforced_timeout_value = enforced_timeout(caps.enforced, requested_timeout_value)
 
-        guard_error = self._guard_child(
+        guard_error = guard_child(
             child=child,
             controller_workload_id=controller_workload_id,
             active_ancestry=active_ancestry,
@@ -192,8 +195,8 @@ class ControllerDispatcher:
                 result=failed_child_result(
                     child=child,
                     error_code=guard_error,
-                    requested_timeout=requested_timeout,
-                    enforced_timeout=enforced_timeout,
+                    requested_timeout=requested_timeout_value,
+                    enforced_timeout=enforced_timeout_value,
                     requested_caps=caps.requested,
                     enforced_caps=caps.enforced,
                 ),
@@ -206,8 +209,8 @@ class ControllerDispatcher:
                 result=failed_child_result(
                     child=child,
                     error_code=ERROR_CHILD_EXECUTION_FAILED,
-                    requested_timeout=requested_timeout,
-                    enforced_timeout=enforced_timeout,
+                    requested_timeout=requested_timeout_value,
+                    enforced_timeout=enforced_timeout_value,
                     requested_caps=caps.requested,
                     enforced_caps=caps.enforced,
                 ),
@@ -219,8 +222,8 @@ class ControllerDispatcher:
                 result=failed_child_result(
                     child=child,
                     error_code=ERROR_CHILD_SDK_REQUIRED,
-                    requested_timeout=requested_timeout,
-                    enforced_timeout=enforced_timeout,
+                    requested_timeout=requested_timeout_value,
+                    enforced_timeout=enforced_timeout_value,
                     requested_caps=caps.requested,
                     enforced_caps=caps.enforced,
                 ),
@@ -238,16 +241,16 @@ class ControllerDispatcher:
                 workspace=workspace,
                 department=department,
             )
-            run_result = await run_call if enforced_timeout is None else await asyncio.wait_for(
-                run_call, timeout=float(enforced_timeout)
+            run_result = await run_call if enforced_timeout_value is None else await asyncio.wait_for(
+                run_call, timeout=float(enforced_timeout_value)
             )
         except asyncio.TimeoutError:
             return _ChildOutcome(
                 result=failed_child_result(
                     child=child,
                     error_code=ERROR_CHILD_EXECUTION_FAILED,
-                    requested_timeout=requested_timeout,
-                    enforced_timeout=enforced_timeout,
+                    requested_timeout=requested_timeout_value,
+                    enforced_timeout=enforced_timeout_value,
                     requested_caps=caps.requested,
                     enforced_caps=caps.enforced,
                 ),
@@ -259,23 +262,37 @@ class ControllerDispatcher:
                 result=failed_child_result(
                     child=child,
                     error_code=error_code,
-                    requested_timeout=requested_timeout,
-                    enforced_timeout=enforced_timeout,
+                    requested_timeout=requested_timeout_value,
+                    enforced_timeout=enforced_timeout_value,
                     requested_caps=caps.requested,
                     enforced_caps=caps.enforced,
                 ),
                 error_code=error_code,
             )
 
-        run_summary = dict(run_result.summary or {})
-        child_ok = bool(run_summary.get("ok", True))
-        if child_ok:
+        if not isinstance(run_result.summary, dict):
+            return _ChildOutcome(
+                result=failed_child_result(
+                    child=child,
+                    error_code=ERROR_CHILD_EXECUTION_FAILED,
+                    requested_timeout=requested_timeout_value,
+                    enforced_timeout=enforced_timeout_value,
+                    requested_caps=caps.requested,
+                    enforced_caps=caps.enforced,
+                    summary={"malformed_summary": type(run_result.summary).__name__},
+                ),
+                error_code=ERROR_CHILD_EXECUTION_FAILED,
+            )
+
+        run_summary = dict(run_result.summary)
+        child_ok = run_summary.get("ok")
+        if child_ok is True:
             return _ChildOutcome(
                 result=ControllerChildResult(
                     target_workload=child.target_workload,
                     status="success",
-                    requested_timeout=requested_timeout,
-                    enforced_timeout=enforced_timeout,
+                    requested_timeout=requested_timeout_value,
+                    enforced_timeout=enforced_timeout_value,
                     requested_caps=caps.requested,
                     enforced_caps=caps.enforced,
                     artifact_refs=[
@@ -292,8 +309,8 @@ class ControllerDispatcher:
             result=failed_child_result(
                 child=child,
                 error_code=ERROR_CHILD_EXECUTION_FAILED,
-                requested_timeout=requested_timeout,
-                enforced_timeout=enforced_timeout,
+                requested_timeout=requested_timeout_value,
+                enforced_timeout=enforced_timeout_value,
                 requested_caps=caps.requested,
                 enforced_caps=caps.enforced,
                 summary=run_summary,
@@ -313,28 +330,22 @@ class ControllerDispatcher:
             child_timeout_seconds=DEFAULT_CHILD_TIMEOUT_SECONDS,
         )
         return ControllerPolicyCaps(
-            max_depth=ControllerDispatcher._read_env_int(
-                "ORKET_CONTROLLER_MAX_DEPTH", fallback=int(base.max_depth or DEFAULT_MAX_DEPTH), minimum=0
+            max_depth=read_env_int(
+                os.getenv("ORKET_CONTROLLER_MAX_DEPTH", ""),
+                fallback=int(base.max_depth or DEFAULT_MAX_DEPTH),
+                minimum=0,
             ),
-            max_fanout=ControllerDispatcher._read_env_int(
-                "ORKET_CONTROLLER_MAX_FANOUT", fallback=int(base.max_fanout or DEFAULT_MAX_FANOUT), minimum=1
+            max_fanout=read_env_int(
+                os.getenv("ORKET_CONTROLLER_MAX_FANOUT", ""),
+                fallback=int(base.max_fanout or DEFAULT_MAX_FANOUT),
+                minimum=1,
             ),
-            child_timeout_seconds=ControllerDispatcher._read_env_int(
-                "ORKET_CONTROLLER_CHILD_TIMEOUT_SECONDS",
+            child_timeout_seconds=read_env_int(
+                os.getenv("ORKET_CONTROLLER_CHILD_TIMEOUT_SECONDS", ""),
                 fallback=int(base.child_timeout_seconds or DEFAULT_CHILD_TIMEOUT_SECONDS),
                 minimum=1,
             ),
         )
-
-    @staticmethod
-    def _read_env_int(name: str, *, fallback: int, minimum: int) -> int:
-        raw = str(os.getenv(name, "")).strip()
-        if not raw:
-            return fallback
-        parsed = int(raw)
-        if parsed < minimum:
-            raise ValueError(ERROR_ENVELOPE_INVALID)
-        return parsed
 
     def _resolve_caps(self, requested_caps: ControllerPolicyCaps | None) -> _ResolvedCaps:
         policy = self._runtime_policy_caps
@@ -362,45 +373,6 @@ class ControllerDispatcher:
         )
         return _ResolvedCaps(requested=requested_resolved, enforced=enforced)
 
-    @staticmethod
-    def _parse_envelope(payload: dict[str, Any]) -> tuple[ControllerRunEnvelope | None, str | None]:
-        if not isinstance(payload, dict):
-            return None, ERROR_ENVELOPE_INVALID
-        try:
-            return ControllerRunEnvelope.model_validate(payload), None
-        except Exception as exc:
-            text = str(exc)
-            if ERROR_CHILD_TIMEOUT_INVALID in text:
-                return None, ERROR_CHILD_TIMEOUT_INVALID
-            return None, ERROR_ENVELOPE_INVALID
-
-    @staticmethod
-    def _guard_child(
-        *, child: ControllerChildCall, controller_workload_id: str, active_ancestry: list[str]
-    ) -> str | None:
-        if child.target_workload == controller_workload_id:
-            return ERROR_RECURSION_DENIED
-        if child.target_workload in active_ancestry:
-            return ERROR_CYCLE_DENIED
-        if child.contract_style != CONTRACT_STYLE_SDK_V0:
-            return ERROR_CHILD_SDK_REQUIRED
-        return None
-
-    @staticmethod
-    def _requested_timeout(requested_caps: ControllerPolicyCaps, child: ControllerChildCall) -> int | None:
-        if child.timeout_seconds is not None:
-            return int(child.timeout_seconds)
-        if requested_caps.child_timeout_seconds is not None:
-            return int(requested_caps.child_timeout_seconds)
-        return None
-
-    @staticmethod
-    def _enforced_timeout(enforced_caps: ControllerPolicyCaps, requested_timeout: int | None) -> int | None:
-        if requested_timeout is None:
-            return int(enforced_caps.child_timeout_seconds) if enforced_caps.child_timeout_seconds is not None else None
-        if enforced_caps.child_timeout_seconds is None:
-            return int(requested_timeout)
-        return min(int(requested_timeout), int(enforced_caps.child_timeout_seconds))
 
 
 __all__ = [
@@ -415,5 +387,6 @@ __all__ = [
     "ERROR_ENVELOPE_INVALID",
     "ERROR_MAX_DEPTH_EXCEEDED",
     "ERROR_MAX_FANOUT_EXCEEDED",
+    "ERROR_OBSERVABILITY_EMIT_FAILED",
     "ERROR_RECURSION_DENIED",
 ]
