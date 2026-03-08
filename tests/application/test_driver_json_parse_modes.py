@@ -125,3 +125,31 @@ async def test_process_request_strict_mode_rejects_non_json_envelope_output():
 
     assert "Driver failed to parse JSON" in response
     assert "Strict JSON mode requires pure JSON envelope output." in response
+
+
+@pytest.mark.asyncio
+async def test_process_request_compatibility_mode_surfaces_degraded_parse(monkeypatch):
+    """Layer: integration. Verifies compatibility extraction is surfaced as degraded operator-visible behavior."""
+    events = []
+
+    def _capture(event_name, payload, *args, **kwargs):
+        events.append((event_name, payload))
+
+    monkeypatch.setattr("orket.driver.log_event", _capture)
+    driver = OrketDriver.__new__(OrketDriver)
+    driver.model_root = Path("model")
+    driver.skill = None
+    driver.dialect = None
+    driver.json_parse_mode = "compatibility"
+
+    class _Provider:
+        async def complete(self, _messages):
+            return SimpleNamespace(content='note: {"action":"converse","response":"ok","reasoning":"ok"}')
+
+    driver.provider = _Provider()
+
+    response = await driver.process_request("settings")
+
+    assert response.startswith("[DEGRADED] Compatibility mode extracted JSON")
+    assert response.endswith("ok")
+    assert ("driver_json_parse_compatibility_fallback_used", {"mode": "compatibility"}) in events

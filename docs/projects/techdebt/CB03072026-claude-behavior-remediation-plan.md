@@ -304,6 +304,18 @@ Proof target:
 26. Revalidated the broader direct `TurnExecutor` application proof on 2026-03-08 after the stricter `ToolGate` transition enforcement and found the earlier "cleared" note was too narrow: it only covered `test_turn_executor*.py` and missed `tests/application/test_memory_trace_emission.py`, which still relied on stale direct-executor status scaffolding and an invalid developer-to-`done` transition.
 27. Made `TurnExecutor._validate_preconditions` fail fast when `context["current_status"]` is missing, not an active turn status, or mismatched with `issue.status`, then aligned the direct executor application tests with the real orchestrator turn-status contract (`in_progress` / `awaiting_guard_review`) and replaced incidental invalid state changes in memory-trace coverage with valid tool actions.
 28. Verified with `python -m pytest tests/application/test_turn_executor_context.py tests/application/test_turn_executor_delegate_surface.py tests/application/test_turn_executor_middleware.py tests/application/test_turn_executor_replay.py tests/application/test_turn_executor_runtime_context_bridge.py tests/application/test_turn_executor_skill_contract.py tests/application/test_turn_executor_timeout_error.py tests/application/test_turn_executor_token_states.py tests/application/test_memory_trace_emission.py -q` and `python -m pytest tests/application/test_orchestrator_epic.py -q -k "turn_status or current_status or required_statuses_for_seat or preserves_deferred_architecture_mode_for_stabilizers or resolve_architecture_pattern_preserves_architect_decides or passes_microservices_pattern_to_stabilizers"`.
+29. `CB-5A` completed on 2026-03-08.
+30. Revalidated Services/Driver/Utilities finding 15 against current HEAD and confirmed `OrketDriver()` still defaulted `AsyncFileTools`, `ReforgerTools`, `model_root`, and org loading to `Path(".")` / `Path("model")` / `Path("workspace/default")`, so direct driver construction still depended on caller CWD.
+31. Added explicit project-root anchoring to `OrketDriver` default initialization, switched driver config loading and operator log workspace references onto the anchored roots, and kept `project_root` overrideable so tests and future explicit callers can provide a different root intentionally.
+32. Verified with `python -m pytest tests/application/test_driver_config_loading.py tests/application/test_driver_json_parse_modes.py tests/application/test_driver_conversation.py tests/application/test_driver_cli.py -q`.
+33. `CB-5B` completed on 2026-03-08.
+34. Revalidated the current-state compatibility-mode finding against current HEAD and confirmed the fallback path still silently sliced embedded JSON from the first `{` to the last `}` and executed it without any operator-visible degradation marker when `json_parse_mode="compatibility"`.
+35. Kept compatibility mode available for explicit fallback paths, but made non-envelope extraction surface as degraded behavior by emitting `driver_json_parse_compatibility_fallback_used` telemetry and prefixing the returned operator text with an explicit degraded warning.
+36. Verified with `python -m pytest tests/application/test_driver_config_loading.py tests/application/test_driver_json_parse_modes.py tests/application/test_driver_conversation.py tests/application/test_driver_cli.py -q`.
+37. `CB-5C` completed on 2026-03-08.
+38. Revalidated the workflow proof-truth finding against current HEAD and confirmed the quality and nightly memory comparator smoke still passed the exact same fixture paths on both left and right sides, so the comparator step only proved self-equality.
+39. Kept the gate as explicit comparator smoke, but changed both workflows to materialize distinct left/right fixture files before comparison and tightened the workflow contract tests so they now fail if the smoke regresses back to same-path self-comparison.
+40. Verified with `python -m pytest tests/platform/test_quality_workflow_gates.py tests/platform/test_nightly_workflow_memory_gates.py -q`.
 
 ## Verification Plan
 
@@ -332,7 +344,7 @@ Lane-close verification:
 3. `CB-2` in progress (`CB-2A` complete)
 4. `CB-3` in progress (`CB-3A` complete)
 5. `CB-4` in progress (`CB-4A` complete; `CB-4B` complete)
-6. `CB-5` pending
+6. `CB-5` in progress (`CB-5A` complete)
 7. `CB-6` pending
 
 ## Closeout Note

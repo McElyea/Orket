@@ -18,6 +18,10 @@ from orket.driver_support_conversation import DriverConversationMixin
 from orket.driver_support_resources import DriverResourceMixin
 
 
+def _default_project_root() -> Path:
+    return Path(__file__).resolve().parent.parent
+
+
 class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
     """
     The Driver is the high-level intent parser and resource manager.
@@ -33,13 +37,17 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         reforger_tools: ReforgerTools | None = None,
         strict_config: bool | None = None,
         json_parse_mode: str | None = None,
+        project_root: Path | None = None,
     ) -> None:
-        self.fs = fs or AsyncFileTools(Path("."))
-        self.reforger_tools = reforger_tools or ReforgerTools(Path("workspace/default"), [Path(".")])
+        self.project_root = Path(project_root).resolve() if project_root is not None else _default_project_root()
+        self.model_root = self.project_root / "model"
+        self.workspace_root = self.project_root / "workspace" / "default"
+        self.fs = fs or AsyncFileTools(self.project_root)
+        self.reforger_tools = reforger_tools or ReforgerTools(self.workspace_root, [self.project_root])
 
         from orket.schema import OrganizationConfig
 
-        org_path = Path("model/organization.json")
+        org_path = self.model_root / "organization.json"
         self.org = None
         if org_path.exists():
             try:
@@ -53,7 +61,6 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         selected_model = selector.select(role="operations_lead", override=model)
 
         self.provider = provider or LocalModelProvider(model=selected_model, temperature=0.1)
-        self.model_root = Path("model")
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
         strict_from_env = str(os.getenv("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
@@ -70,6 +77,17 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             env_mode=parse_mode_from_env,
         )
 
+    def _operator_workspace_root(self) -> Path:
+        return Path(getattr(self, "workspace_root", _default_project_root() / "workspace" / "default"))
+
+    def _operator_model_root(self) -> Path:
+        return Path(getattr(self, "model_root", _default_project_root() / "model"))
+
+    def _compatibility_parse_warning(self) -> str:
+        if not bool(getattr(self, "_compatibility_parse_fallback_used", False)):
+            return ""
+        return "[DEGRADED] Compatibility mode extracted JSON from non-envelope model output.\n"
+
     def _resolve_json_parse_mode(self, *, explicit_mode: str | None, env_mode: str) -> str:
         selected_parse_mode = str(explicit_mode or env_mode or "").strip().lower()
         if selected_parse_mode in {"strict", "compatibility"}:
@@ -85,10 +103,11 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             self.strict_config_mode = False
         if not hasattr(self, "config_degraded"):
             self.config_degraded = False
+        workspace_root = self._operator_workspace_root()
         self.config_dependency_classification.clear()
         self.config_load_failures.clear()
         self.config_degraded = False
-        loader = ConfigLoader(Path("model"), "core")
+        loader = ConfigLoader(self._operator_model_root(), "core")
         skill_dependency = "skill.operations_lead"
         self.config_dependency_classification[skill_dependency] = "degradable"
 
@@ -103,7 +122,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 "error": str(exc),
             }
             self.config_load_failures.append(failure)
-            log_event("driver_config_dependency_failed", failure, Path("workspace/default"), role="DRIVER")
+            log_event("driver_config_dependency_failed", failure, workspace_root, role="DRIVER")
 
         model_name = self.provider.model.lower()
         if "deepseek" in model_name:
@@ -130,7 +149,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 "error": str(exc),
             }
             self.config_load_failures.append(failure)
-            log_event("driver_config_dependency_failed", failure, Path("workspace/default"), role="DRIVER")
+            log_event("driver_config_dependency_failed", failure, workspace_root, role="DRIVER")
 
         self.prompting_mode = "governed" if self.skill and self.dialect else "fallback"
         log_event(
@@ -141,7 +160,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 "strict_mode": bool(self.strict_config_mode),
                 "load_failures": self.config_load_failures,
             },
-            Path("workspace/default"),
+            workspace_root,
             role="DRIVER",
         )
         if bool(self.strict_config_mode) and self.prompting_mode != "governed":
@@ -243,12 +262,14 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         )
 
     def _parse_model_plan(self, raw_text: str) -> dict[str, Any]:
+        workspace_root = self._operator_workspace_root()
         parse_mode = str(getattr(self, "json_parse_mode", "compatibility")).strip().lower()
+        self._compatibility_parse_fallback_used = False
         if parse_mode == "strict":
             log_event(
                 "driver_json_parse_mode_strict",
                 {"mode": "strict"},
-                Path("workspace/default"),
+                workspace_root,
                 role="DRIVER",
             )
             stripped = str(raw_text or "").strip()
@@ -259,18 +280,23 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         log_event(
             "driver_json_parse_mode_compatibility",
             {"mode": "compatibility"},
-            Path("workspace/default"),
+            workspace_root,
             role="DRIVER",
         )
         text = str(raw_text or "")
+        stripped = text.strip()
+        if stripped.startswith("{") and stripped.endswith("}"):
+            return json.loads(stripped)
         start = text.find("{")
         end = text.rfind("}")
         if start == -1 or end == -1:
             raise ValueError("Compatibility mode could not find JSON envelope in model output.")
+        self._compatibility_parse_fallback_used = True
         return json.loads(text[start : end + 1])
 
     async def process_request(self, message: str) -> str:
         request_text = str(message or "").strip()
+        workspace_root = self._operator_workspace_root()
         self._log_operator_metric("operator_request_total", route="received")
 
         cli_response = await self._try_cli_command(message)
@@ -288,7 +314,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                 return model_reply
             return "I can chat normally and help with Orket operations when you ask explicitly."
 
-        loader = ConfigLoader(Path("model"), "core")
+        loader = ConfigLoader(self._operator_model_root(), "core")
         inventory = await self._get_inventory()
         context = {
             "inventory": inventory,
@@ -316,21 +342,30 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
 
         try:
             plan = self._parse_model_plan(str(response.content or ""))
+            compatibility_warning = self._compatibility_parse_warning()
+            if compatibility_warning:
+                log_event(
+                    "driver_json_parse_compatibility_fallback_used",
+                    {"mode": "compatibility"},
+                    workspace_root,
+                    role="DRIVER",
+                )
             action = str(plan.get("action") or "").strip().lower()
             if action in {"create_issue", "create_epic", "create_rock"} and not self._has_explicit_structural_intent(request_text):
                 self._log_operator_metric("operator_structural_action_blocked", action=action)
                 log_event(
                     "operator_structural_action_blocked",
                     {"action": action, "request": request_text},
-                    Path("workspace/default"),
+                    workspace_root,
                     role="DRIVER",
                 )
                 return (
-                    "I can do that, but please ask explicitly for a board change. "
+                    compatibility_warning
+                    + "I can do that, but please ask explicitly for a board change. "
                     "For example: '/create epic <name> <department>' or 'create epic <name>'."
                 )
             self._log_operator_metric("operator_request_total", route="model")
-            return await self.execute_plan(plan)
+            return compatibility_warning + await self.execute_plan(plan)
         except (json.JSONDecodeError, ValueError) as e:
             self._log_operator_metric("operator_request_total", route="model_json_error")
             return f"Driver failed to parse JSON: {str(e)}"
@@ -340,7 +375,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             log_event(
                 "driver_process_failed",
                 {"error": str(e), "traceback": traceback.format_exc()},
-                Path("workspace/default"),
+                workspace_root,
                 role="DRIVER",
             )
             return f"Driver failed to process request due to internal error: {str(e)}"
@@ -350,6 +385,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         reasoning = plan.get("reasoning", "No reasoning provided.")
         response_text = str(plan.get("response", "") or "").strip()
         normalized_action = str(action or "").strip().lower()
+        workspace_root = self._operator_workspace_root()
 
         if normalized_action and normalized_action not in self._supported_plan_actions():
             return self._supported_action_error_text(normalized_action)
@@ -365,7 +401,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                     "reason": reasoning,
                     "mode": "suggestion_only",
                 },
-                Path("workspace/default"),
+                workspace_root,
                 role="DRIVER",
             )
             team_label = str(team or "unknown_team")

@@ -17,3 +17,7 @@ def test_nightly_workflow_enforces_memory_determinism_contract_gates() -> None:
     assert not missing, "nightly workflow missing required memory determinism gates: " + ", ".join(missing)
     assert "Enforce Memory Trace Fixture Contract And Comparator Smoke" in text
     assert "Enforce Memory Determinism Contract" not in text
+    assert "--left benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json" in text
+    assert "--right benchmarks/results/benchmarks/memory/memory_trace_fixture_right.json" in text
+    assert "--left-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_left.json" in text
+    assert "--right-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_right.json" in text

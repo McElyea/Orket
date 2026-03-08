@@ -358,20 +358,24 @@ jobs:
                   }
               ]
           }
-          trace_path = Path("benchmarks/results/benchmarks/memory/memory_trace_fixture.json")
-          retrieval_path = Path("benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json")
+          trace_path = Path("benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json")
+          retrieval_path = Path("benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_left.json")
+          trace_compare_path = Path("benchmarks/results/benchmarks/memory/memory_trace_fixture_right.json")
+          retrieval_compare_path = Path("benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_right.json")
           trace_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
           retrieval_path.write_text(json.dumps(retrieval, indent=2) + "\n", encoding="utf-8")
+          trace_compare_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
+          retrieval_compare_path.write_text(json.dumps(retrieval, indent=2) + "\n", encoding="utf-8")
           PY
           python scripts/benchmarks/check_memory_determinism.py \
-            --trace benchmarks/results/benchmarks/memory/memory_trace_fixture.json \
-            --retrieval-trace benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json \
+            --trace benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json \
+            --retrieval-trace benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_left.json \
             --out benchmarks/results/benchmarks/memory/memory_determinism_check.json
           python scripts/benchmarks/compare_memory_determinism.py \
-            --left benchmarks/results/benchmarks/memory/memory_trace_fixture.json \
-            --right benchmarks/results/benchmarks/memory/memory_trace_fixture.json \
-            --left-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json \
-            --right-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture.json \
+            --left benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json \
+            --right benchmarks/results/benchmarks/memory/memory_trace_fixture_right.json \
+            --left-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_left.json \
+            --right-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_right.json \
             --out benchmarks/results/benchmarks/memory/memory_determinism_compare.json
 
       - name: Enforce replay artifact drift comparator smoke

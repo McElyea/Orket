@@ -11,7 +11,7 @@ Intentionally empty.
 ## Maintenance (Non-Priority)
 These items are active executable work. They are non-priority, not deferred.
 
-1. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`. Current status: `CB-1` complete; `CB-2A`, `CB-3A`, `CB-4A`, and `CB-4B` complete; `CB-ROP-0`, `CB-ROP-1`, `CB-ROP-2A`, `CB-ROP-2B`, and `CB-ROP-3` complete; `CB-RSD-0`, `CB-RSD-1`, `CB-RSD-2`, and `CB-RSD-3` complete; direct `turn_executor` application proof revalidated with explicit turn-status alignment guard and expanded executor-suite coverage; next slice `CB-5`.
+1. techdebt active cycle `CB03072026` -- Plans: `docs/projects/techdebt/CB03072026-claude-behavior-remediation-plan.md`, `docs/projects/techdebt/CB03072026-residual-orchestration-prompting-plan.md`, `docs/projects/techdebt/CB03072026-residual-surface-defaults-plan.md`. Current status: `CB-1` complete; `CB-2A`, `CB-3A`, `CB-4A`, and `CB-4B` complete; `CB-5A`, `CB-5B`, and `CB-5C` complete; `CB-ROP-0`, `CB-ROP-1`, `CB-ROP-2A`, `CB-ROP-2B`, and `CB-ROP-3` complete; `CB-RSD-0`, `CB-RSD-1`, `CB-RSD-2`, and `CB-RSD-3` complete; direct `turn_executor` application proof revalidated with explicit turn-status alignment guard and expanded executor-suite coverage; next slice `CB-5D`.
    1. `CB-0` revalidate critical/high finding inventory against current HEAD; mark duplicates, already-fixed items, and blockers before code changes.
    2. `CB-3A` repair `coordinator_store` async/service-boundary behavior.
    3. `CB-ROP-0` revalidate residual orchestration/prompting findings.

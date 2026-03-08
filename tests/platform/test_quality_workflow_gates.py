@@ -42,6 +42,10 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
     assert not missing, "quality workflow missing required architecture gates: " + ", ".join(missing)
     assert "Enforce memory trace fixture contract and comparator smoke" in text
     assert "Enforce memory determinism contract smoke" not in text
+    assert "--left benchmarks/results/benchmarks/memory/memory_trace_fixture_left.json" in text
+    assert "--right benchmarks/results/benchmarks/memory/memory_trace_fixture_right.json" in text
+    assert "--left-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_left.json" in text
+    assert "--right-retrieval benchmarks/results/benchmarks/memory/memory_retrieval_trace_fixture_right.json" in text
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -48,3 +49,56 @@ def test_load_engine_configs_strict_mode_fails_closed(monkeypatch):
 
     with pytest.raises(RuntimeError, match="strict config mode"):
         driver._load_engine_configs()
+
+
+def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path):
+    """Layer: contract. Verifies default driver roots are resolved from project root, not caller CWD."""
+    captures = {}
+
+    class _FakeFileTools:
+        def __init__(self, root):  # type: ignore[no-untyped-def]
+            captures["fs_root"] = Path(root)
+
+    class _FakeReforgerTools:
+        def __init__(self, workspace, allowed_roots):  # type: ignore[no-untyped-def]
+            captures["workspace_root"] = Path(workspace)
+            captures["allowed_roots"] = [Path(item) for item in allowed_roots]
+
+    class _FakeProvider:
+        def __init__(self, model, temperature=0.1):  # type: ignore[no-untyped-def]
+            self.model = model
+
+    class _FakeSelector:
+        def __init__(self, organization=None):  # type: ignore[no-untyped-def]
+            _ = organization
+
+        def select(self, role, override=None):  # type: ignore[no-untyped-def]
+            _ = role
+            return override or "qwen3.5-coder"
+
+    def _fake_load_engine_configs(self) -> None:
+        self.skill = None
+        self.dialect = None
+        self.prompting_mode = "fallback"
+        self.config_degraded = False
+        self.config_dependency_classification = {}
+        self.config_load_failures = []
+
+    off_root_cwd = tmp_path / "other_cwd"
+    off_root_cwd.mkdir()
+    monkeypatch.chdir(off_root_cwd)
+    monkeypatch.setattr("orket.driver._default_project_root", lambda: tmp_path)
+    monkeypatch.setattr("orket.driver.AsyncFileTools", _FakeFileTools)
+    monkeypatch.setattr("orket.driver.ReforgerTools", _FakeReforgerTools)
+    monkeypatch.setattr("orket.driver.LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr("orket.orchestration.models.ModelSelector", _FakeSelector)
+    monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
+
+    driver = OrketDriver(model="qwen3.5-coder")
+
+    assert driver.project_root == tmp_path
+    assert driver.model_root == tmp_path / "model"
+    assert driver.workspace_root == tmp_path / "workspace" / "default"
+    assert captures["fs_root"] == tmp_path
+    assert captures["workspace_root"] == tmp_path / "workspace" / "default"
+    assert captures["allowed_roots"] == [tmp_path]
