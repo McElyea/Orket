@@ -4,6 +4,7 @@ Tool Gate Service - Mechanical Enforcement.
 Intercepts tool calls before execution to enforce organizational invariants.
 """
 
+import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 
@@ -13,6 +14,9 @@ from orket.core.domain.state_machine import StateMachine, StateMachineError
 
 class ToolGateViolation(Exception):
     """Raised when a tool call violates organizational policy."""
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ToolGate:
@@ -242,22 +246,29 @@ class ToolGate:
         if not current_status_str:
             return "Cannot validate transition: current status unknown"
 
-        current_status = CardStatus(current_status_str)
-
-        if self.org and not getattr(self.org, "bypass_governance", False):
-            try:
-                wait_reason = args.get("wait_reason")
-                StateMachine.validate_transition(
-                    CardType.ISSUE,
-                    current_status,
-                    requested_status,
-                    roles=roles,
-                    wait_reason=wait_reason,
-                )
-            except (StateMachineError, ValueError, TypeError) as e:
-                return str(e)
+        try:
+            current_status = CardStatus(current_status_str)
+            card_type = self._resolve_card_type(context)
+            if self.org and getattr(self.org, "bypass_governance", False):
+                _LOGGER.warning("Ignoring bypass_governance during tool gate transition validation.")
+            wait_reason = args.get("wait_reason")
+            StateMachine.validate_transition(
+                card_type,
+                current_status,
+                requested_status,
+                roles=roles,
+                wait_reason=wait_reason,
+            )
+        except (StateMachineError, ValueError, TypeError) as e:
+            return str(e)
 
         return None
+
+    def _resolve_card_type(self, context: Dict[str, Any]) -> CardType:
+        raw_card_type = context.get("card_type", CardType.ISSUE.value)
+        if isinstance(raw_card_type, CardType):
+            return raw_card_type
+        return CardType(str(raw_card_type).strip().lower())
 
     def _validate_destructive_operation(
         self,

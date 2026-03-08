@@ -41,7 +41,9 @@ class _StubInteractionManager:
 
 
 class _StubExtensionManager:
-    def resolve_workload(self, _workload_id: str) -> None:
+    def resolve_workload(self, workload_id: str) -> object | None:
+        if workload_id == "ext-workload":
+            return object()
         return None
 
     async def run_workload(self, **_kwargs: Any) -> None:
@@ -164,6 +166,24 @@ def test_sessions_router_protocol_run_rejects_traversal_run_id(tmp_path: Path) -
     assert "Invalid run_id" in response.text
 
 
+def test_sessions_router_begin_interaction_turn_rejects_workspace_outside_root(tmp_path: Path) -> None:
+    """Layer: contract. Verifies extension workloads cannot target a workspace outside the configured root."""
+    workspace_root = tmp_path / "workspace"
+    client = _build_client(workspace_root)
+
+    response = client.post(
+        "/v1/interactions/session-1/turns",
+        json={
+            "workload_id": "ext-workload",
+            "workspace": str(tmp_path / "outside"),
+            "input_config": {"seed": 1},
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Invalid workspace" in response.text
+
+
 def test_sessions_router_protocol_ledger_parity_endpoint(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
@@ -183,10 +203,24 @@ def test_sessions_router_protocol_ledger_parity_missing_sqlite_returns_404(tmp_p
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
     client = _build_client(workspace_root)
 
-    missing = tmp_path / "missing.db"
+    missing = workspace_root / "missing.db"
     response = client.get(f"/v1/protocol/runs/run-a/ledger-parity?sqlite_db_path={missing}")
     assert response.status_code == 404
     assert "SQLite run ledger database not found" in response.text
+
+
+def test_sessions_router_protocol_ledger_parity_rejects_sqlite_outside_workspace(tmp_path: Path) -> None:
+    """Layer: contract. Verifies run-ledger parity rejects caller-provided SQLite paths outside the workspace."""
+    workspace_root = tmp_path / "workspace"
+    _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
+    client = _build_client(workspace_root)
+
+    outside_db = tmp_path / "outside.db"
+    outside_db.write_text("", encoding="utf-8")
+    response = client.get("/v1/protocol/runs/run-a/ledger-parity", params={"sqlite_db_path": str(outside_db)})
+
+    assert response.status_code == 400
+    assert "Invalid sqlite_db_path" in response.text
 
 
 def test_sessions_router_protocol_ledger_parity_reports_mismatch(tmp_path: Path) -> None:
@@ -260,10 +294,23 @@ def test_sessions_router_protocol_campaign_endpoint_reports_missing_runs_root(tm
     workspace_root = tmp_path / "workspace"
     client = _build_client(workspace_root)
 
-    missing_root = tmp_path / "missing-runs"
+    missing_root = workspace_root / "missing-runs"
     response = client.get(f"/v1/protocol/replay/campaign?runs_root={missing_root}")
     assert response.status_code == 404
     assert "Runs root not found" in response.text
+
+
+def test_sessions_router_protocol_campaign_endpoint_rejects_runs_root_outside_workspace(tmp_path: Path) -> None:
+    """Layer: contract. Verifies campaign replay rejects runs_root values that escape the workspace root."""
+    workspace_root = tmp_path / "workspace"
+    client = _build_client(workspace_root)
+
+    outside_root = tmp_path / "outside-runs"
+    outside_root.mkdir()
+    response = client.get("/v1/protocol/replay/campaign", params={"runs_root": str(outside_root)})
+
+    assert response.status_code == 400
+    assert "Invalid runs_root" in response.text
 
 
 def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_clean_match(tmp_path: Path) -> None:
@@ -302,3 +349,16 @@ def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_mismat
     assert payload["all_match"] is False
     assert payload["mismatch_count"] == 1
     assert payload["compatibility_telemetry_delta"]["field_delta_counts"]["status"] >= 1
+
+
+def test_sessions_router_protocol_ledger_parity_campaign_rejects_sqlite_outside_workspace(tmp_path: Path) -> None:
+    """Layer: contract. Verifies campaign ledger parity rejects caller-provided SQLite paths outside the workspace."""
+    workspace_root = tmp_path / "workspace"
+    client = _build_client(workspace_root)
+
+    outside_db = tmp_path / "outside.db"
+    outside_db.write_text("", encoding="utf-8")
+    response = client.get("/v1/protocol/ledger-parity/campaign", params={"sqlite_db_path": str(outside_db)})
+
+    assert response.status_code == 400
+    assert "Invalid sqlite_db_path" in response.text

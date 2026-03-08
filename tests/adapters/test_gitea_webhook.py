@@ -9,22 +9,32 @@ from orket.adapters.vcs.webhook_db import WebhookDatabase
 
 
 class _FakeResponse:
-    def __init__(self, status_code=200):
+    def __init__(self, status_code=200, text=""):
         self.status_code = status_code
+        self.text = text
 
 
 class _FakeClient:
-    def __init__(self):
+    def __init__(self, *, post_responses=None, patch_responses=None):
         self.post_calls = []
         self.patch_calls = []
+        self.post_responses = post_responses or {}
+        self.patch_responses = patch_responses or {}
+
+    @staticmethod
+    def _resolve_response(url, responses):
+        for needle, response in responses.items():
+            if needle in url:
+                return response
+        return _FakeResponse(status_code=200)
 
     async def post(self, url, **kwargs):
         self.post_calls.append((url, kwargs))
-        return _FakeResponse(status_code=200)
+        return self._resolve_response(url, self.post_responses)
 
     async def patch(self, url, **kwargs):
         self.patch_calls.append((url, kwargs))
-        return _FakeResponse(status_code=200)
+        return self._resolve_response(url, self.patch_responses)
 
     async def aclose(self):
         return None
@@ -163,6 +173,30 @@ async def test_pr_review_approved_triggers_auto_merge(monkeypatch, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_pr_review_approved_reports_merge_failure(monkeypatch, tmp_path):
+    """Layer: integration. Verifies approved reviews do not claim merge success when the merge API fails."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler.client = _FakeClient(
+        post_responses={"/pulls/7/merge": _FakeResponse(status_code=409, text="merge conflict")},
+    )
+
+    payload = {
+        "pull_request": {"number": 7},
+        "review": {"user": {"login": "guard"}, "state": "approved"},
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    result = await handler.handle_webhook("pull_request_review", payload)
+    await handler.close()
+
+    assert result["status"] == "error"
+    assert "merge failed" in result["message"].lower()
+    assert "409" in result["message"]
+
+
+@pytest.mark.asyncio
 async def test_pr_review_commented_is_ignored(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
 
@@ -198,6 +232,34 @@ async def test_pr_opened_without_issue_id_is_ignored(monkeypatch, tmp_path):
 
     assert result["status"] == "ignored"
     assert "No issue ID found" in result["message"]
+
+
+@pytest.mark.asyncio
+async def test_pr_review_escalation_failure_is_reported(monkeypatch, tmp_path):
+    """Layer: integration. Verifies architect escalation reports comment publication failures instead of success."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    db_path = tmp_path / "escalation_failure.db"
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler.db = WebhookDatabase(db_path=db_path)
+    handler.client = _FakeClient(
+        post_responses={"/issues/42/comments": _FakeResponse(status_code=500, text="comment blocked")},
+    )
+
+    payload = {
+        "pull_request": {"number": 42},
+        "review": {"user": {"login": "bot"}, "state": "changes_requested", "body": "still failing"},
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    await handler.handle_webhook("pull_request_review", payload)
+    await handler.handle_webhook("pull_request_review", payload)
+    result = await handler.handle_webhook("pull_request_review", payload)
+    await handler.close()
+
+    assert result["status"] == "error"
+    assert "escalation failed" in result["message"].lower()
+    assert "500" in result["message"]
 
 
 @pytest.mark.asyncio
@@ -246,6 +308,47 @@ async def test_pr_merged_closes_cycle_and_triggers_sandbox_comment(monkeypatch, 
 
 
 @pytest.mark.asyncio
+async def test_pr_merged_reports_sandbox_deployment_failure(monkeypatch, tmp_path):
+    """Layer: integration. Verifies merged PR handling reports deployment degradation when sandbox creation fails."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    db_path = tmp_path / "merged_failure.db"
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler.db = WebhookDatabase(db_path=db_path)
+    handler.client = _FakeClient()
+
+    await handler.db.increment_pr_cycle("org/repo", 12)
+
+    async def _raise_create_sandbox(**_kwargs):
+        raise RuntimeError("sandbox unavailable")
+
+    handler.sandbox_orchestrator.create_sandbox = _raise_create_sandbox
+
+    payload = {
+        "action": "closed",
+        "pull_request": {
+            "number": 12,
+            "merged": True,
+            "head": {"ref": "main"},
+            "merged_by": {"login": "guard"},
+        },
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    result = await handler.handle_webhook("pull_request", payload)
+
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        row = await (await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#12",))).fetchone()
+
+    await handler.close()
+
+    assert result["status"] == "degraded"
+    assert "sandbox deployment failed" in result["message"].lower()
+    assert row["status"] == "merged"
+
+
+@pytest.mark.asyncio
 async def test_auto_reject_creates_requirements_review_issue(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "requirements_issue_test.db"
@@ -266,3 +369,38 @@ async def test_auto_reject_creates_requirements_review_issue(monkeypatch, tmp_pa
     await handler.close()
 
     assert any(call[0].endswith("/api/v1/repos/org/repo/issues") for call in handler.client.post_calls)
+
+
+@pytest.mark.asyncio
+async def test_auto_reject_reports_close_failure_without_marking_rejected(monkeypatch, tmp_path):
+    """Layer: integration. Verifies auto-reject stops and reports failure when the PR close request fails."""
+    monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
+    db_path = tmp_path / "reject_failure.db"
+
+    handler = GiteaWebhookHandler(workspace=tmp_path)
+    handler.db = WebhookDatabase(db_path=db_path)
+    handler.client = _FakeClient(
+        patch_responses={"/pulls/55": _FakeResponse(status_code=503, text="gitea unavailable")},
+    )
+
+    payload = {
+        "pull_request": {"number": 55},
+        "review": {"user": {"login": "guard"}, "state": "changes_requested", "body": "still failing"},
+        "repository": {"name": "repo", "owner": {"login": "org"}},
+    }
+
+    for _ in range(3):
+        interim = await handler.handle_webhook("pull_request_review", payload)
+        assert interim["status"] in {"changes_requested", "escalated"}
+    result = await handler.handle_webhook("pull_request_review", payload)
+
+    async with aiosqlite.connect(db_path) as conn:
+        conn.row_factory = aiosqlite.Row
+        row = await (await conn.execute("SELECT status FROM pr_review_cycles WHERE pr_key = ?", ("org/repo#55",))).fetchone()
+
+    await handler.close()
+
+    assert result["status"] == "error"
+    assert "rejection failed" in result["message"].lower()
+    assert "503" in result["message"]
+    assert row["status"] == "active"

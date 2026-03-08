@@ -67,6 +67,11 @@ class CardManagementTools(BaseTools):
             return {"ok": False, "error": f"Issue not found: {issue_id}"}
 
         current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status))
+        raw_card_type = getattr(issue, "type", None) or context.get("card_type") or args.get("card_type") or CardType.ISSUE.value
+        try:
+            card_type = raw_card_type if isinstance(raw_card_type, CardType) else CardType(str(raw_card_type).strip().lower())
+        except ValueError:
+            return {"ok": False, "error": f"Invalid card type: {raw_card_type}"}
 
         roles = context.get("roles")
         if roles is None:
@@ -77,7 +82,7 @@ class CardManagementTools(BaseTools):
             workflow_profile=str(context.get("workflow_profile") or "legacy_cards_v1"),
         )
 
-        gate_context = {**context, "current_status": current_status.value}
+        gate_context = {**context, "current_status": current_status.value, "card_type": card_type.value}
         if self.tool_gate:
             gate_violation = self.tool_gate.validate(
                 tool_name="update_issue_status",
@@ -93,7 +98,7 @@ class CardManagementTools(BaseTools):
             current_status=current_status,
             payload={"status": new_status.value, "wait_reason": args.get("wait_reason")},
             roles=roles,
-            card_type=CardType.ISSUE,
+            card_type=card_type,
         )
         if not transition.ok:
             response: Dict[str, Any] = {"ok": False, "error": transition.error or "Transition rejected."}

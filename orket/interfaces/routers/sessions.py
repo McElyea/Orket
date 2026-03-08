@@ -49,8 +49,21 @@ def build_sessions_router(
 ) -> APIRouter:
     router = APIRouter()
 
+    def _workspace_root() -> Path:
+        return workspace_root_getter().resolve()
+
+    def _resolve_workspace_path(raw_path: str | Path, *, field_name: str) -> Path:
+        workspace_root = _workspace_root()
+        candidate = Path(str(raw_path))
+        if not candidate.is_absolute():
+            candidate = workspace_root / candidate
+        resolved = candidate.resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            raise HTTPException(status_code=400, detail=f"Invalid {field_name}: path escapes workspace root.")
+        return resolved
+
     def _resolve_protocol_run_root(run_id: str) -> Path:
-        base = (workspace_root_getter() / "runs").resolve()
+        base = (_workspace_root() / "runs").resolve()
         candidate = (base / str(run_id).strip()).resolve()
         if not candidate.is_relative_to(base):
             raise HTTPException(status_code=400, detail="Invalid run_id")
@@ -93,6 +106,7 @@ def build_sessions_router(
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             except RuntimeError as exc:
                 raise HTTPException(status_code=503, detail=str(exc)) from exc
+        workspace = _resolve_workspace_path(req.workspace, field_name="workspace")
         try:
             turn_id = await interaction_manager.begin_turn(
                 session_id=session_id,
@@ -102,7 +116,6 @@ def build_sessions_router(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         context = await interaction_manager.create_context(session_id, turn_id)
-        workspace = Path(req.workspace).resolve()
 
         async def _run_turn():
             try:
@@ -178,7 +191,7 @@ def build_sessions_router(
     async def list_marshaller_run_rows(limit: int = 20):
         from orket.marshaller.cli import list_marshaller_runs
 
-        workspace_root = workspace_root_getter()
+        workspace_root = _workspace_root()
         rows = await list_marshaller_runs(workspace_root, limit=max(1, int(limit)))
         return {"runs": rows}
 
@@ -186,7 +199,7 @@ def build_sessions_router(
     async def inspect_marshaller_run(run_id: str, attempt_index: Optional[int] = None):
         from orket.marshaller.cli import inspect_marshaller_attempt
 
-        workspace_root = workspace_root_getter()
+        workspace_root = _workspace_root()
         try:
             return await inspect_marshaller_attempt(
                 workspace_root,
@@ -247,9 +260,9 @@ def build_sessions_router(
         runs_root: Optional[str] = None,
     ):
         root = (
-            Path(str(runs_root)).resolve()
+            _resolve_workspace_path(runs_root, field_name="runs_root")
             if str(runs_root or "").strip()
-            else (workspace_root_getter() / "runs").resolve()
+            else (_workspace_root() / "runs").resolve()
         )
         if not root.exists():
             raise HTTPException(status_code=404, detail=f"Runs root not found: {root}")
@@ -267,13 +280,13 @@ def build_sessions_router(
     async def compare_protocol_and_sqlite_run_ledgers(run_id: str, sqlite_db_path: Optional[str] = None):
         _ = _resolve_protocol_run_root(run_id)
         sqlite_path = (
-            Path(str(sqlite_db_path)).resolve()
+            _resolve_workspace_path(sqlite_db_path, field_name="sqlite_db_path")
             if str(sqlite_db_path or "").strip()
-            else (workspace_root_getter() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+            else (_workspace_root() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
         )
         if not sqlite_path.exists():
             raise HTTPException(status_code=404, detail=f"SQLite run ledger database not found: {sqlite_path}")
-        protocol_root = workspace_root_getter()
+        protocol_root = _workspace_root()
         sqlite_repo = AsyncRunLedgerRepository(sqlite_path)
         protocol_repo = AsyncProtocolRunLedgerRepository(protocol_root)
         try:
@@ -292,16 +305,16 @@ def build_sessions_router(
         discover_limit: int = 200,
     ):
         sqlite_path = (
-            Path(str(sqlite_db_path)).resolve()
+            _resolve_workspace_path(sqlite_db_path, field_name="sqlite_db_path")
             if str(sqlite_db_path or "").strip()
-            else (workspace_root_getter() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+            else (_workspace_root() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
         )
         if not sqlite_path.exists():
             raise HTTPException(status_code=404, detail=f"SQLite run ledger database not found: {sqlite_path}")
         try:
             return await compare_protocol_ledger_parity_campaign(
                 sqlite_db=sqlite_path,
-                protocol_root=workspace_root_getter(),
+                protocol_root=_workspace_root(),
                 session_ids=list(session_id or []),
                 discover_limit=max(0, int(discover_limit)),
             )

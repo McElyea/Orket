@@ -10,6 +10,7 @@ from orket.application.services.runtime_verifier import RuntimeVerifier
 
 @pytest.mark.asyncio
 async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
+    """Layer: contract. Verifies the builtin python profile command plan executes a real verifier command."""
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
@@ -19,7 +20,9 @@ async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
     assert result.ok is True
     assert "agent_output/main.py" in result.checked_files
     assert result.errors == []
-    assert result.command_results == []
+    assert len(result.command_results) == 1
+    assert result.command_results[0]["returncode"] == 0
+    assert result.command_results[0]["policy_source"] == "profile_default:python"
     assert result.failure_breakdown == {}
     assert result.guard_contract.result == "pass"
     assert result.guard_contract.terminal_failure is False
@@ -29,6 +32,7 @@ async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
 
 @pytest.mark.asyncio
 async def test_runtime_verifier_fails_invalid_python(tmp_path: Path):
+    """Layer: contract. Verifies syntax failures remain explicit even when builtin verifier commands also run."""
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("def broken(:\n    pass\n", encoding="utf-8")
@@ -38,6 +42,7 @@ async def test_runtime_verifier_fails_invalid_python(tmp_path: Path):
     assert result.ok is False
     assert "agent_output/main.py" in result.checked_files
     assert len(result.errors) >= 1
+    assert len(result.command_results) == 1
     assert result.guard_contract.result == "fail"
     assert result.guard_contract.severity == "strict"
     assert result.guard_contract.terminal_failure is False
@@ -219,3 +224,48 @@ async def test_runtime_verifier_microservices_pattern_requires_microservices_dep
     joined = "\n".join(result.errors)
     assert "Dockerfile.api" in joined
     assert "Dockerfile.worker" in joined
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_rejects_shell_string_commands(tmp_path: Path):
+    """Layer: contract. Verifies runtime verifier refuses shell-string commands instead of executing them with shell=True."""
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    org = type(
+        "Org",
+        (),
+        {
+            "process_rules": {
+                "runtime_verifier_commands": ["python -c \"print('unsafe')\""],
+            }
+        },
+    )
+
+    result = await RuntimeVerifier(tmp_path, organization=org).verify()
+
+    assert result.ok is False
+    assert result.command_results[0]["returncode"] == 126
+    assert "argv lists" in result.command_results[0]["stderr"]
+
+
+@pytest.mark.asyncio
+async def test_runtime_verifier_reports_when_no_builtin_defaults_exist_for_node_profile(tmp_path: Path):
+    """Layer: contract. Verifies command-plan source is explicit when a stack profile has no builtin verifier commands."""
+    agent_output = tmp_path / "agent_output"
+    agent_output.mkdir(parents=True, exist_ok=True)
+    (agent_output / "package.json").write_text("{\"name\": \"demo\"}\n", encoding="utf-8")
+    org = type(
+        "Org",
+        (),
+        {
+            "process_rules": {
+                "runtime_verifier_stack_profile": "node",
+            }
+        },
+    )
+
+    plan = await RuntimeVerifier(tmp_path, organization=org)._resolve_runtime_command_plan()
+
+    assert plan["commands"] == []
+    assert plan["source"] == "profile_default_none:node"

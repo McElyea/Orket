@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
@@ -118,9 +119,15 @@ class RuntimeVerifier:
                     "commands": [item for item in selected if item],
                     "source": f"profile_policy:{stack_profile}",
                 }
+        default_commands = await self._default_commands_for_profile(stack_profile)
+        if default_commands:
+            return {
+                "commands": default_commands,
+                "source": f"profile_default:{stack_profile}",
+            }
         return {
-            "commands": self._default_commands_for_profile(stack_profile),
-            "source": f"profile_default:{stack_profile}",
+            "commands": [],
+            "source": f"profile_default_none:{stack_profile}",
         }
 
     async def _infer_stack_profile(self) -> str:
@@ -134,10 +141,11 @@ class RuntimeVerifier:
             return "node"
         return "python"
 
-    @staticmethod
-    def _default_commands_for_profile(stack_profile: str) -> List[Any]:
-        if stack_profile in {"python", "polyglot"}:
-            return []
+    async def _default_commands_for_profile(self, stack_profile: str) -> List[Any]:
+        # Only Python-backed surfaces have a safe cross-platform builtin verifier command.
+        agent_output_exists = await asyncio.to_thread((self.workspace_root / "agent_output").exists)
+        if agent_output_exists and stack_profile in {"python", "polyglot"}:
+            return [[sys.executable, "-m", "compileall", "-q", "agent_output"]]
         return []
 
     @staticmethod
@@ -240,11 +248,16 @@ class RuntimeVerifier:
         if isinstance(command, list):
             cmd = [str(part) for part in command]
             display = " ".join(cmd)
-            shell = False
         else:
-            cmd = str(command)
             display = str(command)
-            shell = True
+            return {
+                "command_display": display,
+                "returncode": 126,
+                "stdout": "",
+                "stderr": "runtime verifier commands must be argv lists; shell strings are not allowed",
+                "failure_class": "command_failed",
+                "policy_source": policy_source,
+            }
 
         try:
             completed = subprocess.run(
@@ -253,7 +266,7 @@ class RuntimeVerifier:
                 capture_output=True,
                 text=True,
                 timeout=timeout_sec,
-                shell=shell,
+                shell=False,
                 check=False,
             )
             return {

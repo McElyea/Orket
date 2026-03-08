@@ -425,6 +425,8 @@ def _resolve_bool_flag(self, env_key: str, org_key: str, default: bool = False) 
     env_raw = (os.environ.get(env_key) or "").strip().lower()
     if env_raw in {"1", "true", "yes", "on"}:
         return True
+    if env_raw in {"0", "false", "no", "off"}:
+        return False
     if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
         value = self.org.process_rules.get(org_key)
         if isinstance(value, bool):

@@ -8,11 +8,15 @@ Orket
    - `docs/CONTRIBUTOR.md`
    - `docs/ROADMAP.md`
    - `docs/ARCHITECTURE.md`
+   - Complete this startup read before beginning work in the repository.
+   - Agent-specific enforcement details live in `AGENTS.md`.
 2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
    - If a non-maintenance project or project lane is complete, move its closeout/plan/history docs to `docs/projects/archive/<ProjectName>/` and update links in the same change.
    - Project-owned docs that remain long-lived contracts/specifications must move to `docs/specs/` when the project or lane is archived.
    - Completed non-maintenance project folders must not remain under `docs/projects/` unless the folder is still intentionally active as a maintenance lane or externally gated authority surface.
    - Keep `docs/ROADMAP.md` as the only active roadmap source; do not create parallel active backlog docs.
+   - When creating a new active implementation plan, add or update the corresponding `docs/ROADMAP.md` entry in the same change so the plan is discoverable from the active execution index.
+   - Roadmap entries for active plans should stay terse and point to the canonical plan path instead of restating the plan body.
    - Keep `docs/ROADMAP.md` active-only: do not leave completed or archived project roots in active roadmap sections or the Project Index.
    - Run anti-orphan checks at handoff:
      1) every remaining non-archive folder in `docs/projects/` appears in roadmap Project Index

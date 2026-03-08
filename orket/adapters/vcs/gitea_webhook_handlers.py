@@ -11,6 +11,17 @@ from orket.logging import log_event
 from orket.schema import CardStatus
 
 
+def _response_error(*, action: str, response: Any) -> str | None:
+    status_code = int(getattr(response, "status_code", 0) or 0)
+    if 200 <= status_code < 300:
+        return None
+    detail = f"{action} failed with status {status_code}"
+    response_text = str(getattr(response, "text", "") or "").strip()
+    if response_text:
+        detail = f"{detail}: {response_text}"
+    return detail
+
+
 class PRReviewHandler:
     """Handles PR review events and review-cycle policy."""
 
@@ -30,7 +41,9 @@ class PRReviewHandler:
         log_event("pr_review", {"pr": pr_key, "reviewer": reviewer, "state": review_state}, self.handler.workspace)
 
         if review_state == "approved":
-            await self.auto_merge(repo, pr_number)
+            merge_error = await self.auto_merge(repo, pr_number)
+            if merge_error is not None:
+                return {"status": "error", "message": f"PR #{pr_number} approved but merge failed: {merge_error}"}
             return {"status": "success", "message": f"PR #{pr_number} approved and merged"}
 
         if review_state == "changes_requested":
@@ -40,16 +53,26 @@ class PRReviewHandler:
             await self.handler.db.add_failure_reason(repo_full_name, pr_number, reviewer, reason)
 
             if cycles == 3:
-                await self.escalate_to_architect(repo, pr_number)
+                escalation_error = await self.escalate_to_architect(repo, pr_number)
+                if escalation_error is not None:
+                    return {
+                        "status": "error",
+                        "message": f"PR #{pr_number} hit architect escalation threshold but escalation failed: {escalation_error}",
+                    }
                 return {"status": "escalated", "message": f"PR #{pr_number} escalated to architect"}
             if cycles >= 4:
-                await self.auto_reject(repo, pr_number, repo_full_name)
+                rejection_error = await self.auto_reject(repo, pr_number, repo_full_name)
+                if rejection_error is not None:
+                    return {
+                        "status": "error",
+                        "message": f"PR #{pr_number} hit auto-reject threshold but rejection failed: {rejection_error}",
+                    }
                 return {"status": "rejected", "message": f"PR #{pr_number} auto-rejected after 4 cycles"}
             return {"status": "changes_requested", "message": f"PR #{pr_number} rejected (cycle {cycles}/4)"}
 
         return {"status": "ignored", "message": "Review state not actionable"}
 
-    async def auto_merge(self, repo: Dict[str, Any], pr_number: int) -> None:
+    async def auto_merge(self, repo: Dict[str, Any], pr_number: int) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/pulls/{pr_number}/merge"
@@ -64,16 +87,18 @@ class PRReviewHandler:
             },
         )
 
-        if response.status_code == 200:
-            log_event("pr_merged", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.handler.workspace)
-        else:
+        error = _response_error(action=f"PR #{pr_number} merge", response=response)
+        if error is not None:
             log_event(
                 "pr_merge_failed",
-                {"pr": pr_number, "status": response.status_code, "error": response.text},
+                {"pr": pr_number, "status": getattr(response, "status_code", None), "error": error},
                 self.handler.workspace,
             )
+            return error
+        log_event("pr_merged", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.handler.workspace)
+        return None
 
-    async def escalate_to_architect(self, repo: Dict[str, Any], pr_number: int) -> None:
+    async def escalate_to_architect(self, repo: Dict[str, Any], pr_number: int) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues/{pr_number}/comments"
@@ -82,34 +107,69 @@ class PRReviewHandler:
             "@lead_architect please review approach and provide unblock guidance. "
             "This is the last chance before auto-reject."
         )
-        await self.handler.client.post(
+        response = await self.handler.client.post(
             url,
             headers={"Content-Type": "application/json"},
             json={"body": comment},
         )
+        error = _response_error(action=f"architect escalation comment for PR #{pr_number}", response=response)
+        if error is not None:
+            log_event(
+                "pr_escalation_failed",
+                {"pr": pr_number, "repo": f"{owner}/{repo_name}", "error": error},
+                self.handler.workspace,
+            )
+            return error
         log_event("pr_escalated", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.handler.workspace)
+        return None
 
-    async def auto_reject(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> None:
+    async def auto_reject(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
+        repo_key = f"{owner}/{repo_name}"
 
         close_url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/pulls/{pr_number}"
-        await self.handler.client.patch(
+        close_response = await self.handler.client.patch(
             close_url,
             headers={"Content-Type": "application/json"},
             json={"state": "closed"},
         )
+        close_error = _response_error(action=f"PR #{pr_number} close", response=close_response)
+        if close_error is not None:
+            log_event(
+                "pr_reject_failed",
+                {"pr": pr_number, "repo": repo_key, "step": "close_pr", "error": close_error},
+                self.handler.workspace,
+            )
+            return close_error
 
         comment_url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues/{pr_number}/comments"
-        await self.handler.client.post(
+        comment_response = await self.handler.client.post(
             comment_url,
             headers={"Content-Type": "application/json"},
             json={"body": "Auto-rejected after 4 review cycles. Requirements Issue created."},
         )
+        comment_error = _response_error(action=f"auto-reject comment for PR #{pr_number}", response=comment_response)
+        if comment_error is not None:
+            log_event(
+                "pr_reject_failed",
+                {"pr": pr_number, "repo": repo_key, "step": "comment", "error": comment_error},
+                self.handler.workspace,
+            )
+            return comment_error
 
-        await self.handler.lifecycle.create_requirements_issue(repo, pr_number, repo_full_name)
-        log_event("pr_rejected", {"pr": pr_number, "repo": f"{owner}/{repo_name}"}, self.handler.workspace)
+        requirements_error = await self.handler.lifecycle.create_requirements_issue(repo, pr_number, repo_full_name)
+        if requirements_error is not None:
+            log_event(
+                "pr_reject_failed",
+                {"pr": pr_number, "repo": repo_key, "step": "requirements_issue", "error": requirements_error},
+                self.handler.workspace,
+            )
+            return requirements_error
+
+        log_event("pr_rejected", {"pr": pr_number, "repo": repo_key}, self.handler.workspace)
         await self.handler.db.close_pr_cycle(repo_full_name, pr_number, status="rejected")
+        return None
 
 
 class PRLifecycleHandler:
@@ -158,10 +218,18 @@ class PRLifecycleHandler:
             self.handler.workspace,
         )
         await self.handler.db.close_pr_cycle(repo_full_name, pr_number, status="merged")
-        await self.handler.sandbox.trigger_sandbox_deployment(owner, repo_name, pr)
+        deployment_result = await self.handler.sandbox.trigger_sandbox_deployment(owner, repo_name, pr)
+        if not deployment_result.get("ok", False):
+            return {
+                "status": "degraded",
+                "message": (
+                    f"PR #{pr_number} merged, but sandbox deployment failed: "
+                    f"{deployment_result.get('error', 'unknown error')}"
+                ),
+            }
         return {"status": "success", "message": f"PR #{pr_number} merged, sandbox deployment triggered"}
 
-    async def create_requirements_issue(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> None:
+    async def create_requirements_issue(self, repo: Dict[str, Any], pr_number: int, repo_full_name: str) -> str | None:
         owner = repo["owner"]["login"]
         repo_name = repo["name"]
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues"
@@ -176,7 +244,7 @@ class PRLifecycleHandler:
             f"Rejection Reasons:\n{reasons_text}\n"
         )
 
-        await self.handler.client.post(
+        response = await self.handler.client.post(
             url,
             headers={"Content-Type": "application/json"},
             json={
@@ -185,6 +253,15 @@ class PRLifecycleHandler:
                 "labels": ["requirements-review", "auto-rejected"],
             },
         )
+        error = _response_error(action=f"requirements issue creation for PR #{pr_number}", response=response)
+        if error is not None:
+            log_event(
+                "requirements_issue_creation_failed",
+                {"pr": pr_number, "repo": f"{owner}/{repo_name}", "error": error},
+                self.handler.workspace,
+            )
+            return error
+        return None
 
 
 class SandboxDeploymentHandler:
@@ -193,7 +270,7 @@ class SandboxDeploymentHandler:
     def __init__(self, handler: Any) -> None:
         self.handler = handler
 
-    async def trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: Dict[str, Any]) -> None:
+    async def trigger_sandbox_deployment(self, owner: str, repo_name: str, pr: Dict[str, Any]) -> Dict[str, Any]:
         repo_full_name = f"{owner}/{repo_name}"
         pr_number = pr["number"]
         workspace_path = self.handler.workspace / "sandboxes" / repo_name
@@ -217,12 +294,19 @@ class SandboxDeploymentHandler:
                 self.handler.workspace,
             )
             await self.add_sandbox_comment(owner, repo_name, pr_number, sandbox)
+            return {
+                "ok": True,
+                "sandbox_id": sandbox.id,
+                "api_url": sandbox.api_url,
+                "frontend_url": sandbox.frontend_url,
+            }
         except (RuntimeError, ValueError, OSError, httpx.HTTPError) as exc:
             log_event(
                 "sandbox_deployment_failed",
                 {"repo": repo_full_name, "pr": pr_number, "error": str(exc)},
                 self.handler.workspace,
             )
+            return {"ok": False, "error": str(exc)}
 
     async def add_sandbox_comment(self, owner: str, repo_name: str, pr_number: int, sandbox: Any) -> None:
         url = f"{self.handler.gitea_url}/api/v1/repos/{owner}/{repo_name}/issues/{pr_number}/comments"
@@ -233,8 +317,11 @@ class SandboxDeploymentHandler:
             f"- Database: {sandbox.tech_stack.value}\n\n"
             f"Sandbox ID: {sandbox.id}"
         )
-        await self.handler.client.post(
+        response = await self.handler.client.post(
             url,
             headers={"Content-Type": "application/json"},
             json={"body": comment},
         )
+        error = _response_error(action=f"sandbox comment for PR #{pr_number}", response=response)
+        if error is not None:
+            raise RuntimeError(error)

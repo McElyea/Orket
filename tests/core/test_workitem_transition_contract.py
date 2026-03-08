@@ -86,7 +86,8 @@ def test_gate_runs_pre_and_post_transition() -> None:
     assert calls == ["pre", "post"]
 
 
-def test_system_set_status_requires_reason_and_allows_override() -> None:
+def test_system_set_status_requires_reason_and_records_override_metadata() -> None:
+    """Layer: contract. Verifies override requests still require an audit reason and preserve audit metadata."""
     service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
     missing_reason = service.request_transition(
         action="system_set_status",
@@ -98,9 +99,53 @@ def test_system_set_status_requires_reason_and_allows_override() -> None:
 
     overridden = service.request_transition(
         action="system_set_status",
-        current_status=CardStatus.READY,
-        payload={"status": "blocked", "reason": "dependency_blocked"},
+        current_status=CardStatus.IN_PROGRESS,
+        payload={"status": "blocked", "reason": "dependency_blocked", "wait_reason": "dependency"},
+        roles=["developer"],
     )
     assert overridden.ok is True
     assert overridden.new_status == "blocked"
     assert overridden.metadata.get("policy_override") is True
+    assert overridden.metadata.get("override_reason") == "dependency_blocked"
+
+
+def test_system_set_status_enforces_transition_rules() -> None:
+    """Layer: contract. Verifies override requests cannot bypass the workflow/state-machine transition rules."""
+    service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
+    rejected = service.request_transition(
+        action="system_set_status",
+        current_status=CardStatus.READY,
+        payload={"status": "done", "reason": "force_complete"},
+        roles=["system"],
+    )
+    assert rejected.ok is False
+    assert rejected.error_code == TransitionErrorCode.POLICY_VIOLATION
+    assert "invalid transition" in str(rejected.error).lower()
+
+
+def test_system_set_status_runs_gate_boundaries_for_allowed_transitions() -> None:
+    """Layer: contract. Verifies override requests still pass through the transition boundary hooks."""
+    calls: list[str] = []
+
+    class _GateBoundary:
+        def pre_transition(self, **kwargs):
+            calls.append("pre")
+            return None
+
+        def post_transition(self, **kwargs):
+            calls.append("post")
+            return None
+
+    service = WorkItemTransitionService(
+        workflow_profile="legacy_cards_v1",
+        gate_boundary=_GateBoundary(),
+    )
+    result = service.request_transition(
+        action="system_set_status",
+        current_status=CardStatus.IN_PROGRESS,
+        payload={"status": "blocked", "reason": "dependency_blocked", "wait_reason": "dependency"},
+        roles=["developer"],
+    )
+
+    assert result.ok is True
+    assert calls == ["pre", "post"]

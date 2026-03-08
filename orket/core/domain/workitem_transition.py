@@ -85,6 +85,7 @@ class WorkItemTransitionService:
                 error="Missing action.",
             )
 
+        metadata: Dict[str, Any] = {"workflow_profile": self.workflow_profile}
         if normalized_action == "system_set_status":
             target = str(payload.get("status", "")).strip().lower()
             reason = str(payload.get("reason", "")).strip()
@@ -111,14 +112,10 @@ class WorkItemTransitionService:
                     error_code=TransitionErrorCode.INVALID_ACTION,
                     error=f"Unknown status: {target}",
                 )
-            return TransitionResult(
-                ok=True,
-                action=normalized_action,
-                new_status=requested.value,
-                metadata={"workflow_profile": self.workflow_profile, "policy_override": True},
-            )
-
-        requested = self.profile.resolve_requested_status(normalized_action, payload)
+            metadata["policy_override"] = True
+            metadata["override_reason"] = reason
+        else:
+            requested = self.profile.resolve_requested_status(normalized_action, payload)
         if requested is None:
             return TransitionResult(
                 ok=False,
@@ -166,7 +163,7 @@ class WorkItemTransitionService:
             ok=True,
             action=normalized_action,
             new_status=requested.value,
-            metadata={"workflow_profile": self.workflow_profile},
+            metadata=metadata,
         )
         if self.gate_boundary is not None:
             post_result = self.gate_boundary.post_transition(

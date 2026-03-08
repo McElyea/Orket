@@ -46,6 +46,10 @@ Do not treat existing violations as permission to create more.
 
 When referencing files in chat responses, choose link format by client surface.
 
+Precedence for this repository:
+1. These client-surface rules override any more-general instruction about file-link path style.
+2. If another instruction says to use absolute filesystem paths but the active surface here is the Codex app, follow the Codex app rules in this file instead.
+
 ### VS Code Extension / CLI Surface
 
 Use clickable Markdown links with absolute Windows paths in URL form.
@@ -73,7 +77,8 @@ Rules:
 1. Prefer repo-relative targets rooted at the current workspace.
 2. Do not use `/C:/...` targets in the Codex app surface unless the user explicitly confirms they work again.
 3. Do not use `./` or `.\` prefixes unless required by a specific client quirk.
-4. If the user reports link translation drift, fall back to plain backticked Windows paths for that thread until a working style is re-confirmed.
+4. Only fall back to plain backticked Windows paths after workspace-relative Markdown links were actually tried in the current thread and the user reports that those specific links do not open.
+5. If the user re-confirms that workspace-relative Markdown links work in the Codex app, switch back to that style immediately for the rest of the thread.
 
 ---
 
@@ -105,12 +110,14 @@ Allowed:
 `docs/CONTRIBUTOR.md` is the canonical contributor workflow for this repository. Agents must follow it, not re-invent it in ad hoc roadmap prose.
 
 Required:
-1. Read and follow `docs/CONTRIBUTOR.md` when executing roadmap-driven work or updating documentation process.
-2. Treat `docs/ROADMAP.md` as an active execution index, not a session journal, narrative handoff log, or duplicate process guide.
-3. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
-4. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
-5. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
-6. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
+1. Session-start gate: before any substantive work in this repository, read `docs/CONTRIBUTOR.md` in the current session. "Substantive work" includes planning, implementation, editing, running tests, reviewing code, creating implementation plans, and updating roadmap or process docs. Reading `AGENTS.md` is not a substitute. If this has not happened in the current session, stop and do it before proceeding.
+2. After reading `docs/CONTRIBUTOR.md`, follow its startup protocol exactly, including reading `docs/ROADMAP.md` and `docs/ARCHITECTURE.md`.
+3. Treat `docs/ROADMAP.md` as an active execution index, not a session journal, narrative handoff log, or duplicate process guide.
+4. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
+5. When creating a new active implementation plan, follow the roadmap-entry rule in `docs/CONTRIBUTOR.md` and update `docs/ROADMAP.md` in the same change.
+6. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
+7. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
+8. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
 
 Do not use `docs/ROADMAP.md` to restate process that already lives in `docs/CONTRIBUTOR.md`.
 

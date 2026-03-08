@@ -1,6 +1,6 @@
 ﻿import pytest
 
-from orket.schema import CardStatus
+from orket.schema import CardStatus, CardType
 from orket.tools import CardManagementTools
 
 
@@ -107,6 +107,7 @@ async def test_update_issue_status_valid_transition_succeeds(tmp_path):
 
 @pytest.mark.asyncio
 async def test_update_issue_status_delegates_to_tool_gate(tmp_path):
+    """Layer: contract. Verifies card tools forward current status and resolved card type into the gate context."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     db_path = tmp_path / "state_machine_gate.db"
@@ -135,6 +136,7 @@ async def test_update_issue_status_delegates_to_tool_gate(tmp_path):
     assert len(gate.calls) == 1
     assert gate.calls[0]["tool_name"] == "update_issue_status"
     assert gate.calls[0]["context"]["current_status"] == "ready"
+    assert gate.calls[0]["context"]["card_type"] == "issue"
 
 
 @pytest.mark.asyncio
@@ -168,4 +170,34 @@ async def test_update_issue_status_blocks_when_tool_gate_rejects(tmp_path):
 
     issue = await cards.cards.get_by_id("ISSUE-STATE-5")
     assert issue.status == CardStatus.READY
+
+
+@pytest.mark.asyncio
+async def test_update_issue_status_uses_stored_card_type_for_transition_rules(tmp_path):
+    """Layer: contract. Verifies card tools validate transitions against the stored card type, not an issue-only default."""
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    db_path = tmp_path / "state_machine_epic.db"
+
+    cards = CardManagementTools(workspace, [], db_path=str(db_path))
+    await cards.cards.save(
+        {
+            "id": "EPIC-STATE-1",
+            "session_id": "sess-6",
+            "build_id": "build-6",
+            "seat": "lead",
+            "summary": "Epic transition test",
+            "type": CardType.EPIC,
+            "priority": 2.0,
+            "status": CardStatus.IN_PROGRESS,
+        }
+    )
+
+    result = await cards.update_issue_status(
+        {"issue_id": "EPIC-STATE-1", "status": "done"},
+        context={"role": "developer"},
+    )
+
+    assert result["ok"] is True
+    assert result["status"] == "done"
 
