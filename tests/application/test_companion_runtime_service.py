@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 import orket.application.services.companion_runtime_service as companion_runtime_service
 from orket.application.services.companion_runtime_service import CompanionRuntimeService
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider
+from orket_extension_sdk.audio import AudioClip, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 from orket_extension_sdk.voice import TranscribeResponse
 
@@ -30,6 +32,21 @@ class _FailingModelProvider:
 
     def is_available(self) -> bool:
         return False
+
+
+class _FakeTTSProvider:
+    def list_voices(self) -> list[VoiceInfo]:
+        return [VoiceInfo(voice_id="test_voice", display_name="Test Voice", language="en", tags=[])]
+
+    def synthesize(
+        self,
+        text: str,
+        voice_id: str,
+        emotion_hint: str = "neutral",
+        speed: float = 1.0,
+    ) -> AudioClip:
+        del text, voice_id, emotion_hint, speed
+        return AudioClip(sample_rate=16000, channels=1, samples=b"\x01\x02", format="pcm_s16le")
 
 
 @pytest.mark.asyncio
@@ -106,6 +123,7 @@ async def test_companion_runtime_service_voice_and_transcribe_paths(tmp_path: Pa
         project_root=tmp_path,
         model_provider=_FakeModelProvider(),  # type: ignore[arg-type]
         stt_provider=stt,
+        tts_provider=_FakeTTSProvider(),  # type: ignore[arg-type]
     )
     state_idle = await service.voice_state()
     assert state_idle["state"] == "idle"
@@ -124,8 +142,26 @@ async def test_companion_runtime_service_voice_and_transcribe_paths(tmp_path: Pa
     assert transcript.ok is True
     assert transcript.text == "len=1"
 
+    synth = await service.synthesize(text="hello there")
+    assert synth["ok"] is True
+    assert synth["sample_rate"] == 16000
+    assert base64.b64decode(synth["audio_b64"].encode("utf-8"), validate=True) == b"\x01\x02"
+
     with pytest.raises(ValueError, match="E_COMPANION_AUDIO_B64_INVALID"):
         await service.transcribe(audio_b64="invalid$$$", mime_type="audio/wav")
+
+
+@pytest.mark.asyncio
+async def test_companion_runtime_service_synthesize_degrades_when_tts_unavailable(tmp_path: Path) -> None:
+    """Layer: integration. Verifies synthesize returns explicit unavailable response when no TTS backend is configured."""
+    service = CompanionRuntimeService(
+        project_root=tmp_path,
+        model_provider=_FakeModelProvider(),  # type: ignore[arg-type]
+    )
+    synth = await service.synthesize(text="hello")
+    assert synth["ok"] is False
+    assert synth["error_code"] == "tts_unavailable"
+    assert synth["audio_b64"] == ""
 
 
 @pytest.mark.asyncio

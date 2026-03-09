@@ -75,6 +75,11 @@ Phase 0 progress:
     - runner logic is split across focused helper modules for maintainability (`scripts/companion/companion_matrix_execution.py`, `scripts/companion/companion_matrix_http_steps.py`, `scripts/companion/companion_matrix_scoring.py`) with expanded integration coverage (`tests/scripts/test_run_companion_provider_runtime_matrix.py`)
     - live non-mocked pipeline run now succeeds in-session via `python -m scripts.companion.run_companion_provider_runtime_matrix_pipeline --provider-model-map "ollama=qwen2.5-coder:7b;lmstudio=qwen2.5-coder:7b"` against local host API (`http://127.0.0.1:8082`) with `status=complete` and `schema_errors=0`
     - canonical matrix artifacts now reflect live success evidence for both runtime families (`benchmarks/results/companion/provider_runtime_matrix/companion_provider_runtime_matrix.json`, `benchmarks/results/companion/provider_runtime_matrix/README.md`)
+13. Slice K optional TTS seam groundwork implemented:
+    - host runtime service and companion API seams now expose `/companion/voice/synthesize` under both `/v1` and `/api/v1` aliases with typed request/response handling and explicit unavailable degradation semantics
+    - external extension template gateway/client seams now include voice synthesis wiring (`docs/templates/external_extension/src/companion_extension/api_client.py`, `docs/templates/external_extension/src/companion_app/server.py`)
+    - integration coverage now includes service, router, and alias-route synthesis behavior (`tests/application/test_companion_runtime_service.py`, `tests/interfaces/test_companion_router.py`, `tests/interfaces/test_companion_api_alias_routes.py`)
+    - live non-mocked probe against local host API succeeded via real HTTP call to `/api/v1/companion/voice/synthesize` with observed `degraded` path (`tts_unavailable`) and HTTP success result (`200`)
 
 ## 2. Scope and Phase Model
 

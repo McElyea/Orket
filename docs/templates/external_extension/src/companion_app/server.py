@@ -37,6 +37,13 @@ class TranscribeRequest(BaseModel):
     language_hint: str = ""
 
 
+class SynthesizeRequest(BaseModel):
+    text: str = Field(min_length=1)
+    voice_id: str = ""
+    emotion_hint: str = "neutral"
+    speed: float = 1.0
+
+
 class SessionRequest(BaseModel):
     session_id: str = Field(min_length=1)
 
@@ -151,6 +158,19 @@ async def voice_transcribe(req: TranscribeRequest) -> dict[str, Any]:
             audio_b64=req.audio_b64,
             mime_type=req.mime_type,
             language_hint=req.language_hint,
+        )
+    except httpx.HTTPError as exc:
+        _raise_gateway_error(exc)
+
+
+@app.post("/api/voice/synthesize")
+async def voice_synthesize(req: SynthesizeRequest) -> dict[str, Any]:
+    try:
+        return await _client().voice_synthesize(
+            text=req.text,
+            voice_id=req.voice_id,
+            emotion_hint=req.emotion_hint,
+            speed=req.speed,
         )
     except httpx.HTTPError as exc:
         _raise_gateway_error(exc)

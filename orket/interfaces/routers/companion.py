@@ -30,6 +30,13 @@ class CompanionTranscribeRequest(BaseModel):
     language_hint: str = ""
 
 
+class CompanionSynthesizeRequest(BaseModel):
+    text: str = Field(min_length=1)
+    voice_id: str = ""
+    emotion_hint: str = "neutral"
+    speed: float = 1.0
+
+
 class CompanionSessionRequest(BaseModel):
     session_id: str = Field(min_length=1)
 
@@ -122,6 +129,19 @@ def build_companion_router(*, service_getter: Callable[[], Any]) -> APIRouter:
             "error_code": result.error_code,
             "error_message": result.error_message,
         }
+
+    @router.post("/companion/voice/synthesize")
+    async def companion_voice_synthesize(req: CompanionSynthesizeRequest):
+        service = service_getter()
+        try:
+            return await service.synthesize(
+                text=req.text,
+                voice_id=req.voice_id,
+                emotion_hint=req.emotion_hint,
+                speed=req.speed,
+            )
+        except ValueError as exc:
+            _raise_companion_http_error(exc)
 
     @router.post("/companion/session/clear-memory")
     async def companion_clear_session_memory(req: CompanionSessionRequest):

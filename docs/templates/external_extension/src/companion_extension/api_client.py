@@ -79,6 +79,25 @@ class CompanionApiClient:
             json={"audio_b64": audio_b64, "mime_type": mime_type, "language_hint": language_hint},
         )
 
+    async def voice_synthesize(
+        self,
+        *,
+        text: str,
+        voice_id: str = "",
+        emotion_hint: str = "neutral",
+        speed: float = 1.0,
+    ) -> dict[str, Any]:
+        return await self._request(
+            "POST",
+            "/api/v1/companion/voice/synthesize",
+            json={
+                "text": text,
+                "voice_id": voice_id,
+                "emotion_hint": emotion_hint,
+                "speed": float(speed),
+            },
+        )
+
     async def _request(
         self,
         method: str,

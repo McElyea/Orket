@@ -12,8 +12,10 @@ from typing import Any, Literal
 
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
+from orket.capabilities.tts_piper import build_tts_provider
 from orket.services.profile_write_policy import ProfileWritePolicy
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
+from orket_extension_sdk.audio import TTSProvider
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 from orket_extension_sdk.voice import TranscribeRequest, TranscribeResponse, VoiceTurnControlRequest, VoiceTurnControlResponse
 
@@ -42,6 +44,7 @@ class CompanionRuntimeService:
         memory_store: ScopedMemoryStore | None = None,
         voice_controller: HostVoiceTurnController | None = None,
         stt_provider: HostSTTCapabilityProvider | None = None,
+        tts_provider: TTSProvider | None = None,
     ) -> None:
         self._project_root = project_root.resolve()
         self._extension_defaults = _default_companion_config()
@@ -56,6 +59,7 @@ class CompanionRuntimeService:
         )
         self._voice_controller = voice_controller or HostVoiceTurnController()
         self._stt_provider = stt_provider or HostSTTCapabilityProvider()
+        self._tts_provider = tts_provider or build_tts_provider(input_config={})
         self._state_lock = asyncio.Lock()
         self._initialized = False
         self._profile_defaults_cache: dict[str, Any] = {}
@@ -73,10 +77,12 @@ class CompanionRuntimeService:
     async def status(self) -> dict[str, Any]:
         await self.ensure_initialized()
         stt_available = await self._stt_available()
+        tts_available = await self._tts_available()
         return {
             "ok": True,
             "model_available": bool(await asyncio.to_thread(self._model_provider.is_available)),
             "stt_available": stt_available,
+            "tts_available": tts_available,
             "text_only_degraded": not stt_available,
             "voice_state": self._voice_controller.state(),
             "voice_silence_delay_sec": self._voice_controller.silence_delay_seconds(),
@@ -221,6 +227,42 @@ class CompanionRuntimeService:
         request = TranscribeRequest(audio_bytes=audio_bytes, mime_type=mime_type, language_hint=language_hint)
         return await asyncio.to_thread(self._stt_provider.transcribe, request)
 
+    async def synthesize(
+        self,
+        *,
+        text: str,
+        voice_id: str = "",
+        emotion_hint: str = "neutral",
+        speed: float = 1.0,
+    ) -> dict[str, Any]:
+        await self.ensure_initialized()
+        normalized_text = str(text or "").strip()
+        if not normalized_text:
+            raise ValueError("E_COMPANION_TTS_TEXT_REQUIRED")
+        voices = await asyncio.to_thread(self._tts_provider.list_voices)
+        resolved_voice_id = str(voice_id or "").strip() or str((voices[0].voice_id if voices else "null") or "null")
+        try:
+            clip = await asyncio.to_thread(
+                self._tts_provider.synthesize,
+                normalized_text,
+                resolved_voice_id,
+                str(emotion_hint or "neutral"),
+                float(speed),
+            )
+        except (RuntimeError, OSError, TypeError, ValueError) as exc:
+            raise ValueError(f"E_COMPANION_TTS_FAILED: {exc}") from exc
+        samples = bytes(clip.samples or b"")
+        return {
+            "ok": bool(samples),
+            "voice_id": resolved_voice_id,
+            "sample_rate": int(clip.sample_rate),
+            "channels": int(clip.channels),
+            "format": str(clip.format or "pcm_s16le"),
+            "audio_b64": base64.b64encode(samples).decode("utf-8"),
+            "error_code": None if samples else "tts_unavailable",
+            "error_message": "" if samples else "No TTS backend configured.",
+        }
+
     async def _session_state(self, session_id: str) -> _SessionState:
         await self.ensure_initialized()
         key = str(session_id or "").strip()
@@ -294,6 +336,16 @@ class CompanionRuntimeService:
         except (RuntimeError, OSError, ValueError):
             return False
         return bool(probe.ok)
+
+    async def _tts_available(self) -> bool:
+        try:
+            voices = await asyncio.to_thread(self._tts_provider.list_voices)
+        except (RuntimeError, OSError, ValueError, TypeError):
+            return False
+        if not voices:
+            return False
+        first_voice_id = str(getattr(voices[0], "voice_id", "") or "").strip().lower()
+        return first_voice_id not in {"", "null"}
 
 
 def _default_companion_config() -> dict[str, Any]:
