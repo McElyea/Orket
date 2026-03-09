@@ -17,6 +17,10 @@ def test_ext_init_scaffolds_template_repo(tmp_path: Path, capsys) -> None:
     assert target.joinpath("extension.yaml").is_file()
     assert target.joinpath("pyproject.toml").is_file()
     assert target.joinpath(".gitea", "workflows", "ci.yml").is_file()
+    assert target.joinpath("src", "companion_app", "server.py").is_file()
+    assert target.joinpath("src", "companion_app", "static", "index.html").is_file()
+    assert target.joinpath("src", "companion_app", "static", "app.js").is_file()
+    assert target.joinpath("src", "companion_app", "static", "styles.css").is_file()
 
 
 def test_ext_init_fails_when_target_exists_without_force(tmp_path: Path, capsys) -> None:
@@ -29,4 +33,3 @@ def test_ext_init_fails_when_target_exists_without_force(tmp_path: Path, capsys)
     assert code == 2
     assert payload["ok"] is False
     assert payload["errors"][0]["code"] == "E_EXT_TARGET_EXISTS"
-

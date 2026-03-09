@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Companion MVP Template</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="panel controls">
+        <h1>Companion</h1>
+        <p class="subtitle">Host-authoritative chat UI template</p>
+
+        <label>
+          Session ID
+          <input id="session-id" value="local-session-1" />
+        </label>
+
+        <div class="row">
+          <label>
+            Role
+            <select id="mode-role">
+              <option value="general_assistant">General assistant</option>
+              <option value="researcher">Researcher</option>
+              <option value="programmer">Programmer</option>
+              <option value="strategist">Strategist</option>
+              <option value="tutor">Tutor</option>
+              <option value="supportive_listener">Supportive listener</option>
+            </select>
+          </label>
+          <label>
+            Style
+            <select id="mode-style">
+              <option value="platonic">Platonic</option>
+              <option value="romantic">Romantic</option>
+              <option value="intermediate">Intermediate</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row toggles">
+          <label><input id="toggle-session-memory" type="checkbox" checked /> Session memory</label>
+          <label><input id="toggle-profile-memory" type="checkbox" checked /> Profile memory</label>
+        </div>
+
+        <label>
+          Silence Delay (sec)
+          <input id="voice-delay" type="number" min="0.2" max="10.0" step="0.1" value="2.0" />
+        </label>
+
+        <div class="row actions">
+          <button id="apply-next-turn">Apply Next Turn</button>
+          <button id="clear-session" class="secondary">Clear Session Memory</button>
+        </div>
+
+        <div class="row actions">
+          <button id="voice-start">Voice Start</button>
+          <button id="voice-submit" class="secondary">Voice Submit</button>
+          <button id="voice-stop" class="secondary">Voice Stop</button>
+        </div>
+        <p id="voice-state" class="meta">Voice state: idle</p>
+      </section>
+
+      <section class="panel chat">
+        <div id="chat-log" class="log"></div>
+        <form id="chat-form" class="composer">
+          <textarea id="chat-input" placeholder="Send a message to Companion..." rows="3"></textarea>
+          <div class="row">
+            <button type="submit">Send</button>
+            <button id="refresh-history" type="button" class="secondary">Refresh History</button>
+            <button id="refresh-status" type="button" class="secondary">Refresh Status</button>
+          </div>
+          <p id="status" class="meta"></p>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="/static/app.js"></script>
+  </body>
+</html>

@@ -71,12 +71,12 @@ class CompanionRuntimeService:
 
     async def status(self) -> dict[str, Any]:
         await self.ensure_initialized()
-        stt_probe = await asyncio.to_thread(self._stt_provider.transcribe, TranscribeRequest(audio_bytes=b""))
+        stt_available = await self._stt_available()
         return {
             "ok": True,
             "model_available": bool(await asyncio.to_thread(self._model_provider.is_available)),
-            "stt_available": bool(stt_probe.ok),
-            "text_only_degraded": not bool(stt_probe.ok),
+            "stt_available": stt_available,
+            "text_only_degraded": not stt_available,
             "voice_state": self._voice_controller.state(),
             "voice_silence_delay_sec": self._voice_controller.silence_delay_seconds(),
             "active_sessions": len(self._sessions),
@@ -138,7 +138,10 @@ class CompanionRuntimeService:
             max_tokens=256,
             temperature=0.2,
         )
-        model_result = await asyncio.to_thread(self._model_provider.generate, request)
+        try:
+            model_result = await asyncio.to_thread(self._model_provider.generate, request)
+        except (RuntimeError, OSError, ValueError) as exc:
+            raise ValueError(f"E_COMPANION_MODEL_GENERATION_FAILED: {exc}") from exc
         assistant_text = str(model_result.text or "").strip() or "I could not generate a response."
         session.turn_index += 1
         turn_id = f"turn.{session.turn_index:06d}"
@@ -163,13 +166,14 @@ class CompanionRuntimeService:
             )
 
         return {
+            "ok": True,
             "session_id": session_id,
             "turn_id": turn_id,
             "message": assistant_text,
             "model": model_result.model,
             "latency_ms": model_result.latency_ms,
             "config": config.model_dump(mode="json", exclude_none=True),
-            "text_only_degraded": (await self.status())["text_only_degraded"],
+            "text_only_degraded": not await self._stt_available(),
         }
 
     async def clear_session_memory(self, *, session_id: str) -> dict[str, Any]:
@@ -253,6 +257,13 @@ class CompanionRuntimeService:
             rows = await self._memory_store.list_profile(limit=8)
             snippets.extend(_format_memory_rows(rows, prefix="profile"))
         return "\n".join(snippets)
+
+    async def _stt_available(self) -> bool:
+        try:
+            probe = await asyncio.to_thread(self._stt_provider.transcribe, TranscribeRequest(audio_bytes=b""))
+        except (RuntimeError, OSError, ValueError):
+            return False
+        return bool(probe.ok)
 
 
 def _default_companion_config() -> dict[str, Any]:

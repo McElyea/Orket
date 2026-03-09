@@ -22,6 +22,15 @@ class _FakeModelProvider:
         return True
 
 
+class _FailingModelProvider:
+    def generate(self, request: GenerateRequest) -> GenerateResponse:
+        del request
+        raise RuntimeError("model backend offline")
+
+    def is_available(self) -> bool:
+        return False
+
+
 @pytest.mark.asyncio
 async def test_companion_runtime_service_chat_consumes_pending_next_turn_mode(tmp_path: Path) -> None:
     """Layer: integration. Verifies next-turn mode updates apply on one chat turn and then clear."""
@@ -116,3 +125,14 @@ async def test_companion_runtime_service_voice_and_transcribe_paths(tmp_path: Pa
 
     with pytest.raises(ValueError, match="E_COMPANION_AUDIO_B64_INVALID"):
         await service.transcribe(audio_b64="invalid$$$", mime_type="audio/wav")
+
+
+@pytest.mark.asyncio
+async def test_companion_runtime_service_chat_surfaces_generation_failures_with_code(tmp_path: Path) -> None:
+    """Layer: integration. Verifies model generation failures produce explicit Companion error codes."""
+    service = CompanionRuntimeService(
+        project_root=tmp_path,
+        model_provider=_FailingModelProvider(),  # type: ignore[arg-type]
+    )
+    with pytest.raises(ValueError, match="E_COMPANION_MODEL_GENERATION_FAILED"):
+        await service.chat(session_id="s-fail", message="hello")
