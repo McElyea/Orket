@@ -17,6 +17,7 @@ def test_external_extension_template_defaults_validate() -> None:
         defaults = load_defaults(template_root / "config")
         assert defaults.mode.role_id.value == "general_assistant"
         assert defaults.mode.relationship_style.value == "platonic"
+        assert defaults.memory.episodic_memory_enabled is False
         assert defaults.voice.silence_delay_sec == 1.5
         assert defaults.voice.adaptive_cadence_enabled is False
     finally:

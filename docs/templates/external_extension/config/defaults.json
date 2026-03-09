@@ -5,7 +5,8 @@
   },
   "memory": {
     "session_memory_enabled": true,
-    "profile_memory_enabled": true
+    "profile_memory_enabled": true,
+    "episodic_memory_enabled": false
   },
   "voice": {
     "enabled": false,

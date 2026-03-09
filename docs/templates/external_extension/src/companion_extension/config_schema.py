@@ -43,6 +43,7 @@ class MemoryConfig(BaseModel):
 
     session_memory_enabled: bool = True
     profile_memory_enabled: bool = True
+    episodic_memory_enabled: bool = False
 
 
 class VoiceConfig(BaseModel):

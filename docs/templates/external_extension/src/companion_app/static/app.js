@@ -4,6 +4,7 @@ const els = {
   modeStyle: document.querySelector("#mode-style"),
   toggleSessionMemory: document.querySelector("#toggle-session-memory"),
   toggleProfileMemory: document.querySelector("#toggle-profile-memory"),
+  toggleEpisodicMemory: document.querySelector("#toggle-episodic-memory"),
   toggleAdaptiveCadence: document.querySelector("#toggle-adaptive-cadence"),
   voiceDelay: document.querySelector("#voice-delay"),
   voiceState: document.querySelector("#voice-state"),
@@ -66,6 +67,7 @@ async function refreshConfig() {
   if (mode.relationship_style) els.modeStyle.value = mode.relationship_style;
   els.toggleSessionMemory.checked = Boolean(memory.session_memory_enabled);
   els.toggleProfileMemory.checked = Boolean(memory.profile_memory_enabled);
+  els.toggleEpisodicMemory.checked = Boolean(memory.episodic_memory_enabled);
   els.toggleAdaptiveCadence.checked = Boolean(voice.adaptive_cadence_enabled);
   if (typeof voice.silence_delay_sec === "number") {
     els.voiceDelay.value = String(voice.silence_delay_sec);
@@ -120,6 +122,7 @@ async function applyNextTurnConfig() {
     memory: {
       session_memory_enabled: els.toggleSessionMemory.checked,
       profile_memory_enabled: els.toggleProfileMemory.checked,
+      episodic_memory_enabled: els.toggleEpisodicMemory.checked,
     },
     voice: {
       silence_delay_sec: Number(els.voiceDelay.value || 2.0),

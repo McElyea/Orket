@@ -71,3 +71,9 @@ def test_companion_config_rejects_unknown_fields() -> None:
                 "mode": {"role_id": "tutor", "relationship_style": "platonic", "unexpected_key": True},
             }
         )
+
+
+def test_companion_config_accepts_episodic_memory_toggle() -> None:
+    """Layer: contract. Verifies episodic-memory toggle is accepted in the memory schema."""
+    parsed = CompanionConfig.model_validate({"memory": {"episodic_memory_enabled": True}})
+    assert parsed.memory.episodic_memory_enabled is True

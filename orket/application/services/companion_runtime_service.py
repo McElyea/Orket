@@ -188,6 +188,13 @@ class CompanionRuntimeService:
                 value=assistant_text,
                 metadata={"kind": "chat_output"},
             )
+        if config.memory.episodic_memory_enabled:
+            await self._memory_store.write_episodic(
+                session_id=session_id,
+                key=f"{turn_id}.summary",
+                value=assistant_text,
+                metadata={"kind": "episodic_turn"},
+            )
 
         return {
             "ok": True,
@@ -203,10 +210,11 @@ class CompanionRuntimeService:
     async def clear_session_memory(self, *, session_id: str) -> dict[str, Any]:
         session = await self._session_state(session_id)
         deleted = await self._memory_store.clear_session(session_id=session_id)
+        deleted_episodic = await self._memory_store.clear_episodic(session_id=session_id)
         session.history = []
         session.turn_index = 0
         session.resolver.clear_session()
-        return {"ok": True, "session_id": session_id, "deleted_records": deleted}
+        return {"ok": True, "session_id": session_id, "deleted_records": deleted + deleted_episodic, "deleted_episodic_records": deleted_episodic}
 
     async def voice_state(self) -> dict[str, Any]:
         await self.ensure_initialized()
@@ -231,14 +239,7 @@ class CompanionRuntimeService:
             raise ValueError("E_COMPANION_CADENCE_TEXT_REQUIRED")
         voice = session.resolver.preview(include_pending_next_turn=True).voice
         if not voice.adaptive_cadence_enabled:
-            return {
-                "ok": True,
-                "session_id": session_id,
-                "adaptive_cadence_enabled": False,
-                "source": "manual",
-                "suggested_silence_delay_sec": float(voice.silence_delay_sec),
-                "input_words": max(1, len(utterance.split())),
-            }
+            return {"ok": True, "session_id": session_id, "adaptive_cadence_enabled": False, "source": "manual", "suggested_silence_delay_sec": float(voice.silence_delay_sec), "input_words": max(1, len(utterance.split()))}
         suggested, words = suggest_adaptive_silence_delay(
             text=utterance,
             silence_delay_min_sec=float(voice.silence_delay_min_sec),
@@ -246,14 +247,7 @@ class CompanionRuntimeService:
             adaptive_cadence_min_sec=float(voice.adaptive_cadence_min_sec),
             adaptive_cadence_max_sec=float(voice.adaptive_cadence_max_sec),
         )
-        return {
-            "ok": True,
-            "session_id": session_id,
-            "adaptive_cadence_enabled": True,
-            "source": "adaptive",
-            "suggested_silence_delay_sec": suggested,
-            "input_words": words,
-        }
+        return {"ok": True, "session_id": session_id, "adaptive_cadence_enabled": True, "source": "adaptive", "suggested_silence_delay_sec": suggested, "input_words": words}
 
     async def transcribe(self, *, audio_b64: str, mime_type: str, language_hint: str = "") -> TranscribeResponse:
         await self.ensure_initialized()
@@ -312,12 +306,7 @@ class CompanionRuntimeService:
             }
             for voice in voices
         ]
-        return {
-            "ok": True,
-            "tts_available": bool(serialized),
-            "default_voice_id": str(serialized[0]["voice_id"] if serialized else ""),
-            "voices": serialized,
-        }
+        return {"ok": True, "tts_available": bool(serialized), "default_voice_id": str(serialized[0]["voice_id"] if serialized else ""), "voices": serialized}
 
     async def _session_state(self, session_id: str) -> _SessionState:
         await self.ensure_initialized()
@@ -366,6 +355,9 @@ class CompanionRuntimeService:
         if config.memory.profile_memory_enabled:
             rows = await self._memory_store.list_profile(limit=8)
             snippets.extend(format_memory_rows(rows, prefix="profile"))
+        if config.memory.episodic_memory_enabled:
+            rows = await self._memory_store.query_episodic(session_id=session_id, query="", limit=6)
+            snippets.extend(format_memory_rows(rows, prefix="episodic"))
         return "\n".join(snippets)
 
     async def _generate_response(

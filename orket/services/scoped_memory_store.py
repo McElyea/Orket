@@ -9,7 +9,7 @@ import aiosqlite
 
 from .profile_write_policy import ProfileWritePolicy
 
-MemoryScope = Literal["session_memory", "profile_memory"]
+MemoryScope = Literal["session_memory", "profile_memory", "episodic_memory"]
 
 
 @dataclass(frozen=True)
@@ -27,12 +27,16 @@ class ScopedMemoryRecord:
 class MemoryControls:
     session_memory_enabled: bool = True
     profile_memory_enabled: bool = True
+    episodic_memory_enabled: bool = False
 
     def effective_session_enabled(self) -> bool:
         return bool(self.session_memory_enabled)
 
     def effective_profile_enabled(self) -> bool:
         return bool(self.profile_memory_enabled)
+
+    def effective_episodic_enabled(self) -> bool:
+        return bool(self.episodic_memory_enabled)
 
 
 class ScopedMemoryStore:
@@ -69,6 +73,25 @@ class ScopedMemoryStore:
                 ON extension_memory(scope, memory_key ASC, created_at ASC)
                 """
             )
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS extension_episodic_memory (
+                    session_id TEXT NOT NULL,
+                    memory_key TEXT NOT NULL,
+                    memory_value TEXT NOT NULL,
+                    metadata_json TEXT NOT NULL DEFAULT '{}',
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY(session_id, memory_key)
+                )
+                """
+            )
+            await conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_extension_episodic_memory_session_updated
+                ON extension_episodic_memory(session_id, updated_at DESC, memory_key ASC)
+                """
+            )
             await conn.commit()
 
     @staticmethod
@@ -89,6 +112,21 @@ class ScopedMemoryStore:
         return await self._write_record(
             scope="session_memory",
             session_id=self.normalize_session_id("session_memory", session_id),
+            key=key,
+            value=value,
+            metadata=metadata or {},
+        )
+
+    async def write_episodic(
+        self,
+        *,
+        session_id: str,
+        key: str,
+        value: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> ScopedMemoryRecord:
+        return await self._write_episodic_record(
+            session_id=self.normalize_session_id("episodic_memory", session_id),
             key=key,
             value=value,
             metadata=metadata or {},
@@ -125,6 +163,20 @@ class ScopedMemoryStore:
             await conn.commit()
             return int(cursor.rowcount or 0)
 
+    async def clear_episodic(self, *, session_id: str) -> int:
+        await self.ensure_initialized()
+        resolved_session = self.normalize_session_id("episodic_memory", session_id)
+        async with aiosqlite.connect(self._db_path) as conn:
+            cursor = await conn.execute(
+                """
+                DELETE FROM extension_episodic_memory
+                WHERE session_id = ?
+                """,
+                (resolved_session,),
+            )
+            await conn.commit()
+            return int(cursor.rowcount or 0)
+
     async def query_session(self, *, session_id: str, query: str, limit: int) -> list[ScopedMemoryRecord]:
         await self.ensure_initialized()
         resolved_session = self.normalize_session_id("session_memory", session_id)
@@ -148,6 +200,36 @@ class ScopedMemoryStore:
                 SELECT scope, session_id, memory_key, memory_value, metadata_json, created_at, updated_at
                 FROM extension_memory
                 WHERE scope = 'session_memory' AND session_id = ?
+                ORDER BY updated_at DESC, memory_key ASC
+                LIMIT ?
+                """
+            )
+            args = (resolved_session, bounded_limit)
+        return await self._query_records(sql=sql, args=args)
+
+    async def query_episodic(self, *, session_id: str, query: str, limit: int) -> list[ScopedMemoryRecord]:
+        await self.ensure_initialized()
+        resolved_session = self.normalize_session_id("episodic_memory", session_id)
+        bounded_limit = _bounded_limit(limit)
+        normalized_query = str(query or "").strip()
+        if normalized_query:
+            like_query = f"%{normalized_query}%"
+            sql = (
+                """
+                SELECT 'episodic_memory', session_id, memory_key, memory_value, metadata_json, created_at, updated_at
+                FROM extension_episodic_memory
+                WHERE session_id = ? AND (memory_key LIKE ? OR memory_value LIKE ?)
+                ORDER BY updated_at DESC, memory_key ASC
+                LIMIT ?
+                """
+            )
+            args = (resolved_session, like_query, like_query, bounded_limit)
+        else:
+            sql = (
+                """
+                SELECT 'episodic_memory', session_id, memory_key, memory_value, metadata_json, created_at, updated_at
+                FROM extension_episodic_memory
+                WHERE session_id = ?
                 ORDER BY updated_at DESC, memory_key ASC
                 LIMIT ?
                 """
@@ -196,6 +278,39 @@ class ScopedMemoryStore:
             args=(self.normalize_session_id("profile_memory", ""), like_query, like_query, _bounded_limit(limit)),
         )
 
+    async def _write_episodic_record(
+        self,
+        *,
+        session_id: str,
+        key: str,
+        value: str,
+        metadata: dict[str, Any],
+    ) -> ScopedMemoryRecord:
+        await self.ensure_initialized()
+        async with aiosqlite.connect(self._db_path) as conn:
+            await conn.execute(
+                """
+                INSERT INTO extension_episodic_memory (session_id, memory_key, memory_value, metadata_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT(session_id, memory_key)
+                DO UPDATE SET
+                    memory_value = excluded.memory_value,
+                    metadata_json = excluded.metadata_json,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    session_id,
+                    str(key or "").strip(),
+                    str(value or ""),
+                    json.dumps(metadata, sort_keys=True, separators=(",", ":")),
+                ),
+            )
+            await conn.commit()
+        record = await self._read_episodic_record(session_id=session_id, key=key)
+        if record is None:
+            raise RuntimeError("E_SCOPED_MEMORY_EPISODIC_WRITE_READBACK_FAILED")
+        return record
+
     async def _write_record(
         self,
         *,
@@ -231,6 +346,18 @@ class ScopedMemoryStore:
             raise RuntimeError("E_SCOPED_MEMORY_WRITE_READBACK_FAILED")
         return record
 
+    async def _read_episodic_record(self, *, session_id: str, key: str) -> ScopedMemoryRecord | None:
+        rows = await self._query_records(
+            sql="""
+                SELECT 'episodic_memory', session_id, memory_key, memory_value, metadata_json, created_at, updated_at
+                FROM extension_episodic_memory
+                WHERE session_id = ? AND memory_key = ?
+                LIMIT 1
+                """,
+            args=(session_id, str(key or "").strip()),
+        )
+        return rows[0] if rows else None
+
     async def _read_record(self, *, scope: MemoryScope, session_id: str, key: str) -> ScopedMemoryRecord | None:
         rows = await self._query_records(
             sql="""
@@ -262,7 +389,7 @@ def _row_to_record(row: tuple[Any, ...]) -> ScopedMemoryRecord:
         scope=scope,  # type: ignore[arg-type]
         key=str(key or ""),
         value=str(value or ""),
-        session_id=str(session_id or "") if scope == "session_memory" else "",
+        session_id=str(session_id or "") if scope in {"session_memory", "episodic_memory"} else "",
         metadata=metadata,
         created_at=str(created_at or ""),
         updated_at=str(updated_at or ""),

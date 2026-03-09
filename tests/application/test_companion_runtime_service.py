@@ -104,13 +104,19 @@ async def test_companion_runtime_service_clear_session_resets_history_and_memory
         project_root=tmp_path,
         model_provider=_FakeModelProvider(),  # type: ignore[arg-type]
     )
+    await service.update_config(
+        session_id="s-clear",
+        scope="session",
+        patch={"memory": {"episodic_memory_enabled": True}},
+    )
     await service.chat(session_id="s-clear", message="first")
     history_before = await service.get_history(session_id="s-clear", limit=20)
     assert len(history_before) == 2
 
     cleared = await service.clear_session_memory(session_id="s-clear")
     assert cleared["ok"] is True
-    assert cleared["deleted_records"] >= 2
+    assert cleared["deleted_records"] >= 3
+    assert cleared["deleted_episodic_records"] >= 1
     history_after = await service.get_history(session_id="s-clear", limit=20)
     assert history_after == []
 

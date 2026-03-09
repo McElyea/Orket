@@ -53,3 +53,24 @@ async def test_scoped_memory_store_enforces_profile_write_policy(tmp_path: Path)
     store = ScopedMemoryStore(tmp_path / "memory.db")
     with pytest.raises(ProfileWritePolicyError, match="E_PROFILE_MEMORY_CONFIRMATION_REQUIRED"):
         await store.write_profile(key="user_fact.name", value="Aster", metadata={})
+
+
+@pytest.mark.asyncio
+async def test_scoped_memory_store_episodic_scope_isolated_and_clearable(tmp_path: Path) -> None:
+    """Layer: integration. Verifies episodic memory is isolated by session and clear_session path only clears target scope."""
+    store = ScopedMemoryStore(tmp_path / "memory.db")
+    await store.write_episodic(session_id="session-a", key="turn.000001.summary", value="A summary")
+    await store.write_episodic(session_id="session-b", key="turn.000001.summary", value="B summary")
+
+    rows_a = await store.query_episodic(session_id="session-a", query="", limit=10)
+    assert len(rows_a) == 1
+    assert rows_a[0].scope == "episodic_memory"
+    assert rows_a[0].session_id == "session-a"
+    assert rows_a[0].value == "A summary"
+
+    deleted = await store.clear_episodic(session_id="session-a")
+    assert deleted == 1
+    assert await store.query_episodic(session_id="session-a", query="", limit=10) == []
+    rows_b = await store.query_episodic(session_id="session-b", query="", limit=10)
+    assert len(rows_b) == 1
+    assert rows_b[0].value == "B summary"
