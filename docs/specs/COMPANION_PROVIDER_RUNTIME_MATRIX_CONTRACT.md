@@ -23,6 +23,10 @@ Canonical markdown report output path:
 
 1. `benchmarks/results/companion/provider_runtime_matrix/README.md`
 
+Canonical schema path:
+
+1. `docs/specs/companion-provider-runtime-matrix.schema.json`
+
 The JSON file is rerunnable and must preserve `diff_ledger` append behavior through `write_payload_with_diff_ledger`.
 
 ## 3. Invocation Contract
@@ -30,6 +34,10 @@ The JSON file is rerunnable and must preserve `diff_ledger` append behavior thro
 Base command:
 
 1. `python -m scripts.companion.run_companion_provider_runtime_matrix`
+
+Validation command:
+
+1. `python -m scripts.companion.validate_companion_provider_runtime_matrix`
 
 Key options:
 

@@ -1,0 +1,417 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orket.local/specs/companion-provider-runtime-matrix.schema.json",
+  "title": "Companion Provider Runtime Matrix",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "generated_at_utc",
+    "status",
+    "observed_result",
+    "providers_requested",
+    "models_requested",
+    "case_pairs_requested",
+    "rig_classes_requested",
+    "usage_profiles_requested",
+    "cases",
+    "recommendations",
+    "blockers",
+    "summary",
+    "diff_ledger"
+  ],
+  "properties": {
+    "generated_at_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial"
+      ]
+    },
+    "observed_result": {
+      "type": "string",
+      "enum": [
+        "success",
+        "partial success",
+        "failure"
+      ]
+    },
+    "providers_requested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "models_requested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "case_pairs_requested": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/provider_model_pair"
+      }
+    },
+    "rig_classes_requested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "usage_profiles_requested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/matrix_case"
+      }
+    },
+    "recommendations": {
+      "$ref": "#/$defs/recommendations"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocker"
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "diff_ledger": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diff_ledger_entry"
+      }
+    }
+  },
+  "$defs": {
+    "provider_model_pair": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "provider",
+        "model"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        }
+      }
+    },
+    "score_entry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "status",
+        "value"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "measured",
+            "not_measured"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "reasoning",
+        "conversational_quality",
+        "memory_usefulness",
+        "latency",
+        "footprint",
+        "voice_suitability",
+        "stability",
+        "mode_adherence"
+      ],
+      "properties": {
+        "reasoning": {
+          "$ref": "#/$defs/score_entry"
+        },
+        "conversational_quality": {
+          "$ref": "#/$defs/score_entry"
+        },
+        "memory_usefulness": {
+          "$ref": "#/$defs/score_entry"
+        },
+        "latency": {
+          "$ref": "#/$defs/score_entry"
+        },
+        "footprint": {
+          "$ref": "#/$defs/score_entry"
+        },
+        "voice_suitability": {
+          "$ref": "#/$defs/score_entry"
+        },
+        "stability": {
+          "$ref": "#/$defs/score_entry"
+        },
+        "mode_adherence": {
+          "$ref": "#/$defs/score_entry"
+        }
+      }
+    },
+    "matrix_case": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "provider",
+        "model",
+        "observed_path",
+        "result",
+        "scores"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "observed_path": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "degraded",
+            "blocked"
+          ]
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "latency_ms": {
+          "type": "number"
+        },
+        "message_preview": {
+          "type": "string"
+        },
+        "stt_available": {
+          "type": "boolean"
+        },
+        "failed_step": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "scores": {
+          "$ref": "#/$defs/scores"
+        }
+      }
+    },
+    "recommendation_row": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "recommended",
+            "blocked"
+          ]
+        },
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "composite_score": {
+          "type": "number"
+        },
+        "profile_score": {
+          "type": "number"
+        },
+        "profile_coverage": {
+          "type": "number"
+        },
+        "rig_fit_score": {
+          "type": "number"
+        },
+        "missing_dimensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "usage_profiles",
+        "rig_classes",
+        "by_rig_class",
+        "candidate_scores"
+      ],
+      "properties": {
+        "usage_profiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rig_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "by_rig_class": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/recommendation_row"
+            }
+          }
+        },
+        "candidate_scores": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "provider",
+        "model",
+        "step",
+        "observed_path",
+        "category",
+        "error"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "step": {
+          "type": "string"
+        },
+        "observed_path": {
+          "type": "string",
+          "enum": [
+            "degraded",
+            "blocked"
+          ]
+        },
+        "category": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "requested_cases",
+        "successful_cases",
+        "failed_cases",
+        "blocker_count"
+      ],
+      "properties": {
+        "requested_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "successful_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_cases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocker_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "diff_ledger_entry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "run_at_utc",
+        "changed",
+        "before_digest",
+        "after_digest",
+        "diff"
+      ],
+      "properties": {
+        "run_at_utc": {
+          "type": "string"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "before_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "after_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "diff": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
