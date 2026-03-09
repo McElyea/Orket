@@ -17,3 +17,12 @@ Last reviewed: 2026-03-01
 3. Release automation should assert:
    - tag version == `orket_extension_sdk.__version__`
    - fail on mismatch to prevent drift.
+
+## Release Automation
+1. Canonical SDK release workflow: `.gitea/workflows/sdk-package-release.yml`.
+2. Tag/version guard command:
+   - `python scripts/sdk/check_sdk_tag_version.py --tag sdk-vX.Y.Z --repo-root .`
+3. Workflow scope:
+   - run SDK tests and lint
+   - build wheel/sdist for `orket_extension_sdk`
+   - perform smoke install of built wheel

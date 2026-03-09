@@ -12,7 +12,10 @@ from orket.capabilities.audio_player import build_audio_player
 from orket.capabilities.tts_piper import build_tts_provider
 from orket_extension_sdk.capabilities import CapabilityRegistry
 from orket_extension_sdk.audio import NullAudioPlayer
+from orket_extension_sdk.llm import NullLLMProvider
+from orket_extension_sdk.memory import NullMemoryProvider
 from orket_extension_sdk.result import WorkloadResult
+from orket_extension_sdk.voice import NullSTTProvider, NullVoiceTurnController
 
 from .contracts import RunPlan, Workload
 from .models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, WorkloadRecord
@@ -53,6 +56,16 @@ class WorkloadArtifacts:
             registry.register("tts.speak", build_tts_provider(input_config=input_config))
         if not registry.has("audio.play"):
             registry.register("audio.play", build_audio_player(input_config=input_config))
+        if not registry.has("model.generate"):
+            registry.register("model.generate", NullLLMProvider())
+        if not registry.has("memory.write"):
+            registry.register("memory.write", NullMemoryProvider())
+        if not registry.has("memory.query"):
+            registry.register("memory.query", NullMemoryProvider())
+        if not registry.has("speech.transcribe"):
+            registry.register("speech.transcribe", NullSTTProvider())
+        if not registry.has("voice.turn_control"):
+            registry.register("voice.turn_control", NullVoiceTurnController())
         if not registry.has("speech.play_clip"):
             registry.register("speech.play_clip", NullAudioPlayer())
         return registry

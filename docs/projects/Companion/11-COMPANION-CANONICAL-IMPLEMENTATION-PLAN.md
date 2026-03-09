@@ -23,13 +23,21 @@ Phase 0 progress:
    - `py.typed` marker and changelog scaffold
    - SDK import-isolation contract tests
    - clean editable install proof for base and extras
-2. Slice B partially implemented:
+2. Slice B implemented:
    - SDK standalone validators (`python -m orket_extension_sdk.validate`, `python -m orket_extension_sdk.import_scan`)
    - Host CLI external validation path (`orket ext validate`)
    - external-extension authoring guide and template surface in `docs/templates/external_extension/`
    - local external Companion bootstrap repo created at `C:\Source\Orket-Extensions\Companion` with install/validate/test proof
-3. Remaining Phase 0 work:
-   - release/publish workflow hardening for SDK package distribution
+3. Slice A release hardening implemented:
+   - SDK package release workflow (`.gitea/workflows/sdk-package-release.yml`)
+   - SDK tag/version guard script (`scripts/sdk/check_sdk_tag_version.py`)
+   - SDK local build/test/publish commands (`orket_extension_sdk/Makefile`)
+4. Remaining Phase 0 work:
+   - optional `orket ext init <path>` convenience scaffolding command (non-blocking)
+5. Slice C groundwork in progress:
+   - SDK memory and voice capability contracts (`orket_extension_sdk/memory.py`, `orket_extension_sdk/voice.py`)
+   - capability vocabulary extended for `memory.write`, `memory.query`, `speech.transcribe`, `voice.turn_control`
+   - runtime default capability registration for new seams (null-provider path)
 
 ## 2. Scope and Phase Model
 

@@ -6,11 +6,14 @@ from pathlib import Path
 
 import pytest
 from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
+from orket_extension_sdk.llm import NullLLMProvider
+from orket_extension_sdk.memory import NullMemoryProvider
 from orket_extension_sdk.result import ArtifactRef, WorkloadResult
+from orket_extension_sdk.voice import NullSTTProvider, NullVoiceTurnController
 
 from orket.extensions.catalog import ExtensionCatalog
 from orket.extensions.manifest_parser import ManifestParser
-from orket.extensions.models import CONTRACT_STYLE_LEGACY, ExtensionRecord, WorkloadRecord
+from orket.extensions.models import CONTRACT_STYLE_LEGACY
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_executor import WorkloadExecutor
@@ -206,6 +209,11 @@ def test_workload_artifacts_build_sdk_capability_registry_registers_audio_defaul
     assert isinstance(registry.tts(), NullTTSProvider)
     assert isinstance(registry.audio_player(), NullAudioPlayer)
     assert isinstance(registry.speech_player(), NullAudioPlayer)
+    assert isinstance(registry.llm(), NullLLMProvider)
+    assert isinstance(registry.memory_writer(), NullMemoryProvider)
+    assert isinstance(registry.memory_query(), NullMemoryProvider)
+    assert isinstance(registry.stt(), NullSTTProvider)
+    assert isinstance(registry.voice_turn_controller(), NullVoiceTurnController)
 
 
 def test_workload_executor_compile_workload() -> None:

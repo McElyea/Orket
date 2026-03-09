@@ -1,0 +1,74 @@
+name: SDK Package Release
+
+on:
+  push:
+    tags:
+      - "sdk-v*"
+  workflow_dispatch:
+    inputs:
+      tag_override:
+        description: "Optional tag to validate (defaults to current ref name)."
+        required: false
+        default: ""
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SDK test and build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e "./orket_extension_sdk[testing]"
+          python -m pip install --upgrade build
+
+      - name: Verify release tag matches SDK version
+        env:
+          TAG_OVERRIDE: ${{ github.event.inputs.tag_override || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${TAG_OVERRIDE:-${GITHUB_REF_NAME}}"
+          python scripts/sdk/check_sdk_tag_version.py --tag "${TAG}" --repo-root .
+
+      - name: Run SDK tests
+        run: |
+          python -m pytest -q tests/sdk/
+
+      - name: Lint SDK package
+        run: |
+          python -m ruff check orket_extension_sdk tests/sdk/
+
+      - name: Build SDK wheel and sdist
+        run: |
+          python -m build --sdist --wheel ./orket_extension_sdk
+
+      - name: Smoke install built SDK artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv .tmp/sdk-release-smoke
+          source .tmp/sdk-release-smoke/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/orket_extension_sdk-*.whl
+          python -c "import orket_extension_sdk as sdk; print(sdk.__version__)"
+
+      - name: Copy artifacts to optional wheelhouse
+        if: ${{ vars.SDK_WHEELHOUSE_PATH != '' }}
+        env:
+          SDK_WHEELHOUSE_PATH: ${{ vars.SDK_WHEELHOUSE_PATH }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${SDK_WHEELHOUSE_PATH}"
+          cp -f dist/* "${SDK_WHEELHOUSE_PATH}/"
+          ls -1 "${SDK_WHEELHOUSE_PATH}"

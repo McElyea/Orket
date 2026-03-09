@@ -1,7 +1,26 @@
 from .__version__ import __version__
 from .audio import AudioClip, AudioPlayer, NullAudioPlayer, NullTTSProvider, TTSProvider, VoiceInfo
 from .llm import GenerateRequest, GenerateResponse, LLMProvider, NullLLMProvider
+from .memory import (
+    MemoryProvider,
+    MemoryQueryRequest,
+    MemoryQueryResponse,
+    MemoryRecord,
+    MemoryWriteRequest,
+    MemoryWriteResponse,
+    NullMemoryProvider,
+)
 from .tui import NullScreenRenderer, Panel, ScreenRenderer, TerminalSize
+from .voice import (
+    NullSTTProvider,
+    NullVoiceTurnController,
+    STTProvider,
+    TranscribeRequest,
+    TranscribeResponse,
+    VoiceTurnControlRequest,
+    VoiceTurnControlResponse,
+    VoiceTurnController,
+)
 from .capabilities import (
     CapabilityId,
     CapabilityProvider,
@@ -44,6 +63,21 @@ __all__ = [
     "GenerateResponse",
     "LLMProvider",
     "NullLLMProvider",
+    "MemoryProvider",
+    "MemoryWriteRequest",
+    "MemoryWriteResponse",
+    "MemoryQueryRequest",
+    "MemoryQueryResponse",
+    "MemoryRecord",
+    "NullMemoryProvider",
+    "STTProvider",
+    "TranscribeRequest",
+    "TranscribeResponse",
+    "VoiceTurnController",
+    "VoiceTurnControlRequest",
+    "VoiceTurnControlResponse",
+    "NullSTTProvider",
+    "NullVoiceTurnController",
     "Panel",
     "TerminalSize",
     "ScreenRenderer",

@@ -5,7 +5,9 @@ from typing import Any, Protocol
 
 from .audio import AudioPlayer, TTSProvider
 from .llm import LLMProvider
+from .memory import MemoryProvider
 from .tui import ScreenRenderer
+from .voice import STTProvider, VoiceTurnController
 
 CapabilityId = str
 
@@ -16,8 +18,12 @@ _CAPABILITY_VOCAB: dict[str, dict[str, Any]] = {
     "time.now": {"deterministic": False},
     "rng": {"deterministic": True},
     "model.generate": {"deterministic": False},
+    "memory.write": {"deterministic": False},
+    "memory.query": {"deterministic": False},
     "audio.play": {"deterministic": False},
     "tts.speak": {"deterministic": False},
+    "speech.transcribe": {"deterministic": False},
+    "voice.turn_control": {"deterministic": False},
     "speech.play_clip": {"deterministic": False},
     "screen.render": {"deterministic": True},
 }
@@ -83,6 +89,30 @@ class CapabilityRegistry:
             raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: model.generate -> LLMProvider")
         return provider
 
+    def memory_writer(self) -> MemoryProvider:
+        provider = self.get("memory.write")
+        if not isinstance(provider, MemoryProvider):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: memory.write -> MemoryProvider")
+        return provider
+
+    def memory_query(self) -> MemoryProvider:
+        provider = self.get("memory.query")
+        if not isinstance(provider, MemoryProvider):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: memory.query -> MemoryProvider")
+        return provider
+
+    def stt(self) -> STTProvider:
+        provider = self.get("speech.transcribe")
+        if not isinstance(provider, STTProvider):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: speech.transcribe -> STTProvider")
+        return provider
+
+    def voice_turn_controller(self) -> VoiceTurnController:
+        provider = self.get("voice.turn_control")
+        if not isinstance(provider, VoiceTurnController):
+            raise ValueError("E_SDK_CAPABILITY_PROVIDER_INVALID: voice.turn_control -> VoiceTurnController")
+        return provider
+
     def screen(self) -> ScreenRenderer:
         provider = self.get("screen.render")
         if not isinstance(provider, ScreenRenderer):
@@ -96,6 +126,10 @@ class CapabilityRegistry:
             "audio.play": AudioPlayer,
             "speech.play_clip": AudioPlayer,
             "model.generate": LLMProvider,
+            "memory.write": MemoryProvider,
+            "memory.query": MemoryProvider,
+            "speech.transcribe": STTProvider,
+            "voice.turn_control": VoiceTurnController,
             "screen.render": ScreenRenderer,
         }
         invalid: list[str] = []
