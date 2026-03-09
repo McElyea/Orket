@@ -78,8 +78,11 @@ Phase 0 progress:
 13. Slice K optional TTS seam groundwork implemented:
     - host runtime service and companion API seams now expose `/companion/voice/synthesize` under both `/v1` and `/api/v1` aliases with typed request/response handling and explicit unavailable degradation semantics
     - external extension template gateway/client seams now include voice synthesis wiring (`docs/templates/external_extension/src/companion_extension/api_client.py`, `docs/templates/external_extension/src/companion_app/server.py`)
+    - external extension web template now includes TTS synthesize controls and browser playback handling for generated PCM payloads (`docs/templates/external_extension/src/companion_app/static/index.html`, `docs/templates/external_extension/src/companion_app/static/app.js`, `docs/templates/external_extension/src/companion_app/static/styles.css`)
     - integration coverage now includes service, router, and alias-route synthesis behavior (`tests/application/test_companion_runtime_service.py`, `tests/interfaces/test_companion_router.py`, `tests/interfaces/test_companion_api_alias_routes.py`)
+    - template server coverage now validates static TTS surface and voice-synthesize proxying (`tests/application/test_external_extension_template_server.py`)
     - live non-mocked probe against local host API succeeded via real HTTP call to `/api/v1/companion/voice/synthesize` with observed `degraded` path (`tts_unavailable`) and HTTP success result (`200`)
+    - live non-mocked cross-process probe also succeeded for external template gateway path (`/api/voice/synthesize` -> host `/api/v1/companion/voice/synthesize`) with observed `degraded` path (`tts_unavailable`) and HTTP success result (`200`)
 
 ## 2. Scope and Phase Model
 

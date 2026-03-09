@@ -60,6 +60,17 @@
           <button id="voice-stop" class="secondary">Voice Stop</button>
         </div>
         <p id="voice-state" class="meta">Voice state: idle</p>
+
+        <label>
+          TTS Text
+          <textarea id="tts-text" rows="2" placeholder="Optional text to synthesize..."></textarea>
+        </label>
+        <div class="row actions">
+          <button id="tts-speak" type="button">Synthesize Audio</button>
+          <button id="tts-speak-last" type="button" class="secondary">Speak Last Reply</button>
+        </div>
+        <audio id="tts-audio" controls preload="none"></audio>
+        <p id="tts-status" class="meta">TTS: idle</p>
       </section>
 
       <section class="panel chat">

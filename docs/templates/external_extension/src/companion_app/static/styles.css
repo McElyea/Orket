@@ -120,6 +120,11 @@ button.secondary {
   margin: 0.5rem 0 0;
 }
 
+#tts-audio {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
 .log {
   flex: 1;
   overflow-y: auto;

@@ -6,11 +6,17 @@ const els = {
   toggleProfileMemory: document.querySelector("#toggle-profile-memory"),
   voiceDelay: document.querySelector("#voice-delay"),
   voiceState: document.querySelector("#voice-state"),
+  ttsText: document.querySelector("#tts-text"),
+  ttsAudio: document.querySelector("#tts-audio"),
+  ttsStatus: document.querySelector("#tts-status"),
   chatLog: document.querySelector("#chat-log"),
   chatForm: document.querySelector("#chat-form"),
   chatInput: document.querySelector("#chat-input"),
   status: document.querySelector("#status"),
 };
+
+let lastAssistantMessage = "";
+let ttsObjectUrl = "";
 
 function sessionId() {
   return (els.sessionId.value || "").trim() || "local-session-1";
@@ -41,9 +47,11 @@ function addMessage(role, content) {
 
 async function refreshStatus() {
   const payload = await request("/api/status");
-  els.status.textContent = payload.text_only_degraded
-    ? "Host status: text-only degraded (STT unavailable)"
-    : "Host status: voice path available";
+  const voiceStatus = payload.text_only_degraded
+    ? "text-only degraded (STT unavailable)"
+    : "voice path available";
+  const ttsStatus = payload.tts_available ? "TTS available" : "TTS unavailable";
+  els.status.textContent = `Host status: ${voiceStatus} | ${ttsStatus}`;
 }
 
 async function refreshConfig() {
@@ -109,7 +117,11 @@ async function sendChat(message) {
     method: "POST",
     body: JSON.stringify({ session_id: sessionId(), message }),
   });
-  addMessage("assistant", payload.message || "");
+  lastAssistantMessage = payload.message || "";
+  addMessage("assistant", lastAssistantMessage);
+  if (lastAssistantMessage) {
+    els.ttsText.value = lastAssistantMessage;
+  }
   els.status.textContent = `Model: ${payload.model || "unknown"} | latency: ${payload.latency_ms || 0}ms`;
 }
 
@@ -122,6 +134,96 @@ async function voiceControl(command) {
     }),
   });
   els.voiceState.textContent = `Voice state: ${payload.state}`;
+}
+
+function releaseTtsObjectUrl() {
+  if (!ttsObjectUrl) return;
+  URL.revokeObjectURL(ttsObjectUrl);
+  ttsObjectUrl = "";
+}
+
+function decodeBase64ToBytes(payload) {
+  const encoded = String(payload || "");
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function pcmS16leToWavBlob(audioB64, sampleRate, channels) {
+  const pcmBytes = decodeBase64ToBytes(audioB64);
+  const byteRate = sampleRate * channels * 2;
+  const blockAlign = channels * 2;
+  const wavBuffer = new ArrayBuffer(44 + pcmBytes.length);
+  const view = new DataView(wavBuffer);
+  const out = new Uint8Array(wavBuffer);
+
+  const writeAscii = (offset, value) => {
+    for (let index = 0; index < value.length; index += 1) {
+      view.setUint8(offset + index, value.charCodeAt(index));
+    }
+  };
+
+  writeAscii(0, "RIFF");
+  view.setUint32(4, 36 + pcmBytes.length, true);
+  writeAscii(8, "WAVE");
+  writeAscii(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeAscii(36, "data");
+  view.setUint32(40, pcmBytes.length, true);
+  out.set(pcmBytes, 44);
+
+  return new Blob([out], { type: "audio/wav" });
+}
+
+async function synthesize(text) {
+  return request("/api/voice/synthesize", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+}
+
+async function synthesizeAndPlay(text) {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) {
+    els.ttsStatus.textContent = "TTS: enter text to synthesize.";
+    return;
+  }
+  const payload = await synthesize(trimmed);
+  if (!payload.ok || !payload.audio_b64) {
+    const errorCode = payload.error_code || "tts_unavailable";
+    const errorMessage = payload.error_message || "No audio generated.";
+    els.ttsStatus.textContent = `TTS: ${errorCode} (${errorMessage})`;
+    return;
+  }
+  if (payload.format !== "pcm_s16le") {
+    els.ttsStatus.textContent = `TTS: unsupported format ${payload.format}`;
+    return;
+  }
+
+  const wavBlob = pcmS16leToWavBlob(
+    payload.audio_b64,
+    Number(payload.sample_rate || 22050),
+    Number(payload.channels || 1),
+  );
+  releaseTtsObjectUrl();
+  ttsObjectUrl = URL.createObjectURL(wavBlob);
+  els.ttsAudio.src = ttsObjectUrl;
+
+  try {
+    await els.ttsAudio.play();
+    els.ttsStatus.textContent = `TTS: playing voice ${payload.voice_id || "unknown"}`;
+  } catch (_error) {
+    els.ttsStatus.textContent = "TTS: audio generated (click Play to start).";
+  }
 }
 
 els.chatForm.addEventListener("submit", async (event) => {
@@ -168,9 +270,49 @@ document.querySelector("#refresh-status").addEventListener("click", async () => 
   }
 });
 
-document.querySelector("#voice-start").addEventListener("click", () => voiceControl("start"));
-document.querySelector("#voice-submit").addEventListener("click", () => voiceControl("submit"));
-document.querySelector("#voice-stop").addEventListener("click", () => voiceControl("stop"));
+document.querySelector("#voice-start").addEventListener("click", async () => {
+  try {
+    await voiceControl("start");
+  } catch (error) {
+    els.status.textContent = `Voice error: ${error.message}`;
+  }
+});
+
+document.querySelector("#voice-submit").addEventListener("click", async () => {
+  try {
+    await voiceControl("submit");
+  } catch (error) {
+    els.status.textContent = `Voice error: ${error.message}`;
+  }
+});
+
+document.querySelector("#voice-stop").addEventListener("click", async () => {
+  try {
+    await voiceControl("stop");
+  } catch (error) {
+    els.status.textContent = `Voice error: ${error.message}`;
+  }
+});
+
+document.querySelector("#tts-speak").addEventListener("click", async () => {
+  try {
+    await synthesizeAndPlay(els.ttsText.value);
+  } catch (error) {
+    els.ttsStatus.textContent = `TTS error: ${error.message}`;
+  }
+});
+
+document.querySelector("#tts-speak-last").addEventListener("click", async () => {
+  try {
+    await synthesizeAndPlay(lastAssistantMessage);
+  } catch (error) {
+    els.ttsStatus.textContent = `TTS error: ${error.message}`;
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  releaseTtsObjectUrl();
+});
 
 Promise.all([refreshStatus(), refreshConfig(), refreshHistory()])
   .catch((error) => {

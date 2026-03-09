@@ -19,9 +19,63 @@ def test_external_extension_template_server_serves_static_ui() -> None:
         home = client.get("/")
         assert home.status_code == 200
         assert "Companion MVP Template" in home.text
+        assert "Synthesize Audio" in home.text
         assert client.get("/healthz").json() == {"ok": True}
-        assert client.get("/static/app.js").status_code == 200
+        app_js = client.get("/static/app.js")
+        assert app_js.status_code == 200
+        assert "/api/voice/synthesize" in app_js.text
         assert client.get("/static/styles.css").status_code == 200
+    finally:
+        sys.path = [entry for entry in sys.path if entry != str(src_root)]
+        for module_name in list(sys.modules):
+            if module_name == "companion_app" or module_name.startswith("companion_app."):
+                sys.modules.pop(module_name, None)
+            if module_name == "companion_extension" or module_name.startswith("companion_extension."):
+                sys.modules.pop(module_name, None)
+
+
+def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch) -> None:
+    """Layer: integration. Verifies template voice synthesize route proxies to the host API client seam."""
+    repo_root = Path(__file__).resolve().parents[2]
+    template_root = repo_root / "docs" / "templates" / "external_extension"
+    src_root = template_root / "src"
+    sys.path.insert(0, str(src_root))
+    try:
+        import companion_app.server as server_module
+
+        class _FakeClient:
+            async def voice_synthesize(
+                self,
+                *,
+                text: str,
+                voice_id: str = "",
+                emotion_hint: str = "neutral",
+                speed: float = 1.0,
+            ) -> dict[str, object]:
+                return {
+                    "ok": bool(text),
+                    "voice_id": voice_id or "test_voice",
+                    "emotion_hint": emotion_hint,
+                    "speed": speed,
+                    "sample_rate": 22050,
+                    "channels": 1,
+                    "format": "pcm_s16le",
+                    "audio_b64": "AQI=",
+                    "error_code": None,
+                    "error_message": "",
+                }
+
+        monkeypatch.setattr(server_module, "_client", lambda: _FakeClient())
+        client = TestClient(server_module.app)
+        response = client.post(
+            "/api/voice/synthesize",
+            json={"text": "Hello synth", "voice_id": "demo_voice", "emotion_hint": "calm", "speed": 1.2},
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["ok"] is True
+        assert payload["voice_id"] == "demo_voice"
+        assert payload["audio_b64"] == "AQI="
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]
         for module_name in list(sys.modules):
