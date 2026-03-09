@@ -46,6 +46,21 @@ def test_companion_config_clamps_voice_silence_delay_within_bounds() -> None:
         }
     )
     assert parsed.voice.silence_delay_sec == 6.0
+    assert parsed.voice.adaptive_cadence_min_sec == 0.5
+    assert parsed.voice.adaptive_cadence_max_sec == 4.0
+
+
+def test_companion_config_rejects_invalid_adaptive_cadence_bounds() -> None:
+    """Layer: contract. Verifies adaptive cadence bounds fail closed when max is lower than min."""
+    with pytest.raises(ValidationError, match="E_COMPANION_ADAPTIVE_BOUNDS_INVALID"):
+        CompanionConfig.model_validate(
+            {
+                "voice": {
+                    "adaptive_cadence_min_sec": 2.0,
+                    "adaptive_cadence_max_sec": 1.0,
+                }
+            }
+        )
 
 
 def test_companion_config_rejects_unknown_fields() -> None:

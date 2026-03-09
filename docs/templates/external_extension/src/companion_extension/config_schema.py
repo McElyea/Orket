@@ -52,13 +52,28 @@ class VoiceConfig(BaseModel):
     silence_delay_sec: float = Field(default=1.5, ge=0.0)
     silence_delay_min_sec: float = Field(default=0.2, ge=0.0)
     silence_delay_max_sec: float = Field(default=6.0, gt=0.0)
+    adaptive_cadence_enabled: bool = False
+    adaptive_cadence_min_sec: float = Field(default=0.4, ge=0.0)
+    adaptive_cadence_max_sec: float = Field(default=4.0, gt=0.0)
 
     @model_validator(mode="after")
     def _clamp_silence_delay(self) -> VoiceConfig:
         if self.silence_delay_max_sec < self.silence_delay_min_sec:
             raise ValueError("silence_delay_max_sec must be >= silence_delay_min_sec")
+        if self.adaptive_cadence_max_sec < self.adaptive_cadence_min_sec:
+            raise ValueError("adaptive_cadence_max_sec must be >= adaptive_cadence_min_sec")
         clamped = max(self.silence_delay_min_sec, min(self.silence_delay_max_sec, self.silence_delay_sec))
+        clamped_adaptive_min = max(
+            self.silence_delay_min_sec,
+            min(self.silence_delay_max_sec, self.adaptive_cadence_min_sec),
+        )
+        clamped_adaptive_max = max(
+            clamped_adaptive_min,
+            min(self.silence_delay_max_sec, self.adaptive_cadence_max_sec),
+        )
         self.silence_delay_sec = clamped
+        self.adaptive_cadence_min_sec = clamped_adaptive_min
+        self.adaptive_cadence_max_sec = clamped_adaptive_max
         return self
 
 

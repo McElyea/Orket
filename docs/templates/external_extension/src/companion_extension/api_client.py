@@ -101,6 +101,13 @@ class CompanionApiClient:
             },
         )
 
+    async def voice_cadence_suggest(self, *, session_id: str, text: str) -> dict[str, Any]:
+        return await self._request(
+            "POST",
+            "/api/v1/companion/voice/cadence/suggest",
+            json={"session_id": session_id, "text": text},
+        )
+
     async def _request(
         self,
         method: str,

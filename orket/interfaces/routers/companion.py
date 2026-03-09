@@ -37,6 +37,11 @@ class CompanionSynthesizeRequest(BaseModel):
     speed: float = 1.0
 
 
+class CompanionCadenceSuggestRequest(BaseModel):
+    session_id: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+
+
 class CompanionSessionRequest(BaseModel):
     session_id: str = Field(min_length=1)
 
@@ -144,6 +149,17 @@ def build_companion_router(*, service_getter: Callable[[], Any]) -> APIRouter:
                 voice_id=req.voice_id,
                 emotion_hint=req.emotion_hint,
                 speed=req.speed,
+            )
+        except ValueError as exc:
+            _raise_companion_http_error(exc)
+
+    @router.post("/companion/voice/cadence/suggest")
+    async def companion_voice_cadence_suggest(req: CompanionCadenceSuggestRequest):
+        service = service_getter()
+        try:
+            return await service.suggest_voice_cadence(
+                session_id=req.session_id,
+                text=req.text,
             )
         except ValueError as exc:
             _raise_companion_http_error(exc)

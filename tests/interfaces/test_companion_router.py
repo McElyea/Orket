@@ -99,6 +99,15 @@ def test_companion_router_voice_and_transcribe_flow(companion_client: TestClient
     assert voices_payload["tts_available"] is True
     assert voices_payload["voices"][0]["voice_id"] == "test_voice"
 
+    cadence = companion_client.post(
+        "/v1/companion/voice/cadence/suggest",
+        json={"session_id": "router-session", "text": "a short voice draft"},
+    )
+    assert cadence.status_code == 200
+    cadence_payload = cadence.json()
+    assert cadence_payload["ok"] is True
+    assert cadence_payload["source"] == "manual"
+
     transcribe = companion_client.post(
         "/v1/companion/voice/transcribe",
         json={"audio_b64": "YWI=", "mime_type": "audio/wav"},

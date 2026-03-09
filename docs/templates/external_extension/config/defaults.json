@@ -11,6 +11,9 @@
     "enabled": false,
     "silence_delay_sec": 1.5,
     "silence_delay_min_sec": 0.2,
-    "silence_delay_max_sec": 6.0
+    "silence_delay_max_sec": 6.0,
+    "adaptive_cadence_enabled": false,
+    "adaptive_cadence_min_sec": 0.4,
+    "adaptive_cadence_max_sec": 4.0
   }
 }

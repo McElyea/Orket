@@ -4,6 +4,7 @@ const els = {
   modeStyle: document.querySelector("#mode-style"),
   toggleSessionMemory: document.querySelector("#toggle-session-memory"),
   toggleProfileMemory: document.querySelector("#toggle-profile-memory"),
+  toggleAdaptiveCadence: document.querySelector("#toggle-adaptive-cadence"),
   voiceDelay: document.querySelector("#voice-delay"),
   voiceState: document.querySelector("#voice-state"),
   ttsText: document.querySelector("#tts-text"),
@@ -65,6 +66,7 @@ async function refreshConfig() {
   if (mode.relationship_style) els.modeStyle.value = mode.relationship_style;
   els.toggleSessionMemory.checked = Boolean(memory.session_memory_enabled);
   els.toggleProfileMemory.checked = Boolean(memory.profile_memory_enabled);
+  els.toggleAdaptiveCadence.checked = Boolean(voice.adaptive_cadence_enabled);
   if (typeof voice.silence_delay_sec === "number") {
     els.voiceDelay.value = String(voice.silence_delay_sec);
   }
@@ -121,6 +123,7 @@ async function applyNextTurnConfig() {
     },
     voice: {
       silence_delay_sec: Number(els.voiceDelay.value || 2.0),
+      adaptive_cadence_enabled: els.toggleAdaptiveCadence.checked,
     },
   };
   await request("/api/config", {
@@ -166,6 +169,30 @@ async function voiceControl(command) {
     }),
   });
   els.voiceState.textContent = `Voice state: ${payload.state}`;
+}
+
+function _adaptiveCadenceSeedText() {
+  const draft = String(els.chatInput.value || "").trim();
+  if (draft) return draft;
+  const ttsText = String(els.ttsText.value || "").trim();
+  if (ttsText) return ttsText;
+  return String(lastAssistantMessage || "").trim();
+}
+
+async function suggestVoiceDelay() {
+  const seed = _adaptiveCadenceSeedText();
+  if (!seed) {
+    els.status.textContent = "Cadence error: enter message text first.";
+    return;
+  }
+  const payload = await request("/api/voice/cadence/suggest", {
+    method: "POST",
+    body: JSON.stringify({ session_id: sessionId(), text: seed }),
+  });
+  if (typeof payload.suggested_silence_delay_sec === "number") {
+    els.voiceDelay.value = String(payload.suggested_silence_delay_sec);
+  }
+  els.status.textContent = `Cadence ${payload.source}: ${payload.suggested_silence_delay_sec}s (${payload.input_words} words).`;
 }
 
 function releaseTtsObjectUrl() {
@@ -324,6 +351,14 @@ document.querySelector("#voice-stop").addEventListener("click", async () => {
     await voiceControl("stop");
   } catch (error) {
     els.status.textContent = `Voice error: ${error.message}`;
+  }
+});
+
+document.querySelector("#voice-suggest-delay").addEventListener("click", async () => {
+  try {
+    await suggestVoiceDelay();
+  } catch (error) {
+    els.status.textContent = `Cadence error: ${error.message}`;
   }
 });
 

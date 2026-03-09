@@ -4,7 +4,6 @@ import asyncio
 import base64
 import binascii
 import json
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -20,7 +19,14 @@ from orket_extension_sdk.voice import TranscribeRequest, TranscribeResponse, Voi
 
 from .companion_config_models import CompanionConfig
 from .config_precedence_resolver import ConfigPrecedenceResolver
-from .companion_runtime_helpers import build_system_prompt, format_history_context, format_memory_rows, utc_now_iso
+from .companion_runtime_helpers import (
+    build_system_prompt,
+    format_history_context,
+    format_memory_rows,
+    generate_with_provider_overrides,
+    suggest_adaptive_silence_delay,
+    utc_now_iso,
+)
 
 CompanionConfigScope = Literal["profile", "session", "next_turn"]
 
@@ -218,6 +224,37 @@ class CompanionRuntimeService:
         )
         return await asyncio.to_thread(self._voice_controller.control, request)
 
+    async def suggest_voice_cadence(self, *, session_id: str, text: str) -> dict[str, Any]:
+        session = await self._session_state(session_id)
+        utterance = str(text or "").strip()
+        if not utterance:
+            raise ValueError("E_COMPANION_CADENCE_TEXT_REQUIRED")
+        voice = session.resolver.preview(include_pending_next_turn=True).voice
+        if not voice.adaptive_cadence_enabled:
+            return {
+                "ok": True,
+                "session_id": session_id,
+                "adaptive_cadence_enabled": False,
+                "source": "manual",
+                "suggested_silence_delay_sec": float(voice.silence_delay_sec),
+                "input_words": max(1, len(utterance.split())),
+            }
+        suggested, words = suggest_adaptive_silence_delay(
+            text=utterance,
+            silence_delay_min_sec=float(voice.silence_delay_min_sec),
+            silence_delay_max_sec=float(voice.silence_delay_max_sec),
+            adaptive_cadence_min_sec=float(voice.adaptive_cadence_min_sec),
+            adaptive_cadence_max_sec=float(voice.adaptive_cadence_max_sec),
+        )
+        return {
+            "ok": True,
+            "session_id": session_id,
+            "adaptive_cadence_enabled": True,
+            "source": "adaptive",
+            "suggested_silence_delay_sec": suggested,
+            "input_words": words,
+        }
+
     async def transcribe(self, *, audio_b64: str, mime_type: str, language_hint: str = "") -> TranscribeResponse:
         await self.ensure_initialized()
         try:
@@ -343,7 +380,7 @@ class CompanionRuntimeService:
         if not normalized_provider and not normalized_model:
             return await asyncio.to_thread(self._model_provider.generate, request)
         return await asyncio.to_thread(
-            _generate_with_provider_overrides,
+            generate_with_provider_overrides,
             request,
             normalized_provider,
             normalized_model,
@@ -402,33 +439,3 @@ def _merge_nested(base: dict[str, Any], override: dict[str, Any]) -> dict[str, A
         else:
             merged[key] = value
     return merged
-
-
-def _generate_with_provider_overrides(
-    request: GenerateRequest,
-    provider_override: str,
-    model_override: str,
-) -> GenerateResponse:
-    model = model_override or "qwen2.5-coder:7b"
-    provider = provider_override.strip()
-    previous_llm_provider = os.environ.get("ORKET_LLM_PROVIDER")
-    previous_model_provider = os.environ.get("ORKET_MODEL_PROVIDER")
-    try:
-        if provider:
-            os.environ["ORKET_LLM_PROVIDER"] = provider
-            os.environ["ORKET_MODEL_PROVIDER"] = provider
-        provider_client = LocalModelCapabilityProvider(
-            model=model,
-            temperature=0.2,
-            seed=None,
-        )
-        return provider_client.generate(request)
-    finally:
-        if previous_llm_provider is None:
-            os.environ.pop("ORKET_LLM_PROVIDER", None)
-        else:
-            os.environ["ORKET_LLM_PROVIDER"] = previous_llm_provider
-        if previous_model_provider is None:
-            os.environ.pop("ORKET_MODEL_PROVIDER", None)
-        else:
-            os.environ["ORKET_MODEL_PROVIDER"] = previous_model_provider

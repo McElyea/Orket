@@ -44,6 +44,11 @@ class SynthesizeRequest(BaseModel):
     speed: float = 1.0
 
 
+class CadenceSuggestRequest(BaseModel):
+    session_id: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+
+
 class SessionRequest(BaseModel):
     session_id: str = Field(min_length=1)
 
@@ -180,5 +185,13 @@ async def voice_synthesize(req: SynthesizeRequest) -> dict[str, Any]:
             emotion_hint=req.emotion_hint,
             speed=req.speed,
         )
+    except httpx.HTTPError as exc:
+        _raise_gateway_error(exc)
+
+
+@app.post("/api/voice/cadence/suggest")
+async def voice_cadence_suggest(req: CadenceSuggestRequest) -> dict[str, Any]:
+    try:
+        return await _client().voice_cadence_suggest(session_id=req.session_id, text=req.text)
     except httpx.HTTPError as exc:
         _raise_gateway_error(exc)

@@ -25,6 +25,7 @@ def test_external_extension_template_server_serves_static_ui() -> None:
         assert app_js.status_code == 200
         assert "/api/voice/synthesize" in app_js.text
         assert "/api/voice/voices" in app_js.text
+        assert "/api/voice/cadence/suggest" in app_js.text
         assert client.get("/static/styles.css").status_code == 200
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]
@@ -81,6 +82,16 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
                     "error_message": "",
                 }
 
+            async def voice_cadence_suggest(self, *, session_id: str, text: str) -> dict[str, object]:
+                return {
+                    "ok": True,
+                    "session_id": session_id,
+                    "adaptive_cadence_enabled": True,
+                    "source": "adaptive",
+                    "suggested_silence_delay_sec": 1.4,
+                    "input_words": len(text.split()),
+                }
+
         monkeypatch.setattr(server_module, "_client", lambda: _FakeClient())
         client = TestClient(server_module.app)
         response = client.post(
@@ -97,6 +108,14 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
         voices_payload = voices.json()
         assert voices_payload["ok"] is True
         assert voices_payload["voices"][0]["voice_id"] == "demo_voice"
+        cadence = client.post(
+            "/api/voice/cadence/suggest",
+            json={"session_id": "demo-session", "text": "hello cadence route"},
+        )
+        assert cadence.status_code == 200
+        cadence_payload = cadence.json()
+        assert cadence_payload["source"] == "adaptive"
+        assert cadence_payload["suggested_silence_delay_sec"] == 1.4
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]
         for module_name in list(sys.modules):

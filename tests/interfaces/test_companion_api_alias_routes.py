@@ -74,3 +74,18 @@ def test_companion_voice_voices_available_under_v1_and_api_v1(tmp_path: Path, mo
     assert api_v1.status_code == 200
     assert "voices" in v1.json()
     assert "voices" in api_v1.json()
+
+
+def test_companion_voice_cadence_suggest_available_under_v1_and_api_v1(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies Companion cadence suggestion endpoint is exposed on both `/v1` and `/api/v1` seams."""
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    client = TestClient(create_api_app(project_root=tmp_path))
+    headers = {"X-API-Key": "test-key"}
+    payload = {"session_id": "api-cadence", "text": "hello cadence"}
+
+    v1 = client.post("/v1/companion/voice/cadence/suggest", headers=headers, json=payload)
+    api_v1 = client.post("/api/v1/companion/voice/cadence/suggest", headers=headers, json=payload)
+    assert v1.status_code == 200
+    assert api_v1.status_code == 200
+    assert "suggested_silence_delay_sec" in v1.json()
+    assert "suggested_silence_delay_sec" in api_v1.json()

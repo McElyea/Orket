@@ -18,6 +18,7 @@ def test_external_extension_template_defaults_validate() -> None:
         assert defaults.mode.role_id.value == "general_assistant"
         assert defaults.mode.relationship_style.value == "platonic"
         assert defaults.voice.silence_delay_sec == 1.5
+        assert defaults.voice.adaptive_cadence_enabled is False
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]
         for module_name in list(sys.modules):

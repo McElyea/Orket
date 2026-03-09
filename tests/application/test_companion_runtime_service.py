@@ -148,10 +148,33 @@ async def test_companion_runtime_service_voice_and_transcribe_paths(tmp_path: Pa
     assert voices["default_voice_id"] == "test_voice"
     assert voices["voices"][0]["voice_id"] == "test_voice"
 
+    cadence_manual = await service.suggest_voice_cadence(session_id="default", text="short text")
+    assert cadence_manual["adaptive_cadence_enabled"] is False
+    assert cadence_manual["source"] == "manual"
+
     synth = await service.synthesize(text="hello there")
     assert synth["ok"] is True
     assert synth["sample_rate"] == 16000
     assert base64.b64decode(synth["audio_b64"].encode("utf-8"), validate=True) == b"\x01\x02"
+
+    await service.update_config(
+        session_id="default",
+        scope="session",
+        patch={
+            "voice": {
+                "adaptive_cadence_enabled": True,
+                "adaptive_cadence_min_sec": 0.5,
+                "adaptive_cadence_max_sec": 3.0,
+            }
+        },
+    )
+    cadence_adaptive = await service.suggest_voice_cadence(
+        session_id="default",
+        text="this is a longer utterance to drive adaptive cadence",
+    )
+    assert cadence_adaptive["adaptive_cadence_enabled"] is True
+    assert cadence_adaptive["source"] == "adaptive"
+    assert 0.5 <= cadence_adaptive["suggested_silence_delay_sec"] <= 3.0
 
     with pytest.raises(ValueError, match="E_COMPANION_AUDIO_B64_INVALID"):
         await service.transcribe(audio_b64="invalid$$$", mime_type="audio/wav")
@@ -171,6 +194,17 @@ async def test_companion_runtime_service_synthesize_degrades_when_tts_unavailabl
     assert synth["ok"] is False
     assert synth["error_code"] == "tts_unavailable"
     assert synth["audio_b64"] == ""
+
+
+@pytest.mark.asyncio
+async def test_companion_runtime_service_rejects_empty_cadence_text(tmp_path: Path) -> None:
+    """Layer: integration. Verifies adaptive cadence suggestion fails closed when text seed is empty."""
+    service = CompanionRuntimeService(
+        project_root=tmp_path,
+        model_provider=_FakeModelProvider(),  # type: ignore[arg-type]
+    )
+    with pytest.raises(ValueError, match="E_COMPANION_CADENCE_TEXT_REQUIRED"):
+        await service.suggest_voice_cadence(session_id="s-cadence", text="   ")
 
 
 @pytest.mark.asyncio
@@ -194,7 +228,7 @@ async def test_companion_runtime_service_chat_uses_provider_override_path(tmp_pa
         captured["model"] = model_override
         return GenerateResponse(text=f"override:{request.user_message}", model="override-model", latency_ms=3)
 
-    monkeypatch.setattr(companion_runtime_service, "_generate_with_provider_overrides", fake_generate_with_overrides)
+    monkeypatch.setattr(companion_runtime_service, "generate_with_provider_overrides", fake_generate_with_overrides)
     service = CompanionRuntimeService(
         project_root=tmp_path,
         model_provider=_FailingModelProvider(),  # type: ignore[arg-type]
