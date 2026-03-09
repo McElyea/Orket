@@ -39,6 +39,10 @@ Validation command:
 
 1. `python -m scripts.companion.validate_companion_provider_runtime_matrix`
 
+Pipeline command (generate + validate + render):
+
+1. `python -m scripts.companion.run_companion_provider_runtime_matrix_pipeline`
+
 Key options:
 
 1. `--providers` comma list (default `ollama,lmstudio`)
