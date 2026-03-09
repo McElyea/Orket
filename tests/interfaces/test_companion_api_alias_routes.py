@@ -89,3 +89,28 @@ def test_companion_voice_cadence_suggest_available_under_v1_and_api_v1(tmp_path:
     assert api_v1.status_code == 200
     assert "suggested_silence_delay_sec" in v1.json()
     assert "suggested_silence_delay_sec" in api_v1.json()
+
+
+def test_companion_scoped_api_key_only_grants_companion_routes(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies companion-scoped key does not authorize non-companion `/v1/*` endpoints."""
+    monkeypatch.setenv("ORKET_API_KEY", "core-key")
+    monkeypatch.setenv("ORKET_COMPANION_API_KEY", "companion-key")
+    client = TestClient(create_api_app(project_root=tmp_path))
+
+    companion_headers = {"X-API-Key": "companion-key"}
+    core_headers = {"X-API-Key": "core-key"}
+
+    companion_status = client.get("/api/v1/companion/status", headers=companion_headers)
+    assert companion_status.status_code == 200
+    assert companion_status.json()["ok"] is True
+
+    companion_status_v1 = client.get("/v1/companion/status", headers=companion_headers)
+    assert companion_status_v1.status_code == 200
+    assert companion_status_v1.json()["ok"] is True
+
+    non_companion_with_companion_key = client.get("/v1/version", headers=companion_headers)
+    assert non_companion_with_companion_key.status_code == 403
+    assert non_companion_with_companion_key.json()["detail"] == "Could not validate credentials"
+
+    non_companion_with_core_key = client.get("/v1/version", headers=core_headers)
+    assert non_companion_with_core_key.status_code == 200

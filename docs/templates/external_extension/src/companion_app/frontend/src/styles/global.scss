@@ -1,0 +1,53 @@
+:root {
+  --brand-muted-teal: #4faf9f;
+  --brand-sage-dust: #c9dcd3;
+  --surface-porcelain: #fcfaf7;
+  --highlight-soft-coral: #e7a59a;
+  --bg-warm-linen: #f7f5f2;
+  --teal-deep: #3f9789;
+  --text-primary: #2e2b28;
+  --text-secondary: #6f6a63;
+  --shadow-soft: rgba(46, 43, 40, 0.06);
+  --tone-muted: #e3e7e3;
+
+  --font-stack-girly: "Quicksand", "Segoe UI", "Trebuchet MS", sans-serif;
+  --font-stack-manly: "IBM Plex Sans", "Segoe UI", "Arial", sans-serif;
+  --font-stack-neutral: "Source Sans 3", "Segoe UI", "Arial", sans-serif;
+  --font-stack-weird: "Space Grotesk", "Segoe UI", "Arial", sans-serif;
+  --font-stack-elegant: "Playfair Display", "Georgia", "Times New Roman", serif;
+  --font-stack-playful: "Nunito", "Segoe UI", "Arial", sans-serif;
+  --font-stack-techno: "Fira Sans", "Segoe UI", "Arial", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top left, rgba(201, 220, 211, 0.35), transparent 40%),
+    linear-gradient(170deg, #f9f7f4 0%, var(--bg-warm-linen) 45%, #f4f0ea 100%);
+  color: var(--text-primary);
+}
+
+button,
+input,
+select,
+textarea {
+  color: inherit;
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 2px;
+}

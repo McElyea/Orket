@@ -9,6 +9,8 @@
 
 This plan covers the Companion-side product implementation in the external repo. It assumes host-side execution seams already exist and are consumed through the public host API. The Companion app is a **thin client** over the host API seam. No product-significant runtime authority lives in the Companion repo.
 
+UI contract authority for this slice: `docs/specs/COMPANION_UI_MVP_CONTRACT.md`.
+
 ## Backend Authority Model
 
 For MVP, Companion product behavior primarily consumes public host API seams for:
@@ -33,7 +35,7 @@ The external repo includes an extension workload entrypoint (`workload.py`) for 
 - Audio output/TTS playback
 - Adaptive cadence
 - Episodic memory
-- Avatar/emotion/lip-sync
+- Final avatar system / full emotion rendering / lip-sync
 
 ## Implementation Steps
 
@@ -96,14 +98,29 @@ These templates define the extension-level config defaults (layer 1 of the prece
 - Host-API-backed: all behavior flows through the host API client
 - Real conversational experience, not a dev shell
 
-**MVP tech choice**: Choose one simple serving model. Do not leave multiple frontend hosting patterns half-open.
+**Locked MVP stack**:
+1. React
+2. Vite
+3. TypeScript
+4. SCSS Modules
+5. Radix UI primitives
+6. Lucide icons
+7. plain `fetch` + thin typed API client
 
-**Core components** (regardless of framework choice):
-- **Chat panel**: message list, text input, submit button, typing indicator, voice input toggle
-- **Mode selector**: role dropdown (6 roles), style dropdown (4 styles), "pending next turn" indicator
-- **Voice controls**: mic button, silence delay slider (0.5s-10.0s), voice state indicator, submit/cancel buttons, "voice unavailable" banner when STT is not available
-- **Memory panel**: session/profile toggle, "clear session memory" button, profile viewer
-- **Status bar**: connection status, STT availability, active model
+**Locked MVP layout**:
+1. left rail for profile/settings/mode/memory/navigation
+2. center presence/avatar area
+3. right chat area
+4. bottom accordion control panel including status
+5. no top status bar
+6. center/right panes must be swappable
+
+**Core UI behavior**:
+1. text chat submit is explicit and unaffected by voice timing controls
+2. manual silence-delay is visible and adjustable
+3. explicit voice stop/submit controls are visible
+4. STT availability and text-only degraded mode are visible
+5. optional decorative assets (avatar/image/theme) never block core render
 
 ### Step 5: Web UI -- voice interaction flow
 
@@ -118,11 +135,15 @@ These templates define the extension-level config defaults (layer 1 of the prece
 
 ### Step 6: Web UI -- memory controls
 
-- Session memory toggle (on/off) -> `PUT /config/memory`
-- Profile memory toggle (on/off) -> `PUT /config/memory`
-- "Clear session memory" button -> `DELETE /memory/session`
-- "View profile" button -> modal with profile key/value list from `GET /memory/profile`
-- Edit/delete individual profile entries -> `PUT/DELETE /memory/profile/{key}`
+Memory controls stay within MVP scope:
+1. session memory enable/disable
+2. profile memory enable/disable
+3. clear session memory
+4. inspect/edit profile settings through profile-scope config updates
+
+Host seam usage:
+1. `PATCH /api/config` (`scope=next_turn` or `scope=profile`) for settings updates
+2. `POST /api/session/clear-memory` for session clear
 
 These are product features for end users, not debug utilities.
 
@@ -189,9 +210,10 @@ Do not overprescribe the extensibility mechanism (event bus, slot system, etc.) 
 | `src/companion_extension/config_schema.py` | Role/style enums + config models |
 | `src/companion_extension/config_loader.py` | Load mode/style JSON configs |
 | `src/companion_app/server.py` | Dev server (single serving model) |
+| `src/companion_app/frontend/*` | React + Vite + TypeScript + SCSS source |
 | `src/companion_app/static/index.html` | SPA shell |
-| `src/companion_app/static/app.js` | Main app logic |
-| `src/companion_app/static/styles.css` | Styling |
+| `src/companion_app/static/app.js` | Built frontend runtime bundle |
+| `src/companion_app/static/styles.css` | Built frontend styles bundle |
 | `config/modes/*.json` | 6 role template files |
 | `config/styles/*.json` | 3+ style modifier files |
 | `config/defaults.json` | Extension defaults |

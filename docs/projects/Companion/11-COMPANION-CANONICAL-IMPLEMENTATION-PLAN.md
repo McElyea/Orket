@@ -4,7 +4,7 @@ Last updated: 2026-03-09
 Status: In Progress
 Owner: Orket Core
 Source authority: `docs/projects/Companion/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md`
-Supporting inputs: `docs/projects/Companion/00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md`, `docs/projects/Companion/02-SDK-PACKAGE-HARDENING.md` through `docs/projects/Companion/10-IMPORT-ISOLATION-HARDENING.md`
+Supporting inputs: `docs/projects/Companion/00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md`, `docs/projects/Companion/02-SDK-PACKAGE-HARDENING.md` through `docs/projects/Companion/10-IMPORT-ISOLATION-HARDENING.md`, `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
 
 ## 1. Objective
 
@@ -60,7 +60,7 @@ Phase 0 progress:
     - integration tests cover service behavior and router contracts (`tests/application/test_companion_runtime_service.py`, `tests/interfaces/test_companion_router.py`, `tests/interfaces/test_companion_api_alias_routes.py`)
 11. Slice I template MVP groundwork implemented:
     - external template API client expanded to full Companion host seam (`status`, `config`, `history`, `chat`, `voice`, `clear-session`)
-    - external template web app now includes FastAPI gateway routes plus static MVP chat/control UI assets in `src/companion_app/static/`
+    - external template web app now includes FastAPI gateway routes plus locked React/Vite/TypeScript MVP UI source (`src/companion_app/frontend/`) built to static assets in `src/companion_app/static/`
     - `ext init` and template server/config tests now verify richer scaffold paths and static UI serving behavior
 12. Slice J matrix runner hardening implemented:
     - matrix runner now executes multi-step Companion host seam probes (`status`, `config`, `chat`, `voice`) and scores all required dimensions (`reasoning`, `conversational_quality`, `memory_usefulness`, `latency`, `footprint`, `voice_suitability`, `stability`, `mode_adherence`)
@@ -79,28 +79,28 @@ Phase 0 progress:
     - host runtime service and companion API seams now expose `/companion/voice/synthesize` under both `/v1` and `/api/v1` aliases with typed request/response handling and explicit unavailable degradation semantics
     - host runtime service and companion API seams now expose `/companion/voice/voices` under both `/v1` and `/api/v1` aliases for typed host voice inventory discovery
     - external extension template gateway/client seams now include voice synthesis wiring (`docs/templates/external_extension/src/companion_extension/api_client.py`, `docs/templates/external_extension/src/companion_app/server.py`)
-    - external extension web template now includes TTS synthesize controls, host voice inventory selection, and browser playback handling for generated PCM payloads (`docs/templates/external_extension/src/companion_app/static/index.html`, `docs/templates/external_extension/src/companion_app/static/app.js`, `docs/templates/external_extension/src/companion_app/static/styles.css`)
+    - locked MVP UI keeps TTS control surfaces out of primary product flow while preserving gateway/client seam availability for future opt-in enhancement work
     - integration coverage now includes service, router, and alias-route synthesis plus voice-inventory behavior (`tests/application/test_companion_runtime_service.py`, `tests/interfaces/test_companion_router.py`, `tests/interfaces/test_companion_api_alias_routes.py`)
-    - template server coverage now validates static TTS surface and voice-synthesize/voice-inventory proxying (`tests/application/test_external_extension_template_server.py`)
+    - template server coverage now validates voice-synthesize/voice-inventory proxy behavior without requiring direct MVP UI controls (`tests/application/test_external_extension_template_server.py`)
     - live non-mocked probe against local host API succeeded via real HTTP call to `/api/v1/companion/voice/synthesize` with observed `degraded` path (`tts_unavailable`) and HTTP success result (`200`)
     - live non-mocked cross-process probe also succeeded for external template gateway path (`/api/voice/synthesize` -> host `/api/v1/companion/voice/synthesize`) with observed `degraded` path (`tts_unavailable`) and HTTP success result (`200`)
     - live non-mocked cross-process voice inventory probe also succeeded for external template gateway path (`/api/voice/voices` -> host `/api/v1/companion/voice/voices`) with observed `degraded` path (`tts_available=false`) and HTTP success result (`200`)
 14. Slice K adaptive cadence groundwork implemented:
     - companion voice config schema now supports opt-in bounded adaptive cadence (`adaptive_cadence_enabled`, `adaptive_cadence_min_sec`, `adaptive_cadence_max_sec`) with host-side validation and clamping (`orket/application/services/companion_config_models.py`, `docs/templates/external_extension/src/companion_extension/config_schema.py`)
     - host runtime seam now exposes cadence suggestion endpoint (`/companion/voice/cadence/suggest`) under both `/v1` and `/api/v1` aliases without silently overriding explicit manual delay settings (`orket/application/services/companion_runtime_service.py`, `orket/interfaces/routers/companion.py`)
-    - external extension template now wires cadence suggestion through gateway/client/UI controls (`docs/templates/external_extension/src/companion_extension/api_client.py`, `docs/templates/external_extension/src/companion_app/server.py`, `docs/templates/external_extension/src/companion_app/static/index.html`, `docs/templates/external_extension/src/companion_app/static/app.js`)
+    - external extension template now wires cadence suggestion through gateway/client seams while keeping cadence UX optional in locked MVP presentation (`docs/templates/external_extension/src/companion_extension/api_client.py`, `docs/templates/external_extension/src/companion_app/server.py`)
     - integration/contract coverage now includes config schema, runtime service, router aliases, and template gateway cadence contracts (`tests/application/test_companion_config_schema.py`, `tests/application/test_companion_runtime_service.py`, `tests/interfaces/test_companion_router.py`, `tests/interfaces/test_companion_api_alias_routes.py`, `tests/application/test_external_extension_template_server.py`, `tests/application/test_external_extension_template_config.py`)
     - live non-mocked cross-process cadence probe succeeded for external template gateway path (`/api/voice/cadence/suggest` -> host `/api/v1/companion/voice/cadence/suggest`) after enabling session adaptive cadence with observed `adaptive` path and HTTP success result (`200`)
 15. Slice K episodic-memory groundwork implemented:
     - scoped memory persistence now includes dedicated episodic store/table and async read/write/query/clear paths (`orket/services/scoped_memory_store.py`)
     - companion config schema now supports `memory.episodic_memory_enabled` for host-owned opt-in episodic behavior (`orket/application/services/companion_config_models.py`, `docs/templates/external_extension/src/companion_extension/config_schema.py`, `docs/templates/external_extension/config/defaults.json`)
     - host runtime chat flow now writes episodic turn summaries when enabled, includes episodic rows in retrieval context, and clears episodic rows through existing clear-session seam (`orket/application/services/companion_runtime_service.py`)
-    - external extension template config/UI now expose episodic-memory toggle through host config patch flow (`docs/templates/external_extension/src/companion_app/static/index.html`, `docs/templates/external_extension/src/companion_app/static/app.js`)
+    - external extension template config now carries episodic-memory shape compatibility while locked MVP UI keeps episodic controls out of primary flow (`docs/templates/external_extension/config/defaults.json`)
     - integration/contract coverage now includes episodic store behavior, schema acceptance, runtime clear-session episodic deletion, and template defaults parse (`tests/application/test_scoped_memory_store.py`, `tests/application/test_companion_config_schema.py`, `tests/application/test_companion_runtime_service.py`, `tests/application/test_external_extension_template_config.py`)
     - live non-mocked cross-process episodic probe succeeded (`/api/config` enable episodic -> `/api/chat` -> `/api/session/clear-memory`) with observed `primary` path and HTTP success result (`200`) including explicit episodic deletion evidence (`deleted_episodic_records=1`)
 16. Slice K presentation groundwork implemented:
-    - external extension web template now includes an avatar presentation shell with deterministic expression-state mapping and speaking-state hooks driven by host-backed chat/TTS events (`docs/templates/external_extension/src/companion_app/static/index.html`, `docs/templates/external_extension/src/companion_app/static/app.js`, `docs/templates/external_extension/src/companion_app/static/styles.css`)
-    - CSS expression states (`neutral`, `curious`, `excited`, `focused`, `empathetic`) and speaking animation provide lip-sync-ready UI scaffolding without altering host runtime authority seams
+    - external extension web template includes a resilient avatar/presence shell with graceful fallback rendering, host-driven voice-state cues, and swap-ready layout structure (`docs/templates/external_extension/src/companion_app/frontend/src/App.tsx`, `docs/templates/external_extension/src/companion_app/frontend/src/styles/App.module.scss`)
+    - companion visual contract now uses warm neutral teal composition, quarter-circle chat bubble language, and selectable typography personalities without altering host runtime authority seams
     - template contract coverage now verifies avatar surface/logic asset presence alongside existing host-seam wiring checks (`tests/application/test_external_extension_template_server.py`)
 
 ## 2. Scope and Phase Model
@@ -114,7 +114,7 @@ Initiative phases:
 
 MVP includes:
 1. External Companion repo and install/validate/run flow
-2. Real local web chat UI
+2. Real local web Companion UI surface (left rail + swappable presence/chat + bottom controls)
 3. Role/style mode controls
 4. `session_memory` and `profile_memory`
 5. STT voice input
@@ -125,7 +125,7 @@ MVP excludes:
 1. Audio output/TTS playback
 2. Adaptive cadence
 3. `episodic_memory`
-4. Avatar, expression, and lip-sync delivery
+4. Final avatar/emotion/lip-sync production systems
 
 ## 3. Dependency and Execution Order
 
@@ -426,6 +426,7 @@ Phase 4 completion gate:
 | `08-EXTERNAL-REPO-BOOTSTRAP.md` | Slice B |
 | `09-COMPANION-MVP-PRODUCT.md` | Slice I |
 | `10-IMPORT-ISOLATION-HARDENING.md` | Slice E |
+| `docs/specs/COMPANION_UI_MVP_CONTRACT.md` | Slice I UI contract lock |
 
 ## 8. Execution Notes
 

@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-03-07
+Last reviewed: 2026-03-09
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
@@ -44,6 +44,7 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 17. `docs/specs/EXPLORER_FRONTIER_SCHEMA.md`
 18. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`
 19. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`
+20. `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`

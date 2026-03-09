@@ -1,14 +1,18 @@
 ﻿# Frontend API Contract
 
-Last verified against `orket/interfaces/api.py`: 2026-02-27
+Last verified against `orket/interfaces/api.py`: 2026-03-09
 
 ## Authentication
 1. `/v1/*` endpoints require `X-API-Key`.
-2. Websocket endpoint `GET ws://<host>/ws/events` accepts API key via:
+2. Companion route key-scoping:
+   - `/v1/companion/*` and `/api/v1/companion/*` accept `ORKET_COMPANION_API_KEY` when configured.
+   - Primary `ORKET_API_KEY` is still accepted on Companion routes for operator/admin access.
+   - Non-Companion `/v1/*` routes do not accept `ORKET_COMPANION_API_KEY`.
+3. Websocket endpoint `GET ws://<host>/ws/events` accepts API key via:
    - `X-API-Key` header, or
    - `api_key` query parameter.
-3. Fail-closed default: requests are rejected when `ORKET_API_KEY` is unset.
-4. Insecure bypass exists only when `ORKET_ALLOW_INSECURE_NO_API_KEY=true`.
+4. Fail-closed default: requests are rejected when `ORKET_API_KEY` is unset.
+5. Insecure bypass exists only when `ORKET_ALLOW_INSECURE_NO_API_KEY=true`.
 
 ## Base Health
 1. `GET /health`

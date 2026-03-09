@@ -61,6 +61,15 @@ app.mount("/static", StaticFiles(directory=_STATIC_ROOT), name="static")
 def _client() -> CompanionApiClient:
     base_url = str(os.getenv("COMPANION_HOST_BASE_URL", "http://127.0.0.1:8000")).strip()
     api_key = str(os.getenv("COMPANION_API_KEY", "")).strip()
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "ok": False,
+                "code": "E_COMPANION_GATEWAY_API_KEY_REQUIRED",
+                "message": "COMPANION_API_KEY is required for Companion host API access.",
+            },
+        )
     timeout_seconds = float(os.getenv("COMPANION_TIMEOUT_SECONDS", "45"))
     return CompanionApiClient(base_url, timeout_seconds=timeout_seconds, api_key=api_key)
 

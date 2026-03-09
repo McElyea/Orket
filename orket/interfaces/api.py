@@ -6,7 +6,7 @@ from datetime import datetime, UTC
 from functools import lru_cache
 from typing import Any, Optional, List
 
-from fastapi import FastAPI, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query
+from fastapi import FastAPI, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 import os
@@ -404,14 +404,55 @@ def _discover_team_topology(model_root: Path) -> list[dict[str, Any]]:
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-async def get_api_key(api_key_header: str = Security(api_key_header)):
-    expected_key = os.getenv("ORKET_API_KEY")
-    if not api_runtime_node.is_api_key_valid(expected_key, api_key_header):
-        raise HTTPException(
-            status_code=403,
-            detail=api_runtime_node.api_key_invalid_detail(),
-        )
-    return api_key_header
+
+def _read_api_key_env(name: str) -> str | None:
+    value = os.getenv(name)
+    if value is None:
+        return None
+    stripped = str(value).strip()
+    return stripped or None
+
+
+def _is_companion_route(path: str) -> bool:
+    normalized_path = str(path or "").strip()
+    return normalized_path.startswith("/v1/companion") or normalized_path.startswith("/api/v1/companion")
+
+
+def _is_companion_key_valid(
+    *,
+    provided_key: str | None,
+    default_key: str | None,
+    companion_key: str | None,
+) -> bool:
+    if companion_key:
+        if provided_key == companion_key:
+            return True
+        # Allow primary host key for trusted operator/admin access.
+        if default_key and provided_key == default_key:
+            return True
+        return False
+    return api_runtime_node.is_api_key_valid(default_key, provided_key)
+
+
+async def get_api_key(request: Request, api_key_header: str = Security(api_key_header)):
+    default_key = _read_api_key_env("ORKET_API_KEY")
+    companion_key = _read_api_key_env("ORKET_COMPANION_API_KEY")
+    request_path = str(request.url.path or "")
+
+    if _is_companion_route(request_path):
+        if _is_companion_key_valid(
+            provided_key=api_key_header,
+            default_key=default_key,
+            companion_key=companion_key,
+        ):
+            return api_key_header
+    elif api_runtime_node.is_api_key_valid(default_key, api_key_header):
+        return api_key_header
+
+    raise HTTPException(
+        status_code=403,
+        detail=api_runtime_node.api_key_invalid_detail(),
+    )
 
 # --- Lifespan ---
 
@@ -429,12 +470,15 @@ async def lifespan(_app: FastAPI):
     loop = asyncio.get_running_loop()
     log_subscriber = _on_log_record_factory(loop)
     subscribe_to_events(log_subscriber)
-    expected_key = os.getenv("ORKET_API_KEY", "").strip()
+    expected_key = _read_api_key_env("ORKET_API_KEY")
+    companion_key = _read_api_key_env("ORKET_COMPANION_API_KEY")
     insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
     log_event(
         "api_security_posture",
         {
             "api_key_configured": bool(expected_key),
+            "companion_api_key_configured": bool(companion_key),
+            "companion_api_key_scoped": bool(companion_key and companion_key != expected_key),
             "insecure_no_api_key_bypass": insecure_bypass,
         },
         PROJECT_ROOT,
