@@ -11,9 +11,8 @@ import tomllib
 
 import httpx
 from pydantic import ValidationError
-from orket_extension_sdk.capabilities import load_capability_vocab, validate_capabilities
 from orket_extension_sdk import __version__ as sdk_version
-from orket_extension_sdk.manifest import load_manifest as load_sdk_manifest
+from orket_extension_sdk.validate import validate_extension as validate_sdk_extension_tool
 
 from orket.core.domain.orket_manifest import (
     OrketManifest,
@@ -535,147 +534,12 @@ def _is_safe_archive_name(name: str) -> bool:
     return normalized == str(pure)
 
 
-def _resolve_sdk_manifest_path(target: Path) -> Path | None:
-    if target.is_file():
-        return target
-    for filename in ("extension.yaml", "extension.yml", "extension.json"):
-        candidate = target / filename
-        if candidate.is_file():
-            return candidate
-    return None
-
-
-def _parse_sdk_entrypoint(value: str) -> tuple[str, str]:
-    module_name, sep, attr_name = str(value or "").strip().partition(":")
-    if sep != ":" or not module_name.strip() or not attr_name.strip():
-        raise ValueError(ERROR_SDK_ENTRYPOINT_INVALID)
-    return module_name.strip(), attr_name.strip()
-
-
 def validate_sdk_extension(target: Path, *, strict: bool = False) -> Dict[str, Any]:
-    manifest_path = _resolve_sdk_manifest_path(target)
-    if manifest_path is None:
-        return {
-            "ok": False,
-            "target": str(target),
-            "error_count": 1,
-            "warning_count": 0,
-            "errors": [
-                {
-                    "code": ERROR_SDK_MANIFEST_NOT_FOUND,
-                    "location": "manifest",
-                    "message": "Manifest not found. Expected one of: extension.yaml, extension.yml, extension.json",
-                }
-            ],
-            "warnings": [],
-            "exit_code": 2,
-        }
+    return validate_sdk_extension_tool(target, strict=strict, include_import_scan=False)
 
-    errors: list[dict[str, str]] = []
-    warnings: list[dict[str, str]] = []
 
-    try:
-        manifest = load_sdk_manifest(manifest_path)
-    except ValueError as exc:
-        return {
-            "ok": False,
-            "target": str(target),
-            "manifest_path": str(manifest_path),
-            "error_count": 1,
-            "warning_count": 0,
-            "errors": [
-                {
-                    "code": "E_SDK_MANIFEST_PARSE",
-                    "location": str(manifest_path.name),
-                    "message": str(exc),
-                }
-            ],
-            "warnings": [],
-            "exit_code": 2,
-        }
-
-    extension_root = manifest_path.parent.resolve()
-    if str(extension_root) not in sys.path:
-        sys.path.insert(0, str(extension_root))
-        remove_path = True
-    else:
-        remove_path = False
-    try:
-        for workload in manifest.workloads:
-            location = f"workloads.{workload.workload_id}"
-            try:
-                module_name, attr_name = _parse_sdk_entrypoint(workload.entrypoint)
-            except ValueError:
-                errors.append(
-                    {
-                        "code": ERROR_SDK_ENTRYPOINT_INVALID,
-                        "location": f"{location}.entrypoint",
-                        "message": f"Invalid entrypoint format: {workload.entrypoint}",
-                    }
-                )
-                continue
-
-            try:
-                module = __import__(module_name, fromlist=[attr_name])
-            except Exception as exc:
-                errors.append(
-                    {
-                        "code": ERROR_SDK_ENTRYPOINT_MISSING,
-                        "location": f"{location}.entrypoint",
-                        "message": f"Unable to import module '{module_name}': {exc}",
-                    }
-                )
-                continue
-            if getattr(module, attr_name, None) is None:
-                errors.append(
-                    {
-                        "code": ERROR_SDK_ENTRYPOINT_MISSING,
-                        "location": f"{location}.entrypoint",
-                        "message": f"Entrypoint attr '{attr_name}' not found in module '{module_name}'",
-                    }
-                )
-
-            cap_errors, cap_warnings = validate_capabilities(
-                list(workload.required_capabilities),
-                strict=strict,
-                vocab=load_capability_vocab(),
-            )
-            for code in cap_errors:
-                errors.append(
-                    {
-                        "code": code.split(":", 1)[0],
-                        "location": f"{location}.required_capabilities",
-                        "message": code,
-                    }
-                )
-            for code in cap_warnings:
-                warnings.append(
-                    {
-                        "code": code.split(":", 1)[0],
-                        "location": f"{location}.required_capabilities",
-                        "message": code,
-                    }
-                )
-    finally:
-        if remove_path:
-            try:
-                sys.path.remove(str(extension_root))
-            except ValueError:
-                pass
-
-    ok = len(errors) == 0
-    return {
-        "ok": ok,
-        "target": str(target),
-        "manifest_path": str(manifest_path),
-        "extension_id": manifest.extension_id,
-        "workload_count": len(manifest.workloads),
-        "error_count": len(errors),
-        "warning_count": len(warnings),
-        "errors": errors,
-        "warnings": warnings,
-        "exit_code": 0 if ok else 2,
-    }
+def validate_external_extension(target: Path, *, strict: bool = False) -> Dict[str, Any]:
+    return validate_sdk_extension_tool(target, strict=strict, include_import_scan=True)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -720,12 +584,26 @@ def _parser() -> argparse.ArgumentParser:
     sdk_validate.add_argument("--strict", action="store_true", help="Treat unknown capabilities as errors.")
     sdk_validate.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
+    ext_parser = subparsers.add_parser("ext", help="External extension commands.")
+    ext_subparsers = ext_parser.add_subparsers(dest="ext_command", required=True)
+    ext_validate = ext_subparsers.add_parser(
+        "validate",
+        help="Validate external extension manifests, entrypoints, and import isolation.",
+    )
+    ext_validate.add_argument("target", nargs="?", default=".", help="Extension directory or manifest path.")
+    ext_validate.add_argument("--strict", action="store_true", help="Treat unknown capabilities as errors.")
+    ext_validate.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
     refactor_parser = subparsers.add_parser("refactor", help="Run CP-1.1 transactional refactor (rename only).")
     refactor_parser.add_argument("instruction", help="Refactor instruction. Supported: rename <A> to <B>.")
     refactor_parser.add_argument("--scope", action="append", required=True, help="Write scope path (repeatable).")
     refactor_parser.add_argument("--yes", action="store_true", help="Confirm mutation execution.")
     refactor_parser.add_argument("--dry-run", action="store_true", help="Plan only, no writes.")
-    refactor_parser.add_argument("--verify-profile", default="default", help="Verification profile from orket.config.json.")
+    refactor_parser.add_argument(
+        "--verify-profile",
+        default="default",
+        help="Verification profile from orket.config.json.",
+    )
     refactor_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
     api_parser = subparsers.add_parser("api", help="API generation commands.")
@@ -805,7 +683,11 @@ def _parser() -> argparse.ArgumentParser:
     review_files.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
     review_replay = review_sub.add_parser("replay", help="Replay a ReviewRun offline from saved artifacts.")
-    review_replay.add_argument("--run-dir", default="", help="Review run directory containing snapshot/policy artifacts.")
+    review_replay.add_argument(
+        "--run-dir",
+        default="",
+        help="Review run directory containing snapshot/policy artifacts.",
+    )
     review_replay.add_argument("--snapshot", default="", help="Path to snapshot.json.")
     review_replay.add_argument("--policy", default="", help="Path to policy_resolved.json.")
     review_replay.add_argument("--repo-root", default=".", help="Repo root for policy context.")
@@ -933,6 +815,26 @@ def main(argv: List[str] | None = None) -> int:
                     }
                 ],
             }
+    elif args.command == "ext":
+        if str(getattr(args, "ext_command", "")).strip() == "validate":
+            result = validate_external_extension(Path(args.target), strict=bool(args.strict))
+            for item in result.get("warnings", []):
+                print(
+                    f"[{item.get('code')}] {item.get('location')}: {item.get('message')}",
+                    file=sys.stderr,
+                )
+        else:
+            result = {
+                "ok": False,
+                "error_count": 1,
+                "errors": [
+                    {
+                        "code": "E_EXT_COMMAND_REQUIRED",
+                        "location": "ext",
+                        "message": "Specify an extension command. Supported: 'orket ext validate'.",
+                    }
+                ],
+            }
     elif args.command == "refactor":
         result = run_refactor_transaction(
             instruction=str(args.instruction),
@@ -968,7 +870,10 @@ def main(argv: List[str] | None = None) -> int:
         )
         policy_override = {}
         if bool(getattr(args, "enable_model_assisted", False)):
-            policy_override = {"model_assisted": {"enabled": True}, "lanes": {"enabled": ["deterministic", "model_assisted"]}}
+            policy_override = {
+                "model_assisted": {"enabled": True},
+                "lanes": {"enabled": ["deterministic", "model_assisted"]},
+            }
         if bool(getattr(args, "code_only", False)) and bool(getattr(args, "all_files", False)):
             result = {
                 "ok": False,

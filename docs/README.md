@@ -70,6 +70,7 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 1. `docs/guides/CONTRIBUTOR-MENTAL-MODEL.md`
 2. `docs/guides/examples.md`
 3. `docs/guides/PROJECT.md`
+4. `docs/guides/external-extension-authoring.md`
 
 ## Architecture Deep Dives
 1. `docs/architecture/ADR-0001-volatility-tier-boundaries.md`

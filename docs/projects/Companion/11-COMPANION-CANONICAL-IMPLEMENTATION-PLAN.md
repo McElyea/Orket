@@ -1,7 +1,7 @@
 # Companion Canonical Implementation Plan
 
 Last updated: 2026-03-08
-Status: Planned
+Status: In Progress
 Owner: Orket Core
 Source authority: `docs/projects/Companion/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md`
 Supporting inputs: `docs/projects/Companion/00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md`, `docs/projects/Companion/02-SDK-PACKAGE-HARDENING.md` through `docs/projects/Companion/10-IMPORT-ISOLATION-HARDENING.md`
@@ -14,6 +14,22 @@ Non-negotiable authority constraints:
 1. Host API seam owns prompt assembly, memory retrieval, generation orchestration, session state, and voice turn-finalization behavior.
 2. Companion external repo owns presentation, UX state, and typed consumption of public host seams.
 3. No product-significant runtime authority is duplicated in Companion UI code or Companion-repo backend shims.
+
+## 1.1 Current Execution Snapshot (2026-03-08)
+
+Phase 0 progress:
+1. Slice A implemented:
+   - SDK-local packaging authority (`orket_extension_sdk/pyproject.toml`)
+   - `py.typed` marker and changelog scaffold
+   - SDK import-isolation contract tests
+   - clean editable install proof for base and extras
+2. Slice B partially implemented:
+   - SDK standalone validators (`python -m orket_extension_sdk.validate`, `python -m orket_extension_sdk.import_scan`)
+   - Host CLI external validation path (`orket ext validate`)
+   - external-extension authoring guide and template surface in `docs/templates/external_extension/`
+   - local external Companion bootstrap repo created at `C:\Source\Orket-Extensions\Companion` with install/validate/test proof
+3. Remaining Phase 0 work:
+   - release/publish workflow hardening for SDK package distribution
 
 ## 2. Scope and Phase Model
 

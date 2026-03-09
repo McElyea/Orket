@@ -1,0 +1,12 @@
+{
+  "mode": "general_assistant",
+  "style": "platonic",
+  "memory": {
+    "session_memory_enabled": true,
+    "profile_memory_enabled": true
+  },
+  "voice": {
+    "enabled": false,
+    "silence_delay_seconds": 1.5
+  }
+}

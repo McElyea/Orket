@@ -1,0 +1,8 @@
+manifest_version: v0
+extension_id: your.extension.id
+extension_version: 0.1.0
+workloads:
+  - workload_id: sample_workload
+    entrypoint: companion_extension.workload:run
+    required_capabilities:
+      - model.generate
