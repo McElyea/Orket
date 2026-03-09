@@ -28,6 +28,9 @@ Run local web app:
 2. Set environment:
    - `COMPANION_HOST_BASE_URL` (default `http://127.0.0.1:8000`)
    - `COMPANION_API_KEY` (required; gateway fails closed when missing)
+   - `COMPANION_UI_HOST` (default `127.0.0.1`)
+   - `COMPANION_UI_PORT` (default `3000`; starting port)
+   - `COMPANION_UI_MAX_PORT` (default `COMPANION_UI_PORT + 20`; script auto-falls forward to the next open port)
    - `COMPANION_TIMEOUT_SECONDS` (default `45`)
    - `COMPANION_GATEWAY_REQUIRE_LOOPBACK` (default `true`)
    - `COMPANION_GATEWAY_REQUIRE_SAME_ORIGIN` (default `true` for mutating routes)
