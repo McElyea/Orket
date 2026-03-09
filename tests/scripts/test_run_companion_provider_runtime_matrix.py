@@ -203,3 +203,18 @@ def test_run_companion_provider_runtime_matrix_recommendation_matrix_reflects_ri
     class_d = payload["recommendations"]["by_rig_class"]["D"]["chat-first"]
     assert class_a["model"] == "qwen2.5-coder:7b"
     assert class_d["model"] == "qwen2.5-coder:40b"
+
+
+def test_run_companion_provider_runtime_matrix_expands_single_provider_multi_model_inputs(tmp_path: Path) -> None:
+    """Layer: integration. Verifies single-provider multi-model input expands into one case per model."""
+    output = tmp_path / "matrix.json"
+    payload = _run_matrix(
+        output=output,
+        providers=["ollama"],
+        models=["qwen2.5-coder:7b", "qwen2.5-coder:14b"],
+        transport=_build_matrix_transport(),
+    )
+    assert payload["summary"]["requested_cases"] == 2
+    assert len(payload["cases"]) == 2
+    models_seen = {row["model"] for row in payload["case_pairs_requested"]}
+    assert models_seen == {"qwen2.5-coder:7b", "qwen2.5-coder:14b"}

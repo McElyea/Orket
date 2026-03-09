@@ -14,6 +14,7 @@ SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 
+from scripts.companion.companion_matrix_case_selection import expand_case_pairs
 from scripts.companion.companion_matrix_execution import coverage_blockers, evaluate_case
 from scripts.companion.companion_matrix_scoring import RIG_CLASSES, USAGE_PROFILES, build_recommendation_matrix
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
@@ -33,6 +34,7 @@ def run_companion_provider_runtime_matrix(
     api_key: str,
     providers: list[str],
     models: list[str],
+    case_pairs: list[dict[str, str]] | None = None,
     rig_classes: list[str],
     usage_profiles: list[str],
     session_id: str,
@@ -45,12 +47,16 @@ def run_companion_provider_runtime_matrix(
     if api_key:
         headers["X-API-Key"] = api_key
     timeout = max(1.0, float(timeout_s))
+    selected_pairs = list(case_pairs or expand_case_pairs(providers=providers, models=models))
+    if not selected_pairs:
+        raise ValueError("E_COMPANION_MATRIX_CASES_REQUIRED")
 
     cases: list[dict[str, Any]] = []
     blockers: list[dict[str, Any]] = []
     with httpx.Client(base_url=base_url.rstrip("/"), headers=headers, timeout=timeout, transport=transport) as client:
-        for index, provider in enumerate(providers):
-            model = models[index] if index < len(models) else ""
+        for index, pair in enumerate(selected_pairs):
+            provider = str(pair.get("provider") or "")
+            model = str(pair.get("model") or "")
             case_payload, case_blockers = evaluate_case(
                 client=client,
                 session_id=f"{session_id}-{provider}-{index + 1}",
@@ -84,13 +90,14 @@ def run_companion_provider_runtime_matrix(
         "observed_result": observed_result,
         "providers_requested": providers,
         "models_requested": models,
+        "case_pairs_requested": selected_pairs,
         "rig_classes_requested": rig_classes,
         "usage_profiles_requested": usage_profiles,
         "cases": cases,
         "recommendations": recommendations,
         "blockers": blockers,
         "summary": {
-            "requested_cases": len(providers),
+            "requested_cases": len(selected_pairs),
             "successful_cases": success_count,
             "failed_cases": len(case_failures),
             "blocker_count": len(blockers),
@@ -107,6 +114,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--api-key", default=os.getenv("ORKET_API_KEY", ""))
     parser.add_argument("--providers", default="ollama,lmstudio")
     parser.add_argument("--models", default="")
+    parser.add_argument(
+        "--provider-model-map",
+        default="",
+        help="Optional explicit map: provider=model1|model2;provider2=model3",
+    )
     parser.add_argument("--rig-classes", default="A,B,C,D")
     parser.add_argument("--usage-profiles", default="chat-first,memory-heavy,voice-heavy")
     parser.add_argument("--session-id", default="companion-matrix")
@@ -136,6 +148,17 @@ def main(argv: list[str] | None = None) -> int:
     if not providers:
         raise SystemExit("E_COMPANION_MATRIX_PROVIDERS_REQUIRED")
     models = _parse_csv_tokens(args.models)
+    try:
+        case_pairs = expand_case_pairs(
+            providers=providers,
+            models=models,
+            provider_model_map=str(args.provider_model_map or ""),
+        )
+    except ValueError as exc:
+        raise SystemExit(f"E_COMPANION_MATRIX_PROVIDER_MODEL_MAP_INVALID: {exc}") from exc
+    if not case_pairs:
+        raise SystemExit("E_COMPANION_MATRIX_CASES_REQUIRED")
+
     rig_classes = _validated_or_default(
         [token.upper() for token in _parse_csv_tokens(args.rig_classes)],
         RIG_CLASSES,
@@ -152,6 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         api_key=str(args.api_key),
         providers=providers,
         models=models,
+        case_pairs=case_pairs,
         rig_classes=rig_classes,
         usage_profiles=usage_profiles,
         session_id=str(args.session_id),
