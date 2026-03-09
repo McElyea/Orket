@@ -1,7 +1,7 @@
 # Companion Canonical Implementation Plan
 
 Last updated: 2026-03-09
-Status: MVP Closed (Post-MVP deferred)
+Status: Archived (MVP implemented and lane closed)
 Owner: Orket Core
 Archive root (MVP closeout): `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/`
 Source authority: `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md`
@@ -437,6 +437,6 @@ Phase 4 completion gate:
 
 ## 8. Execution Notes
 
-1. This file is the canonical execution pointer for the Companion lane in `docs/ROADMAP.md`.
-2. Supporting `00-10`, `12`, and `13` MVP docs are archived under `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/` and remain historical authority inputs for MVP traceability.
-3. Closeout must archive completed phase-scoped docs without archiving the initiative-level plan while future phases remain.
+1. This file is archived historical authority for Companion MVP implementation and closeout.
+2. Supporting `00-10`, `12`, and `13` MVP docs are archived under `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/` and remain historical traceability inputs.
+3. Reopening Companion post-MVP work requires a new active implementation plan and roadmap pointer.

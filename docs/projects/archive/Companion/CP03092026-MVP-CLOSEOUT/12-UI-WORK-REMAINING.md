@@ -3,7 +3,7 @@
 Last updated: 2026-03-09
 Status: Closed (MVP remaining work complete)
 Owner: Orket Core
-Parent authority: `docs/projects/Companion/11-COMPANION-CANONICAL-IMPLEMENTATION-PLAN.md`
+Parent authority: `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/11-COMPANION-CANONICAL-IMPLEMENTATION-PLAN.md`
 UI contract authority: `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
 
 ## 1. Purpose
