@@ -89,6 +89,10 @@ Orket may remain broad and exploratory, but agents must not normalize preventabl
 Git workflow for this repository:
 1. Work directly on `main` by default.
 2. Do not create or switch to task branches unless the user explicitly requests a branch-based workflow.
+3. Explicit user command semantics for VCS scope:
+   - if the user says to commit/push "ALL changes", treat that as repository-wide scope, including changes the agent did not author.
+   - in that case, stage all available changes (`git add -A`) and commit/push unless the user explicitly excludes paths.
+   - if any path cannot be staged due to permissions or environment blockers, report the exact blocked path(s) and error(s).
 
 Required:
 1. Preserve future packaging and shipping options.
@@ -138,6 +142,13 @@ Required:
 12. For `docs/projects/techdebt/`, only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain outside archive.
 13. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
 14. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
+15. Explicit roadmap-placement rule:
+   - when the user explicitly asks to "put/add this on the roadmap" (or equivalent), place the item in `Priority Now` at the highest available non-blocking position.
+   - default placement is top of `Priority Now`.
+   - if an existing `Priority Now` item is already explicitly higher-priority or cannot be displaced without blocking active execution, insert the new user-requested item immediately after it (typically second).
+   - do not place explicit user-requested roadmap additions only in `Future Lanes` unless the user explicitly asks for future/backlog placement.
+   - keep this rule AGENT-local; do not mirror or duplicate agent-specific roadmap-placement policy into `docs/CONTRIBUTOR.md` unless the user explicitly requests that documentation change.
+   - when updating `docs/ROADMAP.md`, keep edits execution-only (lane/status/pointer updates). Do not add operating-rule/process narrative to roadmap sections as part of roadmap-entry updates.
 
 Do not use `docs/ROADMAP.md` to restate process that already lives in `docs/CONTRIBUTOR.md`.
 

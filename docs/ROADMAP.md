@@ -8,7 +8,7 @@ Active lane entries should link the canonical implementation plan path only; req
 Phase closeout is not initiative closeout: if a lane's initiative mini-roadmap still has pending phases, keep the lane active and archive only completed phase docs.
 
 ## Priority Now
-No active priority lane.
+1. Companion external extension initiative -- Canonical implementation plan: `docs/projects/Companion/11-COMPANION-CANONICAL-IMPLEMENTATION-PLAN.md`.
 
 ## Maintenance (Non-Priority)
 These items are active executable work. They are non-priority, not deferred.
@@ -30,6 +30,7 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
+| Companion | active | P1-priority-now | `docs/projects/Companion/11-COMPANION-CANONICAL-IMPLEMENTATION-PLAN.md` | Orket Core | - |
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Source: `Recurring-Maintenance-Checklist.md`. Folder governance: `README.md`. |
 | future | backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred project lanes (for example `UIForge`, `NervousSystem`). |
