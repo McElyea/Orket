@@ -37,7 +37,7 @@ Phase 0 progress:
 5. Slice C groundwork in progress:
    - SDK memory and voice capability contracts (`orket_extension_sdk/memory.py`, `orket_extension_sdk/voice.py`)
    - capability vocabulary extended for `memory.write`, `memory.query`, `speech.transcribe`, `voice.turn_control`
-   - runtime default capability registration for new seams (null-provider path)
+   - runtime capability registration now includes host-backed `model.generate`, SQLite-backed `memory.write`/`memory.query`, and null-provider defaults for speech/voice seams
 
 ## 2. Scope and Phase Model
 

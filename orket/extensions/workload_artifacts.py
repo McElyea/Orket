@@ -9,11 +9,11 @@ from posixpath import normpath
 from typing import Any
 
 from orket.capabilities.audio_player import build_audio_player
+from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.tts_piper import build_tts_provider
 from orket_extension_sdk.capabilities import CapabilityRegistry
 from orket_extension_sdk.audio import NullAudioPlayer
-from orket_extension_sdk.llm import NullLLMProvider
-from orket_extension_sdk.memory import NullMemoryProvider
 from orket_extension_sdk.result import WorkloadResult
 from orket_extension_sdk.voice import NullSTTProvider, NullVoiceTurnController
 
@@ -57,11 +57,34 @@ class WorkloadArtifacts:
         if not registry.has("audio.play"):
             registry.register("audio.play", build_audio_player(input_config=input_config))
         if not registry.has("model.generate"):
-            registry.register("model.generate", NullLLMProvider())
-        if not registry.has("memory.write"):
-            registry.register("memory.write", NullMemoryProvider())
-        if not registry.has("memory.query"):
-            registry.register("memory.query", NullMemoryProvider())
+            requested_model = str(input_config.get("model") or input_config.get("model_id") or "").strip()
+            model = requested_model or "qwen2.5-coder:7b"
+            raw_temperature = input_config.get("temperature", 0.2)
+            try:
+                temperature = float(raw_temperature)
+            except (TypeError, ValueError):
+                temperature = 0.2
+            raw_seed = input_config.get("seed")
+            try:
+                seed = int(raw_seed) if raw_seed is not None else None
+            except (TypeError, ValueError):
+                seed = None
+            registry.register(
+                "model.generate",
+                LocalModelCapabilityProvider(
+                    model=model,
+                    temperature=temperature,
+                    seed=seed,
+                ),
+            )
+        if not registry.has("memory.write") or not registry.has("memory.query"):
+            memory_provider = SQLiteMemoryCapabilityProvider(
+                db_path=(workspace / ".orket" / "durable" / "db" / "extension_memory.db")
+            )
+            if not registry.has("memory.write"):
+                registry.register("memory.write", memory_provider)
+            if not registry.has("memory.query"):
+                registry.register("memory.query", memory_provider)
         if not registry.has("speech.transcribe"):
             registry.register("speech.transcribe", NullSTTProvider())
         if not registry.has("voice.turn_control"):
