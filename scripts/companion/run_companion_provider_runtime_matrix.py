@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import json
@@ -14,6 +14,8 @@ SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 
+from scripts.companion.companion_matrix_execution import coverage_blockers, evaluate_case
+from scripts.companion.companion_matrix_scoring import RIG_CLASSES, USAGE_PROFILES, build_recommendation_matrix
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
@@ -25,141 +27,17 @@ def _parse_csv_tokens(raw: str) -> list[str]:
     return [token.strip() for token in str(raw or "").split(",") if token.strip()]
 
 
-def _score_latency(latency_ms: int) -> float:
-    if latency_ms <= 800:
-        return 1.0
-    if latency_ms <= 1500:
-        return 0.8
-    if latency_ms <= 2500:
-        return 0.6
-    if latency_ms <= 5000:
-        return 0.4
-    return 0.2
-
-
-def _score_mode_adherence(message: str) -> float:
-    if "MATRIX_OK" in str(message or ""):
-        return 1.0
-    if message:
-        return 0.5
-    return 0.0
-
-
-def _build_case_result(
-    *,
-    provider: str,
-    model: str,
-    path: str,
-    result: str,
-    response_payload: dict[str, Any] | None = None,
-    error: str = "",
-) -> dict[str, Any]:
-    payload = dict(response_payload or {})
-    latency_ms = int(payload.get("latency_ms") or 0)
-    message = str(payload.get("message") or "")
-    if result != "success":
-        return {
-            "provider": provider,
-            "model": model,
-            "observed_path": path,
-            "result": result,
-            "error": error,
-            "scores": {
-                "reasoning": {"status": "not_measured", "value": None},
-                "conversational_quality": {"status": "not_measured", "value": None},
-                "memory_usefulness": {"status": "not_measured", "value": None},
-                "latency": {"status": "not_measured", "value": None},
-                "footprint": {"status": "not_measured", "value": None},
-                "voice_suitability": {"status": "not_measured", "value": None},
-                "stability": {"status": "measured", "value": 0.0},
-                "mode_adherence": {"status": "not_measured", "value": None},
-            },
-        }
-
-    return {
-        "provider": provider,
-        "model": model,
-        "observed_path": path,
-        "result": result,
-        "latency_ms": latency_ms,
-        "message_preview": message[:160],
-        "scores": {
-            "reasoning": {"status": "not_measured", "value": None},
-            "conversational_quality": {"status": "measured", "value": _score_mode_adherence(message)},
-            "memory_usefulness": {"status": "not_measured", "value": None},
-            "latency": {"status": "measured", "value": _score_latency(latency_ms)},
-            "footprint": {"status": "not_measured", "value": None},
-            "voice_suitability": {"status": "not_measured", "value": None},
-            "stability": {"status": "measured", "value": 1.0},
-            "mode_adherence": {"status": "measured", "value": _score_mode_adherence(message)},
-        },
-    }
-
-
-def _invoke_case(
-    *,
-    client: httpx.Client,
-    session_id: str,
-    provider: str,
-    model: str,
-) -> dict[str, Any]:
-    config_payload = {
-        "session_id": session_id,
-        "scope": "next_turn",
-        "patch": {
-            "mode": {"role_id": "general_assistant", "relationship_style": "platonic"},
-            "memory": {"session_memory_enabled": True, "profile_memory_enabled": True},
-        },
-    }
-    try:
-        config_response = client.patch("/api/v1/companion/config", json=config_payload)
-        config_response.raise_for_status()
-        chat_response = client.post(
-            "/api/v1/companion/chat",
-            json={
-                "session_id": session_id,
-                "message": f"[{provider}:{model}] Reply with exactly: MATRIX_OK",
-                "provider": provider,
-                "model": model,
-            },
-        )
-        chat_response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        detail = f"status={exc.response.status_code} url={exc.request.url}"
-        return _build_case_result(
-            provider=provider,
-            model=model,
-            path="blocked",
-            result="failure",
-            error=detail,
-        )
-    except httpx.HTTPError as exc:
-        return _build_case_result(
-            provider=provider,
-            model=model,
-            path="blocked",
-            result="failure",
-            error=str(exc),
-        )
-
-    payload = chat_response.json()
-    return _build_case_result(
-        provider=provider,
-        model=model,
-        path="primary",
-        result="success",
-        response_payload=payload,
-    )
-
-
 def run_companion_provider_runtime_matrix(
     *,
     base_url: str,
     api_key: str,
     providers: list[str],
     models: list[str],
+    rig_classes: list[str],
+    usage_profiles: list[str],
     session_id: str,
     timeout_s: float,
+    stability_attempts: int,
     output_path: Path,
     transport: httpx.BaseTransport | None = None,
 ) -> dict[str, Any]:
@@ -169,35 +47,54 @@ def run_companion_provider_runtime_matrix(
     timeout = max(1.0, float(timeout_s))
 
     cases: list[dict[str, Any]] = []
+    blockers: list[dict[str, Any]] = []
     with httpx.Client(base_url=base_url.rstrip("/"), headers=headers, timeout=timeout, transport=transport) as client:
         for index, provider in enumerate(providers):
             model = models[index] if index < len(models) else ""
-            cases.append(
-                _invoke_case(
-                    client=client,
-                    session_id=f"{session_id}-{provider}-{index + 1}",
-                    provider=provider,
-                    model=model,
-                )
+            case_payload, case_blockers = evaluate_case(
+                client=client,
+                session_id=f"{session_id}-{provider}-{index + 1}",
+                provider=provider,
+                model=model,
+                stability_attempts=stability_attempts,
             )
+            cases.append(case_payload)
+            blockers.extend(case_blockers)
 
-    failures = [row for row in cases if row.get("result") != "success"]
-    status = "complete" if not failures else "partial"
+    blockers.extend(coverage_blockers(cases))
+    recommendations = build_recommendation_matrix(
+        cases=cases,
+        rig_classes=rig_classes,
+        usage_profiles=usage_profiles,
+    )
+
+    case_failures = [row for row in cases if row.get("result") != "success"]
+    status = "complete" if not case_failures and not blockers else "partial"
+    success_count = sum(1 for row in cases if row.get("result") == "success")
+    if status == "complete":
+        observed_result = "success"
+    elif success_count > 0:
+        observed_result = "partial success"
+    else:
+        observed_result = "failure"
+
     payload = {
         "generated_at_utc": _now_utc_iso(),
         "status": status,
-        "observed_result": "success" if not failures else "partial success",
+        "observed_result": observed_result,
         "providers_requested": providers,
         "models_requested": models,
+        "rig_classes_requested": rig_classes,
+        "usage_profiles_requested": usage_profiles,
         "cases": cases,
-        "blockers": [
-            {
-                "provider": str(row.get("provider") or ""),
-                "model": str(row.get("model") or ""),
-                "error": str(row.get("error") or ""),
-            }
-            for row in failures
-        ],
+        "recommendations": recommendations,
+        "blockers": blockers,
+        "summary": {
+            "requested_cases": len(providers),
+            "successful_cases": success_count,
+            "failed_cases": len(case_failures),
+            "blocker_count": len(blockers),
+        },
     }
     return write_payload_with_diff_ledger(output_path, payload)
 
@@ -210,8 +107,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--api-key", default=os.getenv("ORKET_API_KEY", ""))
     parser.add_argument("--providers", default="ollama,lmstudio")
     parser.add_argument("--models", default="")
+    parser.add_argument("--rig-classes", default="A,B,C,D")
+    parser.add_argument("--usage-profiles", default="chat-first,memory-heavy,voice-heavy")
     parser.add_argument("--session-id", default="companion-matrix")
     parser.add_argument("--timeout-s", type=float, default=30.0)
+    parser.add_argument("--stability-attempts", type=int, default=2)
     parser.add_argument(
         "--output",
         default="benchmarks/results/companion/provider_runtime_matrix/companion_provider_runtime_matrix.json",
@@ -220,20 +120,43 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _validated_or_default(tokens: list[str], defaults: tuple[str, ...], *, label: str) -> list[str]:
+    if not tokens:
+        return list(defaults)
+    allowed = {token for token in defaults}
+    invalid = [token for token in tokens if token not in allowed]
+    if invalid:
+        raise SystemExit(f"E_COMPANION_MATRIX_INVALID_{label.upper()}: {','.join(invalid)}")
+    return tokens
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     providers = _parse_csv_tokens(args.providers)
     if not providers:
         raise SystemExit("E_COMPANION_MATRIX_PROVIDERS_REQUIRED")
     models = _parse_csv_tokens(args.models)
+    rig_classes = _validated_or_default(
+        [token.upper() for token in _parse_csv_tokens(args.rig_classes)],
+        RIG_CLASSES,
+        label="rig_classes",
+    )
+    usage_profiles = _validated_or_default(
+        _parse_csv_tokens(args.usage_profiles),
+        USAGE_PROFILES,
+        label="usage_profiles",
+    )
 
     payload = run_companion_provider_runtime_matrix(
         base_url=str(args.base_url),
         api_key=str(args.api_key),
         providers=providers,
         models=models,
+        rig_classes=rig_classes,
+        usage_profiles=usage_profiles,
         session_id=str(args.session_id),
         timeout_s=float(args.timeout_s),
+        stability_attempts=max(1, int(args.stability_attempts)),
         output_path=Path(args.output),
     )
     if args.json:

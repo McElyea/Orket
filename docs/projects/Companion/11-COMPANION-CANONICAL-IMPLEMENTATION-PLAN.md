@@ -15,7 +15,7 @@ Non-negotiable authority constraints:
 2. Companion external repo owns presentation, UX state, and typed consumption of public host seams.
 3. No product-significant runtime authority is duplicated in Companion UI code or Companion-repo backend shims.
 
-## 1.1 Current Execution Snapshot (2026-03-08)
+## 1.1 Current Execution Snapshot (2026-03-09)
 
 Phase 0 progress:
 1. Slice A implemented:
@@ -62,11 +62,13 @@ Phase 0 progress:
     - external template API client expanded to full Companion host seam (`status`, `config`, `history`, `chat`, `voice`, `clear-session`)
     - external template web app now includes FastAPI gateway routes plus static MVP chat/control UI assets in `src/companion_app/static/`
     - `ext init` and template server/config tests now verify richer scaffold paths and static UI serving behavior
-12. Slice J groundwork implemented:
-    - companion provider/runtime matrix runner scaffold (`scripts/companion/run_companion_provider_runtime_matrix.py`) now exercises Companion host API seams and emits canonical matrix JSON
-    - Companion chat seam now accepts optional provider/model selectors for matrix-driven evaluations (`provider`, `model` fields on `/companion/chat`)
-    - matrix artifact output uses diff-ledger canonical writer (`write_payload_with_diff_ledger`) with static canonical path defaults
-    - script integration tests cover complete/partial outcomes and diff-ledger append behavior (`tests/scripts/test_run_companion_provider_runtime_matrix.py`)
+12. Slice J matrix runner hardening implemented:
+    - matrix runner now executes multi-step Companion host seam probes (`status`, `config`, `chat`, `voice`) and scores all required dimensions (`reasoning`, `conversational_quality`, `memory_usefulness`, `latency`, `footprint`, `voice_suitability`, `stability`, `mode_adherence`)
+    - case-level observed paths now classify as `primary`, `degraded`, or `blocked` with exact blocker step + error payloads
+    - matrix output now includes rig-class recommendations (`A`, `B`, `C`, `D`) for usage profiles (`chat-first`, `memory-heavy`, `voice-heavy`) instead of a single-winner output
+    - coverage gaps for unmeasured dimensions are now emitted as explicit blockers instead of silently passing matrix status
+    - runner logic is split across focused helper modules for maintainability (`scripts/companion/companion_matrix_execution.py`, `scripts/companion/companion_matrix_http_steps.py`, `scripts/companion/companion_matrix_scoring.py`) with expanded integration coverage (`tests/scripts/test_run_companion_provider_runtime_matrix.py`)
+    - live non-mocked probe attempted in-session via `python -m scripts.companion.run_companion_provider_runtime_matrix`; current environment result was `blocked` at `/api/v1/companion/status` with connection refusal (`WinError 10061`) because host API was not listening
 
 ## 2. Scope and Phase Model
 
