@@ -119,6 +119,8 @@ def _invoke_case(
             json={
                 "session_id": session_id,
                 "message": f"[{provider}:{model}] Reply with exactly: MATRIX_OK",
+                "provider": provider,
+                "model": model,
             },
         )
         chat_response.raise_for_status()

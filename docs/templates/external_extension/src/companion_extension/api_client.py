@@ -31,11 +31,23 @@ class CompanionApiClient:
             params={"session_id": session_id, "limit": max(1, int(limit))},
         )
 
-    async def chat(self, *, session_id: str, message: str) -> dict[str, Any]:
+    async def chat(
+        self,
+        *,
+        session_id: str,
+        message: str,
+        provider: str = "",
+        model: str = "",
+    ) -> dict[str, Any]:
         return await self._request(
             "POST",
             "/api/v1/companion/chat",
-            json={"session_id": session_id, "message": message},
+            json={
+                "session_id": session_id,
+                "message": message,
+                "provider": provider,
+                "model": model,
+            },
         )
 
     async def clear_session_memory(self, *, session_id: str) -> dict[str, Any]:

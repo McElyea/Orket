@@ -16,6 +16,8 @@ from companion_extension.api_client import CompanionApiClient
 class ChatRequest(BaseModel):
     session_id: str = Field(min_length=1)
     message: str = Field(min_length=1)
+    provider: str = ""
+    model: str = ""
 
 
 class ConfigUpdateRequest(BaseModel):
@@ -108,7 +110,12 @@ async def history(session_id: str, limit: int = 50) -> dict[str, Any]:
 @app.post("/api/chat")
 async def chat(req: ChatRequest) -> dict[str, Any]:
     try:
-        return await _client().chat(session_id=req.session_id, message=req.message)
+        return await _client().chat(
+            session_id=req.session_id,
+            message=req.message,
+            provider=req.provider,
+            model=req.model,
+        )
     except httpx.HTTPError as exc:
         _raise_gateway_error(exc)
 

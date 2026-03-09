@@ -4,6 +4,7 @@ import asyncio
 import base64
 import binascii
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -13,7 +14,7 @@ from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.services.profile_write_policy import ProfileWritePolicy
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
-from orket_extension_sdk.llm import GenerateRequest
+from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 from orket_extension_sdk.voice import TranscribeRequest, TranscribeResponse, VoiceTurnControlRequest, VoiceTurnControlResponse
 
 from .companion_config_models import CompanionConfig
@@ -122,7 +123,14 @@ class CompanionRuntimeService:
         bounded_limit = max(1, min(200, int(limit)))
         return list(session.history[-bounded_limit:])
 
-    async def chat(self, *, session_id: str, message: str) -> dict[str, Any]:
+    async def chat(
+        self,
+        *,
+        session_id: str,
+        message: str,
+        provider: str = "",
+        model: str = "",
+    ) -> dict[str, Any]:
         user_message = str(message or "").strip()
         if not user_message:
             raise ValueError("E_COMPANION_MESSAGE_REQUIRED")
@@ -139,7 +147,11 @@ class CompanionRuntimeService:
             temperature=0.2,
         )
         try:
-            model_result = await asyncio.to_thread(self._model_provider.generate, request)
+            model_result = await self._generate_response(
+                request=request,
+                provider_override=provider,
+                model_override=model,
+            )
         except (RuntimeError, OSError, ValueError) as exc:
             raise ValueError(f"E_COMPANION_MODEL_GENERATION_FAILED: {exc}") from exc
         assistant_text = str(model_result.text or "").strip() or "I could not generate a response."
@@ -258,6 +270,24 @@ class CompanionRuntimeService:
             snippets.extend(_format_memory_rows(rows, prefix="profile"))
         return "\n".join(snippets)
 
+    async def _generate_response(
+        self,
+        *,
+        request: GenerateRequest,
+        provider_override: str,
+        model_override: str,
+    ) -> GenerateResponse:
+        normalized_provider = str(provider_override or "").strip()
+        normalized_model = str(model_override or "").strip()
+        if not normalized_provider and not normalized_model:
+            return await asyncio.to_thread(self._model_provider.generate, request)
+        return await asyncio.to_thread(
+            _generate_with_provider_overrides,
+            request,
+            normalized_provider,
+            normalized_model,
+        )
+
     async def _stt_available(self) -> bool:
         try:
             probe = await asyncio.to_thread(self._stt_provider.transcribe, TranscribeRequest(audio_bytes=b""))
@@ -336,3 +366,33 @@ def _format_history_context(history_rows: list[dict[str, Any]]) -> str:
         if role and content:
             parts.append(f"{role}: {content}")
     return "\n".join(parts)
+
+
+def _generate_with_provider_overrides(
+    request: GenerateRequest,
+    provider_override: str,
+    model_override: str,
+) -> GenerateResponse:
+    model = model_override or "qwen2.5-coder:7b"
+    provider = provider_override.strip()
+    previous_llm_provider = os.environ.get("ORKET_LLM_PROVIDER")
+    previous_model_provider = os.environ.get("ORKET_MODEL_PROVIDER")
+    try:
+        if provider:
+            os.environ["ORKET_LLM_PROVIDER"] = provider
+            os.environ["ORKET_MODEL_PROVIDER"] = provider
+        provider_client = LocalModelCapabilityProvider(
+            model=model,
+            temperature=0.2,
+            seed=None,
+        )
+        return provider_client.generate(request)
+    finally:
+        if previous_llm_provider is None:
+            os.environ.pop("ORKET_LLM_PROVIDER", None)
+        else:
+            os.environ["ORKET_LLM_PROVIDER"] = previous_llm_provider
+        if previous_model_provider is None:
+            os.environ.pop("ORKET_MODEL_PROVIDER", None)
+        else:
+            os.environ["ORKET_MODEL_PROVIDER"] = previous_model_provider

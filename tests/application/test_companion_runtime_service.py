@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import orket.application.services.companion_runtime_service as companion_runtime_service
 from orket.application.services.companion_runtime_service import CompanionRuntimeService
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
@@ -136,3 +137,28 @@ async def test_companion_runtime_service_chat_surfaces_generation_failures_with_
     )
     with pytest.raises(ValueError, match="E_COMPANION_MODEL_GENERATION_FAILED"):
         await service.chat(session_id="s-fail", message="hello")
+
+
+@pytest.mark.asyncio
+async def test_companion_runtime_service_chat_uses_provider_override_path(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies provider/model overrides route through the override generation path."""
+    captured: dict[str, str] = {}
+
+    def fake_generate_with_overrides(request: GenerateRequest, provider_override: str, model_override: str) -> GenerateResponse:
+        captured["provider"] = provider_override
+        captured["model"] = model_override
+        return GenerateResponse(text=f"override:{request.user_message}", model="override-model", latency_ms=3)
+
+    monkeypatch.setattr(companion_runtime_service, "_generate_with_provider_overrides", fake_generate_with_overrides)
+    service = CompanionRuntimeService(
+        project_root=tmp_path,
+        model_provider=_FailingModelProvider(),  # type: ignore[arg-type]
+    )
+    result = await service.chat(
+        session_id="s-override",
+        message="hello",
+        provider="lmstudio",
+        model="qwen2.5-coder:14b",
+    )
+    assert result["message"] == "override:hello"
+    assert captured == {"provider": "lmstudio", "model": "qwen2.5-coder:14b"}

@@ -64,6 +64,7 @@ Phase 0 progress:
     - `ext init` and template server/config tests now verify richer scaffold paths and static UI serving behavior
 12. Slice J groundwork implemented:
     - companion provider/runtime matrix runner scaffold (`scripts/companion/run_companion_provider_runtime_matrix.py`) now exercises Companion host API seams and emits canonical matrix JSON
+    - Companion chat seam now accepts optional provider/model selectors for matrix-driven evaluations (`provider`, `model` fields on `/companion/chat`)
     - matrix artifact output uses diff-ledger canonical writer (`write_payload_with_diff_ledger`) with static canonical path defaults
     - script integration tests cover complete/partial outcomes and diff-ledger append behavior (`tests/scripts/test_run_companion_provider_runtime_matrix.py`)
 

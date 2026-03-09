@@ -86,3 +86,32 @@ def test_run_companion_provider_runtime_matrix_partial_appends_diff_ledger(tmp_p
     assert payload["blockers"][0]["provider"] == "lmstudio"
     persisted = json.loads(output.read_text(encoding="utf-8"))
     assert len(persisted["diff_ledger"]) == 2
+
+
+def test_run_companion_provider_runtime_matrix_forwards_provider_and_model_in_chat_payload(tmp_path: Path) -> None:
+    """Layer: integration. Verifies matrix runner forwards provider/model selectors through chat API payload."""
+    captured: list[dict[str, object]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/v1/companion/config":
+            return httpx.Response(200, json={"ok": True})
+        if request.url.path == "/api/v1/companion/chat":
+            payload = json.loads(request.content.decode("utf-8"))
+            captured.append(payload)
+            return httpx.Response(200, json={"message": "MATRIX_OK", "latency_ms": 700, "model": "fake"})
+        return httpx.Response(404, json={"detail": "not found"})
+
+    output = tmp_path / "matrix.json"
+    run_companion_provider_runtime_matrix(
+        base_url="http://test",
+        api_key="",
+        providers=["lmstudio"],
+        models=["qwen2.5-coder:14b"],
+        session_id="matrix",
+        timeout_s=5.0,
+        output_path=output,
+        transport=httpx.MockTransport(handler),
+    )
+    assert len(captured) == 1
+    assert captured[0]["provider"] == "lmstudio"
+    assert captured[0]["model"] == "qwen2.5-coder:14b"

@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field
 class CompanionChatRequest(BaseModel):
     session_id: str = Field(min_length=1)
     message: str = Field(min_length=1)
+    provider: str = ""
+    model: str = ""
 
 
 class CompanionConfigUpdateRequest(BaseModel):
@@ -75,7 +77,12 @@ def build_companion_router(*, service_getter: Callable[[], Any]) -> APIRouter:
     async def companion_chat(req: CompanionChatRequest):
         service = service_getter()
         try:
-            return await service.chat(session_id=req.session_id, message=req.message)
+            return await service.chat(
+                session_id=req.session_id,
+                message=req.message,
+                provider=req.provider,
+                model=req.model,
+            )
         except ValueError as exc:
             _raise_companion_http_error(exc)
 
