@@ -5,6 +5,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+_SAME_ORIGIN_HEADERS = {"origin": "http://testserver"}
+
 
 def test_external_extension_template_server_serves_static_ui() -> None:
     """Layer: contract. Verifies external extension template web server boots and serves static UI assets."""
@@ -96,6 +98,7 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
         client = TestClient(server_module.app)
         response = client.post(
             "/api/voice/synthesize",
+            headers=_SAME_ORIGIN_HEADERS,
             json={"text": "Hello synth", "voice_id": "demo_voice", "emotion_hint": "calm", "speed": 1.2},
         )
         assert response.status_code == 200
@@ -110,6 +113,7 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
         assert voices_payload["voices"][0]["voice_id"] == "demo_voice"
         cadence = client.post(
             "/api/voice/cadence/suggest",
+            headers=_SAME_ORIGIN_HEADERS,
             json={"session_id": "demo-session", "text": "hello cadence route"},
         )
         assert cadence.status_code == 200
@@ -212,6 +216,7 @@ def test_external_extension_template_server_proxies_chat_and_config(monkeypatch)
         }
         update_response = client.patch(
             "/api/config",
+            headers=_SAME_ORIGIN_HEADERS,
             json={"session_id": "s-test", "scope": "next_turn", "patch": config_patch},
         )
         assert update_response.status_code == 200
@@ -224,6 +229,7 @@ def test_external_extension_template_server_proxies_chat_and_config(monkeypatch)
 
         chat_response = client.post(
             "/api/chat",
+            headers=_SAME_ORIGIN_HEADERS,
             json={
                 "session_id": "s-test",
                 "message": "Can you summarize this?",
@@ -264,6 +270,191 @@ def test_external_extension_template_server_requires_companion_api_key(monkeypat
         detail = response.json()["detail"]
         assert detail["ok"] is False
         assert detail["code"] == "E_COMPANION_GATEWAY_API_KEY_REQUIRED"
+    finally:
+        sys.path = [entry for entry in sys.path if entry != str(src_root)]
+        for module_name in list(sys.modules):
+            if module_name == "companion_app" or module_name.startswith("companion_app."):
+                sys.modules.pop(module_name, None)
+            if module_name == "companion_extension" or module_name.startswith("companion_extension."):
+                sys.modules.pop(module_name, None)
+
+
+def test_external_extension_template_server_blocks_cross_origin_mutations(monkeypatch) -> None:
+    """Layer: contract. Verifies mutating routes are rejected when request Origin does not match gateway origin."""
+    repo_root = Path(__file__).resolve().parents[2]
+    template_root = repo_root / "docs" / "templates" / "external_extension"
+    src_root = template_root / "src"
+    sys.path.insert(0, str(src_root))
+    try:
+        import companion_app.server as server_module
+
+        class _FakeClient:
+            async def chat(self, *, session_id: str, message: str, provider: str = "", model: str = "") -> dict[str, object]:
+                return {
+                    "ok": True,
+                    "session_id": session_id,
+                    "turn_id": "turn.1",
+                    "message": message,
+                    "model": model or "fake-model",
+                    "latency_ms": 1,
+                    "text_only_degraded": False,
+                }
+
+        monkeypatch.setattr(server_module, "_client", lambda: _FakeClient())
+        client = TestClient(server_module.app)
+        response = client.post(
+            "/api/chat",
+            headers={"origin": "http://evil.test"},
+            json={"session_id": "session-1", "message": "hello"},
+        )
+        assert response.status_code == 403
+        detail = response.json()["detail"]
+        assert detail["ok"] is False
+        assert detail["code"] == "E_COMPANION_GATEWAY_CSRF_BLOCKED"
+    finally:
+        sys.path = [entry for entry in sys.path if entry != str(src_root)]
+        for module_name in list(sys.modules):
+            if module_name == "companion_app" or module_name.startswith("companion_app."):
+                sys.modules.pop(module_name, None)
+            if module_name == "companion_extension" or module_name.startswith("companion_extension."):
+                sys.modules.pop(module_name, None)
+
+
+def test_external_extension_template_server_enforces_loopback_clients(monkeypatch) -> None:
+    """Layer: contract. Verifies gateway rejects non-loopback clients when loopback enforcement is enabled."""
+    repo_root = Path(__file__).resolve().parents[2]
+    template_root = repo_root / "docs" / "templates" / "external_extension"
+    src_root = template_root / "src"
+    sys.path.insert(0, str(src_root))
+    try:
+        import companion_app.server as server_module
+
+        monkeypatch.setattr(server_module, "_LOOPBACK_HOSTS", frozenset({"127.0.0.1", "::1", "localhost"}))
+        client = TestClient(server_module.app)
+        response = client.get("/api/status")
+        assert response.status_code == 403
+        detail = response.json()["detail"]
+        assert detail["ok"] is False
+        assert detail["code"] == "E_COMPANION_GATEWAY_LOOPBACK_REQUIRED"
+    finally:
+        sys.path = [entry for entry in sys.path if entry != str(src_root)]
+        for module_name in list(sys.modules):
+            if module_name == "companion_app" or module_name.startswith("companion_app."):
+                sys.modules.pop(module_name, None)
+            if module_name == "companion_extension" or module_name.startswith("companion_extension."):
+                sys.modules.pop(module_name, None)
+
+
+def test_external_extension_template_server_rejects_oversized_config_patch(monkeypatch) -> None:
+    """Layer: contract. Verifies oversized config patches are rejected before host client execution."""
+    repo_root = Path(__file__).resolve().parents[2]
+    template_root = repo_root / "docs" / "templates" / "external_extension"
+    src_root = template_root / "src"
+    sys.path.insert(0, str(src_root))
+    try:
+        import companion_app.server as server_module
+
+        class _FakeClient:
+            async def update_config(self, *, session_id: str, scope: str, patch: dict[str, object]) -> dict[str, object]:
+                raise AssertionError("host client should not be called for oversized patch")
+
+        monkeypatch.setattr(server_module, "_MAX_CONFIG_PATCH_BYTES", 32)
+        monkeypatch.setattr(server_module, "_client", lambda: _FakeClient())
+        client = TestClient(server_module.app)
+        response = client.patch(
+            "/api/config",
+            headers=_SAME_ORIGIN_HEADERS,
+            json={
+                "session_id": "session-1",
+                "scope": "next_turn",
+                "patch": {"mode": {"role_id": "x" * 128}},
+            },
+        )
+        assert response.status_code == 413
+        detail = response.json()["detail"]
+        assert detail["ok"] is False
+        assert detail["code"] == "E_COMPANION_CONFIG_PATCH_TOO_LARGE"
+    finally:
+        sys.path = [entry for entry in sys.path if entry != str(src_root)]
+        for module_name in list(sys.modules):
+            if module_name == "companion_app" or module_name.startswith("companion_app."):
+                sys.modules.pop(module_name, None)
+            if module_name == "companion_extension" or module_name.startswith("companion_extension."):
+                sys.modules.pop(module_name, None)
+
+
+def test_external_extension_template_server_rejects_oversized_chat_message(monkeypatch) -> None:
+    """Layer: contract. Verifies oversized chat payloads are rejected before host client execution."""
+    repo_root = Path(__file__).resolve().parents[2]
+    template_root = repo_root / "docs" / "templates" / "external_extension"
+    src_root = template_root / "src"
+    sys.path.insert(0, str(src_root))
+    try:
+        import companion_app.server as server_module
+
+        class _FakeClient:
+            async def chat(
+                self,
+                *,
+                session_id: str,
+                message: str,
+                provider: str = "",
+                model: str = "",
+            ) -> dict[str, object]:
+                raise AssertionError("host client should not be called for oversized chat message")
+
+        monkeypatch.setattr(server_module, "_MAX_CHAT_MESSAGE_BYTES", 12)
+        monkeypatch.setattr(server_module, "_client", lambda: _FakeClient())
+        client = TestClient(server_module.app)
+        response = client.post(
+            "/api/chat",
+            headers=_SAME_ORIGIN_HEADERS,
+            json={"session_id": "session-1", "message": "message that is too large"},
+        )
+        assert response.status_code == 413
+        detail = response.json()["detail"]
+        assert detail["ok"] is False
+        assert detail["code"] == "E_COMPANION_CHAT_MESSAGE_TOO_LARGE"
+    finally:
+        sys.path = [entry for entry in sys.path if entry != str(src_root)]
+        for module_name in list(sys.modules):
+            if module_name == "companion_app" or module_name.startswith("companion_app."):
+                sys.modules.pop(module_name, None)
+            if module_name == "companion_extension" or module_name.startswith("companion_extension."):
+                sys.modules.pop(module_name, None)
+
+
+def test_external_extension_template_server_rejects_oversized_audio_payload(monkeypatch) -> None:
+    """Layer: contract. Verifies oversized audio payloads are rejected before host STT execution."""
+    repo_root = Path(__file__).resolve().parents[2]
+    template_root = repo_root / "docs" / "templates" / "external_extension"
+    src_root = template_root / "src"
+    sys.path.insert(0, str(src_root))
+    try:
+        import companion_app.server as server_module
+
+        class _FakeClient:
+            async def voice_transcribe(
+                self,
+                *,
+                audio_b64: str,
+                mime_type: str = "audio/wav",
+                language_hint: str = "",
+            ) -> dict[str, object]:
+                raise AssertionError("host client should not be called for oversized audio payload")
+
+        monkeypatch.setattr(server_module, "_MAX_AUDIO_B64_BYTES", 16)
+        monkeypatch.setattr(server_module, "_client", lambda: _FakeClient())
+        client = TestClient(server_module.app)
+        response = client.post(
+            "/api/voice/transcribe",
+            headers=_SAME_ORIGIN_HEADERS,
+            json={"audio_b64": "A" * 40, "mime_type": "audio/wav", "language_hint": "en"},
+        )
+        assert response.status_code == 413
+        detail = response.json()["detail"]
+        assert detail["ok"] is False
+        assert detail["code"] == "E_COMPANION_AUDIO_PAYLOAD_TOO_LARGE"
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]
         for module_name in list(sys.modules):

@@ -6,8 +6,10 @@ Last verified against `orket/interfaces/api.py`: 2026-03-09
 1. `/v1/*` endpoints require `X-API-Key`.
 2. Companion route key-scoping:
    - `/v1/companion/*` and `/api/v1/companion/*` accept `ORKET_COMPANION_API_KEY` when configured.
-   - Primary `ORKET_API_KEY` is still accepted on Companion routes for operator/admin access.
+   - Compatibility mode (default): `ORKET_API_KEY` is still accepted on Companion routes for operator/admin access.
+   - Strict mode (`ORKET_COMPANION_KEY_STRICT=true`): Companion routes reject `ORKET_API_KEY` when `ORKET_COMPANION_API_KEY` is configured.
    - Non-Companion `/v1/*` routes do not accept `ORKET_COMPANION_API_KEY`.
+   - Auth rejection telemetry is emitted via `api_auth_rejected` with `route_class` (`companion` or `core`) and reason code.
 3. Websocket endpoint `GET ws://<host>/ws/events` accepts API key via:
    - `X-API-Key` header, or
    - `api_key` query parameter.

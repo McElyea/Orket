@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+import orket.interfaces.api as api_module
 from orket.interfaces.api import create_api_app
 
 
@@ -114,3 +115,57 @@ def test_companion_scoped_api_key_only_grants_companion_routes(tmp_path: Path, m
 
     non_companion_with_core_key = client.get("/v1/version", headers=core_headers)
     assert non_companion_with_core_key.status_code == 200
+
+
+def test_companion_core_key_compatibility_mode_allows_companion_routes(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies default compatibility mode allows the core key on Companion routes."""
+    monkeypatch.setenv("ORKET_API_KEY", "core-key")
+    monkeypatch.setenv("ORKET_COMPANION_API_KEY", "companion-key")
+    monkeypatch.delenv("ORKET_COMPANION_KEY_STRICT", raising=False)
+    client = TestClient(create_api_app(project_root=tmp_path))
+
+    response = client.get("/api/v1/companion/status", headers={"X-API-Key": "core-key"})
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+
+
+def test_companion_strict_mode_rejects_core_key_on_companion_routes(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies strict mode enforces companion-only key usage on Companion routes."""
+    monkeypatch.setenv("ORKET_API_KEY", "core-key")
+    monkeypatch.setenv("ORKET_COMPANION_API_KEY", "companion-key")
+    monkeypatch.setenv("ORKET_COMPANION_KEY_STRICT", "true")
+    client = TestClient(create_api_app(project_root=tmp_path))
+
+    rejected = client.get("/api/v1/companion/status", headers={"X-API-Key": "core-key"})
+    assert rejected.status_code == 403
+    assert rejected.json()["detail"] == "Could not validate credentials"
+
+    accepted = client.get("/api/v1/companion/status", headers={"X-API-Key": "companion-key"})
+    assert accepted.status_code == 200
+    assert accepted.json()["ok"] is True
+
+    core_route = client.get("/v1/version", headers={"X-API-Key": "core-key"})
+    assert core_route.status_code == 200
+
+
+def test_companion_key_rejected_on_core_route_emits_auth_rejection_event(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies scoped key misuse on core routes emits structured auth rejection telemetry."""
+    monkeypatch.setenv("ORKET_API_KEY", "core-key")
+    monkeypatch.setenv("ORKET_COMPANION_API_KEY", "companion-key")
+    captured_events: list[dict[str, object]] = []
+
+    def _fake_log_event(name, payload, workspace=None):  # noqa: ANN001
+        if name == "api_auth_rejected" and isinstance(payload, dict):
+            captured_events.append(payload)
+
+    monkeypatch.setattr(api_module, "log_event", _fake_log_event)
+    client = TestClient(create_api_app(project_root=tmp_path))
+
+    response = client.get("/v1/version", headers={"X-API-Key": "companion-key"})
+    assert response.status_code == 403
+
+    assert any(
+        str(event.get("route_class")) == "core"
+        and str(event.get("reason")) == "companion_key_rejected_on_core_route"
+        for event in captured_events
+    )

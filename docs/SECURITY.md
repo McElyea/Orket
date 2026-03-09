@@ -6,9 +6,14 @@ This document defines security requirements for API/webhook boundaries, configur
 1. `/v1/*` endpoints are protected by `X-API-Key`.
 2. Default behavior is fail-closed:
    - if `ORKET_API_KEY` is unset, requests are rejected.
-3. Insecure local bypass is explicit and opt-in only:
+3. Companion route scoping:
+   - `ORKET_COMPANION_API_KEY` may be used for `/v1/companion/*` and `/api/v1/companion/*` only.
+   - non-Companion routes reject `ORKET_COMPANION_API_KEY`.
+   - `ORKET_COMPANION_KEY_STRICT=true` enforces companion-only key usage on Companion routes when scoped key is configured.
+4. Insecure local bypass is explicit and opt-in only:
    - `ORKET_ALLOW_INSECURE_NO_API_KEY=true`
-4. Startup logs emit security posture and warn when insecure bypass is enabled.
+5. Startup logs emit security posture and warn when insecure bypass is enabled.
+6. Auth rejection telemetry (`api_auth_rejected`) is emitted without credential material.
 
 ## 2. Webhook Trust Boundary (`/webhook/*`)
 1. `/webhook/gitea` requires:

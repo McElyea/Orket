@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-03-05
+Last reviewed: 2026-03-09
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -174,6 +174,26 @@ Workspace/log paths:
 ```bash
 python scripts/replay/report_failure_modes.py --log workspace/default/orket.log --out benchmarks/results/replay/failure_modes.json
 ```
+
+## Companion Key Rotation
+1. Preconditions:
+   - Companion host and gateway are running and healthy.
+   - You can reach `GET /api/v1/companion/status` through the gateway.
+2. Stage new host keys first:
+   - Set `ORKET_COMPANION_API_KEY=<new_companion_key>` on host.
+   - Keep old `ORKET_API_KEY` active during cutover.
+   - If enforcing strict least-privilege, set `ORKET_COMPANION_KEY_STRICT=true` only after gateway key update succeeds.
+3. Rotate gateway credential second:
+   - Update `COMPANION_API_KEY=<new_companion_key>` in extension gateway environment.
+   - Restart gateway and verify `GET /api/status` returns `200`.
+4. Smoke checks after cutover:
+   - `GET /api/status` through gateway is `200`.
+   - `POST /api/chat` through gateway returns `200`.
+   - `GET /v1/version` with Companion key returns `403` (proves Companion-key scope is preserved).
+5. Rollback:
+   - Revert gateway `COMPANION_API_KEY` to previous value.
+   - If strict mode was enabled and rollback requires core key compatibility, set `ORKET_COMPANION_KEY_STRICT=false`.
+   - Re-run smoke checks and keep prior keys active until stability is confirmed.
 
 ## Related Docs
 1. `docs/SECURITY.md`

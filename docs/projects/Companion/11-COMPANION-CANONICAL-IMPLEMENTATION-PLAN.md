@@ -1,7 +1,7 @@
 # Companion Canonical Implementation Plan
 
 Last updated: 2026-03-09
-Status: In Progress
+Status: MVP Closed (Post-MVP deferred)
 Owner: Orket Core
 Source authority: `docs/projects/Companion/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md`
 Supporting inputs: `docs/projects/Companion/00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md`, `docs/projects/Companion/02-SDK-PACKAGE-HARDENING.md` through `docs/projects/Companion/10-IMPORT-ISOLATION-HARDENING.md`, `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
@@ -102,6 +102,12 @@ Phase 0 progress:
     - external extension web template includes a resilient avatar/presence shell with graceful fallback rendering, host-driven voice-state cues, and swap-ready layout structure (`docs/templates/external_extension/src/companion_app/frontend/src/App.tsx`, `docs/templates/external_extension/src/companion_app/frontend/src/styles/App.module.scss`)
     - companion visual contract now uses warm neutral teal composition, quarter-circle chat bubble language, and selectable typography personalities without altering host runtime authority seams
     - template contract coverage now verifies avatar surface/logic asset presence alongside existing host-seam wiring checks (`tests/application/test_external_extension_template_server.py`)
+17. Companion MVP closeout hardening completed:
+    - strict companion key-policy mode is now available (`ORKET_COMPANION_KEY_STRICT`) with integration coverage (`tests/interfaces/test_companion_api_alias_routes.py`)
+    - extension gateway now enforces default loopback + same-origin mutating-route policy and explicit payload size limits with contract coverage (`docs/templates/external_extension/src/companion_app/server.py`, `tests/application/test_external_extension_template_server.py`)
+    - UI behavioral automation now covers explicit text-submit semantics, voice controls, pane swap, avatar fallback, and keyboard traversal (`docs/templates/external_extension/src/companion_app/frontend/src/App.test.tsx`)
+    - live non-mocked host+gateway closeout evidence recorded in `docs/projects/Companion/13-UI-LIVE-INTEGRATION-EVIDENCE-2026-03-09.md`
+    - remaining-work register is now closed for MVP scope (`docs/projects/Companion/12-UI-WORK-REMAINING.md`)
 
 ## 2. Scope and Phase Model
 

@@ -418,36 +418,97 @@ def _is_companion_route(path: str) -> bool:
     return normalized_path.startswith("/v1/companion") or normalized_path.startswith("/api/v1/companion")
 
 
+def _read_bool_env(name: str, *, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _is_companion_key_strict_enabled() -> bool:
+    return _read_bool_env("ORKET_COMPANION_KEY_STRICT", default=False)
+
+
+def _log_api_auth_rejection(
+    *,
+    request_path: str,
+    route_class: str,
+    reason: str,
+    provided_key_present: bool,
+    companion_key_configured: bool,
+    companion_key_strict: bool,
+) -> None:
+    log_event(
+        "api_auth_rejected",
+        {
+            "route_class": route_class,
+            "reason": reason,
+            "request_path": request_path,
+            "provided_key_present": provided_key_present,
+            "companion_key_configured": companion_key_configured,
+            "companion_key_strict": companion_key_strict,
+        },
+        PROJECT_ROOT,
+    )
+
+
 def _is_companion_key_valid(
     *,
     provided_key: str | None,
     default_key: str | None,
     companion_key: str | None,
+    companion_key_strict: bool,
 ) -> bool:
     if companion_key:
         if provided_key == companion_key:
             return True
         # Allow primary host key for trusted operator/admin access.
-        if default_key and provided_key == default_key:
+        if not companion_key_strict and default_key and provided_key == default_key:
             return True
         return False
     return api_runtime_node.is_api_key_valid(default_key, provided_key)
 
 
-async def get_api_key(request: Request, api_key_header: str = Security(api_key_header)):
+async def get_api_key(request: Request, api_key_header: str | None = Security(api_key_header)):
     default_key = _read_api_key_env("ORKET_API_KEY")
     companion_key = _read_api_key_env("ORKET_COMPANION_API_KEY")
+    companion_key_strict = _is_companion_key_strict_enabled()
     request_path = str(request.url.path or "")
+    provided_key_present = bool(str(api_key_header or "").strip())
 
     if _is_companion_route(request_path):
         if _is_companion_key_valid(
             provided_key=api_key_header,
             default_key=default_key,
             companion_key=companion_key,
+            companion_key_strict=companion_key_strict,
         ):
             return api_key_header
+        reason = "invalid_or_missing_key_for_companion_route"
+        if companion_key and companion_key_strict and api_key_header and default_key and api_key_header == default_key:
+            reason = "default_key_rejected_on_companion_route_strict"
+        _log_api_auth_rejection(
+            request_path=request_path,
+            route_class="companion",
+            reason=reason,
+            provided_key_present=provided_key_present,
+            companion_key_configured=bool(companion_key),
+            companion_key_strict=companion_key_strict,
+        )
     elif api_runtime_node.is_api_key_valid(default_key, api_key_header):
         return api_key_header
+    else:
+        reason = "invalid_or_missing_key_for_core_route"
+        if companion_key and api_key_header == companion_key:
+            reason = "companion_key_rejected_on_core_route"
+        _log_api_auth_rejection(
+            request_path=request_path,
+            route_class="core",
+            reason=reason,
+            provided_key_present=provided_key_present,
+            companion_key_configured=bool(companion_key),
+            companion_key_strict=companion_key_strict,
+        )
 
     raise HTTPException(
         status_code=403,
@@ -472,6 +533,7 @@ async def lifespan(_app: FastAPI):
     subscribe_to_events(log_subscriber)
     expected_key = _read_api_key_env("ORKET_API_KEY")
     companion_key = _read_api_key_env("ORKET_COMPANION_API_KEY")
+    companion_key_strict = _is_companion_key_strict_enabled()
     insecure_bypass = os.getenv("ORKET_ALLOW_INSECURE_NO_API_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
     log_event(
         "api_security_posture",
@@ -479,6 +541,7 @@ async def lifespan(_app: FastAPI):
             "api_key_configured": bool(expected_key),
             "companion_api_key_configured": bool(companion_key),
             "companion_api_key_scoped": bool(companion_key and companion_key != expected_key),
+            "companion_key_strict": companion_key_strict,
             "insecure_no_api_key_bypass": insecure_bypass,
         },
         PROJECT_ROOT,

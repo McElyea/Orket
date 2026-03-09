@@ -111,6 +111,19 @@
   color: var(--text-primary);
 }
 
+.textInput:focus-visible,
+.selectInput:focus-visible,
+.chatInput:focus-visible,
+.rangeInput:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.ghostButton:focus-visible,
+.accordionTrigger:focus-visible,
+.switchRoot:focus-visible {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 2px;
+}
+
 .chatInput {
   min-height: 84px;
   resize: vertical;
