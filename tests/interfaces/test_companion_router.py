@@ -93,6 +93,12 @@ def test_companion_router_voice_and_transcribe_flow(companion_client: TestClient
     assert state.status_code == 200
     assert state.json()["state"] == "listening"
 
+    voices = companion_client.get("/v1/companion/voice/voices")
+    assert voices.status_code == 200
+    voices_payload = voices.json()
+    assert voices_payload["tts_available"] is True
+    assert voices_payload["voices"][0]["voice_id"] == "test_voice"
+
     transcribe = companion_client.post(
         "/v1/companion/voice/transcribe",
         json={"audio_b64": "YWI=", "mime_type": "audio/wav"},

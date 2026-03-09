@@ -142,6 +142,12 @@ async def test_companion_runtime_service_voice_and_transcribe_paths(tmp_path: Pa
     assert transcript.ok is True
     assert transcript.text == "len=1"
 
+    voices = await service.tts_voices()
+    assert voices["ok"] is True
+    assert voices["tts_available"] is True
+    assert voices["default_voice_id"] == "test_voice"
+    assert voices["voices"][0]["voice_id"] == "test_voice"
+
     synth = await service.synthesize(text="hello there")
     assert synth["ok"] is True
     assert synth["sample_rate"] == 16000
@@ -158,6 +164,9 @@ async def test_companion_runtime_service_synthesize_degrades_when_tts_unavailabl
         project_root=tmp_path,
         model_provider=_FakeModelProvider(),  # type: ignore[arg-type]
     )
+    voices = await service.tts_voices()
+    assert voices["tts_available"] is False
+    assert voices["voices"] == []
     synth = await service.synthesize(text="hello")
     assert synth["ok"] is False
     assert synth["error_code"] == "tts_unavailable"

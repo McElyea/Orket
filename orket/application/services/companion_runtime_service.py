@@ -6,7 +6,6 @@ import binascii
 import json
 import os
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -14,13 +13,14 @@ from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
 from orket.services.profile_write_policy import ProfileWritePolicy
-from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
-from orket_extension_sdk.audio import TTSProvider
+from orket.services.scoped_memory_store import ScopedMemoryStore
+from orket_extension_sdk.audio import TTSProvider, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 from orket_extension_sdk.voice import TranscribeRequest, TranscribeResponse, VoiceTurnControlRequest, VoiceTurnControlResponse
 
 from .companion_config_models import CompanionConfig
 from .config_precedence_resolver import ConfigPrecedenceResolver
+from .companion_runtime_helpers import build_system_prompt, format_history_context, format_memory_rows, utc_now_iso
 
 CompanionConfigScope = Literal["profile", "session", "next_turn"]
 
@@ -143,8 +143,8 @@ class CompanionRuntimeService:
         session = await self._session_state(session_id)
         config = session.resolver.resolve()
         memory_context = await self._build_memory_context(session_id=session_id, config=config)
-        history_context = _format_history_context(session.history[-6:])
-        system_prompt = _build_system_prompt(config=config, memory_context=memory_context, history_context=history_context)
+        history_context = format_history_context(session.history[-6:])
+        system_prompt = build_system_prompt(config=config, memory_context=memory_context, history_context=history_context)
 
         request = GenerateRequest(
             system_prompt=system_prompt,
@@ -163,7 +163,7 @@ class CompanionRuntimeService:
         assistant_text = str(model_result.text or "").strip() or "I could not generate a response."
         session.turn_index += 1
         turn_id = f"turn.{session.turn_index:06d}"
-        timestamp_utc = _utc_now_iso()
+        timestamp_utc = utc_now_iso()
         session.history.append({"role": "user", "content": user_message, "timestamp_utc": timestamp_utc})
         session.history.append({"role": "assistant", "content": assistant_text, "timestamp_utc": timestamp_utc})
         if len(session.history) > self._MAX_HISTORY:
@@ -239,7 +239,7 @@ class CompanionRuntimeService:
         normalized_text = str(text or "").strip()
         if not normalized_text:
             raise ValueError("E_COMPANION_TTS_TEXT_REQUIRED")
-        voices = await asyncio.to_thread(self._tts_provider.list_voices)
+        voices = await self._tts_voices()
         resolved_voice_id = str(voice_id or "").strip() or str((voices[0].voice_id if voices else "null") or "null")
         try:
             clip = await asyncio.to_thread(
@@ -261,6 +261,25 @@ class CompanionRuntimeService:
             "audio_b64": base64.b64encode(samples).decode("utf-8"),
             "error_code": None if samples else "tts_unavailable",
             "error_message": "" if samples else "No TTS backend configured.",
+        }
+
+    async def tts_voices(self) -> dict[str, Any]:
+        await self.ensure_initialized()
+        voices = await self._tts_voices()
+        serialized = [
+            {
+                "voice_id": str(voice.voice_id),
+                "display_name": str(voice.display_name),
+                "language": str(voice.language),
+                "tags": [str(tag) for tag in list(voice.tags or [])],
+            }
+            for voice in voices
+        ]
+        return {
+            "ok": True,
+            "tts_available": bool(serialized),
+            "default_voice_id": str(serialized[0]["voice_id"] if serialized else ""),
+            "voices": serialized,
         }
 
     async def _session_state(self, session_id: str) -> _SessionState:
@@ -306,10 +325,10 @@ class CompanionRuntimeService:
         snippets: list[str] = []
         if config.memory.session_memory_enabled:
             rows = await self._memory_store.query_session(session_id=session_id, query="", limit=8)
-            snippets.extend(_format_memory_rows(rows, prefix="session"))
+            snippets.extend(format_memory_rows(rows, prefix="session"))
         if config.memory.profile_memory_enabled:
             rows = await self._memory_store.list_profile(limit=8)
-            snippets.extend(_format_memory_rows(rows, prefix="profile"))
+            snippets.extend(format_memory_rows(rows, prefix="profile"))
         return "\n".join(snippets)
 
     async def _generate_response(
@@ -338,23 +357,25 @@ class CompanionRuntimeService:
         return bool(probe.ok)
 
     async def _tts_available(self) -> bool:
+        return bool(await self._tts_voices())
+
+    async def _tts_voices(self) -> list[VoiceInfo]:
         try:
             voices = await asyncio.to_thread(self._tts_provider.list_voices)
         except (RuntimeError, OSError, ValueError, TypeError):
-            return False
-        if not voices:
-            return False
-        first_voice_id = str(getattr(voices[0], "voice_id", "") or "").strip().lower()
-        return first_voice_id not in {"", "null"}
+            return []
+        filtered: list[VoiceInfo] = []
+        for voice in list(voices or []):
+            voice_id = str(getattr(voice, "voice_id", "") or "").strip().lower()
+            if voice_id in {"", "null"}:
+                continue
+            filtered.append(voice)
+        return filtered
 
 
 def _default_companion_config() -> dict[str, Any]:
     config = CompanionConfig()
     return config.model_dump(mode="json", exclude_none=True)
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(UTC).isoformat()
 
 
 def _normalize_config_patch(payload: dict[str, Any]) -> dict[str, Any]:
@@ -381,43 +402,6 @@ def _merge_nested(base: dict[str, Any], override: dict[str, Any]) -> dict[str, A
         else:
             merged[key] = value
     return merged
-
-
-def _build_system_prompt(*, config: CompanionConfig, memory_context: str, history_context: str) -> str:
-    mode = config.mode
-    sections = [
-        "You are Companion running on Orket host runtime authority.",
-        f"Role: {mode.role_id.value}",
-        f"Relationship style: {mode.relationship_style.value}",
-    ]
-    if mode.custom_style:
-        sections.append("Custom style settings:\n" + json.dumps(mode.custom_style, sort_keys=True))
-    if memory_context.strip():
-        sections.append("Retrieved memory context:\n" + memory_context)
-    if history_context.strip():
-        sections.append("Recent conversation context:\n" + history_context)
-    return "\n\n".join(sections)
-
-
-def _format_memory_rows(rows: list[ScopedMemoryRecord], *, prefix: str) -> list[str]:
-    formatted: list[str] = []
-    for row in rows:
-        key = str(row.key or "").strip()
-        value = str(row.value or "").strip()
-        if not key and not value:
-            continue
-        formatted.append(f"- [{prefix}] {key}: {value}")
-    return formatted
-
-
-def _format_history_context(history_rows: list[dict[str, Any]]) -> str:
-    parts: list[str] = []
-    for row in history_rows:
-        role = str(row.get("role") or "").strip()
-        content = str(row.get("content") or "").strip()
-        if role and content:
-            parts.append(f"{role}: {content}")
-    return "\n".join(parts)
 
 
 def _generate_with_provider_overrides(

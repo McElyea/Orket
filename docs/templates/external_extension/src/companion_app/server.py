@@ -143,6 +143,14 @@ async def voice_state() -> dict[str, Any]:
         _raise_gateway_error(exc)
 
 
+@app.get("/api/voice/voices")
+async def voice_voices() -> dict[str, Any]:
+    try:
+        return await _client().voice_voices()
+    except httpx.HTTPError as exc:
+        _raise_gateway_error(exc)
+
+
 @app.post("/api/voice/control")
 async def voice_control(req: VoiceControlRequest) -> dict[str, Any]:
     try:

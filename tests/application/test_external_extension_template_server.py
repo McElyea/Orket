@@ -24,6 +24,7 @@ def test_external_extension_template_server_serves_static_ui() -> None:
         app_js = client.get("/static/app.js")
         assert app_js.status_code == 200
         assert "/api/voice/synthesize" in app_js.text
+        assert "/api/voice/voices" in app_js.text
         assert client.get("/static/styles.css").status_code == 200
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]
@@ -44,6 +45,21 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
         import companion_app.server as server_module
 
         class _FakeClient:
+            async def voice_voices(self) -> dict[str, object]:
+                return {
+                    "ok": True,
+                    "tts_available": True,
+                    "default_voice_id": "demo_voice",
+                    "voices": [
+                        {
+                            "voice_id": "demo_voice",
+                            "display_name": "Demo Voice",
+                            "language": "en",
+                            "tags": ["test"],
+                        }
+                    ],
+                }
+
             async def voice_synthesize(
                 self,
                 *,
@@ -76,6 +92,11 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
         assert payload["ok"] is True
         assert payload["voice_id"] == "demo_voice"
         assert payload["audio_b64"] == "AQI="
+        voices = client.get("/api/voice/voices")
+        assert voices.status_code == 200
+        voices_payload = voices.json()
+        assert voices_payload["ok"] is True
+        assert voices_payload["voices"][0]["voice_id"] == "demo_voice"
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]
         for module_name in list(sys.modules):

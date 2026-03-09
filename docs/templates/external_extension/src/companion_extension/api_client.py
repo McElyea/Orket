@@ -60,6 +60,9 @@ class CompanionApiClient:
     async def voice_state(self) -> dict[str, Any]:
         return await self._request("GET", "/api/v1/companion/voice/state")
 
+    async def voice_voices(self) -> dict[str, Any]:
+        return await self._request("GET", "/api/v1/companion/voice/voices")
+
     async def voice_control(self, *, command: str, silence_delay_sec: float | None = None) -> dict[str, Any]:
         payload: dict[str, Any] = {"command": command}
         if silence_delay_sec is not None:

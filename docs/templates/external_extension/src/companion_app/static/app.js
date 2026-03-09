@@ -7,6 +7,7 @@ const els = {
   voiceDelay: document.querySelector("#voice-delay"),
   voiceState: document.querySelector("#voice-state"),
   ttsText: document.querySelector("#tts-text"),
+  ttsVoice: document.querySelector("#tts-voice"),
   ttsAudio: document.querySelector("#tts-audio"),
   ttsStatus: document.querySelector("#tts-status"),
   chatLog: document.querySelector("#chat-log"),
@@ -75,6 +76,37 @@ async function refreshHistory() {
   for (const row of payload.history || []) {
     addMessage(row.role || "assistant", row.content || "");
   }
+}
+
+async function refreshTtsVoices() {
+  const payload = await request("/api/voice/voices");
+  const voices = Array.isArray(payload.voices) ? payload.voices : [];
+  const previousVoice = String(els.ttsVoice.value || "").trim();
+  const preferredVoice = previousVoice || String(payload.default_voice_id || "").trim();
+
+  els.ttsVoice.replaceChildren();
+  const autoOption = document.createElement("option");
+  autoOption.value = "";
+  autoOption.textContent = "Auto (default)";
+  els.ttsVoice.appendChild(autoOption);
+
+  for (const voice of voices) {
+    const voiceId = String(voice.voice_id || "").trim();
+    if (!voiceId) continue;
+    const option = document.createElement("option");
+    option.value = voiceId;
+    option.textContent = `${voice.display_name || voiceId} (${voice.language || "und"})`;
+    els.ttsVoice.appendChild(option);
+  }
+
+  if (preferredVoice) {
+    const exists = [...els.ttsVoice.options].some((option) => option.value === preferredVoice);
+    els.ttsVoice.value = exists ? preferredVoice : "";
+  }
+
+  els.ttsStatus.textContent = voices.length
+    ? `TTS: ${voices.length} voice(s) available.`
+    : "TTS: no host voices available.";
 }
 
 async function applyNextTurnConfig() {
@@ -184,10 +216,10 @@ function pcmS16leToWavBlob(audioB64, sampleRate, channels) {
   return new Blob([out], { type: "audio/wav" });
 }
 
-async function synthesize(text) {
+async function synthesize(text, voiceId) {
   return request("/api/voice/synthesize", {
     method: "POST",
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, voice_id: voiceId }),
   });
 }
 
@@ -197,7 +229,8 @@ async function synthesizeAndPlay(text) {
     els.ttsStatus.textContent = "TTS: enter text to synthesize.";
     return;
   }
-  const payload = await synthesize(trimmed);
+  const selectedVoiceId = String(els.ttsVoice.value || "").trim();
+  const payload = await synthesize(trimmed, selectedVoiceId);
   if (!payload.ok || !payload.audio_b64) {
     const errorCode = payload.error_code || "tts_unavailable";
     const errorMessage = payload.error_message || "No audio generated.";
@@ -310,11 +343,19 @@ document.querySelector("#tts-speak-last").addEventListener("click", async () => 
   }
 });
 
+document.querySelector("#tts-refresh-voices").addEventListener("click", async () => {
+  try {
+    await refreshTtsVoices();
+  } catch (error) {
+    els.ttsStatus.textContent = `TTS error: ${error.message}`;
+  }
+});
+
 window.addEventListener("beforeunload", () => {
   releaseTtsObjectUrl();
 });
 
-Promise.all([refreshStatus(), refreshConfig(), refreshHistory()])
+Promise.all([refreshStatus(), refreshConfig(), refreshHistory(), refreshTtsVoices()])
   .catch((error) => {
     els.status.textContent = `Startup error: ${error.message}`;
   });

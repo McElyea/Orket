@@ -98,6 +98,11 @@ def build_companion_router(*, service_getter: Callable[[], Any]) -> APIRouter:
         service = service_getter()
         return await service.voice_state()
 
+    @router.get("/companion/voice/voices")
+    async def companion_voice_voices():
+        service = service_getter()
+        return await service.tts_voices()
+
     @router.post("/companion/voice/control")
     async def companion_voice_control(req: CompanionVoiceControlRequest):
         service = service_getter()
