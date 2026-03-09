@@ -62,6 +62,10 @@ Phase 0 progress:
     - external template API client expanded to full Companion host seam (`status`, `config`, `history`, `chat`, `voice`, `clear-session`)
     - external template web app now includes FastAPI gateway routes plus static MVP chat/control UI assets in `src/companion_app/static/`
     - `ext init` and template server/config tests now verify richer scaffold paths and static UI serving behavior
+12. Slice J groundwork implemented:
+    - companion provider/runtime matrix runner scaffold (`scripts/companion/run_companion_provider_runtime_matrix.py`) now exercises Companion host API seams and emits canonical matrix JSON
+    - matrix artifact output uses diff-ledger canonical writer (`write_payload_with_diff_ledger`) with static canonical path defaults
+    - script integration tests cover complete/partial outcomes and diff-ledger append behavior (`tests/scripts/test_run_companion_provider_runtime_matrix.py`)
 
 ## 2. Scope and Phase Model
 
