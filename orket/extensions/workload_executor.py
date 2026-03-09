@@ -12,6 +12,7 @@ from orket_extension_sdk.workload import run_workload as sdk_run_workload
 from orket.streaming.contracts import CommitIntent, StreamEventType
 
 from .contracts import ExtensionRegistry, RunPlan
+from .import_guard import ImportGuardContext
 from .models import ExtensionRecord, ExtensionRunResult, WorkloadRecord
 from .reproducibility import ReproducibilityEnforcer
 from .runtime import ExtensionEngineAdapter, RunContext
@@ -113,7 +114,6 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        sdk_workload = self.loader.load_sdk_workload(extension, workload)
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
@@ -134,7 +134,9 @@ class WorkloadExecutor:
         sdk_ctx = self._build_sdk_context(
             extension, workload, input_config, workspace, artifact_root, capability_registry, input_digest
         )
-        result = await self._invoke_sdk_workload(sdk_workload, sdk_ctx, dict(input_config))
+        with ImportGuardContext():
+            sdk_workload = self.loader.load_sdk_workload(extension, workload)
+            result = await self._invoke_sdk_workload(sdk_workload, sdk_ctx, dict(input_config))
         self.artifacts.validate_sdk_artifacts(result, artifact_root)
 
         run_result: dict[str, Any] = {

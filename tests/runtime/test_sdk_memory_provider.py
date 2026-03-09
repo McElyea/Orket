@@ -43,15 +43,69 @@ def test_sqlite_memory_provider_profile_scope_ignores_session_id(tmp_path: Path)
         MemoryWriteRequest(
             scope="profile_memory",
             session_id="session-a",
-            key="name",
+            key="companion_setting.display_name",
             value="Companion",
         )
     )
     assert write.ok is True
 
     query = provider.query(
-        MemoryQueryRequest(scope="profile_memory", session_id="session-b", query="name", limit=10)
+        MemoryQueryRequest(scope="profile_memory", session_id="session-b", query="display_name", limit=10)
     )
     assert query.ok is True
     assert len(query.records) == 1
     assert query.records[0].value == "Companion"
+
+
+def test_sqlite_memory_provider_profile_scope_enforces_fact_confirmation(tmp_path: Path) -> None:
+    """Layer: integration. Verifies profile writes require confirmation metadata for user-fact keys."""
+    provider = SQLiteMemoryCapabilityProvider(tmp_path / "memory.db")
+    unconfirmed = provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="user_fact.name",
+            value="Aster",
+        )
+    )
+    assert unconfirmed.ok is False
+    assert unconfirmed.error_code == "E_PROFILE_MEMORY_CONFIRMATION_REQUIRED"
+
+    confirmed = provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="user_fact.name",
+            value="Aster",
+            metadata={"user_confirmed": True},
+        )
+    )
+    assert confirmed.ok is True
+
+
+def test_sqlite_memory_provider_profile_scope_supports_listing_and_exact_key_query(tmp_path: Path) -> None:
+    """Layer: integration. Verifies deterministic profile listing and exact-key query behavior."""
+    provider = SQLiteMemoryCapabilityProvider(tmp_path / "memory.db")
+    assert provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="user_preference.theme",
+            value="dark",
+        )
+    ).ok
+    assert provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="companion_setting.role_id",
+            value="strategist",
+        )
+    ).ok
+
+    listed = provider.query(MemoryQueryRequest(scope="profile_memory", query="", limit=10))
+    assert listed.ok is True
+    assert [row.key for row in listed.records] == ["companion_setting.role_id", "user_preference.theme"]
+
+    exact = provider.query(
+        MemoryQueryRequest(scope="profile_memory", query="key:companion_setting.role_id", limit=10)
+    )
+    assert exact.ok is True
+    assert len(exact.records) == 1
+    assert exact.records[0].value == "strategist"

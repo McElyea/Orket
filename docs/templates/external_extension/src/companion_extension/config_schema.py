@@ -1,20 +1,70 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class CompanionRoleId(str, Enum):
+    RESEARCHER = "researcher"
+    PROGRAMMER = "programmer"
+    STRATEGIST = "strategist"
+    TUTOR = "tutor"
+    SUPPORTIVE_LISTENER = "supportive_listener"
+    GENERAL_ASSISTANT = "general_assistant"
+
+
+class RelationshipStyleId(str, Enum):
+    PLATONIC = "platonic"
+    ROMANTIC = "romantic"
+    INTERMEDIATE = "intermediate"
+    CUSTOM = "custom"
+
+
+class ModeConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role_id: CompanionRoleId = CompanionRoleId.GENERAL_ASSISTANT
+    relationship_style: RelationshipStyleId = RelationshipStyleId.PLATONIC
+    custom_style: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _validate_custom_style(self) -> ModeConfig:
+        if self.relationship_style == RelationshipStyleId.CUSTOM and not self.custom_style:
+            raise ValueError("custom_style required when relationship_style is custom")
+        if self.relationship_style != RelationshipStyleId.CUSTOM and self.custom_style is not None:
+            raise ValueError("custom_style is only allowed when relationship_style is custom")
+        return self
 
 
 class MemoryConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     session_memory_enabled: bool = True
     profile_memory_enabled: bool = True
 
 
 class VoiceConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = False
-    silence_delay_seconds: float = Field(default=1.5, ge=0.2, le=6.0)
+    silence_delay_sec: float = Field(default=1.5, ge=0.0)
+    silence_delay_min_sec: float = Field(default=0.2, ge=0.0)
+    silence_delay_max_sec: float = Field(default=6.0, gt=0.0)
+
+    @model_validator(mode="after")
+    def _clamp_silence_delay(self) -> VoiceConfig:
+        if self.silence_delay_max_sec < self.silence_delay_min_sec:
+            raise ValueError("silence_delay_max_sec must be >= silence_delay_min_sec")
+        clamped = max(self.silence_delay_min_sec, min(self.silence_delay_max_sec, self.silence_delay_sec))
+        self.silence_delay_sec = clamped
+        return self
 
 
 class CompanionDefaults(BaseModel):
-    mode: str = Field(min_length=1)
-    style: str = Field(min_length=1)
+    model_config = ConfigDict(extra="forbid")
+
+    mode: ModeConfig = Field(default_factory=ModeConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     voice: VoiceConfig = Field(default_factory=VoiceConfig)

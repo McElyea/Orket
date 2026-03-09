@@ -1,6 +1,6 @@
 # Companion Canonical Implementation Plan
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 Status: In Progress
 Owner: Orket Core
 Source authority: `docs/projects/Companion/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md`
@@ -38,6 +38,22 @@ Phase 0 progress:
    - SDK memory and voice capability contracts (`orket_extension_sdk/memory.py`, `orket_extension_sdk/voice.py`)
    - capability vocabulary extended for `memory.write`, `memory.query`, `speech.transcribe`, `voice.turn_control`
    - runtime capability registration now includes host-backed `model.generate`, SQLite-backed `memory.write`/`memory.query`, and null-provider defaults for speech/voice seams
+6. Slice E implemented:
+   - runtime import guard lifecycle (`orket/extensions/import_guard.py`) installed for SDK workload module load + execution scope
+   - blocked dynamic imports of internal `orket.*` namespaces now fail with `E_EXT_IMPORT_BLOCKED` while allowing `orket_extension_sdk.*`
+   - integration coverage for guard block/allow/no-leak behavior (`tests/runtime/test_extension_import_guard.py`)
+7. Slice D foundation implemented:
+   - host companion config models (`orket/application/services/companion_config_models.py`) with enum authority, structural validation, and silence-delay bounds clamping
+   - deterministic 4-layer resolver (`orket/application/services/config_precedence_resolver.py`) with pending-next-turn consumption semantics
+   - mode scope policy helper (`orket/application/services/mode_change_policy.py`) for `session` vs `pending_next_turn` updates
+   - external extension template config schema/defaults aligned to structured mode+voice shape and validated by runtime test coverage
+8. Slice F groundwork implemented:
+   - scoped memory store (`orket/services/scoped_memory_store.py`) with explicit session/profile operations and clear-session support
+   - profile write policy enforcement (`orket/services/profile_write_policy.py`) with allowlist prefixes and `user_fact.*` confirmation gate
+   - SDK memory provider now routes through scoped store and enforces memory toggles plus profile policy (`orket/capabilities/sdk_memory_provider.py`)
+9. Slice G groundwork implemented:
+   - host voice turn controller and host STT seam providers (`orket/capabilities/sdk_voice_provider.py`)
+   - capability registry defaults now wire host voice-turn control with bounded silence-delay configuration and host STT unavailable fallback
 
 ## 2. Scope and Phase Model
 

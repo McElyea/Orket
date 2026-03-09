@@ -11,11 +11,12 @@ from typing import Any
 from orket.capabilities.audio_player import build_audio_player
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
+from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
+from orket.services.scoped_memory_store import MemoryControls
 from orket_extension_sdk.capabilities import CapabilityRegistry
 from orket_extension_sdk.audio import NullAudioPlayer
 from orket_extension_sdk.result import WorkloadResult
-from orket_extension_sdk.voice import NullSTTProvider, NullVoiceTurnController
 
 from .contracts import RunPlan, Workload
 from .models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, WorkloadRecord
@@ -78,17 +79,48 @@ class WorkloadArtifacts:
                 ),
             )
         if not registry.has("memory.write") or not registry.has("memory.query"):
+            memory_settings = input_config.get("memory")
+            if not isinstance(memory_settings, dict):
+                memory_settings = {}
+            controls = MemoryControls(
+                session_memory_enabled=WorkloadArtifacts._resolve_bool_setting(
+                    memory_settings.get("session_memory_enabled", input_config.get("session_memory_enabled", True))
+                ),
+                profile_memory_enabled=WorkloadArtifacts._resolve_bool_setting(
+                    memory_settings.get("profile_memory_enabled", input_config.get("profile_memory_enabled", True))
+                ),
+            )
             memory_provider = SQLiteMemoryCapabilityProvider(
-                db_path=(workspace / ".orket" / "durable" / "db" / "extension_memory.db")
+                db_path=(workspace / ".orket" / "durable" / "db" / "extension_memory.db"),
+                controls=controls,
             )
             if not registry.has("memory.write"):
                 registry.register("memory.write", memory_provider)
             if not registry.has("memory.query"):
                 registry.register("memory.query", memory_provider)
         if not registry.has("speech.transcribe"):
-            registry.register("speech.transcribe", NullSTTProvider())
+            registry.register("speech.transcribe", HostSTTCapabilityProvider())
         if not registry.has("voice.turn_control"):
-            registry.register("voice.turn_control", NullVoiceTurnController())
+            voice_settings = input_config.get("voice")
+            if not isinstance(voice_settings, dict):
+                voice_settings = {}
+            registry.register(
+                "voice.turn_control",
+                HostVoiceTurnController(
+                    default_silence_delay_seconds=WorkloadArtifacts._resolve_float_setting(
+                        voice_settings.get("silence_delay_sec", input_config.get("silence_delay_sec", 2.0)),
+                        default=2.0,
+                    ),
+                    min_silence_delay_seconds=WorkloadArtifacts._resolve_float_setting(
+                        voice_settings.get("silence_delay_min_sec", input_config.get("silence_delay_min_sec", 0.2)),
+                        default=0.2,
+                    ),
+                    max_silence_delay_seconds=WorkloadArtifacts._resolve_float_setting(
+                        voice_settings.get("silence_delay_max_sec", input_config.get("silence_delay_max_sec", 10.0)),
+                        default=10.0,
+                    ),
+                ),
+            )
         if not registry.has("speech.play_clip"):
             registry.register("speech.play_clip", NullAudioPlayer())
         return registry
@@ -426,3 +458,24 @@ class WorkloadArtifacts:
             "item_count": len(keys),
             "payload_digest_sha256": digest,
         }
+
+    @staticmethod
+    def _resolve_bool_setting(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True
+            if normalized in {"0", "false", "no", "off"}:
+                return False
+        if isinstance(value, (int, float)):
+            return bool(value)
+        return True
+
+    @staticmethod
+    def _resolve_float_setting(value: Any, *, default: float) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return float(default)

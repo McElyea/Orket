@@ -5,11 +5,12 @@ import json
 from pathlib import Path
 
 import pytest
+from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
 from orket_extension_sdk.llm import LLMProvider
+from orket_extension_sdk.memory import MemoryWriteRequest
 from orket_extension_sdk.result import ArtifactRef, WorkloadResult
-from orket_extension_sdk.voice import NullSTTProvider, NullVoiceTurnController
 
 from orket.extensions.catalog import ExtensionCatalog
 from orket.extensions.manifest_parser import ManifestParser
@@ -212,8 +213,49 @@ def test_workload_artifacts_build_sdk_capability_registry_registers_audio_defaul
     assert isinstance(registry.llm(), LLMProvider)
     assert isinstance(registry.memory_writer(), SQLiteMemoryCapabilityProvider)
     assert isinstance(registry.memory_query(), SQLiteMemoryCapabilityProvider)
-    assert isinstance(registry.stt(), NullSTTProvider)
-    assert isinstance(registry.voice_turn_controller(), NullVoiceTurnController)
+    assert isinstance(registry.stt(), HostSTTCapabilityProvider)
+    assert isinstance(registry.voice_turn_controller(), HostVoiceTurnController)
+
+
+def test_workload_artifacts_build_sdk_capability_registry_honors_memory_toggles(tmp_path: Path) -> None:
+    """Layer: integration. Verifies runtime memory toggles are propagated into capability provider controls."""
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+    registry = artifacts.build_sdk_capability_registry(
+        workspace=tmp_path / "workspace",
+        artifact_root=tmp_path / "artifacts",
+        input_config={"memory": {"session_memory_enabled": False, "profile_memory_enabled": True}},
+    )
+    provider = registry.memory_writer()
+
+    session_write = provider.write(
+        MemoryWriteRequest(scope="session_memory", session_id="s1", key="topic", value="hello")
+    )
+    assert session_write.ok is False
+    assert session_write.error_code == "memory_session_disabled"
+
+    profile_write = provider.write(
+        MemoryWriteRequest(scope="profile_memory", key="companion_setting.role_id", value="strategist")
+    )
+    assert profile_write.ok is True
+
+
+def test_workload_artifacts_build_sdk_capability_registry_honors_voice_bounds(tmp_path: Path) -> None:
+    """Layer: integration. Verifies voice-turn controller receives bounded silence-delay defaults from input config."""
+    artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
+    registry = artifacts.build_sdk_capability_registry(
+        workspace=tmp_path / "workspace",
+        artifact_root=tmp_path / "artifacts",
+        input_config={
+            "voice": {
+                "silence_delay_sec": 9.0,
+                "silence_delay_min_sec": 0.5,
+                "silence_delay_max_sec": 3.0,
+            }
+        },
+    )
+    controller = registry.voice_turn_controller()
+    assert isinstance(controller, HostVoiceTurnController)
+    assert controller.silence_delay_seconds() == 3.0
 
 
 def test_workload_executor_compile_workload() -> None:

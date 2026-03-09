@@ -1,12 +1,16 @@
 {
-  "mode": "general_assistant",
-  "style": "platonic",
+  "mode": {
+    "role_id": "general_assistant",
+    "relationship_style": "platonic"
+  },
   "memory": {
     "session_memory_enabled": true,
     "profile_memory_enabled": true
   },
   "voice": {
     "enabled": false,
-    "silence_delay_seconds": 1.5
+    "silence_delay_sec": 1.5,
+    "silence_delay_min_sec": 0.2,
+    "silence_delay_max_sec": 6.0
   }
 }

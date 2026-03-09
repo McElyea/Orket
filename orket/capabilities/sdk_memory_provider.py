@@ -1,112 +1,131 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
-
-import aiosqlite
 
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket_extension_sdk.memory import (
     MemoryProvider,
+    MemoryRecord,
     MemoryQueryRequest,
     MemoryQueryResponse,
-    MemoryRecord,
     MemoryWriteRequest,
     MemoryWriteResponse,
 )
+from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
+from orket.services.scoped_memory_store import MemoryControls, ScopedMemoryRecord, ScopedMemoryStore
 
 
 class SQLiteMemoryCapabilityProvider(MemoryProvider):
-    def __init__(self, db_path: Path) -> None:
-        self._db_path = db_path.resolve()
-
-    async def _ensure_initialized(self) -> None:
-        self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        async with aiosqlite.connect(self._db_path) as conn:
-            await conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS extension_memory (
-                    scope TEXT NOT NULL,
-                    session_id TEXT NOT NULL,
-                    memory_key TEXT NOT NULL,
-                    memory_value TEXT NOT NULL,
-                    metadata_json TEXT NOT NULL,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY(scope, session_id, memory_key)
-                )
-                """
-            )
-            await conn.commit()
-
-    @staticmethod
-    def _normalized_session_id(request_scope: str, session_id: str) -> str:
-        if request_scope == "profile_memory":
-            return "__profile__"
-        return str(session_id or "").strip() or "__default_session__"
+    def __init__(
+        self,
+        db_path: Path,
+        *,
+        controls: MemoryControls | None = None,
+        profile_write_policy: ProfileWritePolicy | None = None,
+    ) -> None:
+        self._store = ScopedMemoryStore(db_path.resolve(), profile_write_policy=profile_write_policy)
+        self._controls = controls or MemoryControls()
 
     async def _write_async(self, request: MemoryWriteRequest) -> MemoryWriteResponse:
-        await self._ensure_initialized()
-        session_id = self._normalized_session_id(request.scope, request.session_id)
-        async with aiosqlite.connect(self._db_path) as conn:
-            await conn.execute(
-                """
-                INSERT INTO extension_memory (scope, session_id, memory_key, memory_value, metadata_json, updated_at)
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(scope, session_id, memory_key)
-                DO UPDATE SET
-                    memory_value = excluded.memory_value,
-                    metadata_json = excluded.metadata_json,
-                    updated_at = CURRENT_TIMESTAMP
-                """,
-                (
-                    request.scope,
-                    session_id,
-                    request.key,
-                    request.value,
-                    json.dumps(request.metadata, sort_keys=True, separators=(",", ":")),
-                ),
+        if request.scope == "session_memory":
+            if not self._controls.effective_session_enabled():
+                return self._disabled_write_response(request=request, error_code="memory_session_disabled")
+            record = await self._store.write_session(
+                session_id=request.session_id,
+                key=request.key,
+                value=request.value,
+                metadata=request.metadata,
             )
-            await conn.commit()
+            return MemoryWriteResponse(
+                ok=True,
+                scope=request.scope,
+                key=record.key,
+                session_id=record.session_id,
+            )
+
+        if not self._controls.effective_profile_enabled():
+            return self._disabled_write_response(request=request, error_code="memory_profile_disabled")
+        try:
+            record = await self._store.write_profile(
+                key=request.key,
+                value=request.value,
+                metadata=request.metadata,
+            )
+        except ProfileWritePolicyError as exc:
+            return MemoryWriteResponse(
+                ok=False,
+                scope=request.scope,
+                key=request.key,
+                error_code=exc.code,
+                error_message=exc.message,
+            )
         return MemoryWriteResponse(
             ok=True,
             scope=request.scope,
-            key=request.key,
-            session_id=session_id if request.scope == "session_memory" else "",
+            key=record.key,
+            session_id="",
         )
 
     async def _query_async(self, request: MemoryQueryRequest) -> MemoryQueryResponse:
-        await self._ensure_initialized()
-        session_id = self._normalized_session_id(request.scope, request.session_id)
-        limit = max(1, min(200, int(request.limit)))
-        query = str(request.query or "").strip()
-        like_query = f"%{query}%"
-        rows: list[tuple[str, str, str, str]] = []
-        async with aiosqlite.connect(self._db_path) as conn:
-            cursor = await conn.execute(
-                """
-                SELECT scope, session_id, memory_key, memory_value
-                FROM extension_memory
-                WHERE scope = ? AND session_id = ? AND (memory_key LIKE ? OR memory_value LIKE ?)
-                ORDER BY updated_at DESC, memory_key ASC
-                LIMIT ?
-                """,
-                (request.scope, session_id, like_query, like_query, limit),
+        records: list[ScopedMemoryRecord]
+        if request.scope == "session_memory":
+            if not self._controls.effective_session_enabled():
+                return self._disabled_query_response(error_code="memory_session_disabled")
+            records = await self._store.query_session(
+                session_id=request.session_id,
+                query=request.query,
+                limit=request.limit,
             )
-            rows = await cursor.fetchall()
-        records = [
-            MemoryRecord(
-                scope=scope,
-                session_id=row_session if scope == "session_memory" else "",
-                key=key,
-                value=value,
-                metadata={},
-            )
-            for scope, row_session, key, value in rows
-        ]
-        return MemoryQueryResponse(ok=True, records=records)
+        else:
+            if not self._controls.effective_profile_enabled():
+                return self._disabled_query_response(error_code="memory_profile_disabled")
+            query = str(request.query or "").strip()
+            if query.startswith("key:"):
+                key = query.split(":", 1)[1].strip()
+                row = await self._store.read_profile(key=key)
+                records = [row] if row is not None else []
+            elif query:
+                records = await self._store.query_profile(query=query, limit=request.limit)
+            else:
+                records = await self._store.list_profile(limit=request.limit)
+        sdk_records = [self._to_sdk_record(record) for record in records]
+        return MemoryQueryResponse(ok=True, records=sdk_records)
 
     def write(self, request: MemoryWriteRequest) -> MemoryWriteResponse:
         return run_coro_sync(self._write_async(request))
 
     def query(self, request: MemoryQueryRequest) -> MemoryQueryResponse:
         return run_coro_sync(self._query_async(request))
+
+    def clear_session(self, session_id: str) -> int:
+        return run_coro_sync(self._store.clear_session(session_id=session_id))
+
+    @staticmethod
+    def _to_sdk_record(record: ScopedMemoryRecord) -> MemoryRecord:
+        return MemoryRecord(
+            scope=record.scope,
+            key=record.key,
+            value=record.value,
+            session_id=record.session_id if record.scope == "session_memory" else "",
+            metadata=dict(record.metadata),
+        )
+
+    @staticmethod
+    def _disabled_write_response(*, request: MemoryWriteRequest, error_code: str) -> MemoryWriteResponse:
+        return MemoryWriteResponse(
+            ok=False,
+            scope=request.scope,
+            key=request.key,
+            session_id=request.session_id if request.scope == "session_memory" else "",
+            error_code=error_code,
+            error_message="Memory writes are disabled by runtime controls.",
+        )
+
+    @staticmethod
+    def _disabled_query_response(*, error_code: str) -> MemoryQueryResponse:
+        return MemoryQueryResponse(
+            ok=False,
+            records=[],
+            error_code=error_code,
+            error_message="Memory reads are disabled by runtime controls.",
+        )

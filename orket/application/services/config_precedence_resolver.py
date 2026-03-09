@@ -1,0 +1,94 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+from .companion_config_models import CompanionConfig
+
+_SECTION_KEYS = frozenset({"mode", "memory", "voice"})
+
+
+def _clone_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _clone_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_clone_value(item) for item in value]
+    return value
+
+
+def _merge_values(base: Any, override: Any) -> Any:
+    if isinstance(base, Mapping) and isinstance(override, Mapping):
+        merged: dict[str, Any] = {str(key): _clone_value(value) for key, value in base.items()}
+        for key, value in override.items():
+            key_name = str(key)
+            if key_name in merged:
+                merged[key_name] = _merge_values(merged[key_name], value)
+            else:
+                merged[key_name] = _clone_value(value)
+        return merged
+    return _clone_value(override)
+
+
+def _normalize_layer(payload: Mapping[str, Any] | None) -> dict[str, Any]:
+    if payload is None:
+        return {}
+    return _clone_value(payload)
+
+
+class ConfigPrecedenceResolver:
+    """
+    Deterministic Companion config layering:
+    extension_defaults < profile_defaults < session_overrides < pending_next_turn.
+    """
+
+    def __init__(
+        self,
+        *,
+        extension_defaults: Mapping[str, Any] | None = None,
+        profile_defaults: Mapping[str, Any] | None = None,
+    ) -> None:
+        self._extension_defaults = _normalize_layer(extension_defaults)
+        self._profile_defaults = _normalize_layer(profile_defaults)
+        self._session_overrides: dict[str, Any] = {}
+        self._pending_next_turn: dict[str, Any] = {}
+
+    def set_extension_defaults(self, payload: Mapping[str, Any] | None) -> None:
+        self._extension_defaults = _normalize_layer(payload)
+
+    def set_profile_defaults(self, payload: Mapping[str, Any] | None) -> None:
+        self._profile_defaults = _normalize_layer(payload)
+
+    def set_session_override(self, section: str, value: Any) -> None:
+        self._set_layer_value(self._session_overrides, section=section, value=value)
+
+    def set_pending_next_turn(self, section: str, value: Any) -> None:
+        self._set_layer_value(self._pending_next_turn, section=section, value=value)
+
+    def clear_session(self) -> None:
+        self._session_overrides = {}
+        self._pending_next_turn = {}
+
+    def resolve(self) -> CompanionConfig:
+        merged: dict[str, Any] = {}
+        for layer in (
+            self._extension_defaults,
+            self._profile_defaults,
+            self._session_overrides,
+            self._pending_next_turn,
+        ):
+            merged = _merge_values(merged, layer)
+        resolved = CompanionConfig.model_validate(merged)
+        self._pending_next_turn = {}
+        return resolved
+
+    @staticmethod
+    def _set_layer_value(layer: dict[str, Any], *, section: str, value: Any) -> None:
+        section_name = str(section or "").strip()
+        if section_name not in _SECTION_KEYS:
+            allowed = ", ".join(sorted(_SECTION_KEYS))
+            raise ValueError(f"E_COMPANION_CONFIG_SECTION_INVALID: section='{section_name}' allowed='{allowed}'")
+        existing = layer.get(section_name)
+        if existing is None:
+            layer[section_name] = _clone_value(value)
+            return
+        layer[section_name] = _merge_values(existing, value)
