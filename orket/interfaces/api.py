@@ -33,7 +33,9 @@ from orket.interfaces.routers.cards import build_cards_router
 from orket.interfaces.routers.settings import build_settings_router
 from orket.interfaces.routers.system import build_system_router
 from orket.interfaces.routers.sessions import build_sessions_router
+from orket.interfaces.routers.companion import build_companion_router
 from orket.interfaces.routers.streaming import register_streaming_routes
+from orket.application.services.companion_runtime_service import CompanionRuntimeService
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -457,6 +459,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
 # Apply auth to all v1 endpoints if configured
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_api_key)])
+companion_api_router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_api_key)])
 
 origins_str = os.getenv("ORKET_ALLOWED_ORIGINS", api_runtime_node.default_allowed_origins_value())
 origins = api_runtime_node.parse_allowed_origins(origins_str)
@@ -473,6 +476,7 @@ engine = _EngineProxy(lambda: api_runtime_node.create_engine(api_runtime_node.re
 stream_bus: StreamBus | None = None
 interaction_manager: InteractionManager | None = None
 extension_manager: ExtensionManager | None = None
+companion_service: CompanionRuntimeService | None = None
 
 
 def _build_stream_bus_from_env() -> StreamBus:
@@ -508,6 +512,13 @@ def _get_extension_manager() -> ExtensionManager:
     if extension_manager is None:
         extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
     return extension_manager
+
+
+def _get_companion_service() -> CompanionRuntimeService:
+    global companion_service
+    if companion_service is None:
+        companion_service = CompanionRuntimeService(project_root=PROJECT_ROOT)
+    return companion_service
 
 # --- System Endpoints ---
 
@@ -644,6 +655,8 @@ v1_router.include_router(
         commit_intent_factory=lambda reason: CommitIntent(type="decision", ref=f"fail_closed:{reason}"),
     )
 )
+v1_router.include_router(build_companion_router(service_getter=lambda: _get_companion_service()))
+companion_api_router.include_router(build_companion_router(service_getter=lambda: _get_companion_service()))
 
 def _normalize_setting_token(value: Any) -> str:
     return str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
@@ -1475,10 +1488,11 @@ async def list_logs(
     }
 
 app.include_router(v1_router)
+app.include_router(companion_api_router)
 
 
 def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
-    global PROJECT_ROOT, engine, interaction_manager, extension_manager, stream_bus
+    global PROJECT_ROOT, engine, interaction_manager, extension_manager, stream_bus, companion_service
     if project_root is not None:
         PROJECT_ROOT = Path(project_root).resolve()
     engine.reset(lambda: api_runtime_node.create_engine(api_runtime_node.resolve_api_workspace(PROJECT_ROOT)))
@@ -1489,6 +1503,7 @@ def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
         project_root=PROJECT_ROOT,
     )
     extension_manager = ExtensionManager(project_root=PROJECT_ROOT)
+    companion_service = CompanionRuntimeService(project_root=PROJECT_ROOT)
     return app
 
 # --- WS ---

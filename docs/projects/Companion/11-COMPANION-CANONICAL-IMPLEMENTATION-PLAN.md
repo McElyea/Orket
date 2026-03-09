@@ -54,6 +54,10 @@ Phase 0 progress:
 9. Slice G groundwork implemented:
    - host voice turn controller and host STT seam providers (`orket/capabilities/sdk_voice_provider.py`)
    - capability registry defaults now wire host voice-turn control with bounded silence-delay configuration and host STT unavailable fallback
+10. Slice H groundwork implemented:
+    - host runtime service (`orket/application/services/companion_runtime_service.py`) now owns Companion config/session/history/chat/memory-clear/voice-state/voice-control/transcribe behavior
+    - dedicated Companion router surface (`orket/interfaces/routers/companion.py`) exposed under both `/v1/companion/*` and `/api/v1/companion/*` with existing API-key auth dependency
+    - integration tests cover service behavior and router contracts (`tests/application/test_companion_runtime_service.py`, `tests/interfaces/test_companion_router.py`, `tests/interfaces/test_companion_api_alias_routes.py`)
 
 ## 2. Scope and Phase Model
 

@@ -68,16 +68,12 @@ class ConfigPrecedenceResolver:
         self._session_overrides = {}
         self._pending_next_turn = {}
 
+    def preview(self, *, include_pending_next_turn: bool = True) -> CompanionConfig:
+        merged = self._merged_payload(include_pending_next_turn=include_pending_next_turn)
+        return CompanionConfig.model_validate(merged)
+
     def resolve(self) -> CompanionConfig:
-        merged: dict[str, Any] = {}
-        for layer in (
-            self._extension_defaults,
-            self._profile_defaults,
-            self._session_overrides,
-            self._pending_next_turn,
-        ):
-            merged = _merge_values(merged, layer)
-        resolved = CompanionConfig.model_validate(merged)
+        resolved = self.preview(include_pending_next_turn=True)
         self._pending_next_turn = {}
         return resolved
 
@@ -92,3 +88,16 @@ class ConfigPrecedenceResolver:
             layer[section_name] = _clone_value(value)
             return
         layer[section_name] = _merge_values(existing, value)
+
+    def _merged_payload(self, *, include_pending_next_turn: bool) -> dict[str, Any]:
+        merged: dict[str, Any] = {}
+        layers: list[dict[str, Any]] = [
+            self._extension_defaults,
+            self._profile_defaults,
+            self._session_overrides,
+        ]
+        if include_pending_next_turn:
+            layers.append(self._pending_next_turn)
+        for layer in layers:
+            merged = _merge_values(merged, layer)
+        return merged

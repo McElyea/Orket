@@ -73,3 +73,18 @@ def test_config_precedence_rejects_unknown_section() -> None:
     resolver = ConfigPrecedenceResolver()
     with pytest.raises(ValueError, match="E_COMPANION_CONFIG_SECTION_INVALID"):
         resolver.set_session_override("invalid_section", {"value": 1})
+
+
+def test_config_precedence_preview_does_not_consume_pending_layer() -> None:
+    """Layer: unit. Verifies preview reads pending-next-turn config without consuming it."""
+    resolver = ConfigPrecedenceResolver(extension_defaults={"mode": {"role_id": "researcher"}})
+    resolver.set_pending_next_turn("mode", {"role_id": "tutor"})
+
+    preview = resolver.preview()
+    assert preview.mode.role_id == CompanionRoleId.TUTOR
+
+    resolved = resolver.resolve()
+    assert resolved.mode.role_id == CompanionRoleId.TUTOR
+
+    after = resolver.resolve()
+    assert after.mode.role_id == CompanionRoleId.RESEARCHER
