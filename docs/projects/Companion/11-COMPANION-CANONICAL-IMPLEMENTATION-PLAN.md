@@ -73,7 +73,8 @@ Phase 0 progress:
     - end-to-end matrix pipeline command now exists for generate+validate+render flow (`python -m scripts.companion.run_companion_provider_runtime_matrix_pipeline`) with integration coverage (`tests/scripts/test_run_companion_provider_runtime_matrix_pipeline.py`)
     - coverage gaps for unmeasured dimensions are now emitted as explicit blockers instead of silently passing matrix status
     - runner logic is split across focused helper modules for maintainability (`scripts/companion/companion_matrix_execution.py`, `scripts/companion/companion_matrix_http_steps.py`, `scripts/companion/companion_matrix_scoring.py`) with expanded integration coverage (`tests/scripts/test_run_companion_provider_runtime_matrix.py`)
-    - live non-mocked probe attempted in-session via `python -m scripts.companion.run_companion_provider_runtime_matrix`; current environment result was `blocked` at `/api/v1/companion/status` with connection refusal (`WinError 10061`) because host API was not listening
+    - live non-mocked pipeline run now succeeds in-session via `python -m scripts.companion.run_companion_provider_runtime_matrix_pipeline --provider-model-map "ollama=qwen2.5-coder:7b;lmstudio=qwen2.5-coder:7b"` against local host API (`http://127.0.0.1:8082`) with `status=complete` and `schema_errors=0`
+    - canonical matrix artifacts now reflect live success evidence for both runtime families (`benchmarks/results/companion/provider_runtime_matrix/companion_provider_runtime_matrix.json`, `benchmarks/results/companion/provider_runtime_matrix/README.md`)
 
 ## 2. Scope and Phase Model
 
