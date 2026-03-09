@@ -20,12 +20,14 @@ def test_external_extension_template_server_serves_static_ui() -> None:
         assert home.status_code == 200
         assert "Companion MVP Template" in home.text
         assert "Synthesize Audio" in home.text
+        assert "avatar-face" in home.text
         assert client.get("/healthz").json() == {"ok": True}
         app_js = client.get("/static/app.js")
         assert app_js.status_code == 200
         assert "/api/voice/synthesize" in app_js.text
         assert "/api/voice/voices" in app_js.text
         assert "/api/voice/cadence/suggest" in app_js.text
+        assert "updateAvatarExpression" in app_js.text
         assert client.get("/static/styles.css").status_code == 200
     finally:
         sys.path = [entry for entry in sys.path if entry != str(src_root)]

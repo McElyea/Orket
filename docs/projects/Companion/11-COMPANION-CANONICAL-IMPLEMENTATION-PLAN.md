@@ -98,6 +98,10 @@ Phase 0 progress:
     - external extension template config/UI now expose episodic-memory toggle through host config patch flow (`docs/templates/external_extension/src/companion_app/static/index.html`, `docs/templates/external_extension/src/companion_app/static/app.js`)
     - integration/contract coverage now includes episodic store behavior, schema acceptance, runtime clear-session episodic deletion, and template defaults parse (`tests/application/test_scoped_memory_store.py`, `tests/application/test_companion_config_schema.py`, `tests/application/test_companion_runtime_service.py`, `tests/application/test_external_extension_template_config.py`)
     - live non-mocked cross-process episodic probe succeeded (`/api/config` enable episodic -> `/api/chat` -> `/api/session/clear-memory`) with observed `primary` path and HTTP success result (`200`) including explicit episodic deletion evidence (`deleted_episodic_records=1`)
+16. Slice K presentation groundwork implemented:
+    - external extension web template now includes an avatar presentation shell with deterministic expression-state mapping and speaking-state hooks driven by host-backed chat/TTS events (`docs/templates/external_extension/src/companion_app/static/index.html`, `docs/templates/external_extension/src/companion_app/static/app.js`, `docs/templates/external_extension/src/companion_app/static/styles.css`)
+    - CSS expression states (`neutral`, `curious`, `excited`, `focused`, `empathetic`) and speaking animation provide lip-sync-ready UI scaffolding without altering host runtime authority seams
+    - template contract coverage now verifies avatar surface/logic asset presence alongside existing host-seam wiring checks (`tests/application/test_external_extension_template_server.py`)
 
 ## 2. Scope and Phase Model
 

@@ -12,6 +12,8 @@ const els = {
   ttsVoice: document.querySelector("#tts-voice"),
   ttsAudio: document.querySelector("#tts-audio"),
   ttsStatus: document.querySelector("#tts-status"),
+  avatarFace: document.querySelector("#avatar-face"),
+  avatarExpression: document.querySelector("#avatar-expression"),
   chatLog: document.querySelector("#chat-log"),
   chatForm: document.querySelector("#chat-form"),
   chatInput: document.querySelector("#chat-input"),
@@ -46,6 +48,26 @@ function addMessage(role, content) {
   item.innerHTML = `<span class="role">${role}</span>${content}`;
   els.chatLog.appendChild(item);
   els.chatLog.scrollTop = els.chatLog.scrollHeight;
+}
+
+function inferExpression(text) {
+  const normalized = String(text || "").toLowerCase();
+  if (!normalized) return "neutral";
+  if (normalized.includes("!") || normalized.includes("great")) return "excited";
+  if (normalized.includes("sorry") || normalized.includes("understand")) return "empathetic";
+  if (normalized.includes("?")) return "curious";
+  if (normalized.includes("step") || normalized.includes("plan")) return "focused";
+  return "neutral";
+}
+
+function updateAvatarExpression(text) {
+  const expression = inferExpression(text);
+  els.avatarFace.dataset.expression = expression;
+  els.avatarExpression.textContent = `Avatar: ${expression}`;
+}
+
+function setAvatarSpeaking(isSpeaking) {
+  els.avatarFace.dataset.speaking = isSpeaking ? "true" : "false";
 }
 
 async function refreshStatus() {
@@ -160,6 +182,7 @@ async function sendChat(message) {
   if (lastAssistantMessage) {
     els.ttsText.value = lastAssistantMessage;
   }
+  updateAvatarExpression(lastAssistantMessage);
   els.status.textContent = `Model: ${payload.model || "unknown"} | latency: ${payload.latency_ms || 0}ms`;
 }
 
@@ -285,6 +308,7 @@ async function synthesizeAndPlay(text) {
     await els.ttsAudio.play();
     els.ttsStatus.textContent = `TTS: playing voice ${payload.voice_id || "unknown"}`;
   } catch (_error) {
+    setAvatarSpeaking(false);
     els.ttsStatus.textContent = "TTS: audio generated (click Play to start).";
   }
 }
@@ -389,7 +413,12 @@ document.querySelector("#tts-refresh-voices").addEventListener("click", async ()
   }
 });
 
+els.ttsAudio.addEventListener("play", () => setAvatarSpeaking(true));
+els.ttsAudio.addEventListener("pause", () => setAvatarSpeaking(false));
+els.ttsAudio.addEventListener("ended", () => setAvatarSpeaking(false));
+
 window.addEventListener("beforeunload", () => {
+  setAvatarSpeaking(false);
   releaseTtsObjectUrl();
 });
 
