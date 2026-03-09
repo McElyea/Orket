@@ -21,7 +21,7 @@ These items are active executable work. They are non-priority, not deferred.
 3. protocol-governed post-production six-month evidence -- Local provider compatibility contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Next review `2026-04-06`.
 
 ## Future Lanes (Non-Priority Backlog)
-1. Companion post-MVP enhancement lane -- Canonical implementation plan: `docs/projects/Companion/11-COMPANION-CANONICAL-IMPLEMENTATION-PLAN.md`. MVP closeout register: `docs/projects/Companion/12-UI-WORK-REMAINING.md`. Reopen only with an explicit scoped post-MVP request.
+1. Companion post-MVP enhancement lane -- Canonical implementation plan: `docs/projects/Companion/11-COMPANION-CANONICAL-IMPLEMENTATION-PLAN.md`. MVP closeout archive: `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/`. Reopen only with an explicit scoped post-MVP request.
 2. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract source: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Reopen only with an explicit scoped implementation request. Readiness evidence: `benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json` (`ready=false`).
 3. NervousSystem next-phase planning -- Hold until production rollout timing is explicitly scheduled.
 4. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.

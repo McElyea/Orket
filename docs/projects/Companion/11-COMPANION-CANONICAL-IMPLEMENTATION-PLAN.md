@@ -3,8 +3,9 @@
 Last updated: 2026-03-09
 Status: MVP Closed (Post-MVP deferred)
 Owner: Orket Core
-Source authority: `docs/projects/Companion/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md`
-Supporting inputs: `docs/projects/Companion/00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md`, `docs/projects/Companion/02-SDK-PACKAGE-HARDENING.md` through `docs/projects/Companion/10-IMPORT-ISOLATION-HARDENING.md`, `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
+Archive root (MVP closeout): `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/`
+Source authority: `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md`
+Supporting inputs: `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md`, `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/02-SDK-PACKAGE-HARDENING.md` through `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/10-IMPORT-ISOLATION-HARDENING.md`, `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
 
 ## 1. Objective
 
@@ -106,8 +107,8 @@ Phase 0 progress:
     - strict companion key-policy mode is now available (`ORKET_COMPANION_KEY_STRICT`) with integration coverage (`tests/interfaces/test_companion_api_alias_routes.py`)
     - extension gateway now enforces default loopback + same-origin mutating-route policy and explicit payload size limits with contract coverage (`docs/templates/external_extension/src/companion_app/server.py`, `tests/application/test_external_extension_template_server.py`)
     - UI behavioral automation now covers explicit text-submit semantics, voice controls, pane swap, avatar fallback, and keyboard traversal (`docs/templates/external_extension/src/companion_app/frontend/src/App.test.tsx`)
-    - live non-mocked host+gateway closeout evidence recorded in `docs/projects/Companion/13-UI-LIVE-INTEGRATION-EVIDENCE-2026-03-09.md`
-    - remaining-work register is now closed for MVP scope (`docs/projects/Companion/12-UI-WORK-REMAINING.md`)
+    - live non-mocked host+gateway closeout evidence recorded in `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/13-UI-LIVE-INTEGRATION-EVIDENCE-2026-03-09.md`
+    - remaining-work register is now closed for MVP scope (`docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/12-UI-WORK-REMAINING.md`)
 
 ## 2. Scope and Phase Model
 
@@ -421,21 +422,21 @@ Phase 4 completion gate:
 
 | Source doc | Covered by slice |
 | --- | --- |
-| `00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md` | Slices A-K sequencing and severity-driven priority |
-| `01-COMPANION-EXTERNAL-EXTENSION-PLAN.md` | Whole plan authority and phase model |
-| `02-SDK-PACKAGE-HARDENING.md` | Slice A |
-| `03-CAPABILITY-WIRING.md` | Slice C |
-| `04-MEMORY-SUBSYSTEM-SPLIT.md` | Slice F |
-| `05-VOICE-STT-TURN-CONTROL.md` | Slice G |
-| `06-CONFIG-AND-MODE-SCHEMA.md` | Slice D |
-| `07-HOST-API-SEAM.md` | Slice H |
-| `08-EXTERNAL-REPO-BOOTSTRAP.md` | Slice B |
-| `09-COMPANION-MVP-PRODUCT.md` | Slice I |
-| `10-IMPORT-ISOLATION-HARDENING.md` | Slice E |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/00-GAP-SUMMARY-AND-DEPENDENCY-MAP.md` | Slices A-K sequencing and severity-driven priority |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/01-COMPANION-EXTERNAL-EXTENSION-PLAN.md` | Whole plan authority and phase model |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/02-SDK-PACKAGE-HARDENING.md` | Slice A |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/03-CAPABILITY-WIRING.md` | Slice C |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/04-MEMORY-SUBSYSTEM-SPLIT.md` | Slice F |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/05-VOICE-STT-TURN-CONTROL.md` | Slice G |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/06-CONFIG-AND-MODE-SCHEMA.md` | Slice D |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/07-HOST-API-SEAM.md` | Slice H |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/08-EXTERNAL-REPO-BOOTSTRAP.md` | Slice B |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/09-COMPANION-MVP-PRODUCT.md` | Slice I |
+| `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/10-IMPORT-ISOLATION-HARDENING.md` | Slice E |
 | `docs/specs/COMPANION_UI_MVP_CONTRACT.md` | Slice I UI contract lock |
 
 ## 8. Execution Notes
 
 1. This file is the canonical execution pointer for the Companion lane in `docs/ROADMAP.md`.
-2. Supporting `00-10` docs remain authoritative inputs but not the active roadmap pointer.
+2. Supporting `00-10`, `12`, and `13` MVP docs are archived under `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/` and remain historical authority inputs for MVP traceability.
 3. Closeout must archive completed phase-scoped docs without archiving the initiative-level plan while future phases remain.

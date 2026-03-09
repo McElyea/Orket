@@ -3,7 +3,7 @@
 Last updated: 2026-03-09
 Status: Completed
 Owner: Orket Core
-Related register: `docs/projects/Companion/12-UI-WORK-REMAINING.md`
+Related register: `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/12-UI-WORK-REMAINING.md`
 
 ## 1. Purpose
 

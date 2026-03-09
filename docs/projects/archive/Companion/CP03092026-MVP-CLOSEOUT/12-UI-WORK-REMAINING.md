@@ -22,7 +22,7 @@ Closeout outcome:
 Status: Completed
 
 Evidence:
-1. `docs/projects/Companion/13-UI-LIVE-INTEGRATION-EVIDENCE-2026-03-09.md`
+1. `docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/13-UI-LIVE-INTEGRATION-EVIDENCE-2026-03-09.md`
 
 Observed summary:
 1. Host + gateway cross-process flow verified live.
