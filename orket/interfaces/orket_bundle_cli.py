@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from importlib import metadata
 from pathlib import Path, PurePosixPath
@@ -44,6 +45,8 @@ ERROR_SDK_COMMAND_REQUIRED = "E_SDK_COMMAND_REQUIRED"
 ERROR_SDK_MANIFEST_NOT_FOUND = "E_SDK_MANIFEST_NOT_FOUND"
 ERROR_SDK_ENTRYPOINT_INVALID = "E_SDK_ENTRYPOINT_INVALID"
 ERROR_SDK_ENTRYPOINT_MISSING = "E_SDK_ENTRYPOINT_MISSING"
+ERROR_EXT_TEMPLATE_MISSING = "E_EXT_TEMPLATE_MISSING"
+ERROR_EXT_TARGET_EXISTS = "E_EXT_TARGET_EXISTS"
 ERROR_REVIEW_ARGUMENTS = "E_REVIEW_ARGUMENTS"
 ERROR_REVIEW_RUN_FAILED = "E_REVIEW_RUN_FAILED"
 
@@ -542,6 +545,64 @@ def validate_external_extension(target: Path, *, strict: bool = False) -> Dict[s
     return validate_sdk_extension_tool(target, strict=strict, include_import_scan=True)
 
 
+def init_external_extension(target: Path, *, force: bool = False) -> Dict[str, Any]:
+    template_root = (Path(__file__).resolve().parents[2] / "docs" / "templates" / "external_extension").resolve()
+    destination = target.resolve()
+    if not template_root.is_dir():
+        return {
+            "ok": False,
+            "operation": "ext.init",
+            "target": str(target),
+            "error_count": 1,
+            "errors": [
+                {
+                    "code": ERROR_EXT_TEMPLATE_MISSING,
+                    "location": "template",
+                    "message": f"Template not found: {template_root}",
+                }
+            ],
+            "exit_code": 2,
+        }
+    if destination.exists() and not force:
+        return {
+            "ok": False,
+            "operation": "ext.init",
+            "target": str(target),
+            "error_count": 1,
+            "errors": [
+                {
+                    "code": ERROR_EXT_TARGET_EXISTS,
+                    "location": "target",
+                    "message": f"Target already exists: {destination}",
+                }
+            ],
+            "exit_code": 2,
+        }
+
+    destination.mkdir(parents=True, exist_ok=True)
+    copied_files = 0
+    for source_path in sorted(template_root.rglob("*"), key=lambda item: item.as_posix()):
+        relative = source_path.relative_to(template_root)
+        destination_path = destination / relative
+        if source_path.is_dir():
+            destination_path.mkdir(parents=True, exist_ok=True)
+            continue
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_path, destination_path)
+        copied_files += 1
+
+    return {
+        "ok": True,
+        "operation": "ext.init",
+        "target": str(target),
+        "template": str(template_root),
+        "copied_file_count": copied_files,
+        "error_count": 0,
+        "errors": [],
+        "exit_code": 0,
+    }
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="orket", description="Orket bundle tools.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -593,6 +654,13 @@ def _parser() -> argparse.ArgumentParser:
     ext_validate.add_argument("target", nargs="?", default=".", help="Extension directory or manifest path.")
     ext_validate.add_argument("--strict", action="store_true", help="Treat unknown capabilities as errors.")
     ext_validate.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    ext_init = ext_subparsers.add_parser(
+        "init",
+        help="Scaffold an external extension repository from the canonical template.",
+    )
+    ext_init.add_argument("target", help="Destination directory for scaffolded extension files.")
+    ext_init.add_argument("--force", action="store_true", help="Overwrite files in an existing target directory.")
+    ext_init.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
     refactor_parser = subparsers.add_parser("refactor", help="Run CP-1.1 transactional refactor (rename only).")
     refactor_parser.add_argument("instruction", help="Refactor instruction. Supported: rename <A> to <B>.")
@@ -732,6 +800,17 @@ def _render_human(result: Dict[str, Any]) -> str:
             lines.append(f"[{item.get('code')}] {item.get('location')}: {item.get('message')}")
         return "\n".join(lines)
 
+    if str(result.get("operation", "")) == "ext.init":
+        if bool(result.get("ok")):
+            return (
+                f"OK: scaffolded external extension at {result.get('target')} "
+                f"(files={result.get('copied_file_count', 0)})"
+            )
+        lines = [f"FAIL ({result.get('error_count', 0)} error(s))"]
+        for item in result.get("errors", []):
+            lines.append(f"[{item.get('code')}] {item.get('location')}: {item.get('message')}")
+        return "\n".join(lines)
+
     if "code" in result and "message" in result:
         lines: List[str] = []
         if result.get("plan"):
@@ -816,13 +895,16 @@ def main(argv: List[str] | None = None) -> int:
                 ],
             }
     elif args.command == "ext":
-        if str(getattr(args, "ext_command", "")).strip() == "validate":
+        ext_command = str(getattr(args, "ext_command", "")).strip()
+        if ext_command == "validate":
             result = validate_external_extension(Path(args.target), strict=bool(args.strict))
             for item in result.get("warnings", []):
                 print(
                     f"[{item.get('code')}] {item.get('location')}: {item.get('message')}",
                     file=sys.stderr,
                 )
+        elif ext_command == "init":
+            result = init_external_extension(Path(args.target), force=bool(args.force))
         else:
             result = {
                 "ok": False,

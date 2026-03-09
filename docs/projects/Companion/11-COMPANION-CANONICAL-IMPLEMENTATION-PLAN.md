@@ -32,8 +32,8 @@ Phase 0 progress:
    - SDK package release workflow (`.gitea/workflows/sdk-package-release.yml`)
    - SDK tag/version guard script (`scripts/sdk/check_sdk_tag_version.py`)
    - SDK local build/test/publish commands (`orket_extension_sdk/Makefile`)
-4. Remaining Phase 0 work:
-   - optional `orket ext init <path>` convenience scaffolding command (non-blocking)
+4. Phase 0 bootstrap convenience implemented:
+   - host CLI scaffold command (`orket ext init <path>`)
 5. Slice C groundwork in progress:
    - SDK memory and voice capability contracts (`orket_extension_sdk/memory.py`, `orket_extension_sdk/voice.py`)
    - capability vocabulary extended for `memory.write`, `memory.query`, `speech.transcribe`, `voice.turn_control`
