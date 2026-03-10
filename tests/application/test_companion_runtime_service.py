@@ -25,6 +25,22 @@ class _FakeModelProvider:
         return True
 
 
+class _CapturingModelProvider:
+    def __init__(self) -> None:
+        self.requests: list[GenerateRequest] = []
+
+    def generate(self, request: GenerateRequest) -> GenerateResponse:
+        self.requests.append(request)
+        return GenerateResponse(
+            text=f"echo:{request.user_message}",
+            model="capturing-local",
+            latency_ms=6,
+        )
+
+    def is_available(self) -> bool:
+        return True
+
+
 class _FailingModelProvider:
     def generate(self, request: GenerateRequest) -> GenerateResponse:
         del request
@@ -225,6 +241,41 @@ async def test_companion_runtime_service_chat_surfaces_generation_failures_with_
 
 
 @pytest.mark.asyncio
+async def test_companion_runtime_service_list_models_uses_runtime_catalog(tmp_path: Path, monkeypatch) -> None:
+    """Layer: integration. Verifies model catalog responses are exposed with default model selection."""
+
+    async def fake_list_provider_models(*, provider: str, base_url, timeout_s: float, api_key):
+        del base_url, timeout_s, api_key
+        if provider == "ollama":
+            return {
+                "requested_provider": "ollama",
+                "canonical_provider": "ollama",
+                "base_url": "http://127.0.0.1:11434",
+                "models": ["Command-R:35B", "qwen2.5-coder:7b"],
+            }
+        return {
+            "requested_provider": provider,
+            "canonical_provider": "openai_compat",
+            "base_url": "http://127.0.0.1:1234/v1",
+            "models": ["qwen3-14b"],
+        }
+
+    monkeypatch.setattr(companion_runtime_service, "list_provider_models", fake_list_provider_models)
+    service = CompanionRuntimeService(
+        project_root=tmp_path,
+        model_provider=_FakeModelProvider(),  # type: ignore[arg-type]
+    )
+
+    ollama = await service.list_models(provider="ollama")
+    assert ollama["ok"] is True
+    assert ollama["default_model"] == "Command-R:35B"
+    assert ollama["models"] == ["Command-R:35B", "qwen2.5-coder:7b"]
+
+    openai = await service.list_models(provider="openai_compat")
+    assert openai["ok"] is True
+    assert openai["default_model"] == "qwen3-14b"
+
+@pytest.mark.asyncio
 async def test_companion_runtime_service_chat_uses_provider_override_path(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. Verifies provider/model overrides route through the override generation path."""
     captured: dict[str, str] = {}
@@ -247,3 +298,30 @@ async def test_companion_runtime_service_chat_uses_provider_override_path(tmp_pa
     )
     assert result["message"] == "override:hello"
     assert captured == {"provider": "lmstudio", "model": "qwen2.5-coder:14b"}
+
+
+@pytest.mark.asyncio
+async def test_companion_runtime_service_applies_session_role_and_relationship_to_prompt(tmp_path: Path) -> None:
+    """Layer: integration. Verifies session mode updates flow into the generated system prompt for chat."""
+    model_provider = _CapturingModelProvider()
+    service = CompanionRuntimeService(
+        project_root=tmp_path,
+        model_provider=model_provider,  # type: ignore[arg-type]
+    )
+    await service.update_config(
+        session_id="s-mode",
+        scope="session",
+        patch={"mode": {"role_id": "supportive_listener", "relationship_style": "intermediate"}},
+    )
+    result = await service.chat(session_id="s-mode", message="hello")
+
+    assert result["config"]["mode"]["role_id"] == "supportive_listener"
+    assert result["config"]["mode"]["relationship_style"] == "intermediate"
+    assert model_provider.requests
+    system_prompt = model_provider.requests[-1].system_prompt
+    assert "Role: supportive_listener" in system_prompt
+    assert "Relationship style: intermediate" in system_prompt
+    assert "Role guidance: prioritize empathy, validation, and reflective listening before problem-solving." in system_prompt
+    assert "Relationship guidance: closer and more personal than platonic while remaining respectful and grounded." in system_prompt
+
+

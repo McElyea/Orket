@@ -5,6 +5,8 @@ from typing import Any, Callable, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from orket.logging import log_event
+
 
 class CompanionChatRequest(BaseModel):
     session_id: str = Field(min_length=1)
@@ -84,6 +86,31 @@ def build_companion_router(*, service_getter: Callable[[], Any]) -> APIRouter:
         except ValueError as exc:
             _raise_companion_http_error(exc)
         return {"ok": True, "session_id": session_id, "history": history}
+
+    @router.get("/companion/models")
+    async def companion_models(provider: str = "ollama"):
+        service = service_getter()
+        try:
+            return await service.list_models(provider=provider)
+        except ValueError as exc:
+            _raise_companion_http_error(exc)
+        except Exception as exc:
+            requested = str(provider or "").strip().lower() or "ollama"
+            log_event(
+                "companion_model_catalog_unavailable",
+                {"provider": requested, "error": str(exc)},
+            )
+            default_model = "Command-R:35B" if requested == "ollama" else ""
+            fallback_models = [default_model] if default_model else []
+            return {
+                "ok": True,
+                "requested_provider": requested,
+                "canonical_provider": "openai_compat" if requested in {"lmstudio", "openai_compat"} else "ollama",
+                "base_url": "",
+                "models": fallback_models,
+                "default_model": default_model,
+                "degraded": True,
+            }
 
     @router.post("/companion/chat")
     async def companion_chat(req: CompanionChatRequest):
@@ -189,3 +216,4 @@ def _resolve_error_code(detail: str) -> str:
     if prefix.startswith("E_"):
         return prefix
     return "E_COMPANION_REQUEST_INVALID"
+

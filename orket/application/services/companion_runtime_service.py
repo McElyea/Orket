@@ -11,6 +11,7 @@ from typing import Any, Literal
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
+from orket.runtime.provider_runtime_target import list_provider_models
 from orket.services.profile_write_policy import ProfileWritePolicy
 from orket.services.scoped_memory_store import ScopedMemoryStore
 from orket_extension_sdk.audio import TTSProvider, VoiceInfo
@@ -134,6 +135,28 @@ class CompanionRuntimeService:
         session = await self._session_state(session_id)
         bounded_limit = max(1, min(200, int(limit)))
         return list(session.history[-bounded_limit:])
+
+    async def list_models(self, *, provider: str = "") -> dict[str, Any]:
+        await self.ensure_initialized()
+        requested_provider = str(provider or "").strip().lower() or "ollama"
+        payload = await list_provider_models(
+            provider=requested_provider,
+            base_url=None,
+            timeout_s=8.0,
+            api_key=None,
+        )
+        models = [str(model).strip() for model in list(payload.get("models", []) or []) if str(model).strip()]
+        default_model = "Command-R:35B" if requested_provider == "ollama" else ""
+        if default_model not in models and models:
+            default_model = models[0]
+        return {
+            "ok": True,
+            "requested_provider": str(payload.get("requested_provider") or requested_provider),
+            "canonical_provider": str(payload.get("canonical_provider") or requested_provider),
+            "base_url": str(payload.get("base_url") or ""),
+            "models": models,
+            "default_model": default_model,
+        }
 
     async def chat(
         self,
@@ -431,3 +454,4 @@ def _merge_nested(base: dict[str, Any], override: dict[str, Any]) -> dict[str, A
         else:
             merged[key] = value
     return merged
+

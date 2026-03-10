@@ -193,6 +193,15 @@ async def status(request: Request) -> dict[str, Any]:
         _raise_gateway_error(exc)
 
 
+@app.get("/api/models")
+async def models(request: Request, provider: str = "ollama") -> dict[str, Any]:
+    _enforce_gateway_request_policy(request)
+    try:
+        return await _client().models(provider=provider)
+    except httpx.HTTPError as exc:
+        _raise_gateway_error(exc)
+
+
 @app.get("/api/config")
 async def get_config(session_id: str, request: Request) -> dict[str, Any]:
     _enforce_gateway_request_policy(request)

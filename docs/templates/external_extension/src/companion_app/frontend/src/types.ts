@@ -2,6 +2,8 @@ export type CompanionConfigScope = "profile" | "session" | "next_turn";
 
 export type VoiceCommand = "start" | "stop" | "submit";
 
+export type CompanionProvider = "ollama" | "lmstudio" | "openai_compat";
+
 export interface CompanionModeConfig {
   role_id: string;
   relationship_style: string;
@@ -77,6 +79,16 @@ export interface HistoryResponse {
   ok: boolean;
   session_id: string;
   history: HistoryRow[];
+}
+
+export interface ModelCatalogResponse {
+  ok: boolean;
+  requested_provider: string;
+  canonical_provider: string;
+  base_url: string;
+  models: string[];
+  default_model: string;
+  degraded?: boolean;
 }
 
 export interface ChatResponse {

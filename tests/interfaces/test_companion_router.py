@@ -140,3 +140,14 @@ def test_companion_router_invalid_config_patch_returns_error_envelope(companion_
     detail = response.json()["detail"]
     assert detail["ok"] is False
     assert detail["code"] == "E_COMPANION_CONFIG_SECTION_INVALID"
+
+
+def test_companion_router_models_catalog_endpoint(companion_client: TestClient) -> None:
+    """Layer: contract. Verifies model-catalog endpoint returns a structured payload."""
+    response = companion_client.get("/v1/companion/models", params={"provider": "ollama"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["ok"] is True
+    assert payload["requested_provider"] in {"ollama", "openai_compat", "lmstudio"}
+    assert "models" in payload
+    assert "default_model" in payload

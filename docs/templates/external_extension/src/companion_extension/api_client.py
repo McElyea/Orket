@@ -14,6 +14,14 @@ class CompanionApiClient:
     async def status(self) -> dict[str, Any]:
         return await self._request("GET", "/api/v1/companion/status")
 
+    async def models(self, *, provider: str = "ollama") -> dict[str, Any]:
+        normalized = str(provider or "").strip().lower() or "ollama"
+        return await self._request(
+            "GET",
+            "/api/v1/companion/models",
+            params={"provider": normalized},
+        )
+
     async def get_config(self, *, session_id: str) -> dict[str, Any]:
         return await self._request("GET", "/api/v1/companion/config", params={"session_id": session_id})
 

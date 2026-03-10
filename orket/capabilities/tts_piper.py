@@ -13,6 +13,7 @@ from orket_extension_sdk.audio import AudioClip, NullTTSProvider, TTSProvider, V
 @dataclass(frozen=True)
 class PiperConfig:
     model_path: Path
+    voices_dir: Path | None = None
     executable: str = "piper"
     sample_rate: int = 22050
 
@@ -34,8 +35,44 @@ class PiperTTSProvider:
         return self._config
 
     def list_voices(self) -> list[VoiceInfo]:
-        voice_id = self._config.model_path.stem
-        return [VoiceInfo(voice_id=voice_id, display_name=voice_id, language="und", tags=["piper"])]
+        voices: list[VoiceInfo] = []
+        for voice_id in sorted(self._voice_models().keys()):
+            voices.append(VoiceInfo(voice_id=voice_id, display_name=voice_id, language="und", tags=["piper"]))
+        return voices
+
+    def _voice_models(self) -> dict[str, Path]:
+        models: dict[str, Path] = {}
+        default_model = Path(self._config.model_path).expanduser()
+        if default_model.exists() and default_model.is_file() and default_model.suffix.lower() == ".onnx":
+            models[default_model.stem] = default_model
+        scan_dirs: list[Path] = []
+        if self._config.voices_dir is not None:
+            scan_dirs.append(Path(self._config.voices_dir).expanduser())
+        if default_model.parent not in scan_dirs:
+            scan_dirs.append(default_model.parent)
+        for directory in scan_dirs:
+            if not directory.exists() or not directory.is_dir():
+                continue
+            for candidate in sorted(directory.glob("*.onnx")):
+                voice_id = str(candidate.stem or "").strip()
+                if not voice_id:
+                    continue
+                models.setdefault(voice_id, candidate)
+        return models
+
+    def _resolve_model_for_voice(self, voice_id: str) -> Path:
+        requested = str(voice_id or "").strip().lower()
+        models = self._voice_models()
+        if requested:
+            for candidate_id, candidate_path in models.items():
+                if candidate_id.lower() == requested:
+                    return candidate_path
+        default_model = Path(self._config.model_path).expanduser()
+        if default_model.exists():
+            return default_model
+        if models:
+            return next(iter(models.values()))
+        raise RuntimeError(f"Piper model file not found: {self._config.model_path}")
 
     def synthesize(
         self,
@@ -46,8 +83,7 @@ class PiperTTSProvider:
     ) -> AudioClip:
         if not str(text or "").strip():
             return AudioClip(sample_rate=self._config.sample_rate, channels=1, samples=b"", format="pcm_s16le")
-        if not self._config.model_path.exists():
-            raise RuntimeError(f"Piper model file not found: {self._config.model_path}")
+        model_path = self._resolve_model_for_voice(voice_id)
         exe = self._resolve_executable(self._config.executable)
         if not exe:
             raise RuntimeError(f"Piper executable not found: {self._config.executable}")
@@ -60,7 +96,7 @@ class PiperTTSProvider:
         cmd = [
             exe,
             "--model",
-            str(self._config.model_path),
+            str(model_path),
             "--output-raw",
             "--length_scale",
             f"{length_scale:.4f}",
@@ -95,14 +131,25 @@ def build_tts_provider(*, input_config: dict[str, Any]) -> TTSProvider:
         input_config.get("tts_model_path")
         or os.getenv("ORKET_TTS_PIPER_MODEL_PATH", "")
     ).strip()
+    voices_dir_raw = str(
+        input_config.get("tts_voices_dir")
+        or os.getenv("ORKET_TTS_PIPER_VOICES_DIR", "")
+    ).strip()
     executable = str(input_config.get("tts_executable") or os.getenv("ORKET_TTS_PIPER_BIN", "piper")).strip() or "piper"
     sample_rate = int(input_config.get("tts_sample_rate") or os.getenv("ORKET_TTS_SAMPLE_RATE", "22050") or 22050)
     if not model_path_raw:
         return NullTTSProvider()
     model_path = Path(model_path_raw).expanduser()
+    voices_dir = Path(voices_dir_raw).expanduser() if voices_dir_raw else model_path.parent
     if not model_path.exists():
         return NullTTSProvider()
     if not shutil.which(executable) and not Path(executable).exists():
         return NullTTSProvider()
-    return PiperTTSProvider(PiperConfig(model_path=model_path, executable=executable, sample_rate=sample_rate))
-
+    return PiperTTSProvider(
+        PiperConfig(
+            model_path=model_path,
+            voices_dir=voices_dir,
+            executable=executable,
+            sample_rate=sample_rate,
+        )
+    )

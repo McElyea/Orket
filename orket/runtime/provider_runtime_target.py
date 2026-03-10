@@ -185,6 +185,14 @@ async def list_provider_models(
     requested = effective_provider(provider, default="ollama")
     canonical = normalize_provider(requested)
     resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested))
+    if requested == "lmstudio":
+        models = await asyncio.to_thread(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
+        return {
+            "requested_provider": requested,
+            "canonical_provider": canonical,
+            "base_url": resolved_base_url,
+            "models": models,
+        }
     models = (
         await _list_openai_compat_models(base_url=resolved_base_url, api_key=api_key, timeout_s=timeout_s)
         if canonical == "openai_compat"

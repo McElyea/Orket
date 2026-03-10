@@ -45,6 +45,7 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 18. `docs/specs/EXPLORER_CONTEXT_CEILING_SCHEMA.md`
 19. `docs/specs/EXPLORER_THERMAL_STABILITY_SCHEMA.md`
 20. `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
+21. `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`

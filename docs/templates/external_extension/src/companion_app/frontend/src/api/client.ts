@@ -5,6 +5,7 @@ import type {
   ConfigResponse,
   ConfigUpdateResponse,
   HistoryResponse,
+  ModelCatalogResponse,
   StatusResponse,
   UpdateConfigRequest,
   VoiceCommand,
@@ -37,6 +38,11 @@ export class CompanionApiClient {
       limit: String(Math.max(1, Math.floor(limit))),
     });
     return this.request<HistoryResponse>(`/history?${params.toString()}`);
+  }
+
+  async models(provider: string): Promise<ModelCatalogResponse> {
+    const params = new URLSearchParams({ provider: String(provider || "ollama") });
+    return this.request<ModelCatalogResponse>(`/models?${params.toString()}`);
   }
 
   async chat(request: ChatRequest): Promise<ChatResponse> {

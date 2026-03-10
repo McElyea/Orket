@@ -10,7 +10,6 @@ import {
   RotateCcw,
   Save,
   SendHorizonal,
-  Settings2,
   UserRound,
   Waves,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { CompanionApiClient } from "./api/client";
 import type {
   CompanionConfig,
   CompanionConfigScope,
+  CompanionProvider,
   HistoryRow,
   StatusResponse,
   VoiceCommand,
@@ -31,30 +31,39 @@ type FontPersonality = "girly" | "manly" | "neutral" | "weird" | "elegant" | "pl
 
 type PresenceMood = "neutral" | "warm" | "focused" | "curious";
 
+const PROVIDER_OPTIONS: Array<{ value: CompanionProvider; label: string }> = [
+  { value: "ollama", label: "Ollama" },
+  { value: "lmstudio", label: "LM Studio" },
+  { value: "openai_compat", label: "OpenAI-Compatible" },
+];
+
+const DEFAULT_PROVIDER: CompanionProvider = "ollama";
+const DEFAULT_MODEL = "Command-R:35B";
+
 const ROLE_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "general_assistant", label: "General Assistant" },
-  { value: "supportive_listener", label: "Supportive Listener" },
-  { value: "researcher", label: "Researcher" },
-  { value: "programmer", label: "Programmer" },
-  { value: "strategist", label: "Strategist" },
-  { value: "tutor", label: "Tutor" },
+  { value: "general_assistant", label: "Balanced Companion" },
+  { value: "supportive_listener", label: "Confidant" },
+  { value: "strategist", label: "Planner" },
+  { value: "tutor", label: "Mentor" },
+  { value: "researcher", label: "Curious Explorer" },
+  { value: "programmer", label: "Analytical Thinker" },
 ];
 
 const STYLE_OPTIONS: Array<{ value: string; label: string; disabled?: boolean }> = [
-  { value: "platonic", label: "Platonic" },
-  { value: "intermediate", label: "Intermediate" },
+  { value: "platonic", label: "Friendship" },
+  { value: "intermediate", label: "Close" },
   { value: "romantic", label: "Romantic" },
-  { value: "custom", label: "Custom (host-defined)", disabled: true },
+  { value: "custom", label: "Custom (advanced)", disabled: true },
 ];
 
 const FONT_PERSONALITIES: Array<{ value: FontPersonality; label: string }> = [
-  { value: "girly", label: "Girly (Quicksand)" },
-  { value: "manly", label: "Manly (IBM Plex Sans)" },
-  { value: "neutral", label: "Neutral (Source Sans 3)" },
-  { value: "weird", label: "Weird (Space Grotesk)" },
-  { value: "elegant", label: "Elegant (Playfair Display)" },
+  { value: "girly", label: "Soft (Quicksand)" },
+  { value: "manly", label: "Bold (IBM Plex Sans)" },
+  { value: "neutral", label: "Clean (Source Sans 3)" },
+  { value: "weird", label: "Quirky (Space Grotesk)" },
+  { value: "elegant", label: "Classic (Playfair Display)" },
   { value: "playful", label: "Playful (Nunito)" },
-  { value: "techno", label: "Techno (Fira Sans)" },
+  { value: "techno", label: "Sharp (Fira Sans)" },
 ];
 
 const DEFAULT_CONFIG: CompanionConfig = {
@@ -128,6 +137,9 @@ export function App(): JSX.Element {
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [voiceState, setVoiceState] = useState<VoiceStateResponse>(DEFAULT_VOICE_STATE);
   const [fontPersonality, setFontPersonality] = useState<FontPersonality>("neutral");
+  const [provider, setProvider] = useState<CompanionProvider>(DEFAULT_PROVIDER);
+  const [model, setModel] = useState(DEFAULT_MODEL);
+  const [availableModels, setAvailableModels] = useState<string[]>([DEFAULT_MODEL]);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [panesSwapped, setPanesSwapped] = useState(false);
@@ -177,18 +189,51 @@ export function App(): JSX.Element {
     setHistory(payload.history || []);
   }, [api, sessionId]);
 
+  const refreshModelCatalog = useCallback(
+    async (nextProvider: CompanionProvider, keepSelection: boolean): Promise<void> => {
+      try {
+        const payload = await api.models(nextProvider);
+        const models = (payload.models || []).filter((entry) => String(entry || "").trim().length > 0);
+        setAvailableModels(models);
+        setModel((current) => {
+          if (keepSelection && current && models.includes(current)) {
+            return current;
+          }
+          if (nextProvider === "ollama" && models.includes(DEFAULT_MODEL)) {
+            return DEFAULT_MODEL;
+          }
+          if (payload.default_model && models.includes(payload.default_model)) {
+            return payload.default_model;
+          }
+          if (models.length > 0) {
+            return models[0];
+          }
+          if (nextProvider === "ollama") {
+            return DEFAULT_MODEL;
+          }
+          return keepSelection ? current : "";
+        });
+      } catch {
+        const fallbackModels = nextProvider === "ollama" ? [DEFAULT_MODEL] : [];
+        setAvailableModels(fallbackModels);
+        setModel((current) => (keepSelection && current ? current : fallbackModels[0] ?? ""));
+      }
+    },
+    [api],
+  );
+
   const refreshAll = useCallback(async (): Promise<void> => {
     setBusy(true);
     try {
-      await Promise.all([refreshStatus(), refreshConfig(), refreshHistory(), refreshVoice()]);
-      setNotice(`Session ${sessionId} synced with host.`);
+      await Promise.all([refreshStatus(), refreshConfig(), refreshHistory(), refreshVoice(), refreshModelCatalog(provider, true)]);
+      setNotice(`Conversation ${sessionId} synced with host.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to refresh host state.";
       setNotice(`Refresh error: ${message}`);
     } finally {
       setBusy(false);
     }
-  }, [refreshConfig, refreshHistory, refreshStatus, refreshVoice, sessionId]);
+  }, [provider, refreshConfig, refreshHistory, refreshModelCatalog, refreshStatus, refreshVoice, sessionId]);
 
   useEffect(() => {
     void refreshAll();
@@ -198,6 +243,10 @@ export function App(): JSX.Element {
     }, 9000);
     return () => window.clearInterval(timer);
   }, [refreshAll, refreshStatus, refreshVoice]);
+
+  useEffect(() => {
+    void refreshModelCatalog(provider, true);
+  }, [provider, refreshModelCatalog]);
 
   const applySettings = useCallback(
     async (scope: CompanionConfigScope): Promise<void> => {
@@ -228,11 +277,13 @@ export function App(): JSX.Element {
         },
       });
       setConfig(payload.config);
-      setNotice(
-        scope === "profile"
-          ? "Saved current settings as profile defaults."
-          : "Queued settings for the next turn.",
-      );
+      if (scope === "profile") {
+        setNotice("Saved current settings as profile defaults.");
+      } else if (scope === "session") {
+        setNotice("Applied settings to this conversation.");
+      } else {
+        setNotice("Queued settings for the next turn.");
+      }
     },
     [api, config, sessionId],
   );
@@ -248,7 +299,13 @@ export function App(): JSX.Element {
       setChatDraft("");
       setHistory((current) => [...current, { role: "user", content: message }]);
       try {
-        const payload = await api.chat({ session_id: sessionId, message });
+        await applySettings("session");
+        const payload = await api.chat({
+          session_id: sessionId,
+          message,
+          provider,
+          model,
+        });
         setHistory((current) => [...current, { role: "assistant", content: payload.message || "" }]);
         if (payload.config) {
           setConfig(payload.config);
@@ -265,7 +322,7 @@ export function App(): JSX.Element {
         setSending(false);
       }
     },
-    [api, chatDraft, sending, sessionId],
+    [api, applySettings, chatDraft, model, provider, sending, sessionId],
   );
 
   const runVoiceCommand = useCallback(
@@ -317,7 +374,7 @@ export function App(): JSX.Element {
 
           <div className={styles.railSection}>
             <label className={styles.fieldLabel} htmlFor="session-id">
-              Session
+              Conversation
             </label>
             <input
               id="session-id"
@@ -335,78 +392,12 @@ export function App(): JSX.Element {
                   setSessionId(next);
                 }}
               >
-                Load Session
+                Load Conversation
               </button>
               <button type="button" className={styles.ghostButton} onClick={() => void refreshAll()} disabled={busy}>
                 {busy ? "Syncing..." : "Refresh"}
               </button>
             </div>
-          </div>
-
-          <div className={styles.railSection}>
-            <label className={styles.fieldLabel} htmlFor="role-id">
-              Role
-            </label>
-            <select
-              id="role-id"
-              className={styles.selectInput}
-              value={config.mode.role_id}
-              onChange={(event) =>
-                setConfig((current) => ({
-                  ...current,
-                  mode: {
-                    ...current.mode,
-                    role_id: event.target.value,
-                  },
-                }))
-              }
-            >
-              {ROLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-
-            <label className={styles.fieldLabel} htmlFor="style-id">
-              Relationship Style
-            </label>
-            <select
-              id="style-id"
-              className={styles.selectInput}
-              value={config.mode.relationship_style}
-              onChange={(event) =>
-                setConfig((current) => ({
-                  ...current,
-                  mode: {
-                    ...current.mode,
-                    relationship_style: event.target.value,
-                  },
-                }))
-              }
-            >
-              {STYLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value} disabled={Boolean(option.disabled)}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-
-            <label className={styles.fieldLabel} htmlFor="font-personality">
-              Font Personality
-            </label>
-            <select
-              id="font-personality"
-              className={styles.selectInput}
-              value={fontPersonality}
-              onChange={(event) => setFontPersonality(event.target.value as FontPersonality)}
-            >
-              {FONT_PERSONALITIES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className={styles.railSection}>
@@ -424,17 +415,6 @@ export function App(): JSX.Element {
               }}
             />
             <p className={styles.helperText}>Missing assets fall back to a built-in presence shape.</p>
-          </div>
-
-          <div className={styles.inlineButtons}>
-            <button type="button" className={styles.primaryButton} onClick={() => void applySettings("next_turn")}>
-              <Settings2 size={16} aria-hidden="true" />
-              Queue Next Turn
-            </button>
-            <button type="button" className={styles.secondaryButton} onClick={() => void applySettings("profile")}>
-              <Save size={16} aria-hidden="true" />
-              Save Profile
-            </button>
           </div>
 
           <div className={styles.inlineButtons}>
@@ -488,7 +468,132 @@ export function App(): JSX.Element {
 
       <section className={styles.controlPanel}>
         <div className={styles.noticeBar}>{notice}</div>
-        <Accordion.Root className={styles.accordionRoot} type="multiple" defaultValue={["voice", "status"]}>
+        <Accordion.Root className={styles.accordionRoot} type="multiple" defaultValue={["settings", "voice", "status"]}>
+          <Accordion.Item className={styles.accordionItem} value="settings">
+            <Accordion.Header>
+              <Accordion.Trigger className={styles.accordionTrigger}>
+                <span className={styles.triggerLabel}>
+                  <Save size={16} aria-hidden="true" />
+                  Companion Settings
+                </span>
+                <ChevronDown className={styles.triggerIcon} size={16} aria-hidden="true" />
+              </Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Content className={styles.accordionContent}>
+              <div className={styles.accordionInner}>
+                <label className={styles.fieldLabel} htmlFor="provider-id">
+                  Provider
+                </label>
+                <select
+                  id="provider-id"
+                  className={styles.selectInput}
+                  value={provider}
+                  onChange={(event) => setProvider(event.target.value as CompanionProvider)}
+                >
+                  {PROVIDER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label className={styles.fieldLabel} htmlFor="model-id">
+                  Model
+                </label>
+                <select
+                  id="model-id"
+                  className={styles.selectInput}
+                  value={model}
+                  onChange={(event) => setModel(event.target.value)}
+                >
+                  {[...new Set([model, ...availableModels].filter((entry) => String(entry || "").trim().length > 0))].map((entry) => (
+                    <option key={entry} value={entry}>
+                      {entry}
+                    </option>
+                  ))}
+                </select>
+
+                <label className={styles.fieldLabel} htmlFor="role-id">
+                  Companion Role
+                </label>
+                <select
+                  id="role-id"
+                  className={styles.selectInput}
+                  value={config.mode.role_id}
+                  onChange={(event) =>
+                    setConfig((current) => ({
+                      ...current,
+                      mode: {
+                        ...current.mode,
+                        role_id: event.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {ROLE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label className={styles.fieldLabel} htmlFor="style-id">
+                  Relationship Style
+                </label>
+                <select
+                  id="style-id"
+                  className={styles.selectInput}
+                  value={config.mode.relationship_style}
+                  onChange={(event) =>
+                    setConfig((current) => ({
+                      ...current,
+                      mode: {
+                        ...current.mode,
+                        relationship_style: event.target.value,
+                      },
+                    }))
+                  }
+                >
+                  {STYLE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value} disabled={Boolean(option.disabled)}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <label className={styles.fieldLabel} htmlFor="font-personality">
+                  Font Personality
+                </label>
+                <select
+                  id="font-personality"
+                  className={styles.selectInput}
+                  value={fontPersonality}
+                  onChange={(event) => setFontPersonality(event.target.value as FontPersonality)}
+                >
+                  {FONT_PERSONALITIES.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <div className={styles.inlineButtons}>
+                  <button type="button" className={styles.primaryButton} onClick={() => void applySettings("session")}>
+                    <Save size={16} aria-hidden="true" />
+                    Apply to Conversation
+                  </button>
+                  <button type="button" className={styles.secondaryButton} onClick={() => void applySettings("profile")}>
+                    <Save size={16} aria-hidden="true" />
+                    Save Profile
+                  </button>
+                  <button type="button" className={styles.ghostButton} onClick={() => void refreshModelCatalog(provider, false)}>
+                    Refresh Models
+                  </button>
+                </div>
+              </div>
+            </Accordion.Content>
+          </Accordion.Item>
+
           <Accordion.Item className={styles.accordionItem} value="voice">
             <Accordion.Header>
               <Accordion.Trigger className={styles.accordionTrigger}>
@@ -556,8 +661,8 @@ export function App(): JSX.Element {
             <Accordion.Content className={styles.accordionContent}>
               <div className={styles.accordionInner}>
                 <ToggleRow
-                  label="Session memory"
-                  hint="Turn memory in this session on or off."
+                  label="Conversation memory"
+                  hint="Turn memory in this conversation on or off."
                   checked={config.memory.session_memory_enabled}
                   onCheckedChange={(next) =>
                     setConfig((current) => ({
@@ -580,7 +685,7 @@ export function App(): JSX.Element {
                 <div className={styles.inlineButtons}>
                   <button type="button" className={styles.secondaryButton} onClick={() => void clearSessionMemory()}>
                     <RotateCcw size={16} aria-hidden="true" />
-                    Clear Session Memory
+                    Clear Conversation Memory
                   </button>
                 </div>
               </div>
@@ -609,11 +714,19 @@ export function App(): JSX.Element {
                     <span className={styles.statusValue}>{humanizeState(voiceState.state)}</span>
                   </div>
                   <div className={styles.statusItem}>
+                    <span className={styles.statusLabel}>Provider</span>
+                    <span className={styles.statusValue}>{provider}</span>
+                  </div>
+                  <div className={styles.statusItem}>
+                    <span className={styles.statusLabel}>Model</span>
+                    <span className={styles.statusValue}>{model || "(none)"}</span>
+                  </div>
+                  <div className={styles.statusItem}>
                     <span className={styles.statusLabel}>Model Path</span>
                     <span className={styles.statusValue}>{status?.model_available ? "ready" : "degraded"}</span>
                   </div>
                   <div className={styles.statusItem}>
-                    <span className={styles.statusLabel}>Active Sessions</span>
+                    <span className={styles.statusLabel}>Active Conversations</span>
                     <span className={styles.statusValue}>{status?.active_sessions ?? 0}</span>
                   </div>
                 </div>
@@ -767,3 +880,4 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: ToggleRowProps): J
     </div>
   );
 }
+

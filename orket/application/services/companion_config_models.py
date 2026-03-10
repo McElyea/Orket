@@ -7,6 +7,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class CompanionRoleId(str, Enum):
+    NONE = "none"
+    WAIFU = "waifu"
+    BOYFRIEND = "boyfriend"
+    GIRLFRIEND = "girlfriend"
+    HUSBAND = "husband"
+    ROLE_PLAY = "role_play"
     RESEARCHER = "researcher"
     PROGRAMMER = "programmer"
     STRATEGIST = "strategist"

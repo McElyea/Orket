@@ -110,6 +110,17 @@ function installFetchMock(): RecordedCall[] {
       });
     }
 
+    if (method === "GET" && url.pathname === "/api/models") {
+      return jsonResponse({
+        ok: true,
+        requested_provider: "ollama",
+        canonical_provider: "ollama",
+        base_url: "http://127.0.0.1:11434",
+        models: ["Command-R:35B", "qwen2.5-coder:7b"],
+        default_model: "Command-R:35B",
+      });
+    }
+
     if (method === "GET" && url.pathname === "/api/voice/state") {
       return jsonResponse({ ok: true, state: "stop", silence_delay_sec: 1.5 });
     }
@@ -203,6 +214,8 @@ describe("Companion App", () => {
     const chatCall = [...calls].reverse().find((call) => call.path === "/api/chat");
     const chatPayload = asRecord(chatCall?.body);
     expect(chatPayload?.message).toBe("send explicitly");
+    expect(chatPayload?.provider).toBe("ollama");
+    expect(chatPayload?.model).toBe("Command-R:35B");
     expect(chatPayload).not.toHaveProperty("silence_delay_sec");
   });
 
@@ -229,7 +242,7 @@ describe("Companion App", () => {
 
     await screen.findByText(/synced with host/i);
 
-    const sessionInput = screen.getByLabelText("Session");
+    const sessionInput = screen.getByLabelText("Conversation");
     const chatInput = screen.getByPlaceholderText("Type your message and press Send");
 
     await user.tab();
@@ -265,3 +278,4 @@ describe("Companion App", () => {
     expect(screen.getByText("Companion remains present even when decorative assets are missing.")).toBeTruthy();
   });
 });
+

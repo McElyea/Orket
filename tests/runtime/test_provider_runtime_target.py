@@ -99,3 +99,30 @@ async def test_resolve_provider_runtime_target_blocks_when_lmstudio_auto_load_di
     assert result.model_id == "qwen3.5-4b"
     assert result.auto_load_attempted is True
     assert result.auto_load_performed is False
+
+
+@pytest.mark.asyncio
+async def test_list_provider_models_uses_lmstudio_cli_inventory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies lmstudio catalog discovery uses `lms ls` inventory semantics."""
+
+    def _fake_lms_list(**_: object) -> list[str]:
+        return ["qwen3.5-4b", "qwen3.5-0.8b"]
+
+    async def _unexpected_openai_models(**_: object) -> list[str]:
+        raise AssertionError("openai-compatible HTTP model listing should not run for provider=lmstudio")
+
+    monkeypatch.setattr(runtime_target, "_list_installed_lmstudio_models_sync", _fake_lms_list)
+    monkeypatch.setattr(runtime_target, "_list_openai_compat_models", _unexpected_openai_models)
+
+    payload = await runtime_target.list_provider_models(
+        provider="lmstudio",
+        base_url="http://127.0.0.1:1234/v1",
+        timeout_s=5.0,
+        api_key=None,
+    )
+
+    assert payload["requested_provider"] == "lmstudio"
+    assert payload["canonical_provider"] == "openai_compat"
+    assert payload["models"] == ["qwen3.5-4b", "qwen3.5-0.8b"]

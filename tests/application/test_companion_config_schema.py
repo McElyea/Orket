@@ -77,3 +77,9 @@ def test_companion_config_accepts_episodic_memory_toggle() -> None:
     """Layer: contract. Verifies episodic-memory toggle is accepted in the memory schema."""
     parsed = CompanionConfig.model_validate({"memory": {"episodic_memory_enabled": True}})
     assert parsed.memory.episodic_memory_enabled is True
+
+
+def test_companion_config_accepts_extended_companion_roles() -> None:
+    """Layer: contract. Verifies expanded companion-focused role IDs validate successfully."""
+    parsed = CompanionConfig.model_validate({"mode": {"role_id": "girlfriend", "relationship_style": "romantic"}})
+    assert parsed.mode.role_id.value == "girlfriend"

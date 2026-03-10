@@ -260,6 +260,7 @@
 
 .messageList {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 0.25rem 1rem 0.8rem;
   display: flex;
