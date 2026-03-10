@@ -49,6 +49,7 @@ Completed in active execution:
 34. UI lane security boundary tests contract/checker, run-start artifact, and acceptance-gate enforcement
 35. degradation-first UI standard contract/checker, run-start artifact, and acceptance-gate enforcement
 36. decision-record/operating-principles contract checker, run-start artifact, and acceptance-gate enforcement
+37. result-to-error invariant contract/checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

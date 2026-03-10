@@ -25,6 +25,9 @@ from scripts.governance.check_environment_parity_checklist import evaluate_envir
 from scripts.governance.check_idempotency_discipline_policy import (
     evaluate_idempotency_discipline_policy,
 )
+from scripts.governance.check_result_error_invariants import (
+    evaluate_result_error_invariants,
+)
 from scripts.governance.check_interrupt_semantics_policy import evaluate_interrupt_semantics_policy
 from scripts.governance.check_model_profile_bios import evaluate_model_profile_bios
 from scripts.governance.check_human_correction_capture_policy import (
@@ -130,6 +133,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "model_profile_bios.json",
     "interrupt_semantics_policy.json",
     "idempotency_discipline_policy.json",
+    "result_error_invariant_contract.json",
     "artifact_provenance_block_policy.json",
     "operator_override_logging_policy.json",
     "demo_production_labeling_policy.json",
@@ -213,6 +217,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-idempotency-policy-check",
         action="store_true",
         help="Skip idempotency discipline policy contract check.",
+    )
+    parser.add_argument(
+        "--skip-result-error-invariant-check",
+        action="store_true",
+        help="Skip result-to-error invariant contract check.",
     )
     parser.add_argument(
         "--skip-artifact-provenance-policy-check",
@@ -370,6 +379,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_model_profile_bios: bool = True,
     check_interrupt_policy: bool = True,
     check_idempotency_policy: bool = True,
+    check_result_error_invariant: bool = True,
     check_artifact_provenance_policy: bool = True,
     check_operator_override_policy: bool = True,
     check_demo_production_policy: bool = True,
@@ -517,6 +527,16 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(idempotency_policy_payload.get("ok")):
             failures.append("idempotency_discipline_policy_check_failed")
+
+    if check_result_error_invariant:
+        result_error_payload = evaluate_result_error_invariants()
+        details["result_error_invariant_check"] = {
+            "ok": bool(result_error_payload.get("ok")),
+            "forbidden_status_count": int(result_error_payload.get("forbidden_status_count") or 0),
+            "behavior_case_count": int(result_error_payload.get("behavior_case_count") or 0),
+        }
+        if not bool(result_error_payload.get("ok")):
+            failures.append("result_error_invariant_check_failed")
 
     if check_artifact_provenance_policy:
         provenance_policy_payload = evaluate_artifact_provenance_block_policy()
@@ -785,6 +805,7 @@ def main(argv: list[str] | None = None) -> int:
         check_model_profile_bios=not bool(args.skip_model_profile_bios_check),
         check_interrupt_policy=not bool(args.skip_interrupt_policy_check),
         check_idempotency_policy=not bool(args.skip_idempotency_policy_check),
+        check_result_error_invariant=not bool(args.skip_result_error_invariant_check),
         check_artifact_provenance_policy=not bool(args.skip_artifact_provenance_policy_check),
         check_operator_override_policy=not bool(args.skip_operator_override_policy_check),
         check_demo_production_policy=not bool(args.skip_demo_production_policy_check),

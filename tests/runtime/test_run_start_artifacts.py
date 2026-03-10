@@ -77,6 +77,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["idempotency_discipline_policy"]["schema_version"] == "1.0"
     idempotency_surfaces = [row["surface"] for row in payload["idempotency_discipline_policy"]["rows"]]
     assert "run_finalize" in idempotency_surfaces
+    assert payload["result_error_invariant_contract"]["schema_version"] == "1.0"
+    forbidden_statuses = payload["result_error_invariant_contract"]["failure_forbidden_statuses"]
+    assert "done" in forbidden_statuses
     assert payload["artifact_provenance_block_policy"]["schema_version"] == "1.0"
     required_provenance_fields = payload["artifact_provenance_block_policy"]["required_provenance_fields"]
     assert "run_id" in required_provenance_fields
@@ -179,6 +182,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["model_profile_bios_path"]).exists()
     assert Path(payload["interrupt_semantics_policy_path"]).exists()
     assert Path(payload["idempotency_discipline_policy_path"]).exists()
+    assert Path(payload["result_error_invariant_contract_path"]).exists()
     assert Path(payload["artifact_provenance_block_policy_path"]).exists()
     assert Path(payload["operator_override_logging_policy_path"]).exists()
     assert Path(payload["demo_production_labeling_policy_path"]).exists()

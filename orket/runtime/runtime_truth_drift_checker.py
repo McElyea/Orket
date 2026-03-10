@@ -37,6 +37,7 @@ from orket.runtime.workspace_hygiene_rules import validate_workspace_hygiene_rul
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
+from orket.runtime.result_error_invariants import validate_result_error_invariant_contract
 from orket.runtime.retry_classification_policy import validate_retry_classification_policy
 from orket.runtime.safe_default_catalog import validate_safe_default_catalog
 from orket.runtime.structured_warning_policy import validate_structured_warning_policy
@@ -257,6 +258,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "retry_classification_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        statuses = validate_result_error_invariant_contract()
+        checks.append(
+            {
+                "check": "result_error_invariant_contract_valid",
+                "ok": True,
+                "count": len(statuses),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "result_error_invariant_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }

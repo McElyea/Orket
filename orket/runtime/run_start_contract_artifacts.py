@@ -31,6 +31,7 @@ from orket.runtime.persistence_corruption_test_contract import persistence_corru
 from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
+from orket.runtime.result_error_invariants import result_error_invariant_contract_snapshot
 from orket.runtime.resource_pressure_simulation_lane import resource_pressure_simulation_lane_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_config_ownership_map import runtime_config_ownership_map_snapshot
@@ -204,6 +205,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "idempotency_discipline_policy.json",
         idempotency_discipline_policy_snapshot,
         "E_RUN_IDEMPOTENCY_DISCIPLINE_POLICY_IMMUTABLE",
+    ),
+    (
+        "result_error_invariant_contract",
+        "result_error_invariant_contract.json",
+        result_error_invariant_contract_snapshot,
+        "E_RUN_RESULT_ERROR_INVARIANT_CONTRACT_IMMUTABLE",
     ),
     (
         "artifact_provenance_block_policy",

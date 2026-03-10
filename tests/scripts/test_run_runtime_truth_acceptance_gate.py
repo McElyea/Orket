@@ -62,6 +62,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["model_profile_bios_check"]["ok"] is True
     assert payload["details"]["interrupt_semantics_policy_check"]["ok"] is True
     assert payload["details"]["idempotency_discipline_policy_check"]["ok"] is True
+    assert payload["details"]["result_error_invariant_check"]["ok"] is True
     assert payload["details"]["artifact_provenance_block_policy_check"]["ok"] is True
     assert payload["details"]["operator_override_logging_policy_check"]["ok"] is True
     assert payload["details"]["demo_production_labeling_policy_check"]["ok"] is True
@@ -316,6 +317,32 @@ def test_runtime_truth_acceptance_gate_fails_when_idempotency_policy_check_fails
     )
     assert payload["ok"] is False
     assert "idempotency_discipline_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_result_error_invariant_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_result_error_invariants",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "forbidden_status_count": 0,
+            "behavior_case_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "result_error_invariant_check_failed" in payload["failures"]
 
 
 # Layer: contract
@@ -1004,6 +1031,7 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "model_profile_bios.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "interrupt_semantics_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "idempotency_discipline_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "result_error_invariant_contract.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "artifact_provenance_block_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "operator_override_logging_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "demo_production_labeling_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES

@@ -21,6 +21,7 @@ _TRACE_IDS: dict[str, str] = {
     "model_profile_bios": "TRUTH-B-MODEL-PROFILE-BIOS",
     "interrupt_semantics_policy": "TRUTH-W2B-INTERRUPT-SEMANTICS-POLICY",
     "idempotency_discipline_policy": "TRUTH-W2B-IDEMPOTENCY-DISCIPLINE-POLICY",
+    "result_error_invariant_contract": "TRUTH-W2B-RESULT-ERROR-INVARIANT-CHECKER",
     "artifact_provenance_block_policy": "TRUTH-W2C-ARTIFACT-PROVENANCE-BLOCK",
     "operator_override_logging_policy": "TRUTH-W2C-OPERATOR-OVERRIDE-LOGGING",
     "demo_production_labeling_policy": "TRUTH-W2C-DEMO-PRODUCTION-LABELING",
