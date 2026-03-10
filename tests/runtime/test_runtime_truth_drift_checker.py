@@ -26,6 +26,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "idempotency_discipline_policy_valid" in checks
     assert "artifact_provenance_block_policy_valid" in checks
     assert "operator_override_logging_policy_valid" in checks
+    assert "demo_production_labeling_policy_valid" in checks
 
 
 # Layer: contract

@@ -24,6 +24,7 @@ Completed in active execution:
 9. idempotency discipline policy contract, checker, run-start artifact, and acceptance-gate enforcement
 10. strict artifact provenance block policy contract, checker, run-start artifact, and acceptance-gate enforcement
 11. operator override logging policy contract, checker, run-start artifact, and acceptance-gate enforcement
+12. demo-vs-production labeling policy contract, checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

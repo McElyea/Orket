@@ -15,6 +15,7 @@ from orket.runtime.capability_fallback_hierarchy import capability_fallback_hier
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
 from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
+from orket.runtime.demo_production_labeling_policy import demo_production_labeling_policy_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
@@ -238,6 +239,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_OPERATOR_OVERRIDE_LOGGING_POLICY_IMMUTABLE",
     )
 
+    demo_production_labeling_policy = demo_production_labeling_policy_snapshot()
+    demo_production_labeling_policy_path = runtime_root / "demo_production_labeling_policy.json"
+    _write_immutable_json(
+        path=demo_production_labeling_policy_path,
+        payload=demo_production_labeling_policy,
+        error_code="E_RUN_DEMO_PRODUCTION_LABELING_POLICY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -316,6 +325,8 @@ def capture_run_start_artifacts(
         "artifact_provenance_block_policy_path": str(artifact_provenance_block_policy_path),
         "operator_override_logging_policy": operator_override_logging_policy,
         "operator_override_logging_policy_path": str(operator_override_logging_policy_path),
+        "demo_production_labeling_policy": demo_production_labeling_policy,
+        "demo_production_labeling_policy_path": str(demo_production_labeling_policy_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

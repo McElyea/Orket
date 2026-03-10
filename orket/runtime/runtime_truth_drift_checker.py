@@ -5,6 +5,7 @@ from typing import Any
 from orket.runtime.capability_fallback_hierarchy import validate_capability_fallback_hierarchy
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.artifact_provenance_block_policy import validate_artifact_provenance_block_policy
+from orket.runtime.demo_production_labeling_policy import validate_demo_production_labeling_policy
 from orket.runtime.idempotency_discipline_policy import validate_idempotency_discipline_policy
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
@@ -338,6 +339,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "operator_override_logging_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        labels = validate_demo_production_labeling_policy()
+        checks.append(
+            {
+                "check": "demo_production_labeling_policy_valid",
+                "ok": True,
+                "count": len(labels),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "demo_production_labeling_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

@@ -23,6 +23,7 @@ _TRACE_IDS: dict[str, str] = {
     "idempotency_discipline_policy": "TRUTH-W2B-IDEMPOTENCY-DISCIPLINE-POLICY",
     "artifact_provenance_block_policy": "TRUTH-W2C-ARTIFACT-PROVENANCE-BLOCK",
     "operator_override_logging_policy": "TRUTH-W2C-OPERATOR-OVERRIDE-LOGGING",
+    "demo_production_labeling_policy": "TRUTH-W2C-DEMO-PRODUCTION-LABELING",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }
