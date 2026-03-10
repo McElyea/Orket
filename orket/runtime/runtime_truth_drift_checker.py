@@ -16,6 +16,7 @@ from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
 from orket.runtime.release_confidence_scorecard import validate_release_confidence_scorecard
 from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
+from orket.runtime.spec_debt_queue import validate_spec_debt_queue
 from orket.runtime.workspace_hygiene_rules import validate_workspace_hygiene_rules
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
@@ -490,6 +491,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "canonical_examples_library_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        debt_ids = validate_spec_debt_queue()
+        checks.append(
+            {
+                "check": "spec_debt_queue_valid",
+                "ok": True,
+                "count": len(debt_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "spec_debt_queue_valid",
                 "ok": False,
                 "error": str(exc),
             }

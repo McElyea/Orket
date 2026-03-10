@@ -107,6 +107,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["canonical_examples_library"]["schema_version"] == "1.0"
     canonical_example_ids = [row["example_id"] for row in payload["canonical_examples_library"]["examples"]]
     assert "EX-ROUTE-DECISION-BASELINE" in canonical_example_ids
+    assert payload["spec_debt_queue"]["schema_version"] == "1.0"
+    debt_ids = [row["debt_id"] for row in payload["spec_debt_queue"]["entries"]]
+    assert "SDQ-001" in debt_ids
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -136,6 +139,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["feature_flag_expiration_policy_path"]).exists()
     assert Path(payload["workspace_hygiene_rules_path"]).exists()
     assert Path(payload["canonical_examples_library_path"]).exists()
+    assert Path(payload["spec_debt_queue_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -804,6 +808,38 @@ def test_capture_run_start_artifacts_fails_closed_on_canonical_examples_library_
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-canonical-examples-library-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_spec_debt_queue_mutation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-spec-debt-queue-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    spec_debt_queue_path = (
+        workspace
+        / "observability"
+        / "run-spec-debt-queue-immutable"
+        / "runtime_contracts"
+        / "spec_debt_queue.json"
+    )
+    spec_debt_queue_path.write_text(
+        '{"schema_version":"999.0","entries":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_SPEC_DEBT_QUEUE_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-spec-debt-queue-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )

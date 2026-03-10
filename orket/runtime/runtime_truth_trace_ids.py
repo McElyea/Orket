@@ -31,6 +31,7 @@ _TRACE_IDS: dict[str, str] = {
     "feature_flag_expiration_policy": "TRUTH-W2E-FEATURE-FLAG-EXPIRATION-POLICY",
     "workspace_hygiene_rules": "TRUTH-W2E-WORKSPACE-HYGIENE-RULES",
     "canonical_examples_library": "TRUTH-W2E-CANONICAL-EXAMPLES-LIBRARY",
+    "spec_debt_queue": "TRUTH-W2E-SPEC-DEBT-QUEUE",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }

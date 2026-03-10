@@ -32,6 +32,7 @@ Completed in active execution:
 17. feature-flag expiration policy contract, checker, run-start artifact, and acceptance-gate enforcement
 18. workspace hygiene rules contract, checker, run-start artifact, and acceptance-gate enforcement
 19. canonical examples library contract, checker, run-start artifact, and acceptance-gate enforcement
+20. spec debt queue contract, checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

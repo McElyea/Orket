@@ -48,6 +48,9 @@ from scripts.governance.check_workspace_hygiene_rules import (
 from scripts.governance.check_canonical_examples_library import (
     evaluate_canonical_examples_library,
 )
+from scripts.governance.check_spec_debt_queue import (
+    evaluate_spec_debt_queue,
+)
 from scripts.governance.check_operator_override_logging_policy import (
     evaluate_operator_override_logging_policy,
 )
@@ -89,6 +92,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "feature_flag_expiration_policy.json",
     "workspace_hygiene_rules.json",
     "canonical_examples_library.json",
+    "spec_debt_queue.json",
 )
 
 
@@ -196,6 +200,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip canonical examples library contract check.",
     )
+    parser.add_argument(
+        "--skip-spec-debt-queue-check",
+        action="store_true",
+        help="Skip spec debt queue contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -227,6 +236,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_feature_flag_expiration: bool = True,
     check_workspace_hygiene: bool = True,
     check_canonical_examples: bool = True,
+    check_spec_debt_queue: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -438,6 +448,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(examples_payload.get("ok")):
             failures.append("canonical_examples_library_check_failed")
 
+    if check_spec_debt_queue:
+        spec_debt_payload = evaluate_spec_debt_queue()
+        details["spec_debt_queue_check"] = {
+            "ok": bool(spec_debt_payload.get("ok")),
+            "debt_count": int(spec_debt_payload.get("debt_count") or 0),
+        }
+        if not bool(spec_debt_payload.get("ok")):
+            failures.append("spec_debt_queue_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -471,6 +490,7 @@ def main(argv: list[str] | None = None) -> int:
         check_feature_flag_expiration=not bool(args.skip_feature_flag_expiration_check),
         check_workspace_hygiene=not bool(args.skip_workspace_hygiene_check),
         check_canonical_examples=not bool(args.skip_canonical_examples_check),
+        check_spec_debt_queue=not bool(args.skip_spec_debt_queue_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

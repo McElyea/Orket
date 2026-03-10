@@ -30,6 +30,7 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "feature_flag_expiration_policy" in artifacts
     assert "workspace_hygiene_rules" in artifacts
     assert "canonical_examples_library" in artifacts
+    assert "spec_debt_queue" in artifacts
     assert "route_decision_artifact" in artifacts
 
 
