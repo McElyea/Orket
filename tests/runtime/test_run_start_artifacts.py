@@ -95,6 +95,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["execution_readiness_rubric"]["schema_version"] == "1.0"
     readiness_criteria = [row["criterion"] for row in payload["execution_readiness_rubric"]["criteria"]]
     assert "contract_drift_clean" in readiness_criteria
+    assert payload["release_confidence_scorecard"]["schema_version"] == "1.0"
+    scorecard_dimensions = [row["name"] for row in payload["release_confidence_scorecard"]["dimensions"]]
+    assert "correctness" in scorecard_dimensions
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -120,6 +123,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["human_correction_capture_policy_path"]).exists()
     assert Path(payload["sampling_discipline_guide_path"]).exists()
     assert Path(payload["execution_readiness_rubric_path"]).exists()
+    assert Path(payload["release_confidence_scorecard_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -660,6 +664,38 @@ def test_capture_run_start_artifacts_fails_closed_on_execution_readiness_rubric_
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-execution-readiness-rubric-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_release_confidence_scorecard_mutation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-release-confidence-scorecard-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    scorecard_path = (
+        workspace
+        / "observability"
+        / "run-release-confidence-scorecard-immutable"
+        / "runtime_contracts"
+        / "release_confidence_scorecard.json"
+    )
+    scorecard_path.write_text(
+        '{"schema_version":"999.0","promotion_threshold":0.0,"dimensions":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_RELEASE_CONFIDENCE_SCORECARD_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-release-confidence-scorecard-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )

@@ -68,6 +68,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["human_correction_capture_policy_check"]["ok"] is True
     assert payload["details"]["sampling_discipline_guide_check"]["ok"] is True
     assert payload["details"]["execution_readiness_rubric_check"]["ok"] is True
+    assert payload["details"]["release_confidence_scorecard_check"]["ok"] is True
 
 
 # Layer: contract
@@ -448,6 +449,31 @@ def test_runtime_truth_acceptance_gate_fails_when_execution_readiness_check_fail
 
 
 # Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_release_confidence_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_release_confidence_scorecard",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "dimension_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "release_confidence_scorecard_check_failed" in payload["failures"]
+
+
+# Layer: contract
 def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_artifacts() -> None:
     assert "runtime_invariant_registry.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "runtime_config_ownership_map.json" in REQUIRED_RUNTIME_CONTRACT_FILES
@@ -463,3 +489,4 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "human_correction_capture_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "sampling_discipline_guide.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "execution_readiness_rubric.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "release_confidence_scorecard.json" in REQUIRED_RUNTIME_CONTRACT_FILES

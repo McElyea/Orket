@@ -22,6 +22,7 @@ from orket.runtime.operator_override_logging_policy import operator_override_log
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
 from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_snapshot
+from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_truth_contracts import (
     degradation_taxonomy_snapshot,
@@ -274,6 +275,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_EXECUTION_READINESS_RUBRIC_IMMUTABLE",
     )
 
+    release_confidence_scorecard = release_confidence_scorecard_snapshot()
+    release_confidence_scorecard_path = runtime_root / "release_confidence_scorecard.json"
+    _write_immutable_json(
+        path=release_confidence_scorecard_path,
+        payload=release_confidence_scorecard,
+        error_code="E_RUN_RELEASE_CONFIDENCE_SCORECARD_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -360,6 +369,8 @@ def capture_run_start_artifacts(
         "sampling_discipline_guide_path": str(sampling_discipline_guide_path),
         "execution_readiness_rubric": execution_readiness_rubric,
         "execution_readiness_rubric_path": str(execution_readiness_rubric_path),
+        "release_confidence_scorecard": release_confidence_scorecard,
+        "release_confidence_scorecard_path": str(release_confidence_scorecard_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

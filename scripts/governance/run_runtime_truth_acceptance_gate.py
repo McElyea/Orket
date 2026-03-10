@@ -36,6 +36,9 @@ from scripts.governance.check_sampling_discipline_guide import (
 from scripts.governance.check_execution_readiness_rubric import (
     evaluate_execution_readiness_rubric,
 )
+from scripts.governance.check_release_confidence_scorecard import (
+    evaluate_release_confidence_scorecard,
+)
 from scripts.governance.check_operator_override_logging_policy import (
     evaluate_operator_override_logging_policy,
 )
@@ -73,6 +76,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "human_correction_capture_policy.json",
     "sampling_discipline_guide.json",
     "execution_readiness_rubric.json",
+    "release_confidence_scorecard.json",
 )
 
 
@@ -160,6 +164,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip execution-readiness rubric contract check.",
     )
+    parser.add_argument(
+        "--skip-release-confidence-check",
+        action="store_true",
+        help="Skip release confidence scorecard contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -187,6 +196,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_human_correction_policy: bool = True,
     check_sampling_discipline: bool = True,
     check_execution_readiness: bool = True,
+    check_release_confidence: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -362,6 +372,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(readiness_payload.get("ok")):
             failures.append("execution_readiness_rubric_check_failed")
 
+    if check_release_confidence:
+        scorecard_payload = evaluate_release_confidence_scorecard()
+        details["release_confidence_scorecard_check"] = {
+            "ok": bool(scorecard_payload.get("ok")),
+            "dimension_count": int(scorecard_payload.get("dimension_count") or 0),
+        }
+        if not bool(scorecard_payload.get("ok")):
+            failures.append("release_confidence_scorecard_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -391,6 +410,7 @@ def main(argv: list[str] | None = None) -> int:
         check_human_correction_policy=not bool(args.skip_human_correction_policy_check),
         check_sampling_discipline=not bool(args.skip_sampling_discipline_check),
         check_execution_readiness=not bool(args.skip_execution_readiness_check),
+        check_release_confidence=not bool(args.skip_release_confidence_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

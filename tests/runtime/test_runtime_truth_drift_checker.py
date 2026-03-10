@@ -30,6 +30,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "human_correction_capture_policy_valid" in checks
     assert "sampling_discipline_guide_valid" in checks
     assert "execution_readiness_rubric_valid" in checks
+    assert "release_confidence_scorecard_valid" in checks
 
 
 # Layer: contract

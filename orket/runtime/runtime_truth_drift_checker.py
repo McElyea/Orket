@@ -12,6 +12,7 @@ from orket.runtime.idempotency_discipline_policy import validate_idempotency_dis
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
+from orket.runtime.release_confidence_scorecard import validate_release_confidence_scorecard
 from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
@@ -414,6 +415,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "execution_readiness_rubric_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        dimensions = validate_release_confidence_scorecard()
+        checks.append(
+            {
+                "check": "release_confidence_scorecard_valid",
+                "ok": True,
+                "count": len(dimensions),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "release_confidence_scorecard_valid",
                 "ok": False,
                 "error": str(exc),
             }
