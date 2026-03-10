@@ -11,6 +11,7 @@ from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_
 from orket.runtime.feature_flag_expiration_policy import feature_flag_expiration_policy_snapshot
 from orket.runtime.human_correction_capture_policy import human_correction_capture_policy_snapshot
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
+from orket.runtime.interface_freeze_windows import interface_freeze_windows_snapshot
 from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
@@ -260,6 +261,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "non_fatal_error_budget.json",
         non_fatal_error_budget_snapshot,
         "E_RUN_NON_FATAL_ERROR_BUDGET_IMMUTABLE",
+    ),
+    (
+        "interface_freeze_windows",
+        "interface_freeze_windows.json",
+        interface_freeze_windows_snapshot,
+        "E_RUN_INTERFACE_FREEZE_WINDOWS_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",

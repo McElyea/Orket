@@ -54,6 +54,9 @@ from scripts.governance.check_spec_debt_queue import (
 from scripts.governance.check_non_fatal_error_budget import (
     evaluate_non_fatal_error_budget,
 )
+from scripts.governance.check_interface_freeze_windows import (
+    evaluate_interface_freeze_windows,
+)
 from scripts.governance.check_promotion_rollback_criteria import (
     evaluate_promotion_rollback_criteria,
 )
@@ -100,6 +103,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "canonical_examples_library.json",
     "spec_debt_queue.json",
     "non_fatal_error_budget.json",
+    "interface_freeze_windows.json",
     "promotion_rollback_criteria.json",
 )
 
@@ -219,6 +223,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip non-fatal error budget contract check.",
     )
     parser.add_argument(
+        "--skip-interface-freeze-windows-check",
+        action="store_true",
+        help="Skip interface freeze windows contract check.",
+    )
+    parser.add_argument(
         "--skip-promotion-rollback-check",
         action="store_true",
         help="Skip promotion rollback criteria contract check.",
@@ -256,6 +265,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_canonical_examples: bool = True,
     check_spec_debt_queue: bool = True,
     check_non_fatal_error_budget: bool = True,
+    check_interface_freeze_windows: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
@@ -486,6 +496,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(budget_payload.get("ok")):
             failures.append("non_fatal_error_budget_check_failed")
 
+    if check_interface_freeze_windows:
+        freeze_windows_payload = evaluate_interface_freeze_windows()
+        details["interface_freeze_windows_check"] = {
+            "ok": bool(freeze_windows_payload.get("ok")),
+            "window_count": int(freeze_windows_payload.get("window_count") or 0),
+        }
+        if not bool(freeze_windows_payload.get("ok")):
+            failures.append("interface_freeze_windows_check_failed")
+
     if check_promotion_rollback:
         rollback_payload = evaluate_promotion_rollback_criteria()
         details["promotion_rollback_criteria_check"] = {
@@ -530,6 +549,7 @@ def main(argv: list[str] | None = None) -> int:
         check_canonical_examples=not bool(args.skip_canonical_examples_check),
         check_spec_debt_queue=not bool(args.skip_spec_debt_queue_check),
         check_non_fatal_error_budget=not bool(args.skip_non_fatal_error_budget_check),
+        check_interface_freeze_windows=not bool(args.skip_interface_freeze_windows_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))

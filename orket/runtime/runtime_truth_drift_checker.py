@@ -11,6 +11,7 @@ from orket.runtime.execution_readiness_rubric import validate_execution_readines
 from orket.runtime.feature_flag_expiration_policy import validate_feature_flag_expiration_policy
 from orket.runtime.human_correction_capture_policy import validate_human_correction_capture_policy
 from orket.runtime.idempotency_discipline_policy import validate_idempotency_discipline_policy
+from orket.runtime.interface_freeze_windows import validate_interface_freeze_windows
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.non_fatal_error_budget import validate_non_fatal_error_budget
@@ -529,6 +530,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "non_fatal_error_budget_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        window_ids = validate_interface_freeze_windows()
+        checks.append(
+            {
+                "check": "interface_freeze_windows_valid",
+                "ok": True,
+                "count": len(window_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "interface_freeze_windows_valid",
                 "ok": False,
                 "error": str(exc),
             }

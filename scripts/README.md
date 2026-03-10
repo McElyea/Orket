@@ -83,6 +83,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_canonical_examples_library.py`
   - `check_spec_debt_queue.py`
   - `check_non_fatal_error_budget.py`
+  - `check_interface_freeze_windows.py`
   - `check_promotion_rollback_criteria.py`
   - `check_environment_parity_checklist.py`
   - `check_runtime_boundary_audit_checklist.py`
