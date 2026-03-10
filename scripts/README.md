@@ -61,6 +61,23 @@ Use provider-aware helpers to avoid mismatches:
 - Run the quant tuner with provider-aware model resolution (no setup wizard required):
   - `python scripts/quant/tune_quant_sweep_provider_ready.py --matrix-config <path> --provider lmstudio --auto-model-count 1`
 
+## Runtime Truth Governance
+
+Runtime truth hardening scripts are grouped in `scripts/governance/` and are intended to run as direct script entrypoints (`python scripts/governance/<name>.py`).
+
+- Contract/gate checks:
+  - `run_runtime_truth_acceptance_gate.py`
+  - `check_runtime_truth_contract_drift.py`
+  - `check_environment_parity_checklist.py`
+  - `enforce_test_taxonomy.py`
+- Structural risk detectors:
+  - `check_unreachable_branches.py`
+  - `check_noop_critical_paths.py`
+- Reporting/export utilities:
+  - `build_runtime_truth_dashboard_seed.py`
+  - `build_cross_lane_dependency_map.py`
+  - `export_state_transition_mermaid.py`
+
 ## Migration Rule
 
 When adding new script suites:
