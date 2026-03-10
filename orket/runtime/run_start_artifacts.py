@@ -10,6 +10,7 @@ from orket.runtime.contract_bootstrap import (
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
+from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_truth_contracts import (
     degradation_taxonomy_snapshot,
@@ -90,6 +91,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_FAIL_BEHAVIOR_REGISTRY_IMMUTABLE",
     )
 
+    provider_truth_table = provider_truth_table_snapshot()
+    provider_truth_table_path = runtime_root / "provider_truth_table.json"
+    _write_immutable_json(
+        path=provider_truth_table_path,
+        payload=provider_truth_table,
+        error_code="E_RUN_PROVIDER_TRUTH_TABLE_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -136,6 +145,8 @@ def capture_run_start_artifacts(
         "degradation_taxonomy_path": str(degradation_taxonomy_path),
         "fail_behavior_registry": fail_behavior_registry,
         "fail_behavior_registry_path": str(fail_behavior_registry_path),
+        "provider_truth_table": provider_truth_table,
+        "provider_truth_table_path": str(provider_truth_table_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,
