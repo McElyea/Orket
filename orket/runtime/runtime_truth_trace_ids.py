@@ -37,6 +37,7 @@ _TRACE_IDS: dict[str, str] = {
     "evidence_package_generator_contract": "TRUTH-W2E-EVIDENCE-PACKAGE-GENERATOR",
     "observability_redaction_test_contract": "TRUTH-W2C-OBSERVABILITY-REDACTION-TESTS",
     "trust_language_review_policy": "TRUTH-W2C-TRUST-LANGUAGE-REVIEW",
+    "local_remote_route_policy": "TRUTH-W2B-LOCAL-REMOTE-ROUTE-POLICY",
     "promotion_rollback_criteria": "TRUTH-W2E-PROMOTION-ROLLBACK-CRITERIA",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",

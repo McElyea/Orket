@@ -14,6 +14,7 @@ from orket.runtime.human_correction_capture_policy import validate_human_correct
 from orket.runtime.idempotency_discipline_policy import validate_idempotency_discipline_policy
 from orket.runtime.interface_freeze_windows import validate_interface_freeze_windows
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
+from orket.runtime.local_remote_route_policy import validate_local_remote_route_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.non_fatal_error_budget import validate_non_fatal_error_budget
 from orket.runtime.observability_redaction_test_contract import validate_observability_redaction_test_contract
@@ -605,6 +606,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "trust_language_review_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        lanes = validate_local_remote_route_policy()
+        checks.append(
+            {
+                "check": "local_remote_route_policy_valid",
+                "ok": True,
+                "count": len(lanes),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "local_remote_route_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

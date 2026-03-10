@@ -14,6 +14,7 @@ from orket.runtime.human_correction_capture_policy import human_correction_captu
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
 from orket.runtime.interface_freeze_windows import interface_freeze_windows_snapshot
 from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
+from orket.runtime.local_remote_route_policy import local_remote_route_policy_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
 from orket.runtime.observability_redaction_test_contract import observability_redaction_test_contract_snapshot
@@ -288,6 +289,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "trust_language_review_policy.json",
         trust_language_review_policy_snapshot,
         "E_RUN_TRUST_LANGUAGE_REVIEW_POLICY_IMMUTABLE",
+    ),
+    (
+        "local_remote_route_policy",
+        "local_remote_route_policy.json",
+        local_remote_route_policy_snapshot,
+        "E_RUN_LOCAL_REMOTE_ROUTE_POLICY_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",
