@@ -22,6 +22,9 @@ from scripts.governance.check_noop_critical_paths import (
     evaluate_noop_critical_paths,
 )
 from scripts.governance.check_environment_parity_checklist import evaluate_environment_parity_checklist
+from scripts.governance.check_runtime_invariant_registry import (
+    evaluate_runtime_invariant_registry,
+)
 from scripts.governance.check_idempotency_discipline_policy import (
     evaluate_idempotency_discipline_policy,
 )
@@ -187,6 +190,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-environment-parity-check",
         action="store_true",
         help="Skip environment parity checklist.",
+    )
+    parser.add_argument(
+        "--skip-runtime-invariant-registry-check",
+        action="store_true",
+        help="Skip runtime invariant registry contract check.",
     )
     parser.add_argument(
         "--skip-warning-policy-check",
@@ -373,6 +381,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_unreachable_branches: bool = True,
     check_noop_critical_paths: bool = True,
     check_environment_parity: bool = True,
+    check_runtime_invariant_registry: bool = True,
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
     check_boundary_audit: bool = True,
@@ -473,6 +482,15 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(parity_payload.get("ok")):
             failures.append("environment_parity_check_failed")
+
+    if check_runtime_invariant_registry:
+        invariant_payload = evaluate_runtime_invariant_registry()
+        details["runtime_invariant_registry_check"] = {
+            "ok": bool(invariant_payload.get("ok")),
+            "invariant_count": int(invariant_payload.get("invariant_count") or 0),
+        }
+        if not bool(invariant_payload.get("ok")):
+            failures.append("runtime_invariant_registry_check_failed")
 
     if check_warning_policy:
         warning_policy_payload = evaluate_structured_warning_policy()
@@ -799,6 +817,7 @@ def main(argv: list[str] | None = None) -> int:
         check_unreachable_branches=not bool(args.skip_unreachable_branch_check),
         check_noop_critical_paths=not bool(args.skip_noop_critical_path_check),
         check_environment_parity=not bool(args.skip_environment_parity_check),
+        check_runtime_invariant_registry=not bool(args.skip_runtime_invariant_registry_check),
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_boundary_audit=not bool(args.skip_boundary_audit_check),

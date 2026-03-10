@@ -99,6 +99,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_naming_discipline_policy.py`
   - `check_promotion_rollback_criteria.py`
   - `check_environment_parity_checklist.py`
+  - `check_runtime_invariant_registry.py`
   - `check_runtime_boundary_audit_checklist.py`
   - `check_retry_classification_policy.py`
   - `check_result_error_invariants.py`

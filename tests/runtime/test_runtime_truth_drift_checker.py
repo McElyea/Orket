@@ -21,6 +21,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "structured_warning_policy_valid" in checks
     assert "retry_classification_policy_valid" in checks
     assert "result_error_invariant_contract_valid" in checks
+    assert "runtime_invariant_registry_snapshot_valid" in checks
     assert "runtime_boundary_audit_checklist_valid" in checks
     assert "model_profile_bios_valid" in checks
     assert "interrupt_semantics_policy_valid" in checks
@@ -224,5 +225,26 @@ def test_runtime_truth_contract_drift_report_fails_when_result_error_invariant_c
     payload = checker.runtime_truth_contract_drift_report()
     target = next(
         row for row in payload["checks"] if row["check"] == "result_error_invariant_contract_valid"
+    )
+    assert target["ok"] is False
+
+
+# Layer: contract
+def test_runtime_truth_contract_drift_report_fails_when_runtime_invariant_registry_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from orket.runtime import runtime_truth_drift_checker as checker
+
+    def _raise_contract_error() -> dict[str, object]:
+        raise ValueError("E_RUNTIME_INVARIANT_REGISTRY_EMPTY:docs/specs/RUNTIME_INVARIANTS.md")
+
+    monkeypatch.setattr(
+        checker,
+        "runtime_invariant_registry_snapshot",
+        _raise_contract_error,
+    )
+    payload = checker.runtime_truth_contract_drift_report()
+    target = next(
+        row for row in payload["checks"] if row["check"] == "runtime_invariant_registry_snapshot_valid"
     )
     assert target["ok"] is False

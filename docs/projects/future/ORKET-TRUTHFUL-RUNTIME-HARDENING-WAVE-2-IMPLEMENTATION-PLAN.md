@@ -50,6 +50,7 @@ Completed in active execution:
 35. degradation-first UI standard contract/checker, run-start artifact, and acceptance-gate enforcement
 36. decision-record/operating-principles contract checker, run-start artifact, and acceptance-gate enforcement
 37. result-to-error invariant contract/checker, run-start artifact, and acceptance-gate enforcement
+38. runtime invariant registry checker with drift/acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

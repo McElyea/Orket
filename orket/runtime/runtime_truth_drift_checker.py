@@ -37,6 +37,7 @@ from orket.runtime.workspace_hygiene_rules import validate_workspace_hygiene_rul
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
+from orket.runtime.runtime_invariant_registry import runtime_invariant_registry_snapshot
 from orket.runtime.result_error_invariants import validate_result_error_invariant_contract
 from orket.runtime.retry_classification_policy import validate_retry_classification_policy
 from orket.runtime.safe_default_catalog import validate_safe_default_catalog
@@ -168,6 +169,25 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "runtime_config_ownership_map_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        invariant_snapshot = runtime_invariant_registry_snapshot()
+        invariant_count = len(list(invariant_snapshot.get("invariants") or []))
+        checks.append(
+            {
+                "check": "runtime_invariant_registry_snapshot_valid",
+                "ok": invariant_count >= 1,
+                "count": invariant_count,
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "runtime_invariant_registry_snapshot_valid",
                 "ok": False,
                 "error": str(exc),
             }
