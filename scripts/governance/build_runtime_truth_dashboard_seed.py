@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -105,7 +106,7 @@ def build_runtime_truth_dashboard_seed(*, db_path: Path) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     try:
-        args = _parse_args(argv or [])
+        args = _parse_args(sys.argv[1:] if argv is None else argv)
         payload = build_runtime_truth_dashboard_seed(db_path=Path(args.db_path).resolve())
     except ValueError as exc:
         payload = {

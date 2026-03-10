@@ -4,6 +4,8 @@ import json
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.build_runtime_truth_dashboard_seed import (
     build_runtime_truth_dashboard_seed,
     main,
@@ -71,3 +73,15 @@ def test_build_runtime_truth_dashboard_seed_computes_expected_signal_counts(tmp_
 def test_build_runtime_truth_dashboard_seed_main_fails_when_db_missing(tmp_path: Path) -> None:
     exit_code = main(["--db-path", str(tmp_path / "missing.db")])
     assert exit_code == 1
+
+
+# Layer: integration
+def test_build_runtime_truth_dashboard_seed_main_uses_sys_argv_when_not_provided(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_path = tmp_path / "runtime.db"
+    _seed_run_ledger(db_path)
+    monkeypatch.setattr("sys.argv", ["build_runtime_truth_dashboard_seed.py", "--db-path", str(db_path)])
+    exit_code = main()
+    assert exit_code == 0
