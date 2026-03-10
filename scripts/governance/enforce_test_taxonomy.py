@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -62,7 +63,7 @@ def evaluate_test_taxonomy(*, root: Path) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(argv or [])
+    args = _parse_args(sys.argv[1:] if argv is None else argv)
     payload = evaluate_test_taxonomy(root=Path(args.root).resolve())
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     if bool(args.strict) and int(payload.get("missing_layer_total") or 0) > 0:
