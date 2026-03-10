@@ -42,6 +42,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "trust_language_review_policy_valid" in checks
     assert "local_remote_route_policy_valid" in checks
     assert "failure_replay_harness_contract_valid" in checks
+    assert "cold_start_truth_test_contract_valid" in checks
     assert "promotion_rollback_criteria_valid" in checks
 
 

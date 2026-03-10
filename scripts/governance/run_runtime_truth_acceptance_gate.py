@@ -72,6 +72,9 @@ from scripts.governance.check_local_remote_route_policy import (
 from scripts.governance.check_failure_replay_harness_contract import (
     evaluate_failure_replay_harness_contract,
 )
+from scripts.governance.check_cold_start_truth_tests import (
+    evaluate_cold_start_truth_tests,
+)
 from scripts.governance.check_promotion_rollback_criteria import (
     evaluate_promotion_rollback_criteria,
 )
@@ -124,6 +127,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "trust_language_review_policy.json",
     "local_remote_route_policy.json",
     "failure_replay_harness_contract.json",
+    "cold_start_truth_test_contract.json",
     "promotion_rollback_criteria.json",
 )
 
@@ -273,6 +277,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip failure replay harness contract check.",
     )
     parser.add_argument(
+        "--skip-cold-start-truth-tests-check",
+        action="store_true",
+        help="Skip cold-start truth tests check.",
+    )
+    parser.add_argument(
         "--skip-promotion-rollback-check",
         action="store_true",
         help="Skip promotion rollback criteria contract check.",
@@ -316,6 +325,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_trust_language_review: bool = True,
     check_local_remote_route_policy: bool = True,
     check_failure_replay_harness_contract: bool = True,
+    check_cold_start_truth_tests: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
@@ -600,6 +610,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(replay_harness_contract_payload.get("ok")):
             failures.append("failure_replay_harness_contract_check_failed")
 
+    if check_cold_start_truth_tests:
+        cold_start_truth_payload = evaluate_cold_start_truth_tests()
+        details["cold_start_truth_tests_check"] = {
+            "ok": bool(cold_start_truth_payload.get("ok")),
+            "check_count": int(cold_start_truth_payload.get("check_count") or 0),
+        }
+        if not bool(cold_start_truth_payload.get("ok")):
+            failures.append("cold_start_truth_tests_check_failed")
+
     if check_promotion_rollback:
         rollback_payload = evaluate_promotion_rollback_criteria()
         details["promotion_rollback_criteria_check"] = {
@@ -650,6 +669,7 @@ def main(argv: list[str] | None = None) -> int:
         check_trust_language_review=not bool(args.skip_trust_language_review_check),
         check_local_remote_route_policy=not bool(args.skip_local_remote_route_policy_check),
         check_failure_replay_harness_contract=not bool(args.skip_failure_replay_harness_contract_check),
+        check_cold_start_truth_tests=not bool(args.skip_cold_start_truth_tests_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))

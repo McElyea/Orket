@@ -7,6 +7,7 @@ from orket.runtime.capability_fallback_hierarchy import capability_fallback_hier
 from orket.runtime.canonical_examples_library import canonical_examples_library_snapshot
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.demo_production_labeling_policy import demo_production_labeling_policy_snapshot
+from orket.runtime.cold_start_truth_test_contract import cold_start_truth_test_contract_snapshot
 from orket.runtime.evidence_package_generator_contract import evidence_package_generator_contract_snapshot
 from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_snapshot
 from orket.runtime.feature_flag_expiration_policy import feature_flag_expiration_policy_snapshot
@@ -302,6 +303,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "failure_replay_harness_contract.json",
         failure_replay_harness_contract_snapshot,
         "E_RUN_FAILURE_REPLAY_HARNESS_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "cold_start_truth_test_contract",
+        "cold_start_truth_test_contract.json",
+        cold_start_truth_test_contract_snapshot,
+        "E_RUN_COLD_START_TRUTH_TEST_CONTRACT_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",

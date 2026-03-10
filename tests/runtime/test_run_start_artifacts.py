@@ -131,6 +131,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["failure_replay_harness_contract"]["schema_version"] == "1.0"
     replay_required_outputs = payload["failure_replay_harness_contract"]["required_output_fields"]
     assert "drift" in replay_required_outputs
+    assert payload["cold_start_truth_test_contract"]["schema_version"] == "1.0"
+    cold_start_check_ids = [row["check_id"] for row in payload["cold_start_truth_test_contract"]["checks"]]
+    assert "stub_cold_start_true_loading_payload" in cold_start_check_ids
     assert payload["promotion_rollback_criteria"]["schema_version"] == "1.0"
     rollback_triggers = [row["trigger"] for row in payload["promotion_rollback_criteria"]["triggers"]]
     assert "acceptance_gate_failure" in rollback_triggers
@@ -171,6 +174,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["trust_language_review_policy_path"]).exists()
     assert Path(payload["local_remote_route_policy_path"]).exists()
     assert Path(payload["failure_replay_harness_contract_path"]).exists()
+    assert Path(payload["cold_start_truth_test_contract_path"]).exists()
     assert Path(payload["promotion_rollback_criteria_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()

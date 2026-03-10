@@ -89,6 +89,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_trust_language_review.py`
   - `check_local_remote_route_policy.py`
   - `check_failure_replay_harness_contract.py`
+  - `check_cold_start_truth_tests.py`
   - `check_promotion_rollback_criteria.py`
   - `check_environment_parity_checklist.py`
   - `check_runtime_boundary_audit_checklist.py`
