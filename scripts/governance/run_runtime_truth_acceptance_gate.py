@@ -6,6 +6,14 @@ from pathlib import Path
 from typing import Any
 
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
+from scripts.governance.check_noop_critical_paths import (
+    DEFAULT_SCAN_ROOTS as DEFAULT_NOOP_SCAN_ROOTS,
+    evaluate_noop_critical_paths,
+)
+from scripts.governance.check_unreachable_branches import (
+    DEFAULT_SCAN_ROOTS as DEFAULT_UNREACHABLE_SCAN_ROOTS,
+    evaluate_unreachable_branches,
+)
 
 
 REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
@@ -36,6 +44,16 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip runtime truth drift checker.",
     )
+    parser.add_argument(
+        "--skip-unreachable-branch-check",
+        action="store_true",
+        help="Skip unreachable-branch detector for critical roots.",
+    )
+    parser.add_argument(
+        "--skip-noop-critical-path-check",
+        action="store_true",
+        help="Skip no-op critical-path detector for critical roots.",
+    )
     return parser.parse_args(argv)
 
 
@@ -48,6 +66,8 @@ def evaluate_runtime_truth_acceptance_gate(
     workspace: Path,
     run_id: str,
     check_drift: bool,
+    check_unreachable_branches: bool = True,
+    check_noop_critical_paths: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -83,6 +103,28 @@ def evaluate_runtime_truth_acceptance_gate(
         if invalid_json_files:
             failures.append("runtime_contract_files_invalid_json")
 
+    if check_unreachable_branches:
+        roots = [workspace / path for path in DEFAULT_UNREACHABLE_SCAN_ROOTS]
+        unreachable_payload = evaluate_unreachable_branches(roots=roots)
+        details["unreachable_branch_check"] = {
+            "ok": bool(unreachable_payload.get("ok")),
+            "findings_count": len(unreachable_payload.get("findings", [])),
+            "parse_errors_count": len(unreachable_payload.get("parse_errors", [])),
+        }
+        if not bool(unreachable_payload.get("ok")):
+            failures.append("unreachable_branch_check_failed")
+
+    if check_noop_critical_paths:
+        roots = [workspace / path for path in DEFAULT_NOOP_SCAN_ROOTS]
+        noop_payload = evaluate_noop_critical_paths(roots=roots)
+        details["noop_critical_path_check"] = {
+            "ok": bool(noop_payload.get("ok")),
+            "findings_count": len(noop_payload.get("findings", [])),
+            "parse_errors_count": len(noop_payload.get("parse_errors", [])),
+        }
+        if not bool(noop_payload.get("ok")):
+            failures.append("noop_critical_path_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -97,6 +139,8 @@ def main(argv: list[str] | None = None) -> int:
         workspace=Path(args.workspace).resolve(),
         run_id=str(args.run_id or "").strip(),
         check_drift=not bool(args.skip_drift_check),
+        check_unreachable_branches=not bool(args.skip_unreachable_branch_check),
+        check_noop_critical_paths=not bool(args.skip_noop_critical_path_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

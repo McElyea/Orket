@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.run_runtime_truth_acceptance_gate import (
     REQUIRED_RUNTIME_CONTRACT_FILES,
     evaluate_runtime_truth_acceptance_gate,
@@ -51,6 +53,60 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     )
     assert payload["ok"] is True
     assert payload["details"]["drift_report"]["ok"] is True
+    assert payload["details"]["unreachable_branch_check"]["ok"] is True
+    assert payload["details"]["noop_critical_path_check"]["ok"] is True
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_unreachable_branch_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_unreachable_branches",
+        lambda *, roots: {
+            "schema_version": "1.0",
+            "ok": False,
+            "findings": [{"path": "x.py", "line": 1}],
+            "parse_errors": [],
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "unreachable_branch_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_noop_critical_path_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_noop_critical_paths",
+        lambda *, roots: {
+            "schema_version": "1.0",
+            "ok": False,
+            "findings": [{"path": "x.py", "line": 1, "name": "noop"}],
+            "parse_errors": [],
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "noop_critical_path_check_failed" in payload["failures"]
 
 
 # Layer: contract
