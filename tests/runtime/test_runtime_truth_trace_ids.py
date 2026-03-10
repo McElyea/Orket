@@ -19,6 +19,8 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "capability_fallback_hierarchy" in artifacts
     assert "model_profile_bios" in artifacts
     assert "interrupt_semantics_policy" in artifacts
+    assert "retry_classification_policy" in artifacts
+    assert "runtime_boundary_audit_checklist" in artifacts
     assert "idempotency_discipline_policy" in artifacts
     assert "result_error_invariant_contract" in artifacts
     assert "artifact_provenance_block_policy" in artifacts

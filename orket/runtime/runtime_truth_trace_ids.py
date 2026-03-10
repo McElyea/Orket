@@ -20,6 +20,8 @@ _TRACE_IDS: dict[str, str] = {
     "capability_fallback_hierarchy": "TRUTH-W2B-CAPABILITY-FALLBACK-HIERARCHY",
     "model_profile_bios": "TRUTH-B-MODEL-PROFILE-BIOS",
     "interrupt_semantics_policy": "TRUTH-W2B-INTERRUPT-SEMANTICS-POLICY",
+    "retry_classification_policy": "TRUTH-W2B-RETRY-CLASSIFICATION-POLICY",
+    "runtime_boundary_audit_checklist": "TRUTH-W2B-RUNTIME-BOUNDARY-AUDIT-CHECKLIST",
     "idempotency_discipline_policy": "TRUTH-W2B-IDEMPOTENCY-DISCIPLINE-POLICY",
     "result_error_invariant_contract": "TRUTH-W2B-RESULT-ERROR-INVARIANT-CHECKER",
     "artifact_provenance_block_policy": "TRUTH-W2C-ARTIFACT-PROVENANCE-BLOCK",

@@ -74,6 +74,12 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["interrupt_semantics_policy"]["schema_version"] == "1.0"
     interrupt_surfaces = [row["surface"] for row in payload["interrupt_semantics_policy"]["rows"]]
     assert "run_execution" in interrupt_surfaces
+    assert payload["retry_classification_policy"]["schema_version"] == "1.0"
+    retry_signals = [row["signal"] for row in payload["retry_classification_policy"]["rows"]]
+    assert "model_timeout_retry" in retry_signals
+    assert payload["runtime_boundary_audit_checklist"]["schema_version"] == "1.0"
+    boundary_ids = [row["boundary_id"] for row in payload["runtime_boundary_audit_checklist"]["boundaries"]]
+    assert "BND-API-ENTRY" in boundary_ids
     assert payload["idempotency_discipline_policy"]["schema_version"] == "1.0"
     idempotency_surfaces = [row["surface"] for row in payload["idempotency_discipline_policy"]["rows"]]
     assert "run_finalize" in idempotency_surfaces
@@ -181,6 +187,8 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["capability_fallback_hierarchy_path"]).exists()
     assert Path(payload["model_profile_bios_path"]).exists()
     assert Path(payload["interrupt_semantics_policy_path"]).exists()
+    assert Path(payload["retry_classification_policy_path"]).exists()
+    assert Path(payload["runtime_boundary_audit_checklist_path"]).exists()
     assert Path(payload["idempotency_discipline_policy_path"]).exists()
     assert Path(payload["result_error_invariant_contract_path"]).exists()
     assert Path(payload["artifact_provenance_block_policy_path"]).exists()

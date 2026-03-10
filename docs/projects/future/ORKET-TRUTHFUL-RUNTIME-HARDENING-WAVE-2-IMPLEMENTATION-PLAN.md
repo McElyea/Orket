@@ -52,6 +52,7 @@ Completed in active execution:
 37. result-to-error invariant contract/checker, run-start artifact, and acceptance-gate enforcement
 38. runtime invariant registry checker with drift/acceptance-gate enforcement
 39. runtime config ownership map checker with drift/run-start/acceptance-gate enforcement
+40. retry classification and runtime boundary audit contracts captured as run-start immutable artifacts
 
 ## 2. Relationship to Existing Phase Plans
 

@@ -138,6 +138,8 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "capability_fallback_hierarchy.json",
     "model_profile_bios.json",
     "interrupt_semantics_policy.json",
+    "retry_classification_policy.json",
+    "runtime_boundary_audit_checklist.json",
     "idempotency_discipline_policy.json",
     "result_error_invariant_contract.json",
     "artifact_provenance_block_policy.json",

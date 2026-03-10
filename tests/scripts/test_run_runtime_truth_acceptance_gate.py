@@ -1082,6 +1082,8 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "capability_fallback_hierarchy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "model_profile_bios.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "interrupt_semantics_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "retry_classification_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "runtime_boundary_audit_checklist.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "idempotency_discipline_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "result_error_invariant_contract.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "artifact_provenance_block_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES

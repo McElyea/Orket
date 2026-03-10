@@ -33,7 +33,9 @@ from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
 from orket.runtime.result_error_invariants import result_error_invariant_contract_snapshot
 from orket.runtime.resource_pressure_simulation_lane import resource_pressure_simulation_lane_snapshot
+from orket.runtime.retry_classification_policy import retry_classification_policy_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
+from orket.runtime.runtime_boundary_audit_checklist import runtime_boundary_audit_checklist_snapshot
 from orket.runtime.runtime_config_ownership_map import runtime_config_ownership_map_snapshot
 from orket.runtime.runtime_invariant_registry import runtime_invariant_registry_snapshot
 from orket.runtime.runtime_truth_contracts import (
@@ -199,6 +201,18 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "interrupt_semantics_policy.json",
         interrupt_semantics_policy_snapshot,
         "E_RUN_INTERRUPT_SEMANTICS_POLICY_IMMUTABLE",
+    ),
+    (
+        "retry_classification_policy",
+        "retry_classification_policy.json",
+        retry_classification_policy_snapshot,
+        "E_RUN_RETRY_CLASSIFICATION_POLICY_IMMUTABLE",
+    ),
+    (
+        "runtime_boundary_audit_checklist",
+        "runtime_boundary_audit_checklist.json",
+        runtime_boundary_audit_checklist_snapshot,
+        "E_RUN_RUNTIME_BOUNDARY_AUDIT_CHECKLIST_IMMUTABLE",
     ),
     (
         "idempotency_discipline_policy",
