@@ -57,6 +57,7 @@ Completed in active execution:
 42. unknown-input policy checker with drift/acceptance-gate enforcement
 43. safe default catalog checker with drift/run-start/acceptance-gate enforcement
 44. clock/time authority and capability fallback hierarchy checkers with acceptance-gate enforcement
+45. runtime truth foundation contract checker (status vocabulary, degradation taxonomy, fail behavior) with drift/acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

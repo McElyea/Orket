@@ -15,6 +15,9 @@ RUNTIME_STATUS_VOCABULARY: tuple[str, ...] = (
     "degraded",
 )
 
+_EXPECTED_DEGRADATION_LEVELS = {"none", "degraded", "blocked"}
+_ALLOWED_FAIL_BEHAVIOR_MODES = {"fail_open", "fail_closed"}
+
 
 def runtime_status_vocabulary_snapshot() -> dict[str, object]:
     return {
@@ -28,6 +31,20 @@ def validate_runtime_status(status: str) -> str:
     if normalized not in RUNTIME_STATUS_VOCABULARY:
         raise ValueError(f"E_RUNTIME_STATUS_UNKNOWN:{normalized or '<empty>'}")
     return normalized
+
+
+def validate_runtime_status_vocabulary_contract(
+    payload: dict[str, object] | None = None,
+) -> tuple[str, ...]:
+    contract = dict(payload or runtime_status_vocabulary_snapshot())
+    terms = [str(token).strip().lower() for token in contract.get("runtime_status_terms", []) if str(token).strip()]
+    if not terms:
+        raise ValueError("E_RUNTIME_STATUS_VOCABULARY_EMPTY")
+    if len(set(terms)) != len(terms):
+        raise ValueError("E_RUNTIME_STATUS_VOCABULARY_DUPLICATE")
+    if set(terms) != set(RUNTIME_STATUS_VOCABULARY):
+        raise ValueError("E_RUNTIME_STATUS_VOCABULARY_SET_MISMATCH")
+    return tuple(sorted(terms))
 
 
 def degradation_taxonomy_snapshot() -> dict[str, object]:
@@ -51,6 +68,30 @@ def degradation_taxonomy_snapshot() -> dict[str, object]:
             },
         ],
     }
+
+
+def validate_degradation_taxonomy_contract(
+    payload: dict[str, object] | None = None,
+) -> tuple[str, ...]:
+    contract = dict(payload or degradation_taxonomy_snapshot())
+    rows = list(contract.get("levels") or [])
+    if not rows:
+        raise ValueError("E_DEGRADATION_TAXONOMY_EMPTY")
+    levels: list[str] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("E_DEGRADATION_TAXONOMY_ROW_SCHEMA")
+        level = str(row.get("level") or "").strip().lower()
+        description = str(row.get("description") or "").strip()
+        path_classification = str(row.get("path_classification") or "").strip().lower()
+        if not level or not description or not path_classification:
+            raise ValueError("E_DEGRADATION_TAXONOMY_ROW_SCHEMA")
+        levels.append(level)
+    if len(set(levels)) != len(levels):
+        raise ValueError("E_DEGRADATION_TAXONOMY_DUPLICATE_LEVEL")
+    if set(levels) != _EXPECTED_DEGRADATION_LEVELS:
+        raise ValueError("E_DEGRADATION_TAXONOMY_LEVEL_SET_MISMATCH")
+    return tuple(sorted(levels))
 
 
 def fail_behavior_registry_snapshot() -> dict[str, object]:
@@ -79,3 +120,31 @@ def fail_behavior_registry_snapshot() -> dict[str, object]:
             },
         ],
     }
+
+
+def validate_fail_behavior_registry_contract(
+    payload: dict[str, object] | None = None,
+) -> tuple[str, ...]:
+    contract = dict(payload or fail_behavior_registry_snapshot())
+    rows = list(contract.get("subsystems") or [])
+    if not rows:
+        raise ValueError("E_FAIL_BEHAVIOR_REGISTRY_EMPTY")
+    subsystems: list[str] = []
+    modes: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("E_FAIL_BEHAVIOR_REGISTRY_ROW_SCHEMA")
+        subsystem = str(row.get("subsystem") or "").strip()
+        failure_mode = str(row.get("failure_mode") or "").strip().lower()
+        reason = str(row.get("reason") or "").strip()
+        if not subsystem or not reason:
+            raise ValueError("E_FAIL_BEHAVIOR_REGISTRY_ROW_SCHEMA")
+        if failure_mode not in _ALLOWED_FAIL_BEHAVIOR_MODES:
+            raise ValueError(f"E_FAIL_BEHAVIOR_REGISTRY_MODE_INVALID:{subsystem}")
+        subsystems.append(subsystem)
+        modes.add(failure_mode)
+    if len(set(subsystems)) != len(subsystems):
+        raise ValueError("E_FAIL_BEHAVIOR_REGISTRY_DUPLICATE_SUBSYSTEM")
+    if modes != _ALLOWED_FAIL_BEHAVIOR_MODES:
+        raise ValueError("E_FAIL_BEHAVIOR_REGISTRY_MODE_SET_MISMATCH")
+    return tuple(sorted(subsystems))

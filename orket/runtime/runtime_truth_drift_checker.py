@@ -45,7 +45,14 @@ from orket.runtime.safe_default_catalog import validate_safe_default_catalog
 from orket.runtime.structured_warning_policy import validate_structured_warning_policy
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.run_phase_contract import CANONICAL_RUN_PHASE_ORDER
-from orket.runtime.runtime_truth_contracts import runtime_status_vocabulary_snapshot
+from orket.runtime.runtime_truth_contracts import (
+    degradation_taxonomy_snapshot,
+    fail_behavior_registry_snapshot,
+    runtime_status_vocabulary_snapshot,
+    validate_degradation_taxonomy_contract,
+    validate_fail_behavior_registry_contract,
+    validate_runtime_status_vocabulary_contract,
+)
 from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.timeout_streaming_contracts import (
@@ -107,6 +114,62 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
             "run_states": sorted(run_states),
         }
     )
+
+    try:
+        validated_terms = validate_runtime_status_vocabulary_contract(status_snapshot)
+        checks.append(
+            {
+                "check": "runtime_status_vocabulary_contract_valid",
+                "ok": True,
+                "count": len(validated_terms),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "runtime_status_vocabulary_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    degradation_snapshot = degradation_taxonomy_snapshot()
+    try:
+        levels = validate_degradation_taxonomy_contract(degradation_snapshot)
+        checks.append(
+            {
+                "check": "degradation_taxonomy_contract_valid",
+                "ok": True,
+                "count": len(levels),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "degradation_taxonomy_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    fail_behavior_snapshot = fail_behavior_registry_snapshot()
+    try:
+        subsystems = validate_fail_behavior_registry_contract(fail_behavior_snapshot)
+        checks.append(
+            {
+                "check": "fail_behavior_registry_contract_valid",
+                "ok": True,
+                "count": len(subsystems),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "fail_behavior_registry_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
 
     checks.append(
         {

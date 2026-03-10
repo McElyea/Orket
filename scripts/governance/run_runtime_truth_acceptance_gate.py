@@ -37,6 +37,9 @@ from scripts.governance.check_clock_time_authority_policy import (
 from scripts.governance.check_capability_fallback_hierarchy import (
     evaluate_capability_fallback_hierarchy,
 )
+from scripts.governance.check_runtime_truth_foundation_contracts import (
+    evaluate_runtime_truth_foundation_contracts,
+)
 from scripts.governance.check_idempotency_discipline_policy import (
     evaluate_idempotency_discipline_policy,
 )
@@ -239,6 +242,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip capability fallback hierarchy contract check.",
     )
     parser.add_argument(
+        "--skip-runtime-truth-foundation-contracts-check",
+        action="store_true",
+        help="Skip runtime truth foundation contracts check.",
+    )
+    parser.add_argument(
         "--skip-warning-policy-check",
         action="store_true",
         help="Skip structured warning policy contract check.",
@@ -438,6 +446,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_unknown_input_policy: bool = True,
     check_clock_time_authority_policy: bool = True,
     check_capability_fallback_hierarchy: bool = True,
+    check_runtime_truth_foundation_contracts: bool = True,
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
     check_provider_quarantine_policy: bool = True,
@@ -585,6 +594,16 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(fallback_hierarchy_payload.get("ok")):
             failures.append("capability_fallback_hierarchy_check_failed")
+
+    if check_runtime_truth_foundation_contracts:
+        foundation_payload = evaluate_runtime_truth_foundation_contracts()
+        failed_checks = [row for row in foundation_payload.get("checks", []) if not bool((row or {}).get("ok"))]
+        details["runtime_truth_foundation_contracts_check"] = {
+            "ok": bool(foundation_payload.get("ok")),
+            "failed_check_count": len(failed_checks),
+        }
+        if not bool(foundation_payload.get("ok")):
+            failures.append("runtime_truth_foundation_contracts_check_failed")
 
     if check_warning_policy:
         warning_policy_payload = evaluate_structured_warning_policy()
@@ -935,6 +954,7 @@ def main(argv: list[str] | None = None) -> int:
         check_unknown_input_policy=not bool(args.skip_unknown_input_policy_check),
         check_clock_time_authority_policy=not bool(args.skip_clock_time_authority_policy_check),
         check_capability_fallback_hierarchy=not bool(args.skip_capability_fallback_hierarchy_check),
+        check_runtime_truth_foundation_contracts=not bool(args.skip_runtime_truth_foundation_contracts_check),
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_provider_quarantine_policy=not bool(args.skip_provider_quarantine_policy_check),

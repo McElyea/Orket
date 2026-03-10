@@ -23,6 +23,9 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "retry_classification_policy_valid" in checks
     assert "result_error_invariant_contract_valid" in checks
     assert "runtime_invariant_registry_snapshot_valid" in checks
+    assert "runtime_status_vocabulary_contract_valid" in checks
+    assert "degradation_taxonomy_contract_valid" in checks
+    assert "fail_behavior_registry_contract_valid" in checks
     assert "runtime_boundary_audit_checklist_valid" in checks
     assert "provider_quarantine_policy_contract_valid" in checks
     assert "model_profile_bios_valid" in checks
@@ -290,5 +293,26 @@ def test_runtime_truth_contract_drift_report_fails_when_unknown_input_policy_con
     payload = checker.runtime_truth_contract_drift_report()
     target = next(
         row for row in payload["checks"] if row["check"] == "unknown_input_policy_contract_valid"
+    )
+    assert target["ok"] is False
+
+
+# Layer: contract
+def test_runtime_truth_contract_drift_report_fails_when_runtime_status_vocabulary_contract_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from orket.runtime import runtime_truth_drift_checker as checker
+
+    def _raise_contract_error(payload: dict[str, object] | None = None) -> tuple[str, ...]:
+        raise ValueError("E_RUNTIME_STATUS_VOCABULARY_SET_MISMATCH")
+
+    monkeypatch.setattr(
+        checker,
+        "validate_runtime_status_vocabulary_contract",
+        _raise_contract_error,
+    )
+    payload = checker.runtime_truth_contract_drift_report()
+    target = next(
+        row for row in payload["checks"] if row["check"] == "runtime_status_vocabulary_contract_valid"
     )
     assert target["ok"] is False
