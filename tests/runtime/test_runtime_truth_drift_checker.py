@@ -22,6 +22,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "retry_classification_policy_valid" in checks
     assert "runtime_boundary_audit_checklist_valid" in checks
     assert "model_profile_bios_valid" in checks
+    assert "interrupt_semantics_policy_valid" in checks
 
 
 # Layer: contract

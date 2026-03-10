@@ -16,6 +16,7 @@ from scripts.governance.check_noop_critical_paths import (
     evaluate_noop_critical_paths,
 )
 from scripts.governance.check_environment_parity_checklist import evaluate_environment_parity_checklist
+from scripts.governance.check_interrupt_semantics_policy import evaluate_interrupt_semantics_policy
 from scripts.governance.check_model_profile_bios import evaluate_model_profile_bios
 from scripts.governance.check_runtime_boundary_audit_checklist import evaluate_runtime_boundary_audit_checklist
 from scripts.governance.check_retry_classification_policy import evaluate_retry_classification_policy
@@ -43,6 +44,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "clock_time_authority_policy.json",
     "capability_fallback_hierarchy.json",
     "model_profile_bios.json",
+    "interrupt_semantics_policy.json",
 )
 
 
@@ -90,6 +92,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip model profile BIOS contract check.",
     )
+    parser.add_argument(
+        "--skip-interrupt-policy-check",
+        action="store_true",
+        help="Skip interrupt semantics policy contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -109,6 +116,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_retry_policy: bool = True,
     check_boundary_audit: bool = True,
     check_model_profile_bios: bool = True,
+    check_interrupt_policy: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -212,6 +220,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(bios_payload.get("ok")):
             failures.append("model_profile_bios_check_failed")
 
+    if check_interrupt_policy:
+        interrupt_policy_payload = evaluate_interrupt_semantics_policy()
+        details["interrupt_semantics_policy_check"] = {
+            "ok": bool(interrupt_policy_payload.get("ok")),
+            "surface_count": int(interrupt_policy_payload.get("surface_count") or 0),
+        }
+        if not bool(interrupt_policy_payload.get("ok")):
+            failures.append("interrupt_semantics_policy_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -233,6 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_boundary_audit=not bool(args.skip_boundary_audit_check),
         check_model_profile_bios=not bool(args.skip_model_profile_bios_check),
+        check_interrupt_policy=not bool(args.skip_interrupt_policy_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

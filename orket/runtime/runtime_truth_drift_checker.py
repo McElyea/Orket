@@ -4,6 +4,7 @@ from typing import Any
 
 from orket.runtime.capability_fallback_hierarchy import validate_capability_fallback_hierarchy
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
+from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
@@ -262,6 +263,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "model_profile_bios_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        surfaces = validate_interrupt_semantics_policy()
+        checks.append(
+            {
+                "check": "interrupt_semantics_policy_valid",
+                "ok": True,
+                "count": len(surfaces),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "interrupt_semantics_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

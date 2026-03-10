@@ -19,6 +19,7 @@ _TRACE_IDS: dict[str, str] = {
     "clock_time_authority_policy": "TRUTH-W2A-CLOCK-TIME-AUTHORITY-POLICY",
     "capability_fallback_hierarchy": "TRUTH-W2B-CAPABILITY-FALLBACK-HIERARCHY",
     "model_profile_bios": "TRUTH-B-MODEL-PROFILE-BIOS",
+    "interrupt_semantics_policy": "TRUTH-W2B-INTERRUPT-SEMANTICS-POLICY",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }
