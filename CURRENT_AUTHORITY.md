@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-07
+Last updated: 2026-03-10
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -35,7 +35,7 @@ It defines only the currently authoritative paths that agents and contributors m
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-07",
+  "last_updated": "2026-03-10",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -104,6 +104,7 @@ It defines only the currently authoritative paths that agents and contributors m
         "docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md",
         "docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md"
       ],
+      "operating_principles_source": "docs/specs/ORKET_OPERATING_PRINCIPLES.md",
       "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
       "sources": [
         "docs/README.md",
