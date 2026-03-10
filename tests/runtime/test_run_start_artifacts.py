@@ -54,6 +54,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     trace_artifacts = [row["artifact"] for row in payload["runtime_truth_trace_ids"]["trace_ids"]]
     assert "run_phase_contract" in trace_artifacts
     assert "route_decision_artifact" in trace_artifacts
+    assert payload["runtime_invariant_registry"]["schema_version"] == "1.0"
+    invariant_ids = [row["invariant_id"] for row in payload["runtime_invariant_registry"]["invariants"]]
+    assert "INV-001" in invariant_ids
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -65,6 +68,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["streaming_semantics_contract_path"]).exists()
     assert Path(payload["runtime_truth_contract_drift_report_path"]).exists()
     assert Path(payload["runtime_truth_trace_ids_path"]).exists()
+    assert Path(payload["runtime_invariant_registry_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()

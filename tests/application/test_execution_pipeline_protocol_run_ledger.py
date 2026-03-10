@@ -333,6 +333,9 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     trace_artifacts = [row["artifact"] for row in artifact_json["runtime_truth_trace_ids"]["trace_ids"]]
     assert "run_phase_contract" in trace_artifacts
     assert "route_decision_artifact" in trace_artifacts
+    assert artifact_json["runtime_invariant_registry"]["schema_version"] == "1.0"
+    invariant_ids = [row["invariant_id"] for row in artifact_json["runtime_invariant_registry"]["invariants"]]
+    assert "INV-001" in invariant_ids
     assert artifact_json["deterministic_mode_contract"]["schema_version"] == "1.0"
     assert artifact_json["deterministic_mode_contract"]["deterministic_mode_enabled"] is False
     assert artifact_json["deterministic_mode_contract"]["resolution_source"] == "default"
@@ -347,4 +350,5 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     assert Path(artifact_json["run_identity_path"]).exists()
     assert Path(artifact_json["runtime_truth_contract_drift_report_path"]).exists()
     assert Path(artifact_json["runtime_truth_trace_ids_path"]).exists()
+    assert Path(artifact_json["runtime_invariant_registry_path"]).exists()
     assert Path(artifact_json["workspace_state_snapshot_path"]).exists()

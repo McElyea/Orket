@@ -23,6 +23,7 @@ from orket.runtime.timeout_streaming_contracts import (
     timeout_semantics_snapshot,
 )
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
+from orket.runtime.runtime_invariant_registry import runtime_invariant_registry_snapshot
 from orket.runtime.runtime_truth_trace_ids import runtime_truth_trace_ids_snapshot
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
@@ -148,6 +149,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_TRUTH_TRACE_IDS_IMMUTABLE",
     )
 
+    runtime_invariant_registry = runtime_invariant_registry_snapshot()
+    runtime_invariant_registry_path = runtime_root / "runtime_invariant_registry.json"
+    _write_immutable_json(
+        path=runtime_invariant_registry_path,
+        payload=runtime_invariant_registry,
+        error_code="E_RUN_INVARIANT_REGISTRY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -206,6 +215,8 @@ def capture_run_start_artifacts(
         "runtime_truth_contract_drift_report_path": str(runtime_truth_drift_report_path),
         "runtime_truth_trace_ids": runtime_truth_trace_ids,
         "runtime_truth_trace_ids_path": str(runtime_truth_trace_ids_path),
+        "runtime_invariant_registry": runtime_invariant_registry,
+        "runtime_invariant_registry_path": str(runtime_invariant_registry_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,
