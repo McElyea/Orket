@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.runtime.capability_fallback_hierarchy import validate_capability_fallback_hierarchy
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
@@ -148,6 +149,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "clock_time_authority_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        fallback_hierarchy = validate_capability_fallback_hierarchy()
+        checks.append(
+            {
+                "check": "capability_fallback_hierarchy_valid",
+                "ok": True,
+                "capability_count": len(dict(fallback_hierarchy.get("fallback_hierarchy") or {})),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "capability_fallback_hierarchy_valid",
                 "ok": False,
                 "error": str(exc),
             }

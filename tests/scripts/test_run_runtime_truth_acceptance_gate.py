@@ -59,3 +59,4 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "runtime_config_ownership_map.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "unknown_input_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "clock_time_authority_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "capability_fallback_hierarchy.json" in REQUIRED_RUNTIME_CONTRACT_FILES

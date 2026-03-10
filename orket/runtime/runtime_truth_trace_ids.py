@@ -17,6 +17,7 @@ _TRACE_IDS: dict[str, str] = {
     "runtime_config_ownership_map": "TRUTH-W2A-CONFIG-OWNERSHIP-MAP",
     "unknown_input_policy": "TRUTH-W2A-UNKNOWN-INPUT-POLICY",
     "clock_time_authority_policy": "TRUTH-W2A-CLOCK-TIME-AUTHORITY-POLICY",
+    "capability_fallback_hierarchy": "TRUTH-W2B-CAPABILITY-FALLBACK-HIERARCHY",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }

@@ -10,6 +10,7 @@ from orket.runtime.contract_bootstrap import (
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
+from orket.runtime.capability_fallback_hierarchy import capability_fallback_hierarchy_snapshot
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
@@ -184,6 +185,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_CLOCK_TIME_AUTHORITY_POLICY_IMMUTABLE",
     )
 
+    capability_fallback_hierarchy = capability_fallback_hierarchy_snapshot()
+    capability_fallback_hierarchy_path = runtime_root / "capability_fallback_hierarchy.json"
+    _write_immutable_json(
+        path=capability_fallback_hierarchy_path,
+        payload=capability_fallback_hierarchy,
+        error_code="E_RUN_CAPABILITY_FALLBACK_HIERARCHY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -250,6 +259,8 @@ def capture_run_start_artifacts(
         "unknown_input_policy_path": str(unknown_input_policy_path),
         "clock_time_authority_policy": clock_time_authority_policy,
         "clock_time_authority_policy_path": str(clock_time_authority_policy_path),
+        "capability_fallback_hierarchy": capability_fallback_hierarchy,
+        "capability_fallback_hierarchy_path": str(capability_fallback_hierarchy_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,
