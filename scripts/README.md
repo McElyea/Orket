@@ -69,6 +69,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `run_runtime_truth_acceptance_gate.py`
   - `check_runtime_truth_contract_drift.py`
   - `check_environment_parity_checklist.py`
+  - `check_runtime_boundary_audit_checklist.py`
   - `check_retry_classification_policy.py`
   - `check_structured_warning_policy.py`
   - `enforce_test_taxonomy.py`

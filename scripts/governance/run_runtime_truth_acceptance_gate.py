@@ -16,6 +16,7 @@ from scripts.governance.check_noop_critical_paths import (
     evaluate_noop_critical_paths,
 )
 from scripts.governance.check_environment_parity_checklist import evaluate_environment_parity_checklist
+from scripts.governance.check_runtime_boundary_audit_checklist import evaluate_runtime_boundary_audit_checklist
 from scripts.governance.check_retry_classification_policy import evaluate_retry_classification_policy
 from scripts.governance.check_structured_warning_policy import evaluate_structured_warning_policy
 from scripts.governance.check_unreachable_branches import (
@@ -77,6 +78,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip retry classification policy contract check.",
     )
+    parser.add_argument(
+        "--skip-boundary-audit-check",
+        action="store_true",
+        help="Skip runtime boundary audit checklist contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -94,6 +100,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_environment_parity: bool = True,
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
+    check_boundary_audit: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -179,6 +186,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(retry_policy_payload.get("ok")):
             failures.append("retry_classification_policy_check_failed")
 
+    if check_boundary_audit:
+        boundary_payload = evaluate_runtime_boundary_audit_checklist(workspace=REPO_ROOT)
+        details["runtime_boundary_audit_check"] = {
+            "ok": bool(boundary_payload.get("ok")),
+            "boundary_count": int(boundary_payload.get("boundary_count") or 0),
+        }
+        if not bool(boundary_payload.get("ok")):
+            failures.append("runtime_boundary_audit_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -198,6 +214,7 @@ def main(argv: list[str] | None = None) -> int:
         check_environment_parity=not bool(args.skip_environment_parity_check),
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
+        check_boundary_audit=not bool(args.skip_boundary_audit_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1
