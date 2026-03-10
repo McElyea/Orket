@@ -23,6 +23,7 @@ from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
 from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_snapshot
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
+from orket.runtime.feature_flag_expiration_policy import feature_flag_expiration_policy_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_truth_contracts import (
     degradation_taxonomy_snapshot,
@@ -283,6 +284,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_RELEASE_CONFIDENCE_SCORECARD_IMMUTABLE",
     )
 
+    feature_flag_expiration_policy = feature_flag_expiration_policy_snapshot()
+    feature_flag_expiration_policy_path = runtime_root / "feature_flag_expiration_policy.json"
+    _write_immutable_json(
+        path=feature_flag_expiration_policy_path,
+        payload=feature_flag_expiration_policy,
+        error_code="E_RUN_FEATURE_FLAG_EXPIRATION_POLICY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -371,6 +380,8 @@ def capture_run_start_artifacts(
         "execution_readiness_rubric_path": str(execution_readiness_rubric_path),
         "release_confidence_scorecard": release_confidence_scorecard,
         "release_confidence_scorecard_path": str(release_confidence_scorecard_path),
+        "feature_flag_expiration_policy": feature_flag_expiration_policy,
+        "feature_flag_expiration_policy_path": str(feature_flag_expiration_policy_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

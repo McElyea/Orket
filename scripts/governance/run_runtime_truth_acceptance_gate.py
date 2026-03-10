@@ -39,6 +39,9 @@ from scripts.governance.check_execution_readiness_rubric import (
 from scripts.governance.check_release_confidence_scorecard import (
     evaluate_release_confidence_scorecard,
 )
+from scripts.governance.check_feature_flag_expiration_policy import (
+    evaluate_feature_flag_expiration_policy,
+)
 from scripts.governance.check_operator_override_logging_policy import (
     evaluate_operator_override_logging_policy,
 )
@@ -77,6 +80,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "sampling_discipline_guide.json",
     "execution_readiness_rubric.json",
     "release_confidence_scorecard.json",
+    "feature_flag_expiration_policy.json",
 )
 
 
@@ -169,6 +173,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip release confidence scorecard contract check.",
     )
+    parser.add_argument(
+        "--skip-feature-flag-expiration-check",
+        action="store_true",
+        help="Skip feature-flag expiration policy contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -197,6 +206,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_sampling_discipline: bool = True,
     check_execution_readiness: bool = True,
     check_release_confidence: bool = True,
+    check_feature_flag_expiration: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -381,6 +391,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(scorecard_payload.get("ok")):
             failures.append("release_confidence_scorecard_check_failed")
 
+    if check_feature_flag_expiration:
+        expiration_payload = evaluate_feature_flag_expiration_policy()
+        details["feature_flag_expiration_policy_check"] = {
+            "ok": bool(expiration_payload.get("ok")),
+            "required_field_count": int(expiration_payload.get("required_field_count") or 0),
+        }
+        if not bool(expiration_payload.get("ok")):
+            failures.append("feature_flag_expiration_policy_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -411,6 +430,7 @@ def main(argv: list[str] | None = None) -> int:
         check_sampling_discipline=not bool(args.skip_sampling_discipline_check),
         check_execution_readiness=not bool(args.skip_execution_readiness_check),
         check_release_confidence=not bool(args.skip_release_confidence_check),
+        check_feature_flag_expiration=not bool(args.skip_feature_flag_expiration_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

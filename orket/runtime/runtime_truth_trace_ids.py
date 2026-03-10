@@ -28,6 +28,7 @@ _TRACE_IDS: dict[str, str] = {
     "sampling_discipline_guide": "TRUTH-W2C-SAMPLING-DISCIPLINE-GUIDE",
     "execution_readiness_rubric": "TRUTH-W2E-EXECUTION-READINESS-RUBRIC",
     "release_confidence_scorecard": "TRUTH-W2E-RELEASE-CONFIDENCE-SCORECARD",
+    "feature_flag_expiration_policy": "TRUTH-W2E-FEATURE-FLAG-EXPIRATION-POLICY",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }

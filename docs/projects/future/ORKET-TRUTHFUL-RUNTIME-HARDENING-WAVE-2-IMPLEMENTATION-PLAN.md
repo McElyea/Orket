@@ -29,6 +29,7 @@ Completed in active execution:
 14. sampling discipline guide contract, checker, run-start artifact, and acceptance-gate enforcement
 15. execution-readiness rubric contract, checker, run-start artifact, and acceptance-gate enforcement
 16. release confidence scorecard contract, checker, run-start artifact, and acceptance-gate enforcement
+17. feature-flag expiration policy contract, checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 
