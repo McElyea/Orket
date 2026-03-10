@@ -11,6 +11,11 @@ from orket.runtime.contract_bootstrap import (
     write_runtime_contract_snapshots,
 )
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
+from orket.runtime.runtime_truth_contracts import (
+    degradation_taxonomy_snapshot,
+    fail_behavior_registry_snapshot,
+    runtime_status_vocabulary_snapshot,
+)
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
@@ -61,6 +66,30 @@ def capture_run_start_artifacts(
         error_code="E_RUN_PHASE_CONTRACT_IMMUTABLE",
     )
 
+    runtime_status_vocabulary = runtime_status_vocabulary_snapshot()
+    runtime_status_vocabulary_path = runtime_root / "runtime_status_vocabulary.json"
+    _write_immutable_json(
+        path=runtime_status_vocabulary_path,
+        payload=runtime_status_vocabulary,
+        error_code="E_RUN_STATUS_VOCABULARY_IMMUTABLE",
+    )
+
+    degradation_taxonomy = degradation_taxonomy_snapshot()
+    degradation_taxonomy_path = runtime_root / "degradation_taxonomy.json"
+    _write_immutable_json(
+        path=degradation_taxonomy_path,
+        payload=degradation_taxonomy,
+        error_code="E_RUN_DEGRADATION_TAXONOMY_IMMUTABLE",
+    )
+
+    fail_behavior_registry = fail_behavior_registry_snapshot()
+    fail_behavior_registry_path = runtime_root / "fail_behavior_registry.json"
+    _write_immutable_json(
+        path=fail_behavior_registry_path,
+        payload=fail_behavior_registry,
+        error_code="E_RUN_FAIL_BEHAVIOR_REGISTRY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -101,6 +130,12 @@ def capture_run_start_artifacts(
         "run_identity_path": str(run_identity_path),
         "run_phase_contract": run_phase_contract,
         "run_phase_contract_path": str(run_phase_contract_path),
+        "runtime_status_vocabulary": runtime_status_vocabulary,
+        "runtime_status_vocabulary_path": str(runtime_status_vocabulary_path),
+        "degradation_taxonomy": degradation_taxonomy,
+        "degradation_taxonomy_path": str(degradation_taxonomy_path),
+        "fail_behavior_registry": fail_behavior_registry,
+        "fail_behavior_registry_path": str(fail_behavior_registry_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,
