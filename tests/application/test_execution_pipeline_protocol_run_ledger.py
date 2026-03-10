@@ -327,6 +327,8 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     assert artifact_json["run_identity"]["run_id"] == "sess-protocol-contract-bootstrap"
     assert artifact_json["run_identity"]["workload"] == "protocol_ledger_epic_contract_bootstrap"
     assert artifact_json["run_determinism_class"] == "workspace"
+    assert artifact_json["runtime_truth_contract_drift_report"]["schema_version"] == "1.0"
+    assert artifact_json["runtime_truth_contract_drift_report"]["ok"] is True
     assert artifact_json["deterministic_mode_contract"]["schema_version"] == "1.0"
     assert artifact_json["deterministic_mode_contract"]["deterministic_mode_enabled"] is False
     assert artifact_json["deterministic_mode_contract"]["resolution_source"] == "default"
@@ -339,4 +341,5 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
     assert Path(artifact_json["tool_registry_snapshot_path"]).exists()
     assert Path(artifact_json["run_identity_path"]).exists()
+    assert Path(artifact_json["runtime_truth_contract_drift_report_path"]).exists()
     assert Path(artifact_json["workspace_state_snapshot_path"]).exists()

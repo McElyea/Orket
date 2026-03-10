@@ -22,6 +22,7 @@ from orket.runtime.timeout_streaming_contracts import (
     streaming_semantics_snapshot,
     timeout_semantics_snapshot,
 )
+from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
@@ -128,6 +129,16 @@ def capture_run_start_artifacts(
         error_code="E_RUN_STREAMING_SEMANTICS_IMMUTABLE",
     )
 
+    runtime_truth_drift_report = runtime_truth_contract_drift_report()
+    if not bool(runtime_truth_drift_report.get("ok")):
+        raise ValueError("E_RUN_TRUTH_CONTRACT_DRIFT")
+    runtime_truth_drift_report_path = runtime_root / "runtime_truth_contract_drift_report.json"
+    _write_immutable_json(
+        path=runtime_truth_drift_report_path,
+        payload=runtime_truth_drift_report,
+        error_code="E_RUN_TRUTH_CONTRACT_DRIFT_REPORT_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -182,6 +193,8 @@ def capture_run_start_artifacts(
         "timeout_semantics_contract_path": str(timeout_semantics_path),
         "streaming_semantics_contract": streaming_semantics,
         "streaming_semantics_contract_path": str(streaming_semantics_path),
+        "runtime_truth_contract_drift_report": runtime_truth_drift_report,
+        "runtime_truth_contract_drift_report_path": str(runtime_truth_drift_report_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

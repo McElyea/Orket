@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from orket.runtime import run_start_artifacts
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
 
@@ -47,6 +48,8 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     ]
     assert payload["streaming_semantics_contract"]["schema_version"] == "1.0"
     assert payload["streaming_semantics_contract"]["terminal_events"] == ["error", "stopped"]
+    assert payload["runtime_truth_contract_drift_report"]["schema_version"] == "1.0"
+    assert payload["runtime_truth_contract_drift_report"]["ok"] is True
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -56,6 +59,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["state_transition_registry_path"]).exists()
     assert Path(payload["timeout_semantics_contract_path"]).exists()
     assert Path(payload["streaming_semantics_contract_path"]).exists()
+    assert Path(payload["runtime_truth_contract_drift_report_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -254,4 +258,33 @@ def test_capture_run_start_artifacts_fails_closed_on_streaming_semantics_mutatio
             run_id="run-streaming-semantics-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_truth_contract_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    monkeypatch.setattr(
+        run_start_artifacts,
+        "runtime_truth_contract_drift_report",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "checks": [
+                {
+                    "check": "provider_truth_table_vs_provider_choices",
+                    "ok": False,
+                }
+            ],
+        },
+    )
+    with pytest.raises(ValueError, match="E_RUN_TRUTH_CONTRACT_DRIFT"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-truth-drift",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
         )
