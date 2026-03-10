@@ -31,6 +31,12 @@ from scripts.governance.check_runtime_invariant_registry import (
 from scripts.governance.check_unknown_input_policy import (
     evaluate_unknown_input_policy,
 )
+from scripts.governance.check_clock_time_authority_policy import (
+    evaluate_clock_time_authority_policy,
+)
+from scripts.governance.check_capability_fallback_hierarchy import (
+    evaluate_capability_fallback_hierarchy,
+)
 from scripts.governance.check_idempotency_discipline_policy import (
     evaluate_idempotency_discipline_policy,
 )
@@ -221,6 +227,16 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-unknown-input-policy-check",
         action="store_true",
         help="Skip unknown-input policy contract check.",
+    )
+    parser.add_argument(
+        "--skip-clock-time-authority-policy-check",
+        action="store_true",
+        help="Skip clock/time authority policy contract check.",
+    )
+    parser.add_argument(
+        "--skip-capability-fallback-hierarchy-check",
+        action="store_true",
+        help="Skip capability fallback hierarchy contract check.",
     )
     parser.add_argument(
         "--skip-warning-policy-check",
@@ -420,6 +436,8 @@ def evaluate_runtime_truth_acceptance_gate(
     check_runtime_invariant_registry: bool = True,
     check_runtime_config_ownership_map: bool = True,
     check_unknown_input_policy: bool = True,
+    check_clock_time_authority_policy: bool = True,
+    check_capability_fallback_hierarchy: bool = True,
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
     check_provider_quarantine_policy: bool = True,
@@ -549,6 +567,24 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(unknown_input_payload.get("ok")):
             failures.append("unknown_input_policy_check_failed")
+
+    if check_clock_time_authority_policy:
+        clock_policy_payload = evaluate_clock_time_authority_policy()
+        details["clock_time_authority_policy_check"] = {
+            "ok": bool(clock_policy_payload.get("ok")),
+            "default_clock_mode": str((clock_policy_payload.get("defaults") or {}).get("clock_mode") or ""),
+        }
+        if not bool(clock_policy_payload.get("ok")):
+            failures.append("clock_time_authority_policy_check_failed")
+
+    if check_capability_fallback_hierarchy:
+        fallback_hierarchy_payload = evaluate_capability_fallback_hierarchy()
+        details["capability_fallback_hierarchy_check"] = {
+            "ok": bool(fallback_hierarchy_payload.get("ok")),
+            "capability_count": int(fallback_hierarchy_payload.get("capability_count") or 0),
+        }
+        if not bool(fallback_hierarchy_payload.get("ok")):
+            failures.append("capability_fallback_hierarchy_check_failed")
 
     if check_warning_policy:
         warning_policy_payload = evaluate_structured_warning_policy()
@@ -897,6 +933,8 @@ def main(argv: list[str] | None = None) -> int:
         check_runtime_invariant_registry=not bool(args.skip_runtime_invariant_registry_check),
         check_runtime_config_ownership_map=not bool(args.skip_runtime_config_ownership_map_check),
         check_unknown_input_policy=not bool(args.skip_unknown_input_policy_check),
+        check_clock_time_authority_policy=not bool(args.skip_clock_time_authority_policy_check),
+        check_capability_fallback_hierarchy=not bool(args.skip_capability_fallback_hierarchy_check),
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_provider_quarantine_policy=not bool(args.skip_provider_quarantine_policy_check),

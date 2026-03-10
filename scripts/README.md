@@ -105,6 +105,8 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_provider_quarantine_policy.py`
   - `check_unknown_input_policy.py`
   - `check_safe_default_catalog.py`
+  - `check_clock_time_authority_policy.py`
+  - `check_capability_fallback_hierarchy.py`
   - `check_retry_classification_policy.py`
   - `check_result_error_invariants.py`
   - `check_structured_warning_policy.py`

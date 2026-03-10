@@ -59,6 +59,8 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["runtime_invariant_registry_check"]["ok"] is True
     assert payload["details"]["runtime_config_ownership_map_check"]["ok"] is True
     assert payload["details"]["unknown_input_policy_check"]["ok"] is True
+    assert payload["details"]["clock_time_authority_policy_check"]["ok"] is True
+    assert payload["details"]["capability_fallback_hierarchy_check"]["ok"] is True
     assert payload["details"]["structured_warning_policy_check"]["ok"] is True
     assert payload["details"]["retry_classification_policy_check"]["ok"] is True
     assert payload["details"]["provider_quarantine_policy_check"]["ok"] is True
@@ -247,6 +249,56 @@ def test_runtime_truth_acceptance_gate_fails_when_unknown_input_policy_check_fai
     )
     assert payload["ok"] is False
     assert "unknown_input_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_clock_time_authority_policy_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_clock_time_authority_policy",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "defaults": {},
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "clock_time_authority_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_capability_fallback_hierarchy_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_capability_fallback_hierarchy",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "capability_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "capability_fallback_hierarchy_check_failed" in payload["failures"]
 
 
 # Layer: contract
