@@ -16,6 +16,7 @@ from scripts.governance.check_noop_critical_paths import (
     evaluate_noop_critical_paths,
 )
 from scripts.governance.check_environment_parity_checklist import evaluate_environment_parity_checklist
+from scripts.governance.check_structured_warning_policy import evaluate_structured_warning_policy
 from scripts.governance.check_unreachable_branches import (
     DEFAULT_SCAN_ROOTS as DEFAULT_UNREACHABLE_SCAN_ROOTS,
     evaluate_unreachable_branches,
@@ -65,6 +66,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip environment parity checklist.",
     )
+    parser.add_argument(
+        "--skip-warning-policy-check",
+        action="store_true",
+        help="Skip structured warning policy contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -80,6 +86,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_unreachable_branches: bool = True,
     check_noop_critical_paths: bool = True,
     check_environment_parity: bool = True,
+    check_warning_policy: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -147,6 +154,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(parity_payload.get("ok")):
             failures.append("environment_parity_check_failed")
 
+    if check_warning_policy:
+        warning_policy_payload = evaluate_structured_warning_policy()
+        details["structured_warning_policy_check"] = {
+            "ok": bool(warning_policy_payload.get("ok")),
+            "warning_count": int(warning_policy_payload.get("warning_count") or 0),
+        }
+        if not bool(warning_policy_payload.get("ok")):
+            failures.append("structured_warning_policy_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -164,6 +180,7 @@ def main(argv: list[str] | None = None) -> int:
         check_unreachable_branches=not bool(args.skip_unreachable_branch_check),
         check_noop_critical_paths=not bool(args.skip_noop_critical_path_check),
         check_environment_parity=not bool(args.skip_environment_parity_check),
+        check_warning_policy=not bool(args.skip_warning_policy_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1
