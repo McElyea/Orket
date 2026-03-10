@@ -15,6 +15,7 @@ from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
 from orket.runtime.release_confidence_scorecard import validate_release_confidence_scorecard
 from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
+from orket.runtime.workspace_hygiene_rules import validate_workspace_hygiene_rules
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
@@ -452,6 +453,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "feature_flag_expiration_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        rule_ids = validate_workspace_hygiene_rules()
+        checks.append(
+            {
+                "check": "workspace_hygiene_rules_valid",
+                "ok": True,
+                "count": len(rule_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "workspace_hygiene_rules_valid",
                 "ok": False,
                 "error": str(exc),
             }

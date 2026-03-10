@@ -34,6 +34,7 @@ from orket.runtime.runtime_truth_contracts import (
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
 from orket.runtime.runtime_truth_trace_ids import runtime_truth_trace_ids_snapshot
 from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
+from orket.runtime.workspace_hygiene_rules import workspace_hygiene_rules_snapshot
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.timeout_streaming_contracts import (
     streaming_semantics_snapshot,
@@ -246,6 +247,12 @@ _CONTRACT_SNAPSHOT_DEFS: tuple[tuple[str, str, ContractSnapshotFactory, str], ..
         "feature_flag_expiration_policy.json",
         feature_flag_expiration_policy_snapshot,
         "E_RUN_FEATURE_FLAG_EXPIRATION_POLICY_IMMUTABLE",
+    ),
+    (
+        "workspace_hygiene_rules",
+        "workspace_hygiene_rules.json",
+        workspace_hygiene_rules_snapshot,
+        "E_RUN_WORKSPACE_HYGIENE_RULES_IMMUTABLE",
     ),
     (
         "ledger_event_schema",

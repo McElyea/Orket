@@ -79,6 +79,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_execution_readiness_rubric.py`
   - `check_release_confidence_scorecard.py`
   - `check_feature_flag_expiration_policy.py`
+  - `check_workspace_hygiene_rules.py`
   - `check_environment_parity_checklist.py`
   - `check_runtime_boundary_audit_checklist.py`
   - `check_retry_classification_policy.py`
