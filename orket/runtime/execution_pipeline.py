@@ -35,6 +35,7 @@ from orket.runtime.config_loader import ConfigLoader
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
+from orket.runtime.state_transition_registry import validate_state_token
 from orket.runtime.workload_adapters import build_cards_workload_contract
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_runtime_db_path
@@ -503,6 +504,7 @@ class ExecutionPipeline:
                 session_status = "terminal_failure"
             else:
                 session_status = "incomplete"
+            session_status = validate_state_token(domain="session", state=session_status)
 
             await self.sessions.complete_session(run_id, session_status, legacy_transcript)
             log_event("session_end", {"run_id": run_id, "status": session_status}, workspace=self.workspace)
@@ -592,13 +594,18 @@ class ExecutionPipeline:
             except (RuntimeError, ValueError, TypeError, OSError):
                 backlog = []
 
-            await self.sessions.complete_session(run_id, "failed", legacy_transcript)
+            failed_status = validate_state_token(domain="session", state="failed")
+            await self.sessions.complete_session(run_id, failed_status, legacy_transcript)
             log_event(
                 "session_end",
-                {"run_id": run_id, "status": "failed", "failure_class": type(exc).__name__},
+                {"run_id": run_id, "status": failed_status, "failure_class": type(exc).__name__},
                 workspace=self.workspace,
             )
-            failure_summary = self._build_run_summary(session_status="failed", backlog=backlog, transcript=legacy_transcript)
+            failure_summary = self._build_run_summary(
+                session_status=failed_status,
+                backlog=backlog,
+                transcript=legacy_transcript,
+            )
             artifacts = self._run_artifact_refs(run_id)
             artifacts.update(dict(run_contract_artifacts))
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
@@ -609,7 +616,7 @@ class ExecutionPipeline:
                 run_type="epic",
                 run_name=epic.name,
                 build_id=active_build,
-                session_status="failed",
+                session_status=failed_status,
                 summary=failure_summary,
                 failure_class=type(exc).__name__,
                 failure_reason=str(exc)[:2000],
@@ -618,7 +625,7 @@ class ExecutionPipeline:
                 artifacts["gitea_export"] = gitea_export
             await self.run_ledger.finalize_run(
                 session_id=run_id,
-                status="failed",
+                status=failed_status,
                 failure_class=type(exc).__name__,
                 failure_reason=str(exc)[:2000],
                 summary=failure_summary,

@@ -17,6 +17,7 @@ from orket.runtime.runtime_truth_contracts import (
     fail_behavior_registry_snapshot,
     runtime_status_vocabulary_snapshot,
 )
+from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
@@ -99,6 +100,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_PROVIDER_TRUTH_TABLE_IMMUTABLE",
     )
 
+    state_transition_registry = state_transition_registry_snapshot()
+    state_transition_registry_path = runtime_root / "state_transition_registry.json"
+    _write_immutable_json(
+        path=state_transition_registry_path,
+        payload=state_transition_registry,
+        error_code="E_RUN_STATE_TRANSITION_REGISTRY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -147,6 +156,8 @@ def capture_run_start_artifacts(
         "fail_behavior_registry_path": str(fail_behavior_registry_path),
         "provider_truth_table": provider_truth_table,
         "provider_truth_table_path": str(provider_truth_table_path),
+        "state_transition_registry": state_transition_registry,
+        "state_transition_registry_path": str(state_transition_registry_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

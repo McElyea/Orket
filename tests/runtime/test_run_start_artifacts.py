@@ -34,12 +34,16 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["provider_truth_table"]["schema_version"] == "1.0"
     providers = [row["provider"] for row in payload["provider_truth_table"]["providers"]]
     assert providers == ["ollama", "openai_compat", "lmstudio"]
+    assert payload["state_transition_registry"]["schema_version"] == "1.0"
+    transition_domains = [row["domain"] for row in payload["state_transition_registry"]["domains"]]
+    assert transition_domains == ["session", "run", "tool_invocation", "voice", "ui"]
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
     assert Path(payload["degradation_taxonomy_path"]).exists()
     assert Path(payload["fail_behavior_registry_path"]).exists()
     assert Path(payload["provider_truth_table_path"]).exists()
+    assert Path(payload["state_transition_registry_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -176,6 +180,36 @@ def test_capture_run_start_artifacts_fails_closed_on_provider_truth_table_mutati
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-provider-truth-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_state_transition_registry_mutation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-state-transition-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    state_transition_registry_path = (
+        workspace
+        / "observability"
+        / "run-state-transition-immutable"
+        / "runtime_contracts"
+        / "state_transition_registry.json"
+    )
+    state_transition_registry_path.write_text(
+        '{"schema_version":"999.0","domains":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_STATE_TRANSITION_REGISTRY_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-state-transition-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )
