@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.runtime import run_start_artifacts
+from orket.runtime import run_start_artifacts, run_start_contract_artifacts
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
 
@@ -888,7 +888,7 @@ def test_capture_run_start_artifacts_fails_closed_on_truth_contract_drift(
 ) -> None:
     workspace = tmp_path / "workspace"
     monkeypatch.setattr(
-        run_start_artifacts,
+        run_start_contract_artifacts,
         "runtime_truth_contract_drift_report",
         lambda: {
             "schema_version": "1.0",
