@@ -5,6 +5,7 @@ from typing import Any
 from orket.runtime.capability_fallback_hierarchy import validate_capability_fallback_hierarchy
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
+from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
 from orket.runtime.retry_classification_policy import validate_retry_classification_policy
 from orket.runtime.safe_default_catalog import validate_safe_default_catalog
@@ -224,6 +225,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "retry_classification_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        boundary_ids = validate_runtime_boundary_audit_checklist()
+        checks.append(
+            {
+                "check": "runtime_boundary_audit_checklist_valid",
+                "ok": True,
+                "count": len(boundary_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "runtime_boundary_audit_checklist_valid",
                 "ok": False,
                 "error": str(exc),
             }
