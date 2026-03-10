@@ -5,6 +5,14 @@ from typing import Iterable
 
 UNKNOWN_INPUT_POLICY_SCHEMA_VERSION = "1.0"
 
+_EXPECTED_UNKNOWN_INPUT_SURFACES = {
+    "provider_runtime_target.requested_provider",
+    "runtime_status_vocabulary.token",
+    "state_transition_registry.domain",
+    "state_transition_registry.state",
+    "streaming_semantics.event",
+}
+
 
 def unknown_input_policy_snapshot() -> dict[str, object]:
     return {
@@ -37,6 +45,34 @@ def unknown_input_policy_snapshot() -> dict[str, object]:
             },
         ],
     }
+
+
+def validate_unknown_input_policy(
+    payload: dict[str, object] | None = None,
+) -> tuple[str, ...]:
+    policy = dict(payload or unknown_input_policy_snapshot())
+    rows = list(policy.get("surfaces") or [])
+    if not rows:
+        raise ValueError("E_UNKNOWN_INPUT_POLICY_EMPTY")
+
+    surfaces: list[str] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("E_UNKNOWN_INPUT_POLICY_ROW_SCHEMA")
+        surface = str(row.get("surface") or "").strip()
+        on_unknown = str(row.get("on_unknown") or "").strip().lower()
+        error_code = str(row.get("error_code") or "").strip()
+        if not surface or not error_code:
+            raise ValueError("E_UNKNOWN_INPUT_POLICY_ROW_SCHEMA")
+        if on_unknown != "fail_closed":
+            raise ValueError(f"E_UNKNOWN_INPUT_POLICY_ON_UNKNOWN_INVALID:{surface}")
+        surfaces.append(surface)
+
+    if len(set(surfaces)) != len(surfaces):
+        raise ValueError("E_UNKNOWN_INPUT_POLICY_DUPLICATE_SURFACE")
+    if set(surfaces) != _EXPECTED_UNKNOWN_INPUT_SURFACES:
+        raise ValueError("E_UNKNOWN_INPUT_POLICY_SURFACE_SET_MISMATCH")
+    return tuple(sorted(surfaces))
 
 
 def validate_allowed_token(

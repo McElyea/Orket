@@ -19,6 +19,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "capability_fallback_hierarchy_valid" in checks
     assert "safe_default_catalog_valid" in checks
     assert "structured_warning_policy_valid" in checks
+    assert "unknown_input_policy_contract_valid" in checks
     assert "retry_classification_policy_valid" in checks
     assert "result_error_invariant_contract_valid" in checks
     assert "runtime_invariant_registry_snapshot_valid" in checks
@@ -268,5 +269,26 @@ def test_runtime_truth_contract_drift_report_fails_when_provider_quarantine_poli
     payload = checker.runtime_truth_contract_drift_report()
     target = next(
         row for row in payload["checks"] if row["check"] == "provider_quarantine_policy_contract_valid"
+    )
+    assert target["ok"] is False
+
+
+# Layer: contract
+def test_runtime_truth_contract_drift_report_fails_when_unknown_input_policy_contract_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from orket.runtime import runtime_truth_drift_checker as checker
+
+    def _raise_contract_error(payload: dict[str, object] | None = None) -> tuple[str, ...]:
+        raise ValueError("E_UNKNOWN_INPUT_POLICY_SURFACE_SET_MISMATCH")
+
+    monkeypatch.setattr(
+        checker,
+        "validate_unknown_input_policy",
+        _raise_contract_error,
+    )
+    payload = checker.runtime_truth_contract_drift_report()
+    target = next(
+        row for row in payload["checks"] if row["check"] == "unknown_input_policy_contract_valid"
     )
     assert target["ok"] is False

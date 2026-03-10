@@ -54,6 +54,7 @@ from orket.runtime.timeout_streaming_contracts import (
 )
 from orket.runtime.trust_language_review_policy import validate_trust_language_review_policy
 from orket.runtime.ui_lane_security_boundary_test_contract import validate_ui_lane_security_boundary_test_contract
+from orket.runtime.unknown_input_policy import validate_unknown_input_policy
 
 
 def runtime_truth_contract_drift_report() -> dict[str, Any]:
@@ -156,6 +157,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
             and str(provider_surface.get("error_code") or "").strip() == "E_UNKNOWN_PROVIDER_INPUT",
         }
     )
+
+    try:
+        surfaces = validate_unknown_input_policy(unknown_input_policy)
+        checks.append(
+            {
+                "check": "unknown_input_policy_contract_valid",
+                "ok": True,
+                "count": len(surfaces),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "unknown_input_policy_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
 
     try:
         config_keys = list(validate_runtime_config_ownership_map())

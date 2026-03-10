@@ -28,6 +28,9 @@ from scripts.governance.check_runtime_config_ownership_map import (
 from scripts.governance.check_runtime_invariant_registry import (
     evaluate_runtime_invariant_registry,
 )
+from scripts.governance.check_unknown_input_policy import (
+    evaluate_unknown_input_policy,
+)
 from scripts.governance.check_idempotency_discipline_policy import (
     evaluate_idempotency_discipline_policy,
 )
@@ -209,6 +212,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-runtime-config-ownership-map-check",
         action="store_true",
         help="Skip runtime config ownership map contract check.",
+    )
+    parser.add_argument(
+        "--skip-unknown-input-policy-check",
+        action="store_true",
+        help="Skip unknown-input policy contract check.",
     )
     parser.add_argument(
         "--skip-warning-policy-check",
@@ -402,6 +410,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_environment_parity: bool = True,
     check_runtime_invariant_registry: bool = True,
     check_runtime_config_ownership_map: bool = True,
+    check_unknown_input_policy: bool = True,
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
     check_provider_quarantine_policy: bool = True,
@@ -521,6 +530,15 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(config_map_payload.get("ok")):
             failures.append("runtime_config_ownership_map_check_failed")
+
+    if check_unknown_input_policy:
+        unknown_input_payload = evaluate_unknown_input_policy()
+        details["unknown_input_policy_check"] = {
+            "ok": bool(unknown_input_payload.get("ok")),
+            "surface_count": int(unknown_input_payload.get("surface_count") or 0),
+        }
+        if not bool(unknown_input_payload.get("ok")):
+            failures.append("unknown_input_policy_check_failed")
 
     if check_warning_policy:
         warning_policy_payload = evaluate_structured_warning_policy()
@@ -859,6 +877,7 @@ def main(argv: list[str] | None = None) -> int:
         check_environment_parity=not bool(args.skip_environment_parity_check),
         check_runtime_invariant_registry=not bool(args.skip_runtime_invariant_registry_check),
         check_runtime_config_ownership_map=not bool(args.skip_runtime_config_ownership_map_check),
+        check_unknown_input_policy=not bool(args.skip_unknown_input_policy_check),
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_provider_quarantine_policy=not bool(args.skip_provider_quarantine_policy_check),

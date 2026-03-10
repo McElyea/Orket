@@ -5,6 +5,7 @@ import pytest
 from orket.runtime.unknown_input_policy import (
     unknown_input_policy_snapshot,
     validate_allowed_token,
+    validate_unknown_input_policy,
 )
 
 
@@ -37,3 +38,19 @@ def test_validate_allowed_token_rejects_unknown_token() -> None:
             allowed=("ollama", "openai_compat"),
             error_code_prefix="E_UNKNOWN_PROVIDER_INPUT",
         )
+
+
+# Layer: contract
+def test_validate_unknown_input_policy_accepts_current_snapshot() -> None:
+    surfaces = validate_unknown_input_policy()
+    assert "provider_runtime_target.requested_provider" in surfaces
+
+
+# Layer: contract
+def test_validate_unknown_input_policy_rejects_surface_set_mismatch() -> None:
+    payload = unknown_input_policy_snapshot()
+    payload["surfaces"] = [
+        row for row in payload["surfaces"] if row["surface"] != "streaming_semantics.event"
+    ]
+    with pytest.raises(ValueError, match="E_UNKNOWN_INPUT_POLICY_SURFACE_SET_MISMATCH"):
+        _ = validate_unknown_input_policy(payload)
