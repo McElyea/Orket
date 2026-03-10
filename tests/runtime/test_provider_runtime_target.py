@@ -184,3 +184,22 @@ async def test_resolve_provider_runtime_target_blocks_quarantined_model(
     assert result.resolution_mode == "quarantined_model"
     assert result.inventory_source == "quarantine_policy"
     assert result.model_id == "qwen2.5-coder:7b"
+
+
+@pytest.mark.asyncio
+async def test_resolve_provider_runtime_target_blocks_unknown_provider_input() -> None:
+    result = await runtime_target.resolve_provider_runtime_target(
+        provider="unknown_provider",
+        requested_model="",
+        base_url=None,
+        timeout_s=5.0,
+        auto_select_model=True,
+        auto_load_local_model=True,
+        model_load_timeout_s=30.0,
+        model_ttl_sec=600,
+    )
+
+    assert result.status == "BLOCKED"
+    assert result.resolution_mode == "unknown_provider_input"
+    assert result.inventory_source == "unknown_input_policy"
+    assert result.canonical_provider == "unknown"

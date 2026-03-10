@@ -7,6 +7,7 @@ from orket.runtime.runtime_config_ownership_map import validate_runtime_config_o
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.run_phase_contract import CANONICAL_RUN_PHASE_ORDER
 from orket.runtime.runtime_truth_contracts import runtime_status_vocabulary_snapshot
+from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.timeout_streaming_contracts import (
     streaming_semantics_snapshot,
@@ -92,6 +93,26 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
             "check": "streaming_semantics_terminal_events",
             "ok": sorted(terminal_events) == ["error", "stopped"],
             "observed": sorted(terminal_events),
+        }
+    )
+
+    unknown_input_policy = unknown_input_policy_snapshot()
+    surfaces = list(unknown_input_policy.get("surfaces", []))
+    provider_surface = next(
+        (
+            row
+            for row in surfaces
+            if isinstance(row, dict)
+            and str(row.get("surface") or "").strip() == "provider_runtime_target.requested_provider"
+        ),
+        None,
+    )
+    checks.append(
+        {
+            "check": "unknown_input_policy_provider_surface",
+            "ok": isinstance(provider_surface, dict)
+            and str(provider_surface.get("on_unknown") or "").strip() == "fail_closed"
+            and str(provider_surface.get("error_code") or "").strip() == "E_UNKNOWN_PROVIDER_INPUT",
         }
     )
 

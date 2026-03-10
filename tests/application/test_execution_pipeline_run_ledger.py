@@ -262,6 +262,9 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     config_keys = [row["config_key"] for row in artifact_json["runtime_config_ownership_map"]["rows"]]
     assert "ORKET_STATE_BACKEND_MODE" in config_keys
     assert "ORKET_PROVIDER_QUARANTINE" in config_keys
+    assert artifact_json["unknown_input_policy"]["schema_version"] == "1.0"
+    unknown_surfaces = [row["surface"] for row in artifact_json["unknown_input_policy"]["surfaces"]]
+    assert "provider_runtime_target.requested_provider" in unknown_surfaces
     assert artifact_json["deterministic_mode_contract"]["schema_version"] == "1.0"
     assert artifact_json["deterministic_mode_contract"]["deterministic_mode_enabled"] is False
     assert artifact_json["deterministic_mode_contract"]["resolution_source"] == "default"
@@ -289,6 +292,7 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert Path(artifact_json["runtime_truth_trace_ids_path"]).exists()
     assert Path(artifact_json["runtime_invariant_registry_path"]).exists()
     assert Path(artifact_json["runtime_config_ownership_map_path"]).exists()
+    assert Path(artifact_json["unknown_input_policy_path"]).exists()
     assert Path(artifact_json["capability_manifest_path"]).exists()
     assert Path(artifact_json["workspace_state_snapshot_path"]).exists()
 

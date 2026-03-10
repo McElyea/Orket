@@ -61,6 +61,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     config_keys = [row["config_key"] for row in payload["runtime_config_ownership_map"]["rows"]]
     assert "ORKET_STATE_BACKEND_MODE" in config_keys
     assert "ORKET_PROVIDER_QUARANTINE" in config_keys
+    assert payload["unknown_input_policy"]["schema_version"] == "1.0"
+    unknown_surfaces = [row["surface"] for row in payload["unknown_input_policy"]["surfaces"]]
+    assert "provider_runtime_target.requested_provider" in unknown_surfaces
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -74,6 +77,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["runtime_truth_trace_ids_path"]).exists()
     assert Path(payload["runtime_invariant_registry_path"]).exists()
     assert Path(payload["runtime_config_ownership_map_path"]).exists()
+    assert Path(payload["unknown_input_policy_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()

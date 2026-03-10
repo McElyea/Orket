@@ -26,6 +26,7 @@ from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_dri
 from orket.runtime.runtime_invariant_registry import runtime_invariant_registry_snapshot
 from orket.runtime.runtime_config_ownership_map import runtime_config_ownership_map_snapshot
 from orket.runtime.runtime_truth_trace_ids import runtime_truth_trace_ids_snapshot
+from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
@@ -166,6 +167,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_CONFIG_OWNERSHIP_MAP_IMMUTABLE",
     )
 
+    unknown_input_policy = unknown_input_policy_snapshot()
+    unknown_input_policy_path = runtime_root / "unknown_input_policy.json"
+    _write_immutable_json(
+        path=unknown_input_policy_path,
+        payload=unknown_input_policy,
+        error_code="E_RUN_UNKNOWN_INPUT_POLICY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -228,6 +237,8 @@ def capture_run_start_artifacts(
         "runtime_invariant_registry_path": str(runtime_invariant_registry_path),
         "runtime_config_ownership_map": runtime_config_ownership_map,
         "runtime_config_ownership_map_path": str(runtime_config_ownership_map_path),
+        "unknown_input_policy": unknown_input_policy,
+        "unknown_input_policy_path": str(unknown_input_policy_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

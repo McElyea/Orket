@@ -13,6 +13,9 @@ _TRACE_IDS: dict[str, str] = {
     "timeout_semantics_contract": "TRUTH-A-TIMEOUT-SEMANTICS-CONTRACT",
     "streaming_semantics_contract": "TRUTH-A-STREAMING-SEMANTICS-CONTRACT",
     "runtime_truth_contract_drift_report": "TRUTH-W2A-CONTRACT-DRIFT-CHECKER",
+    "runtime_invariant_registry": "TRUTH-W2A-INVARIANT-REGISTRY",
+    "runtime_config_ownership_map": "TRUTH-W2A-CONFIG-OWNERSHIP-MAP",
+    "unknown_input_policy": "TRUTH-W2A-UNKNOWN-INPUT-POLICY",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }

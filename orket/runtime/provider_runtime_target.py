@@ -12,6 +12,7 @@ from orket.runtime.provider_quarantine_policy import (
     is_provider_quarantined,
     resolve_provider_quarantine_policy,
 )
+from orket.runtime.unknown_input_policy import validate_allowed_token
 from orket.runtime.provider_runtime_inventory import (
     ProviderRuntimeWarmupError,
     _run_coro_sync,
@@ -257,6 +258,24 @@ async def resolve_provider_runtime_target(
     api_key: str | None = None,
 ) -> ProviderRuntimeTarget:
     requested_provider = effective_provider(provider, default="ollama")
+    try:
+        requested_provider = validate_allowed_token(
+            token=requested_provider,
+            allowed=PROVIDER_CHOICES,
+            error_code_prefix="E_UNKNOWN_PROVIDER_INPUT",
+        )
+    except ValueError:
+        return _target_payload(
+            requested_provider=requested_provider,
+            canonical_provider="unknown",
+            requested_model=str(requested_model or "").strip(),
+            model_id="",
+            base_url=normalize_base_url(base_url, default=default_base_url("ollama")),
+            resolution_mode="unknown_provider_input",
+            inventory_source="unknown_input_policy",
+            available_models=[],
+            status="BLOCKED",
+        )
     canonical_provider = normalize_provider(requested_provider)
     resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested_provider))
     requested_model_token = str(requested_model or "").strip()
