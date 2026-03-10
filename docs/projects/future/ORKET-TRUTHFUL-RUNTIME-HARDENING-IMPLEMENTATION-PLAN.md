@@ -1,7 +1,7 @@
 # Orket Truthful Runtime Hardening Implementation Plan
 
-Last updated: 2026-03-09
-Status: Draft (queued)
+Last updated: 2026-03-10
+Status: Active (in progress)
 Owner: Orket Core
 Lane type: Future (non-priority backlog)
 Primary input: operator-provided control-surface backlog (runtime truth, routing truth, provenance, conformance, and promotion hardening)

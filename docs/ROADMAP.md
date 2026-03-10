@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-03-09
+Last updated: 2026-03-10
 
 ## Operating Rule
 Use `docs/CONTRIBUTOR.md` for contributor workflow and roadmap-selection rules. This file stays focused on active lane status and execution order. `Priority Now` empty means there is no priority lane; it does not mean there is no work. Active items under `Maintenance (Non-Priority)` remain executable when no priority lane exists. Standing recurring maintenance stays active but is a fallback lane and should be listed last within the section unless it is the only active maintenance work.

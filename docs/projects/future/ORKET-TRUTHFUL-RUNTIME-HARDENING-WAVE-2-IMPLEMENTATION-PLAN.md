@@ -1,7 +1,7 @@
 # Orket Truthful Runtime Hardening Wave 2 Implementation Plan
 
-Last updated: 2026-03-09
-Status: Draft (queued)
+Last updated: 2026-03-10
+Status: Active (in progress)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
 Purpose: convert second-wave hardening backlog into executable slices with explicit acceptance gates.
@@ -9,6 +9,16 @@ Purpose: convert second-wave hardening backlog into executable slices with expli
 ## 1. Objective
 
 Operationalize additional truth and governance controls so runtime claims remain attributable under stress, retries, drift, and promotion pressure.
+
+## 1A. Progress Snapshot (2026-03-10)
+
+Completed in active execution:
+1. contract drift checker, trace IDs, acceptance gate runner seed
+2. unknown-input policy, provider quarantine controls, result-error invariants
+3. clock/time authority policy, capability fallback hierarchy, safe default catalog
+4. runtime truth dashboard seed metrics and test taxonomy enforcement
+5. unreachable-branch detector, no-op critical-path detector, environment parity checklist
+6. state transition Mermaid exporter, cross-lane dependency map generator, structured warning policy checks
 
 ## 2. Relationship to Existing Phase Plans
 
