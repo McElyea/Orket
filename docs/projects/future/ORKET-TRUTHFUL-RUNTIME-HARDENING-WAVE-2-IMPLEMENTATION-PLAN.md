@@ -27,6 +27,7 @@ Completed in active execution:
 12. demo-vs-production labeling policy contract, checker, run-start artifact, and acceptance-gate enforcement
 13. human correction capture policy contract, checker, run-start artifact, and acceptance-gate enforcement
 14. sampling discipline guide contract, checker, run-start artifact, and acceptance-gate enforcement
+15. execution-readiness rubric contract, checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

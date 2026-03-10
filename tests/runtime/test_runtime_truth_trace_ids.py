@@ -25,6 +25,7 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "demo_production_labeling_policy" in artifacts
     assert "human_correction_capture_policy" in artifacts
     assert "sampling_discipline_guide" in artifacts
+    assert "execution_readiness_rubric" in artifacts
     assert "route_decision_artifact" in artifacts
 
 
