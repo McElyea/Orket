@@ -62,6 +62,37 @@ def test_evaluate_noop_critical_paths_ignores_abstract_methods(tmp_path: Path) -
     assert payload["findings"] == []
 
 
+# Layer: contract
+def test_evaluate_noop_critical_paths_ignores_protocol_ellipsis_methods(tmp_path: Path) -> None:
+    source = tmp_path / "protocol.py"
+    _write(
+        source,
+        "\n".join(
+            [
+                "from typing import Protocol",
+                "",
+                "class Hook(Protocol):",
+                "    def run(self) -> None:",
+                "        ...",
+            ]
+        )
+        + "\n",
+    )
+
+    payload = evaluate_noop_critical_paths(roots=[tmp_path])
+    assert payload["ok"] is True
+    assert payload["findings"] == []
+
+
+# Layer: contract
+def test_evaluate_noop_critical_paths_parses_utf8_bom_files(tmp_path: Path) -> None:
+    source = tmp_path / "bom_file.py"
+    source.write_text("def run() -> int:\n    return 1\n", encoding="utf-8-sig")
+    payload = evaluate_noop_critical_paths(roots=[tmp_path])
+    assert payload["ok"] is True
+    assert payload["parse_errors"] == []
+
+
 # Layer: integration
 def test_check_noop_critical_paths_writes_out_payload_with_diff_ledger(tmp_path: Path) -> None:
     source = tmp_path / "module.py"

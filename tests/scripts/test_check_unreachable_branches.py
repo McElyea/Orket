@@ -65,6 +65,15 @@ def test_evaluate_unreachable_branches_ignores_type_checking_guards(tmp_path: Pa
     assert payload["findings"] == []
 
 
+# Layer: contract
+def test_evaluate_unreachable_branches_parses_utf8_bom_files(tmp_path: Path) -> None:
+    source = tmp_path / "bom_file.py"
+    source.write_text("def run() -> int:\n    return 1\n", encoding="utf-8-sig")
+    payload = evaluate_unreachable_branches(roots=[tmp_path])
+    assert payload["ok"] is True
+    assert payload["parse_errors"] == []
+
+
 # Layer: integration
 def test_check_unreachable_branches_writes_out_payload_with_diff_ledger(tmp_path: Path) -> None:
     source = tmp_path / "module.py"

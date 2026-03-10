@@ -122,7 +122,7 @@ def evaluate_unreachable_branches(*, roots: list[Path]) -> dict[str, Any]:
     files = _iter_python_files(roots)
     for path in files:
         try:
-            source = path.read_text(encoding="utf-8")
+            source = path.read_text(encoding="utf-8-sig")
             findings.extend(_collect_unreachable_findings(path, source))
         except (OSError, SyntaxError) as exc:
             parse_errors.append({"path": str(path), "error": str(exc)})

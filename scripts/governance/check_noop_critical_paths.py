@@ -69,6 +69,15 @@ def _is_abstract_function(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     return any(_decorator_name(decorator) == "abstractmethod" for decorator in node.decorator_list)
 
 
+def _class_is_protocol(node: ast.ClassDef) -> bool:
+    for base in node.bases:
+        if isinstance(base, ast.Name) and base.id == "Protocol":
+            return True
+        if isinstance(base, ast.Attribute) and str(base.attr or "") == "Protocol":
+            return True
+    return False
+
+
 def _is_noop_body(body: list[ast.stmt]) -> str | None:
     statements = [stmt for stmt in body if not isinstance(stmt, ast.Expr) or not isinstance(stmt.value, ast.Constant)]
     if len(statements) == 1 and isinstance(statements[0], ast.Pass):
@@ -85,8 +94,22 @@ def _is_noop_body(body: list[ast.stmt]) -> str | None:
     return None
 
 
+def _is_protocol_ellipsis_method(node: ast.FunctionDef | ast.AsyncFunctionDef, *, reason: str) -> bool:
+    if reason != "ellipsis":
+        return False
+    parent = getattr(node, "_parent", None)
+    while parent is not None:
+        if isinstance(parent, ast.ClassDef) and _class_is_protocol(parent):
+            return True
+        parent = getattr(parent, "_parent", None)
+    return False
+
+
 def _collect_noop_findings(path: Path, source: str) -> list[dict[str, Any]]:
     tree = ast.parse(source, filename=str(path))
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            setattr(child, "_parent", parent)
     findings: list[dict[str, Any]] = []
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -95,6 +118,8 @@ def _collect_noop_findings(path: Path, source: str) -> list[dict[str, Any]]:
             continue
         reason = _is_noop_body(node.body)
         if reason is None:
+            continue
+        if _is_protocol_ellipsis_method(node, reason=reason):
             continue
         findings.append(
             {
@@ -114,7 +139,7 @@ def evaluate_noop_critical_paths(*, roots: list[Path]) -> dict[str, Any]:
     files = _iter_python_files(roots)
     for path in files:
         try:
-            source = path.read_text(encoding="utf-8")
+            source = path.read_text(encoding="utf-8-sig")
             findings.extend(_collect_noop_findings(path, source))
         except (OSError, SyntaxError) as exc:
             parse_errors.append({"path": str(path), "error": str(exc)})
