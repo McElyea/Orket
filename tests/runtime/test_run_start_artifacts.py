@@ -128,6 +128,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["local_remote_route_policy"]["schema_version"] == "1.0"
     route_lanes = [row["route_lane"] for row in payload["local_remote_route_policy"]["lanes"]]
     assert "protocol_governed" in route_lanes
+    assert payload["failure_replay_harness_contract"]["schema_version"] == "1.0"
+    replay_required_outputs = payload["failure_replay_harness_contract"]["required_output_fields"]
+    assert "drift" in replay_required_outputs
     assert payload["promotion_rollback_criteria"]["schema_version"] == "1.0"
     rollback_triggers = [row["trigger"] for row in payload["promotion_rollback_criteria"]["triggers"]]
     assert "acceptance_gate_failure" in rollback_triggers
@@ -167,6 +170,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["observability_redaction_test_contract_path"]).exists()
     assert Path(payload["trust_language_review_policy_path"]).exists()
     assert Path(payload["local_remote_route_policy_path"]).exists()
+    assert Path(payload["failure_replay_harness_contract_path"]).exists()
     assert Path(payload["promotion_rollback_criteria_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()

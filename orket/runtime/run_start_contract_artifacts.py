@@ -10,6 +10,7 @@ from orket.runtime.demo_production_labeling_policy import demo_production_labeli
 from orket.runtime.evidence_package_generator_contract import evidence_package_generator_contract_snapshot
 from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_snapshot
 from orket.runtime.feature_flag_expiration_policy import feature_flag_expiration_policy_snapshot
+from orket.runtime.failure_replay_harness_contract import failure_replay_harness_contract_snapshot
 from orket.runtime.human_correction_capture_policy import human_correction_capture_policy_snapshot
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
 from orket.runtime.interface_freeze_windows import interface_freeze_windows_snapshot
@@ -295,6 +296,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "local_remote_route_policy.json",
         local_remote_route_policy_snapshot,
         "E_RUN_LOCAL_REMOTE_ROUTE_POLICY_IMMUTABLE",
+    ),
+    (
+        "failure_replay_harness_contract",
+        "failure_replay_harness_contract.json",
+        failure_replay_harness_contract_snapshot,
+        "E_RUN_FAILURE_REPLAY_HARNESS_CONTRACT_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",

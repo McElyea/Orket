@@ -88,6 +88,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_observability_redaction_tests.py`
   - `check_trust_language_review.py`
   - `check_local_remote_route_policy.py`
+  - `check_failure_replay_harness_contract.py`
   - `check_promotion_rollback_criteria.py`
   - `check_environment_parity_checklist.py`
   - `check_runtime_boundary_audit_checklist.py`
@@ -102,6 +103,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `build_cross_lane_dependency_map.py`
   - `export_state_transition_mermaid.py`
   - `generate_runtime_truth_evidence_package.py`
+  - `run_failure_replay_harness.py`
 
 ## Migration Rule
 

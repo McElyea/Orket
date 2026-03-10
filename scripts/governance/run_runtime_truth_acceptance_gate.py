@@ -69,6 +69,9 @@ from scripts.governance.check_trust_language_review import (
 from scripts.governance.check_local_remote_route_policy import (
     evaluate_local_remote_route_policy,
 )
+from scripts.governance.check_failure_replay_harness_contract import (
+    evaluate_failure_replay_harness_contract,
+)
 from scripts.governance.check_promotion_rollback_criteria import (
     evaluate_promotion_rollback_criteria,
 )
@@ -120,6 +123,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "observability_redaction_test_contract.json",
     "trust_language_review_policy.json",
     "local_remote_route_policy.json",
+    "failure_replay_harness_contract.json",
     "promotion_rollback_criteria.json",
 )
 
@@ -264,6 +268,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip local-vs-remote route policy check.",
     )
     parser.add_argument(
+        "--skip-failure-replay-harness-contract-check",
+        action="store_true",
+        help="Skip failure replay harness contract check.",
+    )
+    parser.add_argument(
         "--skip-promotion-rollback-check",
         action="store_true",
         help="Skip promotion rollback criteria contract check.",
@@ -306,6 +315,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_observability_redaction_tests: bool = True,
     check_trust_language_review: bool = True,
     check_local_remote_route_policy: bool = True,
+    check_failure_replay_harness_contract: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
@@ -581,6 +591,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(local_remote_route_payload.get("ok")):
             failures.append("local_remote_route_policy_check_failed")
 
+    if check_failure_replay_harness_contract:
+        replay_harness_contract_payload = evaluate_failure_replay_harness_contract()
+        details["failure_replay_harness_contract_check"] = {
+            "ok": bool(replay_harness_contract_payload.get("ok")),
+            "required_output_field_count": int(replay_harness_contract_payload.get("required_output_field_count") or 0),
+        }
+        if not bool(replay_harness_contract_payload.get("ok")):
+            failures.append("failure_replay_harness_contract_check_failed")
+
     if check_promotion_rollback:
         rollback_payload = evaluate_promotion_rollback_criteria()
         details["promotion_rollback_criteria_check"] = {
@@ -630,6 +649,7 @@ def main(argv: list[str] | None = None) -> int:
         check_observability_redaction_tests=not bool(args.skip_observability_redaction_tests_check),
         check_trust_language_review=not bool(args.skip_trust_language_review_check),
         check_local_remote_route_policy=not bool(args.skip_local_remote_route_policy_check),
+        check_failure_replay_harness_contract=not bool(args.skip_failure_replay_harness_contract_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))

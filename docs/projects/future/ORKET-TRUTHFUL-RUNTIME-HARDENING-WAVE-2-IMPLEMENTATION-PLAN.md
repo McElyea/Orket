@@ -40,6 +40,7 @@ Completed in active execution:
 25. observability redaction tests contract/checker, run-start artifact, and acceptance-gate enforcement
 26. trust language review policy/checker, run-start artifact, and acceptance-gate enforcement
 27. local-vs-remote route policy contract/checker, run-start artifact, and acceptance-gate enforcement
+28. failure replay harness contract/checker, harness runner, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

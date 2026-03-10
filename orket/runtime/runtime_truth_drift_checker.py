@@ -10,6 +10,7 @@ from orket.runtime.demo_production_labeling_policy import validate_demo_producti
 from orket.runtime.evidence_package_generator_contract import validate_evidence_package_generator_contract
 from orket.runtime.execution_readiness_rubric import validate_execution_readiness_rubric
 from orket.runtime.feature_flag_expiration_policy import validate_feature_flag_expiration_policy
+from orket.runtime.failure_replay_harness_contract import validate_failure_replay_harness_contract
 from orket.runtime.human_correction_capture_policy import validate_human_correction_capture_policy
 from orket.runtime.idempotency_discipline_policy import validate_idempotency_discipline_policy
 from orket.runtime.interface_freeze_windows import validate_interface_freeze_windows
@@ -624,6 +625,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "local_remote_route_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        required_output_fields = validate_failure_replay_harness_contract()
+        checks.append(
+            {
+                "check": "failure_replay_harness_contract_valid",
+                "ok": True,
+                "count": len(required_output_fields),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "failure_replay_harness_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }
