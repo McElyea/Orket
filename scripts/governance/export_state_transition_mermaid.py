@@ -2,20 +2,28 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - script execution fallback
-    import sys
+    import importlib.util
 
-    REPO_ROOT = Path(__file__).resolve().parents[2]
-    if str(REPO_ROOT) not in sys.path:
-        sys.path.insert(0, str(REPO_ROOT))
-    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
+    spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
+    if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
+        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -91,7 +99,7 @@ def export_state_transition_mermaid(
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(argv or [])
+    args = _parse_args(sys.argv[1:] if argv is None else argv)
     out_mermaid = Path(args.out_mermaid).resolve()
     out_json = Path(args.out_json).resolve() if str(args.out_json or "").strip() else None
     payload = export_state_transition_mermaid(out_mermaid=out_mermaid, out_json=out_json)

@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
 from scripts.governance.check_noop_critical_paths import (
@@ -134,7 +139,7 @@ def evaluate_runtime_truth_acceptance_gate(
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(argv or [])
+    args = _parse_args(sys.argv[1:] if argv is None else argv)
     payload = evaluate_runtime_truth_acceptance_gate(
         workspace=Path(args.workspace).resolve(),
         run_id=str(args.run_id or "").strip(),
