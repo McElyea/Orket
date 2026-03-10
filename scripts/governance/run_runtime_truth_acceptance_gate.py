@@ -78,6 +78,9 @@ from scripts.governance.check_cold_start_truth_tests import (
 from scripts.governance.check_persistence_corruption_test_suite import (
     evaluate_persistence_corruption_test_suite,
 )
+from scripts.governance.check_long_session_soak_tests import (
+    evaluate_long_session_soak_tests,
+)
 from scripts.governance.check_naming_discipline_policy import (
     evaluate_naming_discipline_policy,
 )
@@ -135,6 +138,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "failure_replay_harness_contract.json",
     "cold_start_truth_test_contract.json",
     "persistence_corruption_test_contract.json",
+    "long_session_soak_test_contract.json",
     "naming_discipline_policy.json",
     "promotion_rollback_criteria.json",
 )
@@ -295,6 +299,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip persistence corruption test suite check.",
     )
     parser.add_argument(
+        "--skip-long-session-soak-tests-check",
+        action="store_true",
+        help="Skip long-session soak tests check.",
+    )
+    parser.add_argument(
         "--skip-naming-discipline-policy-check",
         action="store_true",
         help="Skip naming discipline policy check.",
@@ -345,6 +354,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_failure_replay_harness_contract: bool = True,
     check_cold_start_truth_tests: bool = True,
     check_persistence_corruption_tests: bool = True,
+    check_long_session_soak_tests: bool = True,
     check_naming_discipline_policy: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
@@ -648,6 +658,16 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(persistence_corruption_payload.get("ok")):
             failures.append("persistence_corruption_tests_check_failed")
 
+    if check_long_session_soak_tests:
+        long_session_soak_payload = evaluate_long_session_soak_tests()
+        details["long_session_soak_tests_check"] = {
+            "ok": bool(long_session_soak_payload.get("ok")),
+            "check_count": int(long_session_soak_payload.get("check_count") or 0),
+            "turn_count": int(long_session_soak_payload.get("turn_count") or 0),
+        }
+        if not bool(long_session_soak_payload.get("ok")):
+            failures.append("long_session_soak_tests_check_failed")
+
     if check_naming_discipline_policy:
         naming_policy_payload = evaluate_naming_discipline_policy()
         details["naming_discipline_policy_check"] = {
@@ -709,6 +729,7 @@ def main(argv: list[str] | None = None) -> int:
         check_failure_replay_harness_contract=not bool(args.skip_failure_replay_harness_contract_check),
         check_cold_start_truth_tests=not bool(args.skip_cold_start_truth_tests_check),
         check_persistence_corruption_tests=not bool(args.skip_persistence_corruption_tests_check),
+        check_long_session_soak_tests=not bool(args.skip_long_session_soak_tests_check),
         check_naming_discipline_policy=not bool(args.skip_naming_discipline_policy_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )

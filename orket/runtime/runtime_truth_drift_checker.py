@@ -17,6 +17,7 @@ from orket.runtime.idempotency_discipline_policy import validate_idempotency_dis
 from orket.runtime.interface_freeze_windows import validate_interface_freeze_windows
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.local_remote_route_policy import validate_local_remote_route_policy
+from orket.runtime.long_session_soak_test_contract import validate_long_session_soak_test_contract
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.non_fatal_error_budget import validate_non_fatal_error_budget
 from orket.runtime.naming_discipline_policy import validate_naming_discipline_policy
@@ -682,6 +683,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "persistence_corruption_test_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        check_ids = validate_long_session_soak_test_contract()
+        checks.append(
+            {
+                "check": "long_session_soak_test_contract_valid",
+                "ok": True,
+                "count": len(check_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "long_session_soak_test_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }

@@ -91,6 +91,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_failure_replay_harness_contract.py`
   - `check_cold_start_truth_tests.py`
   - `check_persistence_corruption_test_suite.py`
+  - `check_long_session_soak_tests.py`
   - `check_naming_discipline_policy.py`
   - `check_promotion_rollback_criteria.py`
   - `check_environment_parity_checklist.py`

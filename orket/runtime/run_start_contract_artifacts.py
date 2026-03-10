@@ -17,6 +17,7 @@ from orket.runtime.idempotency_discipline_policy import idempotency_discipline_p
 from orket.runtime.interface_freeze_windows import interface_freeze_windows_snapshot
 from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
 from orket.runtime.local_remote_route_policy import local_remote_route_policy_snapshot
+from orket.runtime.long_session_soak_test_contract import long_session_soak_test_contract_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
 from orket.runtime.naming_discipline_policy import naming_discipline_policy_snapshot
@@ -317,6 +318,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "persistence_corruption_test_contract.json",
         persistence_corruption_test_contract_snapshot,
         "E_RUN_PERSISTENCE_CORRUPTION_TEST_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "long_session_soak_test_contract",
+        "long_session_soak_test_contract.json",
+        long_session_soak_test_contract_snapshot,
+        "E_RUN_LONG_SESSION_SOAK_TEST_CONTRACT_IMMUTABLE",
     ),
     (
         "naming_discipline_policy",

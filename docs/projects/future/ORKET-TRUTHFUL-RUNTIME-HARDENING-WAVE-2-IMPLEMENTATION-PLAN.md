@@ -44,6 +44,7 @@ Completed in active execution:
 29. cold-start truth tests contract/checker, run-start artifact, and acceptance-gate enforcement
 30. naming discipline policy/checker, run-start artifact, and acceptance-gate enforcement
 31. persistence corruption test suite contract/checker, run-start artifact, and acceptance-gate enforcement
+32. long-session soak tests contract/checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 
