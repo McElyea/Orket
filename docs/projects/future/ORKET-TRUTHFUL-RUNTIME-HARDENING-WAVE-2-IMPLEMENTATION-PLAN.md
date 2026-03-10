@@ -45,6 +45,7 @@ Completed in active execution:
 30. naming discipline policy/checker, run-start artifact, and acceptance-gate enforcement
 31. persistence corruption test suite contract/checker, run-start artifact, and acceptance-gate enforcement
 32. long-session soak tests contract/checker, run-start artifact, and acceptance-gate enforcement
+33. resource pressure simulation lane contract/checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

@@ -27,6 +27,7 @@ from orket.runtime.persistence_corruption_test_contract import persistence_corru
 from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
+from orket.runtime.resource_pressure_simulation_lane import resource_pressure_simulation_lane_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_config_ownership_map import runtime_config_ownership_map_snapshot
 from orket.runtime.runtime_invariant_registry import runtime_invariant_registry_snapshot
@@ -324,6 +325,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "long_session_soak_test_contract.json",
         long_session_soak_test_contract_snapshot,
         "E_RUN_LONG_SESSION_SOAK_TEST_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "resource_pressure_simulation_lane",
+        "resource_pressure_simulation_lane.json",
+        resource_pressure_simulation_lane_snapshot,
+        "E_RUN_RESOURCE_PRESSURE_SIMULATION_LANE_IMMUTABLE",
     ),
     (
         "naming_discipline_policy",
