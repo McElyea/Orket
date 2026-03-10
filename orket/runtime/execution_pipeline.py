@@ -33,8 +33,10 @@ from orket.application.services.runtime_policy import (
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
+from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
+from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.state_transition_registry import validate_state_token
 from orket.runtime.workload_adapters import build_cards_workload_contract
 from orket.runtime.workload_shell import SharedWorkloadShell
@@ -402,6 +404,19 @@ class ExecutionPipeline:
                 )
                 await self.async_cards.save(card_data)
 
+        deterministic_mode_contract = deterministic_mode_contract_snapshot()
+        route_decision_artifact = build_route_decision_artifact(
+            run_id=run_id,
+            workload_kind="epic",
+            execution_runtime_node=self.execution_runtime_node,
+            pipeline_wiring_node=self.pipeline_wiring_node,
+            target_issue_id=target_issue_id,
+            resume_mode=resume_mode,
+            deterministic_mode_enabled=bool(
+                deterministic_mode_contract.get("deterministic_mode_enabled")
+            ),
+        )
+
         log_event(
             "session_start",
             {"epic": epic.name, "run_id": run_id, "build_id": active_build},
@@ -454,7 +469,12 @@ class ExecutionPipeline:
             department=self.department,
             build_id=active_build,
             summary={"target_issue_id": target_issue_id, "resume_mode": bool(resume_mode)},
-            artifacts={**self._run_artifact_refs(run_id), **dict(run_contract_artifacts)},
+            artifacts={
+                **self._run_artifact_refs(run_id),
+                **dict(run_contract_artifacts),
+                "deterministic_mode_contract": dict(deterministic_mode_contract),
+                "route_decision_artifact": dict(route_decision_artifact),
+            },
         )
 
         workflow_terminal_statuses = {
@@ -553,6 +573,8 @@ class ExecutionPipeline:
 
             artifacts = self._run_artifact_refs(run_id)
             artifacts.update(dict(run_contract_artifacts))
+            artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
+            artifacts["route_decision_artifact"] = dict(route_decision_artifact)
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection
@@ -608,6 +630,8 @@ class ExecutionPipeline:
             )
             artifacts = self._run_artifact_refs(run_id)
             artifacts.update(dict(run_contract_artifacts))
+            artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
+            artifacts["route_decision_artifact"] = dict(route_decision_artifact)
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection

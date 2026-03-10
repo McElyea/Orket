@@ -327,6 +327,13 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     assert artifact_json["run_identity"]["run_id"] == "sess-protocol-contract-bootstrap"
     assert artifact_json["run_identity"]["workload"] == "protocol_ledger_epic_contract_bootstrap"
     assert artifact_json["run_determinism_class"] == "workspace"
+    assert artifact_json["deterministic_mode_contract"]["schema_version"] == "1.0"
+    assert artifact_json["deterministic_mode_contract"]["deterministic_mode_enabled"] is False
+    assert artifact_json["deterministic_mode_contract"]["resolution_source"] == "default"
+    assert artifact_json["route_decision_artifact"]["schema_version"] == "1.0"
+    assert artifact_json["route_decision_artifact"]["route_target"] == "epic"
+    assert artifact_json["route_decision_artifact"]["reason_code"] == "default_epic_route"
+    assert artifact_json["route_decision_artifact"]["deterministic_mode_enabled"] is False
     assert artifact_json["capability_manifest"]["run_id"] == "sess-protocol-contract-bootstrap"
     assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
     assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
