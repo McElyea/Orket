@@ -33,6 +33,7 @@ Completed in active execution:
 18. workspace hygiene rules contract, checker, run-start artifact, and acceptance-gate enforcement
 19. canonical examples library contract, checker, run-start artifact, and acceptance-gate enforcement
 20. spec debt queue contract, checker, run-start artifact, and acceptance-gate enforcement
+21. promotion rollback criteria contract, checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

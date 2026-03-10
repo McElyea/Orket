@@ -14,6 +14,7 @@ from orket.runtime.idempotency_discipline_policy import validate_idempotency_dis
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
+from orket.runtime.promotion_rollback_criteria import validate_promotion_rollback_criteria
 from orket.runtime.release_confidence_scorecard import validate_release_confidence_scorecard
 from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
 from orket.runtime.spec_debt_queue import validate_spec_debt_queue
@@ -509,6 +510,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "spec_debt_queue_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        triggers = validate_promotion_rollback_criteria()
+        checks.append(
+            {
+                "check": "promotion_rollback_criteria_valid",
+                "ok": True,
+                "count": len(triggers),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "promotion_rollback_criteria_valid",
                 "ok": False,
                 "error": str(exc),
             }

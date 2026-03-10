@@ -23,6 +23,7 @@ from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
+from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_config_ownership_map import runtime_config_ownership_map_snapshot
@@ -267,6 +268,12 @@ _CONTRACT_SNAPSHOT_DEFS: tuple[tuple[str, str, ContractSnapshotFactory, str], ..
         "spec_debt_queue.json",
         spec_debt_queue_snapshot,
         "E_RUN_SPEC_DEBT_QUEUE_IMMUTABLE",
+    ),
+    (
+        "promotion_rollback_criteria",
+        "promotion_rollback_criteria.json",
+        promotion_rollback_criteria_snapshot,
+        "E_RUN_PROMOTION_ROLLBACK_CRITERIA_IMMUTABLE",
     ),
     (
         "ledger_event_schema",
