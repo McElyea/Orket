@@ -16,6 +16,7 @@ from orket.runtime.interface_freeze_windows import validate_interface_freeze_win
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.non_fatal_error_budget import validate_non_fatal_error_budget
+from orket.runtime.observability_redaction_test_contract import validate_observability_redaction_test_contract
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
 from orket.runtime.promotion_rollback_criteria import validate_promotion_rollback_criteria
 from orket.runtime.release_confidence_scorecard import validate_release_confidence_scorecard
@@ -567,6 +568,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "evidence_package_generator_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        check_ids = validate_observability_redaction_test_contract()
+        checks.append(
+            {
+                "check": "observability_redaction_test_contract_valid",
+                "ok": True,
+                "count": len(check_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "observability_redaction_test_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }

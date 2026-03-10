@@ -119,6 +119,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["evidence_package_generator_contract"]["schema_version"] == "1.0"
     required_sections = payload["evidence_package_generator_contract"]["required_sections"]
     assert "gate_summary" in required_sections
+    assert payload["observability_redaction_test_contract"]["schema_version"] == "1.0"
+    redaction_check_ids = [row["check_id"] for row in payload["observability_redaction_test_contract"]["checks"]]
+    assert "env_secret_values_masked" in redaction_check_ids
     assert payload["promotion_rollback_criteria"]["schema_version"] == "1.0"
     rollback_triggers = [row["trigger"] for row in payload["promotion_rollback_criteria"]["triggers"]]
     assert "acceptance_gate_failure" in rollback_triggers
@@ -155,6 +158,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["non_fatal_error_budget_path"]).exists()
     assert Path(payload["interface_freeze_windows_path"]).exists()
     assert Path(payload["evidence_package_generator_contract_path"]).exists()
+    assert Path(payload["observability_redaction_test_contract_path"]).exists()
     assert Path(payload["promotion_rollback_criteria_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()

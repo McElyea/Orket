@@ -60,6 +60,9 @@ from scripts.governance.check_interface_freeze_windows import (
 from scripts.governance.check_evidence_package_generator_contract import (
     evaluate_evidence_package_generator_contract,
 )
+from scripts.governance.check_observability_redaction_tests import (
+    evaluate_observability_redaction_tests,
+)
 from scripts.governance.check_promotion_rollback_criteria import (
     evaluate_promotion_rollback_criteria,
 )
@@ -108,6 +111,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "non_fatal_error_budget.json",
     "interface_freeze_windows.json",
     "evidence_package_generator_contract.json",
+    "observability_redaction_test_contract.json",
     "promotion_rollback_criteria.json",
 )
 
@@ -237,6 +241,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip evidence package generator contract check.",
     )
     parser.add_argument(
+        "--skip-observability-redaction-tests-check",
+        action="store_true",
+        help="Skip observability redaction tests check.",
+    )
+    parser.add_argument(
         "--skip-promotion-rollback-check",
         action="store_true",
         help="Skip promotion rollback criteria contract check.",
@@ -276,6 +285,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_non_fatal_error_budget: bool = True,
     check_interface_freeze_windows: bool = True,
     check_evidence_package_generator: bool = True,
+    check_observability_redaction_tests: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
@@ -524,6 +534,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(evidence_contract_payload.get("ok")):
             failures.append("evidence_package_generator_contract_check_failed")
 
+    if check_observability_redaction_tests:
+        redaction_tests_payload = evaluate_observability_redaction_tests()
+        details["observability_redaction_tests_check"] = {
+            "ok": bool(redaction_tests_payload.get("ok")),
+            "check_count": int(redaction_tests_payload.get("check_count") or 0),
+        }
+        if not bool(redaction_tests_payload.get("ok")):
+            failures.append("observability_redaction_tests_check_failed")
+
     if check_promotion_rollback:
         rollback_payload = evaluate_promotion_rollback_criteria()
         details["promotion_rollback_criteria_check"] = {
@@ -570,6 +589,7 @@ def main(argv: list[str] | None = None) -> int:
         check_non_fatal_error_budget=not bool(args.skip_non_fatal_error_budget_check),
         check_interface_freeze_windows=not bool(args.skip_interface_freeze_windows_check),
         check_evidence_package_generator=not bool(args.skip_evidence_package_generator_check),
+        check_observability_redaction_tests=not bool(args.skip_observability_redaction_tests_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))

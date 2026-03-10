@@ -16,6 +16,7 @@ from orket.runtime.interface_freeze_windows import interface_freeze_windows_snap
 from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
+from orket.runtime.observability_redaction_test_contract import observability_redaction_test_contract_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
 from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
@@ -274,6 +275,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "evidence_package_generator_contract.json",
         evidence_package_generator_contract_snapshot,
         "E_RUN_EVIDENCE_PACKAGE_GENERATOR_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "observability_redaction_test_contract",
+        "observability_redaction_test_contract.json",
+        observability_redaction_test_contract_snapshot,
+        "E_RUN_OBSERVABILITY_REDACTION_TEST_CONTRACT_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",
