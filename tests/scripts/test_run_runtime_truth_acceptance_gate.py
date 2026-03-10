@@ -57,6 +57,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["noop_critical_path_check"]["ok"] is True
     assert payload["details"]["environment_parity_check"]["ok"] is True
     assert payload["details"]["runtime_invariant_registry_check"]["ok"] is True
+    assert payload["details"]["runtime_config_ownership_map_check"]["ok"] is True
     assert payload["details"]["structured_warning_policy_check"]["ok"] is True
     assert payload["details"]["retry_classification_policy_check"]["ok"] is True
     assert payload["details"]["runtime_boundary_audit_check"]["ok"] is True
@@ -193,6 +194,31 @@ def test_runtime_truth_acceptance_gate_fails_when_runtime_invariant_registry_che
     )
     assert payload["ok"] is False
     assert "runtime_invariant_registry_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_runtime_config_ownership_map_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_runtime_config_ownership_map",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "config_key_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "runtime_config_ownership_map_check_failed" in payload["failures"]
 
 
 # Layer: contract

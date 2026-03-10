@@ -22,6 +22,9 @@ from scripts.governance.check_noop_critical_paths import (
     evaluate_noop_critical_paths,
 )
 from scripts.governance.check_environment_parity_checklist import evaluate_environment_parity_checklist
+from scripts.governance.check_runtime_config_ownership_map import (
+    evaluate_runtime_config_ownership_map,
+)
 from scripts.governance.check_runtime_invariant_registry import (
     evaluate_runtime_invariant_registry,
 )
@@ -195,6 +198,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-runtime-invariant-registry-check",
         action="store_true",
         help="Skip runtime invariant registry contract check.",
+    )
+    parser.add_argument(
+        "--skip-runtime-config-ownership-map-check",
+        action="store_true",
+        help="Skip runtime config ownership map contract check.",
     )
     parser.add_argument(
         "--skip-warning-policy-check",
@@ -382,6 +390,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_noop_critical_paths: bool = True,
     check_environment_parity: bool = True,
     check_runtime_invariant_registry: bool = True,
+    check_runtime_config_ownership_map: bool = True,
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
     check_boundary_audit: bool = True,
@@ -491,6 +500,15 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(invariant_payload.get("ok")):
             failures.append("runtime_invariant_registry_check_failed")
+
+    if check_runtime_config_ownership_map:
+        config_map_payload = evaluate_runtime_config_ownership_map()
+        details["runtime_config_ownership_map_check"] = {
+            "ok": bool(config_map_payload.get("ok")),
+            "config_key_count": int(config_map_payload.get("config_key_count") or 0),
+        }
+        if not bool(config_map_payload.get("ok")):
+            failures.append("runtime_config_ownership_map_check_failed")
 
     if check_warning_policy:
         warning_policy_payload = evaluate_structured_warning_policy()
@@ -818,6 +836,7 @@ def main(argv: list[str] | None = None) -> int:
         check_noop_critical_paths=not bool(args.skip_noop_critical_path_check),
         check_environment_parity=not bool(args.skip_environment_parity_check),
         check_runtime_invariant_registry=not bool(args.skip_runtime_invariant_registry_check),
+        check_runtime_config_ownership_map=not bool(args.skip_runtime_config_ownership_map_check),
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_boundary_audit=not bool(args.skip_boundary_audit_check),
