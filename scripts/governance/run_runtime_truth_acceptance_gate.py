@@ -57,6 +57,9 @@ from scripts.governance.check_non_fatal_error_budget import (
 from scripts.governance.check_interface_freeze_windows import (
     evaluate_interface_freeze_windows,
 )
+from scripts.governance.check_evidence_package_generator_contract import (
+    evaluate_evidence_package_generator_contract,
+)
 from scripts.governance.check_promotion_rollback_criteria import (
     evaluate_promotion_rollback_criteria,
 )
@@ -104,6 +107,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "spec_debt_queue.json",
     "non_fatal_error_budget.json",
     "interface_freeze_windows.json",
+    "evidence_package_generator_contract.json",
     "promotion_rollback_criteria.json",
 )
 
@@ -228,6 +232,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip interface freeze windows contract check.",
     )
     parser.add_argument(
+        "--skip-evidence-package-generator-check",
+        action="store_true",
+        help="Skip evidence package generator contract check.",
+    )
+    parser.add_argument(
         "--skip-promotion-rollback-check",
         action="store_true",
         help="Skip promotion rollback criteria contract check.",
@@ -266,6 +275,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_spec_debt_queue: bool = True,
     check_non_fatal_error_budget: bool = True,
     check_interface_freeze_windows: bool = True,
+    check_evidence_package_generator: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
@@ -505,6 +515,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(freeze_windows_payload.get("ok")):
             failures.append("interface_freeze_windows_check_failed")
 
+    if check_evidence_package_generator:
+        evidence_contract_payload = evaluate_evidence_package_generator_contract()
+        details["evidence_package_generator_contract_check"] = {
+            "ok": bool(evidence_contract_payload.get("ok")),
+            "required_section_count": int(evidence_contract_payload.get("required_section_count") or 0),
+        }
+        if not bool(evidence_contract_payload.get("ok")):
+            failures.append("evidence_package_generator_contract_check_failed")
+
     if check_promotion_rollback:
         rollback_payload = evaluate_promotion_rollback_criteria()
         details["promotion_rollback_criteria_check"] = {
@@ -550,6 +569,7 @@ def main(argv: list[str] | None = None) -> int:
         check_spec_debt_queue=not bool(args.skip_spec_debt_queue_check),
         check_non_fatal_error_budget=not bool(args.skip_non_fatal_error_budget_check),
         check_interface_freeze_windows=not bool(args.skip_interface_freeze_windows_check),
+        check_evidence_package_generator=not bool(args.skip_evidence_package_generator_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))

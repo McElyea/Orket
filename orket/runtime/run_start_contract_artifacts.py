@@ -7,6 +7,7 @@ from orket.runtime.capability_fallback_hierarchy import capability_fallback_hier
 from orket.runtime.canonical_examples_library import canonical_examples_library_snapshot
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.demo_production_labeling_policy import demo_production_labeling_policy_snapshot
+from orket.runtime.evidence_package_generator_contract import evidence_package_generator_contract_snapshot
 from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_snapshot
 from orket.runtime.feature_flag_expiration_policy import feature_flag_expiration_policy_snapshot
 from orket.runtime.human_correction_capture_policy import human_correction_capture_policy_snapshot
@@ -267,6 +268,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "interface_freeze_windows.json",
         interface_freeze_windows_snapshot,
         "E_RUN_INTERFACE_FREEZE_WINDOWS_IMMUTABLE",
+    ),
+    (
+        "evidence_package_generator_contract",
+        "evidence_package_generator_contract.json",
+        evidence_package_generator_contract_snapshot,
+        "E_RUN_EVIDENCE_PACKAGE_GENERATOR_CONTRACT_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",

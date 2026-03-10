@@ -34,6 +34,7 @@ _TRACE_IDS: dict[str, str] = {
     "spec_debt_queue": "TRUTH-W2E-SPEC-DEBT-QUEUE",
     "non_fatal_error_budget": "TRUTH-W2E-NON-FATAL-ERROR-BUDGET",
     "interface_freeze_windows": "TRUTH-W2E-INTERFACE-FREEZE-WINDOWS",
+    "evidence_package_generator_contract": "TRUTH-W2E-EVIDENCE-PACKAGE-GENERATOR",
     "promotion_rollback_criteria": "TRUTH-W2E-PROMOTION-ROLLBACK-CRITERIA",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",

@@ -36,6 +36,7 @@ Completed in active execution:
 21. promotion rollback criteria contract, checker, run-start artifact, and acceptance-gate enforcement
 22. non-fatal error budget contract, checker, run-start artifact, and acceptance-gate enforcement
 23. interface freeze windows contract, checker, run-start artifact, and acceptance-gate enforcement
+24. evidence package generator contract/checker, generator script, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

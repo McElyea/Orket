@@ -116,6 +116,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["interface_freeze_windows"]["schema_version"] == "1.0"
     freeze_window_ids = [row["window_id"] for row in payload["interface_freeze_windows"]["windows"]]
     assert "pre_promotion_contract_freeze" in freeze_window_ids
+    assert payload["evidence_package_generator_contract"]["schema_version"] == "1.0"
+    required_sections = payload["evidence_package_generator_contract"]["required_sections"]
+    assert "gate_summary" in required_sections
     assert payload["promotion_rollback_criteria"]["schema_version"] == "1.0"
     rollback_triggers = [row["trigger"] for row in payload["promotion_rollback_criteria"]["triggers"]]
     assert "acceptance_gate_failure" in rollback_triggers
@@ -151,6 +154,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["spec_debt_queue_path"]).exists()
     assert Path(payload["non_fatal_error_budget_path"]).exists()
     assert Path(payload["interface_freeze_windows_path"]).exists()
+    assert Path(payload["evidence_package_generator_contract_path"]).exists()
     assert Path(payload["promotion_rollback_criteria_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()

@@ -84,6 +84,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_spec_debt_queue.py`
   - `check_non_fatal_error_budget.py`
   - `check_interface_freeze_windows.py`
+  - `check_evidence_package_generator_contract.py`
   - `check_promotion_rollback_criteria.py`
   - `check_environment_parity_checklist.py`
   - `check_runtime_boundary_audit_checklist.py`
@@ -97,6 +98,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `build_runtime_truth_dashboard_seed.py`
   - `build_cross_lane_dependency_map.py`
   - `export_state_transition_mermaid.py`
+  - `generate_runtime_truth_evidence_package.py`
 
 ## Migration Rule
 

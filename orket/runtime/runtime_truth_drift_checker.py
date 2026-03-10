@@ -7,6 +7,7 @@ from orket.runtime.canonical_examples_library import validate_canonical_examples
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.artifact_provenance_block_policy import validate_artifact_provenance_block_policy
 from orket.runtime.demo_production_labeling_policy import validate_demo_production_labeling_policy
+from orket.runtime.evidence_package_generator_contract import validate_evidence_package_generator_contract
 from orket.runtime.execution_readiness_rubric import validate_execution_readiness_rubric
 from orket.runtime.feature_flag_expiration_policy import validate_feature_flag_expiration_policy
 from orket.runtime.human_correction_capture_policy import validate_human_correction_capture_policy
@@ -548,6 +549,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "interface_freeze_windows_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        required_sections = validate_evidence_package_generator_contract()
+        checks.append(
+            {
+                "check": "evidence_package_generator_contract_valid",
+                "ok": True,
+                "count": len(required_sections),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "evidence_package_generator_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }
