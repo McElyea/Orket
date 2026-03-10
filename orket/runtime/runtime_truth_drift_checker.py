@@ -46,6 +46,7 @@ from orket.runtime.timeout_streaming_contracts import (
     timeout_semantics_snapshot,
 )
 from orket.runtime.trust_language_review_policy import validate_trust_language_review_policy
+from orket.runtime.ui_lane_security_boundary_test_contract import validate_ui_lane_security_boundary_test_contract
 
 
 def runtime_truth_contract_drift_report() -> dict[str, Any]:
@@ -720,6 +721,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "resource_pressure_simulation_lane_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        check_ids = validate_ui_lane_security_boundary_test_contract()
+        checks.append(
+            {
+                "check": "ui_lane_security_boundary_test_contract_valid",
+                "ok": True,
+                "count": len(check_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "ui_lane_security_boundary_test_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }

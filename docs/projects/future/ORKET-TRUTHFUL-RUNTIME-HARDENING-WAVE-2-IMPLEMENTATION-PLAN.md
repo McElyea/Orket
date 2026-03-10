@@ -46,6 +46,7 @@ Completed in active execution:
 31. persistence corruption test suite contract/checker, run-start artifact, and acceptance-gate enforcement
 32. long-session soak tests contract/checker, run-start artifact, and acceptance-gate enforcement
 33. resource pressure simulation lane contract/checker, run-start artifact, and acceptance-gate enforcement
+34. UI lane security boundary tests contract/checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

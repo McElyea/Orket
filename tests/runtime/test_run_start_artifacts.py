@@ -143,6 +143,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["resource_pressure_simulation_lane"]["schema_version"] == "1.0"
     pressure_check_ids = [row["check_id"] for row in payload["resource_pressure_simulation_lane"]["checks"]]
     assert "cpu_pressure_high_delta_volume" in pressure_check_ids
+    assert payload["ui_lane_security_boundary_test_contract"]["schema_version"] == "1.0"
+    ui_boundary_check_ids = [row["check_id"] for row in payload["ui_lane_security_boundary_test_contract"]["checks"]]
+    assert "explorer_path_traversal_blocked" in ui_boundary_check_ids
     assert payload["naming_discipline_policy"]["schema_version"] == "1.0"
     convention_ids = [row["convention_id"] for row in payload["naming_discipline_policy"]["conventions"]]
     assert "artifact_filenames_match_keys" in convention_ids
@@ -190,6 +193,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["persistence_corruption_test_contract_path"]).exists()
     assert Path(payload["long_session_soak_test_contract_path"]).exists()
     assert Path(payload["resource_pressure_simulation_lane_path"]).exists()
+    assert Path(payload["ui_lane_security_boundary_test_contract_path"]).exists()
     assert Path(payload["naming_discipline_policy_path"]).exists()
     assert Path(payload["promotion_rollback_criteria_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()

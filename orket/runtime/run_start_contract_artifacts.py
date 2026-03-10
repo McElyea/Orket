@@ -46,6 +46,7 @@ from orket.runtime.timeout_streaming_contracts import (
     timeout_semantics_snapshot,
 )
 from orket.runtime.trust_language_review_policy import trust_language_review_policy_snapshot
+from orket.runtime.ui_lane_security_boundary_test_contract import ui_lane_security_boundary_test_contract_snapshot
 from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
 from orket.runtime.workspace_hygiene_rules import workspace_hygiene_rules_snapshot
 
@@ -331,6 +332,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "resource_pressure_simulation_lane.json",
         resource_pressure_simulation_lane_snapshot,
         "E_RUN_RESOURCE_PRESSURE_SIMULATION_LANE_IMMUTABLE",
+    ),
+    (
+        "ui_lane_security_boundary_test_contract",
+        "ui_lane_security_boundary_test_contract.json",
+        ui_lane_security_boundary_test_contract_snapshot,
+        "E_RUN_UI_LANE_SECURITY_BOUNDARY_TEST_CONTRACT_IMMUTABLE",
     ),
     (
         "naming_discipline_policy",

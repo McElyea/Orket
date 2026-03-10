@@ -84,6 +84,9 @@ from scripts.governance.check_long_session_soak_tests import (
 from scripts.governance.check_resource_pressure_simulation_lane import (
     evaluate_resource_pressure_simulation_lane,
 )
+from scripts.governance.check_ui_lane_security_boundary_tests import (
+    evaluate_ui_lane_security_boundary_tests,
+)
 from scripts.governance.check_naming_discipline_policy import (
     evaluate_naming_discipline_policy,
 )
@@ -143,6 +146,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "persistence_corruption_test_contract.json",
     "long_session_soak_test_contract.json",
     "resource_pressure_simulation_lane.json",
+    "ui_lane_security_boundary_test_contract.json",
     "naming_discipline_policy.json",
     "promotion_rollback_criteria.json",
 )
@@ -313,6 +317,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip resource pressure simulation lane check.",
     )
     parser.add_argument(
+        "--skip-ui-lane-security-boundary-tests-check",
+        action="store_true",
+        help="Skip UI lane security boundary tests check.",
+    )
+    parser.add_argument(
         "--skip-naming-discipline-policy-check",
         action="store_true",
         help="Skip naming discipline policy check.",
@@ -365,6 +374,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_persistence_corruption_tests: bool = True,
     check_long_session_soak_tests: bool = True,
     check_resource_pressure_simulation_lane: bool = True,
+    check_ui_lane_security_boundary_tests: bool = True,
     check_naming_discipline_policy: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
@@ -687,6 +697,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(pressure_lane_payload.get("ok")):
             failures.append("resource_pressure_simulation_lane_check_failed")
 
+    if check_ui_lane_security_boundary_tests:
+        ui_lane_boundary_payload = evaluate_ui_lane_security_boundary_tests()
+        details["ui_lane_security_boundary_tests_check"] = {
+            "ok": bool(ui_lane_boundary_payload.get("ok")),
+            "check_count": int(ui_lane_boundary_payload.get("check_count") or 0),
+        }
+        if not bool(ui_lane_boundary_payload.get("ok")):
+            failures.append("ui_lane_security_boundary_tests_check_failed")
+
     if check_naming_discipline_policy:
         naming_policy_payload = evaluate_naming_discipline_policy()
         details["naming_discipline_policy_check"] = {
@@ -750,6 +769,7 @@ def main(argv: list[str] | None = None) -> int:
         check_persistence_corruption_tests=not bool(args.skip_persistence_corruption_tests_check),
         check_long_session_soak_tests=not bool(args.skip_long_session_soak_tests_check),
         check_resource_pressure_simulation_lane=not bool(args.skip_resource_pressure_simulation_lane_check),
+        check_ui_lane_security_boundary_tests=not bool(args.skip_ui_lane_security_boundary_tests_check),
         check_naming_discipline_policy=not bool(args.skip_naming_discipline_policy_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
