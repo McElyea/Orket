@@ -15,6 +15,7 @@ from scripts.governance.check_noop_critical_paths import (
     DEFAULT_SCAN_ROOTS as DEFAULT_NOOP_SCAN_ROOTS,
     evaluate_noop_critical_paths,
 )
+from scripts.governance.check_environment_parity_checklist import evaluate_environment_parity_checklist
 from scripts.governance.check_unreachable_branches import (
     DEFAULT_SCAN_ROOTS as DEFAULT_UNREACHABLE_SCAN_ROOTS,
     evaluate_unreachable_branches,
@@ -59,6 +60,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip no-op critical-path detector for critical roots.",
     )
+    parser.add_argument(
+        "--skip-environment-parity-check",
+        action="store_true",
+        help="Skip environment parity checklist.",
+    )
     return parser.parse_args(argv)
 
 
@@ -73,6 +79,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_drift: bool,
     check_unreachable_branches: bool = True,
     check_noop_critical_paths: bool = True,
+    check_environment_parity: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -130,6 +137,16 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(noop_payload.get("ok")):
             failures.append("noop_critical_path_check_failed")
 
+    if check_environment_parity:
+        parity_payload = evaluate_environment_parity_checklist(environment=None, required_keys=[])
+        failed_checks = [row for row in parity_payload.get("checks", []) if not bool((row or {}).get("ok"))]
+        details["environment_parity_check"] = {
+            "ok": bool(parity_payload.get("ok")),
+            "failed_check_count": len(failed_checks),
+        }
+        if not bool(parity_payload.get("ok")):
+            failures.append("environment_parity_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -146,6 +163,7 @@ def main(argv: list[str] | None = None) -> int:
         check_drift=not bool(args.skip_drift_check),
         check_unreachable_branches=not bool(args.skip_unreachable_branch_check),
         check_noop_critical_paths=not bool(args.skip_noop_critical_path_check),
+        check_environment_parity=not bool(args.skip_environment_parity_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1
