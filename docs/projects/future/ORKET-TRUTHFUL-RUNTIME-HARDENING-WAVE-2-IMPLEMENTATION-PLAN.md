@@ -38,6 +38,7 @@ Completed in active execution:
 23. interface freeze windows contract, checker, run-start artifact, and acceptance-gate enforcement
 24. evidence package generator contract/checker, generator script, run-start artifact, and acceptance-gate enforcement
 25. observability redaction tests contract/checker, run-start artifact, and acceptance-gate enforcement
+26. trust language review policy/checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

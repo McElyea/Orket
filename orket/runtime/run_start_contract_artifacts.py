@@ -38,6 +38,7 @@ from orket.runtime.timeout_streaming_contracts import (
     streaming_semantics_snapshot,
     timeout_semantics_snapshot,
 )
+from orket.runtime.trust_language_review_policy import trust_language_review_policy_snapshot
 from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
 from orket.runtime.workspace_hygiene_rules import workspace_hygiene_rules_snapshot
 
@@ -281,6 +282,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "observability_redaction_test_contract.json",
         observability_redaction_test_contract_snapshot,
         "E_RUN_OBSERVABILITY_REDACTION_TEST_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "trust_language_review_policy",
+        "trust_language_review_policy.json",
+        trust_language_review_policy_snapshot,
+        "E_RUN_TRUST_LANGUAGE_REVIEW_POLICY_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",

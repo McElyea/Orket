@@ -38,6 +38,7 @@ from orket.runtime.timeout_streaming_contracts import (
     streaming_semantics_snapshot,
     timeout_semantics_snapshot,
 )
+from orket.runtime.trust_language_review_policy import validate_trust_language_review_policy
 
 
 def runtime_truth_contract_drift_report() -> dict[str, Any]:
@@ -586,6 +587,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "observability_redaction_test_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        claims = validate_trust_language_review_policy()
+        checks.append(
+            {
+                "check": "trust_language_review_policy_valid",
+                "ok": True,
+                "count": len(claims),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "trust_language_review_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

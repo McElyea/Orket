@@ -63,6 +63,9 @@ from scripts.governance.check_evidence_package_generator_contract import (
 from scripts.governance.check_observability_redaction_tests import (
     evaluate_observability_redaction_tests,
 )
+from scripts.governance.check_trust_language_review import (
+    evaluate_trust_language_review,
+)
 from scripts.governance.check_promotion_rollback_criteria import (
     evaluate_promotion_rollback_criteria,
 )
@@ -112,6 +115,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "interface_freeze_windows.json",
     "evidence_package_generator_contract.json",
     "observability_redaction_test_contract.json",
+    "trust_language_review_policy.json",
     "promotion_rollback_criteria.json",
 )
 
@@ -246,6 +250,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip observability redaction tests check.",
     )
     parser.add_argument(
+        "--skip-trust-language-review-check",
+        action="store_true",
+        help="Skip trust language review check.",
+    )
+    parser.add_argument(
         "--skip-promotion-rollback-check",
         action="store_true",
         help="Skip promotion rollback criteria contract check.",
@@ -286,6 +295,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_interface_freeze_windows: bool = True,
     check_evidence_package_generator: bool = True,
     check_observability_redaction_tests: bool = True,
+    check_trust_language_review: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
@@ -543,6 +553,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(redaction_tests_payload.get("ok")):
             failures.append("observability_redaction_tests_check_failed")
 
+    if check_trust_language_review:
+        trust_language_payload = evaluate_trust_language_review()
+        details["trust_language_review_check"] = {
+            "ok": bool(trust_language_payload.get("ok")),
+            "claim_count": int(trust_language_payload.get("claim_count") or 0),
+        }
+        if not bool(trust_language_payload.get("ok")):
+            failures.append("trust_language_review_check_failed")
+
     if check_promotion_rollback:
         rollback_payload = evaluate_promotion_rollback_criteria()
         details["promotion_rollback_criteria_check"] = {
@@ -590,6 +609,7 @@ def main(argv: list[str] | None = None) -> int:
         check_interface_freeze_windows=not bool(args.skip_interface_freeze_windows_check),
         check_evidence_package_generator=not bool(args.skip_evidence_package_generator_check),
         check_observability_redaction_tests=not bool(args.skip_observability_redaction_tests_check),
+        check_trust_language_review=not bool(args.skip_trust_language_review_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
