@@ -35,6 +35,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "workspace_hygiene_rules_valid" in checks
     assert "canonical_examples_library_valid" in checks
     assert "spec_debt_queue_valid" in checks
+    assert "non_fatal_error_budget_valid" in checks
     assert "promotion_rollback_criteria_valid" in checks
 
 

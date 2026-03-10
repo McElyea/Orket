@@ -13,6 +13,7 @@ from orket.runtime.human_correction_capture_policy import human_correction_captu
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
 from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
+from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
 from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
@@ -253,6 +254,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "spec_debt_queue.json",
         spec_debt_queue_snapshot,
         "E_RUN_SPEC_DEBT_QUEUE_IMMUTABLE",
+    ),
+    (
+        "non_fatal_error_budget",
+        "non_fatal_error_budget.json",
+        non_fatal_error_budget_snapshot,
+        "E_RUN_NON_FATAL_ERROR_BUDGET_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",

@@ -110,6 +110,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["spec_debt_queue"]["schema_version"] == "1.0"
     debt_ids = [row["debt_id"] for row in payload["spec_debt_queue"]["entries"]]
     assert "SDQ-001" in debt_ids
+    assert payload["non_fatal_error_budget"]["schema_version"] == "1.0"
+    budget_ids = [row["budget_id"] for row in payload["non_fatal_error_budget"]["budgets"]]
+    assert "degraded_completion_ratio" in budget_ids
     assert payload["promotion_rollback_criteria"]["schema_version"] == "1.0"
     rollback_triggers = [row["trigger"] for row in payload["promotion_rollback_criteria"]["triggers"]]
     assert "acceptance_gate_failure" in rollback_triggers
@@ -143,6 +146,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["workspace_hygiene_rules_path"]).exists()
     assert Path(payload["canonical_examples_library_path"]).exists()
     assert Path(payload["spec_debt_queue_path"]).exists()
+    assert Path(payload["non_fatal_error_budget_path"]).exists()
     assert Path(payload["promotion_rollback_criteria_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()

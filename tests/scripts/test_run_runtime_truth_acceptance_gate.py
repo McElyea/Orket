@@ -73,6 +73,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["workspace_hygiene_rules_check"]["ok"] is True
     assert payload["details"]["canonical_examples_library_check"]["ok"] is True
     assert payload["details"]["spec_debt_queue_check"]["ok"] is True
+    assert payload["details"]["non_fatal_error_budget_check"]["ok"] is True
     assert payload["details"]["promotion_rollback_criteria_check"]["ok"] is True
 
 
@@ -579,6 +580,31 @@ def test_runtime_truth_acceptance_gate_fails_when_spec_debt_queue_check_fails(
 
 
 # Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_non_fatal_error_budget_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_non_fatal_error_budget",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "budget_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "non_fatal_error_budget_check_failed" in payload["failures"]
+
+
+# Layer: contract
 def test_runtime_truth_acceptance_gate_fails_when_promotion_rollback_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -624,4 +650,5 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "workspace_hygiene_rules.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "canonical_examples_library.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "spec_debt_queue.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "non_fatal_error_budget.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "promotion_rollback_criteria.json" in REQUIRED_RUNTIME_CONTRACT_FILES

@@ -51,6 +51,9 @@ from scripts.governance.check_canonical_examples_library import (
 from scripts.governance.check_spec_debt_queue import (
     evaluate_spec_debt_queue,
 )
+from scripts.governance.check_non_fatal_error_budget import (
+    evaluate_non_fatal_error_budget,
+)
 from scripts.governance.check_promotion_rollback_criteria import (
     evaluate_promotion_rollback_criteria,
 )
@@ -96,6 +99,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "workspace_hygiene_rules.json",
     "canonical_examples_library.json",
     "spec_debt_queue.json",
+    "non_fatal_error_budget.json",
     "promotion_rollback_criteria.json",
 )
 
@@ -210,6 +214,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip spec debt queue contract check.",
     )
     parser.add_argument(
+        "--skip-non-fatal-error-budget-check",
+        action="store_true",
+        help="Skip non-fatal error budget contract check.",
+    )
+    parser.add_argument(
         "--skip-promotion-rollback-check",
         action="store_true",
         help="Skip promotion rollback criteria contract check.",
@@ -246,6 +255,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_workspace_hygiene: bool = True,
     check_canonical_examples: bool = True,
     check_spec_debt_queue: bool = True,
+    check_non_fatal_error_budget: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
@@ -467,6 +477,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(spec_debt_payload.get("ok")):
             failures.append("spec_debt_queue_check_failed")
 
+    if check_non_fatal_error_budget:
+        budget_payload = evaluate_non_fatal_error_budget()
+        details["non_fatal_error_budget_check"] = {
+            "ok": bool(budget_payload.get("ok")),
+            "budget_count": int(budget_payload.get("budget_count") or 0),
+        }
+        if not bool(budget_payload.get("ok")):
+            failures.append("non_fatal_error_budget_check_failed")
+
     if check_promotion_rollback:
         rollback_payload = evaluate_promotion_rollback_criteria()
         details["promotion_rollback_criteria_check"] = {
@@ -510,6 +529,7 @@ def main(argv: list[str] | None = None) -> int:
         check_workspace_hygiene=not bool(args.skip_workspace_hygiene_check),
         check_canonical_examples=not bool(args.skip_canonical_examples_check),
         check_spec_debt_queue=not bool(args.skip_spec_debt_queue_check),
+        check_non_fatal_error_budget=not bool(args.skip_non_fatal_error_budget_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
