@@ -8,6 +8,7 @@ from orket.runtime.artifact_provenance_block_policy import validate_artifact_pro
 from orket.runtime.idempotency_discipline_policy import validate_idempotency_discipline_policy
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
+from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
@@ -319,6 +320,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "artifact_provenance_block_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        override_types = validate_operator_override_logging_policy()
+        checks.append(
+            {
+                "check": "operator_override_logging_policy_valid",
+                "ok": True,
+                "count": len(override_types),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "operator_override_logging_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

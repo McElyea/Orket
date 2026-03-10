@@ -24,6 +24,9 @@ from scripts.governance.check_idempotency_discipline_policy import (
 )
 from scripts.governance.check_interrupt_semantics_policy import evaluate_interrupt_semantics_policy
 from scripts.governance.check_model_profile_bios import evaluate_model_profile_bios
+from scripts.governance.check_operator_override_logging_policy import (
+    evaluate_operator_override_logging_policy,
+)
 from scripts.governance.check_runtime_boundary_audit_checklist import evaluate_runtime_boundary_audit_checklist
 from scripts.governance.check_retry_classification_policy import evaluate_retry_classification_policy
 from scripts.governance.check_structured_warning_policy import evaluate_structured_warning_policy
@@ -53,6 +56,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "interrupt_semantics_policy.json",
     "idempotency_discipline_policy.json",
     "artifact_provenance_block_policy.json",
+    "operator_override_logging_policy.json",
 )
 
 
@@ -115,6 +119,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip strict artifact provenance block policy contract check.",
     )
+    parser.add_argument(
+        "--skip-operator-override-policy-check",
+        action="store_true",
+        help="Skip operator override logging policy contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -137,6 +146,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_interrupt_policy: bool = True,
     check_idempotency_policy: bool = True,
     check_artifact_provenance_policy: bool = True,
+    check_operator_override_policy: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -267,6 +277,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(provenance_policy_payload.get("ok")):
             failures.append("artifact_provenance_block_policy_check_failed")
 
+    if check_operator_override_policy:
+        override_policy_payload = evaluate_operator_override_logging_policy()
+        details["operator_override_logging_policy_check"] = {
+            "ok": bool(override_policy_payload.get("ok")),
+            "override_type_count": int(override_policy_payload.get("override_type_count") or 0),
+        }
+        if not bool(override_policy_payload.get("ok")):
+            failures.append("operator_override_logging_policy_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -291,6 +310,7 @@ def main(argv: list[str] | None = None) -> int:
         check_interrupt_policy=not bool(args.skip_interrupt_policy_check),
         check_idempotency_policy=not bool(args.skip_idempotency_policy_check),
         check_artifact_provenance_policy=not bool(args.skip_artifact_provenance_policy_check),
+        check_operator_override_policy=not bool(args.skip_operator_override_policy_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1
