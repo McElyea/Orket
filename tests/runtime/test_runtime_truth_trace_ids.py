@@ -20,6 +20,7 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "model_profile_bios" in artifacts
     assert "interrupt_semantics_policy" in artifacts
     assert "idempotency_discipline_policy" in artifacts
+    assert "artifact_provenance_block_policy" in artifacts
     assert "route_decision_artifact" in artifacts
 
 

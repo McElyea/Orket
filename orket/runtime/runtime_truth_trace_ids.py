@@ -21,6 +21,7 @@ _TRACE_IDS: dict[str, str] = {
     "model_profile_bios": "TRUTH-B-MODEL-PROFILE-BIOS",
     "interrupt_semantics_policy": "TRUTH-W2B-INTERRUPT-SEMANTICS-POLICY",
     "idempotency_discipline_policy": "TRUTH-W2B-IDEMPOTENCY-DISCIPLINE-POLICY",
+    "artifact_provenance_block_policy": "TRUTH-W2C-ARTIFACT-PROVENANCE-BLOCK",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }

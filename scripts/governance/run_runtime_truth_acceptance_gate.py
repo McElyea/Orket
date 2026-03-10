@@ -11,6 +11,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
+from scripts.governance.check_artifact_provenance_block_policy import (
+    evaluate_artifact_provenance_block_policy,
+)
 from scripts.governance.check_noop_critical_paths import (
     DEFAULT_SCAN_ROOTS as DEFAULT_NOOP_SCAN_ROOTS,
     evaluate_noop_critical_paths,
@@ -49,6 +52,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "model_profile_bios.json",
     "interrupt_semantics_policy.json",
     "idempotency_discipline_policy.json",
+    "artifact_provenance_block_policy.json",
 )
 
 
@@ -106,6 +110,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip idempotency discipline policy contract check.",
     )
+    parser.add_argument(
+        "--skip-artifact-provenance-policy-check",
+        action="store_true",
+        help="Skip strict artifact provenance block policy contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -127,6 +136,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_model_profile_bios: bool = True,
     check_interrupt_policy: bool = True,
     check_idempotency_policy: bool = True,
+    check_artifact_provenance_policy: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -248,6 +258,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(idempotency_policy_payload.get("ok")):
             failures.append("idempotency_discipline_policy_check_failed")
 
+    if check_artifact_provenance_policy:
+        provenance_policy_payload = evaluate_artifact_provenance_block_policy()
+        details["artifact_provenance_block_policy_check"] = {
+            "ok": bool(provenance_policy_payload.get("ok")),
+            "required_field_count": int(provenance_policy_payload.get("required_field_count") or 0),
+        }
+        if not bool(provenance_policy_payload.get("ok")):
+            failures.append("artifact_provenance_block_policy_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -271,6 +290,7 @@ def main(argv: list[str] | None = None) -> int:
         check_model_profile_bios=not bool(args.skip_model_profile_bios_check),
         check_interrupt_policy=not bool(args.skip_interrupt_policy_check),
         check_idempotency_policy=not bool(args.skip_idempotency_policy_check),
+        check_artifact_provenance_policy=not bool(args.skip_artifact_provenance_policy_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

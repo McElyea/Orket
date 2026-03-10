@@ -71,6 +71,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_model_profile_bios.py`
   - `check_interrupt_semantics_policy.py`
   - `check_idempotency_discipline_policy.py`
+  - `check_artifact_provenance_block_policy.py`
   - `check_environment_parity_checklist.py`
   - `check_runtime_boundary_audit_checklist.py`
   - `check_retry_classification_policy.py`

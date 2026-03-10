@@ -10,6 +10,7 @@ from orket.runtime.contract_bootstrap import (
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
+from orket.runtime.artifact_provenance_block_policy import artifact_provenance_block_policy_snapshot
 from orket.runtime.capability_fallback_hierarchy import capability_fallback_hierarchy_snapshot
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
@@ -220,6 +221,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_IDEMPOTENCY_DISCIPLINE_POLICY_IMMUTABLE",
     )
 
+    artifact_provenance_block_policy = artifact_provenance_block_policy_snapshot()
+    artifact_provenance_block_policy_path = runtime_root / "artifact_provenance_block_policy.json"
+    _write_immutable_json(
+        path=artifact_provenance_block_policy_path,
+        payload=artifact_provenance_block_policy,
+        error_code="E_RUN_ARTIFACT_PROVENANCE_BLOCK_POLICY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -294,6 +303,8 @@ def capture_run_start_artifacts(
         "interrupt_semantics_policy_path": str(interrupt_semantics_policy_path),
         "idempotency_discipline_policy": idempotency_discipline_policy,
         "idempotency_discipline_policy_path": str(idempotency_discipline_policy_path),
+        "artifact_provenance_block_policy": artifact_provenance_block_policy,
+        "artifact_provenance_block_policy_path": str(artifact_provenance_block_policy_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,
