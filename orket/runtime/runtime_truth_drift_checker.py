@@ -1,0 +1,109 @@
+from __future__ import annotations
+
+from typing import Any
+
+from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
+from orket.runtime.provider_truth_table import provider_truth_table_snapshot
+from orket.runtime.run_phase_contract import CANONICAL_RUN_PHASE_ORDER
+from orket.runtime.runtime_truth_contracts import runtime_status_vocabulary_snapshot
+from orket.runtime.state_transition_registry import state_transition_registry_snapshot
+from orket.runtime.timeout_streaming_contracts import (
+    streaming_semantics_snapshot,
+    timeout_semantics_snapshot,
+)
+
+
+def runtime_truth_contract_drift_report() -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+
+    provider_snapshot = provider_truth_table_snapshot()
+    provider_names = {
+        str(row.get("provider") or "").strip().lower()
+        for row in provider_snapshot.get("providers", [])
+        if isinstance(row, dict)
+    }
+    provider_choices = {str(token).strip().lower() for token in PROVIDER_CHOICES}
+    checks.append(
+        {
+            "check": "provider_truth_table_vs_provider_choices",
+            "ok": provider_names == provider_choices,
+            "expected": sorted(provider_choices),
+            "observed": sorted(provider_names),
+        }
+    )
+
+    status_snapshot = runtime_status_vocabulary_snapshot()
+    status_terms = {
+        str(token).strip().lower()
+        for token in status_snapshot.get("runtime_status_terms", [])
+        if str(token).strip()
+    }
+    transition_snapshot = state_transition_registry_snapshot()
+    session_states: set[str] = set()
+    run_states: set[str] = set()
+    for row in transition_snapshot.get("domains", []):
+        if not isinstance(row, dict):
+            continue
+        domain = str(row.get("domain") or "").strip().lower()
+        states = {
+            str(token).strip().lower()
+            for token in row.get("states", [])
+            if str(token).strip()
+        }
+        if domain == "session":
+            session_states = states
+        if domain == "run":
+            run_states = states
+    checks.append(
+        {
+            "check": "status_vocabulary_in_session_and_run_states",
+            "ok": status_terms.issubset(session_states) and status_terms.issubset(run_states),
+            "status_terms": sorted(status_terms),
+            "session_states": sorted(session_states),
+            "run_states": sorted(run_states),
+        }
+    )
+
+    checks.append(
+        {
+            "check": "canonical_run_phase_entry_and_terminal",
+            "ok": bool(CANONICAL_RUN_PHASE_ORDER)
+            and CANONICAL_RUN_PHASE_ORDER[0] == "input_normalize"
+            and CANONICAL_RUN_PHASE_ORDER[-1] == "emit_observability",
+            "observed": list(CANONICAL_RUN_PHASE_ORDER),
+        }
+    )
+
+    timeout_snapshot = timeout_semantics_snapshot()
+    timeout_surfaces = timeout_snapshot.get("timeout_surfaces", [])
+    checks.append(
+        {
+            "check": "timeout_semantics_non_empty",
+            "ok": isinstance(timeout_surfaces, list) and len(timeout_surfaces) >= 1,
+            "count": len(timeout_surfaces) if isinstance(timeout_surfaces, list) else 0,
+        }
+    )
+
+    streaming_snapshot = streaming_semantics_snapshot()
+    terminal_events = list(streaming_snapshot.get("terminal_events", []))
+    checks.append(
+        {
+            "check": "streaming_semantics_terminal_events",
+            "ok": sorted(terminal_events) == ["error", "stopped"],
+            "observed": sorted(terminal_events),
+        }
+    )
+
+    return {
+        "schema_version": "1.0",
+        "ok": all(bool(check.get("ok")) for check in checks),
+        "checks": checks,
+    }
+
+
+def assert_no_runtime_truth_contract_drift() -> dict[str, Any]:
+    report = runtime_truth_contract_drift_report()
+    if bool(report.get("ok")):
+        return report
+    failing = [str(row.get("check") or "unknown") for row in report.get("checks", []) if not bool(row.get("ok"))]
+    raise ValueError(f"E_RUNTIME_TRUTH_CONTRACT_DRIFT:{','.join(failing)}")
