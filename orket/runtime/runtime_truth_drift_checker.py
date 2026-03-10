@@ -11,6 +11,7 @@ from orket.runtime.idempotency_discipline_policy import validate_idempotency_dis
 from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantics_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
+from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
@@ -376,6 +377,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "human_correction_capture_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        event_classes = validate_sampling_discipline_guide()
+        checks.append(
+            {
+                "check": "sampling_discipline_guide_valid",
+                "ok": True,
+                "count": len(event_classes),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "sampling_discipline_guide_valid",
                 "ok": False,
                 "error": str(exc),
             }

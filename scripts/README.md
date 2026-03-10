@@ -75,6 +75,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_operator_override_logging_policy.py`
   - `check_demo_production_labeling_policy.py`
   - `check_human_correction_capture_policy.py`
+  - `check_sampling_discipline_guide.py`
   - `check_environment_parity_checklist.py`
   - `check_runtime_boundary_audit_checklist.py`
   - `check_retry_classification_policy.py`

@@ -30,6 +30,9 @@ from scripts.governance.check_model_profile_bios import evaluate_model_profile_b
 from scripts.governance.check_human_correction_capture_policy import (
     evaluate_human_correction_capture_policy,
 )
+from scripts.governance.check_sampling_discipline_guide import (
+    evaluate_sampling_discipline_guide,
+)
 from scripts.governance.check_operator_override_logging_policy import (
     evaluate_operator_override_logging_policy,
 )
@@ -65,6 +68,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "operator_override_logging_policy.json",
     "demo_production_labeling_policy.json",
     "human_correction_capture_policy.json",
+    "sampling_discipline_guide.json",
 )
 
 
@@ -142,6 +146,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip human correction capture policy contract check.",
     )
+    parser.add_argument(
+        "--skip-sampling-discipline-check",
+        action="store_true",
+        help="Skip sampling discipline guide contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -167,6 +176,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_operator_override_policy: bool = True,
     check_demo_production_policy: bool = True,
     check_human_correction_policy: bool = True,
+    check_sampling_discipline: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -324,6 +334,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(correction_policy_payload.get("ok")):
             failures.append("human_correction_capture_policy_check_failed")
 
+    if check_sampling_discipline:
+        sampling_payload = evaluate_sampling_discipline_guide()
+        details["sampling_discipline_guide_check"] = {
+            "ok": bool(sampling_payload.get("ok")),
+            "event_class_count": int(sampling_payload.get("event_class_count") or 0),
+        }
+        if not bool(sampling_payload.get("ok")):
+            failures.append("sampling_discipline_guide_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -351,6 +370,7 @@ def main(argv: list[str] | None = None) -> int:
         check_operator_override_policy=not bool(args.skip_operator_override_policy_check),
         check_demo_production_policy=not bool(args.skip_demo_production_policy_check),
         check_human_correction_policy=not bool(args.skip_human_correction_policy_check),
+        check_sampling_discipline=not bool(args.skip_sampling_discipline_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

@@ -20,6 +20,7 @@ from orket.runtime.human_correction_capture_policy import human_correction_captu
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
+from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_truth_contracts import (
     degradation_taxonomy_snapshot,
@@ -256,6 +257,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_HUMAN_CORRECTION_CAPTURE_POLICY_IMMUTABLE",
     )
 
+    sampling_discipline_guide = sampling_discipline_guide_snapshot()
+    sampling_discipline_guide_path = runtime_root / "sampling_discipline_guide.json"
+    _write_immutable_json(
+        path=sampling_discipline_guide_path,
+        payload=sampling_discipline_guide,
+        error_code="E_RUN_SAMPLING_DISCIPLINE_GUIDE_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -338,6 +347,8 @@ def capture_run_start_artifacts(
         "demo_production_labeling_policy_path": str(demo_production_labeling_policy_path),
         "human_correction_capture_policy": human_correction_capture_policy,
         "human_correction_capture_policy_path": str(human_correction_capture_policy_path),
+        "sampling_discipline_guide": sampling_discipline_guide,
+        "sampling_discipline_guide_path": str(sampling_discipline_guide_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

@@ -25,6 +25,7 @@ _TRACE_IDS: dict[str, str] = {
     "operator_override_logging_policy": "TRUTH-W2C-OPERATOR-OVERRIDE-LOGGING",
     "demo_production_labeling_policy": "TRUTH-W2C-DEMO-PRODUCTION-LABELING",
     "human_correction_capture_policy": "TRUTH-W2C-HUMAN-CORRECTION-CAPTURE",
+    "sampling_discipline_guide": "TRUTH-W2C-SAMPLING-DISCIPLINE-GUIDE",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",
 }

@@ -28,6 +28,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "operator_override_logging_policy_valid" in checks
     assert "demo_production_labeling_policy_valid" in checks
     assert "human_correction_capture_policy_valid" in checks
+    assert "sampling_discipline_guide_valid" in checks
 
 
 # Layer: contract
