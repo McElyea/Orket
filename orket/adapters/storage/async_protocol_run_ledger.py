@@ -19,6 +19,7 @@ from orket.runtime.protocol_error_codes import (
     E_RECEIPT_SEQ_INVALID_PREFIX,
     E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX,
 )
+from orket.runtime.result_error_invariants import validate_result_error_invariant
 from orket.runtime.run_graph_reconstruction import (
     reconstruct_run_graph,
     write_run_graph_artifact,
@@ -86,11 +87,16 @@ class AsyncProtocolRunLedgerRepository:
         summary: Optional[Dict[str, Any]] = None,
         artifacts: Optional[Dict[str, Any]] = None,
     ) -> dict[str, Any]:
+        resolved_status = validate_result_error_invariant(
+            status=status,
+            failure_class=failure_class,
+            failure_reason=failure_reason,
+        )
         event = self._build_event(
             session_id=session_id,
             kind="run_finalized",
             event_type="run_finalized",
-            status=str(status),
+            status=str(resolved_status),
             failure_class=failure_class,
             failure_reason=failure_reason,
             summary=dict(summary or {}),

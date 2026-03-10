@@ -11,6 +11,25 @@ from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 
 
 @pytest.mark.asyncio
+async def test_async_run_ledger_finalize_rejects_done_with_failure(tmp_path: Path) -> None:
+    sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
+    await sqlite_repo.start_run(
+        session_id="sess-invariant",
+        run_type="epic",
+        run_name="Invariant",
+        department="core",
+        build_id="build-1",
+    )
+    with pytest.raises(ValueError, match="E_RESULT_ERROR_INVARIANT:done_must_not_have_failure"):
+        await sqlite_repo.finalize_run(
+            session_id="sess-invariant",
+            status="done",
+            failure_class="ExecutionFailed",
+            failure_reason="should not be set on done",
+        )
+
+
+@pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_writes_both_backends_and_reports_clean_parity(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")

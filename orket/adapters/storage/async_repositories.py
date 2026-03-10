@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
 
 from orket.core.contracts.repositories import SessionRepository, SnapshotRepository
+from orket.runtime.result_error_invariants import validate_result_error_invariant
 
 class AsyncSessionRepository(SessionRepository):
     """
@@ -279,6 +280,11 @@ class AsyncRunLedgerRepository:
         summary: Optional[Dict[str, Any]] = None,
         artifacts: Optional[Dict[str, Any]] = None,
     ) -> None:
+        resolved_status = validate_result_error_invariant(
+            status=status,
+            failure_class=failure_class,
+            failure_reason=failure_reason,
+        )
         now = datetime.now(UTC).isoformat()
         async with self._lock:
             async with aiosqlite.connect(self.db_path) as conn:
@@ -292,7 +298,7 @@ class AsyncRunLedgerRepository:
                         WHERE session_id = ?
                         """,
                         (
-                            status,
+                            resolved_status,
                             failure_class,
                             failure_reason,
                             now,
@@ -332,7 +338,7 @@ class AsyncRunLedgerRepository:
                         WHERE session_id = ?
                         """,
                         (
-                            status,
+                            resolved_status,
                             failure_class,
                             failure_reason,
                             json.dumps(merged_summary),

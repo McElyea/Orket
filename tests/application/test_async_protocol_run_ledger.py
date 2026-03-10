@@ -94,6 +94,26 @@ async def test_async_protocol_run_ledger_start_and_finalize(tmp_path: Path) -> N
     assert events[1]["sequence_number"] == events[1]["event_seq"]
 
 
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_finalize_rejects_done_with_failure(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    await repo.start_run(
+        session_id="sess-invariant",
+        run_type="epic",
+        run_name="Invariant",
+        department="core",
+        build_id="build-invariant",
+    )
+    with pytest.raises(ValueError, match="E_RESULT_ERROR_INVARIANT:done_must_not_have_failure"):
+        await repo.finalize_run(
+            session_id="sess-invariant",
+            status="done",
+            failure_class="ExecutionFailed",
+            failure_reason="should not be present on done",
+        )
+
+
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_event_is_monotonic(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
