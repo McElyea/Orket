@@ -7,6 +7,16 @@ from typing import Any
 
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
 
+try:
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+except ModuleNotFoundError:  # pragma: no cover - script execution fallback
+    import sys
+
+    REPO_ROOT = Path(__file__).resolve().parents[2]
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Check runtime truth contract drift.")
@@ -21,8 +31,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 def check_runtime_truth_contract_drift(*, out_path: Path | None = None) -> tuple[int, dict[str, Any]]:
     payload = runtime_truth_contract_drift_report()
     if out_path is not None:
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        write_payload_with_diff_ledger(out_path, payload)
     return (0 if bool(payload.get("ok")) else 1), payload
 
 
