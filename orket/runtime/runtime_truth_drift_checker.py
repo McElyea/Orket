@@ -6,6 +6,7 @@ from orket.runtime.capability_fallback_hierarchy import validate_capability_fall
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
+from orket.runtime.retry_classification_policy import validate_retry_classification_policy
 from orket.runtime.safe_default_catalog import validate_safe_default_catalog
 from orket.runtime.structured_warning_policy import validate_structured_warning_policy
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
@@ -205,6 +206,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "structured_warning_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        signals = validate_retry_classification_policy()
+        checks.append(
+            {
+                "check": "retry_classification_policy_valid",
+                "ok": True,
+                "count": len(signals),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "retry_classification_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }
