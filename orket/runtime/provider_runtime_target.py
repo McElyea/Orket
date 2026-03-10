@@ -7,6 +7,11 @@ from dataclasses import asdict, dataclass
 from typing import Any
 from urllib.parse import urlparse
 
+from orket.runtime.provider_quarantine_policy import (
+    is_model_quarantined,
+    is_provider_quarantined,
+    resolve_provider_quarantine_policy,
+)
 from orket.runtime.provider_runtime_inventory import (
     ProviderRuntimeWarmupError,
     _run_coro_sync,
@@ -255,6 +260,29 @@ async def resolve_provider_runtime_target(
     canonical_provider = normalize_provider(requested_provider)
     resolved_base_url = normalize_base_url(base_url, default=default_base_url(requested_provider))
     requested_model_token = str(requested_model or "").strip()
+    quarantine_policy = resolve_provider_quarantine_policy()
+    quarantined_providers = {str(token).strip().lower() for token in (quarantine_policy.get("providers") or [])}
+    quarantined_provider_models = {
+        (str(row[0]).strip().lower(), str(row[1]).strip())
+        for row in (quarantine_policy.get("provider_models") or [])
+        if isinstance(row, (tuple, list)) and len(row) == 2
+    }
+    if is_provider_quarantined(
+        requested_provider=requested_provider,
+        canonical_provider=canonical_provider,
+        quarantined_providers=quarantined_providers,
+    ):
+        return _target_payload(
+            requested_provider=requested_provider,
+            canonical_provider=canonical_provider,
+            requested_model=requested_model_token,
+            model_id="",
+            base_url=resolved_base_url,
+            resolution_mode="quarantined_provider",
+            inventory_source="quarantine_policy",
+            available_models=[],
+            status="BLOCKED",
+        )
     if canonical_provider == "ollama":
         available_models = await asyncio.to_thread(_list_installed_ollama_models_sync, timeout_s=timeout_s)
         resolved_model = requested_model_token if requested_model_token in available_models else ""
@@ -262,6 +290,23 @@ async def resolve_provider_runtime_target(
         if not resolved_model and (auto_select_model or not requested_model_token):
             resolved_model = choose_model(available_models, preferred_model=requested_model_token)
             resolution_mode = "auto_selected" if resolved_model else "unresolved"
+        if resolved_model and is_model_quarantined(
+            requested_provider=requested_provider,
+            canonical_provider=canonical_provider,
+            model_id=resolved_model,
+            quarantined_provider_models=quarantined_provider_models,
+        ):
+            return _target_payload(
+                requested_provider=requested_provider,
+                canonical_provider=canonical_provider,
+                requested_model=requested_model_token,
+                model_id=resolved_model,
+                base_url=resolved_base_url,
+                resolution_mode="quarantined_model",
+                inventory_source="quarantine_policy",
+                available_models=available_models,
+                status="BLOCKED",
+            )
         return _target_payload(
             requested_provider=requested_provider,
             canonical_provider=canonical_provider,
@@ -286,6 +331,23 @@ async def resolve_provider_runtime_target(
         if not resolved_model and (auto_select_model or not requested_model_token):
             resolved_model = choose_model(available_models, preferred_model=requested_model_token)
             resolution_mode = "auto_selected" if resolved_model else "unresolved"
+        if resolved_model and is_model_quarantined(
+            requested_provider=requested_provider,
+            canonical_provider=canonical_provider,
+            model_id=resolved_model,
+            quarantined_provider_models=quarantined_provider_models,
+        ):
+            return _target_payload(
+                requested_provider=requested_provider,
+                canonical_provider=canonical_provider,
+                requested_model=requested_model_token,
+                model_id=resolved_model,
+                base_url=resolved_base_url,
+                resolution_mode="quarantined_model",
+                inventory_source="quarantine_policy",
+                available_models=available_models,
+                status="BLOCKED",
+            )
         return _target_payload(
             requested_provider=requested_provider,
             canonical_provider=canonical_provider,
@@ -300,6 +362,25 @@ async def resolve_provider_runtime_target(
 
     available_models = await asyncio.to_thread(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
     loaded_models_before = await asyncio.to_thread(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
+    if requested_model_token and requested_model_token in loaded_models_before and is_model_quarantined(
+        requested_provider=requested_provider,
+        canonical_provider=canonical_provider,
+        model_id=requested_model_token,
+        quarantined_provider_models=quarantined_provider_models,
+    ):
+        return _target_payload(
+            requested_provider=requested_provider,
+            canonical_provider=canonical_provider,
+            requested_model=requested_model_token,
+            model_id=requested_model_token,
+            base_url=resolved_base_url,
+            resolution_mode="quarantined_model",
+            inventory_source="quarantine_policy",
+            available_models=available_models,
+            loaded_models_before=loaded_models_before,
+            loaded_models_after=loaded_models_before,
+            status="BLOCKED",
+        )
     if requested_model_token and requested_model_token in loaded_models_before:
         return _target_payload(
             requested_provider=requested_provider,
@@ -334,6 +415,25 @@ async def resolve_provider_runtime_target(
             base_url=resolved_base_url,
             resolution_mode=resolution_mode,
             inventory_source="lms_cli",
+            available_models=available_models,
+            loaded_models_before=loaded_models_before,
+            loaded_models_after=loaded_models_before,
+            status="BLOCKED",
+        )
+    if is_model_quarantined(
+        requested_provider=requested_provider,
+        canonical_provider=canonical_provider,
+        model_id=candidate,
+        quarantined_provider_models=quarantined_provider_models,
+    ):
+        return _target_payload(
+            requested_provider=requested_provider,
+            canonical_provider=canonical_provider,
+            requested_model=requested_model_token,
+            model_id=candidate,
+            base_url=resolved_base_url,
+            resolution_mode="quarantined_model",
+            inventory_source="quarantine_policy",
             available_models=available_models,
             loaded_models_before=loaded_models_before,
             loaded_models_after=loaded_models_before,

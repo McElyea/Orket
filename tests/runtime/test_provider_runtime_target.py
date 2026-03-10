@@ -126,3 +126,61 @@ async def test_list_provider_models_uses_lmstudio_cli_inventory(
     assert payload["requested_provider"] == "lmstudio"
     assert payload["canonical_provider"] == "openai_compat"
     assert payload["models"] == ["qwen3.5-4b", "qwen3.5-0.8b"]
+
+
+@pytest.mark.asyncio
+async def test_resolve_provider_runtime_target_blocks_quarantined_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ORKET_PROVIDER_QUARANTINE", "ollama")
+    monkeypatch.delenv("ORKET_PROVIDER_MODEL_QUARANTINE", raising=False)
+    monkeypatch.setattr(
+        runtime_target,
+        "_list_installed_ollama_models_sync",
+        lambda **_: (_ for _ in ()).throw(AssertionError("quarantined provider should short-circuit inventory")),
+    )
+
+    result = await runtime_target.resolve_provider_runtime_target(
+        provider="ollama",
+        requested_model="qwen2.5-coder:7b",
+        base_url="http://127.0.0.1:11434",
+        timeout_s=5.0,
+        auto_select_model=True,
+        auto_load_local_model=True,
+        model_load_timeout_s=30.0,
+        model_ttl_sec=600,
+    )
+
+    assert result.status == "BLOCKED"
+    assert result.resolution_mode == "quarantined_provider"
+    assert result.inventory_source == "quarantine_policy"
+    assert result.model_id == ""
+
+
+@pytest.mark.asyncio
+async def test_resolve_provider_runtime_target_blocks_quarantined_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("ORKET_PROVIDER_QUARANTINE", raising=False)
+    monkeypatch.setenv("ORKET_PROVIDER_MODEL_QUARANTINE", "ollama:qwen2.5-coder:7b")
+    monkeypatch.setattr(
+        runtime_target,
+        "_list_installed_ollama_models_sync",
+        lambda **_: ["qwen2.5-coder:7b", "llama3.1:8b"],
+    )
+
+    result = await runtime_target.resolve_provider_runtime_target(
+        provider="ollama",
+        requested_model="qwen2.5-coder:7b",
+        base_url="http://127.0.0.1:11434",
+        timeout_s=5.0,
+        auto_select_model=False,
+        auto_load_local_model=True,
+        model_load_timeout_s=30.0,
+        model_ttl_sec=600,
+    )
+
+    assert result.status == "BLOCKED"
+    assert result.resolution_mode == "quarantined_model"
+    assert result.inventory_source == "quarantine_policy"
+    assert result.model_id == "qwen2.5-coder:7b"
