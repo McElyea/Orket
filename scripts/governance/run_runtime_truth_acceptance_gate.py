@@ -19,6 +19,9 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "streaming_semantics_contract.json",
     "runtime_truth_contract_drift_report.json",
     "runtime_truth_trace_ids.json",
+    "runtime_invariant_registry.json",
+    "runtime_config_ownership_map.json",
+    "unknown_input_policy.json",
 )
 
 

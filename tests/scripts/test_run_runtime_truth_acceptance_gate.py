@@ -51,3 +51,10 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     )
     assert payload["ok"] is True
     assert payload["details"]["drift_report"]["ok"] is True
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_artifacts() -> None:
+    assert "runtime_invariant_registry.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "runtime_config_ownership_map.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "unknown_input_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
