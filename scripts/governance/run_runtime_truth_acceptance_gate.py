@@ -75,6 +75,9 @@ from scripts.governance.check_failure_replay_harness_contract import (
 from scripts.governance.check_cold_start_truth_tests import (
     evaluate_cold_start_truth_tests,
 )
+from scripts.governance.check_persistence_corruption_test_suite import (
+    evaluate_persistence_corruption_test_suite,
+)
 from scripts.governance.check_naming_discipline_policy import (
     evaluate_naming_discipline_policy,
 )
@@ -131,6 +134,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "local_remote_route_policy.json",
     "failure_replay_harness_contract.json",
     "cold_start_truth_test_contract.json",
+    "persistence_corruption_test_contract.json",
     "naming_discipline_policy.json",
     "promotion_rollback_criteria.json",
 )
@@ -286,6 +290,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip cold-start truth tests check.",
     )
     parser.add_argument(
+        "--skip-persistence-corruption-tests-check",
+        action="store_true",
+        help="Skip persistence corruption test suite check.",
+    )
+    parser.add_argument(
         "--skip-naming-discipline-policy-check",
         action="store_true",
         help="Skip naming discipline policy check.",
@@ -335,6 +344,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_local_remote_route_policy: bool = True,
     check_failure_replay_harness_contract: bool = True,
     check_cold_start_truth_tests: bool = True,
+    check_persistence_corruption_tests: bool = True,
     check_naming_discipline_policy: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
@@ -629,6 +639,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(cold_start_truth_payload.get("ok")):
             failures.append("cold_start_truth_tests_check_failed")
 
+    if check_persistence_corruption_tests:
+        persistence_corruption_payload = evaluate_persistence_corruption_test_suite()
+        details["persistence_corruption_tests_check"] = {
+            "ok": bool(persistence_corruption_payload.get("ok")),
+            "check_count": int(persistence_corruption_payload.get("check_count") or 0),
+        }
+        if not bool(persistence_corruption_payload.get("ok")):
+            failures.append("persistence_corruption_tests_check_failed")
+
     if check_naming_discipline_policy:
         naming_policy_payload = evaluate_naming_discipline_policy()
         details["naming_discipline_policy_check"] = {
@@ -689,6 +708,7 @@ def main(argv: list[str] | None = None) -> int:
         check_local_remote_route_policy=not bool(args.skip_local_remote_route_policy_check),
         check_failure_replay_harness_contract=not bool(args.skip_failure_replay_harness_contract_check),
         check_cold_start_truth_tests=not bool(args.skip_cold_start_truth_tests_check),
+        check_persistence_corruption_tests=not bool(args.skip_persistence_corruption_tests_check),
         check_naming_discipline_policy=not bool(args.skip_naming_discipline_policy_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )

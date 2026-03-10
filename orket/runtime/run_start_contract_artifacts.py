@@ -22,6 +22,7 @@ from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
 from orket.runtime.naming_discipline_policy import naming_discipline_policy_snapshot
 from orket.runtime.observability_redaction_test_contract import observability_redaction_test_contract_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
+from orket.runtime.persistence_corruption_test_contract import persistence_corruption_test_contract_snapshot
 from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
@@ -310,6 +311,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "cold_start_truth_test_contract.json",
         cold_start_truth_test_contract_snapshot,
         "E_RUN_COLD_START_TRUTH_TEST_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "persistence_corruption_test_contract",
+        "persistence_corruption_test_contract.json",
+        persistence_corruption_test_contract_snapshot,
+        "E_RUN_PERSISTENCE_CORRUPTION_TEST_CONTRACT_IMMUTABLE",
     ),
     (
         "naming_discipline_policy",

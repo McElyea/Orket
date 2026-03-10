@@ -43,6 +43,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "local_remote_route_policy_valid" in checks
     assert "failure_replay_harness_contract_valid" in checks
     assert "cold_start_truth_test_contract_valid" in checks
+    assert "persistence_corruption_test_contract_valid" in checks
     assert "naming_discipline_policy_valid" in checks
     assert "promotion_rollback_criteria_valid" in checks
 
@@ -72,3 +73,24 @@ def test_assert_no_runtime_truth_contract_drift_raises_on_provider_drift(
     )
     with pytest.raises(ValueError, match="E_RUNTIME_TRUTH_CONTRACT_DRIFT"):
         _ = checker.assert_no_runtime_truth_contract_drift()
+
+
+# Layer: contract
+def test_runtime_truth_contract_drift_report_fails_when_persistence_corruption_contract_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from orket.runtime import runtime_truth_drift_checker as checker
+
+    def _raise_contract_error() -> tuple[str, ...]:
+        raise ValueError("E_PERSISTENCE_CORRUPTION_TEST_CONTRACT_CHECK_ID_SET_MISMATCH")
+
+    monkeypatch.setattr(
+        checker,
+        "validate_persistence_corruption_test_contract",
+        _raise_contract_error,
+    )
+    payload = checker.runtime_truth_contract_drift_report()
+    target = next(
+        row for row in payload["checks"] if row["check"] == "persistence_corruption_test_contract_valid"
+    )
+    assert target["ok"] is False

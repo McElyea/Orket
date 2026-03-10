@@ -8,6 +8,7 @@ Orket
    - `docs/CONTRIBUTOR.md`
    - `docs/ROADMAP.md`
    - `docs/ARCHITECTURE.md`
+   - `docs/architecture/ARCHITECTURE_COMPLIANCE_CHECKLIST.md`
    - Complete this startup read before beginning work in the repository.
    - Agent-specific enforcement details live in `AGENTS.md`.
 2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
