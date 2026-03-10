@@ -17,6 +17,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     checks = {row["check"] for row in payload["checks"]}
     assert "clock_time_authority_policy_valid" in checks
     assert "capability_fallback_hierarchy_valid" in checks
+    assert "safe_default_catalog_valid" in checks
 
 
 # Layer: contract
