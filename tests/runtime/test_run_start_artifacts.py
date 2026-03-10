@@ -24,7 +24,11 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["run_identity"]["workload"] == "core_epic"
     assert payload["run_identity"]["start_time"].startswith("2026-03-06T17:00:00")
     assert payload["run_determinism_class"] == "workspace"
+    assert payload["run_phase_contract"]["schema_version"] == "1.0"
+    assert payload["run_phase_contract"]["entry_phase"] == "input_normalize"
+    assert payload["run_phase_contract"]["terminal_phase"] == "emit_observability"
     assert Path(payload["run_identity_path"]).exists()
+    assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -72,5 +76,35 @@ def test_capture_run_start_artifacts_fails_closed_on_run_identity_workload_misma
             workspace=workspace,
             run_id="run-mismatch",
             workload="other_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_run_phase_contract_mutation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-phase-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    run_phase_contract_path = (
+        workspace
+        / "observability"
+        / "run-phase-immutable"
+        / "runtime_contracts"
+        / "run_phase_contract.json"
+    )
+    run_phase_contract_path.write_text(
+        '{"schema_version":"999.0","entry_phase":"route","terminal_phase":"persist","canonical_phase_order":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_PHASE_CONTRACT_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-phase-immutable",
+            workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )

@@ -10,6 +10,7 @@ from orket.runtime.contract_bootstrap import (
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
+from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
@@ -52,6 +53,14 @@ def capture_run_start_artifacts(
         now=now,
     )
 
+    run_phase_contract = run_phase_contract_snapshot()
+    run_phase_contract_path = runtime_root / "run_phase_contract.json"
+    _write_immutable_json(
+        path=run_phase_contract_path,
+        payload=run_phase_contract,
+        error_code="E_RUN_PHASE_CONTRACT_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -90,6 +99,8 @@ def capture_run_start_artifacts(
         **snapshot_paths,
         "run_identity": run_identity,
         "run_identity_path": str(run_identity_path),
+        "run_phase_contract": run_phase_contract,
+        "run_phase_contract_path": str(run_phase_contract_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,
