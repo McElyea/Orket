@@ -18,6 +18,10 @@ from orket.runtime.runtime_truth_contracts import (
     runtime_status_vocabulary_snapshot,
 )
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
+from orket.runtime.timeout_streaming_contracts import (
+    streaming_semantics_snapshot,
+    timeout_semantics_snapshot,
+)
 from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
@@ -108,6 +112,22 @@ def capture_run_start_artifacts(
         error_code="E_RUN_STATE_TRANSITION_REGISTRY_IMMUTABLE",
     )
 
+    timeout_semantics = timeout_semantics_snapshot()
+    timeout_semantics_path = runtime_root / "timeout_semantics_contract.json"
+    _write_immutable_json(
+        path=timeout_semantics_path,
+        payload=timeout_semantics,
+        error_code="E_RUN_TIMEOUT_SEMANTICS_IMMUTABLE",
+    )
+
+    streaming_semantics = streaming_semantics_snapshot()
+    streaming_semantics_path = runtime_root / "streaming_semantics_contract.json"
+    _write_immutable_json(
+        path=streaming_semantics_path,
+        payload=streaming_semantics,
+        error_code="E_RUN_STREAMING_SEMANTICS_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -158,6 +178,10 @@ def capture_run_start_artifacts(
         "provider_truth_table_path": str(provider_truth_table_path),
         "state_transition_registry": state_transition_registry,
         "state_transition_registry_path": str(state_transition_registry_path),
+        "timeout_semantics_contract": timeout_semantics,
+        "timeout_semantics_contract_path": str(timeout_semantics_path),
+        "streaming_semantics_contract": streaming_semantics,
+        "streaming_semantics_contract_path": str(streaming_semantics_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

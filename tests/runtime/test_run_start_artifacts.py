@@ -37,6 +37,16 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["state_transition_registry"]["schema_version"] == "1.0"
     transition_domains = [row["domain"] for row in payload["state_transition_registry"]["domains"]]
     assert transition_domains == ["session", "run", "tool_invocation", "voice", "ui"]
+    assert payload["timeout_semantics_contract"]["schema_version"] == "1.0"
+    timeout_surfaces = [row["surface"] for row in payload["timeout_semantics_contract"]["timeout_surfaces"]]
+    assert timeout_surfaces == [
+        "local_model_completion_timeout",
+        "model_stream_provider_timeout",
+        "model_stream_turn_timeout",
+        "provider_runtime_inventory_timeout",
+    ]
+    assert payload["streaming_semantics_contract"]["schema_version"] == "1.0"
+    assert payload["streaming_semantics_contract"]["terminal_events"] == ["error", "stopped"]
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -44,6 +54,8 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["fail_behavior_registry_path"]).exists()
     assert Path(payload["provider_truth_table_path"]).exists()
     assert Path(payload["state_transition_registry_path"]).exists()
+    assert Path(payload["timeout_semantics_contract_path"]).exists()
+    assert Path(payload["streaming_semantics_contract_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -210,6 +222,36 @@ def test_capture_run_start_artifacts_fails_closed_on_state_transition_registry_m
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-state-transition-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_streaming_semantics_mutation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-streaming-semantics-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    streaming_semantics_path = (
+        workspace
+        / "observability"
+        / "run-streaming-semantics-immutable"
+        / "runtime_contracts"
+        / "streaming_semantics_contract.json"
+    )
+    streaming_semantics_path.write_text(
+        '{"schema_version":"999.0","event_trace_order":[],"terminal_events":[],"rules":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_STREAMING_SEMANTICS_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-streaming-semantics-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )

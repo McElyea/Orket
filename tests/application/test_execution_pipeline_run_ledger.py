@@ -239,6 +239,16 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert artifact_json["state_transition_registry"]["schema_version"] == "1.0"
     transition_domains = artifact_json["state_transition_registry"]["domains"]
     assert [row["domain"] for row in transition_domains] == ["session", "run", "tool_invocation", "voice", "ui"]
+    assert artifact_json["timeout_semantics_contract"]["schema_version"] == "1.0"
+    timeout_surfaces = artifact_json["timeout_semantics_contract"]["timeout_surfaces"]
+    assert [row["surface"] for row in timeout_surfaces] == [
+        "local_model_completion_timeout",
+        "model_stream_provider_timeout",
+        "model_stream_turn_timeout",
+        "provider_runtime_inventory_timeout",
+    ]
+    assert artifact_json["streaming_semantics_contract"]["schema_version"] == "1.0"
+    assert artifact_json["streaming_semantics_contract"]["terminal_events"] == ["error", "stopped"]
     assert artifact_json["capability_manifest"]["run_id"] == "sess-ledger-contract-bootstrap"
     assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
     assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
@@ -253,6 +263,8 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
     assert Path(artifact_json["fail_behavior_registry_path"]).exists()
     assert Path(artifact_json["provider_truth_table_path"]).exists()
     assert Path(artifact_json["state_transition_registry_path"]).exists()
+    assert Path(artifact_json["timeout_semantics_contract_path"]).exists()
+    assert Path(artifact_json["streaming_semantics_contract_path"]).exists()
     assert Path(artifact_json["capability_manifest_path"]).exists()
     assert Path(artifact_json["workspace_state_snapshot_path"]).exists()
 
