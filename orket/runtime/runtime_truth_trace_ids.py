@@ -18,6 +18,7 @@ _TRACE_IDS: dict[str, str] = {
     "unknown_input_policy": "TRUTH-W2A-UNKNOWN-INPUT-POLICY",
     "clock_time_authority_policy": "TRUTH-W2A-CLOCK-TIME-AUTHORITY-POLICY",
     "provider_quarantine_policy_contract": "TRUTH-W2B-PROVIDER-QUARANTINE-POLICY",
+    "safe_default_catalog": "TRUTH-W2A-SAFE-DEFAULT-CATALOG",
     "capability_fallback_hierarchy": "TRUTH-W2B-CAPABILITY-FALLBACK-HIERARCHY",
     "model_profile_bios": "TRUTH-B-MODEL-PROFILE-BIOS",
     "interrupt_semantics_policy": "TRUTH-W2B-INTERRUPT-SEMANTICS-POLICY",

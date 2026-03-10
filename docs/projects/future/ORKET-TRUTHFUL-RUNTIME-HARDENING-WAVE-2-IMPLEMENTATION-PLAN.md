@@ -55,6 +55,7 @@ Completed in active execution:
 40. retry classification and runtime boundary audit contracts captured as run-start immutable artifacts
 41. provider quarantine policy contract/checker with drift/run-start/acceptance-gate enforcement
 42. unknown-input policy checker with drift/acceptance-gate enforcement
+43. safe default catalog checker with drift/run-start/acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

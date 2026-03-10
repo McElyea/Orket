@@ -69,6 +69,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["provider_quarantine_policy_contract"]["schema_version"] == "1.0"
     quarantine_env_keys = payload["provider_quarantine_policy_contract"]["env_keys"]
     assert "ORKET_PROVIDER_QUARANTINE" in quarantine_env_keys
+    assert payload["safe_default_catalog"]["schema_version"] == "1.0"
+    safe_default_keys = [row["default_key"] for row in payload["safe_default_catalog"]["defaults"]]
+    assert "protocol_network_mode" in safe_default_keys
     assert payload["capability_fallback_hierarchy"]["schema_version"] == "1.0"
     assert payload["capability_fallback_hierarchy"]["fallback_hierarchy"]["streaming"][0]["provider"] == "ollama"
     assert payload["model_profile_bios"]["schema_version"] == "1.0"
@@ -188,6 +191,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["unknown_input_policy_path"]).exists()
     assert Path(payload["clock_time_authority_policy_path"]).exists()
     assert Path(payload["provider_quarantine_policy_contract_path"]).exists()
+    assert Path(payload["safe_default_catalog_path"]).exists()
     assert Path(payload["capability_fallback_hierarchy_path"]).exists()
     assert Path(payload["model_profile_bios_path"]).exists()
     assert Path(payload["interrupt_semantics_policy_path"]).exists()

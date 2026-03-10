@@ -62,6 +62,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["structured_warning_policy_check"]["ok"] is True
     assert payload["details"]["retry_classification_policy_check"]["ok"] is True
     assert payload["details"]["provider_quarantine_policy_check"]["ok"] is True
+    assert payload["details"]["safe_default_catalog_check"]["ok"] is True
     assert payload["details"]["runtime_boundary_audit_check"]["ok"] is True
     assert payload["details"]["model_profile_bios_check"]["ok"] is True
     assert payload["details"]["interrupt_semantics_policy_check"]["ok"] is True
@@ -322,6 +323,31 @@ def test_runtime_truth_acceptance_gate_fails_when_provider_quarantine_policy_che
     )
     assert payload["ok"] is False
     assert "provider_quarantine_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_safe_default_catalog_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_safe_default_catalog",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "default_key_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "safe_default_catalog_check_failed" in payload["failures"]
 
 
 # Layer: contract
@@ -1133,6 +1159,7 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "unknown_input_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "clock_time_authority_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "provider_quarantine_policy_contract.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "safe_default_catalog.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "capability_fallback_hierarchy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "model_profile_bios.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "interrupt_semantics_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES

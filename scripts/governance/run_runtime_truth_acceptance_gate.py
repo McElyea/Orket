@@ -72,6 +72,9 @@ from scripts.governance.check_interface_freeze_windows import (
 from scripts.governance.check_provider_quarantine_policy import (
     evaluate_provider_quarantine_policy,
 )
+from scripts.governance.check_safe_default_catalog import (
+    evaluate_safe_default_catalog,
+)
 from scripts.governance.check_evidence_package_generator_contract import (
     evaluate_evidence_package_generator_contract,
 )
@@ -142,6 +145,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "unknown_input_policy.json",
     "clock_time_authority_policy.json",
     "provider_quarantine_policy_contract.json",
+    "safe_default_catalog.json",
     "capability_fallback_hierarchy.json",
     "model_profile_bios.json",
     "interrupt_semantics_policy.json",
@@ -232,6 +236,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-provider-quarantine-policy-check",
         action="store_true",
         help="Skip provider quarantine policy contract check.",
+    )
+    parser.add_argument(
+        "--skip-safe-default-catalog-check",
+        action="store_true",
+        help="Skip safe default catalog contract check.",
     )
     parser.add_argument(
         "--skip-boundary-audit-check",
@@ -414,6 +423,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
     check_provider_quarantine_policy: bool = True,
+    check_safe_default_catalog: bool = True,
     check_boundary_audit: bool = True,
     check_model_profile_bios: bool = True,
     check_interrupt_policy: bool = True,
@@ -567,6 +577,15 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(quarantine_policy_payload.get("ok")):
             failures.append("provider_quarantine_policy_check_failed")
+
+    if check_safe_default_catalog:
+        safe_defaults_payload = evaluate_safe_default_catalog()
+        details["safe_default_catalog_check"] = {
+            "ok": bool(safe_defaults_payload.get("ok")),
+            "default_key_count": int(safe_defaults_payload.get("default_key_count") or 0),
+        }
+        if not bool(safe_defaults_payload.get("ok")):
+            failures.append("safe_default_catalog_check_failed")
 
     if check_boundary_audit:
         boundary_payload = evaluate_runtime_boundary_audit_checklist(workspace=REPO_ROOT)
@@ -881,6 +900,7 @@ def main(argv: list[str] | None = None) -> int:
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_provider_quarantine_policy=not bool(args.skip_provider_quarantine_policy_check),
+        check_safe_default_catalog=not bool(args.skip_safe_default_catalog_check),
         check_boundary_audit=not bool(args.skip_boundary_audit_check),
         check_model_profile_bios=not bool(args.skip_model_profile_bios_check),
         check_interrupt_policy=not bool(args.skip_interrupt_policy_check),

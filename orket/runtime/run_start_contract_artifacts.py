@@ -46,6 +46,7 @@ from orket.runtime.runtime_truth_contracts import (
 )
 from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
 from orket.runtime.runtime_truth_trace_ids import runtime_truth_trace_ids_snapshot
+from orket.runtime.safe_default_catalog import safe_default_catalog_snapshot
 from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
 from orket.runtime.spec_debt_queue import spec_debt_queue_snapshot
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
@@ -195,6 +196,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "provider_quarantine_policy_contract.json",
         provider_quarantine_policy_contract_snapshot,
         "E_RUN_PROVIDER_QUARANTINE_POLICY_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "safe_default_catalog",
+        "safe_default_catalog.json",
+        safe_default_catalog_snapshot,
+        "E_RUN_SAFE_DEFAULT_CATALOG_IMMUTABLE",
     ),
     (
         "capability_fallback_hierarchy",
