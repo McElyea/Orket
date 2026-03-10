@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
+from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.run_phase_contract import CANONICAL_RUN_PHASE_ORDER
 from orket.runtime.runtime_truth_contracts import runtime_status_vocabulary_snapshot
@@ -93,6 +94,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
             "observed": sorted(terminal_events),
         }
     )
+
+    try:
+        config_keys = list(validate_runtime_config_ownership_map())
+        checks.append(
+            {
+                "check": "runtime_config_ownership_map_valid",
+                "ok": True,
+                "count": len(config_keys),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "runtime_config_ownership_map_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
 
     return {
         "schema_version": "1.0",

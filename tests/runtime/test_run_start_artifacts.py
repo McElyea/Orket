@@ -57,6 +57,10 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["runtime_invariant_registry"]["schema_version"] == "1.0"
     invariant_ids = [row["invariant_id"] for row in payload["runtime_invariant_registry"]["invariants"]]
     assert "INV-001" in invariant_ids
+    assert payload["runtime_config_ownership_map"]["schema_version"] == "1.0"
+    config_keys = [row["config_key"] for row in payload["runtime_config_ownership_map"]["rows"]]
+    assert "ORKET_STATE_BACKEND_MODE" in config_keys
+    assert "ORKET_PROVIDER_QUARANTINE" in config_keys
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -69,6 +73,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["runtime_truth_contract_drift_report_path"]).exists()
     assert Path(payload["runtime_truth_trace_ids_path"]).exists()
     assert Path(payload["runtime_invariant_registry_path"]).exists()
+    assert Path(payload["runtime_config_ownership_map_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
