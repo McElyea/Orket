@@ -87,6 +87,9 @@ from scripts.governance.check_resource_pressure_simulation_lane import (
 from scripts.governance.check_ui_lane_security_boundary_tests import (
     evaluate_ui_lane_security_boundary_tests,
 )
+from scripts.governance.check_degradation_first_ui_standard import (
+    evaluate_degradation_first_ui_standard,
+)
 from scripts.governance.check_naming_discipline_policy import (
     evaluate_naming_discipline_policy,
 )
@@ -147,6 +150,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "long_session_soak_test_contract.json",
     "resource_pressure_simulation_lane.json",
     "ui_lane_security_boundary_test_contract.json",
+    "degradation_first_ui_standard.json",
     "naming_discipline_policy.json",
     "promotion_rollback_criteria.json",
 )
@@ -322,6 +326,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip UI lane security boundary tests check.",
     )
     parser.add_argument(
+        "--skip-degradation-first-ui-standard-check",
+        action="store_true",
+        help="Skip degradation-first UI standard check.",
+    )
+    parser.add_argument(
         "--skip-naming-discipline-policy-check",
         action="store_true",
         help="Skip naming discipline policy check.",
@@ -375,6 +384,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_long_session_soak_tests: bool = True,
     check_resource_pressure_simulation_lane: bool = True,
     check_ui_lane_security_boundary_tests: bool = True,
+    check_degradation_first_ui_standard: bool = True,
     check_naming_discipline_policy: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
@@ -706,6 +716,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(ui_lane_boundary_payload.get("ok")):
             failures.append("ui_lane_security_boundary_tests_check_failed")
 
+    if check_degradation_first_ui_standard:
+        degradation_first_payload = evaluate_degradation_first_ui_standard()
+        details["degradation_first_ui_standard_check"] = {
+            "ok": bool(degradation_first_payload.get("ok")),
+            "check_count": int(degradation_first_payload.get("check_count") or 0),
+        }
+        if not bool(degradation_first_payload.get("ok")):
+            failures.append("degradation_first_ui_standard_check_failed")
+
     if check_naming_discipline_policy:
         naming_policy_payload = evaluate_naming_discipline_policy()
         details["naming_discipline_policy_check"] = {
@@ -770,6 +789,7 @@ def main(argv: list[str] | None = None) -> int:
         check_long_session_soak_tests=not bool(args.skip_long_session_soak_tests_check),
         check_resource_pressure_simulation_lane=not bool(args.skip_resource_pressure_simulation_lane_check),
         check_ui_lane_security_boundary_tests=not bool(args.skip_ui_lane_security_boundary_tests_check),
+        check_degradation_first_ui_standard=not bool(args.skip_degradation_first_ui_standard_check),
         check_naming_discipline_policy=not bool(args.skip_naming_discipline_policy_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )

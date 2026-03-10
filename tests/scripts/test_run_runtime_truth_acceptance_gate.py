@@ -85,6 +85,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["long_session_soak_tests_check"]["ok"] is True
     assert payload["details"]["resource_pressure_simulation_lane_check"]["ok"] is True
     assert payload["details"]["ui_lane_security_boundary_tests_check"]["ok"] is True
+    assert payload["details"]["degradation_first_ui_standard_check"]["ok"] is True
     assert payload["details"]["naming_discipline_policy_check"]["ok"] is True
     assert payload["details"]["promotion_rollback_criteria_check"]["ok"] is True
 
@@ -893,6 +894,31 @@ def test_runtime_truth_acceptance_gate_fails_when_ui_lane_security_boundary_test
 
 
 # Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_degradation_first_ui_standard_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_degradation_first_ui_standard",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "check_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "degradation_first_ui_standard_check_failed" in payload["failures"]
+
+
+# Layer: contract
 def test_runtime_truth_acceptance_gate_fails_when_naming_discipline_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -975,5 +1001,6 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "long_session_soak_test_contract.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "resource_pressure_simulation_lane.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "ui_lane_security_boundary_test_contract.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "degradation_first_ui_standard.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "naming_discipline_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "promotion_rollback_criteria.json" in REQUIRED_RUNTIME_CONTRACT_FILES

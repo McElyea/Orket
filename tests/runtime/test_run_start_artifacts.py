@@ -146,6 +146,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["ui_lane_security_boundary_test_contract"]["schema_version"] == "1.0"
     ui_boundary_check_ids = [row["check_id"] for row in payload["ui_lane_security_boundary_test_contract"]["checks"]]
     assert "explorer_path_traversal_blocked" in ui_boundary_check_ids
+    assert payload["degradation_first_ui_standard"]["schema_version"] == "1.0"
+    degradation_check_ids = [row["check_id"] for row in payload["degradation_first_ui_standard"]["checks"]]
+    assert "companion_models_fallback_marks_degraded_true" in degradation_check_ids
     assert payload["naming_discipline_policy"]["schema_version"] == "1.0"
     convention_ids = [row["convention_id"] for row in payload["naming_discipline_policy"]["conventions"]]
     assert "artifact_filenames_match_keys" in convention_ids
@@ -194,6 +197,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["long_session_soak_test_contract_path"]).exists()
     assert Path(payload["resource_pressure_simulation_lane_path"]).exists()
     assert Path(payload["ui_lane_security_boundary_test_contract_path"]).exists()
+    assert Path(payload["degradation_first_ui_standard_path"]).exists()
     assert Path(payload["naming_discipline_policy_path"]).exists()
     assert Path(payload["promotion_rollback_criteria_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
