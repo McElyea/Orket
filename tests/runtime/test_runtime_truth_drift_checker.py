@@ -23,6 +23,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "result_error_invariant_contract_valid" in checks
     assert "runtime_invariant_registry_snapshot_valid" in checks
     assert "runtime_boundary_audit_checklist_valid" in checks
+    assert "provider_quarantine_policy_contract_valid" in checks
     assert "model_profile_bios_valid" in checks
     assert "interrupt_semantics_policy_valid" in checks
     assert "idempotency_discipline_policy_valid" in checks
@@ -246,5 +247,26 @@ def test_runtime_truth_contract_drift_report_fails_when_runtime_invariant_regist
     payload = checker.runtime_truth_contract_drift_report()
     target = next(
         row for row in payload["checks"] if row["check"] == "runtime_invariant_registry_snapshot_valid"
+    )
+    assert target["ok"] is False
+
+
+# Layer: contract
+def test_runtime_truth_contract_drift_report_fails_when_provider_quarantine_policy_contract_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from orket.runtime import runtime_truth_drift_checker as checker
+
+    def _raise_contract_error() -> tuple[str, ...]:
+        raise ValueError("E_PROVIDER_QUARANTINE_POLICY_CONTRACT_ENV_KEYS_MISMATCH")
+
+    monkeypatch.setattr(
+        checker,
+        "validate_provider_quarantine_policy_contract",
+        _raise_contract_error,
+    )
+    payload = checker.runtime_truth_contract_drift_report()
+    target = next(
+        row for row in payload["checks"] if row["check"] == "provider_quarantine_policy_contract_valid"
     )
     assert target["ok"] is False

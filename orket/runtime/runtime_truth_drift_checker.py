@@ -29,6 +29,7 @@ from orket.runtime.observability_redaction_test_contract import validate_observa
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
 from orket.runtime.persistence_corruption_test_contract import validate_persistence_corruption_test_contract
 from orket.runtime.promotion_rollback_criteria import validate_promotion_rollback_criteria
+from orket.runtime.provider_quarantine_policy_contract import validate_provider_quarantine_policy_contract
 from orket.runtime.release_confidence_scorecard import validate_release_confidence_scorecard
 from orket.runtime.resource_pressure_simulation_lane import validate_resource_pressure_simulation_lane
 from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
@@ -206,6 +207,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "clock_time_authority_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        env_keys = validate_provider_quarantine_policy_contract()
+        checks.append(
+            {
+                "check": "provider_quarantine_policy_contract_valid",
+                "ok": True,
+                "count": len(env_keys),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "provider_quarantine_policy_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }

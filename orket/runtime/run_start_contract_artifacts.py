@@ -30,6 +30,7 @@ from orket.runtime.operator_override_logging_policy import operator_override_log
 from orket.runtime.persistence_corruption_test_contract import persistence_corruption_test_contract_snapshot
 from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
+from orket.runtime.provider_quarantine_policy_contract import provider_quarantine_policy_contract_snapshot
 from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
 from orket.runtime.result_error_invariants import result_error_invariant_contract_snapshot
 from orket.runtime.resource_pressure_simulation_lane import resource_pressure_simulation_lane_snapshot
@@ -188,6 +189,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "clock_time_authority_policy.json",
         clock_time_authority_policy_snapshot,
         "E_RUN_CLOCK_TIME_AUTHORITY_POLICY_IMMUTABLE",
+    ),
+    (
+        "provider_quarantine_policy_contract",
+        "provider_quarantine_policy_contract.json",
+        provider_quarantine_policy_contract_snapshot,
+        "E_RUN_PROVIDER_QUARANTINE_POLICY_CONTRACT_IMMUTABLE",
     ),
     (
         "capability_fallback_hierarchy",

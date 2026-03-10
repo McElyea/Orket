@@ -66,6 +66,9 @@ from scripts.governance.check_non_fatal_error_budget import (
 from scripts.governance.check_interface_freeze_windows import (
     evaluate_interface_freeze_windows,
 )
+from scripts.governance.check_provider_quarantine_policy import (
+    evaluate_provider_quarantine_policy,
+)
 from scripts.governance.check_evidence_package_generator_contract import (
     evaluate_evidence_package_generator_contract,
 )
@@ -135,6 +138,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "runtime_config_ownership_map.json",
     "unknown_input_policy.json",
     "clock_time_authority_policy.json",
+    "provider_quarantine_policy_contract.json",
     "capability_fallback_hierarchy.json",
     "model_profile_bios.json",
     "interrupt_semantics_policy.json",
@@ -215,6 +219,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-retry-policy-check",
         action="store_true",
         help="Skip retry classification policy contract check.",
+    )
+    parser.add_argument(
+        "--skip-provider-quarantine-policy-check",
+        action="store_true",
+        help="Skip provider quarantine policy contract check.",
     )
     parser.add_argument(
         "--skip-boundary-audit-check",
@@ -395,6 +404,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_runtime_config_ownership_map: bool = True,
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
+    check_provider_quarantine_policy: bool = True,
     check_boundary_audit: bool = True,
     check_model_profile_bios: bool = True,
     check_interrupt_policy: bool = True,
@@ -529,6 +539,16 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(retry_policy_payload.get("ok")):
             failures.append("retry_classification_policy_check_failed")
+
+    if check_provider_quarantine_policy:
+        quarantine_policy_payload = evaluate_provider_quarantine_policy()
+        details["provider_quarantine_policy_check"] = {
+            "ok": bool(quarantine_policy_payload.get("ok")),
+            "env_key_count": int(quarantine_policy_payload.get("env_key_count") or 0),
+            "check_count": int(quarantine_policy_payload.get("check_count") or 0),
+        }
+        if not bool(quarantine_policy_payload.get("ok")):
+            failures.append("provider_quarantine_policy_check_failed")
 
     if check_boundary_audit:
         boundary_payload = evaluate_runtime_boundary_audit_checklist(workspace=REPO_ROOT)
@@ -841,6 +861,7 @@ def main(argv: list[str] | None = None) -> int:
         check_runtime_config_ownership_map=not bool(args.skip_runtime_config_ownership_map_check),
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
+        check_provider_quarantine_policy=not bool(args.skip_provider_quarantine_policy_check),
         check_boundary_audit=not bool(args.skip_boundary_audit_check),
         check_model_profile_bios=not bool(args.skip_model_profile_bios_check),
         check_interrupt_policy=not bool(args.skip_interrupt_policy_check),
