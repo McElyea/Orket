@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from orket.runtime.capability_fallback_hierarchy import validate_capability_fallback_hierarchy
+from orket.runtime.canonical_examples_library import validate_canonical_examples_library
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.artifact_provenance_block_policy import validate_artifact_provenance_block_policy
 from orket.runtime.demo_production_labeling_policy import validate_demo_production_labeling_policy
@@ -471,6 +472,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "workspace_hygiene_rules_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        example_ids = validate_canonical_examples_library()
+        checks.append(
+            {
+                "check": "canonical_examples_library_valid",
+                "ok": True,
+                "count": len(example_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "canonical_examples_library_valid",
                 "ok": False,
                 "error": str(exc),
             }

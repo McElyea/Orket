@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 from orket.runtime.artifact_provenance_block_policy import artifact_provenance_block_policy_snapshot
 from orket.runtime.capability_fallback_hierarchy import capability_fallback_hierarchy_snapshot
+from orket.runtime.canonical_examples_library import canonical_examples_library_snapshot
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.contract_bootstrap import (
     RuntimeContractSnapshots,
@@ -253,6 +254,12 @@ _CONTRACT_SNAPSHOT_DEFS: tuple[tuple[str, str, ContractSnapshotFactory, str], ..
         "workspace_hygiene_rules.json",
         workspace_hygiene_rules_snapshot,
         "E_RUN_WORKSPACE_HYGIENE_RULES_IMMUTABLE",
+    ),
+    (
+        "canonical_examples_library",
+        "canonical_examples_library.json",
+        canonical_examples_library_snapshot,
+        "E_RUN_CANONICAL_EXAMPLES_LIBRARY_IMMUTABLE",
     ),
     (
         "ledger_event_schema",

@@ -33,6 +33,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "release_confidence_scorecard_valid" in checks
     assert "feature_flag_expiration_policy_valid" in checks
     assert "workspace_hygiene_rules_valid" in checks
+    assert "canonical_examples_library_valid" in checks
 
 
 # Layer: contract

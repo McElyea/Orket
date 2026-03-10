@@ -104,6 +104,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["workspace_hygiene_rules"]["schema_version"] == "1.0"
     hygiene_rule_ids = [row["rule_id"] for row in payload["workspace_hygiene_rules"]["rules"]]
     assert "WSH-001" in hygiene_rule_ids
+    assert payload["canonical_examples_library"]["schema_version"] == "1.0"
+    canonical_example_ids = [row["example_id"] for row in payload["canonical_examples_library"]["examples"]]
+    assert "EX-ROUTE-DECISION-BASELINE" in canonical_example_ids
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -132,6 +135,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["release_confidence_scorecard_path"]).exists()
     assert Path(payload["feature_flag_expiration_policy_path"]).exists()
     assert Path(payload["workspace_hygiene_rules_path"]).exists()
+    assert Path(payload["canonical_examples_library_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -768,6 +772,38 @@ def test_capture_run_start_artifacts_fails_closed_on_workspace_hygiene_rules_mut
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-workspace-hygiene-rules-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_canonical_examples_library_mutation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-canonical-examples-library-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    canonical_examples_path = (
+        workspace
+        / "observability"
+        / "run-canonical-examples-library-immutable"
+        / "runtime_contracts"
+        / "canonical_examples_library.json"
+    )
+    canonical_examples_path.write_text(
+        '{"schema_version":"999.0","examples":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_CANONICAL_EXAMPLES_LIBRARY_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-canonical-examples-library-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )

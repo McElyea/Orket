@@ -45,6 +45,9 @@ from scripts.governance.check_feature_flag_expiration_policy import (
 from scripts.governance.check_workspace_hygiene_rules import (
     evaluate_workspace_hygiene_rules,
 )
+from scripts.governance.check_canonical_examples_library import (
+    evaluate_canonical_examples_library,
+)
 from scripts.governance.check_operator_override_logging_policy import (
     evaluate_operator_override_logging_policy,
 )
@@ -85,6 +88,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "release_confidence_scorecard.json",
     "feature_flag_expiration_policy.json",
     "workspace_hygiene_rules.json",
+    "canonical_examples_library.json",
 )
 
 
@@ -187,6 +191,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip workspace hygiene rules contract check.",
     )
+    parser.add_argument(
+        "--skip-canonical-examples-check",
+        action="store_true",
+        help="Skip canonical examples library contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -217,6 +226,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_release_confidence: bool = True,
     check_feature_flag_expiration: bool = True,
     check_workspace_hygiene: bool = True,
+    check_canonical_examples: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -419,6 +429,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(workspace_hygiene_payload.get("ok")):
             failures.append("workspace_hygiene_rules_check_failed")
 
+    if check_canonical_examples:
+        examples_payload = evaluate_canonical_examples_library()
+        details["canonical_examples_library_check"] = {
+            "ok": bool(examples_payload.get("ok")),
+            "example_count": int(examples_payload.get("example_count") or 0),
+        }
+        if not bool(examples_payload.get("ok")):
+            failures.append("canonical_examples_library_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -451,6 +470,7 @@ def main(argv: list[str] | None = None) -> int:
         check_release_confidence=not bool(args.skip_release_confidence_check),
         check_feature_flag_expiration=not bool(args.skip_feature_flag_expiration_check),
         check_workspace_hygiene=not bool(args.skip_workspace_hygiene_check),
+        check_canonical_examples=not bool(args.skip_canonical_examples_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1
