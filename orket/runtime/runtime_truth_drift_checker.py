@@ -7,6 +7,9 @@ from orket.runtime.canonical_examples_library import validate_canonical_examples
 from orket.runtime.cold_start_truth_test_contract import validate_cold_start_truth_test_contract
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.degradation_first_ui_standard import validate_degradation_first_ui_standard
+from orket.runtime.decision_record_operating_principles_contract import (
+    validate_decision_record_operating_principles_contract,
+)
 from orket.runtime.artifact_provenance_block_policy import validate_artifact_provenance_block_policy
 from orket.runtime.demo_production_labeling_policy import validate_demo_production_labeling_policy
 from orket.runtime.evidence_package_generator_contract import validate_evidence_package_generator_contract
@@ -758,6 +761,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "degradation_first_ui_standard_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        check_ids = validate_decision_record_operating_principles_contract()
+        checks.append(
+            {
+                "check": "decision_record_operating_principles_contract_valid",
+                "ok": True,
+                "count": len(check_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "decision_record_operating_principles_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }

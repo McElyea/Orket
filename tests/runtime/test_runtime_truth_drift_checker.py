@@ -48,6 +48,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "resource_pressure_simulation_lane_valid" in checks
     assert "ui_lane_security_boundary_test_contract_valid" in checks
     assert "degradation_first_ui_standard_valid" in checks
+    assert "decision_record_operating_principles_contract_valid" in checks
     assert "naming_discipline_policy_valid" in checks
     assert "promotion_rollback_criteria_valid" in checks
 
@@ -180,5 +181,26 @@ def test_runtime_truth_contract_drift_report_fails_when_degradation_first_ui_sta
     payload = checker.runtime_truth_contract_drift_report()
     target = next(
         row for row in payload["checks"] if row["check"] == "degradation_first_ui_standard_valid"
+    )
+    assert target["ok"] is False
+
+
+# Layer: contract
+def test_runtime_truth_contract_drift_report_fails_when_decision_record_operating_principles_contract_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from orket.runtime import runtime_truth_drift_checker as checker
+
+    def _raise_contract_error() -> tuple[str, ...]:
+        raise ValueError("E_DECISION_RECORD_OPERATING_PRINCIPLES_CONTRACT_CHECK_ID_SET_MISMATCH")
+
+    monkeypatch.setattr(
+        checker,
+        "validate_decision_record_operating_principles_contract",
+        _raise_contract_error,
+    )
+    payload = checker.runtime_truth_contract_drift_report()
+    target = next(
+        row for row in payload["checks"] if row["check"] == "decision_record_operating_principles_contract_valid"
     )
     assert target["ok"] is False

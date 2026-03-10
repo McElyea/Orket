@@ -95,6 +95,7 @@ Runtime truth hardening scripts are grouped in `scripts/governance/` and are int
   - `check_resource_pressure_simulation_lane.py`
   - `check_ui_lane_security_boundary_tests.py`
   - `check_degradation_first_ui_standard.py`
+  - `check_decision_record_operating_principles_contract.py`
   - `check_naming_discipline_policy.py`
   - `check_promotion_rollback_criteria.py`
   - `check_environment_parity_checklist.py`

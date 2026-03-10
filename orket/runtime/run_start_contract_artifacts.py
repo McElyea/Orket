@@ -9,6 +9,9 @@ from orket.runtime.clock_time_authority_policy import clock_time_authority_polic
 from orket.runtime.demo_production_labeling_policy import demo_production_labeling_policy_snapshot
 from orket.runtime.cold_start_truth_test_contract import cold_start_truth_test_contract_snapshot
 from orket.runtime.degradation_first_ui_standard import degradation_first_ui_standard_snapshot
+from orket.runtime.decision_record_operating_principles_contract import (
+    decision_record_operating_principles_contract_snapshot,
+)
 from orket.runtime.evidence_package_generator_contract import evidence_package_generator_contract_snapshot
 from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_snapshot
 from orket.runtime.feature_flag_expiration_policy import feature_flag_expiration_policy_snapshot
@@ -345,6 +348,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "degradation_first_ui_standard.json",
         degradation_first_ui_standard_snapshot,
         "E_RUN_DEGRADATION_FIRST_UI_STANDARD_IMMUTABLE",
+    ),
+    (
+        "decision_record_operating_principles_contract",
+        "decision_record_operating_principles_contract.json",
+        decision_record_operating_principles_contract_snapshot,
+        "E_RUN_DECISION_RECORD_OPERATING_PRINCIPLES_CONTRACT_IMMUTABLE",
     ),
     (
         "naming_discipline_policy",

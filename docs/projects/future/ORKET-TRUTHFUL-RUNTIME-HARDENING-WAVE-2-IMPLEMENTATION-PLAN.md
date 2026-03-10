@@ -48,6 +48,7 @@ Completed in active execution:
 33. resource pressure simulation lane contract/checker, run-start artifact, and acceptance-gate enforcement
 34. UI lane security boundary tests contract/checker, run-start artifact, and acceptance-gate enforcement
 35. degradation-first UI standard contract/checker, run-start artifact, and acceptance-gate enforcement
+36. decision-record/operating-principles contract checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

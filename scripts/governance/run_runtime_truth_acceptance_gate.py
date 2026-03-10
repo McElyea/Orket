@@ -90,6 +90,9 @@ from scripts.governance.check_ui_lane_security_boundary_tests import (
 from scripts.governance.check_degradation_first_ui_standard import (
     evaluate_degradation_first_ui_standard,
 )
+from scripts.governance.check_decision_record_operating_principles_contract import (
+    evaluate_decision_record_operating_principles_contract,
+)
 from scripts.governance.check_naming_discipline_policy import (
     evaluate_naming_discipline_policy,
 )
@@ -151,6 +154,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "resource_pressure_simulation_lane.json",
     "ui_lane_security_boundary_test_contract.json",
     "degradation_first_ui_standard.json",
+    "decision_record_operating_principles_contract.json",
     "naming_discipline_policy.json",
     "promotion_rollback_criteria.json",
 )
@@ -331,6 +335,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip degradation-first UI standard check.",
     )
     parser.add_argument(
+        "--skip-decision-record-operating-principles-contract-check",
+        action="store_true",
+        help="Skip decision-record and operating-principles contract check.",
+    )
+    parser.add_argument(
         "--skip-naming-discipline-policy-check",
         action="store_true",
         help="Skip naming discipline policy check.",
@@ -385,6 +394,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_resource_pressure_simulation_lane: bool = True,
     check_ui_lane_security_boundary_tests: bool = True,
     check_degradation_first_ui_standard: bool = True,
+    check_decision_record_operating_principles_contract: bool = True,
     check_naming_discipline_policy: bool = True,
     check_promotion_rollback: bool = True,
 ) -> dict[str, Any]:
@@ -725,6 +735,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(degradation_first_payload.get("ok")):
             failures.append("degradation_first_ui_standard_check_failed")
 
+    if check_decision_record_operating_principles_contract:
+        decision_record_payload = evaluate_decision_record_operating_principles_contract(workspace=REPO_ROOT)
+        details["decision_record_operating_principles_contract_check"] = {
+            "ok": bool(decision_record_payload.get("ok")),
+            "check_count": int(decision_record_payload.get("check_count") or 0),
+        }
+        if not bool(decision_record_payload.get("ok")):
+            failures.append("decision_record_operating_principles_contract_check_failed")
+
     if check_naming_discipline_policy:
         naming_policy_payload = evaluate_naming_discipline_policy()
         details["naming_discipline_policy_check"] = {
@@ -790,6 +809,9 @@ def main(argv: list[str] | None = None) -> int:
         check_resource_pressure_simulation_lane=not bool(args.skip_resource_pressure_simulation_lane_check),
         check_ui_lane_security_boundary_tests=not bool(args.skip_ui_lane_security_boundary_tests_check),
         check_degradation_first_ui_standard=not bool(args.skip_degradation_first_ui_standard_check),
+        check_decision_record_operating_principles_contract=not bool(
+            args.skip_decision_record_operating_principles_contract_check
+        ),
         check_naming_discipline_policy=not bool(args.skip_naming_discipline_policy_check),
         check_promotion_rollback=not bool(args.skip_promotion_rollback_check),
     )
