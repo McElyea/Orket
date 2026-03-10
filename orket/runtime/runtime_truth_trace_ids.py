@@ -40,6 +40,7 @@ _TRACE_IDS: dict[str, str] = {
     "local_remote_route_policy": "TRUTH-W2B-LOCAL-REMOTE-ROUTE-POLICY",
     "failure_replay_harness_contract": "TRUTH-W2D-FAILURE-REPLAY-HARNESS",
     "cold_start_truth_test_contract": "TRUTH-W2D-COLD-START-TRUTH-TESTS",
+    "naming_discipline_policy": "TRUTH-W2B-NAMING-DISCIPLINE",
     "promotion_rollback_criteria": "TRUTH-W2E-PROMOTION-ROLLBACK-CRITERIA",
     "deterministic_mode_contract": "TRUTH-B-DETERMINISTIC-MODE-FLAG",
     "route_decision_artifact": "TRUTH-B-ROUTE-DECISION-ARTIFACT",

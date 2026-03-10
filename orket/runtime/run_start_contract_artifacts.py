@@ -19,6 +19,7 @@ from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_
 from orket.runtime.local_remote_route_policy import local_remote_route_policy_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
+from orket.runtime.naming_discipline_policy import naming_discipline_policy_snapshot
 from orket.runtime.observability_redaction_test_contract import observability_redaction_test_contract_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
 from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
@@ -309,6 +310,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "cold_start_truth_test_contract.json",
         cold_start_truth_test_contract_snapshot,
         "E_RUN_COLD_START_TRUTH_TEST_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "naming_discipline_policy",
+        "naming_discipline_policy.json",
+        naming_discipline_policy_snapshot,
+        "E_RUN_NAMING_DISCIPLINE_POLICY_IMMUTABLE",
     ),
     (
         "promotion_rollback_criteria",

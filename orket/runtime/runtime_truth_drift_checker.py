@@ -19,6 +19,7 @@ from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantic
 from orket.runtime.local_remote_route_policy import validate_local_remote_route_policy
 from orket.runtime.model_profile_bios import validate_model_profile_bios
 from orket.runtime.non_fatal_error_budget import validate_non_fatal_error_budget
+from orket.runtime.naming_discipline_policy import validate_naming_discipline_policy
 from orket.runtime.observability_redaction_test_contract import validate_observability_redaction_test_contract
 from orket.runtime.operator_override_logging_policy import validate_operator_override_logging_policy
 from orket.runtime.promotion_rollback_criteria import validate_promotion_rollback_criteria
@@ -662,6 +663,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "cold_start_truth_test_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        conventions = validate_naming_discipline_policy()
+        checks.append(
+            {
+                "check": "naming_discipline_policy_valid",
+                "ok": True,
+                "count": len(conventions),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "naming_discipline_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

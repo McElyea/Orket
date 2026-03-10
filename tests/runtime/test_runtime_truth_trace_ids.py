@@ -39,6 +39,7 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "local_remote_route_policy" in artifacts
     assert "failure_replay_harness_contract" in artifacts
     assert "cold_start_truth_test_contract" in artifacts
+    assert "naming_discipline_policy" in artifacts
     assert "promotion_rollback_criteria" in artifacts
     assert "route_decision_artifact" in artifacts
 
