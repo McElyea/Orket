@@ -22,6 +22,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "runtime_invariant_registry.json",
     "runtime_config_ownership_map.json",
     "unknown_input_policy.json",
+    "clock_time_authority_policy.json",
 )
 
 

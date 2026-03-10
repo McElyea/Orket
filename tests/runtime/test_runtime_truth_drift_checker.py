@@ -14,6 +14,8 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert payload["schema_version"] == "1.0"
     assert payload["ok"] is True
     assert len(payload["checks"]) >= 5
+    checks = {row["check"] for row in payload["checks"]}
+    assert "clock_time_authority_policy_valid" in checks
 
 
 # Layer: contract

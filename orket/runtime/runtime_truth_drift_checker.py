@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_config_ownership_map import validate_runtime_config_ownership_map
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
@@ -129,6 +130,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "runtime_config_ownership_map_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        clock_policy = validate_clock_time_authority_policy()
+        checks.append(
+            {
+                "check": "clock_time_authority_policy_valid",
+                "ok": True,
+                "defaults": dict(clock_policy.get("defaults") or {}),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "clock_time_authority_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

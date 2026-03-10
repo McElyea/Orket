@@ -10,6 +10,7 @@ from orket.runtime.contract_bootstrap import (
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
+from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
 from orket.runtime.run_phase_contract import run_phase_contract_snapshot
 from orket.runtime.runtime_truth_contracts import (
@@ -175,6 +176,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_UNKNOWN_INPUT_POLICY_IMMUTABLE",
     )
 
+    clock_time_authority_policy = clock_time_authority_policy_snapshot()
+    clock_time_authority_policy_path = runtime_root / "clock_time_authority_policy.json"
+    _write_immutable_json(
+        path=clock_time_authority_policy_path,
+        payload=clock_time_authority_policy,
+        error_code="E_RUN_CLOCK_TIME_AUTHORITY_POLICY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -239,6 +248,8 @@ def capture_run_start_artifacts(
         "runtime_config_ownership_map_path": str(runtime_config_ownership_map_path),
         "unknown_input_policy": unknown_input_policy,
         "unknown_input_policy_path": str(unknown_input_policy_path),
+        "clock_time_authority_policy": clock_time_authority_policy,
+        "clock_time_authority_policy_path": str(clock_time_authority_policy_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

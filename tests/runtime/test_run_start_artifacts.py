@@ -64,6 +64,8 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["unknown_input_policy"]["schema_version"] == "1.0"
     unknown_surfaces = [row["surface"] for row in payload["unknown_input_policy"]["surfaces"]]
     assert "provider_runtime_target.requested_provider" in unknown_surfaces
+    assert payload["clock_time_authority_policy"]["schema_version"] == "1.0"
+    assert payload["clock_time_authority_policy"]["defaults"]["clock_mode"] == "wall"
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -78,6 +80,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["runtime_invariant_registry_path"]).exists()
     assert Path(payload["runtime_config_ownership_map_path"]).exists()
     assert Path(payload["unknown_input_policy_path"]).exists()
+    assert Path(payload["clock_time_authority_policy_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -274,6 +277,36 @@ def test_capture_run_start_artifacts_fails_closed_on_streaming_semantics_mutatio
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-streaming-semantics-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_clock_time_authority_policy_mutation(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-clock-policy-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    clock_policy_path = (
+        workspace
+        / "observability"
+        / "run-clock-policy-immutable"
+        / "runtime_contracts"
+        / "clock_time_authority_policy.json"
+    )
+    clock_policy_path.write_text(
+        '{"schema_version":"999.0","defaults":{"clock_mode":"artifact_replay"}}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_CLOCK_TIME_AUTHORITY_POLICY_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-clock-policy-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )
