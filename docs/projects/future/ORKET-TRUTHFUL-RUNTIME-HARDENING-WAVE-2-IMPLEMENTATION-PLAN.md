@@ -21,6 +21,7 @@ Completed in active execution:
 6. state transition Mermaid exporter, cross-lane dependency map generator, structured warning policy checks
 7. model profile BIOS contract, checker, run-start artifact, and acceptance-gate enforcement
 8. interrupt semantics policy contract, checker, run-start artifact, and acceptance-gate enforcement
+9. idempotency discipline policy contract, checker, run-start artifact, and acceptance-gate enforcement
 
 ## 2. Relationship to Existing Phase Plans
 

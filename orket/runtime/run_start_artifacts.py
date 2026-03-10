@@ -12,6 +12,7 @@ from orket.runtime.contract_bootstrap import (
 )
 from orket.runtime.capability_fallback_hierarchy import capability_fallback_hierarchy_snapshot
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
+from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
 from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.provider_truth_table import provider_truth_table_snapshot
@@ -211,6 +212,14 @@ def capture_run_start_artifacts(
         error_code="E_RUN_INTERRUPT_SEMANTICS_POLICY_IMMUTABLE",
     )
 
+    idempotency_discipline_policy = idempotency_discipline_policy_snapshot()
+    idempotency_discipline_policy_path = runtime_root / "idempotency_discipline_policy.json"
+    _write_immutable_json(
+        path=idempotency_discipline_policy_path,
+        payload=idempotency_discipline_policy,
+        error_code="E_RUN_IDEMPOTENCY_DISCIPLINE_POLICY_IMMUTABLE",
+    )
+
     ledger_event_schema = _ledger_event_schema_payload()
     ledger_event_schema_path = runtime_root / "ledger_event_schema.json"
     _write_immutable_json(
@@ -283,6 +292,8 @@ def capture_run_start_artifacts(
         "model_profile_bios_path": str(model_profile_bios_path),
         "interrupt_semantics_policy": interrupt_semantics_policy,
         "interrupt_semantics_policy_path": str(interrupt_semantics_policy_path),
+        "idempotency_discipline_policy": idempotency_discipline_policy,
+        "idempotency_discipline_policy_path": str(idempotency_discipline_policy_path),
         "ledger_event_schema": ledger_event_schema,
         "ledger_event_schema_path": str(ledger_event_schema_path),
         "capability_manifest_schema": capability_manifest_schema,

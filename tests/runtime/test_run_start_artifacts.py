@@ -74,6 +74,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["interrupt_semantics_policy"]["schema_version"] == "1.0"
     interrupt_surfaces = [row["surface"] for row in payload["interrupt_semantics_policy"]["rows"]]
     assert "run_execution" in interrupt_surfaces
+    assert payload["idempotency_discipline_policy"]["schema_version"] == "1.0"
+    idempotency_surfaces = [row["surface"] for row in payload["idempotency_discipline_policy"]["rows"]]
+    assert "run_finalize" in idempotency_surfaces
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -92,6 +95,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["capability_fallback_hierarchy_path"]).exists()
     assert Path(payload["model_profile_bios_path"]).exists()
     assert Path(payload["interrupt_semantics_policy_path"]).exists()
+    assert Path(payload["idempotency_discipline_policy_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -408,6 +412,38 @@ def test_capture_run_start_artifacts_fails_closed_on_interrupt_semantics_policy_
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-interrupt-policy-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_idempotency_discipline_policy_mutation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-idempotency-policy-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    idempotency_policy_path = (
+        workspace
+        / "observability"
+        / "run-idempotency-policy-immutable"
+        / "runtime_contracts"
+        / "idempotency_discipline_policy.json"
+    )
+    idempotency_policy_path.write_text(
+        '{"schema_version":"999.0","rows":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_IDEMPOTENCY_DISCIPLINE_POLICY_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-idempotency-policy-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )
