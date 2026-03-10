@@ -65,6 +65,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["artifact_provenance_block_policy_check"]["ok"] is True
     assert payload["details"]["operator_override_logging_policy_check"]["ok"] is True
     assert payload["details"]["demo_production_labeling_policy_check"]["ok"] is True
+    assert payload["details"]["human_correction_capture_policy_check"]["ok"] is True
 
 
 # Layer: contract
@@ -370,6 +371,31 @@ def test_runtime_truth_acceptance_gate_fails_when_demo_production_policy_check_f
 
 
 # Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_human_correction_policy_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_human_correction_capture_policy",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "target_surface_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "human_correction_capture_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
 def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_artifacts() -> None:
     assert "runtime_invariant_registry.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "runtime_config_ownership_map.json" in REQUIRED_RUNTIME_CONTRACT_FILES
@@ -382,3 +408,4 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "artifact_provenance_block_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "operator_override_logging_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "demo_production_labeling_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "human_correction_capture_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES

@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-03-09
+Last reviewed: 2026-03-10
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
@@ -79,9 +79,10 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 1. `docs/architecture/ADR-0001-volatility-tier-boundaries.md`
 2. `docs/architecture/CONTRACT_BREAK_WORKFLOW.md`
 3. `docs/architecture/CONTRACT_DELTA_TEMPLATE.md`
-4. `docs/architecture/event_taxonomy.md`
-5. `docs/architecture/dependency_graph_snapshot.md`
-6. `docs/architecture/VOLATILITY_BASELINE.md`
+4. `docs/architecture/ARCHITECTURE_COMPLIANCE_CHECKLIST.md`
+5. `docs/architecture/event_taxonomy.md`
+6. `docs/architecture/dependency_graph_snapshot.md`
+7. `docs/architecture/VOLATILITY_BASELINE.md`
 
 ## Projects
 1. Active plans: `docs/projects/<project>/`

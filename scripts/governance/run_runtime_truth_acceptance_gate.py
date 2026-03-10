@@ -27,6 +27,9 @@ from scripts.governance.check_idempotency_discipline_policy import (
 )
 from scripts.governance.check_interrupt_semantics_policy import evaluate_interrupt_semantics_policy
 from scripts.governance.check_model_profile_bios import evaluate_model_profile_bios
+from scripts.governance.check_human_correction_capture_policy import (
+    evaluate_human_correction_capture_policy,
+)
 from scripts.governance.check_operator_override_logging_policy import (
     evaluate_operator_override_logging_policy,
 )
@@ -61,6 +64,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "artifact_provenance_block_policy.json",
     "operator_override_logging_policy.json",
     "demo_production_labeling_policy.json",
+    "human_correction_capture_policy.json",
 )
 
 
@@ -133,6 +137,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip demo-vs-production labeling policy contract check.",
     )
+    parser.add_argument(
+        "--skip-human-correction-policy-check",
+        action="store_true",
+        help="Skip human correction capture policy contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -157,6 +166,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_artifact_provenance_policy: bool = True,
     check_operator_override_policy: bool = True,
     check_demo_production_policy: bool = True,
+    check_human_correction_policy: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -305,6 +315,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(demo_policy_payload.get("ok")):
             failures.append("demo_production_labeling_policy_check_failed")
 
+    if check_human_correction_policy:
+        correction_policy_payload = evaluate_human_correction_capture_policy()
+        details["human_correction_capture_policy_check"] = {
+            "ok": bool(correction_policy_payload.get("ok")),
+            "target_surface_count": int(correction_policy_payload.get("target_surface_count") or 0),
+        }
+        if not bool(correction_policy_payload.get("ok")):
+            failures.append("human_correction_capture_policy_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -331,6 +350,7 @@ def main(argv: list[str] | None = None) -> int:
         check_artifact_provenance_policy=not bool(args.skip_artifact_provenance_policy_check),
         check_operator_override_policy=not bool(args.skip_operator_override_policy_check),
         check_demo_production_policy=not bool(args.skip_demo_production_policy_check),
+        check_human_correction_policy=not bool(args.skip_human_correction_policy_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

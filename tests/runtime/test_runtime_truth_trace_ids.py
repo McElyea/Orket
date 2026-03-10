@@ -23,6 +23,7 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "artifact_provenance_block_policy" in artifacts
     assert "operator_override_logging_policy" in artifacts
     assert "demo_production_labeling_policy" in artifacts
+    assert "human_correction_capture_policy" in artifacts
     assert "route_decision_artifact" in artifacts
 
 

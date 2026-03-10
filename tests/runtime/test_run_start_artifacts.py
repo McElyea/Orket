@@ -86,6 +86,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["demo_production_labeling_policy"]["schema_version"] == "1.0"
     demo_labels = payload["demo_production_labeling_policy"]["labels"]
     assert "production_verified" in demo_labels
+    assert payload["human_correction_capture_policy"]["schema_version"] == "1.0"
+    correction_target_surfaces = payload["human_correction_capture_policy"]["target_surfaces"]
+    assert "route_decision" in correction_target_surfaces
     assert Path(payload["run_identity_path"]).exists()
     assert Path(payload["run_phase_contract_path"]).exists()
     assert Path(payload["runtime_status_vocabulary_path"]).exists()
@@ -108,6 +111,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["artifact_provenance_block_policy_path"]).exists()
     assert Path(payload["operator_override_logging_policy_path"]).exists()
     assert Path(payload["demo_production_labeling_policy_path"]).exists()
+    assert Path(payload["human_correction_capture_policy_path"]).exists()
     assert Path(payload["ledger_event_schema_path"]).exists()
     assert Path(payload["capability_manifest_schema_path"]).exists()
     assert Path(payload["capability_manifest_path"]).exists()
@@ -552,6 +556,38 @@ def test_capture_run_start_artifacts_fails_closed_on_demo_production_labeling_po
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-demo-production-policy-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_human_correction_capture_policy_mutation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-human-correction-policy-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    correction_policy_path = (
+        workspace
+        / "observability"
+        / "run-human-correction-policy-immutable"
+        / "runtime_contracts"
+        / "human_correction_capture_policy.json"
+    )
+    correction_policy_path.write_text(
+        '{"schema_version":"999.0","required_fields":[],"target_surfaces":[],"persistence":{}}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_HUMAN_CORRECTION_CAPTURE_POLICY_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-human-correction-policy-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )
