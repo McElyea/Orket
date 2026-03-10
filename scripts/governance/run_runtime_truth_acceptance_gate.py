@@ -16,6 +16,7 @@ from scripts.governance.check_noop_critical_paths import (
     evaluate_noop_critical_paths,
 )
 from scripts.governance.check_environment_parity_checklist import evaluate_environment_parity_checklist
+from scripts.governance.check_model_profile_bios import evaluate_model_profile_bios
 from scripts.governance.check_runtime_boundary_audit_checklist import evaluate_runtime_boundary_audit_checklist
 from scripts.governance.check_retry_classification_policy import evaluate_retry_classification_policy
 from scripts.governance.check_structured_warning_policy import evaluate_structured_warning_policy
@@ -41,6 +42,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "unknown_input_policy.json",
     "clock_time_authority_policy.json",
     "capability_fallback_hierarchy.json",
+    "model_profile_bios.json",
 )
 
 
@@ -83,6 +85,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Skip runtime boundary audit checklist contract check.",
     )
+    parser.add_argument(
+        "--skip-model-profile-bios-check",
+        action="store_true",
+        help="Skip model profile BIOS contract check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -101,6 +108,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_warning_policy: bool = True,
     check_retry_policy: bool = True,
     check_boundary_audit: bool = True,
+    check_model_profile_bios: bool = True,
 ) -> dict[str, Any]:
     failures: list[str] = []
     details: dict[str, Any] = {}
@@ -195,6 +203,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(boundary_payload.get("ok")):
             failures.append("runtime_boundary_audit_check_failed")
 
+    if check_model_profile_bios:
+        bios_payload = evaluate_model_profile_bios()
+        details["model_profile_bios_check"] = {
+            "ok": bool(bios_payload.get("ok")),
+            "profile_count": int(bios_payload.get("profile_count") or 0),
+        }
+        if not bool(bios_payload.get("ok")):
+            failures.append("model_profile_bios_check_failed")
+
     return {
         "schema_version": "runtime_truth_acceptance_gate.v1",
         "ok": not failures,
@@ -215,6 +232,7 @@ def main(argv: list[str] | None = None) -> int:
         check_warning_policy=not bool(args.skip_warning_policy_check),
         check_retry_policy=not bool(args.skip_retry_policy_check),
         check_boundary_audit=not bool(args.skip_boundary_audit_check),
+        check_model_profile_bios=not bool(args.skip_model_profile_bios_check),
     )
     print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if bool(payload.get("ok")) else 1

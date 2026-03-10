@@ -17,6 +17,7 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "runtime_truth_contract_drift_report" in artifacts
     assert "clock_time_authority_policy" in artifacts
     assert "capability_fallback_hierarchy" in artifacts
+    assert "model_profile_bios" in artifacts
     assert "route_decision_artifact" in artifacts
 
 
