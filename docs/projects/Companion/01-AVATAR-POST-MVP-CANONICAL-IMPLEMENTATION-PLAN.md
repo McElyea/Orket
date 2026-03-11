@@ -1,7 +1,7 @@
 # Companion Avatar Post-MVP Canonical Implementation Plan
 
-Last updated: 2026-03-09
-Status: Draft (execution-ready)
+Last updated: 2026-03-10
+Status: In Progress (execution started)
 Owner: Orket Core
 Source requirements: `docs/projects/Companion/00-AVATAR-POST-MVP-REQUIREMENTS-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -31,6 +31,18 @@ This canonical plan delegates executable detail to:
 2. `docs/projects/Companion/03-IMPLEMENTATION-PLAN-AVATAR-PHASE-B-SPEAKING-PRESENCE.md`
 3. `docs/projects/Companion/04-IMPLEMENTATION-PLAN-AVATAR-PHASE-C-CONTROL-EVENTS.md`
 4. `docs/projects/Companion/05-IMPLEMENTATION-PLAN-AVATAR-PHASE-D-TRANSPORT-DECISION.md`
+
+## 3a. Execution Status Snapshot
+
+Completed:
+1. [x] Phase A foundation workstreams implemented in the Companion extension runtime (`avatar_prefs_v1`, renderer seam, fallback-safe asset policy, settings controls).
+2. [x] Phase C envelope parser + idempotency dedupe (`avatar_event_v1`) with safe unknown-version/type handling.
+3. [x] Phase C additive expression/gesture cue mapping implemented without changing lifecycle authority precedence.
+4. [x] Phase C observability baseline vocabulary, warning rate-limiting, and payload redaction defaults implemented.
+
+Remaining:
+1. [ ] Phase B playback-amplitude mouth-open baseline and interruption/cancel proof on real playback truth.
+2. [ ] Phase D performance measurement and transport decision gate.
 
 ## 4. Dependency and Order
 

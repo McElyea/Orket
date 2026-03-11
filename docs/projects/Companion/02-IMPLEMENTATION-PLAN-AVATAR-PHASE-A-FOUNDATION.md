@@ -1,7 +1,7 @@
 # Companion Avatar Phase A Implementation Plan (Foundation)
 
-Last updated: 2026-03-09
-Status: Draft (queued)
+Last updated: 2026-03-10
+Status: In Progress (implementation complete; phase closeout pending lane-level handshake)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -93,3 +93,11 @@ Phase A is complete when:
 2. renderer seam + fallback invariants are verified,
 3. avatar failure containment is demonstrated in live verification,
 4. bottom settings controls are present and persistence-correct.
+
+## 6. Execution Checklist Snapshot
+
+1. [x] Workstream A1 settings contract + migration.
+2. [x] Workstream A2 renderer seam foundation.
+3. [x] Workstream A3 asset policy and fail-closed handling.
+4. [x] Workstream A4 UI controls and persistence UX.
+5. [ ] Formal phase closeout/archive handshake in roadmap/docs set (pending while Phase B/C execution is still active in this lane).
