@@ -43,7 +43,7 @@ Completed:
 6. [x] Phase D baseline harness entrypoint established for reproducible host+gateway probes.
 
 Remaining:
-1. [ ] Phase B live host-backed speaking/interruption proof on real playback truth (implementation is in place; current blocker is `tts_unavailable` from `/api/voice/synthesize` and missing local Piper executable resolution in live environment).
+1. [ ] Phase B live interruption/cancel playback-truth proof in the real UI path (host-backed speaking path is now live-verified with `tts_available=true` and `/api/voice/synthesize` `ok=true` on `2026-03-10`, including `python -m piper` fallback when no `piper` PATH shim is present).
 2. [ ] Phase D performance measurement and transport decision gate.
 
 ## 4. Dependency and Order

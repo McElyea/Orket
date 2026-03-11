@@ -103,3 +103,32 @@ def test_capability_registry_builder_registers_configured_piper_provider(tmp_pat
         },
     )
     assert isinstance(registry.tts(), PiperTTSProvider)
+
+
+# Layer: contract (provider availability and synth invocation contract).
+def test_build_tts_provider_falls_back_to_python_module_piper_when_path_shim_missing(tmp_path: Path, monkeypatch) -> None:
+    model = tmp_path / "voice.onnx"
+    model.write_bytes(b"fake-model")
+    monkeypatch.setattr("orket.capabilities.tts_piper.shutil.which", lambda _cmd: None)
+
+    def _fake_run(cmd, **kwargs):  # noqa: ANN001
+        if cmd == ["python", "-m", "piper", "--help"]:
+            return SimpleNamespace(returncode=0, stdout=b"", stderr=b"")
+        if cmd == ["python", "-m", "piper", "--model", str(model), "--output-raw", "--length_scale", "1.0000"]:
+            return SimpleNamespace(returncode=0, stdout=b"\x01\x02", stderr=b"")
+        return SimpleNamespace(returncode=1, stdout=b"", stderr=b"unsupported command")
+
+    monkeypatch.setattr("orket.capabilities.tts_piper.sys.executable", "python")
+    monkeypatch.setattr("orket.capabilities.tts_piper.subprocess.run", _fake_run)
+
+    provider = build_tts_provider(
+        input_config={
+            "tts_backend": "piper",
+            "tts_model_path": str(model),
+            "tts_executable": "piper",
+            "tts_sample_rate": 22050,
+        }
+    )
+    assert isinstance(provider, PiperTTSProvider)
+    clip = provider.synthesize("hello", voice_id="voice")
+    assert clip.samples == b"\x01\x02"

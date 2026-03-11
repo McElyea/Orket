@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import shlex
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -84,8 +86,8 @@ class PiperTTSProvider:
         if not str(text or "").strip():
             return AudioClip(sample_rate=self._config.sample_rate, channels=1, samples=b"", format="pcm_s16le")
         model_path = self._resolve_model_for_voice(voice_id)
-        exe = self._resolve_executable(self._config.executable)
-        if not exe:
+        exe_cmd = self._resolve_executable(self._config.executable)
+        if not exe_cmd:
             raise RuntimeError(f"Piper executable not found: {self._config.executable}")
 
         emotion = str(emotion_hint or "neutral").strip().lower()
@@ -94,7 +96,7 @@ class PiperTTSProvider:
         # Piper uses inverse speed via length scale. Lower length_scale = faster speech.
         length_scale = max(0.5, min(2.0, 1.0 / combined_speed))
         cmd = [
-            exe,
+            *exe_cmd,
             "--model",
             str(model_path),
             "--output-raw",
@@ -116,11 +118,36 @@ class PiperTTSProvider:
         return AudioClip(sample_rate=self._config.sample_rate, channels=1, samples=bytes(proc.stdout), format="pcm_s16le")
 
     @staticmethod
-    def _resolve_executable(value: str) -> str:
+    def _resolve_executable(value: str) -> list[str]:
         raw = str(value or "").strip()
         if not raw:
-            return ""
-        return shutil.which(raw) or raw
+            return []
+        tokens = shlex.split(raw, posix=False)
+        if not tokens:
+            return []
+
+        first_token = str(tokens[0]).strip()
+        resolved = shutil.which(first_token)
+        if resolved:
+            return [resolved, *tokens[1:]]
+
+        first_path = Path(first_token).expanduser()
+        if first_path.exists():
+            return [str(first_path), *tokens[1:]]
+
+        # Windows environments can have piper-tts installed without a `piper` shim on PATH.
+        if first_token.lower() == "piper" and len(tokens) == 1:
+            try:
+                probe = subprocess.run(
+                    [sys.executable, "-m", "piper", "--help"],
+                    capture_output=True,
+                    check=False,
+                )
+            except OSError:
+                probe = None
+            if probe and probe.returncode == 0:
+                return [sys.executable, "-m", "piper"]
+        return []
 
 
 def build_tts_provider(*, input_config: dict[str, Any]) -> TTSProvider:
@@ -143,7 +170,7 @@ def build_tts_provider(*, input_config: dict[str, Any]) -> TTSProvider:
     voices_dir = Path(voices_dir_raw).expanduser() if voices_dir_raw else model_path.parent
     if not model_path.exists():
         return NullTTSProvider()
-    if not shutil.which(executable) and not Path(executable).exists():
+    if not PiperTTSProvider._resolve_executable(executable):
         return NullTTSProvider()
     return PiperTTSProvider(
         PiperConfig(
