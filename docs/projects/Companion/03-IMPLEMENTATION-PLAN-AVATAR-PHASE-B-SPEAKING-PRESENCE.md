@@ -1,7 +1,7 @@
 # Companion Avatar Phase B Implementation Plan (Speaking Presence Baseline)
 
 Last updated: 2026-03-10
-Status: In Progress (partial)
+Status: In Progress (implementation mostly complete; live verification pending)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -88,5 +88,6 @@ Phase B is complete when:
 ## 6. Execution Checklist Snapshot
 
 1. [x] Workstream B1 lifecycle state coordinator and precedence rules.
-2. [ ] Workstream B2 playback-amplitude mouth-open baseline is not complete (current path uses speaking state truth with non-amplitude mouth-open).
+2. [x] Workstream B2 playback-amplitude mouth-open baseline and interruption stop semantics implemented in UI playback path.
 3. [x] Workstream B3 reduced-motion behavior contract tests and persistence.
+4. [ ] Live host-backed speaking/interruption verification is still pending (current environment lacks reachable Companion Host API for runtime proof).
