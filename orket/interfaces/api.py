@@ -1281,7 +1281,10 @@ async def list_sandboxes():
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
 async def stop_sandbox(sandbox_id: str):
     invocation = api_runtime_node.resolve_sandbox_stop_invocation(sandbox_id)
-    await _invoke_async_method(engine, invocation, "sandbox stop")
+    try:
+        await _invoke_async_method(engine, invocation, "sandbox stop")
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"ok": True}
 
 @v1_router.get("/sandboxes/{sandbox_id}/logs")

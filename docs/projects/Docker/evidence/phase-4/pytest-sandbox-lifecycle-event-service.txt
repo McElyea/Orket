@@ -1,0 +1,13 @@
+Phase: 4
+Date: 2026-03-11
+Layer: integration
+Observed path: primary
+Observed result: success
+Command: python -m pytest -q tests/integration/test_sandbox_lifecycle_event_service.py
+Summary: 4 passed in 0.04s
+
+Coverage:
+- Lifecycle events persist through the primary repository path when available.
+- Event emission falls back to a local spool when the primary sink fails.
+- Spool replay rehydrates the primary sink and clears the spool on success.
+- Total sink failure raises a fail-closed error.

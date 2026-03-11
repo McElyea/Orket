@@ -237,6 +237,10 @@ class DefaultSandboxPolicyNode:
     build:
       context: ../../
       dockerfile: agent_output/deployment/Dockerfile
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     ports:
       - "{sandbox.ports.api}:8000"
     environment:
@@ -247,6 +251,10 @@ class DefaultSandboxPolicyNode:
 
   frontend:
     image: nginx:alpine
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     ports:
       - "{sandbox.ports.frontend}:80"
     volumes:
@@ -257,6 +265,10 @@ class DefaultSandboxPolicyNode:
 
   db:
     image: postgres:16
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD={db_password}
@@ -269,6 +281,10 @@ class DefaultSandboxPolicyNode:
 
   pgadmin:
     image: dpage/pgadmin4:latest
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@orket.local
       - PGADMIN_DEFAULT_PASSWORD={admin_password}
@@ -280,6 +296,17 @@ class DefaultSandboxPolicyNode:
 
 volumes:
   db-data:
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
+
+networks:
+  default:
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
 """
 
         if sandbox.tech_stack.value == "fastapi-vue-mongo":
@@ -288,6 +315,10 @@ volumes:
     build:
       context: ../../
       dockerfile: agent_output/deployment/Dockerfile
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     ports:
       - "{sandbox.ports.api}:8000"
     environment:
@@ -298,6 +329,10 @@ volumes:
 
   frontend:
     image: nginx:alpine
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     ports:
       - "{sandbox.ports.frontend}:80"
     volumes:
@@ -308,6 +343,10 @@ volumes:
 
   mongo:
     image: mongo:7
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=orket
       - MONGO_INITDB_ROOT_PASSWORD={db_password}
@@ -319,6 +358,10 @@ volumes:
 
   mongo-express:
     image: mongo-express:latest
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=orket
       - ME_CONFIG_MONGODB_ADMINPASSWORD={db_password}
@@ -333,6 +376,17 @@ volumes:
 
 volumes:
   mongo-data:
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
+
+networks:
+  default:
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
 """
 
         if sandbox.tech_stack.value == "csharp-razor-ef":
@@ -341,6 +395,10 @@ volumes:
     build:
       context: ../../
       dockerfile: agent_output/deployment/Dockerfile
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     ports:
       - "{sandbox.ports.api}:8080"
       - "{sandbox.ports.frontend}:8443"
@@ -353,6 +411,10 @@ volumes:
 
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD={db_password}
@@ -364,6 +426,17 @@ volumes:
 
 volumes:
   mssql-data:
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
+
+networks:
+  default:
+    labels:
+      orket.managed: "true"
+      orket.sandbox_id: "{sandbox.id}"
+      orket.run_id: "{sandbox.rock_id}"
 """
 
         raise ValueError(f"Unsupported tech stack: {sandbox.tech_stack}")

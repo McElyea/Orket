@@ -1,0 +1,16 @@
+Phase: 1
+Date: 2026-03-11
+Layer: integration
+Observed path: primary
+Observed result: success
+Command: python -m pytest -q tests/integration/test_sandbox_lifecycle_repository.py
+Summary: 7 passed in 0.30s
+
+Coverage:
+- Lifecycle records persist and round-trip through a real SQLite database.
+- Unsupported future schema_version rows are rejected on read.
+- Unsupported policy_version rows are rejected on read.
+- Operation dedupe reuses prior results for identical payload hashes.
+- Operation dedupe rejects conflicting payload hashes for the same operation_id.
+- Approvals persist durably.
+- Approval revocations and lifecycle events persist durably.

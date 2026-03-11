@@ -5,6 +5,8 @@ Verifies that SandboxOrchestrator generates valid docker-compose.yml files
 for all supported tech stacks.
 """
 import pytest
+
+# Layer: unit
 from pathlib import Path
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from orket.domain.sandbox import TechStack, SandboxRegistry
@@ -57,6 +59,9 @@ def test_fastapi_react_postgres_compose():
     assert f"{ports.frontend}:80" in compose_content
     assert f"{ports.database}:5432" in compose_content
     assert f"{ports.admin_tool}:80" in compose_content
+    assert 'orket.managed: "true"' in compose_content
+    assert 'orket.sandbox_id: "test-sandbox-1"' in compose_content
+    assert 'orket.run_id: "test-rock"' in compose_content
 
     print("\nâœ… FastAPI + React + Postgres compose generation test passed")
     print(f"\nGenerated compose file:\n{compose_content}")
@@ -100,6 +105,7 @@ def test_fastapi_vue_mongo_compose():
     assert "../frontend:/usr/share/nginx/html:ro" in compose_content
     assert f"{ports.database}:27017" in compose_content
     assert f"{ports.frontend}:80" in compose_content
+    assert 'orket.sandbox_id: "test-sandbox-2"' in compose_content
 
     print("\nâœ… FastAPI + Vue + MongoDB compose generation test passed")
 
@@ -174,7 +180,8 @@ def test_csharp_razor_ef_compose():
 async def test_create_sandbox_uses_generated_password_in_database_url_and_compose(tmp_path, monkeypatch):
     orchestrator = SandboxOrchestrator(
         workspace_root=tmp_path,
-        registry=SandboxRegistry()
+        registry=SandboxRegistry(),
+        lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
     )
 
     generated = iter(["db-pass-123", "admin-pass-456"])
@@ -192,9 +199,13 @@ async def test_create_sandbox_uses_generated_password_in_database_url_and_compos
     async def _fake_deploy(*_args, **_kwargs):
         return None
 
+    async def _fake_mark_deployment_verified(**_kwargs):
+        return None
+
     monkeypatch.setattr("orket.services.sandbox_orchestrator.secrets.token_urlsafe", _fake_token_urlsafe)
     monkeypatch.setattr(orchestrator.fs, "write_file", _fake_write_file)
     monkeypatch.setattr(orchestrator, "_deploy_sandbox", _fake_deploy)
+    monkeypatch.setattr(orchestrator.lifecycle_service, "mark_deployment_verified", _fake_mark_deployment_verified)
 
     sandbox = await orchestrator.create_sandbox(
         rock_id="rock-password",

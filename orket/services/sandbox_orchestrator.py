@@ -7,23 +7,24 @@ Coordinates Docker Compose creation, deployment, health monitoring, and cleanup.
 from __future__ import annotations
 from typing import Optional, Dict, Any
 from pathlib import Path
+import os
 import secrets
+import socket
 import subprocess
 import json
 from datetime import datetime, UTC
 
-from orket.domain.sandbox import (
-    Sandbox,
-    SandboxStatus,
-    TechStack,
-    PortAllocation,
-    SandboxRegistry,
-)
+from orket.adapters.storage.async_executor_service import run_coroutine_blocking
+from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
+from orket.core.domain.sandbox_lifecycle import SandboxState as LifecycleState
+from orket.domain.sandbox import Sandbox, SandboxStatus, TechStack, PortAllocation, SandboxRegistry
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.domain.verification import AGENT_OUTPUT_DIR
 from orket.logging import log_event
+from orket.runtime_paths import resolve_sandbox_lifecycle_db_path
 
 
 class SandboxOrchestrator:
@@ -46,6 +47,7 @@ class SandboxOrchestrator:
         decision_nodes: Optional[DecisionNodeRegistry] = None,
         command_runner: Optional[CommandRunner] = None,
         fs: Optional[AsyncFileTools] = None,
+        lifecycle_db_path: Optional[str] = None,
     ) -> None:
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
@@ -55,6 +57,17 @@ class SandboxOrchestrator:
         self.command_runner = command_runner or CommandRunner()
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
         self.fs = fs or AsyncFileTools(workspace_root)
+        self.instance_id = f"{socket.gethostname()}:{os.getpid()}"
+        self.docker_context = os.getenv("DOCKER_CONTEXT", "default").strip() or "default"
+        self.docker_host_id = os.getenv("ORKET_DOCKER_HOST_ID", self.instance_id).strip() or self.instance_id
+        self.lifecycle_repository = AsyncSandboxLifecycleRepository(resolve_sandbox_lifecycle_db_path(lifecycle_db_path))
+        self.lifecycle_service = SandboxRuntimeLifecycleService(
+            repository=self.lifecycle_repository,
+            command_runner=self.command_runner,
+            instance_id=self.instance_id,
+            docker_context=self.docker_context,
+            docker_host_id=self.docker_host_id,
+        )
         self._allowed_log_services = {
             "api",
             "frontend",
@@ -71,16 +84,18 @@ class SandboxOrchestrator:
         rock_id: str,
         project_name: str,
         tech_stack: TechStack,
-        workspace_path: str
+        workspace_path: str,
     ) -> Sandbox:
         """
         Create and deploy a new sandbox environment.
         """
         sandbox_id = self.sandbox_policy_node.build_sandbox_id(rock_id)
+        if await self.lifecycle_service.repository.get_record(sandbox_id):
+            raise ValueError(f"Sandbox lifecycle record already exists for {sandbox_id}")
 
         # 1. Allocate ports
         ports = self.registry.port_allocator.allocate(sandbox_id, tech_stack)
-        
+
         # Hardened Credentials (v1.0 Ready)
         db_password = secrets.token_urlsafe(32)
 
@@ -96,36 +111,61 @@ class SandboxOrchestrator:
             api_url=f"http://localhost:{ports.api}",
             frontend_url=f"http://localhost:{ports.frontend}",
             database_url=self._get_database_url(tech_stack, ports, db_password),
-            admin_url=f"http://localhost:{ports.admin_tool}" if ports.admin_tool else None
+            admin_url=f"http://localhost:{ports.admin_tool}" if ports.admin_tool else None,
         )
 
-        # 3. Register sandbox
+        # 3. Create durable lifecycle authority before transient registration or Docker work.
+        try:
+            await self.lifecycle_service.create_record(
+                sandbox_id=sandbox_id,
+                compose_project=sandbox.compose_project,
+                workspace_path=workspace_path,
+                run_id=rock_id,
+            )
+            await self.lifecycle_service.mark_create_accepted(sandbox_id=sandbox_id)
+        except (ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError):
+            self.registry.port_allocator.release(sandbox_id)
+            raise
         self.registry.register(sandbox)
 
         # 4. Generate docker-compose.yml
-        compose_content = self._generate_compose_file(sandbox, db_password)
         compose_path = self._compose_path(workspace_path)
-        await self.fs.write_file(str(compose_path), compose_content)
-
-        log_event("sandbox_create", {
-            "sandbox_id": sandbox_id,
-            "rock_id": rock_id,
-            "tech_stack": tech_stack.value,
-            "ports": ports.model_dump()
-        }, Path(workspace_path))
-
-        # 5. Deploy (docker-compose up -d)
         try:
+            compose_content = self._generate_compose_file(sandbox, db_password)
+            await self.fs.write_file(str(compose_path), compose_content)
+            log_event("sandbox_create", {
+                "sandbox_id": sandbox_id,
+                "rock_id": rock_id,
+                "tech_stack": tech_stack.value,
+                "ports": ports.model_dump(),
+            }, Path(workspace_path))
             await self._deploy_sandbox(sandbox, compose_path)
+            await self.lifecycle_service.mark_deployment_verified(
+                sandbox_id=sandbox_id,
+                compose_project=sandbox.compose_project,
+            )
             sandbox.status = SandboxStatus.RUNNING
-            sandbox.deployed_at = datetime.now(UTC).isoformat()
+            sandbox.deployed_at = self._now()
             log_event("sandbox_deployed", {"sandbox_id": sandbox_id}, Path(workspace_path))
-        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
+        except RuntimeError as e:
             sandbox.status = SandboxStatus.UNHEALTHY
             sandbox.last_error = str(e)
+            await self.lifecycle_service.mark_start_failed(sandbox_id=sandbox_id)
             log_event("sandbox_deploy_failed", {
                 "sandbox_id": sandbox_id,
-                "error": str(e)
+                "error": str(e),
+            }, Path(workspace_path))
+            raise
+        except (ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError) as e:
+            sandbox.status = SandboxStatus.UNHEALTHY
+            sandbox.last_error = str(e)
+            await self.lifecycle_service.mark_requires_reconciliation(
+                sandbox_id=sandbox_id,
+                reason="sandbox-create-outcome-unknown",
+            )
+            log_event("sandbox_deploy_failed", {
+                "sandbox_id": sandbox_id,
+                "error": str(e),
             }, Path(workspace_path))
             raise
 
@@ -138,46 +178,23 @@ class SandboxOrchestrator:
         Args:
             sandbox_id: Sandbox to delete
         """
+        record = await self.lifecycle_service.repository.get_record(sandbox_id)
+        if record is None:
+            await self._delete_legacy_sandbox(sandbox_id)
+            return
         sandbox = self.registry.get(sandbox_id)
-        if not sandbox:
-            raise ValueError(f"Sandbox {sandbox_id} not found")
-
-        sandbox.status = SandboxStatus.STOPPING
-
-        compose_path = self._compose_path(sandbox.workspace_path)
-
-        try:
-            result = await self.command_runner.run_async(
-                "docker-compose",
-                "-f",
-                str(compose_path),
-                "-p",
-                sandbox.compose_project,
-                "down",
-                "-v",
-            )
-
-            if result.returncode != 0:
-                raise RuntimeError(f"Failed to stop sandbox: {result.stderr}")
-
+        if sandbox:
+            sandbox.status = SandboxStatus.STOPPING
+        current = await self.lifecycle_service.delete_sandbox(
+            sandbox_id=sandbox_id,
+            compose_path=self._compose_path(record.workspace_path),
+        )
+        if sandbox:
             sandbox.status = SandboxStatus.DELETED
-            sandbox.deleted_at = datetime.now(UTC).isoformat()
-
-            # Release ports
-            self.registry.port_allocator.release(sandbox_id)
-
-            # Unregister
-            self.registry.unregister(sandbox_id)
-
-            log_event("sandbox_deleted", {"sandbox_id": sandbox_id}, Path(sandbox.workspace_path))
-
-        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
-            sandbox.last_error = str(e)
-            log_event("sandbox_delete_failed", {
-                "sandbox_id": sandbox_id,
-                "error": str(e)
-            }, Path(sandbox.workspace_path))
-            raise
+            sandbox.deleted_at = self._now()
+        self.registry.port_allocator.release(sandbox_id)
+        self.registry.unregister(sandbox_id)
+        log_event("sandbox_deleted", {"sandbox_id": sandbox_id}, Path(current.workspace_path))
 
     async def health_check(self, sandbox_id: str) -> bool:
         """
@@ -187,24 +204,28 @@ class SandboxOrchestrator:
             True if all containers running, False otherwise
         """
         sandbox = self.registry.get(sandbox_id)
-        if not sandbox:
+        record = await self.lifecycle_service.repository.get_record(sandbox_id)
+        if not sandbox and not record:
             return False
+        workspace_path = record.workspace_path if record else str(sandbox.workspace_path)
+        compose_project = record.compose_project if record else str(sandbox.compose_project)
 
         try:
             result = await self.command_runner.run_async(
                 "docker-compose",
                 "-f",
-                str(self._compose_path(sandbox.workspace_path)),
+                str(self._compose_path(workspace_path)),
                 "-p",
-                sandbox.compose_project,
+                compose_project,
                 "ps",
                 "--format",
                 "json",
             )
 
             if result.returncode != 0:
-                sandbox.health_checks_failed += 1
-                sandbox.last_health_check = datetime.now(UTC).isoformat()
+                if sandbox:
+                    sandbox.health_checks_failed += 1
+                    sandbox.last_health_check = self._now()
                 return False
 
             # Docker Compose emits either a JSON array or newline-delimited JSON objects.
@@ -217,22 +238,34 @@ class SandboxOrchestrator:
             tracked = core_containers or containers
             all_running = all(c.get("State") == "running" for c in tracked)
 
-            if all_running:
+            if sandbox and all_running:
                 sandbox.health_checks_passed += 1
                 if sandbox.status == SandboxStatus.UNHEALTHY:
                     sandbox.status = SandboxStatus.RUNNING
-            else:
+            elif sandbox:
                 sandbox.health_checks_failed += 1
                 sandbox.status = SandboxStatus.UNHEALTHY
 
-            sandbox.last_health_check = datetime.now(UTC).isoformat()
+            if sandbox:
+                sandbox.last_health_check = self._now()
+            if record and all_running:
+                await self.lifecycle_service.handle_healthy(sandbox_id=sandbox_id)
+            elif record and not containers and record.state is LifecycleState.ACTIVE:
+                await self.lifecycle_service.handle_missing_runtime(sandbox_id=sandbox_id)
             return all_running
 
         except (RuntimeError, ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError) as e:
-            sandbox.health_checks_failed += 1
-            sandbox.last_error = str(e)
-            sandbox.last_health_check = datetime.now(UTC).isoformat()
+            if sandbox:
+                sandbox.health_checks_failed += 1
+                sandbox.last_error = str(e)
+                sandbox.last_health_check = self._now()
             return False
+
+    async def list_sandboxes(self) -> list[dict[str, Any]]:
+        views = await self.lifecycle_service.list_views()
+        if views:
+            return views
+        return [item.model_dump() for item in self.registry.list_active()]
 
     def get_logs(self, sandbox_id: str, service: Optional[str] = None) -> str:
         """
@@ -246,15 +279,17 @@ class SandboxOrchestrator:
             Log output
         """
         sandbox = self.registry.get(sandbox_id)
-        if not sandbox:
+        record = None
+        if sandbox is None:
+            record = run_coroutine_blocking(self.lifecycle_repository.get_record(sandbox_id))
+        if not sandbox and not record:
             raise ValueError(f"Sandbox {sandbox_id} not found")
-
-        compose_path = self._compose_path(sandbox.workspace_path)
+        compose_path = self._compose_path(record.workspace_path if record else sandbox.workspace_path)
 
         cmd = [
             "docker-compose",
             "-f", str(compose_path),
-            "-p", sandbox.compose_project,
+            "-p", record.compose_project if record else sandbox.compose_project,
             "logs", "--tail=100"
         ]
 
@@ -334,4 +369,31 @@ class SandboxOrchestrator:
         )
         container_ids = ps_result.stdout.strip().split("\n")
         sandbox.container_ids = {f"container-{i}": cid for i, cid in enumerate(container_ids)}
+
+    async def _delete_legacy_sandbox(self, sandbox_id: str) -> None:
+        sandbox = self.registry.get(sandbox_id)
+        if not sandbox:
+            raise ValueError(f"Sandbox {sandbox_id} not found")
+        sandbox.status = SandboxStatus.STOPPING
+        result = await self.command_runner.run_async(
+            "docker-compose",
+            "-f",
+            str(self._compose_path(sandbox.workspace_path)),
+            "-p",
+            sandbox.compose_project,
+            "down",
+            "-v",
+        )
+        if result.returncode != 0:
+            sandbox.last_error = result.stderr
+            raise RuntimeError(f"Failed to stop sandbox: {result.stderr}")
+        sandbox.status = SandboxStatus.DELETED
+        sandbox.deleted_at = self._now()
+        self.registry.port_allocator.release(sandbox_id)
+        self.registry.unregister(sandbox_id)
+        log_event("sandbox_deleted", {"sandbox_id": sandbox_id}, Path(sandbox.workspace_path))
+
+    @staticmethod
+    def _now() -> str:
+        return datetime.now(UTC).replace(microsecond=0).isoformat()
 

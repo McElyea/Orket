@@ -15,11 +15,18 @@ class SandboxManager:
     async def list_active(self) -> List[Dict[str, Any]]:
         if self._sandbox_orchestrator is None:
             return []
+        list_method = getattr(self._sandbox_orchestrator, "list_sandboxes", None)
+        if callable(list_method):
+            return await list_method()
         registry = self._sandbox_orchestrator.registry
         return [item.model_dump() for item in registry.list_active()]
 
     async def stop(self, sandbox_id: str) -> None:
         if self._sandbox_orchestrator is None:
+            return None
+        stop_method = getattr(self._sandbox_orchestrator, "stop_sandbox", None)
+        if callable(stop_method):
+            await stop_method(sandbox_id)
             return None
         await self._sandbox_orchestrator.delete_sandbox(sandbox_id)
 

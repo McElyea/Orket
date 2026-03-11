@@ -1,444 +1,162 @@
 # AGENTS.md
 
-## Purpose
+## Priority
 
-This repository is exploratory, but it is not exempt from engineering discipline.
+1. truthful behavior
+2. truthful verification
+3. preserving future shippability
+4. reducing authority drift
+5. minimal-scope changes
+6. resource efficiency
 
-Orket is used to explore local LLM workflow, orchestration, tooling, runtime behavior, and future product possibilities. Agents must support experimentation without increasing drift that would make future shipping harder.
+Exploratory work is not permission for low standards, duplicate authority, stale docs, false-green tests, unsafe fallbacks, or unclear entrypoints.
 
-Optimize for:
-1. truthful behavior,
-2. truthful verification,
-3. preserving future shippability,
-4. reducing authority drift,
-5. minimal-scope changes,
-6. resource efficiency.
+## Maintenance Rule
 
-Do not confuse:
-- exploratory code with low standards,
-- broad scope with lack of boundaries,
-- green tests with real proof.
+Any new AGENTS rule must replace or merge with an existing rule. Do not append overlapping policy.
 
----
+## Scope
 
-## Enforcement Scope
+These rules apply to all new and modified code and docs.
 
-These rules are binding for all new and modified code.
+1. Do not introduce new violations.
+2. Do not widen existing violations.
+3. When touching a non-compliant area, make the smallest reasonable move toward compliance that fits the task.
+4. If pre-existing drift blocks the task, report it under `Remaining blockers or drift`.
 
-Existing violations may remain temporarily only when they are outside the scope of the current task. Agents must not:
-1. introduce new violations,
-2. expand the scope of an existing violation,
-3. move code further away from compliance when touching an affected area.
+## Session Gate
 
-When modifying a non-compliant file, make the smallest reasonable improvement toward compliance unless the user explicitly directs otherwise.
+Before substantive work, read `docs/CONTRIBUTOR.md` in the current session, then follow its startup protocol exactly. Do not improvise contributor workflow or roadmap semantics outside `docs/CONTRIBUTOR.md`.
 
-Scope precedence rule:
-Make the smallest reasonable compliance improvement that fits inside the current task. Do not use compliance work as a reason to perform unrelated cleanup or broad refactoring.
+## Response and Link Format
 
-If a task is blocked by a pre-existing violation, report it under:
-`Remaining blockers or drift`.
+Use client-surface link rules.
 
-Do not treat existing violations as permission to create more.
+These rules override more general file-link defaults for this repo.
 
----
-
-## Response Formatting
-
-When referencing files in chat responses, choose link format by client surface.
-
-Precedence for this repository:
-1. These client-surface rules override any more-general instruction about file-link path style.
-2. If another instruction says to use absolute filesystem paths but the active surface here is the Codex app, follow the Codex app rules in this file instead.
-
-### VS Code Extension / CLI Surface
-
-Use clickable Markdown links with absolute Windows paths in URL form.
-
-Preferred style:
-1. `[Label](/C:/absolute/path/to/file.ext)`
-2. Example: `[Local Prompting Contract](/C:/Source/Orket/docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md)`
-3. Example with line suffix when supported: `[File:120](/C:/Source/Orket/docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md:120)`
-
-Rules:
-1. Prefer `/C:/...`.
-2. Do not use `file://` links.
-3. Do not use plain backticked paths unless the user explicitly requests plain paths.
-
-### Codex App Surface
-
-If the active surface is the Codex app and file links are meant to open inside VS Code from the app, use workspace-relative Markdown links instead of absolute Windows-path URL links.
-
-Preferred style:
-1. `[CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)`
-2. `[Provider Runtime Target](orket/runtime/provider_runtime_target.py)`
-3. `[Contributor Guide](docs/CONTRIBUTOR.md)`
-
-Rules:
-1. Prefer repo-relative targets rooted at the current workspace.
-2. Do not use `/C:/...` targets in the Codex app surface unless the user explicitly confirms they work again.
-3. Do not use `./` or `.\` prefixes unless required by a specific client quirk.
-4. Only fall back to plain backticked Windows paths after workspace-relative Markdown links were actually tried in the current thread and the user reports that those specific links do not open.
-5. If the user re-confirms that workspace-relative Markdown links work in the Codex app, switch back to that style immediately for the rest of the thread.
-
----
+1. Codex app: workspace-relative Markdown links such as `[docs/CONTRIBUTOR.md](docs/CONTRIBUTOR.md)`.
+2. VS Code / CLI: absolute Windows Markdown links such as `[Guide](/C:/Source/Orket/docs/CONTRIBUTOR.md)`.
+3. Do not use `file://`.
+4. Do not fall back to plain backticked paths until workspace-relative links have failed in the current thread and the user has reported that failure.
 
 ## Repo Discipline
 
-Orket may remain broad and exploratory, but agents must not normalize preventable shipping debt.
+1. Work directly on `main` unless the user explicitly requests a branch workflow.
+2. If the user says commit or push "ALL changes", stage repository-wide with `git add -A` unless the user excludes paths.
+3. Preserve future packaging and shipping options.
+4. Do not introduce avoidable install, runtime, or test drift.
+5. Prefer the smallest truthful change. Separate required work, confidence-improving work, and optional cleanup.
+6. Do not use "experimental" as permission for duplicated canonical behavior, stale active docs, ambiguous authority, or unclear runtime entrypoints.
 
-Git workflow for this repository:
-1. Work directly on `main` by default.
-2. Do not create or switch to task branches unless the user explicitly requests a branch-based workflow.
-3. Explicit user command semantics for VCS scope:
-   - if the user says to commit/push "ALL changes", treat that as repository-wide scope, including changes the agent did not author.
-   - in that case, stage all available changes (`git add -A`) and commit/push unless the user explicitly excludes paths.
-   - if any path cannot be staged due to permissions or environment blockers, report the exact blocked path(s) and error(s).
+## Roadmap Control
 
-Required:
-1. Preserve future packaging and shipping options.
-2. Do not introduce avoidable install/runtime/test drift.
-3. Do not leave behind ambiguous authoritative paths when a task touches one.
-4. Do not treat "experimental" as permission for:
-   - broken dependency authority,
-   - stale docs on active paths,
-   - false-green testing,
-   - duplicated canonical behavior,
-   - unsafe fallbacks,
-   - unclear runtime entrypoints.
+`docs/ROADMAP.md` is the active execution index.
 
-Allowed:
-1. Broad exploratory surfaces.
-2. Incomplete product packaging in non-authoritative areas.
-3. Prototype code that is clearly labeled and does not masquerade as the canonical path.
+1. Keep roadmap entries execution-only. Process rules live in `docs/CONTRIBUTOR.md`.
+2. Follow roadmap hygiene, closeout, archive, and contract-extraction rules from `docs/CONTRIBUTOR.md`.
+3. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` in the same change unless the user explicitly says not to.
+4. When the user explicitly says to put or add something on the roadmap, place it in `Priority Now` at the highest available non-blocking position.
+5. Do not move an explicit user-requested roadmap item to backlog or future lanes unless the user explicitly asks for backlog placement.
+6. For explicit roadmap add or move requests, the completion response must include:
+   - the full updated `Priority Now` block,
+   - explicit confirmation the item does not appear in unintended sections,
+   - the result of `python scripts/governance/check_docs_project_hygiene.py`.
+7. If exact requested placement cannot be completed, stop and report the blocker instead of improvising a different placement.
 
----
+## Authority and Drift
 
-## Contributor Process Authority (Required)
+1. `CURRENT_AUTHORITY.md` is the canonical authority snapshot.
+2. If a task changes install or bootstrap commands, runtime entrypoints, canonical test commands, active specs, script output locations, security boundaries, provider or runtime selection, or integration behavior, update the source of truth in the same change unless the user explicitly says not to.
+3. Do not allow silent drift between code, docs, scripts, tests, and actual runtime behavior.
+4. Report unresolved drift under `Remaining blockers or drift`.
 
-`docs/CONTRIBUTOR.md` is the canonical contributor workflow for this repository. Agents must follow it, not re-invent it in ad hoc roadmap prose.
+## Testing and Verification
 
-Required:
-1. Session-start gate: before any substantive work in this repository, read `docs/CONTRIBUTOR.md` in the current session. "Substantive work" includes planning, implementation, editing, running tests, reviewing code, creating implementation plans, and updating roadmap or process docs. Reading `AGENTS.md` is not a substitute. If this has not happened in the current session, stop and do it before proceeding.
-2. After reading `docs/CONTRIBUTOR.md`, follow its startup protocol exactly, including reading `docs/ROADMAP.md` and `docs/ARCHITECTURE.md`.
-3. Treat `docs/ROADMAP.md` as an active execution index, not a session journal, narrative handoff log, or duplicate process guide.
-4. Treat `docs/ROADMAP.md` sections by execution semantics, not by heading name alone:
-   - `Priority Now` empty means no priority lane, not no work.
-   - active items in `Maintenance (Non-Priority)` are still executable roadmap work when no priority lane exists.
-   - standing recurring maintenance entries remain active but are fallback work; they should not outrank active finite maintenance items by default and should be listed last within the section unless they are the only active maintenance work.
-   - standing recurring maintenance roadmap entries must remain static authority pointers only; do not append volatile "latest evidence" or "latest archive" references.
-5. Keep roadmap entries terse, operational, and current by applying the roadmap hygiene rules already defined in `docs/CONTRIBUTOR.md`.
-6. When creating a new active implementation plan, follow the roadmap-entry rule in `docs/CONTRIBUTOR.md` and update `docs/ROADMAP.md` in the same change.
-7. For active lanes, roadmap entries must point to the canonical implementation plan path (single plan pointer), not requirement docs.
-8. Requirement docs may exist in project folders, but they are not the active roadmap execution pointer.
-9. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` and any dependent instructions in the same change unless the user explicitly says not to.
-10. Closeout handshake requirement:
-   - when a project lane or techdebt cycle completes, update `docs/ROADMAP.md`, archive the cycle/project docs, and remove completed/archived cycle docs from active `docs/projects/` scope in the same change.
-   - do not preserve convenience access by leaving a `Status: Completed` or `Status: Archived` cycle doc in an active folder; preserve discoverability via archive links instead.
-11. Phase-vs-initiative closeout requirement:
-   - if a lane has a multi-phase initiative mini-roadmap, treat that mini-roadmap as initiative-level authority rather than phase-scoped collateral.
-   - closing one phase must archive only phase-scoped docs; do not archive the initiative mini-roadmap unless the full initiative is complete.
-   - do not archive an entire non-maintenance project folder while roadmap still lists pending or in-progress work for that lane.
-   - if any phase remains, keep an active `docs/projects/<lane>/` folder containing the initiative mini-roadmap and the current canonical implementation plan.
-12. For `docs/projects/techdebt/`, only standing maintenance docs and docs for cycle ids still listed as active in `docs/ROADMAP.md` may remain outside archive.
-13. Completed non-maintenance project lanes must not linger in active `docs/projects/`; move long-lived contracts/specifications to `docs/specs/` and archive the remaining lane material.
-14. When accepted requirements already contain durable contracts/specifications, extract those into `docs/specs/` before writing the implementation plan so the plan cites stable authority instead of soon-to-be-archived requirement docs.
-15. Explicit roadmap-placement rule:
-   - when the user explicitly asks to "put/add this on the roadmap" (or equivalent), place the item in `Priority Now` at the highest available non-blocking position.
-   - default placement is top of `Priority Now`.
-   - if an existing `Priority Now` item is already explicitly higher-priority or cannot be displaced without blocking active execution, insert the new user-requested item immediately after it (typically second).
-   - do not place explicit user-requested roadmap additions only in `Future Lanes` unless the user explicitly asks for future/backlog placement.
-   - keep this rule AGENT-local; do not mirror or duplicate agent-specific roadmap-placement policy into `docs/CONTRIBUTOR.md` unless the user explicitly requests that documentation change.
-   - when updating `docs/ROADMAP.md`, keep edits execution-only (lane/status/pointer updates). Do not add operating-rule/process narrative to roadmap sections as part of roadmap-entry updates.
+1. Prefer the highest practical test layer that exercises real behavior.
+2. Label each new or modified test as `unit`, `contract`, `integration`, or `end-to-end`.
+3. Do not present mock-heavy or structural tests as proof of runtime truth.
+4. For real-path bug fixes, prefer contract or integration proof over implementation-detail tests.
+5. For new or changed integrations, automations, or runtime or integration behavior, run the real flow end-to-end before declaring completion.
+6. Record the observed path as `primary`, `fallback`, `degraded`, or `blocked`.
+7. Record the observed result as `success`, `failure`, `partial success`, or `environment blocker`.
+8. If live verification is impossible, say so explicitly and report the exact blocker.
+9. Import-only, compile-only, dry-run-only, mocked success, or code inspection alone are not live proof.
 
-Do not use `docs/ROADMAP.md` to restate process that already lives in `docs/CONTRIBUTOR.md`.
+## Script Output Convention
 
----
+Any new script that writes rerunnable JSON results must use `scripts.common.rerun_diff_ledger.write_payload_with_diff_ledger` or `write_json_with_diff_ledger`.
 
-## Authority and Drift Control (Required)
-
-Agents must protect the repository's current authoritative paths.
-
-Current authority snapshot:
-1. `CURRENT_AUTHORITY.md` is the canonical map of what is authoritative right now.
-2. If a task changes an authority item listed there, update `CURRENT_AUTHORITY.md` in the same change unless the user explicitly says not to.
-
-Before declaring a task complete, check whether it affects any of these:
-1. canonical install/bootstrap path,
-2. canonical runtime entrypoint,
-3. canonical test command,
-4. active protocol/spec documents,
-5. canonical script output locations,
-6. security boundaries,
-7. model/provider/runtime selection behavior,
-8. integration behavior.
-
-If a task changes one of those, update the corresponding source of truth in the same change unless the user explicitly says not to.
-
-Do not allow silent drift between:
-- `pyproject.toml`,
-- `requirements.txt`,
-- docs,
-- scripts,
-- tests,
-- actual runtime behavior.
-
-If drift is discovered and not fixed, report it explicitly under:
-`Remaining blockers or drift`.
-
----
-
-## Testing the Right Layer (Required)
-
-False confidence is one of the highest-risk failure modes in this repository.
-
-Agents must prefer tests that validate real runtime behavior over tests that only validate scaffolding, mocks, or internal implementation detail.
-
-Required:
-1. Label each new or modified test by layer:
-   - unit,
-   - contract,
-   - integration,
-   - end-to-end.
-2. Do not present mock-heavy or structural tests as proof of runtime truth.
-3. When fixing a bug in a real execution path, prefer the highest practical test layer that exercises the real behavior.
-4. Flag tests that:
-   - mock away the behavior under investigation,
-   - assert implementation details instead of observable contracts,
-   - rely on synthetic fixtures that bypass the real path,
-   - pass while the live path is still broken.
-5. When higher-layer proof is impractical, state the gap explicitly.
-
-Preferred order:
-1. integration or contract proof for real behavior,
-2. targeted unit coverage for edge cases,
-3. minimal mocks only where isolation is required.
-
-Do not claim confidence the repo has not earned.
-
----
-
-## Live Integration Verification (Required)
-
-For any new or changed integration or automation path that changes runtime or integration behavior, the agent must verify behavior against the real configured system before declaring completion.
-
-Applies to:
-- CI,
-- APIs,
-- webhooks,
-- runners,
-- external services,
-- provider integrations,
-- cross-process orchestration paths.
-
-Required proof:
-1. Run the real command or flow end-to-end.
-2. Record the observed path:
-   - primary,
-   - fallback,
-   - degraded,
-   - blocked.
-3. Record the observed result:
-   - success,
-   - failure,
-   - partial success,
-   - environment blocker.
-4. If it fails, capture the exact failing step and exact error.
-5. Either fix it or report the blocker concretely.
-
-Insufficient proof:
-- compile-only,
-- import-only,
-- dry-run-only,
-- mocked success,
-- code inspection alone.
-
-If live verification is impossible because credentials, infrastructure, or external dependencies are unavailable, say so explicitly and do not over-claim completion.
-
-References:
-1. `[CONTRIBUTOR.md](/C:/Source/Orket/docs/CONTRIBUTOR.md)`
-2. `[AGENTS.md](/C:/Source/Orket/AGENTS.md)`
-
----
-
-## Script Output Conventions (Required)
-
-Any new script that writes rerunnable JSON results must use:
-- `scripts.common.rerun_diff_ledger.write_payload_with_diff_ledger`, or
-- `write_json_with_diff_ledger` for JSON text payloads.
-
-Rules:
-1. Keep a stable canonical output file path for each script output.
-2. Reruns must append `diff_ledger` entries instead of creating timestamp-only files.
-3. Default major-diff rollover policy:
-   - `paths_total_reference <= 250`: threshold `0.93`
-   - `251-1200`: threshold `0.88`
-   - `>1200`: threshold `0.80`
+1. Keep one stable canonical output path per script.
+2. Reruns append `diff_ledger` entries instead of creating timestamp-only files.
+3. Default major-diff rollover:
+   - `paths_total_reference <= 250`: `0.93`
+   - `251-1200`: `0.88`
+   - `>1200`: `0.80`
 4. Rollover also requires `churn_paths >= 20`.
-5. If overriding thresholds or minimum changed paths, include a short code comment explaining why.
+5. If you override thresholds or minimum changed paths, add a short code comment explaining why.
 
----
+## Effort
 
-## Model Selection and Resource Efficiency
+Use the lowest reasoning tier that can reliably finish the task.
 
-Use the minimum reasoning tier that can reliably complete the task.
+1. Retrieval, grep, and targeted file discovery: use the current session model at `low` effort.
+2. Coding, editing, and targeted execution: use the current session model at `medium` effort.
+3. Architecture, repo-wide refactors, and deep reviews: use the current session model at `xhigh` effort.
+4. Do not spend `xhigh` on basic retrieval.
 
-Default model guidance for this repo:
+## Code Discipline
 
-1. **Search / Retrieval**
-   - Model: `gpt-5.3-codex`
-   - Effort: `low`
-   - Use for: grep, file discovery, code reading, structure exploration, locating definitions.
+### Async-reachable paths
 
-2. **Coding / Execution**
-   - Model: `gpt-5.3-codex`
-   - Effort: `medium`
-   - Use for: writing code, editing files, running tests, fixing bugs, targeted implementation.
+1. Do not use `subprocess.run()` or `subprocess.call()`.
+2. Do not use `Path.read_text()`, `Path.write_text()`, or raw `open()`.
+3. Do not use sync HTTP clients such as `requests`.
+4. Do not use `time.sleep()`.
+5. Do not put `lru_cache` on sync-to-async bridge functions.
+6. If reachability is ambiguous, assume the path is async-reachable.
 
-3. **Planning / Architecture / Brutal Review**
-   - Model: `gpt-5.3-codex`
-   - Effort: `xhigh`
-   - Use for: architecture decisions, cross-file refactors, repo-wide reasoning, deep code review, drift analysis.
+Use `asyncio.create_subprocess_exec()`, `aiofiles`, `AsyncFileTools`, `await asyncio.to_thread(...)`, `httpx.AsyncClient`, and `await asyncio.sleep()` as appropriate.
 
-Rules:
-1. Prefer explicit naming:
-   - `gpt-5.3-codex low`
-   - `gpt-5.3-codex medium`
-   - `gpt-5.3-codex xhigh`
-2. Do not spend `xhigh` on basic retrieval.
-3. Do not use broad file loading when targeted reads are enough.
-4. Escalate reasoning effort only when the task justifies it.
+### Size and structure
 
----
-
-## Change Scope Discipline
-
-Prefer the smallest truthful change.
-
-Required:
-1. Do not perform broad cleanup unless the task requires it.
-2. Do not refactor unrelated areas opportunistically.
-3. If adjacent refactoring is required for safety or clarity, keep it narrow and explain why.
-4. Separate:
-   - required-for-correctness work,
-   - confidence-improving work,
-   - optional cleanup.
-
----
-
-## Code Discipline (Required)
-
-These rules are mandatory for new and modified code unless the user explicitly directs otherwise.
-
-### Async Purity
-
-Assume ambiguous call paths are async-reachable.
-
-1. Never use `subprocess.run()` or `subprocess.call()` in async-reachable code. Use `asyncio.create_subprocess_exec()` or `await asyncio.to_thread(...)`.
-2. Never use `Path.read_text()`, `Path.write_text()`, or raw `open()` in async-reachable code. Use `aiofiles`, `AsyncFileTools`, or `await asyncio.to_thread(...)`.
-3. Never use sync HTTP clients such as `requests`. Use `httpx.AsyncClient`.
-4. Never use `time.sleep()` in async code. Use `await asyncio.sleep()`.
-5. Never place `lru_cache` on sync-to-async bridge functions.
-6. If unsure whether a path is async-reachable, assume it is.
-
-### File Size Limits
-
-Large files are a maintainability hazard and should be reduced over time.
-
-Required:
 1. Do not create a new Python file over 400 lines.
-2. Do not increase an existing Python file past 400 lines unless the user explicitly approves or the change is required for correctness and no reasonable split fits the task.
+2. Do not grow an existing Python file past 400 lines unless required for correctness or explicitly approved.
 3. When touching an oversized file, avoid making it larger unless unavoidable.
-4. Prefer extracting helpers or focused modules when an edited file is already oversized.
+4. No new function should exceed 70 lines without clear justification.
 5. No new class should expose more than 10 public methods.
-6. No new function should exceed 70 lines unless there is a clear justification.
-7. Each FastAPI router file should own one resource domain where practical.
+6. Keep each FastAPI router focused on one resource domain where practical.
 
-Existing oversized files are technical debt, not precedent.
+### Single source of truth
 
-### DRY / Single Source of Truth
+1. Do not duplicate definitions when one authoritative definition can be imported.
+2. Do not add compatibility shims without explicit user approval or a tracked removal ticket.
+3. Do not copy-paste a function and rename it when shared logic can be extracted.
 
-1. Never duplicate definitions across files when one authoritative definition can be imported.
-2. Never add a compatibility shim without a tracked removal ticket or explicit user approval.
-3. Never copy-paste a function and rename it when common logic can be extracted.
+### Exceptions and security
 
-### Exception Handling
-
-1. Never use bare `except Exception` except at true top-level boundaries:
-   - CLI entrypoints,
-   - API endpoints,
-   - background task loops,
-   - process supervisors.
-2. At top-level boundaries, log enough context to diagnose the failure.
+1. Do not use bare `except Exception` except at true top-level boundaries such as CLI entrypoints, API endpoints, background loops, or supervisors.
+2. At those boundaries, log enough context to diagnose the failure.
 3. Catch the narrowest reasonable exception type.
 4. Never silently swallow exceptions.
+5. Never embed credentials in URLs, logs, traces, or interpolated strings.
+6. Never pass unsanitized user input to subprocess commands.
+7. Never use `importlib.exec_module()` on user-controlled paths without OS-level sandboxing.
+8. Use `Path.is_relative_to()` for path containment checks. Do not use `str.startswith()`.
 
-### Security Boundaries
+### Naming and proxy rules
 
-1. Never embed credentials in URLs, logs, traces, or interpolated strings.
-2. Never pass unsanitized user input to subprocess commands.
-3. Never use `importlib.exec_module()` on user-controlled paths without OS-level sandboxing.
-4. Always use `Path.is_relative_to()` for path containment checks, never `str.startswith()`.
+1. Do not introduce new `__getattr__` delegation.
+2. Do not expand existing `__getattr__` forwarding. Remove it when the touched area is already being refactored.
+3. Module-level singleton proxy or lazy-init patterns are allowed only with a short explanatory comment.
 
-### Naming and Proxies
+## Review and Reporting
 
-1. Do not introduce new `__getattr__` delegation to forward methods.
-2. Existing `__getattr__` delegation must not be expanded and should be removed when the touched area is being refactored.
-3. Proxy or lazy-init patterns are allowed only for module-level singletons and must include a short explanatory comment.
-
-`__getattr__` forwarding is discouraged because it is invisible to IDEs, type checkers, and grep.
-
----
-
-## Verification and Reporting
-
-When finishing a task, report in this order:
-
-1. what changed,
-2. what was verified,
-3. what was not verified,
-4. remaining blockers or drift,
-5. exact files touched.
-
-Be precise:
-1. If proof is structural only, say so.
-2. If proof is live, say so.
-3. If proof is absent, say so.
-
-Do not overstate certainty.
-
----
-
-## Preferred Review Framing
-
-When asked for a review, group findings where relevant into:
-
-1. **Ship-risk debt**
-   - issues that would block safe shipping, trust, packaging, or operability.
-
-2. **Exploration-safe debt**
-   - acceptable mess while the repo remains exploratory.
-
-3. **Self-deception debt**
-   - anything that creates false confidence, including:
-     - stale docs,
-     - duplicate authority,
-     - false-green tests,
-     - mock-heavy proof of the wrong layer,
-     - compile-only proof presented as runtime proof.
-
-Prioritize self-deception debt aggressively.
-
----
-
-## Decision Rule
-
-Default priority order:
-
-1. truthful behavior,
-2. truthful verification,
-3. preserving future shippability,
-4. reducing authority drift,
-5. minimizing scope,
-6. resource efficiency.
-
-If two approaches both work, choose the one that is easier to verify and less likely to create false confidence.
+1. Final task reports must be ordered as:
+   - what changed,
+   - what was verified,
+   - what was not verified,
+   - remaining blockers or drift,
+   - exact files touched.
+2. State whether proof is live, structural, or absent.
+3. For reviews, prioritize findings over summary and group them as `Ship-risk debt`, `Exploration-safe debt`, and `Self-deception debt`.
+4. When two approaches both work, choose the one that is easier to verify and less likely to create false confidence.

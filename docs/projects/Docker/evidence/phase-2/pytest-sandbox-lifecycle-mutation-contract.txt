@@ -1,0 +1,11 @@
+Phase: 2
+Date: 2026-03-11
+Layer: contract
+Observed path: primary
+Observed result: success
+Command: python -m pytest -q tests/contracts/test_sandbox_lifecycle_mutation_contract.py
+Summary: 2 passed in 0.03s
+
+Coverage:
+- Duplicate operation_id reuse returns the prior cleanup-claim result.
+- requires_reconciliation gating blocks follow-on cleanup and lifecycle mutations.

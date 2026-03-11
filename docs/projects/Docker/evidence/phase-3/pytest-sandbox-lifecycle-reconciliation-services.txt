@@ -1,0 +1,14 @@
+Phase: 3
+Date: 2026-03-11
+Layer: integration
+Observed path: primary
+Observed result: success
+Command: python -m pytest -q tests/integration/test_sandbox_lifecycle_reconciliation_service.py tests/integration/test_sandbox_cleanup_verification_service.py tests/integration/test_sandbox_cleanup_scheduler_service.py
+Summary: 9 passed in 0.34s
+
+Coverage:
+- Reconciliation transitions active records to `reclaimable` and `terminal/lost_runtime` using the durable mutation path.
+- Reconciliation marks terminal records `cleaned` after observed external absence.
+- Reconciliation schedules cleanup when terminal records lack a cleanup due timestamp.
+- Cleanup verification compares observed Docker state to managed inventory and detects partial cleanup.
+- Cleanup scheduler orders due candidates deterministically and claims cleanup through CAS-safe mutation.

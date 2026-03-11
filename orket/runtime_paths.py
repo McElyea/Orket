@@ -33,6 +33,15 @@ def resolve_runtime_db_path(db_path: str | None = None) -> str:
     return str(target)
 
 
+def resolve_sandbox_lifecycle_db_path(db_path: str | None = None) -> str:
+    if db_path:
+        return db_path
+    target = durable_root() / "db" / "sandbox_lifecycle.db"
+    _migrate_legacy_file(legacy=Path.cwd() / "sandbox_lifecycle.db", target=target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    return str(target)
+
+
 def resolve_webhook_db_path(db_path: str | Path | None = None) -> Path:
     if db_path is not None:
         return Path(db_path)

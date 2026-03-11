@@ -1,137 +1,72 @@
 # Contributor Guide
 
-Orket
+## Startup
 
-## Protocol
-1. Start each session by reading:
-   - this file
+1. Before substantive work, read in order:
    - `docs/CONTRIBUTOR.md`
    - `docs/ROADMAP.md`
    - `docs/ARCHITECTURE.md`
-   - `docs/architecture/ARCHITECTURE_COMPLIANCE_CHECKLIST.md`
-   - Complete this startup read before beginning work in the repository.
-   - Agent-specific enforcement details live in `AGENTS.md`.
-2. Update `docs/ROADMAP.md` at handoff: remove completed work and obsolete work.
-   - Interpretation rule:
-     1) `Priority Now` empty means no priority lane, not no work
-     2) active items in `Maintenance (Non-Priority)` remain executable when no priority lane exists
-     3) standing recurring maintenance entries remain active but are fallback work, not the default pick ahead of active finite remediation or implementation items
-     4) within `Maintenance (Non-Priority)`, list standing recurring maintenance entries last unless they are the only active maintenance work
-   - If a non-maintenance project or project lane is complete, move its closeout/plan/history docs to `docs/projects/archive/<ProjectName>/` and update links in the same change.
-   - Project-owned docs that remain long-lived contracts/specifications must move to `docs/specs/` when the project or lane is archived.
-   - Completed non-maintenance project folders must not remain under `docs/projects/` unless the folder is still intentionally active as a maintenance lane or externally gated authority surface.
-   - Keep `docs/ROADMAP.md` as the only active roadmap source; do not create parallel active backlog docs.
-   - When creating a new active implementation plan, add or update the corresponding `docs/ROADMAP.md` entry in the same change so the plan is discoverable from the active execution index.
-   - Roadmap entries for active lanes must point to the canonical implementation plan path (single plan pointer), not requirement docs.
-   - Requirement docs may exist in the project lane, but roadmap entries should not use requirement docs as the active execution pointer.
-   - Roadmap entries for active plans should stay terse and point to the canonical plan path instead of restating the plan body.
-   - Keep `docs/ROADMAP.md` active-only: do not leave completed or archived project roots in active roadmap sections or the Project Index.
-   - Formal closeout handshake for any completed project lane or techdebt cycle:
-     1) update roadmap status and next-slice selection in the same change
-     2) move completed cycle/project docs into the proper archive folder in the same change
-     3) leave no `Status: Completed` or `Status: Archived` cycle doc in active `docs/projects/` scope after handoff
-     4) for `docs/projects/techdebt/`, leave only standing maintenance docs plus docs for cycle ids still listed as active in `docs/ROADMAP.md`
-     5) preserve discoverability with archive links, not by leaving completed docs in active folders
-   - Phase-vs-initiative closeout rule:
-     1) if a lane has a multi-phase initiative mini-roadmap, treat that mini-roadmap as initiative-level authority, not phase-scoped collateral
-     2) do not archive the initiative mini-roadmap when a single phase closes; archive only the completed phase docs
-     3) do not archive the entire project folder while roadmap still lists pending or in-progress work for that lane
-     4) if any phase remains, keep an active lane folder with the initiative mini-roadmap plus the current canonical implementation plan
-   - Run anti-orphan checks at handoff:
-     1) every remaining non-archive folder in `docs/projects/` appears in roadmap Project Index
-     2) every active/queued roadmap entry points to an existing path
-     3) run `python scripts/governance/check_docs_project_hygiene.py` and fix all failures before handoff
-3. Contract extraction prework rule:
-   - When requirements for a project or lane are accepted and durable contracts/specifications are now clear, extract those contract/spec portions into `docs/specs/` before creating the implementation plan.
-   - Requirement documents may keep narrative, rationale, scope, and acceptance framing, but implementation plans should cite the extracted spec/contract files as authority instead of depending on requirement docs that will later be archived.
-   - Do not wait until archive/closeout time to discover and move long-lived authority out of `docs/projects/`.
-4. Keep runtime paths in `orket/` async-safe and governance mechanical.
-5. Do not scan dependency/vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
-6. For documentation dates (`Last updated:`), use local `America/Denver` date, not UTC.
-7. No session narrative here. Use temporary scratch notes if needed.
-8. The roadmap has the next steps, no need to journal them here.
-9. Command intent rule:
-   - If the user says "follow roadmap" (or equivalent) without naming a project, execute the highest-priority active item in `docs/ROADMAP.md`.
-   - If `Priority Now` is empty, execute the highest-priority active non-recurring item under `Maintenance (Non-Priority)` before considering staged or future lanes.
-   - Execute standing recurring maintenance only when no other active maintenance item remains or when the user explicitly requests the recurring cycle.
-   - Do not switch to paused/deferred projects unless the user explicitly requests it.
-10. Published artifacts rule:
-   - `benchmarks/published/index.json` is canonical.
-   - After any published artifact change, run:
-     1) `python scripts/governance/sync_published_index.py --write`
-     2) `python scripts/governance/sync_published_index.py --check`
-   - Commit `index.json`, generated `README.md`, and artifact files together.
-11. Recurring maintenance rule:
-   - Recurring freshness/maintenance cycles are governed by:
-     `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
-   - Techdebt folder closure/archive semantics are governed by:
-     `docs/projects/techdebt/README.md`
-   - In `docs/ROADMAP.md`, standing recurring-maintenance entries must stay static and include only durable authority pointers (for example checklist + folder-governance path).
-   - Do not append volatile pointers such as "Latest evidence" or "Latest completed archive" to roadmap recurring-maintenance entries.
-   - Keep recurring checks out of project execution lanes; project plans should remain closable.
-12. Techdebt cycle closure rule:
-   - If a techdebt cycle's implementation requirements are complete and verified, move cycle-specific docs from
-     `docs/projects/techdebt/` to `docs/projects/archive/techdebt/<cycle_id>/` in the same closeout change.
-   - Archive both cycle implementation artifacts and cycle requirement/review/spec files covered by that closeout.
-   - Keep only standing maintenance docs (and any currently active cycle docs) under `docs/projects/techdebt/`.
-13. README discipline rule:
-   - Do not add small project-subfolder `README.md` files by default.
-   - Allowed exceptions are maintained index/gateway docs (for example root README, scripts/index readmes, or explicitly referenced governance docs with a named owner).
-   - Prefer `docs/ROADMAP.md`, `docs/CONTRIBUTOR.md`, and contract/spec documents as the durable source of truth.
+2. Read `docs/architecture/ARCHITECTURE_COMPLIANCE_CHECKLIST.md` before merge when the change touches runtime, orchestration, adapters, interfaces, or decision nodes.
+3. Agents also follow `AGENTS.md`.
+4. Do not scan dependency or vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
+5. For `Last updated:` fields, use the local `America/Denver` date.
 
-## Current Focus
-1. Keep `docs/ROADMAP.md` active-only (remove completed/obsolete items at each handoff).
-2. Preserve deterministic green gates (`pytest`, dependency direction, volatility boundaries).
-3. Keep pilot evidence artifacts current (`architecture_pilot_matrix*`, `microservices_pilot_stability_check.json`).
-4. Execute the highest-priority active roadmap lane unless the user redirects.
-5. Keep recurring maintenance available as a fallback lane via `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`, but do not let it outrank active finite maintenance work by default.
+## Work Selection
 
-## Quick Setup
-1. Install dependencies: `python -m pip install --upgrade pip && python -m pip install -e ".[dev]"`
-2. Create local `.env` for secrets.
-3. Run locally: `python main.py --rock <rock_name>`
+1. Default to the highest-priority active roadmap item.
+2. If `Priority Now` is empty, take the highest-priority active non-recurring item in `Maintenance (Non-Priority)`.
+3. Standing recurring maintenance is fallback work unless the user explicitly asks for it or it is the only active maintenance item.
+4. Do not reopen staged, deferred, or paused work without an explicit request.
 
-## Core Rules
-1. Keep permanent decisions in tracked docs/code.
-2. Keep runtime paths in `orket/` async-safe (no blocking I/O).
-3. Keep governance mechanical (no retry theater).
-4. Prefer small, reversible changes.
-5. Do not commit secrets, `.env`, or local database files.
-6. Keep repo root clean; do not add tool-specific metadata folders in root when they can live under `Agents/`.
-7. CI/workflow policy: use `.gitea/workflows/` only.
-8. Do not add or modify `.github/workflows/*` unless explicitly requested by the project owner in the current task.
-9. When adding or changing automation, implement and validate the `.gitea` workflow first; treat GitHub workflow paths as out of scope by default.
+## Roadmap Discipline
 
-## Project Map
-- Rocks: `model/core/rocks/`
-- Epics: `model/core/epics/`
-- Roles: `model/core/roles/`
-- Dialects: `model/core/dialects/`
+`docs/ROADMAP.md` is the only active roadmap.
 
-## How To Work
-1. Pick one roadmap item.
-   - Default selection: highest-priority active (non-paused) roadmap item.
-2. Implement the smallest complete slice.
-3. Add/update tests for behavior changed.
-4. Run targeted tests first, then broader tests.
-5. Update docs affected by behavior changes.
+1. Keep entries terse, execution-only, and non-journaled.
+2. Active lane entries point to the canonical implementation plan path, not requirement docs.
+3. Do not create parallel active backlog or handoff docs.
+4. Update the roadmap at handoff to remove completed or obsolete items.
+5. Every non-archive folder in `docs/projects/` must appear in the Project Index.
+6. Every active or queued roadmap entry must point to an existing path.
+7. When roadmap or `docs/projects/` structure changes, run `python scripts/governance/check_docs_project_hygiene.py` before handoff.
+8. Standing recurring maintenance entries stay static and point only to durable authority docs, not volatile evidence.
+
+## Planning and Closeout
+
+1. When creating a new active implementation plan, add or update its roadmap entry in the same change.
+2. When accepted requirements contain durable contracts or specs, extract them into `docs/specs/` before writing the implementation plan.
+3. When a non-maintenance lane completes, move plan, closeout, and history docs to `docs/projects/archive/<lane>/` in the same change.
+4. Move long-lived contracts or specs out of completed lanes into `docs/specs/`.
+5. Do not leave `Status: Completed` or `Status: Archived` docs in active `docs/projects/`.
+6. When closing a phase in a multi-phase initiative, archive only phase-scoped docs. Keep the initiative mini-roadmap and current canonical plan active while later phases remain.
+7. For `docs/projects/techdebt/`, leave only standing maintenance docs and docs for cycle ids still active in the roadmap.
+
+## Repository Rules
+
+1. Keep runtime paths in `orket/` async-safe and governance mechanical.
+2. Keep permanent decisions in tracked docs or code.
+3. Prefer small, reversible changes.
+4. Do not commit secrets, `.env`, or local database files.
+5. Keep the repo root clean. Put tool-specific metadata under `Agents/` when practical.
+6. Do not add small project-subfolder `README.md` files by default.
+7. Workflow changes go in `.gitea/workflows/` only unless explicitly approved otherwise.
+8. When changing automation, implement and validate the `.gitea` workflow first.
+9. After any published artifact change, run:
+   - `python scripts/governance/sync_published_index.py --write`
+   - `python scripts/governance/sync_published_index.py --check`
+10. Commit published artifacts, `benchmarks/published/index.json`, and `benchmarks/published/README.md` together.
+
+## Canonical Commands
+
+- Install: `python -m pip install --upgrade pip && python -m pip install -e ".[dev]"`
+- Default runtime: `python main.py`
+- Named rock runtime: `python main.py --rock <rock_name>`
+- API runtime: `python server.py`
+- Test command: `python -m pytest -q`
 
 ## Testing
-1. Real-world first: prefer temporary real filesystems/databases over mocks.
+
+1. Prefer real filesystems, databases, and integration paths over mocks when practical.
 2. Keep tests deterministic and isolated.
 3. For refactors, prove parity with regression tests.
-4. Provider-backed runtime selection and local warmup are authoritative in `orket/runtime/provider_runtime_target.py`; runtime paths and provider verification scripts must reuse that shared path instead of carrying separate provider/model resolution logic.
-
-## Common Additions
-1. New role: add `model/core/roles/<role>.json`.
-2. New tool: implement in tool family/runtime seam and wire via decision strategy/tool map.
-3. New epic: add `model/core/epics/<epic>.json` with atomic issues.
-
-## PR Checklist
-1. Clear summary of what changed and why.
-2. Tests run and results listed.
-3. Risk/rollback notes for non-trivial changes.
-4. Docs updated where behavior changed.
-5. Workflow changes (if any) are limited to `.gitea/workflows/` unless explicitly approved otherwise.
-6. Boundary/contract breaks include a proposal using `docs/architecture/CONTRACT_DELTA_TEMPLATE.md` with migration and rollback plans.
-7. Published artifact updates include synchronized `benchmarks/published/index.json` and `benchmarks/published/README.md`.
+4. Provider-backed runtime selection and local warmup authority live in `orket/runtime/provider_runtime_target.py`. Runtime paths and provider verification scripts must reuse it.
