@@ -40,7 +40,7 @@ Completed:
 3. [x] Phase C additive expression/gesture cue mapping implemented without changing lifecycle authority precedence.
 4. [x] Phase C observability baseline vocabulary, warning rate-limiting, and payload redaction defaults implemented.
 5. [x] Phase C optional connected-path control-event feed (`POST` publish + `GET` feed) implemented and live-verified.
-6. [x] Phase D baseline harness entrypoint established for reproducible host+gateway probes.
+6. [x] Phase D baseline harness entrypoint established and expanded to multi-run API latency aggregation with system-profile metadata for reproducible host+gateway probes.
 
 Remaining:
 1. [ ] Phase B live interruption/cancel playback-truth proof in the real UI path (host-backed speaking path is now live-verified with `tts_available=true` and `/api/voice/synthesize` `ok=true` on `2026-03-10`, including `python -m piper` fallback when no `piper` PATH shim is present).
