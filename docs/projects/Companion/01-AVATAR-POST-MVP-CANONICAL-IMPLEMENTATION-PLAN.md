@@ -39,6 +39,7 @@ Completed:
 2. [x] Phase C envelope parser + idempotency dedupe (`avatar_event_v1`) with safe unknown-version/type handling.
 3. [x] Phase C additive expression/gesture cue mapping implemented without changing lifecycle authority precedence.
 4. [x] Phase C observability baseline vocabulary, warning rate-limiting, and payload redaction defaults implemented.
+5. [x] Phase C optional connected-path control-event feed (`POST` publish + `GET` feed) implemented and live-verified.
 
 Remaining:
 1. [ ] Phase B live host-backed speaking/interruption proof on real playback truth (implementation is in place; current blocker is `tts_unavailable` from `/api/voice/synthesize` in live environment).

@@ -8,7 +8,7 @@ Active lane entries should link the canonical implementation plan path only; req
 Phase closeout is not initiative closeout: if a lane's initiative mini-roadmap still has pending phases, keep the lane active and archive only completed phase docs.
 
 ## Priority Now
-1. Companion avatar post-MVP lane (in progress: Phase A/B/C implementation slices complete; live TTS-backed Phase B verification and Phase D decision gate remain) -- Canonical implementation plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`. Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`.
+1. Companion avatar post-MVP lane (in progress: Phase A and Phase C are complete; Phase B live TTS-backed verification and Phase D decision gate remain) -- Canonical implementation plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`. Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`.
 
 ## Maintenance (Non-Priority)
 These items are active executable work. They are non-priority, not deferred.

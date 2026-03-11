@@ -1,7 +1,7 @@
 # Companion Avatar Phase C Implementation Plan (Control-Plane Events)
 
 Last updated: 2026-03-10
-Status: In Progress (implementation complete; final phase gate verification pending)
+Status: Complete (phase gate satisfied; lane closeout pending)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -84,4 +84,5 @@ Phase C is complete when:
 1. [x] Workstream C1 event envelope ingestion, fail-closed version handling, and idempotency dedupe.
 2. [x] Workstream C2 additive expression/gesture application path with lifecycle precedence preserved.
 3. [x] Workstream C3 observability vocabulary, rate-limiting, and payload redaction defaults.
-4. [ ] Formal phase closeout/archive handshake in roadmap/docs set (pending while the lane is still executing Phase B and Phase D work).
+4. [x] Live connected-path validation for optional event stream (`POST` publish + `GET` feed) completed without lifecycle regression.
+5. [ ] Formal phase closeout/archive handshake in roadmap/docs set (pending while the lane is still executing Phase B and Phase D work).
