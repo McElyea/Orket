@@ -1,7 +1,7 @@
 # Companion Avatar Phase D Implementation Plan (Transport Decision Gate)
 
-Last updated: 2026-03-09
-Status: Draft (queued)
+Last updated: 2026-03-10
+Status: In Progress (partial baseline harness available)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -69,3 +69,10 @@ Phase D is complete when:
 1. budgets are measured and compared to contract thresholds,
 2. degradation behavior is validated with preserved core usability,
 3. transport decision is published with explicit rationale and next-step scope.
+
+## 6. Execution Checklist Snapshot
+
+1. [x] Workstream D1 baseline harness path established (`scripts/live_phase_d_probe.py` in Companion extension repo).
+2. [ ] Workstream D1 reference-profile FPS/TTI/CPU/GPU collection is pending (current harness captures API-level baseline only).
+3. [ ] Workstream D2 degradation-order validation is pending.
+4. [ ] Workstream D3 evidence-backed decision memo is pending.
