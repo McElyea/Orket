@@ -1,7 +1,7 @@
 # Companion Avatar Phase B Implementation Plan (Speaking Presence Baseline)
 
 Last updated: 2026-03-10
-Status: In Progress (speaking path live-verified; interruption/cancel live verification pending)
+Status: Complete (speaking + interruption/cancel live verification captured)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -91,4 +91,4 @@ Phase B is complete when:
 2. [x] Workstream B2 playback-amplitude mouth-open baseline and interruption stop semantics implemented in UI playback path.
 3. [x] Workstream B3 reduced-motion behavior contract tests and persistence.
 4. [x] Live host-backed speaking verification is complete (`2026-03-10`): `/api/status` reported `tts_available=true` and `/api/voice/synthesize` returned `ok=true` with non-empty audio payload while `shutil.which("piper")` was absent and runtime fallback resolved through `python -m piper`.
-5. [ ] Live interruption/cancel verification in the real UI playback path is still pending final evidence capture.
+5. [x] Live interruption/cancel verification in the real UI playback path is complete (`2026-03-10`) via `scripts/live_phase_d_probe.py --ui-interrupt-probe` with verified checks for speaking start, stop-playback observation, and stop-playback clear.
