@@ -46,9 +46,10 @@ Completed:
 9. [x] Phase D induced-pressure degradation-order evidence captured on live host+gateway path (status reachable in degraded mode, chat usable with settings payload, and voice synth returning expected `tts_unavailable`).
 10. [x] Phase D transport decision memo published with a retain-current decision and explicit WebRTC reopen triggers.
 11. [x] Phase D UI probe instrumentation now supports configurable idle/speaking FPS sampling windows and avatar-mode targeting to execute the remaining contract-grade 60s comparison runs.
+12. [x] Phase D 60s avatar-off vs avatar-on FPS runs completed above contract floor (`>=45 FPS`) for both idle and speaking windows.
 
 Remaining:
-1. [ ] Phase D contract-grade 60s comparison run set and budget pass/fail mapping for full closeout.
+1. [ ] Phase D contract-grade TTI delta and avatar-attributable CPU/GPU uplift mapping for full closeout.
 
 ## 4. Dependency and Order
 
