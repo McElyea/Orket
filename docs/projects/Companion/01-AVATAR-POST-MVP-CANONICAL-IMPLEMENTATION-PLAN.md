@@ -43,6 +43,7 @@ Completed:
 6. [x] Phase D baseline harness entrypoint established and expanded to multi-run API latency aggregation, browser timing metrics, and system resource snapshots (CPU/memory/GPU) for reproducible host+gateway probes.
 7. [x] Phase B live speaking and interruption/cancel playback proof completed on real host+gateway+UI path.
 8. [x] Phase D degraded-mode baseline evidence captured for TTS-unavailable path while chat remained usable.
+9. [x] Phase D induced-pressure degradation-order evidence captured on live host+gateway path (status reachable in degraded mode, chat usable with settings payload, and voice synth returning expected `tts_unavailable`).
 
 Remaining:
 1. [ ] Phase D performance measurement and transport decision gate.

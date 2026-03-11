@@ -1,7 +1,7 @@
 # Companion Avatar Phase D Implementation Plan (Transport Decision Gate)
 
 Last updated: 2026-03-10
-Status: In Progress (baseline harness + API/UI timing + system resource snapshots available)
+Status: In Progress (D1/D2 evidence captured; D3 decision memo pending)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -77,5 +77,5 @@ Phase D is complete when:
 3. [x] Workstream D1 browser-side timing metrics are now captured in live mode (`--ui-interrupt-probe`): navigation timing (`response_end`, `dom_content_loaded_end`, `load_event_end`) plus sampled FPS (`raf_sample`).
 4. [x] Workstream D1 reference-profile CPU/GPU snapshot collection is now captured in the live harness via Windows `typeperf` (`system_metrics_before` / `system_metrics_after` include CPU, memory, and GPU engine utilization).
 5. [x] Workstream D2 degraded-mode baseline check captured (`2026-03-10`): with TTS unavailable (`tts_available=false`, `voice_synthesize.error_code=tts_unavailable`), chat responses still completed (`chat.ok=true`) on the same live host+gateway path.
-6. [ ] Workstream D2 full degradation-order validation under induced resource pressure is pending.
+6. [x] Workstream D2 full degradation-order validation under induced CPU pressure captured (`2026-03-10`): with 16 local stress workers driving probe snapshots to ~`54.86%` / `56.04%` total CPU, gateway status stayed reachable/degraded (`status.http_status=200`, `text_only_degraded=true`), chat remained usable (`chat.http_status=200`, model `llama3.1:8b`) with returned settings config payload, and voice synth degraded as expected (`voice_synthesize.error_code=tts_unavailable`).
 7. [ ] Workstream D3 evidence-backed decision memo is pending.
