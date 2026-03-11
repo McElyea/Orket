@@ -90,4 +90,4 @@ Phase B is complete when:
 1. [x] Workstream B1 lifecycle state coordinator and precedence rules.
 2. [x] Workstream B2 playback-amplitude mouth-open baseline and interruption stop semantics implemented in UI playback path.
 3. [x] Workstream B3 reduced-motion behavior contract tests and persistence.
-4. [ ] Live host-backed speaking/interruption verification is still pending (current environment lacks reachable Companion Host API for runtime proof).
+4. [ ] Live host-backed speaking/interruption verification is still pending; Host API is reachable, but `/api/voice/synthesize` currently returns `error_code=tts_unavailable` (`No TTS backend configured`).

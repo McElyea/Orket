@@ -41,7 +41,7 @@ Completed:
 4. [x] Phase C observability baseline vocabulary, warning rate-limiting, and payload redaction defaults implemented.
 
 Remaining:
-1. [ ] Phase B live host-backed speaking/interruption proof on real playback truth (implementation is in place; runtime host verification remains).
+1. [ ] Phase B live host-backed speaking/interruption proof on real playback truth (implementation is in place; current blocker is `tts_unavailable` from `/api/voice/synthesize` in live environment).
 2. [ ] Phase D performance measurement and transport decision gate.
 
 ## 4. Dependency and Order
