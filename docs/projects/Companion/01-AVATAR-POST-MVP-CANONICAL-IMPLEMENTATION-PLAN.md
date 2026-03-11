@@ -42,7 +42,7 @@ Completed:
 5. [x] Phase C optional connected-path control-event feed (`POST` publish + `GET` feed) implemented and live-verified.
 
 Remaining:
-1. [ ] Phase B live host-backed speaking/interruption proof on real playback truth (implementation is in place; current blocker is `tts_unavailable` from `/api/voice/synthesize` in live environment).
+1. [ ] Phase B live host-backed speaking/interruption proof on real playback truth (implementation is in place; current blocker is `tts_unavailable` from `/api/voice/synthesize` and missing local Piper executable resolution in live environment).
 2. [ ] Phase D performance measurement and transport decision gate.
 
 ## 4. Dependency and Order
