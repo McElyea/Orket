@@ -42,6 +42,7 @@ Completed:
 5. [x] Phase C optional connected-path control-event feed (`POST` publish + `GET` feed) implemented and live-verified.
 6. [x] Phase D baseline harness entrypoint established and expanded to multi-run API latency aggregation with system-profile metadata for reproducible host+gateway probes.
 7. [x] Phase B live speaking and interruption/cancel playback proof completed on real host+gateway+UI path.
+8. [x] Phase D degraded-mode baseline evidence captured for TTS-unavailable path while chat remained usable.
 
 Remaining:
 1. [ ] Phase D performance measurement and transport decision gate.

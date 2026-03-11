@@ -75,5 +75,6 @@ Phase D is complete when:
 1. [x] Workstream D1 baseline harness path established (`scripts/live_phase_d_probe.py` in Companion extension repo).
 2. [x] Workstream D1 API-level baseline instrumentation now captures system-profile metadata, per-endpoint latency samples, and aggregate summaries across repeated runs (`--runs`, `--output`).
 3. [ ] Workstream D1 reference-profile FPS/TTI/CPU/GPU collection is pending (current harness still captures API-level baseline only).
-4. [ ] Workstream D2 degradation-order validation is pending.
-5. [ ] Workstream D3 evidence-backed decision memo is pending.
+4. [x] Workstream D2 degraded-mode baseline check captured (`2026-03-10`): with TTS unavailable (`tts_available=false`, `voice_synthesize.error_code=tts_unavailable`), chat responses still completed (`chat.ok=true`) on the same live host+gateway path.
+5. [ ] Workstream D2 full degradation-order validation under induced resource pressure is pending.
+6. [ ] Workstream D3 evidence-backed decision memo is pending.
