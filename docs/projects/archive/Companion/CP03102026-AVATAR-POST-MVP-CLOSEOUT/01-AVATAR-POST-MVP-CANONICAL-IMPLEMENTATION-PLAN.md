@@ -1,7 +1,7 @@
 # Companion Avatar Post-MVP Canonical Implementation Plan
 
 Last updated: 2026-03-10
-Status: In Progress (execution started)
+Status: Complete (Phase A-D acceptance gates satisfied)
 Owner: Orket Core
 Source requirements: `docs/projects/Companion/00-AVATAR-POST-MVP-REQUIREMENTS-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -47,9 +47,10 @@ Completed:
 10. [x] Phase D transport decision memo published with a retain-current decision and explicit WebRTC reopen triggers.
 11. [x] Phase D UI probe instrumentation now supports configurable idle/speaking FPS sampling windows and avatar-mode targeting to execute the remaining contract-grade 60s comparison runs.
 12. [x] Phase D 60s avatar-off vs avatar-on FPS runs completed above contract floor (`>=45 FPS`) for both idle and speaking windows.
+13. [x] Phase D contract-grade budget mapping completed for TTI/CPU/GPU deltas (`TTI=-44.5ms`, `CPU=+1.05%`, `GPU=+0.51%` against lane ceilings), confirming retain-current transport path.
 
 Remaining:
-1. [ ] Phase D contract-grade TTI delta and avatar-attributable CPU/GPU uplift mapping for full closeout.
+1. [x] None.
 
 ## 4. Dependency and Order
 

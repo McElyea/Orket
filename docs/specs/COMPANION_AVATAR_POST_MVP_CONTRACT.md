@@ -3,7 +3,7 @@
 Last updated: 2026-03-09
 Status: Draft (planning authority)
 Owner: Orket Core
-Source requirements: `docs/projects/Companion/00-AVATAR-POST-MVP-REQUIREMENTS-PLAN.md`
+Source requirements: `docs/projects/archive/Companion/CP03102026-AVATAR-POST-MVP-CLOSEOUT/00-AVATAR-POST-MVP-REQUIREMENTS-PLAN.md`
 Related UI authority: `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
 
 ## 1. Purpose
