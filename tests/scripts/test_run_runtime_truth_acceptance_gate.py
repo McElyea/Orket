@@ -88,6 +88,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["observability_redaction_tests_check"]["ok"] is True
     assert payload["details"]["trust_language_review_check"]["ok"] is True
     assert payload["details"]["local_remote_route_policy_check"]["ok"] is True
+    assert payload["details"]["tool_invocation_policy_contract_check"]["ok"] is True
     assert payload["details"]["failure_replay_harness_contract_check"]["ok"] is True
     assert payload["details"]["cold_start_truth_tests_check"]["ok"] is True
     assert payload["details"]["persistence_corruption_tests_check"]["ok"] is True
@@ -977,6 +978,31 @@ def test_runtime_truth_acceptance_gate_fails_when_local_remote_route_policy_chec
     )
     assert payload["ok"] is False
     assert "local_remote_route_policy_check_failed" in payload["failures"]
+
+
+# Layer: contract
+def test_runtime_truth_acceptance_gate_fails_when_tool_invocation_policy_contract_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.governance import run_runtime_truth_acceptance_gate as gate
+
+    monkeypatch.setattr(
+        gate,
+        "evaluate_tool_invocation_policy_contract",
+        lambda: {
+            "schema_version": "1.0",
+            "ok": False,
+            "run_type_count": 0,
+        },
+    )
+    payload = evaluate_runtime_truth_acceptance_gate(
+        workspace=tmp_path.resolve(),
+        run_id="",
+        check_drift=False,
+    )
+    assert payload["ok"] is False
+    assert "tool_invocation_policy_contract_check_failed" in payload["failures"]
 
 
 # Layer: contract

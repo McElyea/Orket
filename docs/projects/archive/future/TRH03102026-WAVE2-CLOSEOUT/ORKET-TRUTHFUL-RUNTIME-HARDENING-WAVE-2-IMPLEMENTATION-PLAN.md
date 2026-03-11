@@ -1,10 +1,17 @@
 # Orket Truthful Runtime Hardening Wave 2 Implementation Plan
 
 Last updated: 2026-03-10
-Status: Active (in progress)
+Status: Completed (archived closeout)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
 Purpose: convert second-wave hardening backlog into executable slices with explicit acceptance gates.
+
+## Closeout Verification (2026-03-10)
+
+1. Live gate command: `python scripts/governance/run_runtime_truth_acceptance_gate.py --workspace .`
+2. Observed path: primary
+3. Observed result: success (`ok=true`, `failures=[]`)
+4. Closeout scope: Wave 2 packet plan only; canonical truthful-runtime hardening lane remains active.
 
 ## 1. Objective
 

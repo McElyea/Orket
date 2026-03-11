@@ -1,9 +1,9 @@
 # Orket Truthful Runtime Hardening Implementation Plan
 
 Last updated: 2026-03-10
-Status: Active (in progress)
+Status: Staged / Waiting (proof-gated for Phases C-E)
 Owner: Orket Core
-Lane type: Future (non-priority backlog)
+Lane type: Staged / Waiting (externally gated by proof availability)
 Primary input: operator-provided control-surface backlog (runtime truth, routing truth, provenance, conformance, and promotion hardening)
 Related authority inputs:
 1. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
@@ -17,8 +17,8 @@ Related authority inputs:
 
 Make Orket routing and runtime behavior auditable, attributable, and promotion-safe by replacing assumption-driven behavior with explicit capability truth, deterministic contracts, and evidence-gated promotion.
 
-Wave 2 extension plan:
-1. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-WAVE-2-IMPLEMENTATION-PLAN.md`
+Wave 2 closeout archive:
+1. `docs/projects/archive/future/TRH03102026-WAVE2-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-WAVE-2-IMPLEMENTATION-PLAN.md`
 
 ## 2. Scope
 
@@ -37,11 +37,14 @@ Out of scope:
 ## 3. Phase Plan
 
 Phase-specific implementation plans:
-1. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-A-IMPLEMENTATION-PLAN.md`
-2. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-B-IMPLEMENTATION-PLAN.md`
-3. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
-4. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-D-IMPLEMENTATION-PLAN.md`
-5. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-E-IMPLEMENTATION-PLAN.md`
+1. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-D-IMPLEMENTATION-PLAN.md`
+3. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-E-IMPLEMENTATION-PLAN.md`
+
+Phase closeout archives:
+1. `docs/projects/archive/future/TRH03102026-PHASE-A-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-A-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/archive/future/TRH03102026-PHASE-B-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-B-IMPLEMENTATION-PLAN.md`
+3. `docs/projects/archive/future/TRH03102026-WAVE2-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-WAVE-2-IMPLEMENTATION-PLAN.md`
 
 ## Phase A - Contract and Vocabulary Freeze
 
@@ -129,19 +132,24 @@ Acceptance:
 
 ## 4. Execution Order
 
-Strict order:
-1. Phase A
-2. Phase B
-3. Phase C
-4. Phase D
-5. Phase E
+Completed:
+1. Phase A (`docs/projects/archive/future/TRH03102026-PHASE-A-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-A-IMPLEMENTATION-PLAN.md`)
+2. Phase B (`docs/projects/archive/future/TRH03102026-PHASE-B-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-B-IMPLEMENTATION-PLAN.md`)
+
+Remaining strict order:
+1. Phase C
+2. Phase D
+3. Phase E
+
+Current staging state:
+1. Phase C-E are not marked complete in this session because phase-level completion proof is not yet established.
 
 Critical path:
-`A -> B -> C -> E`
+`C -> E`
 
 Rationale:
-1. vocabulary/contracts must exist before reliable attribution and conformance proof
-2. provenance and fallback truth must exist before evidence-gated promotion is meaningful
+1. vocabulary/contracts and routing/prompt/tool policy baselines are complete from Phases A/B.
+2. provenance and fallback truth must exist before evidence-gated promotion is meaningful.
 
 ## 5. Initial Executable Slice (Recommended)
 

@@ -1,9 +1,18 @@
 # Orket Truthful Runtime Hardening Phase A Implementation Plan
 
 Last updated: 2026-03-09
-Status: Draft (queued)
+Status: Completed (archived closeout)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
+
+## Closeout Verification (2026-03-10)
+
+1. Contract tests (layer: contract):  
+   `python -m pytest tests/runtime/test_provider_truth_table.py tests/runtime/test_run_phase_contract.py tests/runtime/test_timeout_streaming_contracts.py tests/runtime/test_state_transition_registry.py tests/runtime/test_runtime_truth_contracts.py tests/runtime/test_protocol_error_codes.py tests/runtime/test_protocol_error_code_adoption.py`
+2. Live acceptance gate (layer: integration/live-truth governance):  
+   `python scripts/governance/run_runtime_truth_acceptance_gate.py --workspace .`
+3. Observed path: primary
+4. Observed result: success (`ok=true`, `failures=[]`)
 
 ## 1. Objective
 
