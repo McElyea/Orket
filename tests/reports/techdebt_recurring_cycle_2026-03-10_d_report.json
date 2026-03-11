@@ -1,0 +1,127 @@
+{
+  "schema_version": "techdebt.recurring_cycle.v1",
+  "cycle_id": "2026-03-10_cycle-d",
+  "status": "pass",
+  "generated_on": "2026-03-10",
+  "sections_executed": [
+    "A",
+    "D"
+  ],
+  "sections_skipped": [
+    {
+      "section": "B",
+      "reason": "not a release-candidate or enforce-window refresh cycle"
+    },
+    {
+      "section": "C",
+      "reason": "no provider/model/template-local-prompting promotion campaign in this cycle"
+    }
+  ],
+  "evidence": {
+    "commands": [
+      "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+      "python scripts/governance/check_docs_project_hygiene.py",
+      "python -m pytest -q"
+    ],
+    "results": {
+      "td03052026_gate_audit": "PASS",
+      "docs_project_hygiene": "PASS",
+      "pytest": "PASS (2508 passed, 9 skipped in 372.86s (0:06:12))"
+    },
+    "cycle_root": "benchmarks/results/techdebt/recurring/2026-03-10_cycle-d",
+    "tracked_artifact": "benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+    "stdout_log": "benchmarks/results/techdebt/recurring/2026-03-10_cycle-d/stdout.log",
+    "stderr_log": "benchmarks/results/techdebt/recurring/2026-03-10_cycle-d/stderr.log",
+    "environment": "benchmarks/results/techdebt/recurring/2026-03-10_cycle-d/environment.json",
+    "report": "tests/reports/techdebt_recurring_cycle_2026-03-10_d_report.json"
+  },
+  "sections": {
+    "A": {
+      "status": "PASS",
+      "command_results": [
+        {
+          "id": "td03052026_gate_audit",
+          "command": "python scripts/governance/check_td03052026_gate_audit.py --require-ready --out benchmarks/results/techdebt/td03052026/readiness_checklist.json",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "TD03052026 gate audit passed.",
+          "duration_seconds": 0.078
+        },
+        {
+          "id": "docs_project_hygiene",
+          "command": "python scripts/governance/check_docs_project_hygiene.py",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "Non-archive project folders: future, marshaller, techdebt",
+          "duration_seconds": 0.062
+        },
+        {
+          "id": "pytest",
+          "command": "python -m pytest -q",
+          "returncode": 0,
+          "status": "PASS",
+          "detail": "2508 passed, 9 skipped in 372.86s (0:06:12)",
+          "duration_seconds": 374.655
+        }
+      ]
+    },
+    "B": {
+      "status": "SKIPPED",
+      "reason": "not a release-candidate or enforce-window refresh cycle"
+    },
+    "C": {
+      "status": "SKIPPED",
+      "reason": "no provider/model/template-local-prompting promotion campaign in this cycle"
+    },
+    "D": {
+      "status": "PASS",
+      "note": "No recurring checklist curation changes were required in this cycle."
+    }
+  },
+  "assertions": [
+    {
+      "id": "section_a_td03052026_gate_audit_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=TD03052026 gate audit passed."
+    },
+    {
+      "id": "section_a_docs_project_hygiene_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=Non-archive project folders: future, marshaller, techdebt"
+    },
+    {
+      "id": "section_a_canonical_pytest_passed",
+      "passed": true,
+      "detail": "status=PASS; detail=2508 passed, 9 skipped in 372.86s (0:06:12)"
+    },
+    {
+      "id": "section_d_review_note_recorded",
+      "passed": true,
+      "detail": "No recurring checklist curation changes were required in this cycle."
+    }
+  ],
+  "notes": [
+    "Section A remains green (G1-G7).",
+    "No recurring checklist curation changes were required in this cycle."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-03-11T04:47:18.849909Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:aa235417a197eac233baa1c2320460fcd34db1032fb7ab463e343c8ccd332068",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 144,
+        "paths_total_reference": 144,
+        "churn_paths": 144,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}
