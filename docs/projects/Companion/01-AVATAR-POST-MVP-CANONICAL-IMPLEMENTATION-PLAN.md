@@ -40,7 +40,7 @@ Completed:
 3. [x] Phase C additive expression/gesture cue mapping implemented without changing lifecycle authority precedence.
 4. [x] Phase C observability baseline vocabulary, warning rate-limiting, and payload redaction defaults implemented.
 5. [x] Phase C optional connected-path control-event feed (`POST` publish + `GET` feed) implemented and live-verified.
-6. [x] Phase D baseline harness entrypoint established and expanded to multi-run API latency aggregation with system-profile metadata for reproducible host+gateway probes.
+6. [x] Phase D baseline harness entrypoint established and expanded to multi-run API latency aggregation, browser timing metrics, and system resource snapshots (CPU/memory/GPU) for reproducible host+gateway probes.
 7. [x] Phase B live speaking and interruption/cancel playback proof completed on real host+gateway+UI path.
 8. [x] Phase D degraded-mode baseline evidence captured for TTS-unavailable path while chat remained usable.
 

@@ -1,7 +1,7 @@
 # Companion Avatar Phase D Implementation Plan (Transport Decision Gate)
 
 Last updated: 2026-03-10
-Status: In Progress (baseline harness + API/UI timing metrics available)
+Status: In Progress (baseline harness + API/UI timing + system resource snapshots available)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/Companion/01-AVATAR-POST-MVP-CANONICAL-IMPLEMENTATION-PLAN.md`
 Contract authority: `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
@@ -75,7 +75,7 @@ Phase D is complete when:
 1. [x] Workstream D1 baseline harness path established (`scripts/live_phase_d_probe.py` in Companion extension repo).
 2. [x] Workstream D1 API-level baseline instrumentation now captures system-profile metadata, per-endpoint latency samples, and aggregate summaries across repeated runs (`--runs`, `--output`).
 3. [x] Workstream D1 browser-side timing metrics are now captured in live mode (`--ui-interrupt-probe`): navigation timing (`response_end`, `dom_content_loaded_end`, `load_event_end`) plus sampled FPS (`raf_sample`).
-4. [ ] Workstream D1 reference-profile CPU/GPU collection is still pending.
+4. [x] Workstream D1 reference-profile CPU/GPU snapshot collection is now captured in the live harness via Windows `typeperf` (`system_metrics_before` / `system_metrics_after` include CPU, memory, and GPU engine utilization).
 5. [x] Workstream D2 degraded-mode baseline check captured (`2026-03-10`): with TTS unavailable (`tts_available=false`, `voice_synthesize.error_code=tts_unavailable`), chat responses still completed (`chat.ok=true`) on the same live host+gateway path.
 6. [ ] Workstream D2 full degradation-order validation under induced resource pressure is pending.
 7. [ ] Workstream D3 evidence-backed decision memo is pending.
