@@ -45,24 +45,24 @@ class DriverCliMixin:
         if verb == "list":
             return self._cli_handle_list(args)
         if verb == "show":
-            return self._cli_handle_show(args)
+            return await self._cli_handle_show(args)
         if verb == "create":
-            return self._cli_handle_create(args)
+            return await self._cli_handle_create(args)
         if verb == "reforge":
             return await self._cli_handle_reforge(args)
         if verb in {"add-card", "add_card"}:
-            return self._cli_handle_add_card(args)
+            return await self._cli_handle_add_card(args)
         if verb in {"list-cards", "list_cards"}:
-            return self._cli_handle_list_cards(args)
+            return await self._cli_handle_list_cards(args)
 
         if normalized.startswith("list "):
             return self._cli_handle_list(shlex.split(text)[1:])
         if normalized.startswith("show "):
-            return self._cli_handle_show(shlex.split(text)[1:])
+            return await self._cli_handle_show(shlex.split(text)[1:])
         if normalized.startswith("create "):
-            return self._cli_handle_create(shlex.split(text)[1:])
+            return await self._cli_handle_create(shlex.split(text)[1:])
         if normalized.startswith("add card "):
-            return self._cli_handle_add_card(shlex.split(text)[2:])
+            return await self._cli_handle_add_card(shlex.split(text)[2:])
 
         return None
 
@@ -213,7 +213,7 @@ class DriverCliMixin:
         names = sorted([f.stem for f in resource_dir.glob("*.json")])
         return f"{resource.title()} in {department} ({len(names)}): " + ", ".join(names)
 
-    def _cli_handle_show(self, args: List[str]) -> str:
+    async def _cli_handle_show(self, args: List[str]) -> str:
         if len(args) < 2:
             return "Usage: /show <team|environment|epic|rock> <name> [department]"
         resource = args[0].strip().lower()
@@ -222,10 +222,10 @@ class DriverCliMixin:
         path = self._find_asset_path(resource, name, department)
         if path is None or not path.exists():
             return f"{resource} '{name}' not found."
-        data = json.loads(self.fs.read_file_sync(str(path)))
+        data = json.loads(await self.fs.read_file(str(path)))
         return json.dumps(data, indent=2)
 
-    def _cli_handle_create(self, args: List[str]) -> str:
+    async def _cli_handle_create(self, args: List[str]) -> str:
         if len(args) < 2:
             return "Usage: /create <team|environment|epic|rock> <name> [department]"
         resource = args[0].strip().lower()
@@ -252,17 +252,17 @@ class DriverCliMixin:
         else:
             return f"Create for '{resource}' is not supported."
 
-        self.fs.write_file_sync(str(target), payload)
+        await self.fs.write_file(str(target), payload)
         return f"Created {resource.rstrip('s')} '{name}' at {target.as_posix()}."
 
-    def _cli_handle_list_cards(self, args: List[str]) -> str:
+    async def _cli_handle_list_cards(self, args: List[str]) -> str:
         if not args:
             return "Usage: /list-cards <epic> [department]"
         epic_name = self._slug_name(args[0])
         department = args[1] if len(args) > 1 else "core"
-        return self._list_cards_for_epic(epic_name, department)
+        return await self._list_cards_for_epic_async(epic_name, department)
 
-    def _cli_handle_add_card(self, args: List[str]) -> str:
+    async def _cli_handle_add_card(self, args: List[str]) -> str:
         if len(args) < 4:
             return "Usage: /add-card <epic> <seat> <priority> <summary...> [--department <department>]"
         department = "core"
@@ -291,8 +291,8 @@ class DriverCliMixin:
         path = self._find_asset_path("epic", epic_name, department)
         if path is None or not path.exists():
             return f"Epic '{epic_name}' not found in {department}."
-        epic_data, migrated = self._load_epic_payload_for_write(path)
+        epic_data, migrated = await self._load_epic_payload_for_write_async(path)
         epic_data["issues"].append({"summary": summary, "seat": seat, "priority": priority})
-        self.fs.write_file_sync(str(path), epic_data)
+        await self.fs.write_file(str(path), epic_data)
         migration_note = " Legacy epic child key was normalized to 'issues'." if migrated else ""
         return f"Added card to epic '{epic_name}' in {department}: [{seat}] p={priority} {summary}{migration_note}"

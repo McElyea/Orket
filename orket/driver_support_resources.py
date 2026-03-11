@@ -129,6 +129,29 @@ class DriverResourceMixin:
             lines.append(f"{idx}. [{seat}] p={priority} {summary}")
         return "\n".join(lines)
 
+    async def _list_cards_for_epic_async(self, epic_name: str, department: str) -> str:
+        path = self._find_asset_path("epic", epic_name, department)
+        if path is None or not path.exists():
+            return f"Epic '{epic_name}' not found in {department}."
+        epic_data = json.loads(await self.fs.read_file(str(path)))
+        if not isinstance(epic_data.get("issues"), list):
+            if isinstance(epic_data.get("cards"), list):
+                return (
+                    f"Epic '{epic_name}' still uses the legacy child key 'cards'. "
+                    "Migrate it to 'issues' before using list/add card operations."
+                )
+            return f"Epic '{epic_name}' has no issues."
+        cards = list(epic_data.get("issues") or [])
+        if not cards:
+            return f"Epic '{epic_name}' has no cards."
+        lines = [f"Cards in {epic_name} ({len(cards)}):"]
+        for idx, card in enumerate(cards, start=1):
+            summary = str(card.get("summary") or card.get("name") or "Untitled")
+            seat = str(card.get("seat") or "unspecified")
+            priority = str(card.get("priority") or "n/a")
+            lines.append(f"{idx}. [{seat}] p={priority} {summary}")
+        return "\n".join(lines)
+
     def _resource_dir(self, resource: str, department: str) -> Path | None:
         normalized = resource.strip().lower()
         aliases = {

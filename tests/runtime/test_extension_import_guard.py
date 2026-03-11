@@ -55,6 +55,7 @@ def test_extension_import_guard_prefix_policy() -> None:
     guard = ExtensionImportGuard()
     assert guard.is_blocked("orket.runtime.provider_runtime_target") is True
     assert guard.is_blocked("orket.interfaces.api") is True
+    assert guard.is_blocked("orket.extensions.controller_workload_runtime") is False
     assert guard.is_blocked("orket_extension_sdk") is False
     assert guard.is_blocked("orket_extension_sdk.result") is False
     assert guard.is_blocked("json") is False
