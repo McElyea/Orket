@@ -554,7 +554,8 @@ jobs:
 
   sandbox_docker_acceptance:
     runs-on: ubuntu-latest
-    needs: [quality, product_quality]
+    # Keep the Docker lifecycle proof reachable even if unrelated repo-wide gates fail.
+    needs: [rulesim_determinism_matrix, docs_hygiene]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
