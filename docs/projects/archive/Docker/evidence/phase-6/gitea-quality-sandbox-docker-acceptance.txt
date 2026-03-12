@@ -1,0 +1,34 @@
+Observed path: primary
+Observed result: success
+Date: 2026-03-12
+Gitea URL: http://localhost:3000
+Repository: Orket/Orket
+Workflow run: 12
+Workflow path: quality.yml@refs/heads/main
+Workflow event: workflow_dispatch
+Workflow head sha: f0d66c00eb3840ad75556469796ecc54357a2b1d
+Workflow url: http://localhost:3000/Orket/Orket/actions/runs/12
+
+Relevant jobs:
+- rulesim_determinism_matrix (ubuntu-latest, 3.11): success
+- rulesim_determinism_matrix (ubuntu-latest, 3.12): success
+- rulesim_determinism_matrix (windows-latest, 3.11): success
+- rulesim_determinism_matrix (windows-latest, 3.12): success
+- docs_hygiene: success
+- architecture_gates: failure (unrelated TD03052026 readiness audit)
+- sandbox_docker_acceptance: success
+
+Sandbox job details:
+- job id: 102
+- runner: orket-ci-runner-2
+- started_at: 2026-03-12T09:21:34Z
+- completed_at: 2026-03-12T09:22:07Z
+- task log id: 60
+
+Sandbox task log highlights:
+- Docker Compose version 5.0.2-1
+- 13 passed in 21.00s
+- Sandbox leak gate passed
+
+Truth note:
+The overall workflow concluded failure because architecture_gates failed on a missing TD03052026 readiness dashboard in CI. The Docker sandbox lifecycle lane proof remains valid because the sandbox-specific job executed and passed on the same live Gitea runner infrastructure.

@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-03-11
+Last updated: 2026-03-12
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. Docker sandbox lifecycle implementation -- Plan: `docs/projects/Docker/02-IMPLEMENTATION-PLAN.md`. Requirements: `docs/projects/Docker/01-REQUIREMENTS.md`.
+None.
 
 ## Maintenance (Non-Priority)
 
@@ -34,4 +34,3 @@ Every non-archive project under `docs/projects/` must appear here.
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Checklist: `Recurring-Maintenance-Checklist.md`. Governance: `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes; truthful runtime hardening continuation (Phases C-E) is staged pending new proof-backed execution. |
-| Docker | implementation-active | P2-reliability | `docs/projects/Docker/` | Orket Core | Canonical implementation plan: `02-IMPLEMENTATION-PLAN.md`; requirements authority: `01-REQUIREMENTS.md`. |

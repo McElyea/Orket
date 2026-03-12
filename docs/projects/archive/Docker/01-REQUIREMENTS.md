@@ -1,7 +1,7 @@
 # Docker Sandbox Lifecycle Requirements
 
-Last updated: 2026-03-11
-Status: Active requirements draft
+Last updated: 2026-03-12
+Status: Archived requirements baseline
 Owner: Orket Core
 
 ## 1. Objective
