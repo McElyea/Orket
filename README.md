@@ -75,3 +75,8 @@ CLI note:
 
 ## Documentation
 Start with `docs/README.md` for a source-of-truth index.
+
+## License
+Orket is source-available, not open source, under the Business Source License 1.1 in [LICENSE](LICENSE).
+
+Commercial uses outside the Additional Use Grant are described in [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md).
