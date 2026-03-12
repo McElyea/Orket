@@ -23,7 +23,7 @@ In scope:
 2. lifecycle mutation engine with CAS fencing and operation idempotency
 3. reconciliation and sweeper cleanup execution
 4. unknown-outcome handling and requires-reconciliation gating
-5. ownership/approval authority and audit-safe eventing
+5. operator-safe cleanup authority and audit-safe eventing
 6. test and CI leak-proof gates
 
 Out of scope:
@@ -68,7 +68,6 @@ Deliverables:
 2. durable stores for:
    - lifecycle records
    - operation-id dedupe
-   - approvals/revocations
    - lifecycle/integrity events
 3. schema-version compatibility checks and policy-version interpretation paths
 
@@ -106,10 +105,10 @@ Deliverables:
 2. orphan classification and promotion logic (verified vs unverified)
 3. cleanup scheduler and claimant with CAS-safe claim transition
 4. cleanup executor with authority checks:
-   - lifecycle record or ownership markers or approved scope
+   - lifecycle record or ownership markers
    - host/context match required
 5. cleanup verification against observed/planned inventory
-6. bounded retry/backoff and exhaustion handling with preserved lifecycle cause
+6. runtime recovery for indeterminate create/cleanup outcomes
 
 Required proof:
 1. `Layer: contract` reconciliation and authority matrix tests
@@ -145,11 +144,11 @@ Exit criteria:
 Deliverables:
 1. API/operator surfaces expose required lifecycle fields
 2. operations blocked while `requires_reconciliation=true`
-3. audit-linked approval, revocation, and break-glass visibility
+3. structured cleanup/error visibility without hidden in-memory-only state
 
 Required proof:
 1. `Layer: contract` API field-shape and policy checks
-2. `Layer: integration` authorization and dual-control gate behavior
+2. `Layer: integration` durable operator-view and conflict-path behavior
 
 Exit criteria:
 1. operator view reflects durable lifecycle truth without hidden state
@@ -162,10 +161,14 @@ Deliverables:
    - label-based (`orket.managed=true`)
    - prefix-based (`orket-sandbox-*`) with explicit allowlist
 3. live acceptance scenarios for:
-   - cross-daemon cleanup rejection
-   - reclaim-vs-cleanup CAS race
-   - sweeper crash between delete and verify
-   - durable-store outage fail-closed
+    - cross-daemon cleanup rejection
+    - unknown-outcome recovery after induced failure
+    - orphan discovery with verified vs unverified classification
+    - scheduled cleanup sweep execution
+    - fail-closed store outage at the orchestrator boundary
+    - cleanup-claim race fencing
+    - sweeper crash between delete and verify
+    - leak-proof post-run verification
 
 Required proof:
 1. `Layer: integration` + `Layer: end-to-end` runs with observed results recorded as:
@@ -245,15 +248,17 @@ This note must appear only once in the document and must be referenced rather th
 | Requirement ID | Requirement Summary | Phase | Deliverable | Proof Layer | Test Reference | Evidence Path | Status |
 |---|---|---|---|---|---|---|---|
 | R1 | Durable lifecycle record and required fields | Phase 1 | Lifecycle schema + durable store | Contract, Integration | `tests/contracts/test_sandbox_lifecycle_schema_contract.py`; `tests/integration/test_sandbox_lifecycle_repository.py` | `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-schema-contract.txt`; `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-repository.txt` | In progress |
-| R2 / R2A / R2B | Durable authority, outage fail-closed, unknown outcome | Phase 1,2,4 | Store handling + reconciliation gating + fallback | Contract, Integration, End-to-end | `tests/contracts/test_sandbox_lifecycle_schema_contract.py`; `tests/contracts/test_sandbox_lifecycle_mutation_contract.py`; `tests/integration/test_sandbox_lifecycle_repository.py`; `tests/integration/test_sandbox_lifecycle_mutation_service.py`; `tests/integration/test_sandbox_lifecycle_event_service.py`; `tests/integration/test_sandbox_orchestrator_lifecycle.py`; planned end-to-end suite: `tests/acceptance/test_sandbox_reconciliation_unknown_outcome.py` | `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-schema-contract.txt`; `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-repository.txt`; `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-contract.txt`; `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-service.txt`; `docs/projects/Docker/evidence/phase-4/pytest-sandbox-lifecycle-event-service.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; planned end-to-end evidence: `docs/projects/Docker/evidence/phase-6/pytest-sandbox-reconciliation-unknown-outcome.txt` | In progress |
-| R3 / R3A / R3B / R4 | Terminal classification, cleanup eligibility, hard-max-age, evidence export | Phase 2,3 | Lifecycle engine + scheduler + evidence export | Contract, Integration | `tests/contracts/test_sandbox_lifecycle_mutation_contract.py`; `tests/contracts/test_sandbox_lifecycle_reconciliation_contract.py`; `tests/integration/test_sandbox_lifecycle_mutation_service.py`; `tests/integration/test_sandbox_lifecycle_reconciliation_service.py`; `tests/integration/test_sandbox_cleanup_scheduler_service.py`; planned Phase 6 acceptance suite: `tests/acceptance/test_sandbox_cleanup_scheduler.py` | `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-contract.txt`; `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-service.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-contracts.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-services.txt`; planned Phase 6 evidence: `docs/projects/Docker/evidence/phase-6/pytest-sandbox-cleanup-scheduler.txt` | In progress |
-| R5 / R5A / R5B / R6 | Lease fencing, CAS safety, idempotency, clock authority | Phase 2 | Mutation engine + dedupe + clock source | Contract, Integration | `tests/contracts/test_sandbox_lifecycle_mutation_contract.py`; `tests/integration/test_sandbox_lifecycle_mutation_service.py` | `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-contract.txt`; `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-service.txt` | In progress |
-| R7 / R8 | Restart policy and reconciliation classification | Phase 3 | Reconciliation engine | Contract, Integration, End-to-end | `tests/contracts/test_sandbox_lifecycle_reconciliation_contract.py`; `tests/integration/test_sandbox_lifecycle_reconciliation_service.py`; planned end-to-end suite: `tests/acceptance/test_sandbox_reconciliation_unknown_outcome.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-contracts.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-services.txt`; planned end-to-end evidence: `docs/projects/Docker/evidence/phase-6/pytest-sandbox-reconciliation-unknown-outcome.txt` | In progress |
-| R9 | Unverified orphan approval and dual control | Phase 2,5,6 | Approval engine + visibility + auth tests | Contract, Integration, End-to-end | `tests/integration/test_sandbox_lifecycle_repository.py`; planned Phase 2/5/6 suites: `tests/integration/test_sandbox_lifecycle_approval_service.py`, `tests/interfaces/test_sandbox_lifecycle_approval_api.py`, `tests/acceptance/test_sandbox_lifecycle_dual_control.py` | `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-repository.txt`; planned Phase 2/5/6 evidence: `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-approval-service.txt`, `docs/projects/Docker/evidence/phase-5/pytest-sandbox-lifecycle-approval-api.txt`, `docs/projects/Docker/evidence/phase-6/pytest-sandbox-lifecycle-dual-control.txt` | Planned |
-| R10-R14 | Inventory, cleanup authority, break-glass, verification, retry exhaustion | Phase 3,6 | Cleanup orchestrator + break-glass path | Contract, Integration, End-to-end | `tests/contracts/test_sandbox_cleanup_authority_contract.py`; `tests/integration/test_sandbox_cleanup_verification_service.py`; `tests/integration/test_sandbox_cleanup_scheduler_service.py`; `tests/integration/test_sandbox_orchestrator_lifecycle.py`; `tests/acceptance/test_sandbox_orchestrator_live_docker.py`; planned end-to-end suite: `tests/acceptance/test_sandbox_cleanup_retry_exhaustion.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-contracts.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-services.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-orchestrator-live-docker.txt`; planned end-to-end evidence: `docs/projects/Docker/evidence/phase-6/pytest-sandbox-cleanup-retry-exhaustion.txt` | In progress |
-| R15 / R15A | Operator visibility and event schema | Phase 1,4,5 | Event schema + operator surfaces | Contract, Integration | `tests/integration/test_sandbox_lifecycle_repository.py`; `tests/integration/test_sandbox_lifecycle_event_service.py`; `tests/integration/test_sandbox_lifecycle_view_service.py`; `tests/interfaces/test_sandbox_lifecycle_operator_api.py` | `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-repository.txt`; `docs/projects/Docker/evidence/phase-4/pytest-sandbox-lifecycle-event-service.txt`; `docs/projects/Docker/evidence/phase-5/pytest-sandbox-lifecycle-view-service.txt`; `docs/projects/Docker/evidence/phase-5/pytest-sandbox-lifecycle-operator-api.txt` | In progress |
-| R16 / R16A | Storage authority and lifecycle retention | Phase 1 | Retention policies + authority window | Contract, Integration | `tests/contracts/test_sandbox_lifecycle_schema_contract.py`; `tests/integration/test_sandbox_lifecycle_repository.py` | `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-schema-contract.txt`; `docs/projects/Docker/evidence/phase-1/pytest-sandbox-lifecycle-repository.txt` | In progress |
-| R17 | Test behavior and leak checks | Phase 6 | CI leak detection gates | Integration, End-to-end | `tests/integration/test_sandbox_orchestrator_lifecycle.py`; `tests/acceptance/test_sandbox_orchestrator_live_docker.py`; `tests/acceptance/test_sandbox_cleanup_leak_gate.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-orchestrator-live-docker.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-cleanup-leak-gate.txt` | In progress |
+| R2 | Record creation ordering | Phase 1,3,6 | Fail-closed create path + recovery gating | Integration, End-to-end | `tests/integration/test_sandbox_orchestrator_lifecycle.py`; `tests/acceptance/test_sandbox_runtime_recovery_live_docker.py`; `tests/acceptance/test_sandbox_store_outage_fail_closed.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-runtime-recovery-live-docker.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-store-outage-fail-closed.txt` | In progress |
+| R3 | Explicit terminal contract | Phase 2,3 | Lifecycle transitions + runtime terminalization | Contract, Integration, End-to-end | `tests/contracts/test_sandbox_lifecycle_contract.py`; `tests/contracts/test_sandbox_lifecycle_mutation_contract.py`; `tests/integration/test_sandbox_orchestrator_lifecycle.py`; `tests/acceptance/test_sandbox_runtime_recovery_live_docker.py` | `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-contract.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-runtime-recovery-live-docker.txt` | In progress |
+| R4 | Policy-driven cleanup eligibility | Phase 2,3,6 | Policy engine + scheduler + sweeper execution | Contract, Integration, End-to-end | `tests/contracts/test_sandbox_lifecycle_reconciliation_contract.py`; `tests/integration/test_sandbox_cleanup_scheduler_service.py`; `tests/integration/test_sandbox_runtime_recovery_service.py`; `tests/acceptance/test_sandbox_runtime_recovery_live_docker.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-contracts.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-runtime-recovery-service.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-runtime-recovery-live-docker.txt` | In progress |
+| R5 | Lease and heartbeat semantics | Phase 2 | Mutation engine fencing + renewals | Contract, Integration | `tests/contracts/test_sandbox_lifecycle_mutation_contract.py`; `tests/core/test_sandbox_lifecycle_fencing.py`; `tests/integration/test_sandbox_lifecycle_mutation_service.py` | `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-contract.txt`; `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-service.txt` | In progress |
+| R6 | Restart-loop and unhealthy classification policy | Phase 3 | Restart/unhealthy policy implementation | Planned Contract, Planned Integration | planned suites: `tests/contracts/test_sandbox_restart_policy_contract.py`; `tests/integration/test_sandbox_restart_policy_service.py` | planned evidence: `docs/projects/Docker/evidence/phase-3/pytest-sandbox-restart-policy-contract.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-restart-policy-service.txt` | Planned |
+| R7 | Reconciliation and orphan handling | Phase 3,6 | Reconciliation engine + unknown-outcome recovery + orphan discovery | Contract, Integration, End-to-end | `tests/contracts/test_sandbox_lifecycle_reconciliation_contract.py`; `tests/integration/test_sandbox_lifecycle_reconciliation_service.py`; `tests/integration/test_sandbox_runtime_recovery_service.py`; `tests/acceptance/test_sandbox_runtime_recovery_live_docker.py`; `tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-contracts.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-lifecycle-reconciliation-services.txt`; `docs/projects/Docker/evidence/phase-3/pytest-sandbox-runtime-recovery-service.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-runtime-recovery-live-docker.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-orphan-reconciliation-live-docker.txt` | In progress |
+| R8 | Cleanup authority and execution | Phase 3,6 | Authority checks + cleanup executor | Contract, Integration, End-to-end | `tests/contracts/test_sandbox_cleanup_authority_contract.py`; `tests/integration/test_sandbox_orchestrator_lifecycle.py`; `tests/acceptance/test_sandbox_orchestrator_live_docker.py`; `tests/acceptance/test_sandbox_runtime_recovery_live_docker.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-orchestrator-live-docker.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-runtime-recovery-live-docker.txt` | In progress |
+| R9 | Cleanup verification | Phase 3,6 | Verification service + live absence proof | Integration, End-to-end | `tests/integration/test_sandbox_cleanup_verification_service.py`; `tests/integration/test_sandbox_orchestrator_lifecycle.py`; `tests/acceptance/test_sandbox_orchestrator_live_docker.py`; `tests/acceptance/test_sandbox_runtime_recovery_live_docker.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-orchestrator-live-docker.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-runtime-recovery-live-docker.txt` | In progress |
+| R10 | Operator visibility | Phase 4,5 | Event schema + operator surfaces | Contract, Integration | `tests/integration/test_sandbox_lifecycle_event_service.py`; `tests/integration/test_sandbox_lifecycle_view_service.py`; `tests/interfaces/test_sandbox_lifecycle_operator_api.py` | `docs/projects/Docker/evidence/phase-4/pytest-sandbox-lifecycle-event-service.txt`; `docs/projects/Docker/evidence/phase-5/pytest-sandbox-lifecycle-view-service.txt`; `docs/projects/Docker/evidence/phase-5/pytest-sandbox-lifecycle-operator-api.txt` | In progress |
+| R11 | Test behavior requirements | Phase 6 | Acceptance gating + leak-proof cleanup evidence | Integration, End-to-end | `tests/integration/test_sandbox_orchestrator_lifecycle.py`; `tests/acceptance/test_sandbox_orchestrator_live_docker.py`; `tests/acceptance/test_sandbox_runtime_recovery_live_docker.py`; `tests/acceptance/test_sandbox_cleanup_leak_gate.py` | `docs/projects/Docker/evidence/phase-3/pytest-sandbox-orchestrator-lifecycle.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-orchestrator-live-docker.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-runtime-recovery-live-docker.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-cleanup-leak-gate.txt` | In progress |
+| R12 | Concurrency and fencing | Phase 0,2,3,6 | CAS contracts + cleanup claim fencing | Unit, Contract, Integration, End-to-end | `tests/core/test_sandbox_lifecycle_fencing.py`; `tests/contracts/test_sandbox_lifecycle_mutation_contract.py`; `tests/integration/test_sandbox_cleanup_scheduler_service.py`; `tests/acceptance/test_sandbox_cleanup_claim_race.py` | `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-contract.txt`; `docs/projects/Docker/evidence/phase-2/pytest-sandbox-lifecycle-mutation-service.txt`; `docs/projects/Docker/evidence/phase-6/pytest-sandbox-cleanup-claim-race.txt` | In progress |
 
 TBD retirement rule
 

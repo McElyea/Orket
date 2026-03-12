@@ -11,6 +11,7 @@ import pytest
 
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
+from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
 
 
 pytestmark = pytest.mark.skipif(
@@ -88,6 +89,7 @@ async def test_live_create_health_and_cleanup_flow(tmp_path, monkeypatch) -> Non
         lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
     )
     monkeypatch.setattr(orchestrator, "_generate_compose_file", _lightweight_compose)
+    patch_orchestrator_port_allocator(orchestrator, monkeypatch)
 
     sandbox = None
     compose_project = "orket-sandbox-live-cleanup-1"
@@ -158,6 +160,7 @@ async def test_live_cleanup_rejects_host_context_mismatch(tmp_path, monkeypatch)
         lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
     )
     monkeypatch.setattr(orchestrator, "_generate_compose_file", _lightweight_compose)
+    patch_orchestrator_port_allocator(orchestrator, monkeypatch)
 
     compose_project = "orket-sandbox-live-mismatch-1"
     compose_path = str(orchestrator._compose_path(str(tmp_path)))

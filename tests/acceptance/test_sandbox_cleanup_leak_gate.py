@@ -11,6 +11,7 @@ import pytest
 
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
+from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
 
 
 pytestmark = pytest.mark.skipif(
@@ -78,6 +79,7 @@ async def test_live_cleanup_leak_gate_leaves_no_new_sandbox_projects(tmp_path, m
         lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
     )
     monkeypatch.setattr(orchestrator, "_generate_compose_file", _lightweight_compose)
+    patch_orchestrator_port_allocator(orchestrator, monkeypatch)
 
     compose_project = "orket-sandbox-live-leak-gate-1"
     compose_path = str(orchestrator._compose_path(str(tmp_path)))

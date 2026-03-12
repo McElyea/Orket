@@ -19,6 +19,7 @@ from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandb
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
+from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
 from orket.core.domain.sandbox_lifecycle import SandboxState as LifecycleState
 from orket.domain.sandbox import Sandbox, SandboxStatus, TechStack, PortAllocation, SandboxRegistry
 from orket.decision_nodes.registry import DecisionNodeRegistry
@@ -68,6 +69,7 @@ class SandboxOrchestrator:
             docker_context=self.docker_context,
             docker_host_id=self.docker_host_id,
         )
+        self.lifecycle_recovery = SandboxRuntimeRecoveryService(lifecycle_service=self.lifecycle_service)
         self._allowed_log_services = {
             "api",
             "frontend",
@@ -267,6 +269,20 @@ class SandboxOrchestrator:
             return views
         return [item.model_dump() for item in self.registry.list_active()]
 
+    async def reconcile_sandbox(self, sandbox_id: str) -> dict[str, Any]:
+        record = await self.lifecycle_recovery.reconcile_sandbox(sandbox_id=sandbox_id)
+        self._sync_registry_with_lifecycle(record)
+        return record.model_dump(mode="json")
+
+    async def sweep_due_cleanups(self, *, max_records: int = 1) -> list[dict[str, Any]]:
+        records = await self.lifecycle_recovery.sweep_due_cleanups(max_records=max_records)
+        for record in records:
+            self._sync_registry_with_lifecycle(record)
+        return [record.model_dump(mode="json") for record in records]
+
+    async def discover_orphaned_sandboxes(self) -> list[dict[str, Any]]:
+        return [record.model_dump(mode="json") for record in await self.lifecycle_recovery.discover_orphans()]
+
     def get_logs(self, sandbox_id: str, service: Optional[str] = None) -> str:
         """
         Retrieve logs from sandbox containers.
@@ -396,4 +412,14 @@ class SandboxOrchestrator:
     @staticmethod
     def _now() -> str:
         return datetime.now(UTC).replace(microsecond=0).isoformat()
+
+    def _sync_registry_with_lifecycle(self, record) -> None:
+        if record.state is not LifecycleState.CLEANED:
+            return
+        sandbox = self.registry.get(record.sandbox_id)
+        if sandbox:
+            sandbox.status = SandboxStatus.DELETED
+            sandbox.deleted_at = self._now()
+        self.registry.port_allocator.release(record.sandbox_id)
+        self.registry.unregister(record.sandbox_id)
 

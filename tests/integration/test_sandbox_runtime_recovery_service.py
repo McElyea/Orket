@@ -1,0 +1,248 @@
+# Layer: integration
+
+from __future__ import annotations
+
+import json
+from datetime import datetime
+from pathlib import Path
+
+import pytest
+
+from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
+from orket.adapters.storage.command_runner import CommandResult
+from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
+from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
+from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
+from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
+from orket.domain.verification import AGENT_OUTPUT_DIR
+
+
+class FakeRecoveryRunner:
+    def __init__(self, *, compose_project: str, sandbox_id: str, run_id: str, resources_present: bool = True):
+        self.compose_project = compose_project
+        self.sandbox_id = sandbox_id
+        self.run_id = run_id
+        self.resources_present = resources_present
+        self.async_calls: list[tuple[str, ...]] = []
+
+    async def run_async(self, *cmd: str) -> CommandResult:
+        self.async_calls.append(cmd)
+        if cmd[:2] == ("docker-compose", "-f") and "down" in cmd:
+            self.resources_present = False
+            return CommandResult(returncode=0, stdout="", stderr="")
+        if cmd[:3] == ("docker", "ps", "-a"):
+            return CommandResult(returncode=0, stdout=self._container_rows(), stderr="")
+        if cmd[:3] == ("docker", "network", "ls"):
+            return CommandResult(returncode=0, stdout=self._network_rows(), stderr="")
+        if cmd[:3] == ("docker", "volume", "ls"):
+            return CommandResult(returncode=0, stdout=self._volume_rows(), stderr="")
+        raise AssertionError(f"Unexpected command: {cmd}")
+
+    def _container_rows(self) -> str:
+        if not self.resources_present:
+            return ""
+        return (
+            '{"Names":"%s-api-1","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
+            % (self.compose_project, self.sandbox_id, self.run_id)
+        )
+
+    def _network_rows(self) -> str:
+        if not self.resources_present:
+            return ""
+        return (
+            '{"Name":"%s_default","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
+            % (self.compose_project, self.sandbox_id, self.run_id)
+        )
+
+    def _volume_rows(self) -> str:
+        if not self.resources_present:
+            return ""
+        return (
+            '{"Name":"%s_db-data","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
+            % (self.compose_project, self.sandbox_id, self.run_id)
+        )
+
+
+class FakeOrphanDiscoveryRunner:
+    def __init__(self) -> None:
+        self.projects = [
+            {"Name": "orket-sandbox-orphan-verified"},
+            {"Name": "orket-sandbox-orphan-unverified"},
+        ]
+
+    async def run_async(self, *cmd: str) -> CommandResult:
+        project = next(
+            (
+                token.split("=", 2)[-1]
+                for token in cmd
+                if token.startswith("label=com.docker.compose.project=")
+            ),
+            "",
+        )
+        if cmd[:3] == ("docker-compose", "ls", "--format"):
+            return CommandResult(returncode=0, stdout=json.dumps(self.projects), stderr="")
+        if cmd[:3] == ("docker", "ps", "-a"):
+            return CommandResult(
+                returncode=0,
+                stdout=self._container_rows(project),
+                stderr="",
+            )
+        if cmd[:3] == ("docker", "network", "ls"):
+            return CommandResult(
+                returncode=0,
+                stdout=self._network_rows(project),
+                stderr="",
+            )
+        if cmd[:3] == ("docker", "volume", "ls"):
+            return CommandResult(
+                returncode=0,
+                stdout=self._volume_rows(project),
+                stderr="",
+            )
+        raise AssertionError(f"Unexpected command: {cmd}")
+
+    @staticmethod
+    def _container_rows(project: str) -> str:
+        if project == "orket-sandbox-orphan-verified":
+            return '{"Names":"verified-api-1","Labels":"orket.managed=true,orket.sandbox_id=orphan-verified,orket.run_id=run-verified"}\n'
+        if project == "orket-sandbox-orphan-unverified":
+            return '{"Names":"unverified-api-1","Labels":""}\n'
+        return ""
+
+    @staticmethod
+    def _network_rows(project: str) -> str:
+        if project == "orket-sandbox-orphan-verified":
+            return '{"Name":"verified_default","Labels":"orket.managed=true,orket.sandbox_id=orphan-verified,orket.run_id=run-verified"}\n'
+        if project == "orket-sandbox-orphan-unverified":
+            return '{"Name":"unverified_default","Labels":""}\n'
+        return ""
+
+    @staticmethod
+    def _volume_rows(project: str) -> str:
+        if project == "orket-sandbox-orphan-verified":
+            return '{"Name":"verified-data","Labels":"orket.managed=true,orket.sandbox_id=orphan-verified,orket.run_id=run-verified"}\n'
+        if project == "orket-sandbox-orphan-unverified":
+            return '{"Name":"unverified-data","Labels":""}\n'
+        return ""
+
+
+def _record(**overrides) -> SandboxLifecycleRecord:
+    payload = {
+        "sandbox_id": "sb-1",
+        "compose_project": "orket-sandbox-sb-1",
+        "workspace_path": "workspace/sb-1",
+        "run_id": "run-1",
+        "owner_instance_id": "runner-a",
+        "lease_epoch": 1,
+        "lease_expires_at": "2026-03-11T00:05:00+00:00",
+        "state": SandboxState.STARTING,
+        "cleanup_state": CleanupState.NONE,
+        "record_version": 2,
+        "created_at": "2026-03-11T00:00:00+00:00",
+        "last_heartbeat_at": "2026-03-11T00:00:00+00:00",
+        "cleanup_attempts": 0,
+        "managed_resource_inventory": ManagedResourceInventory(),
+        "requires_reconciliation": True,
+        "cleanup_failure_reason": "sandbox-create-outcome-unknown",
+        "docker_context": "desktop-linux",
+        "docker_host_id": "host-a",
+    }
+    payload.update(overrides)
+    return SandboxLifecycleRecord(**payload)
+
+
+def _service(tmp_path: Path, runner: FakeRecoveryRunner) -> tuple[AsyncSandboxLifecycleRepository, SandboxRuntimeRecoveryService]:
+    repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    lifecycle = SandboxRuntimeLifecycleService(
+        repository=repo,
+        command_runner=runner,
+        instance_id="runner-a",
+        docker_context="desktop-linux",
+        docker_host_id="host-a",
+    )
+    return repo, SandboxRuntimeRecoveryService(lifecycle_service=lifecycle)
+
+
+@pytest.mark.asyncio
+async def test_recovery_reconciles_blocked_starting_record_to_active_when_resources_exist(tmp_path) -> None:
+    runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
+    repo, recovery = _service(tmp_path, runner)
+    await repo.save_record(_record())
+
+    record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+
+    assert record.state is SandboxState.ACTIVE
+    assert record.requires_reconciliation is False
+    assert record.managed_resource_inventory.containers == ["orket-sandbox-sb-1-api-1"]
+
+
+@pytest.mark.asyncio
+async def test_recovery_reconciles_blocked_starting_record_to_terminal_when_resources_are_absent(tmp_path) -> None:
+    runner = FakeRecoveryRunner(
+        compose_project="orket-sandbox-sb-1",
+        sandbox_id="sb-1",
+        run_id="run-1",
+        resources_present=False,
+    )
+    repo, recovery = _service(tmp_path, runner)
+    await repo.save_record(_record())
+
+    record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+
+    assert record.state is SandboxState.TERMINAL
+    assert record.terminal_reason is TerminalReason.START_FAILED
+    assert record.requires_reconciliation is False
+
+
+@pytest.mark.asyncio
+async def test_sweeper_executes_due_cleanup_for_terminal_record(tmp_path) -> None:
+    runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
+    repo, recovery = _service(tmp_path, runner)
+    compose_path = tmp_path / AGENT_OUTPUT_DIR / "deployment"
+    compose_path.mkdir(parents=True, exist_ok=True)
+    (compose_path / "docker-compose.sandbox.yml").write_text("services: {}\n", encoding="utf-8")
+    await repo.save_record(
+        _record(
+            state=SandboxState.TERMINAL,
+            cleanup_state=CleanupState.SCHEDULED,
+            record_version=4,
+            requires_reconciliation=False,
+            terminal_reason=TerminalReason.SUCCESS,
+            terminal_at="2026-03-11T00:00:00+00:00",
+            cleanup_due_at="2026-03-11T00:01:00+00:00",
+            workspace_path=str(tmp_path),
+        )
+    )
+
+    cleaned = await recovery.sweep_due_cleanups(max_records=1)
+    stored = await repo.get_record("sb-1")
+
+    assert len(cleaned) == 1
+    assert stored is not None
+    assert stored.state is SandboxState.CLEANED
+    assert stored.cleanup_state is CleanupState.COMPLETED
+    assert stored.cleanup_attempts == 1
+
+
+@pytest.mark.asyncio
+async def test_orphan_discovery_persists_verified_and_unverified_orphan_records(tmp_path) -> None:
+    repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    lifecycle = SandboxRuntimeLifecycleService(
+        repository=repo,
+        command_runner=FakeOrphanDiscoveryRunner(),
+        instance_id="runner-a",
+        docker_context="desktop-linux",
+        docker_host_id="host-a",
+    )
+    recovery = SandboxRuntimeRecoveryService(lifecycle_service=lifecycle)
+
+    created = await recovery.discover_orphans()
+    records = {record.compose_project: record for record in created}
+
+    assert set(records) == {"orket-sandbox-orphan-verified", "orket-sandbox-orphan-unverified"}
+    assert records["orket-sandbox-orphan-verified"].terminal_reason is TerminalReason.ORPHAN_DETECTED
+    verified_created = datetime.fromisoformat(records["orket-sandbox-orphan-verified"].created_at)
+    verified_due = datetime.fromisoformat(str(records["orket-sandbox-orphan-verified"].cleanup_due_at))
+    assert int((verified_due - verified_created).total_seconds()) == 3600
+    assert records["orket-sandbox-orphan-unverified"].terminal_reason is TerminalReason.ORPHAN_UNVERIFIED_OWNERSHIP
+    assert records["orket-sandbox-orphan-unverified"].cleanup_due_at is None
