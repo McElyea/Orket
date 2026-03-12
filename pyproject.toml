@@ -11,11 +11,6 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.10"
-
-[project.scripts]
-orket = "orket.interfaces.orket_bundle_cli:main"
-orket-prompts = "orket.interfaces.prompts_cli:main"
-
 dependencies = [
     # Core
     "jsonschema>=4.20.0,<5.0.0",
@@ -43,6 +38,10 @@ dependencies = [
     # Image processing (optional heavy deps listed separately)
     "Pillow>=10.0.0,<13.0.0",
 ]
+
+[project.scripts]
+orket = "orket.interfaces.orket_bundle_cli:main"
+orket-prompts = "orket.interfaces.prompts_cli:main"
 
 [project.optional-dependencies]
 dev = [
