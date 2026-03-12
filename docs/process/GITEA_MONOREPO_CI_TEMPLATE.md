@@ -67,6 +67,38 @@ Repository settings:
 1. Actions enabled.
 2. A runner assigned to this repo/org.
 
+### Runner Lifecycle Boundaries
+1. Persistent self-hosted runner host containers are not acceptable steady-state infrastructure under the teardown rule.
+2. Container privileges are allowed only when the runner container has a proven done-to-teardown path.
+3. If a runner container cannot be spun back down when work is done, stop using container privileges for that route and move to a non-containerized runner or another execution path.
+4. Sandbox leak gates only cover sandbox resources unless a workflow or script explicitly adds runner-container checks.
+5. To inspect local `gitea/act_runner` containers safely, run:
+
+```powershell
+python scripts/gitea/inspect_local_runner_containers.py
+```
+
+6. To remove only containers classified as safe stray runner cleanup targets, run:
+
+```powershell
+python scripts/gitea/inspect_local_runner_containers.py --execute-stray-cleanup
+```
+
+7. To prove the real local Gitea workflow route starts clean and ends clean, run:
+
+```powershell
+python scripts/gitea/run_local_runner_lifecycle_proof.py
+```
+
+8. The current proof route dispatches the existing local Gitea workflow `monorepo-packages-ci.yml` and tears down repo-scoped ephemeral runners between workflow jobs until the run reaches a terminal state.
+9. Observed locally on 2026-03-12: ad hoc `docker run --rm gitea/act_runner:latest ...` attempts can linger if the image default `run.sh` entrypoint retries registration instead of exiting. Do not assume Docker `--rm` is sufficient for runner-container cleanup.
+10. Treat partial proof as failure. The only acceptable lifecycle proof is:
+   - start clean
+   - run the real route
+   - end clean
+   - no non-infrastructure containers left behind
+   - no stale runner registrations left behind
+
 ## How the Workflow Works
 1. `detect_changes` compares `origin/main...HEAD`.
 2. It selects packages from `.ci/packages.json` whose paths changed.

@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.17] - 2026-03-12 - "Runner Lifecycle Truth"
+
+### Added
+- **Local Runner Lifecycle Proof**: Added local Gitea runner lifecycle inspection and proof scripts plus contract tests for cleanup classification and proof output.
+
+### Changed
+- **Governance Guidance**: Tightened CI/process guidance around self-hosted runner lifecycle boundaries and corrected Docker closeout scope so sandbox cleanup is not overclaimed.
+- **Archive Evidence**: Archived the local Gitea runner lifecycle implementation and closeout documents with live-proof references.
+
 ## [0.3.16] - 2026-02-11 - "The Dogfood Cut"
 
 ### Added

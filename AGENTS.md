@@ -45,7 +45,7 @@ These rules override more general file-link defaults for this repo.
 2. If the user says commit or push "ALL changes", stage repository-wide with `git add -A` unless the user excludes paths.
 3. Preserve future packaging and shipping options.
 4. Do not introduce avoidable install, runtime, or test drift.
-5. Prefer the smallest truthful change. Separate required work, confidence-improving work, and optional cleanup.
+5. Prefer the smallest truthful change. Separate required work, confidence-improving work, and optional cleanup. If the user signals that the work seems off, too deep, or not focused on the right problem, stop and reassess at a higher level before continuing. Do not placate, restate the current frame more confidently, or keep refining the same track without addressing the scope concern directly.
 6. Do not use "experimental" as permission for duplicated canonical behavior, stale active docs, ambiguous authority, or unclear runtime entrypoints.
 
 ## Roadmap Control

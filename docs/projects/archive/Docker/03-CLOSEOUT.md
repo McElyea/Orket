@@ -6,7 +6,7 @@ Owner: Orket Core
 
 ## Outcome
 
-The Docker sandbox lifecycle lane is complete.
+The Docker sandbox lifecycle lane is complete for sandbox resources.
 
 Archived authority:
 1. Requirements baseline: `docs/projects/archive/Docker/01-REQUIREMENTS.md`
@@ -25,6 +25,19 @@ Observed `.gitea` runner proof landed on 2026-03-12:
 7. post-run leak check summary: `Sandbox leak gate passed`
 
 The overall `quality.yml` run still concluded `failure` because unrelated job `architecture_gates` failed on the TD03052026 readiness audit. That failure is outside the Docker sandbox lifecycle lane and did not invalidate the observed `sandbox_docker_acceptance` proof.
+
+## Post-closeout Scope Correction
+
+Observed on 2026-03-12:
+1. local `gitea/act_runner` host containers used for self-hosted Gitea runner infrastructure were never part of the sandbox cleanup authority
+2. the sandbox leak gate only enforced:
+   - `orket-sandbox-*` compose projects
+   - Docker resources labeled `orket.managed=true`
+3. persistent registered runners and stray ad hoc `gitea/act_runner` containers therefore require separate lifecycle handling
+
+Follow-up archive:
+1. `docs/projects/archive/gitea-runner-lifecycle/02-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/archive/gitea-runner-lifecycle/03-CLOSEOUT.md`
 
 ## Archive note
 
