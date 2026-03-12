@@ -9,9 +9,12 @@ from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandb
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.application.services.sandbox_cleanup_authority_service import SandboxCleanupAuthorityService
 from orket.application.services.sandbox_cleanup_verification_service import SandboxCleanupVerificationService
+from orket.application.services.sandbox_lifecycle_event_publisher import SandboxLifecycleEventPublisher
 from orket.application.services.sandbox_lifecycle_mutation_service import SandboxLifecycleMutationService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.application.services.sandbox_lifecycle_reconciliation_service import SandboxLifecycleReconciliationService, SandboxObservation
+from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
+from orket.application.services.sandbox_terminal_outcome_service import SandboxTerminalOutcomeService
 from orket.application.services.sandbox_lifecycle_view_service import SandboxLifecycleViewService
 from orket.application.services.sandbox_runtime_cleanup_service import SandboxRuntimeCleanupService
 from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource
@@ -40,6 +43,9 @@ class SandboxRuntimeLifecycleService:
         self.mutations = SandboxLifecycleMutationService(repository)
         self.reconciler = SandboxLifecycleReconciliationService(mutation_service=self.mutations, policy=self.policy)
         self.views = SandboxLifecycleViewService(repository)
+        self.event_publisher = SandboxLifecycleEventPublisher(repository=repository)
+        self.terminal_evidence = SandboxTerminalEvidenceService()
+        self.terminal_outcomes = SandboxTerminalOutcomeService(lifecycle_service=self)
         self.cleanup_authority = SandboxCleanupAuthorityService()
         self.cleanup_verifier = SandboxCleanupVerificationService()
         self.cleanup_executor = SandboxRuntimeCleanupService(lifecycle_service=self)
@@ -155,20 +161,21 @@ class SandboxRuntimeLifecycleService:
         if current.requires_reconciliation:
             raise ValueError(f"Sandbox {sandbox_id} is blocked by requires_reconciliation=true")
         if current.state is SandboxState.ACTIVE:
-            current = (
-                await self.mutations.transition_state(
-                    sandbox_id=sandbox_id,
-                    operation_id=f"terminalize:{sandbox_id}",
-                    expected_record_version=current.record_version,
-                    event=LifecycleEvent.WORKFLOW_TERMINAL_OUTCOME,
-                    next_state=SandboxState.TERMINAL,
-                    terminal_reason=TerminalReason.CANCELED,
-                    expected_owner_instance_id=current.owner_instance_id,
-                    expected_lease_epoch=current.lease_epoch,
-                    terminal_at=self._now(),
-                    cleanup_due_at=self._now(),
-                )
-            ).record
+            current = await self.terminal_outcomes.record_workflow_terminal_outcome(
+                sandbox_id=sandbox_id,
+                terminal_reason=TerminalReason.CANCELED,
+                evidence_payload={
+                    "kind": "sandbox_cancellation_receipt",
+                    "compose_project": current.compose_project,
+                    "workspace_path": current.workspace_path,
+                    "requested_by_instance_id": self.instance_id,
+                },
+                operation_id_prefix="terminalize",
+                expected_owner_instance_id=current.owner_instance_id,
+                expected_lease_epoch=current.lease_epoch,
+                terminal_at=self._now(),
+                cleanup_due_at=self._now(),
+            )
         elif current.state is SandboxState.RECLAIMABLE:
             current = (
                 await self.mutations.transition_state(

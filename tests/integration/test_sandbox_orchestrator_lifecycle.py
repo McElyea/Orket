@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import aiofiles
 import pytest
 
 from orket.adapters.storage.command_runner import CommandResult
+from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
@@ -121,6 +123,9 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
         down_returncode=1,
     )
     orchestrator = _orchestrator(tmp_path, runner)
+    orchestrator.lifecycle_service.terminal_evidence = SandboxTerminalEvidenceService(
+        evidence_root=tmp_path / "terminal_evidence"
+    )
 
     await orchestrator.create_sandbox(
         rock_id="rock-2",
@@ -131,11 +136,17 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     await orchestrator.delete_sandbox(sandbox_id)
 
     record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+    events = await orchestrator.lifecycle_service.repository.list_events(sandbox_id)
 
     assert record is not None
     assert record.state.value == "cleaned"
     assert record.cleanup_state.value == "completed"
     assert record.cleanup_attempts == 1
+    assert record.required_evidence_ref is not None
+    async with aiofiles.open(record.required_evidence_ref, "r", encoding="utf-8") as handle:
+        evidence = await handle.read()
+    assert "sandbox_cancellation_receipt" in evidence
+    assert any(event.event_type == "sandbox.workflow_terminal_outcome" for event in events)
 
 
 @pytest.mark.asyncio

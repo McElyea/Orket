@@ -143,3 +143,34 @@ async def test_reconciliation_schedules_terminal_cleanup_when_due_is_missing(tmp
     assert result.record.state is SandboxState.TERMINAL
     assert result.record.cleanup_state is CleanupState.SCHEDULED
     assert result.record.cleanup_due_at == "2026-03-11T00:15:00+00:00"
+
+
+@pytest.mark.asyncio
+async def test_reconciliation_schedules_overdue_terminal_cleanup_when_due_has_passed(tmp_path) -> None:
+    repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    await repo.save_record(
+        _record(
+            state=SandboxState.TERMINAL,
+            cleanup_state=CleanupState.NONE,
+            record_version=3,
+            terminal_reason=TerminalReason.SUCCESS,
+            terminal_at="2026-03-11T00:00:00+00:00",
+            cleanup_due_at="2026-03-11T00:01:00+00:00",
+        )
+    )
+    service = SandboxLifecycleReconciliationService(
+        mutation_service=SandboxLifecycleMutationService(repo)
+    )
+
+    result = await service.reconcile_existing_record(
+        sandbox_id="sb-1",
+        operation_id="reconcile-op-5",
+        observation=SandboxObservation(
+            docker_present=True,
+            observed_at="2026-03-11T00:05:00+00:00",
+        ),
+    )
+
+    assert result is not None
+    assert result.record.state is SandboxState.TERMINAL
+    assert result.record.cleanup_state is CleanupState.SCHEDULED

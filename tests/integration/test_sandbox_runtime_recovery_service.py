@@ -203,7 +203,7 @@ async def test_sweeper_executes_due_cleanup_for_terminal_record(tmp_path) -> Non
     repo, recovery = _service(tmp_path, runner)
     compose_path = tmp_path / AGENT_OUTPUT_DIR / "deployment"
     compose_path.mkdir(parents=True, exist_ok=True)
-    (compose_path / "docker-compose.sandbox.yml").write_text("services: {}\n", encoding="utf-8")
+    (compose_path / "docker-compose.sandbox.yml").touch()
     await repo.save_record(
         _record(
             state=SandboxState.TERMINAL,
@@ -219,12 +219,49 @@ async def test_sweeper_executes_due_cleanup_for_terminal_record(tmp_path) -> Non
 
     cleaned = await recovery.sweep_due_cleanups(max_records=1)
     stored = await repo.get_record("sb-1")
+    events = await repo.list_events("sb-1")
 
     assert len(cleaned) == 1
     assert stored is not None
     assert stored.state is SandboxState.CLEANED
     assert stored.cleanup_state is CleanupState.COMPLETED
     assert stored.cleanup_attempts == 1
+    assert any(event.event_type == "sandbox.cleanup_decision_evaluated" for event in events)
+    assert any(event.event_type == "sandbox.cleanup_execution_result" for event in events)
+
+
+@pytest.mark.asyncio
+async def test_preview_due_cleanup_emits_dry_run_decision_with_reason_code(tmp_path) -> None:
+    runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
+    repo, recovery = _service(tmp_path, runner)
+    compose_path = tmp_path / AGENT_OUTPUT_DIR / "deployment"
+    compose_path.mkdir(parents=True, exist_ok=True)
+    (compose_path / "docker-compose.sandbox.yml").touch()
+    await repo.save_record(
+        _record(
+            state=SandboxState.TERMINAL,
+            cleanup_state=CleanupState.SCHEDULED,
+            record_version=4,
+            requires_reconciliation=False,
+            terminal_reason=TerminalReason.SUCCESS,
+            terminal_at="2026-03-11T00:00:00+00:00",
+            cleanup_due_at="2026-03-11T00:01:00+00:00",
+            workspace_path=str(tmp_path),
+        )
+    )
+
+    previews = await recovery.preview_due_cleanups(max_records=1)
+    events = await repo.list_events("sb-1")
+
+    assert len(previews) == 1
+    assert previews[0]["reason_code"] == "success"
+    assert previews[0]["policy_match"] == "terminal_cleanup_due"
+    assert previews[0]["dry_run"] is True
+    assert previews[0]["cleanup_result"] == "would_execute_compose"
+    assert any(
+        event.event_type == "sandbox.cleanup_decision_evaluated" and event.payload["dry_run"] is True
+        for event in events
+    )
 
 
 @pytest.mark.asyncio

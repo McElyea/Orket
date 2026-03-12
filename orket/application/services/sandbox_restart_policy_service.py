@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from orket.application.services.sandbox_lifecycle_event_service import SandboxLifecycleEventService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.core.domain.sandbox_lifecycle import SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleEventRecord
@@ -43,11 +40,6 @@ class SandboxRestartPolicyService:
     ) -> None:
         self.lifecycle_service = lifecycle_service
         self.policy = policy or lifecycle_service.policy
-        spool_path = Path(lifecycle_service.repository.db_path).with_name("sandbox_lifecycle_events.spool.jsonl")
-        self.event_service = SandboxLifecycleEventService(
-            repository=lifecycle_service.repository,
-            spool_path=spool_path,
-        )
 
     async def observe_runtime_health(
         self,
@@ -72,24 +64,20 @@ class SandboxRestartPolicyService:
             prior_snapshots=prior_snapshots,
         )
         if assessment.should_terminalize and record.state is SandboxState.ACTIVE:
-            terminal = (
-                await self.lifecycle_service.mutations.transition_state(
-                    sandbox_id=record.sandbox_id,
-                    operation_id=f"restart-loop:{record.sandbox_id}:{record.record_version}",
-                    expected_record_version=record.record_version,
-                    event=self.lifecycle_service._terminal_outcome_event,
-                    next_state=SandboxState.TERMINAL,
+            terminal = await self.lifecycle_service.terminal_outcomes.record_workflow_terminal_outcome(
+                sandbox_id=record.sandbox_id,
+                terminal_reason=TerminalReason.RESTART_LOOP,
+                evidence_payload=assessment.payload,
+                operation_id_prefix="restart-loop",
+                expected_owner_instance_id=self.lifecycle_service.instance_id,
+                expected_lease_epoch=record.lease_epoch,
+                terminal_at=observed_at,
+                cleanup_due_at=self.policy.cleanup_due_at_for(
+                    state=SandboxState.TERMINAL,
                     terminal_reason=TerminalReason.RESTART_LOOP,
-                    expected_owner_instance_id=self.lifecycle_service.instance_id,
-                    expected_lease_epoch=record.lease_epoch,
-                    terminal_at=observed_at,
-                    cleanup_due_at=self.policy.cleanup_due_at_for(
-                        state=SandboxState.TERMINAL,
-                        terminal_reason=TerminalReason.RESTART_LOOP,
-                        reference_time=observed_at,
-                    ),
-                )
-            ).record
+                    reference_time=observed_at,
+                ),
+            )
             await self._emit_event(
                 sandbox_id=sandbox_id,
                 observed_at=observed_at,
@@ -260,31 +248,9 @@ class SandboxRestartPolicyService:
         event_type: str,
         payload: dict[str, object],
     ) -> None:
-        event_id = self._event_id(
+        await self.lifecycle_service.event_publisher.emit(
             sandbox_id=sandbox_id,
+            created_at=observed_at,
             event_type=event_type,
-            observed_at=observed_at,
             payload=payload,
         )
-        await self.event_service.emit(
-            SandboxLifecycleEventRecord(
-                event_id=event_id,
-                sandbox_id=sandbox_id,
-                event_kind="lifecycle",
-                event_type=event_type,
-                created_at=observed_at,
-                payload=payload,
-            )
-        )
-
-    @staticmethod
-    def _event_id(
-        *,
-        sandbox_id: str,
-        event_type: str,
-        observed_at: str,
-        payload: dict[str, object],
-    ) -> str:
-        blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-        digest = hashlib.sha256(f"{sandbox_id}:{event_type}:{observed_at}:{blob}".encode("utf-8")).hexdigest()
-        return f"{event_type}:{digest}"

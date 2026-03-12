@@ -87,6 +87,23 @@ class SandboxRuntimeRecoveryService:
                 continue
         return cleaned
 
+    async def preview_due_cleanups(self, *, max_records: int = 1) -> list[dict[str, object]]:
+        if max_records < 1:
+            return []
+        previews: list[dict[str, object]] = []
+        candidates = await self.scheduler.list_due_candidates(observed_at=self.lifecycle_service._now())
+        for candidate in candidates[:max_records]:
+            record = await self.lifecycle_service.repository.get_record(candidate.sandbox_id)
+            if record is None:
+                continue
+            previews.append(
+                await self.lifecycle_service.cleanup_executor.preview_cleanup(
+                    record=record,
+                    compose_path=self._compose_path(record.workspace_path),
+                )
+            )
+        return previews
+
     async def discover_orphans(self) -> list[SandboxLifecycleRecord]:
         compose_result = await self.lifecycle_service.command_runner.run_async(
             "docker-compose",
@@ -296,15 +313,19 @@ class SandboxRuntimeRecoveryService:
         record: SandboxLifecycleRecord,
         observed_at: str,
     ) -> SandboxLifecycleRecord:
-        return (
-            await self.lifecycle_service.mutations.transition_state(
-                sandbox_id=record.sandbox_id,
-                operation_id=f"hard-max-age:{record.sandbox_id}:{record.record_version}",
-                expected_record_version=record.record_version,
-                event=LifecycleEvent.HARD_MAX_AGE_REACHED,
-                next_state=SandboxState.TERMINAL,
-                terminal_reason=TerminalReason.HARD_MAX_AGE,
-                terminal_at=observed_at,
-                cleanup_due_at=observed_at,
-            )
-        ).record
+        return await self.lifecycle_service.terminal_outcomes.record_policy_terminal_outcome(
+            sandbox_id=record.sandbox_id,
+            event=LifecycleEvent.HARD_MAX_AGE_REACHED,
+            terminal_reason=TerminalReason.HARD_MAX_AGE,
+            evidence_payload={
+                "kind": "sandbox_policy_terminal_receipt",
+                "compose_project": record.compose_project,
+                "workspace_path": record.workspace_path,
+                "policy_match": "hard_max_age_elapsed",
+            },
+            operation_id_prefix="hard-max-age",
+            expected_owner_instance_id=record.owner_instance_id,
+            expected_lease_epoch=record.lease_epoch if record.owner_instance_id else None,
+            terminal_at=observed_at,
+            cleanup_due_at=observed_at,
+        )

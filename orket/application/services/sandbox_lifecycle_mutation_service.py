@@ -260,6 +260,7 @@ class SandboxLifecycleMutationService:
                 "cleanup_due_at": None,
                 "cleanup_last_error": None,
                 "cleanup_failure_reason": None,
+                "required_evidence_ref": None,
                 "record_version": current.record_version + 1,
             }
         )

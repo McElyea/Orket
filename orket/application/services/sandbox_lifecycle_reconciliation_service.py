@@ -92,7 +92,10 @@ class SandboxLifecycleReconciliationService:
                 terminal_reason=TerminalReason.CLEANED_EXTERNALLY,
                 cleanup_state=CleanupState.COMPLETED,
             )
-        if plan.classification is ReconciliationClassification.TERMINAL_AWAITING_CLEANUP:
+        if plan.classification in {
+            ReconciliationClassification.TERMINAL_AWAITING_CLEANUP,
+            ReconciliationClassification.CLEANUP_OVERDUE,
+        }:
             return await self.mutation_service.transition_state(
                 sandbox_id=sandbox_id,
                 operation_id=operation_id,
@@ -173,10 +176,10 @@ class SandboxLifecycleReconciliationService:
             return SandboxReconciliationPlan(
                 classification=classification.classification,
                 target_state=SandboxState.TERMINAL,
-                target_cleanup_state=record.cleanup_state,
+                target_cleanup_state=CleanupState.SCHEDULED,
                 terminal_reason=record.terminal_reason,
                 cleanup_due_at=record.cleanup_due_at,
-                action_required=False,
+                action_required=record.cleanup_state is CleanupState.NONE,
             )
         if classification.classification is ReconciliationClassification.CLEANED_EXTERNALLY:
             return SandboxReconciliationPlan(

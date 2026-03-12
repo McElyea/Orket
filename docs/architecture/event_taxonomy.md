@@ -49,3 +49,17 @@ This document defines canonical runtime events and minimum fields.
    - `run_id`, `issue_id`, `seat`, `review_payload`
 4. `guard_review_payload`
    - `run_id`, `issue_id`, `payload`
+
+## Sandbox Lifecycle
+1. `sandbox.runtime_health_observed`
+   - `restart_summary`, `health_summary`, `terminal_reason`
+2. `sandbox.restart_loop_classified`
+   - `restart_summary`, `health_summary`, `terminal_reason`
+3. `sandbox.workflow_terminal_outcome`
+   - `reason_code`, `required_evidence_ref`, `terminal_at`, `cleanup_due_at`, `state`, `cleanup_state`
+4. `sandbox.policy_terminal_outcome`
+   - `reason_code`, `required_evidence_ref`, `terminal_at`, `cleanup_due_at`, `state`, `cleanup_state`
+5. `sandbox.cleanup_decision_evaluated`
+   - `reason_code`, `policy_match`, `dry_run`, `cleanup_strategy`, `cleanup_result`, `compose_path_available`, `authority_reason_codes`, `fallback_resource_names`, `blocked_resource_names`
+6. `sandbox.cleanup_execution_result`
+   - `reason_code`, `policy_match`, `dry_run`, `cleanup_strategy`, `cleanup_result`, `compose_path_available`, `authority_reason_codes`, `fallback_resource_names`, `blocked_resource_names`, `error`

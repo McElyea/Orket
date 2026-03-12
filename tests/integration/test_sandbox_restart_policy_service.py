@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 
+import aiofiles
 import pytest
 
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandResult
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
+from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.application.services.sandbox_lifecycle_view_service import SandboxLifecycleViewService
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
@@ -81,6 +83,9 @@ async def test_restart_policy_terminalizes_active_record_and_projects_diagnostic
         policy=policy,
     )
     service = SandboxRestartPolicyService(lifecycle_service=lifecycle, policy=policy)
+    lifecycle.terminal_evidence = SandboxTerminalEvidenceService(
+        evidence_root=tmp_path / "terminal_evidence"
+    )
 
     await service.observe_runtime_health(
         sandbox_id="sb-1",
@@ -100,7 +105,12 @@ async def test_restart_policy_terminalizes_active_record_and_projects_diagnostic
     assert stored is not None
     assert stored.state is SandboxState.TERMINAL
     assert stored.terminal_reason is TerminalReason.RESTART_LOOP
+    assert stored.required_evidence_ref is not None
+    async with aiofiles.open(stored.required_evidence_ref, "r", encoding="utf-8") as handle:
+        evidence = json.loads(await handle.read())
+    assert evidence["payload"]["terminal_reason"] == "restart_loop"
     assert any(event.event_type == "sandbox.restart_loop_classified" for event in events)
+    assert any(event.event_type == "sandbox.workflow_terminal_outcome" for event in events)
     assert views[0].restart_summary["terminal_reason"] == "restart_loop"
 
 

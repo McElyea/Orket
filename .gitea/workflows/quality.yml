@@ -318,7 +318,7 @@ jobs:
         run: |
           python scripts/governance/check_roadmap_metrics.py
 
-      - name: Smoke: memory trace fixture contract and comparator identity check
+      - name: "Smoke: memory trace fixture contract and comparator identity check"
         run: |
           mkdir -p benchmarks/results/benchmarks/memory
           python - <<'PY'
@@ -585,7 +585,7 @@ jobs:
         env:
           ORKET_RUN_SANDBOX_ACCEPTANCE: "1"
         run: |
-          python -m pytest -q tests/acceptance/test_sandbox_orchestrator_live_docker.py tests/acceptance/test_sandbox_runtime_recovery_live_docker.py tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py tests/acceptance/test_sandbox_restart_reclaim_live_docker.py tests/acceptance/test_sandbox_cleanup_leak_gate.py tests/acceptance/test_sandbox_cleanup_claim_race.py tests/acceptance/test_sandbox_store_outage_fail_closed.py
+          python -m pytest -q tests/acceptance/test_sandbox_orchestrator_live_docker.py tests/acceptance/test_sandbox_runtime_recovery_live_docker.py tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py tests/acceptance/test_sandbox_restart_reclaim_live_docker.py tests/acceptance/test_sandbox_terminal_evidence_cleanup_live_docker.py tests/acceptance/test_sandbox_cleanup_leak_gate.py tests/acceptance/test_sandbox_cleanup_claim_race.py tests/acceptance/test_sandbox_store_outage_fail_closed.py
 
       - name: Enforce sandbox leak gates
         shell: bash
