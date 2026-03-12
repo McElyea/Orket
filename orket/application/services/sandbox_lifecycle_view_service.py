@@ -32,10 +32,13 @@ class SandboxLifecycleViewService:
 
     async def list_views(self, *, observed_at: str) -> list[SandboxLifecycleOperatorView]:
         records = await self.repository.list_records()
-        views = [self.build_view(record=record, observed_at=observed_at) for record in records]
+        views = []
+        for record in records:
+            events = await self.repository.list_events(record.sandbox_id)
+            views.append(self.build_view(record=record, observed_at=observed_at, events=events))
         return sorted(views, key=lambda item: (item.cleanup_due_at or "", item.sandbox_id))
 
-    def build_view(self, *, record: SandboxLifecycleRecord, observed_at: str) -> SandboxLifecycleOperatorView:
+    def build_view(self, *, record: SandboxLifecycleRecord, observed_at: str, events: list | None = None) -> SandboxLifecycleOperatorView:
         heartbeat_age = self._heartbeat_age_seconds(record.last_heartbeat_at, observed_at)
         cleanup_eligible = (
             record.state in {SandboxState.TERMINAL, SandboxState.RECLAIMABLE, SandboxState.ORPHANED}
@@ -52,7 +55,7 @@ class SandboxLifecycleViewService:
             cleanup_owner_instance_id=record.cleanup_owner_instance_id,
             lease_expires_at=record.lease_expires_at,
             heartbeat_age_seconds=heartbeat_age,
-            restart_summary={},
+            restart_summary=self._restart_summary(events or []),
             cleanup_eligible=cleanup_eligible,
             cleanup_due_at=record.cleanup_due_at,
             requires_reconciliation=record.requires_reconciliation,
@@ -65,3 +68,11 @@ class SandboxLifecycleViewService:
         start = datetime.fromisoformat(last_heartbeat_at)
         end = datetime.fromisoformat(observed_at)
         return max(0, int((end - start).total_seconds()))
+
+    @staticmethod
+    def _restart_summary(events: list) -> dict[str, object]:
+        for event in sorted(events, key=lambda item: (item.created_at, item.event_id), reverse=True):
+            if str(event.event_type).startswith("sandbox.runtime_health") or str(event.event_type).startswith("sandbox.restart_loop"):
+                if isinstance(event.payload, dict):
+                    return dict(event.payload)
+        return {}

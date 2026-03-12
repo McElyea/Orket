@@ -30,6 +30,9 @@ class FakeRecoveryRunner:
         if cmd[:2] == ("docker-compose", "-f") and "down" in cmd:
             self.resources_present = False
             return CommandResult(returncode=0, stdout="", stderr="")
+        if cmd[:3] == ("docker", "rm", "-f") or cmd[:3] == ("docker", "network", "rm") or cmd[:3] == ("docker", "volume", "rm"):
+            self.resources_present = False
+            return CommandResult(returncode=0, stdout="", stderr="")
         if cmd[:3] == ("docker", "ps", "-a"):
             return CommandResult(returncode=0, stdout=self._container_rows(), stderr="")
         if cmd[:3] == ("docker", "network", "ls"):
@@ -244,5 +247,91 @@ async def test_orphan_discovery_persists_verified_and_unverified_orphan_records(
     verified_created = datetime.fromisoformat(records["orket-sandbox-orphan-verified"].created_at)
     verified_due = datetime.fromisoformat(str(records["orket-sandbox-orphan-verified"].cleanup_due_at))
     assert int((verified_due - verified_created).total_seconds()) == 3600
+    assert records["orket-sandbox-orphan-verified"].cleanup_state is CleanupState.SCHEDULED
     assert records["orket-sandbox-orphan-unverified"].terminal_reason is TerminalReason.ORPHAN_UNVERIFIED_OWNERSHIP
     assert records["orket-sandbox-orphan-unverified"].cleanup_due_at is None
+
+
+@pytest.mark.asyncio
+async def test_sweeper_cleans_verified_orphan_without_compose_path_via_fallback_cleanup(tmp_path) -> None:
+    runner = FakeRecoveryRunner(compose_project="orket-sandbox-orphan-verified", sandbox_id="orphan-verified", run_id="run-verified")
+    repo, recovery = _service(tmp_path, runner)
+    await repo.save_record(
+        SandboxLifecycleRecord(
+            sandbox_id="orphan-verified",
+            compose_project="orket-sandbox-orphan-verified",
+            workspace_path="orphan:orket-sandbox-orphan-verified",
+            run_id="run-verified",
+            lease_epoch=0,
+            state=SandboxState.ORPHANED,
+            cleanup_state=CleanupState.SCHEDULED,
+            record_version=1,
+            created_at="2026-03-11T00:00:00+00:00",
+            terminal_at="2026-03-11T00:00:00+00:00",
+            terminal_reason=TerminalReason.ORPHAN_DETECTED,
+            cleanup_due_at="2026-03-11T00:00:00+00:00",
+            cleanup_attempts=0,
+            managed_resource_inventory=ManagedResourceInventory(
+                containers=["orket-sandbox-orphan-verified-api-1"],
+                networks=["orket-sandbox-orphan-verified_default"],
+                managed_volumes=["orket-sandbox-orphan-verified_db-data"],
+            ),
+            requires_reconciliation=False,
+            docker_context="desktop-linux",
+            docker_host_id="host-a",
+        )
+    )
+
+    cleaned = await recovery.sweep_due_cleanups(max_records=1)
+    stored = await repo.get_record("orphan-verified")
+
+    assert len(cleaned) == 1
+    assert stored is not None
+    assert stored.state is SandboxState.CLEANED
+    assert any(call[:3] == ("docker", "rm", "-f") for call in runner.async_calls)
+
+
+@pytest.mark.asyncio
+async def test_reclaimable_record_due_for_reclaim_ttl_transitions_to_terminal_cleanup(tmp_path, monkeypatch) -> None:
+    runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
+    repo, recovery = _service(tmp_path, runner)
+    monkeypatch.setattr(recovery.lifecycle_service, "_now", staticmethod(lambda: "2026-03-11T03:00:00+00:00"))
+    await repo.save_record(
+        _record(
+            state=SandboxState.RECLAIMABLE,
+            cleanup_state=CleanupState.NONE,
+            record_version=2,
+            requires_reconciliation=False,
+            terminal_reason=TerminalReason.LEASE_EXPIRED,
+            cleanup_due_at="2026-03-11T02:00:00+00:00",
+            terminal_at="2026-03-11T00:00:00+00:00",
+        )
+    )
+
+    record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+
+    assert record.state is SandboxState.TERMINAL
+    assert record.cleanup_state is CleanupState.SCHEDULED
+    assert record.terminal_reason is TerminalReason.LEASE_EXPIRED
+
+
+@pytest.mark.asyncio
+async def test_recovery_terminalizes_active_record_when_hard_max_age_is_elapsed(tmp_path, monkeypatch) -> None:
+    runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
+    repo, recovery = _service(tmp_path, runner)
+    monkeypatch.setattr(recovery.lifecycle_service, "_now", staticmethod(lambda: "2026-03-11T03:00:00+00:00"))
+    await repo.save_record(
+        _record(
+            state=SandboxState.ACTIVE,
+            cleanup_state=CleanupState.NONE,
+            record_version=2,
+            requires_reconciliation=False,
+            created_at="2026-03-01T00:00:00+00:00",
+        )
+    )
+
+    record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+
+    assert record.state is SandboxState.TERMINAL
+    assert record.cleanup_state is CleanupState.SCHEDULED
+    assert record.terminal_reason is TerminalReason.HARD_MAX_AGE

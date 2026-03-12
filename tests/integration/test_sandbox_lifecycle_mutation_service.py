@@ -9,7 +9,7 @@ from orket.adapters.storage.async_sandbox_lifecycle_repository import (
     SandboxLifecycleConflictError,
 )
 from orket.application.services.sandbox_lifecycle_mutation_service import SandboxLifecycleMutationService
-from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxLifecycleError, SandboxState
+from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxLifecycleError, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
 
@@ -127,3 +127,33 @@ async def test_requires_reconciliation_gate_blocks_follow_on_transition(tmp_path
             next_state=SandboxState.CLEANED,
             cleanup_state=CleanupState.COMPLETED,
         )
+
+
+@pytest.mark.asyncio
+async def test_reacquire_ownership_clears_reclaimable_terminal_metadata(tmp_path) -> None:
+    repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    await repo.save_record(
+        _record(
+            state=SandboxState.RECLAIMABLE,
+            cleanup_state=CleanupState.NONE,
+            terminal_reason=TerminalReason.LEASE_EXPIRED,
+            cleanup_due_at="2026-03-11T02:00:00+00:00",
+        )
+    )
+    service = SandboxLifecycleMutationService(repo)
+
+    result = await service.reacquire_ownership(
+        sandbox_id="sb-1",
+        operation_id="reacquire-op-1",
+        expected_record_version=3,
+        next_owner_instance_id="runner-b",
+        next_lease_epoch=3,
+        last_heartbeat_at="2026-03-11T00:01:00+00:00",
+        lease_expires_at="2026-03-11T00:06:00+00:00",
+    )
+
+    assert result.record.state is SandboxState.ACTIVE
+    assert result.record.owner_instance_id == "runner-b"
+    assert result.record.lease_epoch == 3
+    assert result.record.terminal_reason is None
+    assert result.record.cleanup_due_at is None

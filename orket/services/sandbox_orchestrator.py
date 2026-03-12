@@ -1,9 +1,5 @@
 ﻿"""
-Sandbox Orchestrator - Phase 3: Elegant Failure & Recovery
-
-Application Service: Manages the full lifecycle of sandbox environments.
-Coordinates Docker Compose creation, deployment, health monitoring, and cleanup.
-"""
+Sandbox orchestration for Docker sandbox lifecycle management."""
 from __future__ import annotations
 from typing import Optional, Dict, Any
 from pathlib import Path
@@ -18,27 +14,17 @@ from orket.adapters.storage.async_executor_service import run_coroutine_blocking
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
-from orket.core.domain.sandbox_lifecycle import SandboxState as LifecycleState
+from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError, SandboxState as LifecycleState
 from orket.domain.sandbox import Sandbox, SandboxStatus, TechStack, PortAllocation, SandboxRegistry
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.domain.verification import AGENT_OUTPUT_DIR
 from orket.logging import log_event
 from orket.runtime_paths import resolve_sandbox_lifecycle_db_path
-
-
 class SandboxOrchestrator:
-    """
-    Application Service: Orchestrates sandbox lifecycle.
-
-    Responsibilities:
-    1. Create Docker Compose configuration from templates
-    2. Start containers (docker-compose up -d)
-    3. Monitor health (docker ps, health checks)
-    4. Provide inspection tools (logs, exec access)
-    5. Clean up (docker-compose down -v)
-    """
+    """Coordinates Docker sandbox creation, health, inspection, and cleanup."""
 
     def __init__(
         self,
@@ -70,6 +56,7 @@ class SandboxOrchestrator:
             docker_host_id=self.docker_host_id,
         )
         self.lifecycle_recovery = SandboxRuntimeRecoveryService(lifecycle_service=self.lifecycle_service)
+        self.restart_policy = SandboxRestartPolicyService(lifecycle_service=self.lifecycle_service)
         self._allowed_log_services = {
             "api",
             "frontend",
@@ -88,20 +75,12 @@ class SandboxOrchestrator:
         tech_stack: TechStack,
         workspace_path: str,
     ) -> Sandbox:
-        """
-        Create and deploy a new sandbox environment.
-        """
+        """Create and deploy a new sandbox environment."""
         sandbox_id = self.sandbox_policy_node.build_sandbox_id(rock_id)
         if await self.lifecycle_service.repository.get_record(sandbox_id):
             raise ValueError(f"Sandbox lifecycle record already exists for {sandbox_id}")
-
-        # 1. Allocate ports
         ports = self.registry.port_allocator.allocate(sandbox_id, tech_stack)
-
-        # Hardened Credentials (v1.0 Ready)
         db_password = secrets.token_urlsafe(32)
-
-        # 2. Create Sandbox entity
         sandbox = Sandbox(
             id=sandbox_id,
             rock_id=rock_id,
@@ -239,6 +218,20 @@ class SandboxOrchestrator:
             ]
             tracked = core_containers or containers
             all_running = all(c.get("State") == "running" for c in tracked)
+            observed_at = self._now()
+            if record and tracked:
+                assessed_record = await self.restart_policy.observe_runtime_health(
+                    sandbox_id=sandbox_id,
+                    container_rows=tracked,
+                    observed_at=observed_at,
+                )
+                if assessed_record and assessed_record.state is LifecycleState.TERMINAL:
+                    if sandbox:
+                        sandbox.health_checks_failed += 1
+                        sandbox.status = SandboxStatus.UNHEALTHY
+                        sandbox.last_error = str(assessed_record.terminal_reason.value if assessed_record.terminal_reason else "restart_loop")
+                        sandbox.last_health_check = observed_at
+                    return False
 
             if sandbox and all_running:
                 sandbox.health_checks_passed += 1
@@ -256,6 +249,13 @@ class SandboxOrchestrator:
                 await self.lifecycle_service.handle_missing_runtime(sandbox_id=sandbox_id)
             return all_running
 
+        except SandboxLifecycleError as e:
+            if sandbox:
+                sandbox.health_checks_failed += 1
+                sandbox.last_error = str(e)
+                sandbox.last_health_check = self._now()
+            log_event("sandbox_health_rejected", {"sandbox_id": sandbox_id, "error": str(e)}, Path(workspace_path))
+            return False
         except (RuntimeError, ValueError, OSError, json.JSONDecodeError, subprocess.SubprocessError) as e:
             if sandbox:
                 sandbox.health_checks_failed += 1
@@ -282,6 +282,10 @@ class SandboxOrchestrator:
 
     async def discover_orphaned_sandboxes(self) -> list[dict[str, Any]]:
         return [record.model_dump(mode="json") for record in await self.lifecycle_recovery.discover_orphans()]
+
+    async def reacquire_sandbox_ownership(self, sandbox_id: str) -> dict[str, Any]:
+        record = await self.lifecycle_service.reacquire_ownership(sandbox_id=sandbox_id)
+        return record.model_dump(mode="json")
 
     def get_logs(self, sandbox_id: str, service: Optional[str] = None) -> str:
         """

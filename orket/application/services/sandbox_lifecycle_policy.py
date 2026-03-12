@@ -62,6 +62,11 @@ class SandboxLifecyclePolicy:
             return timedelta(0)
         return None
 
+    def hard_max_age_elapsed(self, *, created_at: str, observed_at: str) -> bool:
+        created = _parse_iso_datetime(created_at)
+        observed = _parse_iso_datetime(observed_at)
+        return observed >= created + timedelta(hours=self.ttl_hard_max_age_hours)
+
 
 def _parse_iso_datetime(value: str) -> datetime:
     try:

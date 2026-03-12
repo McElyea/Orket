@@ -27,6 +27,13 @@ class SandboxRuntimeRecoveryService:
         if record is None:
             raise ValueError(f"Sandbox lifecycle record not found for {sandbox_id}")
         observed_at = self.lifecycle_service._now()
+        if self.lifecycle_service.policy.hard_max_age_elapsed(created_at=record.created_at, observed_at=observed_at) and record.state not in {
+            SandboxState.TERMINAL,
+            SandboxState.CLEANED,
+            SandboxState.ORPHANED,
+        }:
+            terminal = await self._terminalize_hard_max_age(record=record, observed_at=observed_at)
+            return await self._schedule_cleanup_if_needed(record=terminal, observed_at=observed_at)
         observed_resources = await self.lifecycle_service._observe_project_resources(record.compose_project)
         docker_present = bool(observed_resources)
         if record.requires_reconciliation:
@@ -36,6 +43,22 @@ class SandboxRuntimeRecoveryService:
                 observed_resources=observed_resources,
                 docker_present=docker_present,
             )
+        if record.state is SandboxState.RECLAIMABLE:
+            if record.cleanup_due_at and record.cleanup_due_at <= observed_at:
+                terminal = (
+                    await self.lifecycle_service.mutations.transition_state(
+                        sandbox_id=record.sandbox_id,
+                        operation_id=f"reclaim-ttl:{record.sandbox_id}:{record.record_version}",
+                        expected_record_version=record.record_version,
+                        event=LifecycleEvent.RECLAIM_TTL_ELAPSED,
+                        next_state=SandboxState.TERMINAL,
+                        terminal_reason=TerminalReason.LEASE_EXPIRED,
+                        terminal_at=record.terminal_at or observed_at,
+                        cleanup_due_at=observed_at,
+                    )
+                ).record
+                return await self._schedule_cleanup_if_needed(record=terminal, observed_at=observed_at)
+            return record
         if record.state not in {SandboxState.ACTIVE, SandboxState.TERMINAL}:
             return record
         result = await self.lifecycle_service.reconciler.reconcile_existing_record(
@@ -205,7 +228,7 @@ class SandboxRuntimeRecoveryService:
             session_id=None if run_id else f"orphan:{sandbox_id}",
             lease_epoch=0,
             state=SandboxState.ORPHANED,
-            cleanup_state=CleanupState.NONE,
+            cleanup_state=CleanupState.SCHEDULED if terminal_reason is TerminalReason.ORPHAN_DETECTED else CleanupState.NONE,
             record_version=1,
             created_at=observed_at,
             terminal_at=observed_at,
@@ -242,58 +265,46 @@ class SandboxRuntimeRecoveryService:
         return OwnershipConfidence.UNVERIFIED, default_sandbox_id, None
 
     async def _execute_claimed_cleanup(self, *, record: SandboxLifecycleRecord) -> SandboxLifecycleRecord:
-        current = await self.lifecycle_service._apply_record_copy(
+        return await self.lifecycle_service.cleanup_executor.execute_claimed_cleanup(
             record=record,
-            operation_id=f"cleanup-attempt:{record.sandbox_id}:{record.record_version}",
-            updates={"cleanup_attempts": record.cleanup_attempts + 1},
-            expected_cleanup_state=CleanupState.IN_PROGRESS,
+            compose_path=self._compose_path(record.workspace_path),
         )
-        observed_before = await self.lifecycle_service._observe_project_resources(current.compose_project)
-        if not current.managed_resource_inventory.containers and observed_before:
-            current = await self.lifecycle_service._apply_record_copy(
-                record=current,
-                operation_id=f"cleanup-inventory:{current.sandbox_id}:{current.record_version}",
-                updates={"managed_resource_inventory": self.lifecycle_service._inventory_from_resources(observed_before)},
-                expected_cleanup_state=CleanupState.IN_PROGRESS,
-            )
-        compose_path = self._compose_path(current.workspace_path)
-        authority = self.lifecycle_service.cleanup_authority.decide(
-            record=current,
-            observed_resources=observed_before,
-            compose_path_available=compose_path.exists(),
-        )
-        if not authority.compose_cleanup_allowed:
-            await self.lifecycle_service._mark_cleanup_failed(current, "cleanup authority blocked")
-            raise RuntimeError(f"Cleanup authority blocked for sandbox {current.sandbox_id}")
-        result = await self.lifecycle_service.command_runner.run_async(
-            "docker-compose",
-            "-f",
-            str(compose_path),
-            "-p",
-            current.compose_project,
-            "down",
-            "-v",
-            "--remove-orphans",
-        )
-        observed_after = await self.lifecycle_service._observe_project_resources(current.compose_project)
-        verification = self.lifecycle_service.cleanup_verifier.verify_absence(
-            record=current,
-            observed_resources=observed_after,
-        )
-        if not verification.success:
-            error = result.stderr or ",".join(verification.remaining_expected)
-            await self.lifecycle_service._mark_cleanup_failed(current, error)
-            raise RuntimeError(f"Failed to verify sandbox cleanup: {error}")
-        current = await self.lifecycle_service.repository.get_record(current.sandbox_id)
-        if current is None:
-            raise ValueError(f"Sandbox lifecycle record not found for {record.sandbox_id}")
+
+    async def _schedule_cleanup_if_needed(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> SandboxLifecycleRecord:
+        if record.state is not SandboxState.TERMINAL or record.cleanup_state is not CleanupState.NONE:
+            return record
         return (
             await self.lifecycle_service.mutations.transition_state(
-                sandbox_id=current.sandbox_id,
-                operation_id=f"cleanup-complete:{current.sandbox_id}:{current.record_version}",
-                expected_record_version=current.record_version,
-                event=LifecycleEvent.CLEANUP_VERIFIED_COMPLETE,
-                next_state=SandboxState.CLEANED,
-                cleanup_state=CleanupState.COMPLETED,
+                sandbox_id=record.sandbox_id,
+                operation_id=f"cleanup-scheduled:{record.sandbox_id}:{record.record_version}",
+                expected_record_version=record.record_version,
+                event=LifecycleEvent.CLEANUP_SCHEDULED,
+                next_state=SandboxState.TERMINAL,
+                cleanup_state=CleanupState.SCHEDULED,
+                cleanup_due_at=record.cleanup_due_at or observed_at,
+            )
+        ).record
+
+    async def _terminalize_hard_max_age(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> SandboxLifecycleRecord:
+        return (
+            await self.lifecycle_service.mutations.transition_state(
+                sandbox_id=record.sandbox_id,
+                operation_id=f"hard-max-age:{record.sandbox_id}:{record.record_version}",
+                expected_record_version=record.record_version,
+                event=LifecycleEvent.HARD_MAX_AGE_REACHED,
+                next_state=SandboxState.TERMINAL,
+                terminal_reason=TerminalReason.HARD_MAX_AGE,
+                terminal_at=observed_at,
+                cleanup_due_at=observed_at,
             )
         ).record

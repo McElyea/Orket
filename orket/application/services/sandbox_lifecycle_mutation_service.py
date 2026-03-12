@@ -219,6 +219,68 @@ class SandboxLifecycleMutationService:
         record = await self._require_record(sandbox_id)
         return SandboxLifecycleMutationResult(record=record, reused=bool(result["reused"]))
 
+    async def reacquire_ownership(
+        self,
+        *,
+        sandbox_id: str,
+        operation_id: str,
+        expected_record_version: int,
+        next_owner_instance_id: str,
+        next_lease_epoch: int,
+        last_heartbeat_at: str,
+        lease_expires_at: str,
+    ) -> SandboxLifecycleMutationResult:
+        current = await self._require_record(sandbox_id)
+        self._ensure_not_reconciliation_blocked(current)
+        self._assert_fence(
+            current=current,
+            expected_record_version=expected_record_version,
+            expected_owner_instance_id=None,
+            expected_lease_epoch=None,
+        )
+        validate_lifecycle_transition(
+            current_state=current.state,
+            event=LifecycleEvent.OWNERSHIP_REACQUIRED,
+            next_state=SandboxState.ACTIVE,
+            cleanup_state=None,
+        )
+        if next_lease_epoch <= current.lease_epoch:
+            raise SandboxLifecycleError("Ownership reacquisition requires a strictly newer lease epoch.")
+        next_record = current.model_copy(
+            update={
+                "state": SandboxState.ACTIVE,
+                "cleanup_state": CleanupState.NONE,
+                "owner_instance_id": next_owner_instance_id,
+                "cleanup_owner_instance_id": None,
+                "lease_epoch": next_lease_epoch,
+                "lease_expires_at": lease_expires_at,
+                "last_heartbeat_at": last_heartbeat_at,
+                "terminal_reason": None,
+                "terminal_at": None,
+                "cleanup_due_at": None,
+                "cleanup_last_error": None,
+                "cleanup_failure_reason": None,
+                "record_version": current.record_version + 1,
+            }
+        )
+        result = await self.repository.apply_record_mutation(
+            operation_id=operation_id,
+            payload_hash=self._payload_hash(
+                {
+                    "sandbox_id": sandbox_id,
+                    "expected_record_version": expected_record_version,
+                    "next_owner_instance_id": next_owner_instance_id,
+                    "next_lease_epoch": next_lease_epoch,
+                    "last_heartbeat_at": last_heartbeat_at,
+                    "lease_expires_at": lease_expires_at,
+                }
+            ),
+            record=next_record,
+            expected_record_version=expected_record_version,
+        )
+        record = await self._require_record(sandbox_id)
+        return SandboxLifecycleMutationResult(record=record, reused=bool(result["reused"]))
+
     async def _require_record(self, sandbox_id: str) -> SandboxLifecycleRecord:
         record = await self.repository.get_record(sandbox_id)
         if record is None:

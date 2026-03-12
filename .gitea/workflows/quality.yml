@@ -552,6 +552,92 @@ jobs:
             echo "product/sneaky_price_watch/tests not present; suite intentionally excluded."
           fi
 
+  sandbox_docker_acceptance:
+    runs-on: ubuntu-latest
+    needs: [quality, product_quality]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Ensure docker-compose command is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v docker-compose >/dev/null 2>&1; then
+            mkdir -p "$HOME/.local/bin"
+            printf '%s\n' '#!/usr/bin/env bash' 'exec docker compose "$@"' > "$HOME/.local/bin/docker-compose"
+            chmod +x "$HOME/.local/bin/docker-compose"
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
+          docker-compose version || docker compose version
+
+      - name: Run sandbox lifecycle acceptance
+        env:
+          ORKET_RUN_SANDBOX_ACCEPTANCE: "1"
+        run: |
+          python -m pytest -q tests/acceptance/test_sandbox_orchestrator_live_docker.py tests/acceptance/test_sandbox_runtime_recovery_live_docker.py tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py tests/acceptance/test_sandbox_restart_reclaim_live_docker.py tests/acceptance/test_sandbox_cleanup_leak_gate.py tests/acceptance/test_sandbox_cleanup_claim_race.py tests/acceptance/test_sandbox_store_outage_fail_closed.py
+
+      - name: Enforce sandbox leak gates
+        shell: bash
+        env:
+          ORKET_SANDBOX_LEAK_ALLOWLIST: ""
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+
+          allow = {
+              item.strip()
+              for item in os.getenv("ORKET_SANDBOX_LEAK_ALLOWLIST", "").split(",")
+              if item.strip()
+          }
+
+          def lines(*cmd: str) -> list[str]:
+              completed = subprocess.run(cmd, capture_output=True, text=True, check=False)
+              return sorted(line.strip() for line in completed.stdout.splitlines() if line.strip())
+
+          try:
+              projects = json.loads(subprocess.run(
+                  ["docker-compose", "ls", "--format", "json"],
+                  capture_output=True,
+                  text=True,
+                  check=False,
+              ).stdout or "[]")
+          except json.JSONDecodeError:
+              projects = []
+
+          leaks = sorted(
+              name
+              for name in (str(item.get("Name") or "") for item in projects)
+              if name.startswith("orket-sandbox-") and name not in allow
+          )
+          containers = [name for name in lines("docker", "ps", "-a", "--filter", "label=orket.managed=true", "--format", "{{.Names}}") if name not in allow]
+          networks = [name for name in lines("docker", "network", "ls", "--filter", "label=orket.managed=true", "--format", "{{.Name}}") if name not in allow]
+          volumes = [name for name in lines("docker", "volume", "ls", "--filter", "label=orket.managed=true", "--format", "{{.Name}}") if name not in allow]
+
+          if leaks or containers or networks or volumes:
+              print("Sandbox leak gate failed")
+              print(f"compose_projects={leaks}")
+              print(f"containers={containers}")
+              print(f"networks={networks}")
+              print(f"volumes={volumes}")
+              sys.exit(1)
+
+          print("Sandbox leak gate passed")
+          PY
+
   docker_smoke:
     runs-on: ubuntu-latest
     needs: [quality, product_quality]

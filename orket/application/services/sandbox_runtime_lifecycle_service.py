@@ -13,8 +13,9 @@ from orket.application.services.sandbox_lifecycle_mutation_service import Sandbo
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.application.services.sandbox_lifecycle_reconciliation_service import SandboxLifecycleReconciliationService, SandboxObservation
 from orket.application.services.sandbox_lifecycle_view_service import SandboxLifecycleViewService
+from orket.application.services.sandbox_runtime_cleanup_service import SandboxRuntimeCleanupService
 from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource
-from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxState, TerminalReason
+from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxLifecycleError, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
 class SandboxRuntimeLifecycleService:
@@ -41,6 +42,8 @@ class SandboxRuntimeLifecycleService:
         self.views = SandboxLifecycleViewService(repository)
         self.cleanup_authority = SandboxCleanupAuthorityService()
         self.cleanup_verifier = SandboxCleanupVerificationService()
+        self.cleanup_executor = SandboxRuntimeCleanupService(lifecycle_service=self)
+        self._terminal_outcome_event = LifecycleEvent.WORKFLOW_TERMINAL_OUTCOME
 
     async def create_record(
         self,
@@ -201,56 +204,7 @@ class SandboxRuntimeLifecycleService:
                 expected_record_version=current.record_version,
             )
         ).record
-        current = await self._apply_record_copy(
-            record=current,
-            operation_id=f"cleanup-attempt:{sandbox_id}",
-            updates={"cleanup_attempts": current.cleanup_attempts + 1},
-            expected_cleanup_state=CleanupState.IN_PROGRESS,
-        )
-        observed_before = await self._observe_project_resources(current.compose_project)
-        if not current.managed_resource_inventory.containers and observed_before:
-            current = await self._apply_record_copy(
-                record=current,
-                operation_id=f"cleanup-inventory:{sandbox_id}",
-                updates={"managed_resource_inventory": self._inventory_from_resources(observed_before)},
-                expected_cleanup_state=CleanupState.IN_PROGRESS,
-            )
-        authority = self.cleanup_authority.decide(
-            record=current,
-            observed_resources=observed_before,
-            compose_path_available=compose_path.exists(),
-        )
-        if not authority.compose_cleanup_allowed:
-            await self._mark_cleanup_failed(current, "cleanup authority blocked")
-            raise RuntimeError(f"Cleanup authority blocked for sandbox {sandbox_id}")
-        result = await self.command_runner.run_async(
-            "docker-compose",
-            "-f",
-            str(compose_path),
-            "-p",
-            current.compose_project,
-            "down",
-            "-v",
-            "--remove-orphans",
-        )
-        observed_after = await self._observe_project_resources(current.compose_project)
-        verification = self.cleanup_verifier.verify_absence(
-            record=current,
-            observed_resources=observed_after,
-        )
-        if not verification.success:
-            error = result.stderr or ",".join(verification.remaining_expected)
-            await self._mark_cleanup_failed(current, error)
-            raise RuntimeError(f"Failed to verify sandbox cleanup: {error}")
-        current = await self._require_record(sandbox_id)
-        return (await self.mutations.transition_state(
-            sandbox_id=sandbox_id,
-            operation_id=f"cleanup-complete:{sandbox_id}",
-            expected_record_version=current.record_version,
-            event=LifecycleEvent.CLEANUP_VERIFIED_COMPLETE,
-            next_state=SandboxState.CLEANED,
-            cleanup_state=CleanupState.COMPLETED,
-        )).record
+        return await self.cleanup_executor.execute_claimed_cleanup(record=current, compose_path=compose_path)
 
     async def handle_healthy(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
         record = await self._require_record(sandbox_id)
@@ -267,18 +221,44 @@ class SandboxRuntimeLifecycleService:
                 )
             ).record
         if record.state is SandboxState.ACTIVE:
+            if record.owner_instance_id != self.instance_id:
+                raise SandboxLifecycleError("Sandbox heartbeat rejected for non-owner instance.")
             return (
                 await self.mutations.renew_lease(
                     sandbox_id=sandbox_id,
                     operation_id=f"lease-renew:{sandbox_id}:{record.record_version}",
                     expected_record_version=record.record_version,
-                    expected_owner_instance_id=str(record.owner_instance_id),
+                    expected_owner_instance_id=self.instance_id,
                     expected_lease_epoch=record.lease_epoch,
                     last_heartbeat_at=self._now(),
                     lease_expires_at=self._lease_expires_at(self._now()),
                 )
             ).record
         return record
+
+    async def reacquire_ownership(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
+        record = await self._require_record(sandbox_id)
+        if record.state is not SandboxState.RECLAIMABLE:
+            raise SandboxLifecycleError(f"Sandbox {sandbox_id} is not reclaimable.")
+        observed_resources = await self._observe_project_resources(record.compose_project)
+        if not observed_resources:
+            raise SandboxLifecycleError(f"Sandbox {sandbox_id} cannot be reacquired without observed Docker resources.")
+        record = await self._apply_record_copy(
+            record=record,
+            operation_id=f"reacquire-inventory:{sandbox_id}:{record.record_version}",
+            updates={"managed_resource_inventory": self._inventory_from_resources(observed_resources)},
+        )
+        return (
+            await self.mutations.reacquire_ownership(
+                sandbox_id=sandbox_id,
+                operation_id=f"reacquire:{sandbox_id}:{record.record_version}",
+                expected_record_version=record.record_version,
+                next_owner_instance_id=self.instance_id,
+                next_lease_epoch=record.lease_epoch + 1,
+                last_heartbeat_at=self._now(),
+                lease_expires_at=self._lease_expires_at(self._now()),
+            )
+        ).record
 
     async def handle_missing_runtime(self, *, sandbox_id: str) -> SandboxLifecycleRecord | None:
         record = await self._require_record(sandbox_id)
