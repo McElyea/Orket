@@ -17,6 +17,8 @@ dependencies = [
     "ollama>=0.4.0,<1.0.0",
     "pydantic>=2.5.0,<3.0.0",
     "python-dotenv>=1.0.0,<2.0.0",
+    "PyYAML>=6.0.0,<7.0.0",
+    "rfc8785>=0.1.4,<1.0.0",
 
     # Web framework
     "fastapi>=0.109.0,<1.0.0",
@@ -90,6 +92,12 @@ include = ["orket*"]
 testpaths = ["tests"]
 python_files = "test_*.py"
 asyncio_mode = "auto"
+markers = [
+    "unit: fast, isolated proof of a single behavior",
+    "contract: schema or interface conformance proof",
+    "integration: real-path proof across component boundaries",
+    "end_to_end: user-visible or system-level proof across the full path",
+]
 
 [tool.ruff]
 target-version = "py310"

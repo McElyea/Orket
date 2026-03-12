@@ -90,9 +90,12 @@ def _jcs_canonicalize_to_str(obj: Any) -> str:
     try:
         import rfc8785  # type: ignore
 
-        # The Trail of Bits docs expose a "dumps" style API.
-        # If your installed version differs, you'll get a clear attribute error.
-        return rfc8785.dumps(obj)  # type: ignore[attr-defined]
+        out = rfc8785.dumps(obj)  # type: ignore[attr-defined]
+        if isinstance(out, (bytes, bytearray)):
+            return bytes(out).decode("utf-8")
+        if isinstance(out, str):
+            return out
+        raise CanonicalizationError(f"Unexpected rfc8785.dumps() return type: {type(out).__name__}")
     except ModuleNotFoundError:
         pass
 
