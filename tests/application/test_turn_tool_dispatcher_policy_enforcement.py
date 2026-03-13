@@ -291,3 +291,58 @@ async def test_tool_dispatcher_records_determinism_violation_event(tmp_path: Pat
     emitted = [entry for entry in events if entry.get("event") == "determinism_violation"]
     assert emitted
     assert "E_DETERMINISM_VIOLATION" in str(emitted[0].get("payload", {}).get("error", ""))
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_tool_dispatcher_records_preflight_boundary_rejection_as_runtime_event(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    from orket.application.workflows import turn_tool_dispatcher as dispatcher_module
+
+    events: list[dict[str, Any]] = []
+
+    def _capture(event_name: str, payload: dict[str, Any], workspace: Path) -> None:
+        events.append({"event": event_name, "payload": dict(payload), "workspace": str(workspace)})
+
+    monkeypatch.setattr(dispatcher_module, "log_event", _capture)
+
+    dispatcher = _dispatcher(tmp_path)
+    toolbox = _NoOpToolbox()
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
+    )
+
+    with pytest.raises(RuntimeError) as exc:
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=toolbox,
+            context={
+                "roles": ["coder"],
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "invoked_from_tool": True,
+                "skill_contract_enforced": True,
+                "skill_tool_bindings": {
+                    "write_file": {
+                        "entrypoint_id": "write_file",
+                        "ring": "core",
+                        "determinism_class": "workspace",
+                        "capability_profile": "workspace",
+                    }
+                },
+            },
+            issue=None,
+        )
+
+    assert "E_TOOL_INVOCATION_BOUNDARY" in str(exc.value)
+    emitted = [entry for entry in events if entry.get("event") == "tool_call_exception"]
+    assert emitted
+    assert emitted[0]["payload"]["tool"] == "write_file"
+    assert "E_TOOL_INVOCATION_BOUNDARY" in str(emitted[0]["payload"]["error"])
+    assert toolbox.calls == 0

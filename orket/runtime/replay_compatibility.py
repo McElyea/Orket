@@ -211,7 +211,10 @@ def _workspace_mismatch_fields(recorded: dict[str, Any]) -> list[str]:
     if not isinstance(snapshot, dict):
         return []
 
-    workspace_path = Path(str(snapshot.get("workspace_path") or "").strip())
+    workspace_path_value = str(snapshot.get("workspace_path") or "").strip()
+    if not workspace_path_value:
+        return []
+    workspace_path = Path(workspace_path_value)
     expected_hash = str(snapshot.get("workspace_hash") or "").strip()
     expected_type = str(snapshot.get("workspace_type") or "").strip()
     try:
@@ -219,8 +222,6 @@ def _workspace_mismatch_fields(recorded: dict[str, Any]) -> list[str]:
     except (TypeError, ValueError):
         expected_count = -1
 
-    if not str(workspace_path).strip():
-        return []
     if not workspace_path.exists() or not workspace_path.is_dir():
         return ["workspace_state_snapshot.workspace_path"]
     try:

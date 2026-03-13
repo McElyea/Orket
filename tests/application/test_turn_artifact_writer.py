@@ -86,6 +86,7 @@ def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> Non
     assert loaded["result"] == {"ok": True, "status": "done"}
 
 
+# Layer: integration
 def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     manifest = build_tool_invocation_manifest(run_id="s1", tool_name="write_file")
@@ -118,8 +119,22 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
     rows = [json.loads(line) for line in receipt_log.read_text(encoding="utf-8").splitlines() if line.strip()]
     assert rows[0]["receipt_seq"] == 1
     assert rows[0]["receipt_digest"] == receipt["receipt_digest"]
+    manifest_payload = rows[0]["tool_invocation_manifest"]
+    assert manifest_payload["tool_name"] == "write_file"
+    assert manifest_payload["ring"] == "core"
+    assert manifest_payload["schema_version"] == "1.0.0"
+    assert manifest_payload["determinism_class"] == "workspace"
+    assert manifest_payload["capability_profile"] == "workspace"
+    assert manifest_payload["tool_contract_version"] == "1.0.0"
+    assert "input_schema" not in manifest_payload
+    assert "output_schema" not in manifest_payload
+    assert "error_schema" not in manifest_payload
+    assert "side_effect_class" not in manifest_payload
+    assert "timeout" not in manifest_payload
+    assert "retry_policy" not in manifest_payload
 
 
+# Layer: integration
 def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_artifact(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     manifest = build_tool_invocation_manifest(run_id="s1", tool_name="openclaw.file_read", ring="compatibility")
@@ -169,6 +184,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_
     assert latency_payload["profiles"][0]["latency_ms"] == 12
 
 
+# Layer: contract
 def test_turn_artifact_writer_append_protocol_receipt_rejects_missing_manifest(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     with pytest.raises(ValueError, match="E_TOOL_INVOCATION_MANIFEST_REQUIRED"):

@@ -239,6 +239,30 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
 
 
 # Layer: contract
+def test_capture_run_start_artifacts_emits_v0_boundary_artifacts_only(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    payload = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-boundary-v0",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+
+    runtime_root = workspace / "observability" / "run-boundary-v0" / "runtime_contracts"
+    assert Path(payload["run_identity_path"]) == runtime_root / "run_identity.json"
+    assert Path(payload["capability_manifest_path"]) == runtime_root / "capability_manifest.json"
+    assert payload["run_identity"]["workload"] == "core_epic"
+    assert payload["capability_manifest"]["capabilities_used"] == []
+    assert payload["run_determinism_class"] == payload["capability_manifest"]["run_determinism_class"]
+    assert "capability_profile" not in payload
+    assert "workload_identity" not in payload
+    assert "runtime_violation" not in payload
+    assert not (runtime_root / "capability_profile.json").exists()
+    assert not (runtime_root / "workload_identity.json").exists()
+    assert not (runtime_root / "runtime_violation.json").exists()
+
+
+# Layer: contract
 def test_capture_run_start_artifacts_reuses_existing_run_identity_for_same_run(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     first = capture_run_start_artifacts(

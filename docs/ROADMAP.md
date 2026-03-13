@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. runtime-stability structural closeout -- Active implementation plan: `docs/projects/runtime-stability-closeout/IMPLEMENTATION-PLAN.md`.
+_None._
 
 ## Maintenance (Non-Priority)
 
@@ -32,7 +32,5 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
-| runtime-stability-green-requirements | active-support | P1-supporting | `docs/projects/runtime-stability-green-requirements/` | Orket Core | Supporting requirements authority retained in active projects while the direct closeout plans iterate against `SPC-01`, `SPC-02`, and `SPC-06`. |
-| runtime-stability-closeout | active | P1-proof | `docs/projects/runtime-stability-closeout/` | Orket Core | Structural closeout lane for runtime-stability ideas promoted out of the parking lot; closes code/test gaps or records truthful scope deltas before they are treated as complete. |
 | techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Checklist: `Recurring-Maintenance-Checklist.md`. Governance: `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes; truthful runtime hardening continuation (Phases C-E) is staged pending new proof-backed execution. |

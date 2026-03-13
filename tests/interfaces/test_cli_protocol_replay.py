@@ -186,6 +186,31 @@ async def test_cli_protocol_replay_prints_summary(monkeypatch, tmp_path: Path, c
 
 
 @pytest.mark.asyncio
+async def test_cli_protocol_replay_requires_run_id_target(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Layer: integration. Verifies the canonical replay surface is run-id based, not fixture-path based."""
+    workspace = tmp_path / "workspace" / "default"
+    workspace.mkdir(parents=True, exist_ok=True)
+
+    _bypass_startup_for_protocol_path_test(monkeypatch)
+    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(cli_module.sys, "platform", "linux")
+    monkeypatch.setattr(
+        cli_module,
+        "parse_args",
+        lambda: _args(
+            command="protocol",
+            subcommand="replay",
+            target="",
+            workspace=str(workspace),
+        ),
+    )
+
+    await cli_module.run_cli()
+    out = capsys.readouterr().out
+    assert "protocol replay requires target run_id" in out
+
+
+@pytest.mark.asyncio
 async def test_cli_protocol_compare_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies protocol compare strict mismatch reporting on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"

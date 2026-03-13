@@ -1,11 +1,11 @@
 # Runtime Stability Green Requirements
 
 Last updated: 2026-03-13
-Status: Active
+Status: Archived
 Owner: Orket Core
-Source closeout lane: `docs/projects/runtime-stability-closeout/IMPLEMENTATION-PLAN.md`
+Source closeout lane: `docs/projects/archive/runtime-stability-closeout/IMPLEMENTATION-PLAN.md`
 
-Retention note: Keep this lane active in `docs/projects/` while the direct closeout plans iterate against these requirement packets.
+Archive note: Historical scope-discovery inputs preserved after the direct runtime-stability closeout lane completed on 2026-03-13.
 
 ## 1. Purpose
 
@@ -103,4 +103,4 @@ Acceptance:
 ## 6. Implementation Pointer
 
 Accepted implementation plan for this project:
-1. `docs/projects/runtime-stability-green-requirements/02-IMPLEMENTATION-PLAN.md`
+1. `docs/projects/archive/runtime-stability-green-requirements/02-IMPLEMENTATION-PLAN.md`

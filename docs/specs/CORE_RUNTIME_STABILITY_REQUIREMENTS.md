@@ -1,6 +1,6 @@
 # Runtime Stability Focus Requirements
 
-Last updated: 2026-03-06  
+Last updated: 2026-03-13  
 Status: Active (requirements draft)  
 Owner: Orket Core
 
@@ -52,27 +52,25 @@ Behavior:
 7. `run_determinism_class` is computed per run as the least-deterministic class across invoked tools.
 
 Interfaces:
-1. Core exposes stable entrypoints:
+1. Current v0 boundary authority is the controller-workload contract in `docs/specs/CONTROLLER_WORKLOAD_V1.md`.
+2. Child dispatch authority is `ExtensionManager.run_workload`.
+3. Supported child contract style for current closeout scope is `sdk_v0` only.
+4. Active closeout scope does not require generic stable core entrypoints such as:
    1. `execute_run(workload, input)`
    2. `execute_tool(tool_name, args)`
    3. `record_artifact(type, payload)`
    4. `record_ledger_event(event)`
-2. Workloads expose lifecycle hooks:
-   1. `plan()`
-   2. `execute()`
-   3. `evaluate()`
-3. Workloads cannot import core-internal modules directly.
+5. Workloads cannot import core-internal modules directly.
 
 Observability:
-1. Each run records:
-   1. `run.json`
-   2. `capability_profile.json`
-   3. `workload_identity.json`
-   4. `core_version.json`
-   5. `run_determinism_class` (`pure | workspace | external`)
-2. Boundary violations emit `runtime_violation.json`.
-3. Artifact schema registry must provide artifact-to-version mappings (for example `run.json: 1.0`).
-4. Each run emits `capability_manifest.json` with allowed and used capability profiles.
+1. For the v0 closeout target, each run emits boundary evidence through:
+   1. `run_identity.json`
+   2. `capability_manifest.json`
+   3. `run_determinism_class` (`pure | workspace | external`)
+2. `run_identity.json` is the current run/workload identity artifact for this closeout; separate `capability_profile.json`, `workload_identity.json`, and `core_version.json` artifacts are not part of the active v0 closeout contract.
+3. Boundary violations fail closed with stable error codes and runtime-event evidence at rejection paths; `runtime_violation.json` is not part of the active v0 closeout contract.
+4. Artifact schema registry must provide artifact-to-version mappings (for example `run.json: 1.0`).
+5. `capability_manifest.json` remains the canonical emitted capability surface for allowed and used capability profiles.
 
 Artifact schema registry example:
 ```yaml
@@ -123,15 +121,12 @@ Detect behavioral drift across prompts, tool envelopes, runtime behavior, and ar
 ### Requirements
 
 Behavior:
-1. Golden runs define reference behavior.
-2. Each fixture contains:
-   1. `input.json`
-   2. `expected_tool_calls.json`
-   3. `expected_artifacts.json`
-   4. `expected_status.json`
-3. Golden runs execute in:
-   1. `live_mode`
-   2. `replay_mode` (no LLM invocation)
+1. Recorded protocol runs define reference behavior for the active closeout target.
+2. The canonical replay inputs are the recorded run artifacts under `runs/<run_id>/`, especially:
+   1. `events.log`
+   2. `receipts.log` when present
+   3. run artifact roots when present
+3. Protocol replay executes against recorded runs only and supports operator comparison or campaign evaluation over those run ids.
 4. Replay mode must bypass:
    1. model inference
    2. prompt construction
@@ -139,9 +134,10 @@ Behavior:
 5. Replay mode uses recorded tool calls only.
 
 Interfaces:
-1. `orket run golden/<test>`
-2. `orket replay golden/<test>`
-3. Comparator modes:
+1. `orket protocol replay <run_id>`
+2. `orket protocol compare <run_a> --protocol-run-b <run_b>`
+3. `orket protocol campaign [--protocol-runs-root <path>] [--protocol-campaign-run-id <run_id>] [--protocol-baseline-run-id <run_id>]`
+4. Comparator modes:
    1. `strict`
    2. `normalized`
    3. `artifact_hash`
@@ -185,7 +181,7 @@ Failure semantics:
    5. artifact formatting drift
 
 Proof:
-1. Replay of a golden fixture is artifact-identical.
+1. Replay of equivalent recorded protocol runs is deterministic-match clean at the canonical operator surface.
 2. Drift classifier identifies drift layer correctly.
 
 ## Focus Item 3: Prompt Surface Budgets
@@ -330,7 +326,7 @@ Proof:
 
 ### Goal
 
-Define a deterministic baseline toolset that is small enough to stabilize and broad enough to support OpenClaw-class workflows through compatibility rings.
+Define the current minimal deterministic core-tool baseline truthfully and keep broader OpenClaw-class breadth in the compatibility surface rather than inside this closeout claim.
 
 ### Related Items
 
@@ -351,47 +347,52 @@ Reference:
 ### Requirements
 
 Behavior:
-1. Core baseline tool count is a minimum floor, not a fixed cap.
-2. Each tool must declare:
-   1. `input_schema`
-   2. `output_schema`
-   3. `error_schema`
+1. The active closeout target is the shipped minimal `core` baseline in `core/tools/tool_registry.yaml`; broader OpenClaw-class breadth remains compatibility-layer scope.
+2. Each canonical tool-registry entry must declare:
+   1. `tool_name`
+   2. `ring`
+   3. `tool_contract_version`
    4. `determinism_class` (`pure`, `workspace`, `external`)
-   5. `side_effect_class`
-   6. timeout policy
-   7. retry policy
-3. All tool errors are machine-readable and stable.
-4. Compatibility expansion cannot weaken core determinism rules.
+   5. `capability_profile`
+3. Capability-profile enforcement is required, but it is only one proven sub-part of this minimal baseline closeout.
+4. Richer per-tool metadata (`schema_version`, `input_schema`, `output_schema`, `error_schema`, `side_effect_class`, timeout policy, retry policy) remains governance/template scope and is not required registry metadata for this closeout.
+5. All tool errors are machine-readable and stable.
+6. Compatibility expansion cannot weaken core determinism rules.
 
 Interfaces:
-1. Tool definition includes:
+1. The canonical registry surface for this closeout is `core/tools/tool_registry.yaml`, and it requires:
    1. `tool_name`
-   2. `schema_version`
-   3. `timeout`
-   4. `retry_policy`
+   2. `ring`
+   3. `tool_contract_version`
+   4. `determinism_class`
    5. `capability_profile`
    6. `tool_registry_version`
+2. Per invocation, runtime must record a normalized `tool_invocation_manifest` payload carrying:
+   1. `tool_name`
+   2. `ring`
+   3. `schema_version`
+   4. `determinism_class`
+   5. `capability_profile`
+   6. `tool_contract_version`
 
 Observability:
-1. Emit per invocation:
-   1. `tool_call.json`
-   2. `tool_result.json`
-   3. `tool_metrics.json`
+1. Protocol receipts and tool call/result event surfaces must preserve the normalized `tool_invocation_manifest` payload for each invocation.
+2. Compatibility invocations additionally preserve `compat_translation.json` when a compatibility translation is materialized.
 
 Failure semantics:
-1. Invalid args and schema mismatch fail closed.
-2. Structured errors remain stable across versions.
+1. Invalid or incomplete tool-registry entries fail closed during runtime contract bootstrap.
+2. Ring-policy, capability-profile, and determinism violations fail closed before or during execution as currently enforced.
+3. Structured errors remain stable across versions.
 
 Proof:
-1. Every baseline tool has:
-   1. conformance tests
-   2. schema validation tests
-   3. determinism tests
-2. Compatibility tools additionally require parity tests against mapped behavior.
+1. Contract tests prove the minimal registry fields load and validate fail closed.
+2. Integration tests prove ring-policy and capability-profile enforcement against the chosen minimal metadata contract.
+3. Integration tests prove the receipt or event surfaces preserve the normalized invocation manifest fields claimed here.
+4. Compatibility tools additionally require parity tests against mapped behavior.
 
-## Decision Constraint: Baseline Count vs OpenClaw Match
+## Decision Constraint: Minimal Baseline vs Expanded Breadth
 
-1. Do not hard-cap baseline capability at exactly 10 tools.
-2. Treat 10 as a stabilization floor for deterministic core coverage.
-3. Expand breadth via compatibility ring first, then promote to core only after reliability and parity gates pass.
+1. Treat the current shipped minimal `core` set as sufficient for SPC-06 closeout.
+2. Do not imply a 10-tool stabilization floor or OpenClaw-class breadth as part of this closeout.
+3. Expand breadth via the compatibility ring first, then promote to `core` only after reliability and parity gates pass.
 4. Promotion gates are defined in `docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md`.

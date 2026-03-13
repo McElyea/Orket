@@ -1,10 +1,12 @@
 # SPC-02 Golden Harness Closeout Implementation Plan
 
 Last updated: 2026-03-13
-Status: Active
+Status: Archived
 Owner: Orket Core
-Parent lane: `docs/projects/runtime-stability-closeout/IMPLEMENTATION-PLAN.md`
-Source requirements: `docs/projects/runtime-stability-green-requirements/04-SPC-02-GOLDEN-HARNESS-REQUIREMENTS.md`
+Parent lane: `docs/projects/archive/runtime-stability-closeout/IMPLEMENTATION-PLAN.md`
+Source requirements: `docs/projects/archive/runtime-stability-green-requirements/04-SPC-02-GOLDEN-HARNESS-REQUIREMENTS.md`
+
+Archive note: Historical slice plan preserved after the parent runtime-stability structural closeout lane completed on 2026-03-13.
 
 ## 1. Decision Lock
 

@@ -35,6 +35,11 @@ from orket.runtime.config_loader import ConfigLoader
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
+from orket.runtime.run_summary import (
+    build_degraded_run_summary_payload,
+    generate_run_summary_for_finalize,
+    write_run_summary_artifact,
+)
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.state_transition_registry import validate_state_token
@@ -468,7 +473,6 @@ class ExecutionPipeline:
             run_name=epic.name,
             department=self.department,
             build_id=active_build,
-            summary={"target_issue_id": target_issue_id, "resume_mode": bool(resume_mode)},
             artifacts={
                 **self._run_artifact_refs(run_id),
                 **dict(run_contract_artifacts),
@@ -578,13 +582,21 @@ class ExecutionPipeline:
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection
+            finalized_at = datetime.now(UTC).isoformat()
+            run_summary, artifacts = await self._materialize_run_summary(
+                run_id=run_id,
+                session_status=session_status,
+                failure_reason=None,
+                artifacts=artifacts,
+                finalized_at=finalized_at,
+            )
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
                 run_type="epic",
                 run_name=epic.name,
                 build_id=active_build,
                 session_status=session_status,
-                summary=self._build_run_summary(session_status=session_status, backlog=backlog, transcript=legacy_transcript),
+                summary=run_summary,
             )
             if gitea_export:
                 artifacts["gitea_export"] = gitea_export
@@ -592,8 +604,9 @@ class ExecutionPipeline:
             await self.run_ledger.finalize_run(
                 session_id=run_id,
                 status=session_status,
-                summary=self._build_run_summary(session_status=session_status, backlog=backlog, transcript=legacy_transcript),
+                summary=run_summary,
                 artifacts=artifacts,
+                finalized_at=finalized_at,
             )
 
         except (
@@ -623,11 +636,6 @@ class ExecutionPipeline:
                 {"run_id": run_id, "status": failed_status, "failure_class": type(exc).__name__},
                 workspace=self.workspace,
             )
-            failure_summary = self._build_run_summary(
-                session_status=failed_status,
-                backlog=backlog,
-                transcript=legacy_transcript,
-            )
             artifacts = self._run_artifact_refs(run_id)
             artifacts.update(dict(run_contract_artifacts))
             artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
@@ -635,6 +643,14 @@ class ExecutionPipeline:
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection
+            finalized_at = datetime.now(UTC).isoformat()
+            failure_summary, artifacts = await self._materialize_run_summary(
+                run_id=run_id,
+                session_status=failed_status,
+                failure_reason=str(exc)[:2000],
+                artifacts=artifacts,
+                finalized_at=finalized_at,
+            )
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
                 run_type="epic",
@@ -654,6 +670,7 @@ class ExecutionPipeline:
                 failure_reason=str(exc)[:2000],
                 summary=failure_summary,
                 artifacts=artifacts,
+                finalized_at=finalized_at,
             )
             raise
 
@@ -716,23 +733,61 @@ class ExecutionPipeline:
             )
             return None
 
-    def _build_run_summary(
+    async def _materialize_run_summary(
         self,
         *,
+        run_id: str,
         session_status: str,
-        backlog: List[Any],
-        transcript: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
-        status_counts: Dict[str, int] = {}
-        for issue in backlog:
-            status_key = issue.status.value if hasattr(issue.status, "value") else str(issue.status)
-            status_counts[status_key] = status_counts.get(status_key, 0) + 1
-        return {
-            "session_status": session_status,
-            "issue_count": len(backlog),
-            "transcript_turns": len(transcript),
-            "status_counts": status_counts,
-        }
+        failure_reason: str | None,
+        artifacts: Dict[str, Any],
+        finalized_at: str,
+    ) -> tuple[Dict[str, Any], Dict[str, Any]]:
+        resolved_artifacts = dict(artifacts)
+        run_identity = resolved_artifacts.get("run_identity")
+        started_at = None
+        if isinstance(run_identity, dict):
+            started_at = str(run_identity.get("start_time") or "").strip() or None
+        try:
+            run_summary = await generate_run_summary_for_finalize(
+                workspace=self.workspace,
+                run_id=run_id,
+                status=session_status,
+                failure_reason=failure_reason,
+                started_at=started_at,
+                ended_at=finalized_at,
+                artifacts=resolved_artifacts,
+            )
+        except (RuntimeError, ValueError, TypeError, OSError) as exc:
+            resolved_artifacts["run_summary_generation_error"] = {
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+            }
+            log_event(
+                "run_summary_generation_failed",
+                {"run_id": run_id, "error_type": type(exc).__name__, "error": str(exc)},
+                workspace=self.workspace,
+            )
+            run_summary = build_degraded_run_summary_payload(
+                run_id=run_id,
+                status=session_status,
+                failure_reason=failure_reason,
+                artifacts=resolved_artifacts,
+            )
+        try:
+            run_summary_path = await write_run_summary_artifact(
+                root=self.workspace,
+                session_id=run_id,
+                payload=run_summary,
+            )
+            resolved_artifacts["run_summary_path"] = str(run_summary_path)
+        except (RuntimeError, ValueError, TypeError, OSError) as exc:
+            log_event(
+                "run_summary_artifact_write_failed",
+                {"run_id": run_id, "error_type": type(exc).__name__, "error": str(exc)},
+                workspace=self.workspace,
+            )
+        resolved_artifacts["run_summary"] = dict(run_summary)
+        return run_summary, resolved_artifacts
 
     async def _materialize_protocol_receipts(self, *, run_id: str) -> Dict[str, Any] | None:
         if not hasattr(self.run_ledger, "append_receipt"):

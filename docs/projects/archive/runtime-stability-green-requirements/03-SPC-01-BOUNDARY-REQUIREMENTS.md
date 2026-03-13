@@ -1,10 +1,12 @@
 # SPC-01 Boundary Closeout Requirements
 
 Last updated: 2026-03-13
-Status: Active
+Status: Archived
 Owner: Orket Core
-Parent lane: `docs/projects/runtime-stability-green-requirements/02-IMPLEMENTATION-PLAN.md`
-Closeout source: `docs/projects/runtime-stability-closeout/IMPLEMENTATION-PLAN.md`
+Parent lane: `docs/projects/archive/runtime-stability-green-requirements/02-IMPLEMENTATION-PLAN.md`
+Closeout source: `docs/projects/archive/runtime-stability-closeout/IMPLEMENTATION-PLAN.md`
+
+Archive note: Historical requirements packet preserved after direct SPC-01 closeout completed on 2026-03-13.
 
 ## 1. Purpose
 

@@ -120,6 +120,22 @@ class ToolDispatcher:
                 approval_required_tools=approval_required_tools,
             )
             if preflight_violations:
+                if not protocol_replay_mode:
+                    first_tool_name = ""
+                    if turn.tool_calls:
+                        first_tool_name = str(turn.tool_calls[0].tool or "")
+                    log_event(
+                        "tool_call_exception",
+                        {
+                            "issue_id": turn.issue_id,
+                            "role": turn.role,
+                            "session_id": session_id,
+                            "turn_index": turn_index,
+                            "tool": first_tool_name,
+                            "error": str(preflight_violations[0]),
+                        },
+                        self.workspace,
+                    )
                 raise self.tool_validation_error_factory(preflight_violations)
 
         for index, tool_call in enumerate(turn.tool_calls):

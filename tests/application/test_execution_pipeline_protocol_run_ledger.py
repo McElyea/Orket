@@ -20,6 +20,10 @@ def _write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def _read_json(path: Path) -> dict:
+    return json.loads(path.read_bytes().decode("utf-8"))
+
+
 def _write_epic_assets(root: Path, epic_id: str) -> None:
     _write_json(
         root / "model" / "core" / "teams" / "standard.json",
@@ -136,8 +140,14 @@ async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(
     run = await protocol_repo.get_run("sess-protocol-incomplete")
     assert run is not None
     assert run["status"] == "incomplete"
-    assert run["summary_json"]["session_status"] == "incomplete"
+    assert run["summary_json"]["run_id"] == "sess-protocol-incomplete"
+    assert run["summary_json"]["status"] == "incomplete"
+    assert run["summary_json"]["failure_reason"] is None
+    assert run["summary_json"]["duration_ms"] >= 0
+    assert "gitea_export" not in run["summary_json"]["artifact_ids"]
     assert run["artifact_json"]["workspace"] == str(workspace)
+    assert run["artifact_json"]["run_summary"] == run["summary_json"]
+    assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
     assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
     assert run["started_event_seq"] == 1
     assert run["ended_event_seq"] == 2
@@ -189,9 +199,12 @@ async def test_execution_pipeline_supports_protocol_run_ledger_failure_path(
     assert run["status"] == "failed"
     assert run["failure_class"] == "ExecutionFailed"
     assert "forced protocol failure" in str(run["failure_reason"] or "")
-    assert run["summary_json"]["session_status"] == "failed"
+    assert run["summary_json"]["status"] == "failed"
+    assert "forced protocol failure" in str(run["summary_json"]["failure_reason"] or "")
+    assert run["summary_json"]["duration_ms"] >= 0
     assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
     assert run["artifact_json"]["gitea_export"]["commit"] == "def456"
+    assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
 
 
 @pytest.mark.asyncio
@@ -238,8 +251,10 @@ async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     run = await protocol_repo.get_run("sess-protocol-terminal-failure")
     assert run is not None
     assert run["status"] == "terminal_failure"
-    assert run["summary_json"]["session_status"] == "terminal_failure"
-    assert run["summary_json"]["status_counts"]["blocked"] == 1
+    assert run["summary_json"]["status"] == "terminal_failure"
+    assert run["summary_json"]["failure_reason"] is None
+    assert run["summary_json"]["duration_ms"] >= 0
+    assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
 
 
 @pytest.mark.asyncio

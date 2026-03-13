@@ -279,13 +279,14 @@ class AsyncRunLedgerRepository:
         failure_reason: Optional[str] = None,
         summary: Optional[Dict[str, Any]] = None,
         artifacts: Optional[Dict[str, Any]] = None,
+        finalized_at: Optional[str] = None,
     ) -> None:
         resolved_status = validate_result_error_invariant(
             status=status,
             failure_class=failure_class,
             failure_reason=failure_reason,
         )
-        now = datetime.now(UTC).isoformat()
+        now = str(finalized_at or datetime.now(UTC).isoformat())
         async with self._lock:
             async with aiosqlite.connect(self.db_path) as conn:
                 await self._ensure_initialized(conn)

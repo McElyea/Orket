@@ -28,6 +28,7 @@ class _RunLedgerRepository(Protocol):
         failure_reason: Optional[str] = None,
         summary: Optional[dict[str, Any]] = None,
         artifacts: Optional[dict[str, Any]] = None,
+        finalized_at: Optional[str] = None,
     ) -> Any: ...
 
     async def get_run(self, session_id: str) -> dict[str, Any] | None: ...
@@ -125,26 +126,27 @@ class AsyncDualWriteRunLedgerRepository:
         failure_reason: Optional[str] = None,
         summary: Optional[dict[str, Any]] = None,
         artifacts: Optional[dict[str, Any]] = None,
+        finalized_at: Optional[str] = None,
     ) -> None:
+        finalize_kwargs = {
+            "session_id": session_id,
+            "status": status,
+            "failure_class": failure_class,
+            "failure_reason": failure_reason,
+            "summary": summary,
+            "artifacts": artifacts,
+        }
+        if finalized_at is not None:
+            finalize_kwargs["finalized_at"] = finalized_at
         await self.sqlite_repo.finalize_run(
-            session_id=session_id,
-            status=status,
-            failure_class=failure_class,
-            failure_reason=failure_reason,
-            summary=summary,
-            artifacts=artifacts,
+            **finalize_kwargs,
         )
 
         protocol_error = await self._try_protocol_write(
             phase="finalize_run",
             session_id=session_id,
             fn=self.protocol_repo.finalize_run(
-                session_id=session_id,
-                status=status,
-                failure_class=failure_class,
-                failure_reason=failure_reason,
-                summary=summary,
-                artifacts=artifacts,
+                **finalize_kwargs,
             ),
         )
         await self._emit_parity(

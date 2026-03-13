@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import orket.runtime.execution_pipeline as execution_pipeline_module
 from orket.exceptions import ExecutionFailed
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus
@@ -11,6 +12,10 @@ from orket.schema import CardStatus
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _read_json(path: Path) -> dict:
+    return json.loads(path.read_bytes().decode("utf-8"))
 
 
 def _write_epic_assets(root: Path, epic_id: str) -> None:
@@ -88,9 +93,16 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
     assert ledger["status"] == "incomplete"
     assert ledger["failure_class"] is None
     assert ledger["failure_reason"] is None
-    assert ledger["summary_json"]["session_status"] == "incomplete"
-    assert ledger["summary_json"]["status_counts"]["ready"] == 1
+    assert ledger["summary_json"]["run_id"] == "sess-ledger-incomplete"
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["failure_reason"] is None
+    assert ledger["summary_json"]["duration_ms"] >= 0
+    assert "gitea_export" not in ledger["summary_json"]["artifact_ids"]
     assert ledger["artifact_json"]["workspace"] == str(workspace)
+    assert ledger["artifact_json"]["run_summary"] == ledger["summary_json"]
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
     assert ledger["artifact_json"]["gitea_export"]["provider"] == "gitea"
     assert ledger["artifact_json"]["gitea_export"]["commit"] == "abc123"
 
@@ -135,10 +147,13 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
     assert ledger["status"] == "failed"
     assert ledger["failure_class"] == "ExecutionFailed"
     assert "forced failure for ledger" in (ledger["failure_reason"] or "")
-    assert ledger["summary_json"]["session_status"] == "failed"
-    assert ledger["summary_json"]["status_counts"]["ready"] == 1
+    assert ledger["summary_json"]["run_id"] == "sess-ledger-failed"
+    assert ledger["summary_json"]["status"] == "failed"
+    assert "forced failure for ledger" in str(ledger["summary_json"]["failure_reason"] or "")
+    assert ledger["summary_json"]["duration_ms"] >= 0
     assert ledger["artifact_json"]["gitea_export"]["provider"] == "gitea"
     assert ledger["artifact_json"]["gitea_export"]["commit"] == "def456"
+    assert _read_json(Path(ledger["artifact_json"]["run_summary_path"])) == ledger["summary_json"]
 
     runs = await pipeline.sessions.get_recent_runs(limit=5)
     failed_run = next((r for r in runs if r["id"] == "sess-ledger-failed"), None)
@@ -184,8 +199,60 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
     ledger = await pipeline.run_ledger.get_run("sess-ledger-terminal-failure")
     assert ledger is not None
     assert ledger["status"] == "terminal_failure"
-    assert ledger["summary_json"]["session_status"] == "terminal_failure"
-    assert ledger["summary_json"]["status_counts"]["blocked"] == 1
+    assert ledger["summary_json"]["status"] == "terminal_failure"
+    assert ledger["summary_json"]["failure_reason"] is None
+    assert ledger["summary_json"]["duration_ms"] >= 0
+    assert _read_json(Path(ledger["artifact_json"]["run_summary_path"])) == ledger["summary_json"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_fails(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_summary_fallback")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _no_op_execute_epic(**_kwargs):
+        return None
+
+    async def _no_export_run(**_kwargs):
+        return None
+
+    async def _raise_summary_generation(**_kwargs):
+        raise ValueError("forced summary generation failure")
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export_run)
+    monkeypatch.setattr(
+        execution_pipeline_module,
+        "generate_run_summary_for_finalize",
+        _raise_summary_generation,
+    )
+
+    await pipeline.run_epic(
+        "ledger_epic_summary_fallback",
+        build_id="build-ledger-epic-summary-fallback",
+        session_id="sess-ledger-summary-fallback",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-summary-fallback")
+    assert ledger is not None
+    assert ledger["summary_json"]["status"] == "incomplete"
+    assert ledger["summary_json"]["duration_ms"] is None
+    assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    summary_path = Path(ledger["artifact_json"]["run_summary_path"])
+    assert summary_path.exists()
+    assert _read_json(summary_path) == ledger["summary_json"]
 
 
 # Layer: integration

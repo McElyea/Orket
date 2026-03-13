@@ -1,8 +1,10 @@
 # Runtime Stability Structural Closeout Plan
 
 Last updated: 2026-03-13
-Status: Active
+Status: Archived
 Owner: Orket Core
+
+Archive note: Historical planning record preserved after the runtime-stability structural closeout lane completed on 2026-03-13. See `docs/projects/archive/runtime-stability-closeout/CLOSEOUT.md` for the archive summary.
 
 ## Purpose
 
@@ -47,26 +49,26 @@ This lane uses the following closeout states:
 
 | Slice ID | Removed item group | Current closeout state | Why |
 |---|---|---|---|
-| SPC-01 | core vs workloads boundary | decision locked | v0 boundary closeout is chosen, but the active requirement text and proof still need to be narrowed to that contract |
-| SPC-02 | golden run harness + deterministic replay + run determinism tests | decision locked | protocol replay is chosen as canonical, but active requirement text and operator-layer proof still need to be aligned |
+| SPC-01 | core vs workloads boundary | structurally complete | active requirements were narrowed to the shipped v0 boundary contract and the boundary proof set is green |
+| SPC-02 | golden run harness + deterministic replay + run determinism tests | structurally complete | protocol replay is the canonical operator surface and the CLI, script, and replay proof set is green |
 | SPC-03 | prompt surface budgets + prompt diff tooling | structurally complete | implementation and targeted proof already match the scoped claim |
 | SPC-04 | tool reliability scoreboard | structurally complete | ledger-only scoreboard generation and promotion proof are already landed |
-| SPC-05 | run compression + run graph visualization + artifact schema registry | decision locked | canonical `run_summary.json` implementation is chosen, but the emitted summary artifact and reconstruction proof still need to be completed |
-| SPC-06 | core tool baseline + capability profiles per workload | decision locked | minimal baseline closeout is chosen, but active requirement text and proof still overclaim richer metadata and broader breadth |
+| SPC-05 | run compression + run graph visualization + artifact schema registry | structurally complete | canonical `run_summary.json` emission, schema validation, reconstruction, and parity proof are landed |
+| SPC-06 | core tool baseline + capability profiles per workload | structurally complete | active requirements now match the shipped minimal registry and invocation-manifest contract, and the proof set is green |
 
 ## Execution Routing
 
 Route the removed items by coverage level:
-1. Decision-locked direct closeout plans:
+1. Archived direct closeout plans:
    1. SPC-01
-      Authority: `docs/projects/runtime-stability-closeout/SPC-01-BOUNDARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`
+      Authority: `docs/projects/archive/runtime-stability-closeout/SPC-01-BOUNDARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`
    2. SPC-02
-      Authority: `docs/projects/runtime-stability-closeout/SPC-02-GOLDEN-HARNESS-CLOSEOUT-IMPLEMENTATION-PLAN.md`
+      Authority: `docs/projects/archive/runtime-stability-closeout/SPC-02-GOLDEN-HARNESS-CLOSEOUT-IMPLEMENTATION-PLAN.md`
    3. SPC-05
-      Authority: `docs/projects/runtime-stability-closeout/SPC-05-RUN-SUMMARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`
+      Authority: `docs/projects/archive/runtime-stability-closeout/SPC-05-RUN-SUMMARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`
    4. SPC-06
-      Authority: `docs/projects/runtime-stability-closeout/SPC-06-CORE-TOOL-BASELINE-CLOSEOUT-IMPLEMENTATION-PLAN.md`
-2. Certified structural closeout:
+      Authority: `docs/projects/archive/runtime-stability-closeout/SPC-06-CORE-TOOL-BASELINE-CLOSEOUT-IMPLEMENTATION-PLAN.md`
+2. Certified structural closeout at archive time:
    1. SPC-03
    2. SPC-04
 
@@ -95,7 +97,7 @@ Required completion proof:
 3. Controller replay/parity suites remain green after the closeout change.
 
 Routing decision:
-1. Execute `docs/projects/runtime-stability-closeout/SPC-01-BOUNDARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
+1. Completed via `docs/projects/archive/runtime-stability-closeout/SPC-01-BOUNDARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
 
 ### SPC-02: Golden Run Harness + Deterministic Replay + Run Determinism Tests
 
@@ -118,7 +120,7 @@ Required completion proof:
 3. Drift-classification tests at that same operator layer, not only at raw run-id replay level.
 
 Routing decision:
-1. Execute `docs/projects/runtime-stability-closeout/SPC-02-GOLDEN-HARNESS-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
+1. Completed via `docs/projects/archive/runtime-stability-closeout/SPC-02-GOLDEN-HARNESS-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
 
 ### SPC-03: Prompt Surface Budgets + Prompt Diff Tooling
 
@@ -184,7 +186,7 @@ Required completion proof:
 3. Replay-parity tests that compare emitted or reconstructed summaries across equivalent live and replay runs.
 
 Routing decision:
-1. Execute `docs/projects/runtime-stability-closeout/SPC-05-RUN-SUMMARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
+1. Completed via `docs/projects/archive/runtime-stability-closeout/SPC-05-RUN-SUMMARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
 
 ### SPC-06: Core Tool Baseline + Capability Profiles Per Workload
 
@@ -214,16 +216,16 @@ Required completion proof:
 3. Artifact-surface checks only where the narrowed minimal contract claims those fields.
 
 Routing decision:
-1. Execute `docs/projects/runtime-stability-closeout/SPC-06-CORE-TOOL-BASELINE-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
+1. Completed via `docs/projects/archive/runtime-stability-closeout/SPC-06-CORE-TOOL-BASELINE-CLOSEOUT-IMPLEMENTATION-PLAN.md`.
 
 ## Recommended Execution Order
 
-1. Execute the decision-locked closeout plans for SPC-01, SPC-02, SPC-05, and SPC-06.
-2. Treat SPC-03 and SPC-04 as certified structural closeouts unless new contradictory evidence appears.
+1. Historical execution completed on 2026-03-13 through the SPC-01, SPC-02, SPC-05, and SPC-06 closeout plans.
+2. SPC-03 and SPC-04 remained certified structural closeouts throughout the lane.
 
 ## Exit Criteria For This Lane
 
-This lane can be archived only when every removed item is in one of these states:
+Archive outcome: satisfied on 2026-03-13 once every removed item reached one of these states:
 1. structurally complete with existing proof still green, or
 2. closed by bounded implementation plus proof, or
 3. explicitly narrowed by truthful source-of-truth updates so the smaller shipped claim is the canonical claim.

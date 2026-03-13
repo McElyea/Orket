@@ -1,6 +1,6 @@
 # Runtime Invariants
 
-Last updated: 2026-03-06  
+Last updated: 2026-03-13  
 Status: Active (governance contract)  
 Owner: Orket Core
 
@@ -18,12 +18,12 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
    1. every emitted `artifact_id` must appear in a ledger event
    2. ledger artifact references must resolve to existing artifacts
    3. ledger artifact references must include `artifact_hash` captured at emission (`sha256(artifact_bytes)`)
-6. `INV-006`: Every tool invocation must emit `tool_invocation_manifest.json` with ring, schema version, determinism class, capability profile, and tool contract version.
+6. `INV-006`: Every tool invocation must record normalized `tool_invocation_manifest` evidence with ring, schema version, determinism class, capability profile, and tool contract version.
 7. `INV-007`: Ring policy violations (`core`, `compatibility`, `experimental`) must fail closed before tool execution.
 8. `INV-008`: Capability profile violations must fail closed before tool execution.
 9. `INV-009`: Compatibility mappings may expand only to `core` tools, must not chain to compatibility mappings, and must not elevate determinism class.
 10. `INV-010`: Replay mode must bypass model inference, prompt construction, repair heuristics, and tool-validator repair paths; replay uses recorded tool calls only.
-11. `INV-011`: Replay completeness is required before execution. Replay must fail closed when required artifacts are missing (`tool_call.json`, `tool_result.json`, `tool_invocation_manifest.json`).
+11. `INV-011`: Replay completeness is required before execution. Replay must fail closed when required tool-call, tool-result, or `tool_invocation_manifest` evidence is missing.
 12. `INV-012`: Deterministic replay is required for deterministic runs and deterministic compatibility mappings.
 13. `INV-013`: All runtime/tool error codes must be machine-readable and `snake_case`.
 14. `INV-014`: Workload failures must not crash the core runtime process.
@@ -69,7 +69,7 @@ Define non-negotiable runtime rules that must remain true across all workloads, 
 
 ## Verification Expectations
 
-1. Golden run harness must include `runtime_contract_hash`, `tool_registry_version`, and artifact schema snapshot version.
+1. Protocol replay evidence must include `runtime_contract_hash`, `tool_registry_version`, and artifact schema snapshot version.
 2. Promotion from compatibility to core requires replay and parity gates with no unresolved drift classifications.
 3. Invariant violations must be treated as contract failures, not soft warnings.
 4. Replay and scoreboard systems must fail closed on incomplete evidence.

@@ -86,6 +86,7 @@ class AsyncProtocolRunLedgerRepository:
         failure_reason: Optional[str] = None,
         summary: Optional[Dict[str, Any]] = None,
         artifacts: Optional[Dict[str, Any]] = None,
+        finalized_at: Optional[str] = None,
     ) -> dict[str, Any]:
         resolved_status = validate_result_error_invariant(
             status=status,
@@ -101,6 +102,7 @@ class AsyncProtocolRunLedgerRepository:
             failure_reason=failure_reason,
             summary=dict(summary or {}),
             artifacts=dict(artifacts or {}),
+            **({"timestamp": str(finalized_at).strip()} if str(finalized_at or "").strip() else {}),
         )
         async with self._lock:
             existing_events = await asyncio.to_thread(self._ledger(session_id).replay_events)
