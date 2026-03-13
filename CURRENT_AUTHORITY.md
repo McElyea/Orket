@@ -35,11 +35,11 @@ It defines only the currently authoritative paths that agents and contributors m
 15. Core release proof report storage: `docs/releases/<version>/PROOF_REPORT.md`
 16. Core release evidence storage: `benchmarks/results/releases/<version>/`
 
-## Machine-Readable Authority Map (v2)
+## Machine-Readable Authority Map (v1)
 
 ```json
 {
-  "version": 2,
+  "version": 1,
   "last_updated": "2026-03-12",
   "authority": {
     "dependency_authority": {

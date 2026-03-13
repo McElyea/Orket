@@ -35,11 +35,12 @@
 
 1. When creating a new active implementation plan, add or update its roadmap entry in the same change.
 2. When accepted requirements contain durable contracts or specs, extract them into `docs/specs/` before writing the implementation plan.
-3. When a non-maintenance lane completes, move plan, closeout, and history docs to `docs/projects/archive/<lane>/` in the same change.
-4. Move long-lived contracts or specs out of completed lanes into `docs/specs/`.
-5. Do not leave `Status: Completed` or `Status: Archived` docs in active `docs/projects/`.
-6. When closing a phase in a multi-phase initiative, archive only phase-scoped docs. Keep the initiative mini-roadmap and current canonical plan active while later phases remain.
-7. For `docs/projects/techdebt/`, leave only standing maintenance docs and docs for cycle ids still active in the roadmap.
+3. When a change updates a durable contract, record the contract delta using `docs/architecture/CONTRACT_DELTA_TEMPLATE.md`.
+4. When a non-maintenance lane completes, move plan, closeout, and history docs to `docs/projects/archive/<lane>/` in the same change.
+5. Move long-lived contracts or specs out of completed lanes into `docs/specs/`.
+6. Do not leave `Status: Completed` or `Status: Archived` docs in active `docs/projects/`.
+7. When closing a phase in a multi-phase initiative, archive only phase-scoped docs. Keep the initiative mini-roadmap and current canonical plan active while later phases remain.
+8. For `docs/projects/techdebt/`, leave only standing maintenance docs and docs for cycle ids still active in the roadmap.
 
 ## Repository Rules
 
