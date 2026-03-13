@@ -1,9 +1,13 @@
 # RP03122026 0.4.0 Release Process Requirements
 
 Last updated: 2026-03-12
-Status: Active
+Status: Archived
 Owner: Orket Core
 Lane type: Priority process hardening
+
+Archive note:
+1. Completed and archived on 2026-03-12.
+2. Closeout authority: [docs/projects/archive/techdebt/RP03122026/Closeout.md](docs/projects/archive/techdebt/RP03122026/Closeout.md)
 
 ## 1. Objective
 

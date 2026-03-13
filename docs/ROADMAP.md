@@ -6,8 +6,6 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. `0.4.0` release process and docs authority hardening -- Plan: `docs/projects/techdebt/RP03122026/02-IMPLEMENTATION-PLAN.md`. Requirements: `docs/projects/techdebt/RP03122026/01-REQUIREMENTS.md`.
-
 ## Maintenance (Non-Priority)
 
 1. techdebt -- Standing recurring maintenance. Checklist: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Governance: `docs/projects/techdebt/README.md`.
