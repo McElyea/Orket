@@ -161,5 +161,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version Strategy
 
-- **v0.3.x**: Backend stabilization and improvements
-- **Future target `v0.4.0`**: Reserved for a frontend-focus transition once backend truth and stability are ready
+- **v0.3.x**: Internal runtime, governance, and release-process hardening.
+- **Future target `v0.4.0`**: Reserved for the first process-backed minor release after release/versioning, proof-gate, compatibility, and docs-authority hardening. UI remains deferred until internal surfaces are built enough to define truthful UI requirements.

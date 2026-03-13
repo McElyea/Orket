@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-10
+Last updated: 2026-03-12
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -29,13 +29,18 @@ It defines only the currently authoritative paths that agents and contributors m
 9. Long-lived specs root: `docs/specs/`
 10. Published artifact index: `benchmarks/published/index.json`
 11. Canonical provider runtime target selection: `orket/runtime/provider_runtime_target.py`
+12. Core release/versioning policy: `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`
+13. Core release gate checklist: `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md`
+14. Core release proof report template: `docs/specs/CORE_RELEASE_PROOF_REPORT.md`
+15. Core release proof report storage: `docs/releases/<version>/PROOF_REPORT.md`
+16. Core release evidence storage: `benchmarks/results/releases/<version>/`
 
-## Machine-Readable Authority Map (v1)
+## Machine-Readable Authority Map (v2)
 
 ```json
 {
-  "version": 1,
-  "last_updated": "2026-03-10",
+  "version": 2,
+  "last_updated": "2026-03-12",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -117,6 +122,26 @@ It defines only the currently authoritative paths that agents and contributors m
       "published_artifacts_readme": "benchmarks/published/README.md",
       "sources": [
         "docs/CONTRIBUTOR.md"
+      ]
+    },
+    "core_release_versioning": {
+      "primary": "docs/specs/CORE_RELEASE_VERSIONING_POLICY.md",
+      "release_gate_checklist": "docs/specs/CORE_RELEASE_GATE_CHECKLIST.md",
+      "release_proof_template": "docs/specs/CORE_RELEASE_PROOF_REPORT.md",
+      "release_proof_reports_root": "docs/releases/",
+      "release_evidence_root": "benchmarks/results/releases/",
+      "core_version_source": "pyproject.toml",
+      "changelog_source": "CHANGELOG.md",
+      "workflow_source": "docs/CONTRIBUTOR.md",
+      "sdk_versioning_source": "docs/requirements/sdk/VERSIONING.md",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/CORE_RELEASE_VERSIONING_POLICY.md",
+        "docs/specs/CORE_RELEASE_GATE_CHECKLIST.md",
+        "docs/specs/CORE_RELEASE_PROOF_REPORT.md",
+        "docs/CONTRIBUTOR.md",
+        "CHANGELOG.md",
+        "pyproject.toml"
       ]
     },
     "model_provider_runtime_selection": {

@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-03-10
+Last reviewed: 2026-03-12
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
@@ -47,6 +47,9 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 20. `docs/specs/COMPANION_UI_MVP_CONTRACT.md`
 21. `docs/specs/COMPANION_AVATAR_POST_MVP_CONTRACT.md`
 22. `docs/specs/ORKET_OPERATING_PRINCIPLES.md`
+23. `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`
+24. `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md`
+25. `docs/specs/CORE_RELEASE_PROOF_REPORT.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`

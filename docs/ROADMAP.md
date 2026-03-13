@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-None.
+1. `0.4.0` release process and docs authority hardening -- Plan: `docs/projects/techdebt/RP03122026/02-IMPLEMENTATION-PLAN.md`. Requirements: `docs/projects/techdebt/RP03122026/01-REQUIREMENTS.md`.
 
 ## Maintenance (Non-Priority)
 

@@ -1,6 +1,6 @@
 # SDK Versioning
 
-Last reviewed: 2026-03-01
+Last reviewed: 2026-03-12
 
 ## Canonical Source of Truth
 1. SDK version is defined only in `orket_extension_sdk/__version__.py`.
@@ -13,7 +13,7 @@ Last reviewed: 2026-03-01
 
 ## Tag Policy
 1. SDK release tags use `sdk-vX.Y.Z`.
-2. Core engine tags remain unscoped (for example `v0.4.0`) unless changed by policy.
+2. Core engine tag policy is governed separately by `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 3. Release automation should assert:
    - tag version == `orket_extension_sdk.__version__`
    - fail on mismatch to prevent drift.

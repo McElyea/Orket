@@ -64,6 +64,17 @@
 - API runtime: `python server.py`
 - Test command: `python -m pytest -q`
 
+## Release and Versioning
+
+1. Core engine release/versioning authority lives in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
+2. Core engine version source of truth is `pyproject.toml`.
+3. Starting with `0.4.0`, each non-exempt commit kept on `main` must bump the core engine patch version and keep `CHANGELOG.md` aligned. Docs-only commits may be exempt as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
+4. Minor version bumps require closure of a roadmap-tracked major project as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
+5. Do not treat UI work as the default reason for `0.4.0`; follow the active release/versioning policy and roadmap instead.
+6. Use `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md` when evaluating core release readiness.
+7. Use `docs/specs/CORE_RELEASE_PROOF_REPORT.md` for required minor-release proof records and store completed reports under `docs/releases/<version>/PROOF_REPORT.md`.
+8. Until a dedicated core release workflow or tag/version guard is explicitly adopted, treat core release/versioning enforcement as manual and checklist-backed. Do not imply CI enforcement that does not exist.
+
 ## Testing
 
 1. Prefer real filesystems, databases, and integration paths over mocks when practical.
