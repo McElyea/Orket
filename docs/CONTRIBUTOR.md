@@ -76,6 +76,8 @@
 7. Use `docs/specs/CORE_RELEASE_PROOF_REPORT.md` for required minor-release proof records and store completed reports under `docs/releases/<version>/PROOF_REPORT.md`.
 8. CI now enforces core version/changelog alignment, commit-range version advancement, and tagged core release format through `.gitea/workflows/core-release-policy.yml` and `scripts/governance/check_core_release_policy.py`.
 9. Final proof-gate acceptance remains checklist-backed and owned by Orket Core.
+10. The canonical operator path for core release prep is `python scripts/governance/prepare_core_release.py --tag v<major>.<minor>.<patch>`.
+11. Use `--commit-and-tag` only after the matching changelog entry and any required proof report are complete and no unrelated worktree changes remain.
 
 ## Testing
 

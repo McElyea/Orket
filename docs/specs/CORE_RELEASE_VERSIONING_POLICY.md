@@ -157,6 +157,12 @@ Every minor release must include release notes that contain at minimum:
 4. The automation entrypoints are:
    - `.gitea/workflows/core-release-policy.yml`
    - `scripts/governance/check_core_release_policy.py`
+5. The canonical operator prep path for a tagged core release is:
+   - `scripts/governance/prepare_core_release.py --tag v<major>.<minor>.<patch>`
+6. Use `--commit-and-tag` only after:
+   - the matching changelog entry is release-ready,
+   - any required proof report is release-ready, and
+   - the worktree is clean outside canonical release files.
 
 ## 11. Authority Roles and Boundaries
 
