@@ -85,3 +85,4 @@
 2. Keep tests deterministic and isolated.
 3. For refactors, prove parity with regression tests.
 4. Provider-backed runtime selection and local warmup authority live in `orket/runtime/provider_runtime_target.py`. Runtime paths and provider verification scripts must reuse it.
+5. The general pytest suite fails closed on Docker sandbox creation through `tests/conftest.py`. Only explicit live sandbox acceptance work may create real `orket-sandbox-*` resources.

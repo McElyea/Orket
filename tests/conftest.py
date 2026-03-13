@@ -147,3 +147,10 @@ def workspace(test_root):
 def db_path(test_root):
     return str(test_root / "orket_test.db")
 
+
+@pytest.fixture(autouse=True)
+def fail_closed_sandbox_creation(monkeypatch):
+    # The general pytest suite fails closed on Docker sandbox creation.
+    # Tests that intentionally exercise live sandbox behavior must opt out.
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
+

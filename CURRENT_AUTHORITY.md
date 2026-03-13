@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -37,13 +37,14 @@ It defines only the currently authoritative paths that agents and contributors m
 17. Core release automation workflow: `.gitea/workflows/core-release-policy.yml`
 18. Core release automation script: `scripts/governance/check_core_release_policy.py`
 19. Core release prep script: `scripts/governance/prepare_core_release.py`
+20. Pytest sandbox fail-closed fixture: `tests/conftest.py`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-12",
+  "last_updated": "2026-03-13",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -86,10 +87,12 @@ It defines only the currently authoritative paths that agents and contributors m
       "agent_policy": "AGENTS.md",
       "contributor_policy": "docs/CONTRIBUTOR.md",
       "testing_policy": "docs/TESTING_POLICY.md",
+      "pytest_sandbox_default_policy": "tests/conftest.py",
       "sources": [
         "AGENTS.md",
         "docs/CONTRIBUTOR.md",
-        "docs/TESTING_POLICY.md"
+        "docs/TESTING_POLICY.md",
+        "tests/conftest.py"
       ]
     },
     "active_spec_index": {

@@ -1,6 +1,6 @@
 ﻿# Orket Testing Policy
 
-Last reviewed: 2026-02-27
+Last reviewed: 2026-03-13
 
 ## Test Philosophy
 1. Prefer real system behavior over heavy mocking.
@@ -8,6 +8,7 @@ Last reviewed: 2026-02-27
 3. Keep policy/mechanics split clear:
    - Kernel tests validate deterministic mechanics.
    - Live tests validate model-in-loop behavior and quality trends.
+4. The default pytest suite must fail closed on real Docker sandbox creation. Only explicit live sandbox acceptance work may create `orket-sandbox-*` resources.
 
 ## Mocking Rules
 Mocks are allowed only when one of these applies:
@@ -36,6 +37,10 @@ python -m pytest tests/acceptance tests/kernel/v1/test_odr_refinement_behavior.p
 ```bash
 python -m pytest tests/live -q
 ```
+
+## Docker Sandbox Guard
+1. `tests/conftest.py` sets `ORKET_DISABLE_SANDBOX=1` for the general pytest suite.
+2. Tests that intentionally exercise live sandbox lifecycle must opt in explicitly and must prove cleanup against actual Docker containers, networks, and volumes, not only `docker-compose ls`.
 
 ## Determinism Gates
 1. ODR determinism gate (required for kernel ODR changes):

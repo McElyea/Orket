@@ -46,6 +46,53 @@ async def docker_rows(*cmd: str) -> list[dict[str, object]]:
     return rows
 
 
+async def sandbox_resource_inventory() -> dict[str, set[str]]:
+    containers = {
+        str(row.get("Names") or "").strip()
+        for row in await docker_rows(
+            "docker",
+            "ps",
+            "-a",
+            "--filter",
+            "label=orket.managed=true",
+            "--format",
+            "{{json .}}",
+        )
+        if str(row.get("Names") or "").strip().startswith("orket-sandbox-")
+    }
+    networks = {
+        str(row.get("Name") or "").strip()
+        for row in await docker_rows(
+            "docker",
+            "network",
+            "ls",
+            "--filter",
+            "label=orket.managed=true",
+            "--format",
+            "{{json .}}",
+        )
+        if str(row.get("Name") or "").strip().startswith("orket-sandbox-")
+    }
+    volumes = {
+        str(row.get("Name") or "").strip()
+        for row in await docker_rows(
+            "docker",
+            "volume",
+            "ls",
+            "--filter",
+            "label=orket.managed=true",
+            "--format",
+            "{{json .}}",
+        )
+        if str(row.get("Name") or "").strip().startswith("orket-sandbox-")
+    }
+    return {
+        "containers": containers,
+        "networks": networks,
+        "volumes": volumes,
+    }
+
+
 async def compose_cleanup(compose_path: str, compose_project: str) -> None:
     process = await asyncio.create_subprocess_exec(
         "docker-compose",

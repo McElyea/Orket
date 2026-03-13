@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import os
 import shutil
 
@@ -11,6 +10,7 @@ import pytest
 
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
+from tests.acceptance._sandbox_live_common import compose_cleanup, sandbox_resource_inventory
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
 
 
@@ -33,46 +33,12 @@ def _lightweight_compose(sandbox, _db_password: str) -> str:
 """
 
 
-async def _compose_projects() -> set[str]:
-    process = await asyncio.create_subprocess_exec(
-        "docker-compose",
-        "ls",
-        "--format",
-        "json",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, _ = await process.communicate()
-    payload = json.loads(stdout.decode() or "[]")
-    return {
-        str(item.get("Name") or "")
-        for item in payload
-        if str(item.get("Name") or "").startswith("orket-sandbox-")
-    }
-
-
-async def _compose_cleanup(compose_path: str, compose_project: str) -> None:
-    process = await asyncio.create_subprocess_exec(
-        "docker-compose",
-        "-f",
-        compose_path,
-        "-p",
-        compose_project,
-        "down",
-        "-v",
-        "--remove-orphans",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    await process.communicate()
-
-
 @pytest.mark.asyncio
-async def test_live_cleanup_leak_gate_leaves_no_new_sandbox_projects(tmp_path, monkeypatch) -> None:
-    if shutil.which("docker-compose") is None:
-        pytest.skip("docker-compose is unavailable")
+async def test_live_cleanup_leak_gate_leaves_no_new_sandbox_resources(tmp_path, monkeypatch) -> None:
+    if shutil.which("docker-compose") is None or shutil.which("docker") is None:
+        pytest.skip("docker tooling is unavailable")
 
-    before = await _compose_projects()
+    before = await sandbox_resource_inventory()
     orchestrator = SandboxOrchestrator(
         workspace_root=tmp_path,
         registry=SandboxRegistry(),
@@ -92,13 +58,13 @@ async def test_live_cleanup_leak_gate_leaves_no_new_sandbox_projects(tmp_path, m
         )
         await orchestrator.delete_sandbox(sandbox.id)
     finally:
-        await _compose_cleanup(compose_path, compose_project)
+        await compose_cleanup(compose_path, compose_project)
 
-    after = await _compose_projects()
+    after = await sandbox_resource_inventory()
     for _ in range(10):
-        if after - before == set():
+        if after == before:
             break
         await asyncio.sleep(0.2)
-        after = await _compose_projects()
+        after = await sandbox_resource_inventory()
 
-    assert after - before == set()
+    assert after == before
