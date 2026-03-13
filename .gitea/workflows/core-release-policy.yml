@@ -1,0 +1,54 @@
+name: Core Release Policy
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+  pull_request:
+
+jobs:
+  commit-range-policy:
+    if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Enforce core release commit policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${GITHUB_SHA}"
+          fi
+          python scripts/governance/check_core_release_policy.py --repo-root . --base-rev "${BASE_SHA}" --head-rev "${HEAD_SHA}"
+
+  tag-policy:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Enforce core release tag policy
+        run: |
+          python scripts/governance/check_core_release_policy.py --repo-root . --head-rev "${GITHUB_SHA}" --tag "${GITHUB_REF_NAME}"

@@ -34,6 +34,8 @@ It defines only the currently authoritative paths that agents and contributors m
 14. Core release proof report template: `docs/specs/CORE_RELEASE_PROOF_REPORT.md`
 15. Core release proof report storage: `docs/releases/<version>/PROOF_REPORT.md`
 16. Core release evidence storage: `benchmarks/results/releases/<version>/`
+17. Core release automation workflow: `.gitea/workflows/core-release-policy.yml`
+18. Core release automation script: `scripts/governance/check_core_release_policy.py`
 
 ## Machine-Readable Authority Map (v1)
 
@@ -130,12 +132,16 @@ It defines only the currently authoritative paths that agents and contributors m
       "release_proof_template": "docs/specs/CORE_RELEASE_PROOF_REPORT.md",
       "release_proof_reports_root": "docs/releases/",
       "release_evidence_root": "benchmarks/results/releases/",
+      "automation_workflow": ".gitea/workflows/core-release-policy.yml",
+      "automation_script": "scripts/governance/check_core_release_policy.py",
       "core_version_source": "pyproject.toml",
       "changelog_source": "CHANGELOG.md",
       "workflow_source": "docs/CONTRIBUTOR.md",
       "sdk_versioning_source": "docs/requirements/sdk/VERSIONING.md",
       "sources": [
         "CURRENT_AUTHORITY.md",
+        ".gitea/workflows/core-release-policy.yml",
+        "scripts/governance/check_core_release_policy.py",
         "docs/specs/CORE_RELEASE_VERSIONING_POLICY.md",
         "docs/specs/CORE_RELEASE_GATE_CHECKLIST.md",
         "docs/specs/CORE_RELEASE_PROOF_REPORT.md",

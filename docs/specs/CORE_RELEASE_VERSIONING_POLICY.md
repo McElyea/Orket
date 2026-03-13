@@ -51,17 +51,18 @@ The canonical user surface used for release verification is the install/runtime/
 
 Alternative commands may exist, but they must be documented as secondary or explicitly unsupported for release gating.
 
-## 5. Patch Release Discipline
+## 5. Commit Release Discipline
 
-1. Every commit merged into `main` must increment the core engine patch version unless it qualifies for the docs-only exemption.
-2. A commit qualifies for the docs-only exemption only if it modifies documentation files exclusively and introduces no runtime, configuration, dependency, packaging, or release-artifact changes.
-3. Documentation-only commits are limited to:
+1. Every non-exempt commit merged into `main` must advance the core engine version.
+2. The default release step for a non-exempt commit is a patch increment.
+3. A commit qualifies for the docs-only exemption only if it modifies documentation files exclusively and introduces no runtime, configuration, dependency, packaging, or release-artifact changes.
+4. Documentation-only commits are limited to:
    - files under `docs/`
    - root-level `*.md` files
-4. All non-exempt commits must:
-   - increment the patch version in `pyproject.toml`, and
-   - create or update the matching top version entry in `CHANGELOG.md` for that exact released version.
-5. Revert commits follow the same rule as normal commits.
+5. All non-exempt commits must create or update the matching top version entry in `CHANGELOG.md` for that exact released version.
+6. Non-exempt commits that are not approved minor or major release steps must increment the patch version in `pyproject.toml`.
+7. A non-exempt commit may advance the core version by an allowed minor or major release step instead of a patch step only when that release step is otherwise permitted by this policy.
+8. Revert commits follow the same rule as normal commits.
 
 ## 6. Minor Release Proof Gates
 
@@ -141,14 +142,21 @@ Every minor release must include release notes that contain at minimum:
 
 ## 10. Enforcement Model
 
-1. Core release/versioning enforcement is currently manual and checklist-backed.
-2. Until a dedicated core-engine release workflow or tag/version guard is explicitly adopted, Orket Core must enforce:
-   - non-exempt patch version bumps on `main`
-   - `CHANGELOG.md` and `pyproject.toml` alignment
-   - annotated core tag format
-   - minor-release proof report completeness
-3. Docs-only exemption decisions are made by changed-surface review against this policy and `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md`.
-4. Existing CI runs or supporting scripts may provide evidence, but they do not replace the canonical release gate unless a later policy update explicitly says they do.
+1. Core release/versioning enforcement is split between automation and checklist-backed operator review.
+2. CI automation enforces:
+   - `pyproject.toml` and `CHANGELOG.md` alignment
+   - commit-range core version advancement on `main` and pull requests
+   - canonical `v<major>.<minor>.<patch>` core tag format
+   - annotated core release tags
+   - presence of the minor-release proof report path for tagged minor releases
+3. Orket Core still owns:
+   - release-proof content review
+   - compatibility classification correctness
+   - docs-only exemption semantics when changed-surface intent is ambiguous
+   - final proof-gate acceptance
+4. The automation entrypoints are:
+   - `.gitea/workflows/core-release-policy.yml`
+   - `scripts/governance/check_core_release_policy.py`
 
 ## 11. Authority Roles and Boundaries
 

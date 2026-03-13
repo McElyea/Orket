@@ -69,12 +69,13 @@
 
 1. Core engine release/versioning authority lives in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 2. Core engine version source of truth is `pyproject.toml`.
-3. Starting with `0.4.0`, each non-exempt commit kept on `main` must bump the core engine patch version and keep `CHANGELOG.md` aligned. Docs-only commits may be exempt as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
+3. Starting with `0.4.0`, each non-exempt commit kept on `main` must advance the core engine version and keep `CHANGELOG.md` aligned. The default release step is a patch bump; minor release steps are allowed only as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`. Docs-only commits may be exempt as defined there.
 4. Minor version bumps require closure of a roadmap-tracked major project as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 5. Do not treat UI work as the default reason for `0.4.0`; follow the active release/versioning policy and roadmap instead.
 6. Use `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md` when evaluating core release readiness.
 7. Use `docs/specs/CORE_RELEASE_PROOF_REPORT.md` for required minor-release proof records and store completed reports under `docs/releases/<version>/PROOF_REPORT.md`.
-8. Until a dedicated core release workflow or tag/version guard is explicitly adopted, treat core release/versioning enforcement as manual and checklist-backed. Do not imply CI enforcement that does not exist.
+8. CI now enforces core version/changelog alignment, commit-range version advancement, and tagged core release format through `.gitea/workflows/core-release-policy.yml` and `scripts/governance/check_core_release_policy.py`.
+9. Final proof-gate acceptance remains checklist-backed and owned by Orket Core.
 
 ## Testing
 
