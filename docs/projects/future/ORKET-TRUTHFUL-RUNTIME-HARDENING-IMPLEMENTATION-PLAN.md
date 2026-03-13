@@ -1,9 +1,10 @@
 # Orket Truthful Runtime Hardening Implementation Plan
 
-Last updated: 2026-03-10
+Last updated: 2026-03-13
 Status: Staged / Waiting (proof-gated for Phases C-E)
 Owner: Orket Core
 Lane type: Staged / Waiting (externally gated by proof availability)
+Canonical staged-lane authority: This file owns detailed reentry criteria for this lane.
 Primary input: operator-provided control-surface backlog (runtime truth, routing truth, provenance, conformance, and promotion hardening)
 Related authority inputs:
 1. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
@@ -151,23 +152,46 @@ Rationale:
 1. vocabulary/contracts and routing/prompt/tool policy baselines are complete from Phases A/B.
 2. provenance and fallback truth must exist before evidence-gated promotion is meaningful.
 
-## 5. Initial Executable Slice (Recommended)
+## 5. Staging and Reentry Authority
 
-Slice T1 (first bounded execution packet):
-1. capability registry contract
-2. provider truth table contract
-3. run phase contract
-4. fail-open/fail-closed registry
-5. degradation taxonomy + vocabulary freeze
-6. router decision artifact (minimum form)
-7. deterministic mode flag (minimum form)
+This file is the canonical reentry authority for this staged lane. The roadmap entry stays terse; detailed reentry criteria and remaining-proof status live here.
+
+Why staged now:
+1. Phase A, Phase B, and Wave 2 closeout artifacts exist, but Phase C-E do not have accepted phase-level completion proof.
+2. Provenance and fallback truth remain the critical path before memory/trust policy work or promotion-governance work should resume.
+3. Broad product expansion work is not a valid reason to reopen this lane.
+
+Missing proof before broad reentry:
+1. No accepted Phase C packet yet proves execution provenance, visible repair/fallback behavior, and truth classification as implemented behavior.
+2. No accepted Phase D packet yet proves policy-bound memory mutation and trust-level synthesis behavior.
+3. No accepted Phase E packet yet proves conformance and promotion evidence gates on top of proven Phase C and Phase D behavior.
+
+Smallest acceptable reentry slice:
+1. Reenter at Phase C only.
+2. Keep the first packet bounded to execution provenance envelope, response truth classification, silent fallback detection, and the proof work needed to verify those surfaces.
+3. Do not include net-new UI work, enterprise auth/admin surfaces, packaging work, or unrelated provider expansion in the first packet.
+4. Do not reopen Phase D or Phase E until the selected Phase C packet has acceptance proof.
+
+Required evidence to reopen:
+1. An explicit request naming Phase C as the target phase.
+2. A bounded deliverable list taken from existing Phase C deliverables in this file.
+3. Named exit artifacts for the packet: updated contracts/specs when required, contract/integration/end-to-end proof, and at least one example artifact or transcript showing the new truth surfaces.
+4. Explicit non-goals for the packet so scope does not expand into adjacent product work.
+
+## 6. Initial Reentry Slice (Recommended)
+
+Recommended first packet:
+1. execution provenance envelope
+2. response truth classification (`direct|inferred|estimated|repaired|degraded`)
+3. silent fallback detector and defect classification
+4. contract/integration/end-to-end proof covering the above surfaces
 
 Exit criteria:
-1. runtime route decisions are explainable
-2. degraded vs failed semantics are explicit and testable
-3. deterministic lane can run without optional heuristics
+1. each covered run emits provenance and truth classification artifacts
+2. at least one silent fallback path is machine-detectable and reportable
+3. repaired or degraded behavior is visible and attributable in proof artifacts
 
-## 6. Verification Standards
+## 7. Verification Standards
 
 Required:
 1. contract tests for every new runtime vocabulary and phase/state contract
@@ -178,7 +202,7 @@ Required:
 Truth-reporting rule:
 1. no compile-only or mock-only evidence may be presented as runtime conformance proof
 
-## 7. Risks and Mitigations
+## 8. Risks and Mitigations
 
 1. Risk: contract sprawl without executable adoption.
    1. Mitigation: each phase has bounded slice + acceptance gates.
@@ -189,7 +213,7 @@ Truth-reporting rule:
 4. Risk: promotion gates bypassed during pressure.
    1. Mitigation: require operator sign-off artifact for profile promotion.
 
-## 8. Appendix A - Backlog Coverage Map
+## 9. Appendix A - Backlog Coverage Map
 
 | Backlog Item | Phase |
 |---|---|

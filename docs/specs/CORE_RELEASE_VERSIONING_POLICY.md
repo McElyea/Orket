@@ -27,7 +27,7 @@ SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.
    - roadmap lane closure,
    - acceptance criteria satisfied, and
    - release contract draft exists.
-5. `0.4.0` is reserved for the first process-backed release milestone after release/versioning, proof-gate, compatibility, and docs-authority hardening. It is not reserved for a UI milestone.
+5. `0.4.0` is the first process-backed release milestone after release/versioning, proof-gate, compatibility, and docs-authority hardening. It is not a UI milestone.
 6. UI work remains deferred until a separate requirements-backed lane defines truthful UI needs from the internal product surface actually built.
 
 ## 3. Tag Format and Alignment

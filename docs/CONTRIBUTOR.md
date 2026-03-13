@@ -24,23 +24,26 @@
 
 1. Keep entries terse, execution-only, and non-journaled.
 2. Active lane entries point to the canonical implementation plan path, not requirement docs.
-3. Do not create parallel active backlog or handoff docs.
-4. Update the roadmap at handoff to remove completed or obsolete items.
-5. Every non-archive folder in `docs/projects/` must appear in the Project Index.
-6. Every active or queued roadmap entry must point to an existing path.
-7. When roadmap or `docs/projects/` structure changes, run `python scripts/governance/check_docs_project_hygiene.py` before handoff.
-8. Standing recurring maintenance entries stay static and point only to durable authority docs, not volatile evidence.
+3. Staged / Waiting entries include only the canonical lane authority path and the smallest valid reopen trigger.
+4. Keep detailed reentry criteria, missing-proof status, and historical execution detail in the canonical lane file, not in separate reentry docs.
+5. Do not create parallel active backlog or handoff docs.
+6. Update the roadmap at handoff to remove completed or obsolete items.
+7. Every non-archive folder in `docs/projects/` must appear in the Project Index.
+8. Every active or queued roadmap entry must point to an existing path.
+9. When roadmap or `docs/projects/` structure changes, run `python scripts/governance/check_docs_project_hygiene.py` before handoff.
+10. Standing recurring maintenance entries stay static and point only to durable authority docs, not volatile evidence.
 
 ## Planning and Closeout
 
-1. When creating a new active implementation plan, add or update its roadmap entry in the same change.
-2. When accepted requirements contain durable contracts or specs, extract them into `docs/specs/` before writing the implementation plan.
-3. When a change updates a durable contract, record the contract delta using `docs/architecture/CONTRACT_DELTA_TEMPLATE.md`.
-4. When a non-maintenance lane completes, move plan, closeout, and history docs to `docs/projects/archive/<lane>/` in the same change.
-5. Move long-lived contracts or specs out of completed lanes into `docs/specs/`.
-6. Do not leave `Status: Completed` or `Status: Archived` docs in active `docs/projects/`.
-7. When closing a phase in a multi-phase initiative, archive only phase-scoped docs. Keep the initiative mini-roadmap and current canonical plan active while later phases remain.
-8. For `docs/projects/techdebt/`, leave only standing maintenance docs and docs for cycle ids still active in the roadmap.
+1. When creating or revising a staged lane, keep detailed reentry criteria in the lane's canonical plan or authority file.
+2. When creating a new active implementation plan, add or update its roadmap entry in the same change.
+3. When accepted requirements contain durable contracts or specs, extract them into `docs/specs/` before writing the implementation plan.
+4. When a change updates a durable contract, record the contract delta using `docs/architecture/CONTRACT_DELTA_TEMPLATE.md`.
+5. When a non-maintenance lane completes, move plan, closeout, and history docs to `docs/projects/archive/<lane>/` in the same change.
+6. Move long-lived contracts or specs out of completed lanes into `docs/specs/`.
+7. Do not leave `Status: Completed` or `Status: Archived` docs in active `docs/projects/`.
+8. When closing a phase in a multi-phase initiative, archive only phase-scoped docs. Keep the initiative mini-roadmap and current canonical plan active while later phases remain.
+9. For `docs/projects/techdebt/`, leave only standing maintenance docs and docs for cycle ids still active in the roadmap.
 
 ## Repository Rules
 
