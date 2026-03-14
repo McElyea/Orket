@@ -1,0 +1,12 @@
+{
+    "timestamp": "2026-03-14T02:06:26.141206+00:00",
+    "session_id": "a9e30b8d",
+    "card_id": "ISSUE-B",
+    "violation_type": "governance",
+    "detail": "Deterministic failure: progress contract not met after corrective reprompt.",
+    "attempted_action": null,
+    "remedy_suggestion": "Manual intervention required. Check the last turn in orket.log.",
+    "active_roles": [
+        "lead_architect"
+    ]
+}

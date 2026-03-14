@@ -6,14 +6,14 @@
   "observed_path": "primary",
   "observed_result": "partial success",
   "live_definition": "Local provider-backed model through Ollama or LM Studio only. No mocks, fakes, shims, or provider-free runs count.",
-  "proof_root": "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b",
+  "proof_root": "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13",
   "provider_preflight": {
     "provider": "ollama",
     "model": "qwen2.5-coder:7b",
     "observed_path": "primary",
     "result": "success",
     "status": "pass",
-    "source_path": "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/environment.json"
+    "source_path": "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/environment.json"
   },
   "talking_points": [
     "Acceptance pipeline completed live end-to-end on Ollama qwen2.5-coder:7b with run_id 17d0dacd.",
@@ -37,9 +37,9 @@
         "runtime_verification_returncode": 0
       },
       "source_paths": [
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_a.log",
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/workspaces/claim_a_17d0dacd/runs/17d0dacd/run_summary.json",
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/workspaces/claim_a_17d0dacd/agent_output/verification/runtime_verification.json"
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_a_stdout.log",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_a_run_summary.json",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_a_runtime_verification.json"
       ]
     },
     {
@@ -56,8 +56,8 @@
           "violation_type": "state_transition",
           "detail": "Governance Violation: Invalid transition for CardType.ISSUE: in_progress -> done",
           "source_paths": [
-            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_b_rerun3.log",
-            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_b_rerun3/test_boundary_illegal_state_tr0/workspace/agent_output/policy_violation_ISSUE-B.json"
+            "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_illegal_and_path_stdout.log",
+            "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_illegal_state_policy_violation.json"
           ]
         },
         {
@@ -73,10 +73,10 @@
             "Security reprompt sanitized ../secret.txt to secret.txt and the write completed inside the workspace."
           ],
           "source_paths": [
-            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_b_rerun2.log",
-            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_b_rerun3.log",
-            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_b_rerun2/test_boundary_path_traversal_l0/workspace/agent_output/policy_violation_ISSUE-B.json",
-            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_b_rerun3/test_boundary_path_traversal_l0/workspace/orket.log"
+            "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_path_traversal_stdout.log",
+            "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_illegal_and_path_stdout.log",
+            "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_path_traversal_policy_violation.json",
+            "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_path_traversal_orket.log"
           ]
         }
       ]
@@ -93,7 +93,7 @@
         "run_determinism_class": "workspace"
       },
       "source_paths": [
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_d.log"
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_d_stdout.log"
       ]
     },
     {
@@ -111,9 +111,9 @@
         "state_digest_b": "b13baff3901f4c4cf121c4375a2bf4bac0003d1843f6e5d10615c086f804f37c"
       },
       "source_paths": [
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/replay_outputs/claim_e_script_compare.json",
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_e_cli_compare.log",
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stderr_claim_e_cli_compare.log"
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_compare.json",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_cli_stdout.log",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_cli_stderr.log"
       ]
     },
     {
@@ -126,7 +126,7 @@
         "error": "E_REPLAY_ARTIFACTS_MISSING:workspace_state_snapshot.file_count,workspace_state_snapshot.workspace_hash,workspace_state_snapshot.workspace_type"
       },
       "source_paths": [
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_f_rerun1.log"
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_f_stdout.log"
       ]
     },
     {
@@ -141,8 +141,8 @@
         "detail": "Unexpected error: E_MARKDOWN_FENCE"
       },
       "source_paths": [
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_g/test_system_acceptance_role_pi0/workspace/orket.log",
-        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_g/test_system_acceptance_role_pi0/workspace/agent_output/policy_violation_REQ-1.json"
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_orket.log",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_policy_violation.json"
       ]
     }
   ]

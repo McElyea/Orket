@@ -1,0 +1,3255 @@
+{
+  "deterministic_match": false,
+  "state_digest_a": "0dff1919c86235fed88511929e41b8157e36454ae08f75e0181be0f6d532f0bc",
+  "state_digest_b": "b13baff3901f4c4cf121c4375a2bf4bac0003d1843f6e5d10615c086f804f37c",
+  "differences": [
+    {
+      "field": "artifact_inventory",
+      "a": [
+        {
+          "path": "agent_output/.env.example",
+          "sha256": "76b3c4c0c139a92504060a1e039c177b1a8934494ccddf582cb654e009899fbf",
+          "size_bytes": 34
+        },
+        {
+          "path": "agent_output/README.md",
+          "sha256": "05369d9b345e22c81c512c32e95bf20ba38109bd7b881c9b0a1f505cae7c7f01",
+          "size_bytes": 53
+        },
+        {
+          "path": "agent_output/__pycache__/main.cpython-314.pyc",
+          "sha256": "87c76b0f063ab36fe2feae994dd86c1429596c33b9cb0022d15c9440f1cb4c78",
+          "size_bytes": 335
+        },
+        {
+          "path": "agent_output/dependencies/package.json",
+          "sha256": "be3ed1f04927c774a8b7fa2b93eb8080fd32f250410b3cbc5af53c1219aec56f",
+          "size_bytes": 150
+        },
+        {
+          "path": "agent_output/dependencies/pyproject.toml",
+          "sha256": "f5a103f5c39e870122287c97d2efd107c7f4d3b3a8fa97170328b946375c88b2",
+          "size_bytes": 147
+        },
+        {
+          "path": "agent_output/dependencies/requirements-dev.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/dependencies/requirements.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/deployment/Dockerfile",
+          "sha256": "99db87dcf2271830a7689227b0769d57f531e79f7460e77ec1e801c8b1d2cafb",
+          "size_bytes": 90
+        },
+        {
+          "path": "agent_output/deployment/docker-compose.yml",
+          "sha256": "b7ce2773d4388dc478d4164ccf869b53b373c5f116ac07e4b2fadf61b3aab247",
+          "size_bytes": 150
+        },
+        {
+          "path": "agent_output/deployment/run_local.sh",
+          "sha256": "d7bc784497087bf6af676eaffa3aae41d965273a4234347dba730aabbf6a29e6",
+          "size_bytes": 56
+        },
+        {
+          "path": "agent_output/design.txt",
+          "sha256": "b21748fef6c441b52f89830ef4e5ca3525dd0b4a08101ca2e95b6b0e68384ea4",
+          "size_bytes": 254
+        },
+        {
+          "path": "agent_output/main.py",
+          "sha256": "e4e8b84517e675046964fdaca91996d7294109ed1594a9badae08f6bfa87979e",
+          "size_bytes": 140
+        },
+        {
+          "path": "agent_output/observability/runtime_events.jsonl",
+          "sha256": "8770da576550c7e644efa6e14e227338e0b7682bb4a5c7a62ddd4338106da933",
+          "size_bytes": 8496
+        },
+        {
+          "path": "agent_output/requirements.txt",
+          "sha256": "e448e434720821f349d653b2e63ccfe6cc60bcd3e9d7c96360aa6b9f8972efdd",
+          "size_bytes": 680
+        },
+        {
+          "path": "agent_output/src/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/src/__pycache__/__init__.cpython-314.pyc",
+          "sha256": "e845b11eae3be8a17b54e682dc858255a18d44fccb6c135f06fcd60781c34b5b",
+          "size_bytes": 127
+        },
+        {
+          "path": "agent_output/tests/.gitkeep",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/verification/runtime_verification.json",
+          "sha256": "d9263ea9f969e902b5245452756bf3998a3caccd69ea701c388652ad325c1b4e",
+          "size_bytes": 928
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/checkpoint.json",
+          "sha256": "194bdb17d60620752b95bba5ae6b27ce0999ce620600299afed8ee022f4bd34d",
+          "size_bytes": 1134
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/messages.json",
+          "sha256": "d80030b1851db686a79266cd96aab740872d82094ba475452dd4c164c23fec20",
+          "size_bytes": 5329
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/model_response.txt",
+          "sha256": "43e354c5ec8c5bea880e93473b6f4531872bf55e824865c66cbe9282477b69de",
+          "size_bytes": 485
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/model_response_raw.json",
+          "sha256": "9dedec9b31ee930199d9423b84cc6e18e489ff0f375687cb0a4c9941fdc27002",
+          "size_bytes": 3876
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/parsed_tool_calls.json",
+          "sha256": "e5f525def0de131f5179e5ff47692ce8517f6d73ad7b8340c3a379a1f80c343e",
+          "size_bytes": 504
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/prompt_layers.json",
+          "sha256": "b35ce26ad385eb603642f6eba7592c944dc4a2d27e1be4b465a1ad097ce0d0bc",
+          "size_bytes": 204
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/tool_parser_diagnostics.json",
+          "sha256": "5d75b8183a09e2cfbdf101cd465279efdca328205883e41ef715d9020a25c71b",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "da083be7b1c2ade61088e0fc62688b6d877fed1a1d266717341a323755147cdc",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/003_architect/tool_result_write_file_a472d93e666e.json",
+          "sha256": "b7b8dc9b1d4627a3f6630add8d64f97d11537064f89603f3d4c797adf739fac5",
+          "size_bytes": 249
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/checkpoint.json",
+          "sha256": "718fb3baa67e9a595d8097e3a28ba94abf66fd592719d40115fecb88d982f60b",
+          "size_bytes": 721
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/messages.json",
+          "sha256": "8cd1e0bee413e488338e3006dd4ec45afd30b93c9198d43491b707a1a091a0fc",
+          "size_bytes": 5312
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/model_response.txt",
+          "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+          "size_bytes": 92
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/model_response_raw.json",
+          "sha256": "9c6ac202df26079a54d2e2d16358fbad64323f3ef0abbb8ed31b49945078889a",
+          "size_bytes": 3359
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/parsed_tool_calls.json",
+          "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+          "size_bytes": 96
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+          "size_bytes": 205
+        },
+        {
+          "path": "observability/17d0dacd/arc-1/004_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "56b558177e7c206838914448e9b3d28d0037e3df94bc3546a13e2b753cd970d7",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/checkpoint.json",
+          "sha256": "99c2939ad13eb671e6fad0099cb98d9b321c3b30914fdcfe4800ca967e2c5d68",
+          "size_bytes": 993
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/messages.json",
+          "sha256": "44f5609def9cdf93bb907e2c280b37b9dfd02eb62cb7679841262beb3ae0a6f4",
+          "size_bytes": 5051
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/model_response.txt",
+          "sha256": "a3dc9e694c559fbec1756f6c67e21fda72ba480b70d577db052734ce7b03383d",
+          "size_bytes": 348
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/model_response_raw.json",
+          "sha256": "fefdb356b2fde3fc69e8b186950f98498390da6045194afdd5972ac52dd38425",
+          "size_bytes": 3675
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/parsed_tool_calls.json",
+          "sha256": "f6a9feb8df20824ae1c86fd91bff564616546484af78e2135305f2426198b853",
+          "size_bytes": 367
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/prompt_layers.json",
+          "sha256": "202de0d0f6d2e048fd8c7968e058a401de4bd60771b1a0707b696c795c49495d",
+          "size_bytes": 200
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/tool_parser_diagnostics.json",
+          "sha256": "205c238b7c68f1abb97937cb1c104226297d1d2dc3579d96a0c87b3186e93171",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "e05efa0d3028e0898791ab778f904597e70675fda271c014147bda7e52a02b8f",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/005_coder/tool_result_write_file_56c6ecb2600d.json",
+          "sha256": "d502900a056ffb5b7a9299ef9a68abb94d79194584b288fdbe47b8f209a4cff8",
+          "size_bytes": 246
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/checkpoint.json",
+          "sha256": "bac3941ec65d99b5019b55df440b784bf08c697b004dbd54250885c2279d35b2",
+          "size_bytes": 721
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/messages.json",
+          "sha256": "538c5b12820e56bc194980b37262085dbb648c5d271d4de1db16b37e3b5062b8",
+          "size_bytes": 5806
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/model_response.txt",
+          "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+          "size_bytes": 92
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/model_response_raw.json",
+          "sha256": "4c8c297cc10974753afee37b334700cfccb3e0f351ac3ab82e389d495f4af236",
+          "size_bytes": 3358
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/parsed_tool_calls.json",
+          "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+          "size_bytes": 96
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+          "size_bytes": 205
+        },
+        {
+          "path": "observability/17d0dacd/cod-1/006_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "aa9e9d3559d84d1242b85bce58eef5f2d1673b68d07a2e168d31cdc3c7e20109",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/checkpoint.json",
+          "sha256": "dd5c13c8908d8f917904c30bb0605a2b0596d265a2737c2c8a8367e531ab4c9f",
+          "size_bytes": 1553
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/messages.json",
+          "sha256": "d146ec55382203124b493ceff64a156f0b1726fed1059603fcca0d2b97494985",
+          "size_bytes": 4834
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/model_response.txt",
+          "sha256": "d44d1fbd94e0ea8a6a80cbd377784aa5ef212e0161bea5d5dcd326c5f23492d3",
+          "size_bytes": 894
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/model_response_raw.json",
+          "sha256": "bb425d1c27fd04c3ddbdc974fb61735522b6ec51e9892d0b0093c84f0673bd60",
+          "size_bytes": 4233
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/parsed_tool_calls.json",
+          "sha256": "3f824472bb57cc42d62e1b2198904e5f0d44730696753549ee0af195b7a40535",
+          "size_bytes": 912
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/prompt_layers.json",
+          "sha256": "ab039ebda246846ad4f39cf77f1935e409f4e7e727a6e805f8a397c3285791c9",
+          "size_bytes": 215
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/tool_parser_diagnostics.json",
+          "sha256": "a96f92b5cbdba552b61cd9a942ced1d0a04015e670df1353f2e251bcf0cfc3f7",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "279b69147f2a5caa4bb6569c3ce201b9c13df35756d96e19ba8a5667172ce473",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/17d0dacd/req-1/001_requirements_analyst/tool_result_write_file_c3452dc1ccc9.json",
+          "sha256": "237c41a93222f0bbf4aec5eaeebd3d331591314eda5794994ec2a71194dc6891",
+          "size_bytes": 255
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/checkpoint.json",
+          "sha256": "4a9534c590ffc1943e3fd4445da80529f382ca1d26bfaa50a04507d80f040fb9",
+          "size_bytes": 721
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/messages.json",
+          "sha256": "925b73b53e41533d7301411d4b18581077b96717c2d5c76eb643c461b2364209",
+          "size_bytes": 5016
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/model_response.txt",
+          "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+          "size_bytes": 92
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/model_response_raw.json",
+          "sha256": "f605be5406263062a2d408125b6809b8ca5cf2140b2bc2a314bdb3b594c6e60d",
+          "size_bytes": 3359
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/parsed_tool_calls.json",
+          "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+          "size_bytes": 96
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+          "size_bytes": 205
+        },
+        {
+          "path": "observability/17d0dacd/req-1/002_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "9deb5e244dcc5b1d73db969571545a0d07f73974e688cf3ed5506e3afeb26f39",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/checkpoint.json",
+          "sha256": "e7481c1674f8791c40c42af168311df3edba7de0fb51de8d910fc69f389c20d0",
+          "size_bytes": 950
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/messages.json",
+          "sha256": "e332569c8aa7aa3c258f887327f14c74b44453534b4394c2b625d19901faaa38",
+          "size_bytes": 4921
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/model_response.txt",
+          "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+          "size_bytes": 105
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/model_response_raw.json",
+          "sha256": "0559c54ab97153d4d443e1023ed9e1a4f987db03bf97aa9f3a0406df5390604b",
+          "size_bytes": 3368
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/parsed_tool_calls.json",
+          "sha256": "d890ec7c18c535032433af5bbe192a5785243e3adf2e26acd09816b512b49f7e",
+          "size_bytes": 306
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/prompt_layers.json",
+          "sha256": "408a6b3243cb530948add2c3c982c3c45ed90df098e72e97da6d05b9b0c00362",
+          "size_bytes": 208
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_parser_diagnostics.json",
+          "sha256": "3d1226f6d9bab852e200acab6b8843a311fc734d4b0cd31884c09b7bc91b097d",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_result_read_file_78313aa7c82e.json",
+          "sha256": "bb850b4c9c55a14b88c0d3b4a89ea8a6650aad758c0b9089156f9a1123ddcff3",
+          "size_bytes": 180
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_result_read_file_abeebdfc6dac.json",
+          "sha256": "74602a11eeee39c9bd2a334f1a40eced93fae2b29356fcb47f838aba5932f890",
+          "size_bytes": 716
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "46914accbb917230dcccc1bf015cfb5d7bca658bd7600b65cc2d0340403dfd37",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/checkpoint.json",
+          "sha256": "62f7d66b71e532b5776dd20ac4cc2c6babd1a977742e9326bbc79138bee95937",
+          "size_bytes": 1200
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/messages.json",
+          "sha256": "e20c8a21b489c2b8b7465cd266d0ed73c304063f35a32667def13218a9ec97c6",
+          "size_bytes": 6640
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/model_response.txt",
+          "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+          "size_bytes": 105
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/model_response_raw.json",
+          "sha256": "791ceaebe9f14b69298c5f3069f8f5ef98f13273289ddd4ca72e1e92806f22d5",
+          "size_bytes": 3372
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/parsed_tool_calls.json",
+          "sha256": "be4cfeedd1ce88147c1d1a4fdf68f7c4b6164f0d234ed9f592f20a9576b7b8dc",
+          "size_bytes": 527
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "28a731046ab66dda18b397c7afbd6516626f6c87c1000d964a856176b3334aaa",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_0d89d7b95f86.json",
+          "sha256": "573b6a5a875257954021d5759eeb9b2dad9521c31fd3afbd2e87b3c78dcd438d",
+          "size_bytes": 1050
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_78313aa7c82e.json",
+          "sha256": "bb850b4c9c55a14b88c0d3b4a89ea8a6650aad758c0b9089156f9a1123ddcff3",
+          "size_bytes": 180
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_7e7fa596add6.json",
+          "sha256": "ae284c957d4b6a32a86a52402fb16e6423a50c988b30a31687ccaf84fa230525",
+          "size_bytes": 314
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_abeebdfc6dac.json",
+          "sha256": "74602a11eeee39c9bd2a334f1a40eced93fae2b29356fcb47f838aba5932f890",
+          "size_bytes": 716
+        },
+        {
+          "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "092572cba62bb571e69a8d3c52bd121a0710ee00e60a47d3e16f6508d500203f",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/artifact_provenance_block_policy.json",
+          "sha256": "8b41a42fed501891eaa239a18572ca5989795b030c38857d762eb87e93aeecbb",
+          "size_bytes": 408
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/artifact_schema_snapshot.json",
+          "sha256": "47410585b6910548bdb88195f052a3b12413fc0521b4f0b9100ae185f7dd912c",
+          "size_bytes": 1079
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/canonical_examples_library.json",
+          "sha256": "125dbe3b3672a857549a0c0b9b24a09d2cb0d46ff39922e3ced4e0ca64d20c67",
+          "size_bytes": 632
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/capability_fallback_hierarchy.json",
+          "sha256": "28cd54b20576a42a6c729b0502099db4a8b590d76b21b00ee9ba052c3f9f7ce5",
+          "size_bytes": 1452
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/capability_manifest.json",
+          "sha256": "e8cd0c4d558ca706fb5400d708567a37a44f04095ebb8f0841395b4fc5063cf5",
+          "size_bytes": 304
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/capability_manifest_schema.json",
+          "sha256": "1b0ab616e16b6bc4b7fb8a90506674eeb3fe87ca953371262b34a0a0229f60ec",
+          "size_bytes": 652
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/clock_time_authority_policy.json",
+          "sha256": "1c71bb2a09aab785ac0a6cf1ffe64f8212a1994a5d050ef3b25b061429f63016",
+          "size_bytes": 649
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/cold_start_truth_test_contract.json",
+          "sha256": "6f60127412eae3f2079446b73766fa8c32a8d94a03bae954773de04913c83adc",
+          "size_bytes": 803
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/compatibility_map_schema_snapshot.json",
+          "sha256": "46bd893ae01fae9cb532c9e30a343d73f5b6d0f4bf6a503e56f86270bf54c079",
+          "size_bytes": 520
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/compatibility_map_snapshot.json",
+          "sha256": "3064640b08b76d79cb2ebc3a96a5046a2f68304f35a6e85d6040c98423278fcf",
+          "size_bytes": 877
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/decision_record_operating_principles_contract.json",
+          "sha256": "75a1c2f38ca13319614b5c442fa021853323d8728d160153edc326dfca49a7c6",
+          "size_bytes": 827
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/degradation_first_ui_standard.json",
+          "sha256": "2138695f077153c711f94ca7bbc3f8031122d81986c0500467169374dc000646",
+          "size_bytes": 1065
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/degradation_taxonomy.json",
+          "sha256": "a6d7fde01a38bdc5e119ecbc64360b9720e888b543dde4cd748425725164dc5f",
+          "size_bytes": 567
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/demo_production_labeling_policy.json",
+          "sha256": "71a4b2361581224311793666da08d4457f8f2ef7f9becbcf4e104443b7f19339",
+          "size_bytes": 553
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/evidence_package_generator_contract.json",
+          "sha256": "526be944c67db9253dd07c0e33e173f64ee91d49687c7aa2b0e9e87a53d796c0",
+          "size_bytes": 997
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/execution_readiness_rubric.json",
+          "sha256": "fba4a9381b5810162fe937703c78f02769505962acdcf6bf8414548d81825880",
+          "size_bytes": 530
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/fail_behavior_registry.json",
+          "sha256": "2c6a1c0e0be880501ae8f3f440677c6b330aecbc7d18335cb7e1aa38142171b5",
+          "size_bytes": 836
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/failure_replay_harness_contract.json",
+          "sha256": "c0f073ff716f24b34c530a8504461e28c849aeadde09f5716f0b1bc45dae5fca",
+          "size_bytes": 459
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/feature_flag_expiration_policy.json",
+          "sha256": "fd5fe7b09016299042ce64131a4eb3a696b36ff88a0e98567e4c829aa239601f",
+          "size_bytes": 228
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/human_correction_capture_policy.json",
+          "sha256": "c38ed79fcfbfb564e9a289620a76ee1acacb3f2b7a60a411fee3e13bf33d49ec",
+          "size_bytes": 456
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/idempotency_discipline_policy.json",
+          "sha256": "a47df5d2c56fc472967f06d89bfd694f43c6d564c110f8b967b14d0a5d53e44c",
+          "size_bytes": 1176
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/interface_freeze_windows.json",
+          "sha256": "219277fa91316a72efcde419694c8d98b2e65fa71abce2785e16f011247443c3",
+          "size_bytes": 1318
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/interrupt_semantics_policy.json",
+          "sha256": "bbcce282435a96bd0d7d0dc90c6bfa616a2fc6313cc901d47f546a43d2a56a33",
+          "size_bytes": 1733
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/ledger_event_schema.json",
+          "sha256": "53afecca481d7ca83b855bcc4f7ebf4ba6dfdaa06f0ef7bd5937ee65f50bc592",
+          "size_bytes": 416
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/local_remote_route_policy.json",
+          "sha256": "b5c21ecfa7ebe7ad8a84ae0e05e3b4874fa47526b591e344543eb729019f930c",
+          "size_bytes": 1216
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/long_session_soak_test_contract.json",
+          "sha256": "6569966a08265b04d708053d02fcb27096e9fbb9776cf5ba32cdd64129ef75f2",
+          "size_bytes": 670
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/model_profile_bios.json",
+          "sha256": "2e862f68ce4c4116b9dd336838b69f151087686d40919e54eb204018704262d4",
+          "size_bytes": 718
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/naming_discipline_policy.json",
+          "sha256": "50b600ada2357d2a93810e6850312723b3c04673460a61c913d6218fec6895c5",
+          "size_bytes": 626
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/non_fatal_error_budget.json",
+          "sha256": "cf8bc04c8ccd6f8ba30334082b3c9ccec85e02c4d0c70da3d8b327ce78ee9acf",
+          "size_bytes": 1010
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/observability_redaction_test_contract.json",
+          "sha256": "c9d05c4102b502350d2f11a8023012a55e17a2b4e918c610c5bf3a2893c76133",
+          "size_bytes": 982
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/operator_override_logging_policy.json",
+          "sha256": "fe19d592d71dc056bd4a63781e9bea410cced14890c279d2d5f13b417850f8cd",
+          "size_bytes": 459
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/persistence_corruption_test_contract.json",
+          "sha256": "d9032b39de6183c9a5a5aac5223c7a1b8c3d6d51e927b01922120af89c75c906",
+          "size_bytes": 751
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/promotion_rollback_criteria.json",
+          "sha256": "d4d029ab73024ff67efadbb35682bb754304bb63753f94426c2775aea60f4be9",
+          "size_bytes": 414
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/provider_quarantine_policy_contract.json",
+          "sha256": "c9bb3bc67ab607d6fd7d14c526598c27261340c6af8c954e1b0ff261f3209f1e",
+          "size_bytes": 372
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/provider_truth_table.json",
+          "sha256": "ca74401e1d641170d548560dbe7ceda946a31f15674d90e2ccb486340c89e6c6",
+          "size_bytes": 2818
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/release_confidence_scorecard.json",
+          "sha256": "45bb8781a2c8ac9661e1e6a71cbc6d616c67c8fa60e3d62924d71f72890772d1",
+          "size_bytes": 426
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/resource_pressure_simulation_lane.json",
+          "sha256": "7836d7ed62d27b44547fbda10afff619351cbad693cbf0120a6357116f8eb947",
+          "size_bytes": 935
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/result_error_invariant_contract.json",
+          "sha256": "4f5281a8043ad632eb3d72260701e0497faef766439ddac695b2895df31d0f26",
+          "size_bytes": 121
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/retry_classification_policy.json",
+          "sha256": "eea8e88c9c4101d2851a316126f2f30abcb4f98ab9745b22bae83e665051fa0c",
+          "size_bytes": 1660
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/run_identity.json",
+          "sha256": "8f1970040b5af10a0ac9ed15d7d51d3bbd15b15be523bae0f424098bdc3c2d19",
+          "size_bytes": 121
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/run_phase_contract.json",
+          "sha256": "b42d7e494de4d955ba30bbdb8fb084ff162f15f4e33a0078cb998e55b5ecd816",
+          "size_bytes": 316
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/runtime_boundary_audit_checklist.json",
+          "sha256": "a93b1ad522ff401079637485c47927ef0e531e52c6157a115e3957808529faa6",
+          "size_bytes": 1579
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/runtime_config_ownership_map.json",
+          "sha256": "21515da218527ea0b909ed455421dd26c4b81afc3175181d11516ec25eb4d7b9",
+          "size_bytes": 2561
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/runtime_invariant_registry.json",
+          "sha256": "2c898d162c62d6a86beef8488be7b2bfdd6a34862e1016c54eab0246f8f2b8b0",
+          "size_bytes": 7291
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/runtime_status_vocabulary.json",
+          "sha256": "fec0d2b3a2d1c6f18a29d643b79aae3b0ee262db0fa4b933b70f4668adefa15a",
+          "size_bytes": 188
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/runtime_truth_contract_drift_report.json",
+          "sha256": "84c3c5a71d5bd584d67a3269c89a827489d33cc87f459fb3d7ee97178c192030",
+          "size_bytes": 6525
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/runtime_truth_trace_ids.json",
+          "sha256": "da9938a328b263c008f1b33eebc6b0e73939f785487638a28860e96422c0de87",
+          "size_bytes": 5460
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/safe_default_catalog.json",
+          "sha256": "e940a933fa2adbcfdd319e7dff7a72cc68798757daf7c674ff8fbadd8c110ae2",
+          "size_bytes": 1148
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/sampling_discipline_guide.json",
+          "sha256": "f6063925db3a04583cc09217a8b536ae1929dae3e39f662a4bca34c3835ebccd",
+          "size_bytes": 498
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/spec_debt_queue.json",
+          "sha256": "d5611261aa56793ef43e58c38bbc83412c822e65fd8dd70759247287e8b9e991",
+          "size_bytes": 471
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/state_transition_registry.json",
+          "sha256": "87038e9baad8da5d80250ae2c9dbf8178e516b1fb60f5018bed1c280e69aa5a5",
+          "size_bytes": 5969
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/streaming_semantics_contract.json",
+          "sha256": "d88d1e15fafd2b4af543c61038c5dea031ee17911dcd7f2adc4822cd08b8bc83",
+          "size_bytes": 473
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/timeout_semantics_contract.json",
+          "sha256": "16b1f789ddbc601693a15cb92881b89ce17ea40d65e64bf88302eab4aa3460b3",
+          "size_bytes": 1193
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/tool_contract_snapshot.json",
+          "sha256": "f743a5ef4468ff6b1e4ae795a7f5c55c43173a466c29f4e9cf4cef7768c0a6fd",
+          "size_bytes": 1152
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/tool_registry_snapshot.json",
+          "sha256": "9e536bf0cb72577891d5597273a92297e67f21e034b7260060bdef1d22c9bc44",
+          "size_bytes": 263
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/trust_language_review_policy.json",
+          "sha256": "0c0beef4b47a57ff4d73c4977d22fd4c4ab361750a3820485d10c5a844353f3b",
+          "size_bytes": 1747
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/ui_lane_security_boundary_test_contract.json",
+          "sha256": "a29f07ccc4407b185ba0a10794b69cbe179c26bf796763f8a2a5d7fb075a203b",
+          "size_bytes": 1041
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/unknown_input_policy.json",
+          "sha256": "07227647c0c458cfc7b0eb217aa657c680ffd61815a411f8bed2752cc7f0fa45",
+          "size_bytes": 814
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/workspace_hygiene_rules.json",
+          "sha256": "1f0d78f82ddd0d67d86c49691f321b4804005064e5c2e68436bc7f7099c772b1",
+          "size_bytes": 726
+        },
+        {
+          "path": "observability/17d0dacd/runtime_contracts/workspace_state_snapshot.json",
+          "sha256": "8b3c30d8bd8a4a27bd4a94c93a40d2628de2d4dd11a402c4a056ff236c029a0a",
+          "size_bytes": 364
+        },
+        {
+          "path": "orket.log",
+          "sha256": "2b02f3472543258ef8597f51dcf9519fed45f99630cf1143427d97927df05361",
+          "size_bytes": 103422
+        },
+        {
+          "path": "runs/17d0dacd/events.log",
+          "sha256": "e43a614d42c7a1682d27d1dd3da5da41fa63d63f83d04a15ceb55465d019f68b",
+          "size_bytes": 149815
+        },
+        {
+          "path": "runs/17d0dacd/run_graph.json",
+          "sha256": "8a804b747d613f6d67aa83bc2e1855434e3706185e490e876c9f6e9f7d3173d9",
+          "size_bytes": 175269
+        },
+        {
+          "path": "runs/17d0dacd/run_summary.json",
+          "sha256": "a13318539d29e8a63daed825d47953e437f2d4fb921eccd89fb42f77a4ce4a90",
+          "size_bytes": 2395
+        }
+      ],
+      "b": [
+        {
+          "path": "agent_output/.env.example",
+          "sha256": "76b3c4c0c139a92504060a1e039c177b1a8934494ccddf582cb654e009899fbf",
+          "size_bytes": 34
+        },
+        {
+          "path": "agent_output/README.md",
+          "sha256": "05369d9b345e22c81c512c32e95bf20ba38109bd7b881c9b0a1f505cae7c7f01",
+          "size_bytes": 53
+        },
+        {
+          "path": "agent_output/__pycache__/main.cpython-314.pyc",
+          "sha256": "77ff07ca2cfe7ba57d030ed2f94896e168664393cb3d00d2b68fc5accb3f867f",
+          "size_bytes": 225
+        },
+        {
+          "path": "agent_output/dependencies/package.json",
+          "sha256": "be3ed1f04927c774a8b7fa2b93eb8080fd32f250410b3cbc5af53c1219aec56f",
+          "size_bytes": 150
+        },
+        {
+          "path": "agent_output/dependencies/pyproject.toml",
+          "sha256": "f5a103f5c39e870122287c97d2efd107c7f4d3b3a8fa97170328b946375c88b2",
+          "size_bytes": 147
+        },
+        {
+          "path": "agent_output/dependencies/requirements-dev.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/dependencies/requirements.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/deployment/Dockerfile",
+          "sha256": "99db87dcf2271830a7689227b0769d57f531e79f7460e77ec1e801c8b1d2cafb",
+          "size_bytes": 90
+        },
+        {
+          "path": "agent_output/deployment/docker-compose.yml",
+          "sha256": "b7ce2773d4388dc478d4164ccf869b53b373c5f116ac07e4b2fadf61b3aab247",
+          "size_bytes": 150
+        },
+        {
+          "path": "agent_output/deployment/run_local.sh",
+          "sha256": "d7bc784497087bf6af676eaffa3aae41d965273a4234347dba730aabbf6a29e6",
+          "size_bytes": 56
+        },
+        {
+          "path": "agent_output/design.txt",
+          "sha256": "b21748fef6c441b52f89830ef4e5ca3525dd0b4a08101ca2e95b6b0e68384ea4",
+          "size_bytes": 254
+        },
+        {
+          "path": "agent_output/main.py",
+          "sha256": "12d365c003b4928696a97e936844b59c18b8ea3fc0a78209e66b6a9a61e1ad43",
+          "size_bytes": 131
+        },
+        {
+          "path": "agent_output/observability/runtime_events.jsonl",
+          "sha256": "b90b205c96597609d3a27dd831a673b9dc71b6a0f4536b9cccc3af47b3df0957",
+          "size_bytes": 8494
+        },
+        {
+          "path": "agent_output/requirements.txt",
+          "sha256": "fc2803713db87e9e211a7ce3a6e4854b6f665b124d15c455e814478b86c93c44",
+          "size_bytes": 640
+        },
+        {
+          "path": "agent_output/src/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/src/__pycache__/__init__.cpython-314.pyc",
+          "sha256": "7a404a99ecdc90f4b34cf0bcb0835bea2c2761db15119a24ff3954bf1d55db60",
+          "size_bytes": 127
+        },
+        {
+          "path": "agent_output/tests/.gitkeep",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0
+        },
+        {
+          "path": "agent_output/verification/runtime_verification.json",
+          "sha256": "3d88d28c583f4e8b0c5bcad8afff817bc7c95f4f43efb5cb18f1b3065cc23d54",
+          "size_bytes": 928
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/checkpoint.json",
+          "sha256": "91802c8d4ba6b5b20c8372481c840c7966c1d141929ee519ee0ffb8c8ab7eb0e",
+          "size_bytes": 1134
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/messages.json",
+          "sha256": "d80030b1851db686a79266cd96aab740872d82094ba475452dd4c164c23fec20",
+          "size_bytes": 5329
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/model_response.txt",
+          "sha256": "43e354c5ec8c5bea880e93473b6f4531872bf55e824865c66cbe9282477b69de",
+          "size_bytes": 485
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/model_response_raw.json",
+          "sha256": "3add28f10d14715aba033b74f7e4a594a5bb82f43892867583e4c81354eac960",
+          "size_bytes": 3876
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/parsed_tool_calls.json",
+          "sha256": "e5f525def0de131f5179e5ff47692ce8517f6d73ad7b8340c3a379a1f80c343e",
+          "size_bytes": 504
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/prompt_layers.json",
+          "sha256": "b35ce26ad385eb603642f6eba7592c944dc4a2d27e1be4b465a1ad097ce0d0bc",
+          "size_bytes": 204
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/tool_parser_diagnostics.json",
+          "sha256": "5d75b8183a09e2cfbdf101cd465279efdca328205883e41ef715d9020a25c71b",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "da083be7b1c2ade61088e0fc62688b6d877fed1a1d266717341a323755147cdc",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/003_architect/tool_result_write_file_a472d93e666e.json",
+          "sha256": "8ba74e397f88e4956e2aa3f5765e1fdaec2be143eb5bd0e43d5386c86db6f205",
+          "size_bytes": 255
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/checkpoint.json",
+          "sha256": "3f33dd28e94b50d505212c4c4891c769908e4398afe8b3397b0a7625ecf1f35a",
+          "size_bytes": 721
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/messages.json",
+          "sha256": "8cd1e0bee413e488338e3006dd4ec45afd30b93c9198d43491b707a1a091a0fc",
+          "size_bytes": 5312
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/model_response.txt",
+          "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+          "size_bytes": 92
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/model_response_raw.json",
+          "sha256": "cfc60681caefd280dd095833c6fb869fb52032e381be29c86cba702f87af83fc",
+          "size_bytes": 3359
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/parsed_tool_calls.json",
+          "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+          "size_bytes": 96
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+          "size_bytes": 205
+        },
+        {
+          "path": "observability/d5e64e56/arc-1/004_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "56b558177e7c206838914448e9b3d28d0037e3df94bc3546a13e2b753cd970d7",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/checkpoint.json",
+          "sha256": "d5c61fb6c563f32f1cdec963d495e889abca4e5144af9974a2ca5aca3b05ade0",
+          "size_bytes": 980
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/messages.json",
+          "sha256": "44f5609def9cdf93bb907e2c280b37b9dfd02eb62cb7679841262beb3ae0a6f4",
+          "size_bytes": 5051
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/model_response.txt",
+          "sha256": "377b83ba3d4656c44c3f8abc6b7869edd30119afc74e6eef5cc72213f80494fb",
+          "size_bytes": 248
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/model_response_raw.json",
+          "sha256": "80f046269d6908471f9f5bea629e442746d4943866c30611a9c5a284e442232d",
+          "size_bytes": 3541
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/parsed_tool_calls.json",
+          "sha256": "851e76ed557b9368a24bd3a88162ce80cf54bed43d0857836bf6674706f5c30a",
+          "size_bytes": 354
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/prompt_layers.json",
+          "sha256": "202de0d0f6d2e048fd8c7968e058a401de4bd60771b1a0707b696c795c49495d",
+          "size_bytes": 200
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/tool_parser_diagnostics.json",
+          "sha256": "2e1b73e2638577979bedb9f4b3b3df1d04bf96281b2b7f20182c46c35c8a30a1",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "e05efa0d3028e0898791ab778f904597e70675fda271c014147bda7e52a02b8f",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/005_coder/tool_result_write_file_985b68d4e7bc.json",
+          "sha256": "f0249113850c5513e624aca384daea58a514ff37f8ddd0adcc01849502ff62f8",
+          "size_bytes": 252
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/checkpoint.json",
+          "sha256": "fc35b661c4178f8e2598a88a8c940036b6b7f4fdc52f548b9ed471d8e34f8191",
+          "size_bytes": 721
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/messages.json",
+          "sha256": "538c5b12820e56bc194980b37262085dbb648c5d271d4de1db16b37e3b5062b8",
+          "size_bytes": 5806
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/model_response.txt",
+          "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+          "size_bytes": 92
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/model_response_raw.json",
+          "sha256": "018cb54f8bf27e78a6cb3e877208e56bfd324333c39b0054c4d3de5141964b3b",
+          "size_bytes": 3357
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/parsed_tool_calls.json",
+          "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+          "size_bytes": 96
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+          "size_bytes": 205
+        },
+        {
+          "path": "observability/d5e64e56/cod-1/006_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "aa9e9d3559d84d1242b85bce58eef5f2d1673b68d07a2e168d31cdc3c7e20109",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/checkpoint.json",
+          "sha256": "1ca4a71398b6cb54db1bf7be0c9ce3d62e0c5ffcc96f45304d85db72403d4937",
+          "size_bytes": 1513
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/messages.json",
+          "sha256": "d146ec55382203124b493ceff64a156f0b1726fed1059603fcca0d2b97494985",
+          "size_bytes": 4834
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/model_response.txt",
+          "sha256": "5394f93937468acbf74e833e2906a0fef183818c1aed2f4dbc27b48c189b056c",
+          "size_bytes": 854
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/model_response_raw.json",
+          "sha256": "72fd9f791342e3b87ce24fcb7bed667bc71ed76631bf96382a238b603d6627fa",
+          "size_bytes": 4196
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/parsed_tool_calls.json",
+          "sha256": "2e1a6defb28cd13cfb527e15f6f6c23c37d934cf0cbf1ebc90900895944b8831",
+          "size_bytes": 872
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/prompt_layers.json",
+          "sha256": "ab039ebda246846ad4f39cf77f1935e409f4e7e727a6e805f8a397c3285791c9",
+          "size_bytes": 215
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/tool_parser_diagnostics.json",
+          "sha256": "c8bf08a6ba80f0dbe2ff8446dc665458969039daa94c05b723cbc196934c8990",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "279b69147f2a5caa4bb6569c3ce201b9c13df35756d96e19ba8a5667172ce473",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/d5e64e56/req-1/001_requirements_analyst/tool_result_write_file_427b5799991f.json",
+          "sha256": "6a778ac648fb1934260269b706cded1daede96fbe1a1f87aef9da32509d9d851",
+          "size_bytes": 261
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/checkpoint.json",
+          "sha256": "ef19ddae941a489d3a84a8b6ed28d286b476cef6c2b61e2e445745d9721c44a7",
+          "size_bytes": 721
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/messages.json",
+          "sha256": "925b73b53e41533d7301411d4b18581077b96717c2d5c76eb643c461b2364209",
+          "size_bytes": 5016
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/model_response.txt",
+          "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+          "size_bytes": 92
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/model_response_raw.json",
+          "sha256": "83bd6bf075044a056b143d0693309fdba4d89cc31c2fffb90b07774fd9c2be2d",
+          "size_bytes": 3359
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/parsed_tool_calls.json",
+          "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+          "size_bytes": 96
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+          "size_bytes": 205
+        },
+        {
+          "path": "observability/d5e64e56/req-1/002_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "9deb5e244dcc5b1d73db969571545a0d07f73974e688cf3ed5506e3afeb26f39",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/checkpoint.json",
+          "sha256": "692354b8e647c0ada3516c3249a4da09f6d81d8db34097ef83e87364ff7b2642",
+          "size_bytes": 950
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/messages.json",
+          "sha256": "e332569c8aa7aa3c258f887327f14c74b44453534b4394c2b625d19901faaa38",
+          "size_bytes": 4921
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/model_response.txt",
+          "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+          "size_bytes": 105
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/model_response_raw.json",
+          "sha256": "a622a445728180587dd6dcfbf552294bc884f1a11004faabad1ce2a0cc92edca",
+          "size_bytes": 3369
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/parsed_tool_calls.json",
+          "sha256": "d890ec7c18c535032433af5bbe192a5785243e3adf2e26acd09816b512b49f7e",
+          "size_bytes": 306
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/prompt_layers.json",
+          "sha256": "408a6b3243cb530948add2c3c982c3c45ed90df098e72e97da6d05b9b0c00362",
+          "size_bytes": 208
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_parser_diagnostics.json",
+          "sha256": "3d1226f6d9bab852e200acab6b8843a311fc734d4b0cd31884c09b7bc91b097d",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_result_read_file_78313aa7c82e.json",
+          "sha256": "8ffac6a388fcbacc4291b157b0514545544a6553ee184c2408024670d31c69a0",
+          "size_bytes": 167
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_result_read_file_abeebdfc6dac.json",
+          "sha256": "0aef922bbaf9452b874df801a383f4bcb9c34bcd5f58c2389f42e06c5036aa4b",
+          "size_bytes": 676
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_result_update_issue_status_3dc5023f1ada.json",
+          "sha256": "46914accbb917230dcccc1bf015cfb5d7bca658bd7600b65cc2d0340403dfd37",
+          "size_bytes": 70
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/checkpoint.json",
+          "sha256": "97f126d4d084f2180961bcfbab43176ae6b350aabf94fe7d5d1ef24866d870ad",
+          "size_bytes": 1200
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/messages.json",
+          "sha256": "e20c8a21b489c2b8b7465cd266d0ed73c304063f35a32667def13218a9ec97c6",
+          "size_bytes": 6640
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/model_response.txt",
+          "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+          "size_bytes": 105
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/model_response_raw.json",
+          "sha256": "d6f33f6f5a70a4a5420745b66150766e7c490108206f50bd9a6addfe2001ab71",
+          "size_bytes": 3372
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/parsed_tool_calls.json",
+          "sha256": "be4cfeedd1ce88147c1d1a4fdf68f7c4b6164f0d234ed9f592f20a9576b7b8dc",
+          "size_bytes": 527
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/prompt_layers.json",
+          "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+          "size_bytes": 210
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_parser_diagnostics.json",
+          "sha256": "28a731046ab66dda18b397c7afbd6516626f6c87c1000d964a856176b3334aaa",
+          "size_bytes": 206
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_0d89d7b95f86.json",
+          "sha256": "fac61b973498a041b9bc5f5105395c095e0a8a791e5758f8bb999d30e459daff",
+          "size_bytes": 1050
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_78313aa7c82e.json",
+          "sha256": "8ffac6a388fcbacc4291b157b0514545544a6553ee184c2408024670d31c69a0",
+          "size_bytes": 167
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_7e7fa596add6.json",
+          "sha256": "ae284c957d4b6a32a86a52402fb16e6423a50c988b30a31687ccaf84fa230525",
+          "size_bytes": 314
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_abeebdfc6dac.json",
+          "sha256": "0aef922bbaf9452b874df801a383f4bcb9c34bcd5f58c2389f42e06c5036aa4b",
+          "size_bytes": 676
+        },
+        {
+          "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+          "sha256": "092572cba62bb571e69a8d3c52bd121a0710ee00e60a47d3e16f6508d500203f",
+          "size_bytes": 63
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/artifact_provenance_block_policy.json",
+          "sha256": "8b41a42fed501891eaa239a18572ca5989795b030c38857d762eb87e93aeecbb",
+          "size_bytes": 408
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/artifact_schema_snapshot.json",
+          "sha256": "47410585b6910548bdb88195f052a3b12413fc0521b4f0b9100ae185f7dd912c",
+          "size_bytes": 1079
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/canonical_examples_library.json",
+          "sha256": "125dbe3b3672a857549a0c0b9b24a09d2cb0d46ff39922e3ced4e0ca64d20c67",
+          "size_bytes": 632
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/capability_fallback_hierarchy.json",
+          "sha256": "28cd54b20576a42a6c729b0502099db4a8b590d76b21b00ee9ba052c3f9f7ce5",
+          "size_bytes": 1452
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/capability_manifest.json",
+          "sha256": "fa8fbe450a00c89a0cba402cd05e05531a529d293709e2b22b7263f57a05bd1d",
+          "size_bytes": 304
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/capability_manifest_schema.json",
+          "sha256": "1b0ab616e16b6bc4b7fb8a90506674eeb3fe87ca953371262b34a0a0229f60ec",
+          "size_bytes": 652
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/clock_time_authority_policy.json",
+          "sha256": "1c71bb2a09aab785ac0a6cf1ffe64f8212a1994a5d050ef3b25b061429f63016",
+          "size_bytes": 649
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/cold_start_truth_test_contract.json",
+          "sha256": "6f60127412eae3f2079446b73766fa8c32a8d94a03bae954773de04913c83adc",
+          "size_bytes": 803
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/compatibility_map_schema_snapshot.json",
+          "sha256": "46bd893ae01fae9cb532c9e30a343d73f5b6d0f4bf6a503e56f86270bf54c079",
+          "size_bytes": 520
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/compatibility_map_snapshot.json",
+          "sha256": "3064640b08b76d79cb2ebc3a96a5046a2f68304f35a6e85d6040c98423278fcf",
+          "size_bytes": 877
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/decision_record_operating_principles_contract.json",
+          "sha256": "75a1c2f38ca13319614b5c442fa021853323d8728d160153edc326dfca49a7c6",
+          "size_bytes": 827
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/degradation_first_ui_standard.json",
+          "sha256": "2138695f077153c711f94ca7bbc3f8031122d81986c0500467169374dc000646",
+          "size_bytes": 1065
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/degradation_taxonomy.json",
+          "sha256": "a6d7fde01a38bdc5e119ecbc64360b9720e888b543dde4cd748425725164dc5f",
+          "size_bytes": 567
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/demo_production_labeling_policy.json",
+          "sha256": "71a4b2361581224311793666da08d4457f8f2ef7f9becbcf4e104443b7f19339",
+          "size_bytes": 553
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/evidence_package_generator_contract.json",
+          "sha256": "526be944c67db9253dd07c0e33e173f64ee91d49687c7aa2b0e9e87a53d796c0",
+          "size_bytes": 997
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/execution_readiness_rubric.json",
+          "sha256": "fba4a9381b5810162fe937703c78f02769505962acdcf6bf8414548d81825880",
+          "size_bytes": 530
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/fail_behavior_registry.json",
+          "sha256": "2c6a1c0e0be880501ae8f3f440677c6b330aecbc7d18335cb7e1aa38142171b5",
+          "size_bytes": 836
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/failure_replay_harness_contract.json",
+          "sha256": "c0f073ff716f24b34c530a8504461e28c849aeadde09f5716f0b1bc45dae5fca",
+          "size_bytes": 459
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/feature_flag_expiration_policy.json",
+          "sha256": "fd5fe7b09016299042ce64131a4eb3a696b36ff88a0e98567e4c829aa239601f",
+          "size_bytes": 228
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/human_correction_capture_policy.json",
+          "sha256": "c38ed79fcfbfb564e9a289620a76ee1acacb3f2b7a60a411fee3e13bf33d49ec",
+          "size_bytes": 456
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/idempotency_discipline_policy.json",
+          "sha256": "a47df5d2c56fc472967f06d89bfd694f43c6d564c110f8b967b14d0a5d53e44c",
+          "size_bytes": 1176
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/interface_freeze_windows.json",
+          "sha256": "219277fa91316a72efcde419694c8d98b2e65fa71abce2785e16f011247443c3",
+          "size_bytes": 1318
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/interrupt_semantics_policy.json",
+          "sha256": "bbcce282435a96bd0d7d0dc90c6bfa616a2fc6313cc901d47f546a43d2a56a33",
+          "size_bytes": 1733
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/ledger_event_schema.json",
+          "sha256": "53afecca481d7ca83b855bcc4f7ebf4ba6dfdaa06f0ef7bd5937ee65f50bc592",
+          "size_bytes": 416
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/local_remote_route_policy.json",
+          "sha256": "b5c21ecfa7ebe7ad8a84ae0e05e3b4874fa47526b591e344543eb729019f930c",
+          "size_bytes": 1216
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/long_session_soak_test_contract.json",
+          "sha256": "6569966a08265b04d708053d02fcb27096e9fbb9776cf5ba32cdd64129ef75f2",
+          "size_bytes": 670
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/model_profile_bios.json",
+          "sha256": "2e862f68ce4c4116b9dd336838b69f151087686d40919e54eb204018704262d4",
+          "size_bytes": 718
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/naming_discipline_policy.json",
+          "sha256": "50b600ada2357d2a93810e6850312723b3c04673460a61c913d6218fec6895c5",
+          "size_bytes": 626
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/non_fatal_error_budget.json",
+          "sha256": "cf8bc04c8ccd6f8ba30334082b3c9ccec85e02c4d0c70da3d8b327ce78ee9acf",
+          "size_bytes": 1010
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/observability_redaction_test_contract.json",
+          "sha256": "c9d05c4102b502350d2f11a8023012a55e17a2b4e918c610c5bf3a2893c76133",
+          "size_bytes": 982
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/operator_override_logging_policy.json",
+          "sha256": "fe19d592d71dc056bd4a63781e9bea410cced14890c279d2d5f13b417850f8cd",
+          "size_bytes": 459
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/persistence_corruption_test_contract.json",
+          "sha256": "d9032b39de6183c9a5a5aac5223c7a1b8c3d6d51e927b01922120af89c75c906",
+          "size_bytes": 751
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/promotion_rollback_criteria.json",
+          "sha256": "d4d029ab73024ff67efadbb35682bb754304bb63753f94426c2775aea60f4be9",
+          "size_bytes": 414
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/provider_quarantine_policy_contract.json",
+          "sha256": "c9bb3bc67ab607d6fd7d14c526598c27261340c6af8c954e1b0ff261f3209f1e",
+          "size_bytes": 372
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/provider_truth_table.json",
+          "sha256": "ca74401e1d641170d548560dbe7ceda946a31f15674d90e2ccb486340c89e6c6",
+          "size_bytes": 2818
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/release_confidence_scorecard.json",
+          "sha256": "45bb8781a2c8ac9661e1e6a71cbc6d616c67c8fa60e3d62924d71f72890772d1",
+          "size_bytes": 426
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/resource_pressure_simulation_lane.json",
+          "sha256": "7836d7ed62d27b44547fbda10afff619351cbad693cbf0120a6357116f8eb947",
+          "size_bytes": 935
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/result_error_invariant_contract.json",
+          "sha256": "4f5281a8043ad632eb3d72260701e0497faef766439ddac695b2895df31d0f26",
+          "size_bytes": 121
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/retry_classification_policy.json",
+          "sha256": "eea8e88c9c4101d2851a316126f2f30abcb4f98ab9745b22bae83e665051fa0c",
+          "size_bytes": 1660
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/run_identity.json",
+          "sha256": "f9bae22c0343d542b8d33500935f90de9bb2eabd90150de81ade7a23a1cdc99b",
+          "size_bytes": 121
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/run_phase_contract.json",
+          "sha256": "b42d7e494de4d955ba30bbdb8fb084ff162f15f4e33a0078cb998e55b5ecd816",
+          "size_bytes": 316
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/runtime_boundary_audit_checklist.json",
+          "sha256": "a93b1ad522ff401079637485c47927ef0e531e52c6157a115e3957808529faa6",
+          "size_bytes": 1579
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/runtime_config_ownership_map.json",
+          "sha256": "21515da218527ea0b909ed455421dd26c4b81afc3175181d11516ec25eb4d7b9",
+          "size_bytes": 2561
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/runtime_invariant_registry.json",
+          "sha256": "2c898d162c62d6a86beef8488be7b2bfdd6a34862e1016c54eab0246f8f2b8b0",
+          "size_bytes": 7291
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/runtime_status_vocabulary.json",
+          "sha256": "fec0d2b3a2d1c6f18a29d643b79aae3b0ee262db0fa4b933b70f4668adefa15a",
+          "size_bytes": 188
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/runtime_truth_contract_drift_report.json",
+          "sha256": "84c3c5a71d5bd584d67a3269c89a827489d33cc87f459fb3d7ee97178c192030",
+          "size_bytes": 6525
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/runtime_truth_trace_ids.json",
+          "sha256": "da9938a328b263c008f1b33eebc6b0e73939f785487638a28860e96422c0de87",
+          "size_bytes": 5460
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/safe_default_catalog.json",
+          "sha256": "e940a933fa2adbcfdd319e7dff7a72cc68798757daf7c674ff8fbadd8c110ae2",
+          "size_bytes": 1148
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/sampling_discipline_guide.json",
+          "sha256": "f6063925db3a04583cc09217a8b536ae1929dae3e39f662a4bca34c3835ebccd",
+          "size_bytes": 498
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/spec_debt_queue.json",
+          "sha256": "d5611261aa56793ef43e58c38bbc83412c822e65fd8dd70759247287e8b9e991",
+          "size_bytes": 471
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/state_transition_registry.json",
+          "sha256": "87038e9baad8da5d80250ae2c9dbf8178e516b1fb60f5018bed1c280e69aa5a5",
+          "size_bytes": 5969
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/streaming_semantics_contract.json",
+          "sha256": "d88d1e15fafd2b4af543c61038c5dea031ee17911dcd7f2adc4822cd08b8bc83",
+          "size_bytes": 473
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/timeout_semantics_contract.json",
+          "sha256": "16b1f789ddbc601693a15cb92881b89ce17ea40d65e64bf88302eab4aa3460b3",
+          "size_bytes": 1193
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/tool_contract_snapshot.json",
+          "sha256": "f743a5ef4468ff6b1e4ae795a7f5c55c43173a466c29f4e9cf4cef7768c0a6fd",
+          "size_bytes": 1152
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/tool_registry_snapshot.json",
+          "sha256": "9e536bf0cb72577891d5597273a92297e67f21e034b7260060bdef1d22c9bc44",
+          "size_bytes": 263
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/trust_language_review_policy.json",
+          "sha256": "0c0beef4b47a57ff4d73c4977d22fd4c4ab361750a3820485d10c5a844353f3b",
+          "size_bytes": 1747
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/ui_lane_security_boundary_test_contract.json",
+          "sha256": "a29f07ccc4407b185ba0a10794b69cbe179c26bf796763f8a2a5d7fb075a203b",
+          "size_bytes": 1041
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/unknown_input_policy.json",
+          "sha256": "07227647c0c458cfc7b0eb217aa657c680ffd61815a411f8bed2752cc7f0fa45",
+          "size_bytes": 814
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/workspace_hygiene_rules.json",
+          "sha256": "1f0d78f82ddd0d67d86c49691f321b4804005064e5c2e68436bc7f7099c772b1",
+          "size_bytes": 726
+        },
+        {
+          "path": "observability/d5e64e56/runtime_contracts/workspace_state_snapshot.json",
+          "sha256": "c9af4d19014dfa6e2458b7fcc0f0d8ad6d1874e99e11b232cac17d3e7264f709",
+          "size_bytes": 370
+        },
+        {
+          "path": "orket.log",
+          "sha256": "937a736052a5ab91c57d4cf405950c3606640f46caa502e97b96cb1314a1c6fb",
+          "size_bytes": 103365
+        },
+        {
+          "path": "runs/d5e64e56/events.log",
+          "sha256": "780fb0599f9dc1ab8234905f67ceedcb34e8794524dc3169afe9264610fa4405",
+          "size_bytes": 150601
+        },
+        {
+          "path": "runs/d5e64e56/run_graph.json",
+          "sha256": "6c275edddffd79cc61d086afb8348bbbcb712069a51f7be29945fb5f11466ed0",
+          "size_bytes": 176043
+        },
+        {
+          "path": "runs/d5e64e56/run_summary.json",
+          "sha256": "75bad7aa64e01d4e4a10d3482499bff1f1fb591663fdd50289184c9e55a857f8",
+          "size_bytes": 2395
+        }
+      ]
+    }
+  ],
+  "drift_report": {
+    "drift_schema_version": "1.0",
+    "drift_detected": true,
+    "primary_layer": "artifact_formatting_drift",
+    "detected_layers": [
+      "artifact_formatting_drift"
+    ],
+    "layer_reasons": [
+      {
+        "layer": "artifact_formatting_drift",
+        "fields": [
+          "artifact_inventory"
+        ]
+      }
+    ],
+    "unclassified_fields": []
+  },
+  "run_a": {
+    "session_id": "17d0dacd",
+    "run_type": "epic",
+    "run_name": "Acceptance Pipeline",
+    "department": "core",
+    "build_id": "build-acceptance_pipeline_live",
+    "status": "done",
+    "failure_class": null,
+    "failure_reason": null,
+    "event_count": 2,
+    "last_event_seq": 2,
+    "operations": {},
+    "status_timeline": [
+      {
+        "event_seq": 1,
+        "status": "running"
+      },
+      {
+        "event_seq": 2,
+        "status": "done"
+      }
+    ],
+    "artifact_inventory": [
+      {
+        "path": "agent_output/.env.example",
+        "sha256": "76b3c4c0c139a92504060a1e039c177b1a8934494ccddf582cb654e009899fbf",
+        "size_bytes": 34
+      },
+      {
+        "path": "agent_output/README.md",
+        "sha256": "05369d9b345e22c81c512c32e95bf20ba38109bd7b881c9b0a1f505cae7c7f01",
+        "size_bytes": 53
+      },
+      {
+        "path": "agent_output/__pycache__/main.cpython-314.pyc",
+        "sha256": "87c76b0f063ab36fe2feae994dd86c1429596c33b9cb0022d15c9440f1cb4c78",
+        "size_bytes": 335
+      },
+      {
+        "path": "agent_output/dependencies/package.json",
+        "sha256": "be3ed1f04927c774a8b7fa2b93eb8080fd32f250410b3cbc5af53c1219aec56f",
+        "size_bytes": 150
+      },
+      {
+        "path": "agent_output/dependencies/pyproject.toml",
+        "sha256": "f5a103f5c39e870122287c97d2efd107c7f4d3b3a8fa97170328b946375c88b2",
+        "size_bytes": 147
+      },
+      {
+        "path": "agent_output/dependencies/requirements-dev.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/dependencies/requirements.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/deployment/Dockerfile",
+        "sha256": "99db87dcf2271830a7689227b0769d57f531e79f7460e77ec1e801c8b1d2cafb",
+        "size_bytes": 90
+      },
+      {
+        "path": "agent_output/deployment/docker-compose.yml",
+        "sha256": "b7ce2773d4388dc478d4164ccf869b53b373c5f116ac07e4b2fadf61b3aab247",
+        "size_bytes": 150
+      },
+      {
+        "path": "agent_output/deployment/run_local.sh",
+        "sha256": "d7bc784497087bf6af676eaffa3aae41d965273a4234347dba730aabbf6a29e6",
+        "size_bytes": 56
+      },
+      {
+        "path": "agent_output/design.txt",
+        "sha256": "b21748fef6c441b52f89830ef4e5ca3525dd0b4a08101ca2e95b6b0e68384ea4",
+        "size_bytes": 254
+      },
+      {
+        "path": "agent_output/main.py",
+        "sha256": "e4e8b84517e675046964fdaca91996d7294109ed1594a9badae08f6bfa87979e",
+        "size_bytes": 140
+      },
+      {
+        "path": "agent_output/observability/runtime_events.jsonl",
+        "sha256": "8770da576550c7e644efa6e14e227338e0b7682bb4a5c7a62ddd4338106da933",
+        "size_bytes": 8496
+      },
+      {
+        "path": "agent_output/requirements.txt",
+        "sha256": "e448e434720821f349d653b2e63ccfe6cc60bcd3e9d7c96360aa6b9f8972efdd",
+        "size_bytes": 680
+      },
+      {
+        "path": "agent_output/src/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/src/__pycache__/__init__.cpython-314.pyc",
+        "sha256": "e845b11eae3be8a17b54e682dc858255a18d44fccb6c135f06fcd60781c34b5b",
+        "size_bytes": 127
+      },
+      {
+        "path": "agent_output/tests/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/verification/runtime_verification.json",
+        "sha256": "d9263ea9f969e902b5245452756bf3998a3caccd69ea701c388652ad325c1b4e",
+        "size_bytes": 928
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/checkpoint.json",
+        "sha256": "194bdb17d60620752b95bba5ae6b27ce0999ce620600299afed8ee022f4bd34d",
+        "size_bytes": 1134
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/messages.json",
+        "sha256": "d80030b1851db686a79266cd96aab740872d82094ba475452dd4c164c23fec20",
+        "size_bytes": 5329
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/model_response.txt",
+        "sha256": "43e354c5ec8c5bea880e93473b6f4531872bf55e824865c66cbe9282477b69de",
+        "size_bytes": 485
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/model_response_raw.json",
+        "sha256": "9dedec9b31ee930199d9423b84cc6e18e489ff0f375687cb0a4c9941fdc27002",
+        "size_bytes": 3876
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/parsed_tool_calls.json",
+        "sha256": "e5f525def0de131f5179e5ff47692ce8517f6d73ad7b8340c3a379a1f80c343e",
+        "size_bytes": 504
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/prompt_layers.json",
+        "sha256": "b35ce26ad385eb603642f6eba7592c944dc4a2d27e1be4b465a1ad097ce0d0bc",
+        "size_bytes": 204
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/tool_parser_diagnostics.json",
+        "sha256": "5d75b8183a09e2cfbdf101cd465279efdca328205883e41ef715d9020a25c71b",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "da083be7b1c2ade61088e0fc62688b6d877fed1a1d266717341a323755147cdc",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/003_architect/tool_result_write_file_a472d93e666e.json",
+        "sha256": "b7b8dc9b1d4627a3f6630add8d64f97d11537064f89603f3d4c797adf739fac5",
+        "size_bytes": 249
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/checkpoint.json",
+        "sha256": "718fb3baa67e9a595d8097e3a28ba94abf66fd592719d40115fecb88d982f60b",
+        "size_bytes": 721
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/messages.json",
+        "sha256": "8cd1e0bee413e488338e3006dd4ec45afd30b93c9198d43491b707a1a091a0fc",
+        "size_bytes": 5312
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/model_response.txt",
+        "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+        "size_bytes": 92
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/model_response_raw.json",
+        "sha256": "9c6ac202df26079a54d2e2d16358fbad64323f3ef0abbb8ed31b49945078889a",
+        "size_bytes": 3359
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/parsed_tool_calls.json",
+        "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+        "size_bytes": 96
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+        "size_bytes": 205
+      },
+      {
+        "path": "observability/17d0dacd/arc-1/004_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "56b558177e7c206838914448e9b3d28d0037e3df94bc3546a13e2b753cd970d7",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/checkpoint.json",
+        "sha256": "99c2939ad13eb671e6fad0099cb98d9b321c3b30914fdcfe4800ca967e2c5d68",
+        "size_bytes": 993
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/messages.json",
+        "sha256": "44f5609def9cdf93bb907e2c280b37b9dfd02eb62cb7679841262beb3ae0a6f4",
+        "size_bytes": 5051
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/model_response.txt",
+        "sha256": "a3dc9e694c559fbec1756f6c67e21fda72ba480b70d577db052734ce7b03383d",
+        "size_bytes": 348
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/model_response_raw.json",
+        "sha256": "fefdb356b2fde3fc69e8b186950f98498390da6045194afdd5972ac52dd38425",
+        "size_bytes": 3675
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/parsed_tool_calls.json",
+        "sha256": "f6a9feb8df20824ae1c86fd91bff564616546484af78e2135305f2426198b853",
+        "size_bytes": 367
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/prompt_layers.json",
+        "sha256": "202de0d0f6d2e048fd8c7968e058a401de4bd60771b1a0707b696c795c49495d",
+        "size_bytes": 200
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/tool_parser_diagnostics.json",
+        "sha256": "205c238b7c68f1abb97937cb1c104226297d1d2dc3579d96a0c87b3186e93171",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "e05efa0d3028e0898791ab778f904597e70675fda271c014147bda7e52a02b8f",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/005_coder/tool_result_write_file_56c6ecb2600d.json",
+        "sha256": "d502900a056ffb5b7a9299ef9a68abb94d79194584b288fdbe47b8f209a4cff8",
+        "size_bytes": 246
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/checkpoint.json",
+        "sha256": "bac3941ec65d99b5019b55df440b784bf08c697b004dbd54250885c2279d35b2",
+        "size_bytes": 721
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/messages.json",
+        "sha256": "538c5b12820e56bc194980b37262085dbb648c5d271d4de1db16b37e3b5062b8",
+        "size_bytes": 5806
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/model_response.txt",
+        "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+        "size_bytes": 92
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/model_response_raw.json",
+        "sha256": "4c8c297cc10974753afee37b334700cfccb3e0f351ac3ab82e389d495f4af236",
+        "size_bytes": 3358
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/parsed_tool_calls.json",
+        "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+        "size_bytes": 96
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+        "size_bytes": 205
+      },
+      {
+        "path": "observability/17d0dacd/cod-1/006_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "aa9e9d3559d84d1242b85bce58eef5f2d1673b68d07a2e168d31cdc3c7e20109",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/checkpoint.json",
+        "sha256": "dd5c13c8908d8f917904c30bb0605a2b0596d265a2737c2c8a8367e531ab4c9f",
+        "size_bytes": 1553
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/messages.json",
+        "sha256": "d146ec55382203124b493ceff64a156f0b1726fed1059603fcca0d2b97494985",
+        "size_bytes": 4834
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/model_response.txt",
+        "sha256": "d44d1fbd94e0ea8a6a80cbd377784aa5ef212e0161bea5d5dcd326c5f23492d3",
+        "size_bytes": 894
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/model_response_raw.json",
+        "sha256": "bb425d1c27fd04c3ddbdc974fb61735522b6ec51e9892d0b0093c84f0673bd60",
+        "size_bytes": 4233
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/parsed_tool_calls.json",
+        "sha256": "3f824472bb57cc42d62e1b2198904e5f0d44730696753549ee0af195b7a40535",
+        "size_bytes": 912
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/prompt_layers.json",
+        "sha256": "ab039ebda246846ad4f39cf77f1935e409f4e7e727a6e805f8a397c3285791c9",
+        "size_bytes": 215
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/tool_parser_diagnostics.json",
+        "sha256": "a96f92b5cbdba552b61cd9a942ced1d0a04015e670df1353f2e251bcf0cfc3f7",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "279b69147f2a5caa4bb6569c3ce201b9c13df35756d96e19ba8a5667172ce473",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/17d0dacd/req-1/001_requirements_analyst/tool_result_write_file_c3452dc1ccc9.json",
+        "sha256": "237c41a93222f0bbf4aec5eaeebd3d331591314eda5794994ec2a71194dc6891",
+        "size_bytes": 255
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/checkpoint.json",
+        "sha256": "4a9534c590ffc1943e3fd4445da80529f382ca1d26bfaa50a04507d80f040fb9",
+        "size_bytes": 721
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/messages.json",
+        "sha256": "925b73b53e41533d7301411d4b18581077b96717c2d5c76eb643c461b2364209",
+        "size_bytes": 5016
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/model_response.txt",
+        "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+        "size_bytes": 92
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/model_response_raw.json",
+        "sha256": "f605be5406263062a2d408125b6809b8ca5cf2140b2bc2a314bdb3b594c6e60d",
+        "size_bytes": 3359
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/parsed_tool_calls.json",
+        "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+        "size_bytes": 96
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+        "size_bytes": 205
+      },
+      {
+        "path": "observability/17d0dacd/req-1/002_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "9deb5e244dcc5b1d73db969571545a0d07f73974e688cf3ed5506e3afeb26f39",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/checkpoint.json",
+        "sha256": "e7481c1674f8791c40c42af168311df3edba7de0fb51de8d910fc69f389c20d0",
+        "size_bytes": 950
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/messages.json",
+        "sha256": "e332569c8aa7aa3c258f887327f14c74b44453534b4394c2b625d19901faaa38",
+        "size_bytes": 4921
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/model_response.txt",
+        "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+        "size_bytes": 105
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/model_response_raw.json",
+        "sha256": "0559c54ab97153d4d443e1023ed9e1a4f987db03bf97aa9f3a0406df5390604b",
+        "size_bytes": 3368
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/parsed_tool_calls.json",
+        "sha256": "d890ec7c18c535032433af5bbe192a5785243e3adf2e26acd09816b512b49f7e",
+        "size_bytes": 306
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/prompt_layers.json",
+        "sha256": "408a6b3243cb530948add2c3c982c3c45ed90df098e72e97da6d05b9b0c00362",
+        "size_bytes": 208
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_parser_diagnostics.json",
+        "sha256": "3d1226f6d9bab852e200acab6b8843a311fc734d4b0cd31884c09b7bc91b097d",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_result_read_file_78313aa7c82e.json",
+        "sha256": "bb850b4c9c55a14b88c0d3b4a89ea8a6650aad758c0b9089156f9a1123ddcff3",
+        "size_bytes": 180
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_result_read_file_abeebdfc6dac.json",
+        "sha256": "74602a11eeee39c9bd2a334f1a40eced93fae2b29356fcb47f838aba5932f890",
+        "size_bytes": 716
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/007_code_reviewer/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "46914accbb917230dcccc1bf015cfb5d7bca658bd7600b65cc2d0340403dfd37",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/checkpoint.json",
+        "sha256": "62f7d66b71e532b5776dd20ac4cc2c6babd1a977742e9326bbc79138bee95937",
+        "size_bytes": 1200
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/messages.json",
+        "sha256": "e20c8a21b489c2b8b7465cd266d0ed73c304063f35a32667def13218a9ec97c6",
+        "size_bytes": 6640
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/model_response.txt",
+        "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+        "size_bytes": 105
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/model_response_raw.json",
+        "sha256": "791ceaebe9f14b69298c5f3069f8f5ef98f13273289ddd4ca72e1e92806f22d5",
+        "size_bytes": 3372
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/parsed_tool_calls.json",
+        "sha256": "be4cfeedd1ce88147c1d1a4fdf68f7c4b6164f0d234ed9f592f20a9576b7b8dc",
+        "size_bytes": 527
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "28a731046ab66dda18b397c7afbd6516626f6c87c1000d964a856176b3334aaa",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_0d89d7b95f86.json",
+        "sha256": "573b6a5a875257954021d5759eeb9b2dad9521c31fd3afbd2e87b3c78dcd438d",
+        "size_bytes": 1050
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_78313aa7c82e.json",
+        "sha256": "bb850b4c9c55a14b88c0d3b4a89ea8a6650aad758c0b9089156f9a1123ddcff3",
+        "size_bytes": 180
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_7e7fa596add6.json",
+        "sha256": "ae284c957d4b6a32a86a52402fb16e6423a50c988b30a31687ccaf84fa230525",
+        "size_bytes": 314
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_read_file_abeebdfc6dac.json",
+        "sha256": "74602a11eeee39c9bd2a334f1a40eced93fae2b29356fcb47f838aba5932f890",
+        "size_bytes": 716
+      },
+      {
+        "path": "observability/17d0dacd/rev-1/008_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "092572cba62bb571e69a8d3c52bd121a0710ee00e60a47d3e16f6508d500203f",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/artifact_provenance_block_policy.json",
+        "sha256": "8b41a42fed501891eaa239a18572ca5989795b030c38857d762eb87e93aeecbb",
+        "size_bytes": 408
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/artifact_schema_snapshot.json",
+        "sha256": "47410585b6910548bdb88195f052a3b12413fc0521b4f0b9100ae185f7dd912c",
+        "size_bytes": 1079
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/canonical_examples_library.json",
+        "sha256": "125dbe3b3672a857549a0c0b9b24a09d2cb0d46ff39922e3ced4e0ca64d20c67",
+        "size_bytes": 632
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/capability_fallback_hierarchy.json",
+        "sha256": "28cd54b20576a42a6c729b0502099db4a8b590d76b21b00ee9ba052c3f9f7ce5",
+        "size_bytes": 1452
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/capability_manifest.json",
+        "sha256": "e8cd0c4d558ca706fb5400d708567a37a44f04095ebb8f0841395b4fc5063cf5",
+        "size_bytes": 304
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/capability_manifest_schema.json",
+        "sha256": "1b0ab616e16b6bc4b7fb8a90506674eeb3fe87ca953371262b34a0a0229f60ec",
+        "size_bytes": 652
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/clock_time_authority_policy.json",
+        "sha256": "1c71bb2a09aab785ac0a6cf1ffe64f8212a1994a5d050ef3b25b061429f63016",
+        "size_bytes": 649
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/cold_start_truth_test_contract.json",
+        "sha256": "6f60127412eae3f2079446b73766fa8c32a8d94a03bae954773de04913c83adc",
+        "size_bytes": 803
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/compatibility_map_schema_snapshot.json",
+        "sha256": "46bd893ae01fae9cb532c9e30a343d73f5b6d0f4bf6a503e56f86270bf54c079",
+        "size_bytes": 520
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/compatibility_map_snapshot.json",
+        "sha256": "3064640b08b76d79cb2ebc3a96a5046a2f68304f35a6e85d6040c98423278fcf",
+        "size_bytes": 877
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/decision_record_operating_principles_contract.json",
+        "sha256": "75a1c2f38ca13319614b5c442fa021853323d8728d160153edc326dfca49a7c6",
+        "size_bytes": 827
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/degradation_first_ui_standard.json",
+        "sha256": "2138695f077153c711f94ca7bbc3f8031122d81986c0500467169374dc000646",
+        "size_bytes": 1065
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/degradation_taxonomy.json",
+        "sha256": "a6d7fde01a38bdc5e119ecbc64360b9720e888b543dde4cd748425725164dc5f",
+        "size_bytes": 567
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/demo_production_labeling_policy.json",
+        "sha256": "71a4b2361581224311793666da08d4457f8f2ef7f9becbcf4e104443b7f19339",
+        "size_bytes": 553
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/evidence_package_generator_contract.json",
+        "sha256": "526be944c67db9253dd07c0e33e173f64ee91d49687c7aa2b0e9e87a53d796c0",
+        "size_bytes": 997
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/execution_readiness_rubric.json",
+        "sha256": "fba4a9381b5810162fe937703c78f02769505962acdcf6bf8414548d81825880",
+        "size_bytes": 530
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/fail_behavior_registry.json",
+        "sha256": "2c6a1c0e0be880501ae8f3f440677c6b330aecbc7d18335cb7e1aa38142171b5",
+        "size_bytes": 836
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/failure_replay_harness_contract.json",
+        "sha256": "c0f073ff716f24b34c530a8504461e28c849aeadde09f5716f0b1bc45dae5fca",
+        "size_bytes": 459
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/feature_flag_expiration_policy.json",
+        "sha256": "fd5fe7b09016299042ce64131a4eb3a696b36ff88a0e98567e4c829aa239601f",
+        "size_bytes": 228
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/human_correction_capture_policy.json",
+        "sha256": "c38ed79fcfbfb564e9a289620a76ee1acacb3f2b7a60a411fee3e13bf33d49ec",
+        "size_bytes": 456
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/idempotency_discipline_policy.json",
+        "sha256": "a47df5d2c56fc472967f06d89bfd694f43c6d564c110f8b967b14d0a5d53e44c",
+        "size_bytes": 1176
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/interface_freeze_windows.json",
+        "sha256": "219277fa91316a72efcde419694c8d98b2e65fa71abce2785e16f011247443c3",
+        "size_bytes": 1318
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/interrupt_semantics_policy.json",
+        "sha256": "bbcce282435a96bd0d7d0dc90c6bfa616a2fc6313cc901d47f546a43d2a56a33",
+        "size_bytes": 1733
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/ledger_event_schema.json",
+        "sha256": "53afecca481d7ca83b855bcc4f7ebf4ba6dfdaa06f0ef7bd5937ee65f50bc592",
+        "size_bytes": 416
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/local_remote_route_policy.json",
+        "sha256": "b5c21ecfa7ebe7ad8a84ae0e05e3b4874fa47526b591e344543eb729019f930c",
+        "size_bytes": 1216
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/long_session_soak_test_contract.json",
+        "sha256": "6569966a08265b04d708053d02fcb27096e9fbb9776cf5ba32cdd64129ef75f2",
+        "size_bytes": 670
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/model_profile_bios.json",
+        "sha256": "2e862f68ce4c4116b9dd336838b69f151087686d40919e54eb204018704262d4",
+        "size_bytes": 718
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/naming_discipline_policy.json",
+        "sha256": "50b600ada2357d2a93810e6850312723b3c04673460a61c913d6218fec6895c5",
+        "size_bytes": 626
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/non_fatal_error_budget.json",
+        "sha256": "cf8bc04c8ccd6f8ba30334082b3c9ccec85e02c4d0c70da3d8b327ce78ee9acf",
+        "size_bytes": 1010
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/observability_redaction_test_contract.json",
+        "sha256": "c9d05c4102b502350d2f11a8023012a55e17a2b4e918c610c5bf3a2893c76133",
+        "size_bytes": 982
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/operator_override_logging_policy.json",
+        "sha256": "fe19d592d71dc056bd4a63781e9bea410cced14890c279d2d5f13b417850f8cd",
+        "size_bytes": 459
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/persistence_corruption_test_contract.json",
+        "sha256": "d9032b39de6183c9a5a5aac5223c7a1b8c3d6d51e927b01922120af89c75c906",
+        "size_bytes": 751
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/promotion_rollback_criteria.json",
+        "sha256": "d4d029ab73024ff67efadbb35682bb754304bb63753f94426c2775aea60f4be9",
+        "size_bytes": 414
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/provider_quarantine_policy_contract.json",
+        "sha256": "c9bb3bc67ab607d6fd7d14c526598c27261340c6af8c954e1b0ff261f3209f1e",
+        "size_bytes": 372
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/provider_truth_table.json",
+        "sha256": "ca74401e1d641170d548560dbe7ceda946a31f15674d90e2ccb486340c89e6c6",
+        "size_bytes": 2818
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/release_confidence_scorecard.json",
+        "sha256": "45bb8781a2c8ac9661e1e6a71cbc6d616c67c8fa60e3d62924d71f72890772d1",
+        "size_bytes": 426
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/resource_pressure_simulation_lane.json",
+        "sha256": "7836d7ed62d27b44547fbda10afff619351cbad693cbf0120a6357116f8eb947",
+        "size_bytes": 935
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/result_error_invariant_contract.json",
+        "sha256": "4f5281a8043ad632eb3d72260701e0497faef766439ddac695b2895df31d0f26",
+        "size_bytes": 121
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/retry_classification_policy.json",
+        "sha256": "eea8e88c9c4101d2851a316126f2f30abcb4f98ab9745b22bae83e665051fa0c",
+        "size_bytes": 1660
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/run_identity.json",
+        "sha256": "8f1970040b5af10a0ac9ed15d7d51d3bbd15b15be523bae0f424098bdc3c2d19",
+        "size_bytes": 121
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/run_phase_contract.json",
+        "sha256": "b42d7e494de4d955ba30bbdb8fb084ff162f15f4e33a0078cb998e55b5ecd816",
+        "size_bytes": 316
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/runtime_boundary_audit_checklist.json",
+        "sha256": "a93b1ad522ff401079637485c47927ef0e531e52c6157a115e3957808529faa6",
+        "size_bytes": 1579
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/runtime_config_ownership_map.json",
+        "sha256": "21515da218527ea0b909ed455421dd26c4b81afc3175181d11516ec25eb4d7b9",
+        "size_bytes": 2561
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/runtime_invariant_registry.json",
+        "sha256": "2c898d162c62d6a86beef8488be7b2bfdd6a34862e1016c54eab0246f8f2b8b0",
+        "size_bytes": 7291
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/runtime_status_vocabulary.json",
+        "sha256": "fec0d2b3a2d1c6f18a29d643b79aae3b0ee262db0fa4b933b70f4668adefa15a",
+        "size_bytes": 188
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/runtime_truth_contract_drift_report.json",
+        "sha256": "84c3c5a71d5bd584d67a3269c89a827489d33cc87f459fb3d7ee97178c192030",
+        "size_bytes": 6525
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/runtime_truth_trace_ids.json",
+        "sha256": "da9938a328b263c008f1b33eebc6b0e73939f785487638a28860e96422c0de87",
+        "size_bytes": 5460
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/safe_default_catalog.json",
+        "sha256": "e940a933fa2adbcfdd319e7dff7a72cc68798757daf7c674ff8fbadd8c110ae2",
+        "size_bytes": 1148
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/sampling_discipline_guide.json",
+        "sha256": "f6063925db3a04583cc09217a8b536ae1929dae3e39f662a4bca34c3835ebccd",
+        "size_bytes": 498
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/spec_debt_queue.json",
+        "sha256": "d5611261aa56793ef43e58c38bbc83412c822e65fd8dd70759247287e8b9e991",
+        "size_bytes": 471
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/state_transition_registry.json",
+        "sha256": "87038e9baad8da5d80250ae2c9dbf8178e516b1fb60f5018bed1c280e69aa5a5",
+        "size_bytes": 5969
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/streaming_semantics_contract.json",
+        "sha256": "d88d1e15fafd2b4af543c61038c5dea031ee17911dcd7f2adc4822cd08b8bc83",
+        "size_bytes": 473
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/timeout_semantics_contract.json",
+        "sha256": "16b1f789ddbc601693a15cb92881b89ce17ea40d65e64bf88302eab4aa3460b3",
+        "size_bytes": 1193
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/tool_contract_snapshot.json",
+        "sha256": "f743a5ef4468ff6b1e4ae795a7f5c55c43173a466c29f4e9cf4cef7768c0a6fd",
+        "size_bytes": 1152
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/tool_registry_snapshot.json",
+        "sha256": "9e536bf0cb72577891d5597273a92297e67f21e034b7260060bdef1d22c9bc44",
+        "size_bytes": 263
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/trust_language_review_policy.json",
+        "sha256": "0c0beef4b47a57ff4d73c4977d22fd4c4ab361750a3820485d10c5a844353f3b",
+        "size_bytes": 1747
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/ui_lane_security_boundary_test_contract.json",
+        "sha256": "a29f07ccc4407b185ba0a10794b69cbe179c26bf796763f8a2a5d7fb075a203b",
+        "size_bytes": 1041
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/unknown_input_policy.json",
+        "sha256": "07227647c0c458cfc7b0eb217aa657c680ffd61815a411f8bed2752cc7f0fa45",
+        "size_bytes": 814
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/workspace_hygiene_rules.json",
+        "sha256": "1f0d78f82ddd0d67d86c49691f321b4804005064e5c2e68436bc7f7099c772b1",
+        "size_bytes": 726
+      },
+      {
+        "path": "observability/17d0dacd/runtime_contracts/workspace_state_snapshot.json",
+        "sha256": "8b3c30d8bd8a4a27bd4a94c93a40d2628de2d4dd11a402c4a056ff236c029a0a",
+        "size_bytes": 364
+      },
+      {
+        "path": "orket.log",
+        "sha256": "2b02f3472543258ef8597f51dcf9519fed45f99630cf1143427d97927df05361",
+        "size_bytes": 103422
+      },
+      {
+        "path": "runs/17d0dacd/events.log",
+        "sha256": "e43a614d42c7a1682d27d1dd3da5da41fa63d63f83d04a15ceb55465d019f68b",
+        "size_bytes": 149815
+      },
+      {
+        "path": "runs/17d0dacd/run_graph.json",
+        "sha256": "8a804b747d613f6d67aa83bc2e1855434e3706185e490e876c9f6e9f7d3173d9",
+        "size_bytes": 175269
+      },
+      {
+        "path": "runs/17d0dacd/run_summary.json",
+        "sha256": "a13318539d29e8a63daed825d47953e437f2d4fb921eccd89fb42f77a4ce4a90",
+        "size_bytes": 2395
+      }
+    ],
+    "receipt_inventory": [],
+    "runtime_contract_snapshots": {
+      "tool_registry_version": "1.2.0",
+      "artifact_schema_registry_version": "1.0",
+      "compatibility_map_schema_version": "1.0",
+      "tool_registry_snapshot_hash": "d0038f37b35523ff66eb35cc46cacfc4683307c7c0303121f37d70a12e2152d6",
+      "artifact_schema_snapshot_hash": "1df008686d5e022d2a3ae4328b5a4779960caea81c0de9b672619bc592a9a385",
+      "tool_contract_snapshot_hash": "347a353069cd659f1eb554f8bcfa6dc7787a1dbeb94a5365b73b9f029e046df2"
+    },
+    "runtime_policy_versions": {
+      "prompt_budget_policy": "1.0",
+      "retry_policy": "1.1",
+      "promotion_gate_policy": "1.0"
+    },
+    "ledger_schema_version": "1.0",
+    "runtime_contract_hash": "2a91749ef9d2344c2ad5a2f544e3290d135569b03862ea4b687997e5ca91aade",
+    "compatibility_validation": {
+      "path": "primary",
+      "status": "ok",
+      "missing_contract_fields": [],
+      "mismatch_fields": [],
+      "lifecycle_missing": [],
+      "run_determinism_class": "workspace"
+    },
+    "operation_count": 0,
+    "receipt_count": 0,
+    "state_digest": "0dff1919c86235fed88511929e41b8157e36454ae08f75e0181be0f6d532f0bc"
+  },
+  "run_b": {
+    "session_id": "d5e64e56",
+    "run_type": "epic",
+    "run_name": "Acceptance Pipeline",
+    "department": "core",
+    "build_id": "build-acceptance_pipeline_live",
+    "status": "done",
+    "failure_class": null,
+    "failure_reason": null,
+    "event_count": 2,
+    "last_event_seq": 2,
+    "operations": {},
+    "status_timeline": [
+      {
+        "event_seq": 1,
+        "status": "running"
+      },
+      {
+        "event_seq": 2,
+        "status": "done"
+      }
+    ],
+    "artifact_inventory": [
+      {
+        "path": "agent_output/.env.example",
+        "sha256": "76b3c4c0c139a92504060a1e039c177b1a8934494ccddf582cb654e009899fbf",
+        "size_bytes": 34
+      },
+      {
+        "path": "agent_output/README.md",
+        "sha256": "05369d9b345e22c81c512c32e95bf20ba38109bd7b881c9b0a1f505cae7c7f01",
+        "size_bytes": 53
+      },
+      {
+        "path": "agent_output/__pycache__/main.cpython-314.pyc",
+        "sha256": "77ff07ca2cfe7ba57d030ed2f94896e168664393cb3d00d2b68fc5accb3f867f",
+        "size_bytes": 225
+      },
+      {
+        "path": "agent_output/dependencies/package.json",
+        "sha256": "be3ed1f04927c774a8b7fa2b93eb8080fd32f250410b3cbc5af53c1219aec56f",
+        "size_bytes": 150
+      },
+      {
+        "path": "agent_output/dependencies/pyproject.toml",
+        "sha256": "f5a103f5c39e870122287c97d2efd107c7f4d3b3a8fa97170328b946375c88b2",
+        "size_bytes": 147
+      },
+      {
+        "path": "agent_output/dependencies/requirements-dev.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/dependencies/requirements.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/deployment/Dockerfile",
+        "sha256": "99db87dcf2271830a7689227b0769d57f531e79f7460e77ec1e801c8b1d2cafb",
+        "size_bytes": 90
+      },
+      {
+        "path": "agent_output/deployment/docker-compose.yml",
+        "sha256": "b7ce2773d4388dc478d4164ccf869b53b373c5f116ac07e4b2fadf61b3aab247",
+        "size_bytes": 150
+      },
+      {
+        "path": "agent_output/deployment/run_local.sh",
+        "sha256": "d7bc784497087bf6af676eaffa3aae41d965273a4234347dba730aabbf6a29e6",
+        "size_bytes": 56
+      },
+      {
+        "path": "agent_output/design.txt",
+        "sha256": "b21748fef6c441b52f89830ef4e5ca3525dd0b4a08101ca2e95b6b0e68384ea4",
+        "size_bytes": 254
+      },
+      {
+        "path": "agent_output/main.py",
+        "sha256": "12d365c003b4928696a97e936844b59c18b8ea3fc0a78209e66b6a9a61e1ad43",
+        "size_bytes": 131
+      },
+      {
+        "path": "agent_output/observability/runtime_events.jsonl",
+        "sha256": "b90b205c96597609d3a27dd831a673b9dc71b6a0f4536b9cccc3af47b3df0957",
+        "size_bytes": 8494
+      },
+      {
+        "path": "agent_output/requirements.txt",
+        "sha256": "fc2803713db87e9e211a7ce3a6e4854b6f665b124d15c455e814478b86c93c44",
+        "size_bytes": 640
+      },
+      {
+        "path": "agent_output/src/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/src/__pycache__/__init__.cpython-314.pyc",
+        "sha256": "7a404a99ecdc90f4b34cf0bcb0835bea2c2761db15119a24ff3954bf1d55db60",
+        "size_bytes": 127
+      },
+      {
+        "path": "agent_output/tests/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "agent_output/verification/runtime_verification.json",
+        "sha256": "3d88d28c583f4e8b0c5bcad8afff817bc7c95f4f43efb5cb18f1b3065cc23d54",
+        "size_bytes": 928
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/checkpoint.json",
+        "sha256": "91802c8d4ba6b5b20c8372481c840c7966c1d141929ee519ee0ffb8c8ab7eb0e",
+        "size_bytes": 1134
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/messages.json",
+        "sha256": "d80030b1851db686a79266cd96aab740872d82094ba475452dd4c164c23fec20",
+        "size_bytes": 5329
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/model_response.txt",
+        "sha256": "43e354c5ec8c5bea880e93473b6f4531872bf55e824865c66cbe9282477b69de",
+        "size_bytes": 485
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/model_response_raw.json",
+        "sha256": "3add28f10d14715aba033b74f7e4a594a5bb82f43892867583e4c81354eac960",
+        "size_bytes": 3876
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/parsed_tool_calls.json",
+        "sha256": "e5f525def0de131f5179e5ff47692ce8517f6d73ad7b8340c3a379a1f80c343e",
+        "size_bytes": 504
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/prompt_layers.json",
+        "sha256": "b35ce26ad385eb603642f6eba7592c944dc4a2d27e1be4b465a1ad097ce0d0bc",
+        "size_bytes": 204
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/tool_parser_diagnostics.json",
+        "sha256": "5d75b8183a09e2cfbdf101cd465279efdca328205883e41ef715d9020a25c71b",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "da083be7b1c2ade61088e0fc62688b6d877fed1a1d266717341a323755147cdc",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/003_architect/tool_result_write_file_a472d93e666e.json",
+        "sha256": "8ba74e397f88e4956e2aa3f5765e1fdaec2be143eb5bd0e43d5386c86db6f205",
+        "size_bytes": 255
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/checkpoint.json",
+        "sha256": "3f33dd28e94b50d505212c4c4891c769908e4398afe8b3397b0a7625ecf1f35a",
+        "size_bytes": 721
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/messages.json",
+        "sha256": "8cd1e0bee413e488338e3006dd4ec45afd30b93c9198d43491b707a1a091a0fc",
+        "size_bytes": 5312
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/model_response.txt",
+        "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+        "size_bytes": 92
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/model_response_raw.json",
+        "sha256": "cfc60681caefd280dd095833c6fb869fb52032e381be29c86cba702f87af83fc",
+        "size_bytes": 3359
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/parsed_tool_calls.json",
+        "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+        "size_bytes": 96
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+        "size_bytes": 205
+      },
+      {
+        "path": "observability/d5e64e56/arc-1/004_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "56b558177e7c206838914448e9b3d28d0037e3df94bc3546a13e2b753cd970d7",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/checkpoint.json",
+        "sha256": "d5c61fb6c563f32f1cdec963d495e889abca4e5144af9974a2ca5aca3b05ade0",
+        "size_bytes": 980
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/messages.json",
+        "sha256": "44f5609def9cdf93bb907e2c280b37b9dfd02eb62cb7679841262beb3ae0a6f4",
+        "size_bytes": 5051
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/model_response.txt",
+        "sha256": "377b83ba3d4656c44c3f8abc6b7869edd30119afc74e6eef5cc72213f80494fb",
+        "size_bytes": 248
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/model_response_raw.json",
+        "sha256": "80f046269d6908471f9f5bea629e442746d4943866c30611a9c5a284e442232d",
+        "size_bytes": 3541
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/parsed_tool_calls.json",
+        "sha256": "851e76ed557b9368a24bd3a88162ce80cf54bed43d0857836bf6674706f5c30a",
+        "size_bytes": 354
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/prompt_layers.json",
+        "sha256": "202de0d0f6d2e048fd8c7968e058a401de4bd60771b1a0707b696c795c49495d",
+        "size_bytes": 200
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/tool_parser_diagnostics.json",
+        "sha256": "2e1b73e2638577979bedb9f4b3b3df1d04bf96281b2b7f20182c46c35c8a30a1",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "e05efa0d3028e0898791ab778f904597e70675fda271c014147bda7e52a02b8f",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/005_coder/tool_result_write_file_985b68d4e7bc.json",
+        "sha256": "f0249113850c5513e624aca384daea58a514ff37f8ddd0adcc01849502ff62f8",
+        "size_bytes": 252
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/checkpoint.json",
+        "sha256": "fc35b661c4178f8e2598a88a8c940036b6b7f4fdc52f548b9ed471d8e34f8191",
+        "size_bytes": 721
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/messages.json",
+        "sha256": "538c5b12820e56bc194980b37262085dbb648c5d271d4de1db16b37e3b5062b8",
+        "size_bytes": 5806
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/model_response.txt",
+        "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+        "size_bytes": 92
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/model_response_raw.json",
+        "sha256": "018cb54f8bf27e78a6cb3e877208e56bfd324333c39b0054c4d3de5141964b3b",
+        "size_bytes": 3357
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/parsed_tool_calls.json",
+        "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+        "size_bytes": 96
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+        "size_bytes": 205
+      },
+      {
+        "path": "observability/d5e64e56/cod-1/006_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "aa9e9d3559d84d1242b85bce58eef5f2d1673b68d07a2e168d31cdc3c7e20109",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/checkpoint.json",
+        "sha256": "1ca4a71398b6cb54db1bf7be0c9ce3d62e0c5ffcc96f45304d85db72403d4937",
+        "size_bytes": 1513
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/messages.json",
+        "sha256": "d146ec55382203124b493ceff64a156f0b1726fed1059603fcca0d2b97494985",
+        "size_bytes": 4834
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/model_response.txt",
+        "sha256": "5394f93937468acbf74e833e2906a0fef183818c1aed2f4dbc27b48c189b056c",
+        "size_bytes": 854
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/model_response_raw.json",
+        "sha256": "72fd9f791342e3b87ce24fcb7bed667bc71ed76631bf96382a238b603d6627fa",
+        "size_bytes": 4196
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/parsed_tool_calls.json",
+        "sha256": "2e1a6defb28cd13cfb527e15f6f6c23c37d934cf0cbf1ebc90900895944b8831",
+        "size_bytes": 872
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/prompt_layers.json",
+        "sha256": "ab039ebda246846ad4f39cf77f1935e409f4e7e727a6e805f8a397c3285791c9",
+        "size_bytes": 215
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/tool_parser_diagnostics.json",
+        "sha256": "c8bf08a6ba80f0dbe2ff8446dc665458969039daa94c05b723cbc196934c8990",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "279b69147f2a5caa4bb6569c3ce201b9c13df35756d96e19ba8a5667172ce473",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/d5e64e56/req-1/001_requirements_analyst/tool_result_write_file_427b5799991f.json",
+        "sha256": "6a778ac648fb1934260269b706cded1daede96fbe1a1f87aef9da32509d9d851",
+        "size_bytes": 261
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/checkpoint.json",
+        "sha256": "ef19ddae941a489d3a84a8b6ed28d286b476cef6c2b61e2e445745d9721c44a7",
+        "size_bytes": 721
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/messages.json",
+        "sha256": "925b73b53e41533d7301411d4b18581077b96717c2d5c76eb643c461b2364209",
+        "size_bytes": 5016
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/model_response.txt",
+        "sha256": "19031fad8c7430e401ea588a17fe2c315d71693486bc5d299e01757e37b96676",
+        "size_bytes": 92
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/model_response_raw.json",
+        "sha256": "83bd6bf075044a056b143d0693309fdba4d89cc31c2fffb90b07774fd9c2be2d",
+        "size_bytes": 3359
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/parsed_tool_calls.json",
+        "sha256": "06eb6ddaf6d9130899399aa9a8b143ff74e8f83e950a614cd860a201805e2e42",
+        "size_bytes": 96
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "503f12d902465ed0503706006194e3726b7e7faecaae5a7bb60f8e1529904b06",
+        "size_bytes": 205
+      },
+      {
+        "path": "observability/d5e64e56/req-1/002_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "9deb5e244dcc5b1d73db969571545a0d07f73974e688cf3ed5506e3afeb26f39",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/checkpoint.json",
+        "sha256": "692354b8e647c0ada3516c3249a4da09f6d81d8db34097ef83e87364ff7b2642",
+        "size_bytes": 950
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/messages.json",
+        "sha256": "e332569c8aa7aa3c258f887327f14c74b44453534b4394c2b625d19901faaa38",
+        "size_bytes": 4921
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/model_response.txt",
+        "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+        "size_bytes": 105
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/model_response_raw.json",
+        "sha256": "a622a445728180587dd6dcfbf552294bc884f1a11004faabad1ce2a0cc92edca",
+        "size_bytes": 3369
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/parsed_tool_calls.json",
+        "sha256": "d890ec7c18c535032433af5bbe192a5785243e3adf2e26acd09816b512b49f7e",
+        "size_bytes": 306
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/prompt_layers.json",
+        "sha256": "408a6b3243cb530948add2c3c982c3c45ed90df098e72e97da6d05b9b0c00362",
+        "size_bytes": 208
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_parser_diagnostics.json",
+        "sha256": "3d1226f6d9bab852e200acab6b8843a311fc734d4b0cd31884c09b7bc91b097d",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_result_read_file_78313aa7c82e.json",
+        "sha256": "8ffac6a388fcbacc4291b157b0514545544a6553ee184c2408024670d31c69a0",
+        "size_bytes": 167
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_result_read_file_abeebdfc6dac.json",
+        "sha256": "0aef922bbaf9452b874df801a383f4bcb9c34bcd5f58c2389f42e06c5036aa4b",
+        "size_bytes": 676
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/007_code_reviewer/tool_result_update_issue_status_3dc5023f1ada.json",
+        "sha256": "46914accbb917230dcccc1bf015cfb5d7bca658bd7600b65cc2d0340403dfd37",
+        "size_bytes": 70
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/checkpoint.json",
+        "sha256": "97f126d4d084f2180961bcfbab43176ae6b350aabf94fe7d5d1ef24866d870ad",
+        "size_bytes": 1200
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/messages.json",
+        "sha256": "e20c8a21b489c2b8b7465cd266d0ed73c304063f35a32667def13218a9ec97c6",
+        "size_bytes": 6640
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/model_response.txt",
+        "sha256": "8e1af1c1df8c6cde61997a6d3a445f654631c0ed6783bf0fcbfad28b6056762f",
+        "size_bytes": 105
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/model_response_raw.json",
+        "sha256": "d6f33f6f5a70a4a5420745b66150766e7c490108206f50bd9a6addfe2001ab71",
+        "size_bytes": 3372
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/parsed_tool_calls.json",
+        "sha256": "be4cfeedd1ce88147c1d1a4fdf68f7c4b6164f0d234ed9f592f20a9576b7b8dc",
+        "size_bytes": 527
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/prompt_layers.json",
+        "sha256": "17a799c355a5cc8103d45c5c08bbd51eba73b508a3b5f1f86846e5eb0a5681a8",
+        "size_bytes": 210
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_parser_diagnostics.json",
+        "sha256": "28a731046ab66dda18b397c7afbd6516626f6c87c1000d964a856176b3334aaa",
+        "size_bytes": 206
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_0d89d7b95f86.json",
+        "sha256": "fac61b973498a041b9bc5f5105395c095e0a8a791e5758f8bb999d30e459daff",
+        "size_bytes": 1050
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_78313aa7c82e.json",
+        "sha256": "8ffac6a388fcbacc4291b157b0514545544a6553ee184c2408024670d31c69a0",
+        "size_bytes": 167
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_7e7fa596add6.json",
+        "sha256": "ae284c957d4b6a32a86a52402fb16e6423a50c988b30a31687ccaf84fa230525",
+        "size_bytes": 314
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_read_file_abeebdfc6dac.json",
+        "sha256": "0aef922bbaf9452b874df801a383f4bcb9c34bcd5f58c2389f42e06c5036aa4b",
+        "size_bytes": 676
+      },
+      {
+        "path": "observability/d5e64e56/rev-1/008_integrity_guard/tool_result_update_issue_status_97d112716032.json",
+        "sha256": "092572cba62bb571e69a8d3c52bd121a0710ee00e60a47d3e16f6508d500203f",
+        "size_bytes": 63
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/artifact_provenance_block_policy.json",
+        "sha256": "8b41a42fed501891eaa239a18572ca5989795b030c38857d762eb87e93aeecbb",
+        "size_bytes": 408
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/artifact_schema_snapshot.json",
+        "sha256": "47410585b6910548bdb88195f052a3b12413fc0521b4f0b9100ae185f7dd912c",
+        "size_bytes": 1079
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/canonical_examples_library.json",
+        "sha256": "125dbe3b3672a857549a0c0b9b24a09d2cb0d46ff39922e3ced4e0ca64d20c67",
+        "size_bytes": 632
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/capability_fallback_hierarchy.json",
+        "sha256": "28cd54b20576a42a6c729b0502099db4a8b590d76b21b00ee9ba052c3f9f7ce5",
+        "size_bytes": 1452
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/capability_manifest.json",
+        "sha256": "fa8fbe450a00c89a0cba402cd05e05531a529d293709e2b22b7263f57a05bd1d",
+        "size_bytes": 304
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/capability_manifest_schema.json",
+        "sha256": "1b0ab616e16b6bc4b7fb8a90506674eeb3fe87ca953371262b34a0a0229f60ec",
+        "size_bytes": 652
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/clock_time_authority_policy.json",
+        "sha256": "1c71bb2a09aab785ac0a6cf1ffe64f8212a1994a5d050ef3b25b061429f63016",
+        "size_bytes": 649
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/cold_start_truth_test_contract.json",
+        "sha256": "6f60127412eae3f2079446b73766fa8c32a8d94a03bae954773de04913c83adc",
+        "size_bytes": 803
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/compatibility_map_schema_snapshot.json",
+        "sha256": "46bd893ae01fae9cb532c9e30a343d73f5b6d0f4bf6a503e56f86270bf54c079",
+        "size_bytes": 520
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/compatibility_map_snapshot.json",
+        "sha256": "3064640b08b76d79cb2ebc3a96a5046a2f68304f35a6e85d6040c98423278fcf",
+        "size_bytes": 877
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/decision_record_operating_principles_contract.json",
+        "sha256": "75a1c2f38ca13319614b5c442fa021853323d8728d160153edc326dfca49a7c6",
+        "size_bytes": 827
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/degradation_first_ui_standard.json",
+        "sha256": "2138695f077153c711f94ca7bbc3f8031122d81986c0500467169374dc000646",
+        "size_bytes": 1065
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/degradation_taxonomy.json",
+        "sha256": "a6d7fde01a38bdc5e119ecbc64360b9720e888b543dde4cd748425725164dc5f",
+        "size_bytes": 567
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/demo_production_labeling_policy.json",
+        "sha256": "71a4b2361581224311793666da08d4457f8f2ef7f9becbcf4e104443b7f19339",
+        "size_bytes": 553
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/evidence_package_generator_contract.json",
+        "sha256": "526be944c67db9253dd07c0e33e173f64ee91d49687c7aa2b0e9e87a53d796c0",
+        "size_bytes": 997
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/execution_readiness_rubric.json",
+        "sha256": "fba4a9381b5810162fe937703c78f02769505962acdcf6bf8414548d81825880",
+        "size_bytes": 530
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/fail_behavior_registry.json",
+        "sha256": "2c6a1c0e0be880501ae8f3f440677c6b330aecbc7d18335cb7e1aa38142171b5",
+        "size_bytes": 836
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/failure_replay_harness_contract.json",
+        "sha256": "c0f073ff716f24b34c530a8504461e28c849aeadde09f5716f0b1bc45dae5fca",
+        "size_bytes": 459
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/feature_flag_expiration_policy.json",
+        "sha256": "fd5fe7b09016299042ce64131a4eb3a696b36ff88a0e98567e4c829aa239601f",
+        "size_bytes": 228
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/human_correction_capture_policy.json",
+        "sha256": "c38ed79fcfbfb564e9a289620a76ee1acacb3f2b7a60a411fee3e13bf33d49ec",
+        "size_bytes": 456
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/idempotency_discipline_policy.json",
+        "sha256": "a47df5d2c56fc472967f06d89bfd694f43c6d564c110f8b967b14d0a5d53e44c",
+        "size_bytes": 1176
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/interface_freeze_windows.json",
+        "sha256": "219277fa91316a72efcde419694c8d98b2e65fa71abce2785e16f011247443c3",
+        "size_bytes": 1318
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/interrupt_semantics_policy.json",
+        "sha256": "bbcce282435a96bd0d7d0dc90c6bfa616a2fc6313cc901d47f546a43d2a56a33",
+        "size_bytes": 1733
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/ledger_event_schema.json",
+        "sha256": "53afecca481d7ca83b855bcc4f7ebf4ba6dfdaa06f0ef7bd5937ee65f50bc592",
+        "size_bytes": 416
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/local_remote_route_policy.json",
+        "sha256": "b5c21ecfa7ebe7ad8a84ae0e05e3b4874fa47526b591e344543eb729019f930c",
+        "size_bytes": 1216
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/long_session_soak_test_contract.json",
+        "sha256": "6569966a08265b04d708053d02fcb27096e9fbb9776cf5ba32cdd64129ef75f2",
+        "size_bytes": 670
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/model_profile_bios.json",
+        "sha256": "2e862f68ce4c4116b9dd336838b69f151087686d40919e54eb204018704262d4",
+        "size_bytes": 718
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/naming_discipline_policy.json",
+        "sha256": "50b600ada2357d2a93810e6850312723b3c04673460a61c913d6218fec6895c5",
+        "size_bytes": 626
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/non_fatal_error_budget.json",
+        "sha256": "cf8bc04c8ccd6f8ba30334082b3c9ccec85e02c4d0c70da3d8b327ce78ee9acf",
+        "size_bytes": 1010
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/observability_redaction_test_contract.json",
+        "sha256": "c9d05c4102b502350d2f11a8023012a55e17a2b4e918c610c5bf3a2893c76133",
+        "size_bytes": 982
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/operator_override_logging_policy.json",
+        "sha256": "fe19d592d71dc056bd4a63781e9bea410cced14890c279d2d5f13b417850f8cd",
+        "size_bytes": 459
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/persistence_corruption_test_contract.json",
+        "sha256": "d9032b39de6183c9a5a5aac5223c7a1b8c3d6d51e927b01922120af89c75c906",
+        "size_bytes": 751
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/promotion_rollback_criteria.json",
+        "sha256": "d4d029ab73024ff67efadbb35682bb754304bb63753f94426c2775aea60f4be9",
+        "size_bytes": 414
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/provider_quarantine_policy_contract.json",
+        "sha256": "c9bb3bc67ab607d6fd7d14c526598c27261340c6af8c954e1b0ff261f3209f1e",
+        "size_bytes": 372
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/provider_truth_table.json",
+        "sha256": "ca74401e1d641170d548560dbe7ceda946a31f15674d90e2ccb486340c89e6c6",
+        "size_bytes": 2818
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/release_confidence_scorecard.json",
+        "sha256": "45bb8781a2c8ac9661e1e6a71cbc6d616c67c8fa60e3d62924d71f72890772d1",
+        "size_bytes": 426
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/resource_pressure_simulation_lane.json",
+        "sha256": "7836d7ed62d27b44547fbda10afff619351cbad693cbf0120a6357116f8eb947",
+        "size_bytes": 935
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/result_error_invariant_contract.json",
+        "sha256": "4f5281a8043ad632eb3d72260701e0497faef766439ddac695b2895df31d0f26",
+        "size_bytes": 121
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/retry_classification_policy.json",
+        "sha256": "eea8e88c9c4101d2851a316126f2f30abcb4f98ab9745b22bae83e665051fa0c",
+        "size_bytes": 1660
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/run_identity.json",
+        "sha256": "f9bae22c0343d542b8d33500935f90de9bb2eabd90150de81ade7a23a1cdc99b",
+        "size_bytes": 121
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/run_phase_contract.json",
+        "sha256": "b42d7e494de4d955ba30bbdb8fb084ff162f15f4e33a0078cb998e55b5ecd816",
+        "size_bytes": 316
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/runtime_boundary_audit_checklist.json",
+        "sha256": "a93b1ad522ff401079637485c47927ef0e531e52c6157a115e3957808529faa6",
+        "size_bytes": 1579
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/runtime_config_ownership_map.json",
+        "sha256": "21515da218527ea0b909ed455421dd26c4b81afc3175181d11516ec25eb4d7b9",
+        "size_bytes": 2561
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/runtime_invariant_registry.json",
+        "sha256": "2c898d162c62d6a86beef8488be7b2bfdd6a34862e1016c54eab0246f8f2b8b0",
+        "size_bytes": 7291
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/runtime_status_vocabulary.json",
+        "sha256": "fec0d2b3a2d1c6f18a29d643b79aae3b0ee262db0fa4b933b70f4668adefa15a",
+        "size_bytes": 188
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/runtime_truth_contract_drift_report.json",
+        "sha256": "84c3c5a71d5bd584d67a3269c89a827489d33cc87f459fb3d7ee97178c192030",
+        "size_bytes": 6525
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/runtime_truth_trace_ids.json",
+        "sha256": "da9938a328b263c008f1b33eebc6b0e73939f785487638a28860e96422c0de87",
+        "size_bytes": 5460
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/safe_default_catalog.json",
+        "sha256": "e940a933fa2adbcfdd319e7dff7a72cc68798757daf7c674ff8fbadd8c110ae2",
+        "size_bytes": 1148
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/sampling_discipline_guide.json",
+        "sha256": "f6063925db3a04583cc09217a8b536ae1929dae3e39f662a4bca34c3835ebccd",
+        "size_bytes": 498
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/spec_debt_queue.json",
+        "sha256": "d5611261aa56793ef43e58c38bbc83412c822e65fd8dd70759247287e8b9e991",
+        "size_bytes": 471
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/state_transition_registry.json",
+        "sha256": "87038e9baad8da5d80250ae2c9dbf8178e516b1fb60f5018bed1c280e69aa5a5",
+        "size_bytes": 5969
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/streaming_semantics_contract.json",
+        "sha256": "d88d1e15fafd2b4af543c61038c5dea031ee17911dcd7f2adc4822cd08b8bc83",
+        "size_bytes": 473
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/timeout_semantics_contract.json",
+        "sha256": "16b1f789ddbc601693a15cb92881b89ce17ea40d65e64bf88302eab4aa3460b3",
+        "size_bytes": 1193
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/tool_contract_snapshot.json",
+        "sha256": "f743a5ef4468ff6b1e4ae795a7f5c55c43173a466c29f4e9cf4cef7768c0a6fd",
+        "size_bytes": 1152
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/tool_registry_snapshot.json",
+        "sha256": "9e536bf0cb72577891d5597273a92297e67f21e034b7260060bdef1d22c9bc44",
+        "size_bytes": 263
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/trust_language_review_policy.json",
+        "sha256": "0c0beef4b47a57ff4d73c4977d22fd4c4ab361750a3820485d10c5a844353f3b",
+        "size_bytes": 1747
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/ui_lane_security_boundary_test_contract.json",
+        "sha256": "a29f07ccc4407b185ba0a10794b69cbe179c26bf796763f8a2a5d7fb075a203b",
+        "size_bytes": 1041
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/unknown_input_policy.json",
+        "sha256": "07227647c0c458cfc7b0eb217aa657c680ffd61815a411f8bed2752cc7f0fa45",
+        "size_bytes": 814
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/workspace_hygiene_rules.json",
+        "sha256": "1f0d78f82ddd0d67d86c49691f321b4804005064e5c2e68436bc7f7099c772b1",
+        "size_bytes": 726
+      },
+      {
+        "path": "observability/d5e64e56/runtime_contracts/workspace_state_snapshot.json",
+        "sha256": "c9af4d19014dfa6e2458b7fcc0f0d8ad6d1874e99e11b232cac17d3e7264f709",
+        "size_bytes": 370
+      },
+      {
+        "path": "orket.log",
+        "sha256": "937a736052a5ab91c57d4cf405950c3606640f46caa502e97b96cb1314a1c6fb",
+        "size_bytes": 103365
+      },
+      {
+        "path": "runs/d5e64e56/events.log",
+        "sha256": "780fb0599f9dc1ab8234905f67ceedcb34e8794524dc3169afe9264610fa4405",
+        "size_bytes": 150601
+      },
+      {
+        "path": "runs/d5e64e56/run_graph.json",
+        "sha256": "6c275edddffd79cc61d086afb8348bbbcb712069a51f7be29945fb5f11466ed0",
+        "size_bytes": 176043
+      },
+      {
+        "path": "runs/d5e64e56/run_summary.json",
+        "sha256": "75bad7aa64e01d4e4a10d3482499bff1f1fb591663fdd50289184c9e55a857f8",
+        "size_bytes": 2395
+      }
+    ],
+    "receipt_inventory": [],
+    "runtime_contract_snapshots": {
+      "tool_registry_version": "1.2.0",
+      "artifact_schema_registry_version": "1.0",
+      "compatibility_map_schema_version": "1.0",
+      "tool_registry_snapshot_hash": "d0038f37b35523ff66eb35cc46cacfc4683307c7c0303121f37d70a12e2152d6",
+      "artifact_schema_snapshot_hash": "1df008686d5e022d2a3ae4328b5a4779960caea81c0de9b672619bc592a9a385",
+      "tool_contract_snapshot_hash": "347a353069cd659f1eb554f8bcfa6dc7787a1dbeb94a5365b73b9f029e046df2"
+    },
+    "runtime_policy_versions": {
+      "prompt_budget_policy": "1.0",
+      "retry_policy": "1.1",
+      "promotion_gate_policy": "1.0"
+    },
+    "ledger_schema_version": "1.0",
+    "runtime_contract_hash": "2a91749ef9d2344c2ad5a2f544e3290d135569b03862ea4b687997e5ca91aade",
+    "compatibility_validation": {
+      "path": "primary",
+      "status": "ok",
+      "missing_contract_fields": [],
+      "mismatch_fields": [],
+      "lifecycle_missing": [],
+      "run_determinism_class": "workspace"
+    },
+    "operation_count": 0,
+    "receipt_count": 0,
+    "state_digest": "b13baff3901f4c4cf121c4375a2bf4bac0003d1843f6e5d10615c086f804f37c"
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-03-14T02:14:16.488247Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:1f12c1090258e0e411e00974262637fc219a512676328a4c40819e7df712ca85",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 4520,
+        "paths_total_reference": 4520,
+        "churn_paths": 4520,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

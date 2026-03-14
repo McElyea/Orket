@@ -1,0 +1,12 @@
+{
+    "timestamp": "2026-03-14T02:07:03.527309+00:00",
+    "session_id": "059e2b50",
+    "card_id": "ISSUE-B",
+    "violation_type": "state_transition",
+    "detail": "Governance violations: ['Governance Violation: Invalid transition for CardType.ISSUE: in_progress -> done']",
+    "attempted_action": null,
+    "remedy_suggestion": "Review the state machine documentation. The requested status change is illegal.",
+    "active_roles": [
+        "lead_architect"
+    ]
+}

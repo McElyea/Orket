@@ -1,0 +1,38 @@
+{
+  "run_id": "17d0dacd",
+  "issue_id": "REV-1",
+  "ok": true,
+  "checked_files": [
+    "agent_output/main.py",
+    "agent_output/src/__init__.py"
+  ],
+  "errors": [],
+  "command_results": [
+    {
+      "command_display": "C:\\Python314\\python.exe -m compileall -q agent_output",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "failure_class": "none",
+      "policy_source": "profile_default:polyglot"
+    }
+  ],
+  "failure_breakdown": {},
+  "guard_contract": {
+    "result": "pass",
+    "violations": [],
+    "severity": "soft",
+    "fix_hint": null,
+    "terminal_failure": false,
+    "terminal_reason": null
+  },
+  "guard_decision": {
+    "action": "pass",
+    "next_retry_count": 0,
+    "terminal_failure": false,
+    "retry_fingerprint": null,
+    "repeated_fingerprint": false,
+    "terminal_reason": null
+  },
+  "timestamp": "2026-03-14T02:07:36.900308+00:00"
+}

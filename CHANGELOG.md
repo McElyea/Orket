@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-03-13 - "The Published Proof Bundle"
+
+### Added
+- **Published Live Proof Support Bundle**: Added the published support folder for the `2026-03-13` live runtime-stability proof so the curated artifact now ships with its referenced evidence files.
+
+### Changed
+- **Published Artifact Self-Containment**: Repointed the published live runtime-stability proof JSON away from `benchmarks/results/...` and into `benchmarks/published/General/...` so the published lane no longer depends on non-exposed result paths.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- None.
+
 ## [0.4.2] - 2026-03-13 - "The Live Proof Cut"
 
 ### Added
