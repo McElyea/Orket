@@ -196,8 +196,9 @@ Validation stops at the first failure.
 LD9 - No automatic repair
 Invalid responses are rejected.
 
-LD10 - Exact tool cardinality
-Each required tool appears exactly once unless explicitly overridden.
+LD10 - Seat-aware tool cardinality
+Single-shot required tools appear exactly once.
+`read_file` may appear multiple times when needed to cover required read paths for the active seat.
 
 LD11 - Receipts immutable
 Receipts must never be modified after creation.
@@ -341,7 +342,7 @@ Validation order (fail-fast):
 5. Tool-call shape validation.
 6. Tool schema validation.
 7. Required tool enforcement.
-8. Tool cardinality check.
+8. Tool cardinality and read-path coverage check.
 9. Workspace constraints.
 10. Response caps.
 
@@ -553,7 +554,7 @@ Functional:
 
 - tool-mode rejects narrative
 - unknown keys rejected
-- tool cardinality enforced
+- seat-aware tool cardinality enforced
 
 Determinism:
 

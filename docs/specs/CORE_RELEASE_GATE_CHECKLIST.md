@@ -1,6 +1,6 @@
 # Core Release Gate Checklist
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13
 Status: Active
 Owner: Orket Core
 
@@ -14,19 +14,18 @@ Use with:
 ## 1. Applicability
 
 1. This checklist applies to core engine release decisions beginning with `0.4.0`.
-2. Docs-only exempt commits are not versioned core releases and do not require a core version bump, release tag, or release proof report.
+2. Every post-`0.4.0` commit kept on `main` is a versioned core release step and requires a core version bump plus the matching release tag on that exact commit.
 3. Patch releases must satisfy Sections 2 and 3.
 4. Minor releases must satisfy Sections 2, 3, and 4.
 
-## 2. Docs-Only Exemption Check
+## 2. Per-Commit Release Discipline
 
-Record a docs-only exemption only when all of the following are true:
+Each governed commit must satisfy all of the following:
 
-1. Changed files are limited to `docs/**` and root-level `*.md` files.
-2. No runtime, configuration, dependency, packaging, or release-artifact files changed.
-3. No changed surface requires a core version bump or release tag alignment.
-
-If any item is false or uncertain, treat the change as non-exempt and use the versioned release gate.
+1. The commit advances the core engine version.
+2. The matching top `CHANGELOG.md` entry exists for that exact version.
+3. The matching annotated Git tag `v<version>` exists on that exact commit.
+4. The release step is a patch increment unless the commit is a policy-permitted minor or major release step.
 
 ## 3. Base Gate for Versioned Core Releases
 
@@ -35,7 +34,7 @@ If any item is false or uncertain, treat the change as non-exempt and use the ve
 1. `pyproject.toml` declares the intended core engine version.
 2. The top matching `CHANGELOG.md` entry exists for that exact version.
 3. The release boundary is described truthfully in the changelog or release notes.
-4. For a non-exempt commit, the required patch bump is present in `pyproject.toml`.
+4. For a commit that is not a policy-permitted minor or major release step, the required patch bump is present in `pyproject.toml`.
 
 ### 3.2 Tag alignment
 

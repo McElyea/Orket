@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. live runtime proof for runtime-stability closeout -- Plan: `docs/projects/techdebt/LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`.
+None.
 
 ## Maintenance (Non-Priority)
 
@@ -14,10 +14,11 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Staged / Waiting (Externally Gated)
 
-1. truthful runtime hardening continuation (Phases C-E) -- Staged. Plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`. Reopen only with an explicit Phase C reentry request naming bounded scope and exit artifacts.
-2. controller-workload v1 kickoff -- Planning handoff: `docs/projects/archive/controller-workload/CW03082026-Phase2D/07-V1-PLANNING-HANDOFF.md`. Reopen only with an explicit scoped implementation request.
-3. protocol-governed production-window operator sign-off -- Contract: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`. Archive: `docs/projects/archive/protocol-governed/PG03062026/`. Next review: `2026-04-06`.
-4. protocol-governed post-production six-month evidence -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Next review: `2026-04-06`.
+1. runtime-stability live deterministic-compare hardening -- Staged. Plan: `docs/projects/future/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`. Reopen only with an explicit Claim E hardening request naming compare-surface or live-output scope.
+2. truthful runtime hardening continuation (Phases C-E) -- Staged. Plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`. Reopen only with an explicit Phase C reentry request naming bounded scope and exit artifacts.
+3. controller-workload v1 kickoff -- Planning handoff: `docs/projects/archive/controller-workload/CW03082026-Phase2D/07-V1-PLANNING-HANDOFF.md`. Reopen only with an explicit scoped implementation request.
+4. protocol-governed production-window operator sign-off -- Contract: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`. Archive: `docs/projects/archive/protocol-governed/PG03062026/`. Next review: `2026-04-06`.
+5. protocol-governed post-production six-month evidence -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Next review: `2026-04-06`.
 
 ## Future Lanes (Non-Priority Backlog)
 
@@ -33,4 +34,4 @@ Every non-archive project under `docs/projects/` must appear here.
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance | P3-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane. Checklist: `Recurring-Maintenance-Checklist.md`. Governance: `README.md`. |
-| future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes; truthful runtime hardening continuation (Phases C-E) is staged pending new proof-backed execution. |
+| future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes; runtime-stability live deterministic-compare hardening and truthful runtime hardening continuation are staged pending explicit reentry. |

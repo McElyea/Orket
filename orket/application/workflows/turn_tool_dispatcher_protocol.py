@@ -50,7 +50,11 @@ def collect_protocol_preflight_violations(
             return [format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, f"{index}:args")]
         observed_tool_names.append(tool_name)
 
-    required_tools_error = required_tools_violation(observed_tool_names=observed_tool_names, context=context)
+    required_tools_error = required_tools_violation(
+        observed_tool_names=observed_tool_names,
+        context=context,
+        required_read_path_count=len(PathResolver.required_read_paths(context, workspace)),
+    )
     if required_tools_error:
         return [required_tools_error]
 

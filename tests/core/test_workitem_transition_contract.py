@@ -162,3 +162,19 @@ def test_system_set_status_runs_gate_boundaries_for_allowed_transitions() -> Non
 
     assert result.ok is True
     assert calls == ["pre", "post"]
+
+
+def test_system_set_status_allows_retry_requeue_from_in_progress_to_ready() -> None:
+    """Layer: contract. Verifies system retry scheduling can requeue an in-progress issue to READY."""
+    service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
+
+    result = service.request_transition(
+        action="system_set_status",
+        current_status=CardStatus.IN_PROGRESS,
+        payload={"status": "ready", "reason": "retry_scheduled"},
+        roles=["system"],
+    )
+
+    assert result.ok is True
+    assert result.new_status == "ready"
+    assert result.metadata.get("system_retry_requeue") is True

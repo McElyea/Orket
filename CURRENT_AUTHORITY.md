@@ -37,7 +37,7 @@ It defines only the currently authoritative paths that agents and contributors m
 17. Core release automation workflow: `.gitea/workflows/core-release-policy.yml`
 18. Core release automation script: `scripts/governance/check_core_release_policy.py`
 19. Core release prep script for release-only worktrees: `scripts/governance/prepare_core_release.py`
-20. Canonical core release tag rule: pushed `main` `HEAD` must carry the matching annotated `v<major>.<minor>.<patch>` tag.
+20. Canonical core release tag rule: every post-`0.4.0` versioned commit on pushed `main` must carry the matching annotated `v<major>.<minor>.<patch>` tag on that exact commit.
 21. Pytest sandbox fail-closed fixture: `tests/conftest.py`
 
 ## Machine-Readable Authority Map (v1)
@@ -140,7 +140,7 @@ It defines only the currently authoritative paths that agents and contributors m
       "automation_workflow": ".gitea/workflows/core-release-policy.yml",
       "automation_script": "scripts/governance/check_core_release_policy.py",
       "release_prep_script": "scripts/governance/prepare_core_release.py",
-      "main_head_tag_required": true,
+      "main_commit_tags_required": true,
       "tag_format": "v<major>.<minor>.<patch>",
       "core_version_source": "pyproject.toml",
       "changelog_source": "CHANGELOG.md",

@@ -128,7 +128,7 @@ class ResponseParser:
         if len(payload_bytes) > max(1, int(max_response_bytes)):
             raise ValueError(E_RESPONSE_BYTES)
         trimmed = self._trim_ascii_whitespace_once(content)
-        if "```" in trimmed:
+        if self._contains_markdown_fence_outside_json_strings(trimmed):
             raise ValueError(E_MARKDOWN_FENCE)
         try:
             parsed = json.loads(trimmed, object_pairs_hook=_reject_duplicate_keys)
@@ -165,6 +165,25 @@ class ResponseParser:
         if len(tool_calls) > max(1, int(max_tool_calls)):
             raise ValueError(format_protocol_error(E_MAX_TOOL_CALLS_PREFIX, str(len(tool_calls))))
         return {"content": "", "tool_calls": tool_calls}
+
+    def _contains_markdown_fence_outside_json_strings(self, content: str) -> bool:
+        in_string = False
+        escaped = False
+        for index, char in enumerate(content):
+            if in_string:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == '"':
+                    in_string = False
+                continue
+            if char == '"':
+                in_string = True
+                continue
+            if content[index : index + 3] == "```":
+                return True
+        return False
 
     def _trim_ascii_whitespace_once(self, content: str) -> str:
         allowed = {" ", "\t", "\n", "\r"}

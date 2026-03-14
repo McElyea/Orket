@@ -117,6 +117,8 @@ class DefaultEvaluatorNode:
         error_text = str(getattr(result, "error", "") or "").strip().lower()
         if not error_text.startswith("deterministic failure:"):
             return False
+        # Corrective reprompts only happen after a deterministic contract failure.
+        # If the follow-up still cannot satisfy progress, fail closed instead of retrying.
         governance_markers = (
             "security scope contract not met",
             "hallucination scope contract not met",
@@ -125,6 +127,8 @@ class DefaultEvaluatorNode:
             "read path contract not met",
             "write path contract not met",
             "architecture decision contract not met",
+            "progress contract not met after corrective reprompt",
+            "turn contract not met after corrective reprompt",
         )
         return any(marker in error_text for marker in governance_markers)
 
@@ -608,7 +612,8 @@ class DefaultOrchestrationLoopPolicyNode:
         issue = _kwargs.get("issue")
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
         seat_requirements = {
-            "requirements_analyst": ["write_file", "update_issue_status", "reforger_inspect"],
+            # Governed required tools must stay aligned with the shipped role surface.
+            "requirements_analyst": ["write_file", "update_issue_status"],
             "architect": ["write_file", "update_issue_status"],
             "coder": ["write_file", "update_issue_status"],
             "developer": ["write_file", "update_issue_status"],

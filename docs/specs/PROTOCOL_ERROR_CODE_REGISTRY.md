@@ -50,7 +50,7 @@ This registry defines stable protocol-governed error codes and prefixes used by:
 | `E_MAX_TOOL_CALLS` | Tool-call count exceeded configured deterministic cap. | `E_MAX_TOOL_CALLS:9>8` |
 | `E_WORKSPACE_CONSTRAINT` | Path safety violation in runtime validator pipeline. | `E_WORKSPACE_CONSTRAINT:path_traversal` |
 | `E_MISSING_REQUIRED_TOOL` | Required action tool missing from proposal. | `E_MISSING_REQUIRED_TOOL:write_file` |
-| `E_TOOL_CARDINALITY` | Required tool count was not exactly one. | `E_TOOL_CARDINALITY:write_file:2` |
+| `E_TOOL_CARDINALITY` | Required tool count violated deterministic cardinality rules. Single-shot action tools remain exact-one; `read_file` may repeat to cover required read paths. | `E_TOOL_CARDINALITY:write_file:2` |
 | `E_RECEIPT_SEQ_INVALID` | Receipt sequence value not parseable or invalid. | `E_RECEIPT_SEQ_INVALID:abc` |
 | `E_RECEIPT_SEQ_NON_MONOTONIC` | Receipt sequence not strictly increasing. | `E_RECEIPT_SEQ_NON_MONOTONIC:1<=last:1` |
 | `E_RECEIPT_LOG_PARSE` | Receipt log line failed JSON parse. | `E_RECEIPT_LOG_PARSE:line=7` |

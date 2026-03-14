@@ -77,11 +77,11 @@
 5. Do not treat UI work as the default reason for `0.4.0`; follow the active release/versioning policy and roadmap instead.
 6. Use `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md` when evaluating core release readiness.
 7. Use `docs/specs/CORE_RELEASE_PROOF_REPORT.md` for required minor-release proof records and store completed reports under `docs/releases/<version>/PROOF_REPORT.md`.
-8. CI now enforces core version/changelog alignment, commit-range version advancement, pushed-`main` head-tag alignment, and tagged core release format through `.gitea/workflows/core-release-policy.yml` and `scripts/governance/check_core_release_policy.py`.
+8. CI now enforces core version/changelog alignment, commit-range version advancement, commit-range tag alignment for pushed `main`, and tagged core release format through `.gitea/workflows/core-release-policy.yml` and `scripts/governance/check_core_release_policy.py`.
 9. Final proof-gate acceptance remains checklist-backed and owned by Orket Core.
 10. The canonical operator path for release-only core release prep is `python scripts/governance/prepare_core_release.py --tag v<major>.<minor>.<patch>`.
 11. Use `--commit-and-tag` only after the matching changelog entry and any required proof report are complete and no unrelated worktree changes remain.
-12. For normal non-release-only work already committed on `main`, create the matching annotated tag on `HEAD` and push the branch tip plus that tag together. A core version bump is not complete until the matching tag is pushed.
+12. For normal non-release-only work, each versioned commit destined for `main` must carry its matching annotated tag on that exact commit, and the branch tip plus those tags must be pushed together. A core version bump is not complete until its matching tag is pushed.
 
 ## Testing
 

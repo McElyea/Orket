@@ -69,6 +69,7 @@ class PromptResolver:
             dialect=dialect,
             next_member=next_member,
             patch=patch,
+            protocol_governed_enabled=bool(context.get("protocol_governed_enabled", False)),
         )
 
         role_meta = dict(getattr(skill, "prompt_metadata", {}) or {})

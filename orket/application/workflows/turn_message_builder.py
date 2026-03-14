@@ -61,6 +61,16 @@ class MessageBuilder:
             {"role": "user", "content": f"Execution Context JSON:\n{json.dumps(execution_context, sort_keys=True)}"}
         )
 
+        if bool(context.get("protocol_governed_enabled", False)):
+            protocol_lines = [
+                "- Return exactly one JSON object.",
+                '- Required envelope: {"content":"","tool_calls":[{"tool":"<tool_name>","args":{"key":"value"}}]}',
+                "- content must be an empty string when tool_calls are present.",
+                "- Put all required tool calls into tool_calls within that single JSON object.",
+                "- Do not use markdown fences or multiple top-level JSON objects.",
+            ]
+            messages.append({"role": "user", "content": "Protocol Response Contract:\n" + "\n".join(protocol_lines)})
+
         required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
         if "read_file" in required_action_tools and not required_read_paths:
             required_action_tools = [tool for tool in required_action_tools if tool != "read_file"]

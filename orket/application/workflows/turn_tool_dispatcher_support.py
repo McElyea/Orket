@@ -110,7 +110,12 @@ def required_sequence(context: dict[str, Any]) -> list[str]:
     return deduped
 
 
-def required_tools_violation(*, observed_tool_names: list[str], context: dict[str, Any]) -> str | None:
+def required_tools_violation(
+    *,
+    observed_tool_names: list[str],
+    context: dict[str, Any],
+    required_read_path_count: int = 0,
+) -> str | None:
     required = required_tools(context)
     if not required:
         return None
@@ -119,6 +124,12 @@ def required_tools_violation(*, observed_tool_names: list[str], context: dict[st
         count = int(counts.get(tool_name, 0))
         if count == 0:
             return format_protocol_error(E_MISSING_REQUIRED_TOOL_PREFIX, tool_name)
+        if tool_name == "read_file":
+            # Read coverage is governed by the required path contract, not a one-call ceiling.
+            minimum_reads = max(1, int(required_read_path_count or 0))
+            if count < minimum_reads:
+                return format_protocol_error(E_TOOL_CARDINALITY_PREFIX, f"{tool_name}:{count}")
+            continue
         if count != 1:
             return format_protocol_error(E_TOOL_CARDINALITY_PREFIX, f"{tool_name}:{count}")
     return None

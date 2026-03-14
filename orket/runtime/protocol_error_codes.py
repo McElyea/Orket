@@ -73,7 +73,7 @@ _PREFIX_CODES: Final[dict[str, str]] = {
     E_MAX_TOOL_CALLS_PREFIX: "Tool-call count exceeded deterministic cap.",
     E_WORKSPACE_CONSTRAINT_PREFIX: "Workspace path safety constraint violation.",
     E_MISSING_REQUIRED_TOOL_PREFIX: "A required tool call was not present in the proposal.",
-    E_TOOL_CARDINALITY_PREFIX: "Required tool cardinality was not exactly one.",
+    E_TOOL_CARDINALITY_PREFIX: "Required tool count violated deterministic cardinality rules.",
     E_RING_POLICY_VIOLATION_PREFIX: "Tool call violated active ring policy.",
     E_CAPABILITY_VIOLATION_PREFIX: "Tool capability profile is not allowed for this run.",
     E_DETERMINISM_POLICY_VIOLATION_PREFIX: "Tool determinism class exceeds active run determinism policy.",

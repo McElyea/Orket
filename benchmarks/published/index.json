@@ -111,15 +111,15 @@
       "category": "General",
       "path": "General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json",
       "title": "Live Runtime Stability Proof (Qwen2.5 Coder 7B)",
-      "summary": "Curated live proof package for runtime-stability closeout: acceptance success, replay success, strict compare drift, boundary evidence, and the current governed-runtime blocker.",
+      "summary": "Curated live proof package for runtime-stability closeout: acceptance success, replay success, fail-closed boundary evidence, fresh strict-compare drift, and governed-runtime manifest success.",
       "signals": [
         "provider_preflight_pass",
         "protocol_replay_ok",
         "deterministic_match_false",
-        "E_MARKDOWN_FENCE",
-        "boundary_drift"
+        "governed_manifest_success",
+        "live_output_drift"
       ],
-      "source_path": "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/",
+      "source_path": "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json",
       "publish_reviewed": true
     }
   ]

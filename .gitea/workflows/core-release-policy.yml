@@ -33,7 +33,7 @@ jobs:
           else
             BASE_SHA="${{ github.event.before }}"
             HEAD_SHA="${GITHUB_SHA}"
-            EXTRA_ARGS+=(--require-head-tag)
+            EXTRA_ARGS+=(--require-commit-tags)
           fi
           python scripts/governance/check_core_release_policy.py --repo-root . --base-rev "${BASE_SHA}" --head-rev "${HEAD_SHA}" "${EXTRA_ARGS[@]}"
 

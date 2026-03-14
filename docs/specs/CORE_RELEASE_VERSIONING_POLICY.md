@@ -145,7 +145,7 @@ Every minor release must include release notes that contain at minimum:
 2. CI automation enforces:
    - `pyproject.toml` and `CHANGELOG.md` alignment
    - commit-range core version advancement on `main` and pull requests
-   - matching annotated core release tag presence on pushed `main` `HEAD`
+   - matching annotated core release tag presence on every post-transition commit in the pushed `main` range
    - canonical `v<major>.<minor>.<patch>` core tag format
    - annotated core release tags
    - presence of the minor-release proof report path for tagged minor releases
@@ -162,7 +162,7 @@ Every minor release must include release notes that contain at minimum:
    - the matching changelog entry is release-ready,
    - any required proof report is release-ready, and
    - the worktree is clean outside canonical release files.
-7. For normal non-release-only work already committed on `main`, create the matching annotated `v<version>` tag on `HEAD` and push the branch tip plus that tag together. A core version bump is incomplete until that tag is pushed.
+7. For normal non-release-only work, each versioned commit destined for `main` must carry the matching annotated `v<version>` tag on that exact commit, and the branch tip plus those tags must be pushed together. A core version bump is incomplete until its matching tag is pushed.
 
 ## 11. Authority Roles and Boundaries
 

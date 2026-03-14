@@ -1,6 +1,6 @@
 {
-    "timestamp": "2026-03-14T02:07:03.527309+00:00",
-    "session_id": "059e2b50",
+    "timestamp": "2026-03-14T04:35:37.987043+00:00",
+    "session_id": "97eb0e6d",
     "card_id": "ISSUE-B",
     "violation_type": "state_transition",
     "detail": "Governance violations: ['Governance Violation: Invalid transition for CardType.ISSUE: in_progress -> done']",

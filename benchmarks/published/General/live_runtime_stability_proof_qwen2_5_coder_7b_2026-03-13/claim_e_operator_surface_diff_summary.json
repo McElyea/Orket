@@ -1,0 +1,80 @@
+{
+  "claim_id": "E",
+  "provider": "ollama",
+  "model": "qwen2.5-coder:7b",
+  "comparison_mode": "strict",
+  "run_ids": [
+    "6b3a2424",
+    "8faad44b"
+  ],
+  "deterministic_match": false,
+  "primary_layer": "artifact_formatting_drift",
+  "difference_fields": [
+    "artifact_inventory"
+  ],
+  "operator_surface_changed_paths": [
+    "agent_output/requirements.txt",
+    "agent_output/design.txt",
+    "agent_output/main.py"
+  ],
+  "volatile_changed_paths": [
+    "agent_output/observability/runtime_events.jsonl",
+    "agent_output/verification/runtime_verification.json"
+  ],
+  "diffs": {
+    "agent_output/requirements.txt": [
+      "--- run_a",
+      "+++ run_b",
+      "@@ -1,18 +1,15 @@",
+      "-## Requirements for Tiny CLI Summation Program",
+      "+# Requirements for a Tiny CLI Summation Program",
+      " ",
+      "-### Functionality",
+      "-- The program should accept a list of numbers as input.",
+      "-- The program should sum up all the numbers in the list and output the result.",
+      "-- The program should handle both positive and negative integers.",
+      "-- The program should handle an empty list by returning 0.",
+      "+## Features",
+      "+- Accept a list of numbers as input.",
+      "+- Sum the numbers and output the result.",
+      "+- Handle empty input gracefully, returning 0.",
+      " ",
+      "-### Input",
+      "-- The program should accept input from the command line.",
+      "-- The input should be a space-separated list of numbers.",
+      "+## Input Format",
+      "+- The program should accept a space-separated list of numbers as input from the command line.",
+      " ",
+      "-### Output",
+      "-- The program should output the sum of the numbers on the command line.",
+      "-- The output should be a single integer.",
+      "+## Output Format",
+      "+- The program should print the sum of the numbers to the standard output.",
+      " ",
+      "-### Error Handling",
+      "-- The program should handle invalid input gracefully (e.g., non-numeric characters) by printing an error message and exiting with a non-zero status code.",
+      "+## Error Handling",
+      "+- If no numbers are provided, the program should return 0."
+    ],
+    "agent_output/design.txt": [
+      "--- run_a",
+      "+++ run_b",
+      "@@ -1 +1 @@",
+      "-{\"recommendation\": \"monolith\", \"confidence\": 1.0, \"evidence\": {\"estimated_domains\": 1, \"external_integrations\": 0, \"independent_scaling_needs\": 0, \"deployment_complexity\": 1, \"team_parallelism\": 1, \"operational_maturity\": 1}, \"frontend_framework\": \"vue\"}",
+      "+{\"recommendation\": \"monolith\", \"confidence\": 1.0, \"evidence\": {\"estimated_domains\": 1, \"external_integrations\": 0, \"independent_scaling_needs\": 0, \"deployment_complexity\": 1, \"team_parallelism\": 1, \"operational_maturity\": 1}, \"active_architecture_mode\": \"force_monolith\", \"frontend_framework\": \"vue\"}"
+    ],
+    "agent_output/main.py": [
+      "--- run_a",
+      "+++ run_b",
+      "@@ -1,3 +1,6 @@",
+      "-# This is a placeholder for the implementation of COD-1",
+      "+#!/usr/bin/env python",
+      " ",
+      "-# TODO: Implement the required functionality based on the design",
+      "+# This is a placeholder for the main implementation file.",
+      "+",
+      "+if __name__ == '__main__':",
+      "+    print('Implementation of COD-1 will go here.')"
+    ]
+  }
+}

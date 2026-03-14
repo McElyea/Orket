@@ -1445,6 +1445,7 @@ async def _execute_issue_turn(
                 "required_statuses": provisional_context.get("required_statuses", []),
                 "required_read_paths": provisional_context.get("required_read_paths", []),
                 "required_write_paths": provisional_context.get("required_write_paths", []),
+                "protocol_governed_enabled": provisional_context.get("protocol_governed_enabled", False),
                 "prompt_rule_ids": role_rule_ids + dialect_rule_ids,
                 "runtime_guard_rule_ids": runtime_guard_rule_ids,
             },
@@ -1455,7 +1456,11 @@ async def _execute_issue_turn(
         prompt_metadata = dict(resolution.metadata)
         prompt_layers = dict(resolution.layers)
     else:
-        system_desc = PromptCompiler.compile(skill, dialect)
+        system_desc = PromptCompiler.compile(
+            skill,
+            dialect,
+            protocol_governed_enabled=bool(provisional_context.get("protocol_governed_enabled", False)),
+        )
     if memory_context:
         system_desc += f"\n\nPROJECT CONTEXT (PAST DECISIONS):\n{memory_context}"
 

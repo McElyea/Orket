@@ -17,10 +17,10 @@
   },
   "talking_points": [
     "Acceptance pipeline completed live end-to-end on Ollama qwen2.5-coder:7b with run_id 17d0dacd.",
+    "Boundary illegal-transition and path-traversal protection both failed closed live on the refreshed proof, and the traversal attempt did not materialize secret.txt.",
     "Protocol replay on that fresh run returned status done with compatibility_validation.status=ok.",
-    "Strict compare across two fresh live runs reported deterministic_match=false, exposing real runtime drift.",
-    "Boundary illegal-transition protection fired live, while path traversal still showed two fail-closed regressions worth hardening.",
-    "Protocol-governed enforce mode on the same live path is currently blocked by E_MARKDOWN_FENCE."
+    "Fresh append-only Claim E rerun4 still reported deterministic_match=false and drifted in requirements.txt, design.txt, and main.py between run_ids 6b3a2424 and 8faad44b.",
+    "Protocol-governed enforce mode now completes live on rerun6 with run_id c0a73c12 and emits embedded tool_invocation_manifest receipts for reviewer and guard turns."
   ],
   "claims": [
     {
@@ -45,16 +45,16 @@
     {
       "claim_id": "B",
       "label": "Boundary violations fail closed in live runtime execution",
-      "observed_path": "degraded",
-      "result": "partial success",
+      "observed_path": "primary",
+      "result": "success",
       "checks": [
         {
           "name": "illegal_state_transition",
           "observed_path": "primary",
           "result": "success",
-          "run_id": "059e2b50",
+          "run_id": "97eb0e6d",
           "violation_type": "state_transition",
-          "detail": "Governance Violation: Invalid transition for CardType.ISSUE: in_progress -> done",
+          "detail": "Governance violations: ['Governance Violation: Invalid transition for CardType.ISSUE: in_progress -> done']",
           "source_paths": [
             "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_illegal_and_path_stdout.log",
             "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_illegal_state_policy_violation.json"
@@ -62,19 +62,15 @@
         },
         {
           "name": "path_traversal",
-          "observed_path": "degraded",
-          "result": "partial success",
-          "run_ids": [
-            "a9e30b8d",
-            "e646eed1"
-          ],
-          "drift_variants": [
-            "Security reprompt emitted a governance violation report, but ISSUE-B remained in_progress via retry.",
-            "Security reprompt sanitized ../secret.txt to secret.txt and the write completed inside the workspace."
-          ],
+          "observed_path": "primary",
+          "result": "success",
+          "run_id": "685f4a78",
+          "violation_type": "governance",
+          "detail": "Deterministic failure: progress contract not met after corrective reprompt.",
+          "secret_txt_materialized": false,
+          "retry_triggered_after_violation": false,
           "source_paths": [
             "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_path_traversal_stdout.log",
-            "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_illegal_and_path_stdout.log",
             "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_path_traversal_policy_violation.json",
             "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_b_path_traversal_orket.log"
           ]
@@ -102,18 +98,28 @@
       "observed_path": "primary",
       "result": "failure",
       "run_ids": [
-        "17d0dacd",
-        "d5e64e56"
+        "6b3a2424",
+        "8faad44b"
       ],
       "highlights": {
         "deterministic_match": false,
-        "state_digest_a": "0dff1919c86235fed88511929e41b8157e36454ae08f75e0181be0f6d532f0bc",
-        "state_digest_b": "b13baff3901f4c4cf121c4375a2bf4bac0003d1843f6e5d10615c086f804f37c"
+        "state_digest_a": "12fd8e1b4ca1e348bcb2b43b359348f2ef9a76a8d6482e4abf579e79af57f57a",
+        "state_digest_b": "8380356b2c60fe15cd1ec58528d80d7ca87f09e419ed15d9afb31db6f9a2cbc9",
+        "operator_surface_changed_paths": [
+          "agent_output/requirements.txt",
+          "agent_output/design.txt",
+          "agent_output/main.py"
+        ],
+        "volatile_changed_paths": [
+          "agent_output/observability/runtime_events.jsonl",
+          "agent_output/verification/runtime_verification.json"
+        ]
       },
       "source_paths": [
         "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_compare.json",
-        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_cli_stdout.log",
-        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_cli_stderr.log"
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_operator_surface_diff_summary.json",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_run_a_stdout.log",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_e_run_b_stdout.log"
       ]
     },
     {
@@ -131,18 +137,32 @@
     },
     {
       "claim_id": "G",
-      "label": "Protocol-governed live path emits manifest-ready tool data",
-      "observed_path": "blocked",
-      "result": "failure",
-      "run_id": "454dbd50",
+      "label": "Protocol-governed live path completes and emits manifest-ready tool data",
+      "observed_path": "primary",
+      "result": "success",
+      "run_id": "c0a73c12",
       "highlights": {
-        "error": "E_MARKDOWN_FENCE",
-        "violation_type": "governance",
-        "detail": "Unexpected error: E_MARKDOWN_FENCE"
+        "status": "done",
+        "receipt_count": 17,
+        "final_guard_tool_call_count": 5,
+        "manifest_key_set": [
+          "manifest_version",
+          "tool_name",
+          "ring",
+          "schema_version",
+          "determinism_class",
+          "capability_profile",
+          "tool_contract_version",
+          "run_id",
+          "manifest_hash"
+        ],
+        "forbidden_manifest_fields_present": []
       },
       "source_paths": [
-        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_orket.log",
-        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_policy_violation.json"
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_run_summary.json",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_receipts.txt",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_parsed_tool_calls.json",
+        "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13/claim_g_model_response.txt"
       ]
     }
   ]

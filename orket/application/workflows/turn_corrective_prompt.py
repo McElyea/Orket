@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from .turn_path_resolver import PathResolver
@@ -12,10 +13,17 @@ class CorrectivePromptBuilder:
         self.workspace = workspace
 
     def build_corrective_instruction(self, violations: list[dict], context: dict) -> str:
+        protocol_governed_enabled = bool(context.get("protocol_governed_enabled", False))
         lines = [
             "Corrective instruction: previous response violated deterministic turn contracts.",
-            "Return JSON tool-call blocks only and satisfy all required contracts in this same response.",
         ]
+        if protocol_governed_enabled:
+            lines.append(
+                'Return exactly one JSON object with keys "content" and "tool_calls", and satisfy all required contracts in this same response.'
+            )
+            lines.append('Use {"content":"","tool_calls":[...]} and do not use markdown fences.')
+        else:
+            lines.append("Return JSON tool-call blocks only and satisfy all required contracts in this same response.")
         reason_set = {
             str(item.get("reason", "")).strip()
             for item in violations
@@ -81,26 +89,47 @@ class CorrectivePromptBuilder:
             str(s).strip().lower() for s in (context.get("required_statuses") or []) if str(s).strip()
         ]
         if required_read_paths or required_write_paths or required_statuses:
-            lines.append("- Required-call template (emit blocks like these in this same response):")
-            for path in required_read_paths:
-                lines.append(f'  {{"tool":"read_file","args":{{"path":"{path}"}}}}')
-            for path in required_write_paths:
-                lines.append(f'  {{"tool":"write_file","args":{{"path":"{path}","content":"<actual content>"}}}}')
-            if len(required_statuses) == 1:
-                status = required_statuses[0]
-                if status == "blocked":
-                    lines.append(
-                        '  {"tool":"update_issue_status","args":{"status":"blocked","wait_reason":"review"}}'
+            if protocol_governed_enabled:
+                example_calls: list[dict[str, object]] = []
+                for path in required_read_paths:
+                    example_calls.append({"tool": "read_file", "args": {"path": path}})
+                for path in required_write_paths:
+                    example_calls.append({"tool": "write_file", "args": {"path": path, "content": "<actual content>"}})
+                if len(required_statuses) == 1:
+                    status = required_statuses[0]
+                    if status == "blocked":
+                        example_calls.append(
+                            {"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "review"}}
+                        )
+                    else:
+                        example_calls.append({"tool": "update_issue_status", "args": {"status": status}})
+                elif required_statuses:
+                    example_calls.append(
+                        {"tool": "update_issue_status", "args": {"status": "<one of " + "|".join(required_statuses) + ">"}}
                     )
-                else:
-                    lines.append(f'  {{"tool":"update_issue_status","args":{{"status":"{status}"}}}}')
-            elif required_statuses:
-                lines.append(
-                    "  "
-                    + '{"tool":"update_issue_status","args":{"status":"<one of '
-                    + "|".join(required_statuses)
-                    + '>"}}'
-                )
+                lines.append("- Required-call template (emit one JSON object like this in this same response):")
+                lines.append("  " + json.dumps({"content": "", "tool_calls": example_calls}, ensure_ascii=False))
+            else:
+                lines.append("- Required-call template (emit blocks like these in this same response):")
+                for path in required_read_paths:
+                    lines.append(f'  {{"tool":"read_file","args":{{"path":"{path}"}}}}')
+                for path in required_write_paths:
+                    lines.append(f'  {{"tool":"write_file","args":{{"path":"{path}","content":"<actual content>"}}}}')
+                if len(required_statuses) == 1:
+                    status = required_statuses[0]
+                    if status == "blocked":
+                        lines.append(
+                            '  {"tool":"update_issue_status","args":{"status":"blocked","wait_reason":"review"}}'
+                        )
+                    else:
+                        lines.append(f'  {{"tool":"update_issue_status","args":{{"status":"{status}"}}}}')
+                elif required_statuses:
+                    lines.append(
+                        "  "
+                        + '{"tool":"update_issue_status","args":{"status":"<one of '
+                        + "|".join(required_statuses)
+                        + '>"}}'
+                    )
 
         return "\n".join(lines)
 

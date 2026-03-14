@@ -5,6 +5,27 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5] - 2026-03-13 - "The Archived Recovery Cut"
+
+### Added
+- **Claim E Drift Diff Summary**: Added a published operator-surface diff summary for the fresh append-only live Claim E rerun so the remaining nondeterminism is shareable without referring back to hidden proof roots.
+- **Staged Claim E Hardening Lane**: Added a dedicated staged follow-on plan for runtime-stability live deterministic-compare hardening after the recovery lane was truthfully closed.
+
+### Changed
+- **Governed Prompt Contract**: Updated governed prompt compilation, message building, corrective prompts, and strict response parsing so protocol-governed turns require a single JSON envelope without false `E_MARKDOWN_FENCE` hits from fenced content inside JSON strings.
+- **Governed Read Cardinality**: Relaxed governed `read_file` cardinality to required-path coverage while keeping single-shot required tools fail-closed, and aligned the corresponding runtime contract/error-code authority.
+- **Runtime Retry and Policy Enforcement**: Allowed system retry requeues from `in_progress` back to `ready`, tightened governance handling after corrective reprompts, and removed the stale `reforger_inspect` requirement from the requirements-analyst governed seat.
+- **Live Proof Closeout Truthfulness**: Archived the runtime-stability live recovery lane, refreshed the accepted published proof with fresh append-only Claim E drift evidence plus Claim G success evidence, and moved the remaining Claim E work into a staged hardening lane instead of leaving it as fake active closeout work.
+- **Release Tag Range Enforcement**: Tightened the core release guard and workflow so pushed `main` ranges require matching annotated release tags on each governed post-`0.4.0` commit, not just the branch head.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Continue pushing each `main` release commit with its matching annotated `v<version>` tag.
+
 ## [0.4.4] - 2026-03-13 - "The Tag Truth Cut"
 
 ### Added

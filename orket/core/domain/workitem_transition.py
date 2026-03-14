@@ -66,6 +66,21 @@ class WorkItemTransitionService:
         self.workflow_profile = self.profile.name
         self.gate_boundary = gate_boundary
 
+    @staticmethod
+    def _is_system_retry_requeue(
+        *,
+        action: str,
+        current_status: CardStatus,
+        requested_status: CardStatus,
+        payload: Dict[str, Any],
+    ) -> bool:
+        if action != "system_set_status":
+            return False
+        if current_status != CardStatus.IN_PROGRESS or requested_status != CardStatus.READY:
+            return False
+        reason = str((payload or {}).get("reason", "")).strip().lower()
+        return reason in {"retry_scheduled", "runtime_guard_retry_scheduled"}
+
     def request_transition(
         self,
         *,
@@ -152,12 +167,20 @@ class WorkItemTransitionService:
             payload=payload,
         )
         if not check.ok:
-            return TransitionResult(
-                ok=False,
+            if self._is_system_retry_requeue(
                 action=normalized_action,
-                error_code=TransitionErrorCode.POLICY_VIOLATION,
-                error=str(check.error or "Transition rejected by workflow policy."),
-            )
+                current_status=current_status,
+                requested_status=requested,
+                payload=payload,
+            ):
+                metadata["system_retry_requeue"] = True
+            else:
+                return TransitionResult(
+                    ok=False,
+                    action=normalized_action,
+                    error_code=TransitionErrorCode.POLICY_VIOLATION,
+                    error=str(check.error or "Transition rejected by workflow policy."),
+                )
 
         result = TransitionResult(
             ok=True,

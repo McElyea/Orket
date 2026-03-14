@@ -99,6 +99,27 @@ def test_response_parser_strict_protocol_mode_rejects_markdown_fences(tmp_path: 
         assert "E_MARKDOWN_FENCE" in str(exc)
 
 
+def test_response_parser_strict_protocol_mode_allows_markdown_fence_inside_string_arg(tmp_path: Path) -> None:
+    parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
+    response = {
+        "content": (
+            '{"content":"","tool_calls":[{"tool":"write_file","args":{"path":"README.md","content":"```sh\\n'
+            'python main.py\\n```"}}]}'
+        ),
+        "raw": {"total_tokens": 9},
+    }
+
+    turn = parser.parse_response(
+        response=response,
+        issue_id="ISSUE-1",
+        role_name="coder",
+        context={"session_id": "s1", "turn_index": 1, "protocol_governed_enabled": True},
+    )
+
+    assert len(turn.tool_calls) == 1
+    assert turn.tool_calls[0].args["content"] == "```sh\npython main.py\n```"
+
+
 def test_response_parser_strict_protocol_mode_rejects_excess_tool_calls(tmp_path: Path) -> None:
     parser = ResponseParser(tmp_path, lambda **kwargs: None)  # type: ignore[no-untyped-def]
     response = {

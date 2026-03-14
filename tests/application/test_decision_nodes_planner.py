@@ -255,6 +255,21 @@ def test_default_evaluator_failure_deterministic_security_is_governance_violatio
     assert decision["next_retry_count"] == 1
 
 
+# Layer: contract
+def test_default_evaluator_failure_deterministic_progress_after_corrective_reprompt_is_governance_violation():
+    evaluator = DefaultEvaluatorNode()
+    issue = SimpleNamespace(retry_count=1, max_retries=3)
+    result = SimpleNamespace(
+        violations=[],
+        error="Deterministic failure: progress contract not met after corrective reprompt.",
+    )
+
+    decision = evaluator.evaluate_failure(issue, result)
+
+    assert decision["action"] == "governance_violation"
+    assert decision["next_retry_count"] == 1
+
+
 def test_default_evaluator_missing_read_file_is_retry():
     evaluator = DefaultEvaluatorNode()
     issue = SimpleNamespace(retry_count=0, max_retries=3)
@@ -754,7 +769,6 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.required_action_tools_for_seat("requirements_analyst") == [
         "write_file",
         "update_issue_status",
-        "reforger_inspect",
     ]
     assert node.required_action_tools_for_seat("coder") == ["write_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("code_reviewer") == ["read_file", "update_issue_status"]

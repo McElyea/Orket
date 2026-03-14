@@ -15,6 +15,7 @@ Closed slices:
 4. `SPC-04`: tool-scoreboard generation and promotion proof remained structurally complete throughout the lane.
 5. `SPC-05`: canonical `run_summary.json` emission, schema validation, reconstruction, and parity proof are landed.
 6. `SPC-06`: active requirements now match the shipped minimal tool-registry and invocation-manifest contract, and the proof set is green.
+7. live proof recovery is archived; fresh append-only Claim E rerun4 still showed operator-visible output drift and was carried forward to a staged hardening lane.
 
 ## Active Authority After Archive
 
@@ -31,3 +32,4 @@ Closed slices:
 4. `docs/projects/archive/runtime-stability-closeout/SPC-05-RUN-SUMMARY-CLOSEOUT-IMPLEMENTATION-PLAN.md`
 5. `docs/projects/archive/runtime-stability-closeout/SPC-06-CORE-TOOL-BASELINE-CLOSEOUT-IMPLEMENTATION-PLAN.md`
 6. `docs/projects/archive/runtime-stability-green-requirements/`
+7. `docs/projects/archive/runtime-stability-closeout/LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`

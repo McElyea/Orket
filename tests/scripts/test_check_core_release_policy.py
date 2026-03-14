@@ -56,6 +56,10 @@ def _head_sha(tmp_path: Path) -> str:
     return completed.stdout.strip()
 
 
+def _tag_release(tmp_path: Path, version: str) -> None:
+    subprocess.run(["git", "tag", "-a", f"v{version}", "-m", "release"], cwd=tmp_path, check=True, capture_output=True)
+
+
 def _commit_all(tmp_path: Path, message: str) -> str:
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True, capture_output=True)
     subprocess.run(["git", "commit", "-m", message], cwd=tmp_path, check=True, capture_output=True)
@@ -88,7 +92,7 @@ def test_check_core_release_policy_fails_on_head_changelog_drift(tmp_path: Path)
 
 
 # Layer: contract
-def test_check_core_release_policy_skips_pre_transition_non_exempt_commit_without_bump(tmp_path: Path) -> None:
+def test_check_core_release_policy_skips_pre_transition_commit_without_bump(tmp_path: Path) -> None:
     _init_repo(tmp_path, version="0.3.18")
     base_sha = _head_sha(tmp_path)
     _write(tmp_path / "src.py", "VALUE = 2\n")
@@ -100,7 +104,7 @@ def test_check_core_release_policy_skips_pre_transition_non_exempt_commit_withou
 
 
 # Layer: contract
-def test_check_core_release_policy_fails_on_post_transition_non_exempt_commit_without_bump(tmp_path: Path) -> None:
+def test_check_core_release_policy_fails_on_post_transition_commit_without_bump(tmp_path: Path) -> None:
     _init_repo(tmp_path, version="0.4.0")
     base_sha = _head_sha(tmp_path)
     _write(tmp_path / "src.py", "VALUE = 2\n")
@@ -124,30 +128,65 @@ def test_check_core_release_policy_fails_on_post_transition_docs_only_commit_wit
 
 
 # Layer: contract
-def test_check_core_release_policy_fails_when_head_tag_is_required_but_missing(tmp_path: Path) -> None:
-    _init_repo(tmp_path, version="0.4.1")
-    head_sha = _head_sha(tmp_path)
+def test_check_core_release_policy_fails_when_commit_tags_are_required_but_head_tag_is_missing(tmp_path: Path) -> None:
+    _init_repo(tmp_path, version="0.4.0")
+    base_sha = _head_sha(tmp_path)
+    _write(tmp_path / "pyproject.toml", _pyproject_text("0.4.1"))
+    _write(tmp_path / "CHANGELOG.md", _changelog_text("0.4.1"))
+    _write(tmp_path / "src.py", "VALUE = 2\n")
+    head_sha = _commit_all(tmp_path, "release bump")
 
-    exit_code = main(["--repo-root", str(tmp_path), "--head-rev", head_sha, "--require-head-tag"])
+    exit_code = main(
+        ["--repo-root", str(tmp_path), "--base-rev", base_sha, "--head-rev", head_sha, "--require-commit-tags"]
+    )
 
     assert exit_code == 1
 
 
 # Layer: contract
-def test_check_core_release_policy_passes_when_head_tag_is_required_and_matching_tag_exists(tmp_path: Path) -> None:
-    _init_repo(tmp_path, version="0.4.1")
-    head_sha = _head_sha(tmp_path)
-    subprocess.run(["git", "tag", "-a", "v0.4.1", "-m", "release"], cwd=tmp_path, check=True, capture_output=True)
+def test_check_core_release_policy_passes_when_commit_tags_are_required_and_matching_tags_exist(tmp_path: Path) -> None:
+    _init_repo(tmp_path, version="0.4.0")
+    base_sha = _head_sha(tmp_path)
+    _write(tmp_path / "pyproject.toml", _pyproject_text("0.4.1"))
+    _write(tmp_path / "CHANGELOG.md", _changelog_text("0.4.1"))
+    _write(tmp_path / "src.py", "VALUE = 2\n")
+    head_sha = _commit_all(tmp_path, "release bump")
+    _tag_release(tmp_path, "0.4.1")
 
-    exit_code = main(["--repo-root", str(tmp_path), "--head-rev", head_sha, "--require-head-tag"])
+    exit_code = main(
+        ["--repo-root", str(tmp_path), "--base-rev", base_sha, "--head-rev", head_sha, "--require-commit-tags"]
+    )
 
     assert exit_code == 0
 
 
 # Layer: contract
+def test_check_core_release_policy_fails_when_intermediate_commit_tag_is_missing(tmp_path: Path) -> None:
+    _init_repo(tmp_path, version="0.4.0")
+    base_sha = _head_sha(tmp_path)
+
+    _write(tmp_path / "pyproject.toml", _pyproject_text("0.4.1"))
+    _write(tmp_path / "CHANGELOG.md", _changelog_text("0.4.1"))
+    _write(tmp_path / "src.py", "VALUE = 2\n")
+    _commit_all(tmp_path, "release bump 1")
+
+    _write(tmp_path / "pyproject.toml", _pyproject_text("0.4.2"))
+    _write(tmp_path / "CHANGELOG.md", _changelog_text("0.4.2"))
+    _write(tmp_path / "src.py", "VALUE = 3\n")
+    head_sha = _commit_all(tmp_path, "release bump 2")
+    _tag_release(tmp_path, "0.4.2")
+
+    exit_code = main(
+        ["--repo-root", str(tmp_path), "--base-rev", base_sha, "--head-rev", head_sha, "--require-commit-tags"]
+    )
+
+    assert exit_code == 1
+
+
+# Layer: contract
 def test_check_core_release_policy_validates_annotated_minor_tag_and_proof_report(tmp_path: Path) -> None:
     _init_repo(tmp_path, version="0.4.0", proof_report=True)
-    subprocess.run(["git", "tag", "-a", "v0.4.0", "-m", "release"], cwd=tmp_path, check=True, capture_output=True)
+    _tag_release(tmp_path, "0.4.0")
 
     exit_code = main(["--repo-root", str(tmp_path), "--tag", "v0.4.0"])
 

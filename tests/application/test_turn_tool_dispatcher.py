@@ -207,6 +207,126 @@ async def test_tool_dispatcher_protocol_preflight_enforces_required_tool_presenc
 
 
 @pytest.mark.asyncio
+async def test_tool_dispatcher_protocol_preflight_allows_multi_read_for_required_paths(tmp_path: Path) -> None:
+    dispatcher = _dispatcher(tmp_path)
+    (tmp_path / "agent_output").mkdir()
+    (tmp_path / "agent_output" / "requirements.txt").write_text("req\n", encoding="utf-8")
+    (tmp_path / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    turn = ExecutionTurn(
+        role="code_reviewer",
+        issue_id="REV-1",
+        content="",
+        tool_calls=[
+            ToolCall(tool="read_file", args={"path": "agent_output/requirements.txt"}),
+            ToolCall(tool="read_file", args={"path": "agent_output/main.py"}),
+            ToolCall(tool="update_issue_status", args={"status": "code_review"}),
+        ],
+    )
+
+    class _Toolbox:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def execute(self, tool_name, args, context):
+            self.calls += 1
+            return {"ok": True, "tool": tool_name, "args": args}
+
+    toolbox = _Toolbox()
+    await dispatcher.execute_tools(
+        turn=turn,
+        toolbox=toolbox,
+        context={
+            "roles": ["code_reviewer"],
+            "current_status": "in_progress",
+            "session_id": "s1",
+            "turn_index": 1,
+            "protocol_governed_enabled": True,
+            "required_action_tools": ["read_file", "update_issue_status"],
+            "required_read_paths": [
+                "agent_output/requirements.txt",
+                "agent_output/main.py",
+            ],
+        },
+        issue=None,
+    )
+    assert toolbox.calls == 3
+
+
+@pytest.mark.asyncio
+async def test_tool_dispatcher_protocol_preflight_rejects_insufficient_reads_for_required_paths(tmp_path: Path) -> None:
+    dispatcher = _dispatcher(tmp_path)
+    (tmp_path / "agent_output").mkdir()
+    (tmp_path / "agent_output" / "requirements.txt").write_text("req\n", encoding="utf-8")
+    (tmp_path / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    turn = ExecutionTurn(
+        role="code_reviewer",
+        issue_id="REV-1",
+        content="",
+        tool_calls=[
+            ToolCall(tool="read_file", args={"path": "agent_output/requirements.txt"}),
+            ToolCall(tool="update_issue_status", args={"status": "code_review"}),
+        ],
+    )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context):
+            return {"ok": True}
+
+    with pytest.raises(RuntimeError) as exc:
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=_Toolbox(),
+            context={
+                "roles": ["code_reviewer"],
+                "current_status": "in_progress",
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "required_action_tools": ["read_file", "update_issue_status"],
+                "required_read_paths": [
+                    "agent_output/requirements.txt",
+                    "agent_output/main.py",
+                ],
+            },
+            issue=None,
+        )
+    assert "E_TOOL_CARDINALITY:read_file:1" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_tool_dispatcher_protocol_preflight_rejects_duplicate_single_shot_required_tool(tmp_path: Path) -> None:
+    dispatcher = _dispatcher(tmp_path)
+    turn = ExecutionTurn(
+        role="coder",
+        issue_id="ISSUE-1",
+        content="",
+        tool_calls=[
+            ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"}),
+            ToolCall(tool="write_file", args={"path": "b.txt", "content": "y"}),
+        ],
+    )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context):
+            return {"ok": True}
+
+    with pytest.raises(RuntimeError) as exc:
+        await dispatcher.execute_tools(
+            turn=turn,
+            toolbox=_Toolbox(),
+            context={
+                "roles": ["coder"],
+                "session_id": "s1",
+                "turn_index": 1,
+                "protocol_governed_enabled": True,
+                "required_action_tools": ["write_file"],
+            },
+            issue=None,
+        )
+    assert "E_TOOL_CARDINALITY:write_file:2" in str(exc.value)
+
+
+@pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_required_sequence(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     turn = ExecutionTurn(

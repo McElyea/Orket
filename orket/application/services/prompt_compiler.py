@@ -9,7 +9,31 @@ class PromptCompiler:
     """
     
     @staticmethod
-    def compile(skill: SkillConfig, dialect: DialectConfig, next_member: Optional[str] = None, patch: Optional[str] = None) -> str:
+    def _protocol_lines(protocol_governed_enabled: bool) -> list[str]:
+        if protocol_governed_enabled:
+            return [
+                "- DO NOT narrate your plan in prose. Return exactly one JSON object.",
+                '- Required response envelope: {"content":"","tool_calls":[{"tool":"<tool_name>","args":{"key":"value"}}]}',
+                "- In tool mode, content MUST be an empty string.",
+                "- Put every required tool call into tool_calls within that single JSON object.",
+                "- Do not use markdown fences or multiple top-level JSON objects.",
+            ]
+        return [
+            "- DO NOT narrate your plan in prose. Emit executable tool-call JSON blocks only.",
+            "- Every action must be emitted as:",
+            "  ```json",
+            '  {"tool": "<tool_name>", "args": {"key": "value"}}',
+            "  ```",
+        ]
+
+    @staticmethod
+    def compile(
+        skill: SkillConfig,
+        dialect: DialectConfig,
+        next_member: Optional[str] = None,
+        patch: Optional[str] = None,
+        protocol_governed_enabled: bool = False,
+    ) -> str:
         prompt = f"IDENTITY: {skill.name}\n"
         prompt += f"INTENT: {skill.intent}\n\n"
         
@@ -27,11 +51,8 @@ class PromptCompiler:
         prompt += "- A context-only response is invalid: do not stop after get_issue_context/read-only actions.\n"
         prompt += "- Use 'add_issue_comment' to log your progress, reasoning, and final handoff memo.\n"
         prompt += "- The Card System is the Source of Truth for INTENT. Files are the result of EXECUTION.\n"
-        prompt += "- DO NOT narrate your plan in prose. Emit executable tool-call JSON blocks only.\n"
-        prompt += "- Every action must be emitted as:\n"
-        prompt += "  ```json\n"
-        prompt += "  {\"tool\": \"<tool_name>\", \"args\": {\"key\": \"value\"}}\n"
-        prompt += "  ```\n"
+        for line in PromptCompiler._protocol_lines(protocol_governed_enabled):
+            prompt += f"{line}\n"
         prompt += "- If no valid action is possible, emit exactly one tool call to 'add_issue_comment' explaining the blocker.\n"
         if skill.tools:
             prompt += "\nALLOWED TOOLS:\n"
@@ -47,7 +68,11 @@ class PromptCompiler:
         prompt += "- get_issue_context args MAY be {}\n"
         prompt += "- If Execution Context JSON includes required_action_tools, your turn is INVALID unless all listed tools are called.\n"
         prompt += "- If Execution Context JSON includes required_statuses, your update_issue_status.status MUST be one of them.\n"
-        prompt += "- Return ONLY JSON tool blocks. No markdown explanations outside tool blocks.\n"
+        if protocol_governed_enabled:
+            prompt += '- Return ONLY one JSON object matching {"content":"","tool_calls":[...]}.\n'
+            prompt += "- Do not wrap the JSON object in markdown fences.\n"
+        else:
+            prompt += "- Return ONLY JSON tool blocks. No markdown explanations outside tool blocks.\n"
 
         role_name = (skill.name or "").strip().lower()
         if role_name in {"requirements_analyst", "architect", "coder", "developer", "code_reviewer", "integrity_guard"}:

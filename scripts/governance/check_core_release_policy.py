@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import subprocess
 import sys
@@ -47,6 +46,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--base-rev", default="", help="Optional base revision for commit-range validation.")
     parser.add_argument("--head-rev", default="HEAD", help="Head revision for commit-range or tag validation.")
     parser.add_argument("--tag", default="", help="Optional core release tag to validate, for example v0.4.0.")
+    parser.add_argument(
+        "--require-commit-tags",
+        action="store_true",
+        help="Require each post-transition commit in the checked range to carry the matching annotated core release tag.",
+    )
     parser.add_argument(
         "--require-head-tag",
         action="store_true",
@@ -193,6 +197,40 @@ def _append_assertion(assertions: list[dict[str, Any]], *, assertion_id: str, pa
     assertions.append({"id": assertion_id, "passed": passed, "detail": detail})
 
 
+def _check_matching_tag(
+    repo_root: Path,
+    *,
+    ref: str,
+    version: str,
+    subject: str,
+    assertion_prefix: str,
+    assertions: list[dict[str, Any]],
+    failures: list[str],
+) -> None:
+    expected_tag = f"v{version}"
+    tags = _tags_pointing_at(repo_root, ref)
+    tag_present = expected_tag in tags
+    _append_assertion(
+        assertions,
+        assertion_id=f"{assertion_prefix}_has_matching_release_tag",
+        passed=tag_present,
+        detail=f"{subject} expected_tag={expected_tag} tags={tags}",
+    )
+    if not tag_present:
+        failures.append(f"{subject} is missing matching core release tag {expected_tag}")
+        return
+
+    annotated = _tag_is_annotated(repo_root, expected_tag)
+    _append_assertion(
+        assertions,
+        assertion_id=f"{assertion_prefix}_release_tag_is_annotated",
+        passed=annotated,
+        detail=f"{subject} tag={expected_tag} annotated={annotated}",
+    )
+    if not annotated:
+        failures.append(f"{subject} tag is not annotated: {expected_tag}")
+
+
 def _check_head_alignment(repo_root: Path, assertions: list[dict[str, Any]], failures: list[str]) -> str:
     pyproject_version, changelog_version = _load_head_alignment(repo_root)
     passed = pyproject_version == changelog_version
@@ -209,6 +247,7 @@ def _check_commit_range(
     base_rev: str,
     head_rev: str,
     transition: SemVer,
+    require_commit_tags: bool,
     assertions: list[dict[str, Any]],
     failures: list[str],
 ) -> None:
@@ -266,13 +305,23 @@ def _check_commit_range(
         )
         if not version_step_ok:
             failures.append(
-                f"non-exempt commit {commit[:12]} does not advance version correctly: "
+                f"commit {commit[:12]} does not advance version correctly: "
                 f"previous={previous_version} current={current_version}"
             )
         if not changelog_ok:
             failures.append(
-                f"non-exempt commit {commit[:12]} has changelog drift: "
+                f"commit {commit[:12]} has changelog drift: "
                 f"version={current_version} changelog={changelog_version}"
+            )
+        if require_commit_tags and commit_passed:
+            _check_matching_tag(
+                repo_root,
+                ref=commit,
+                version=str(current_version),
+                subject=f"commit {commit[:12]}",
+                assertion_prefix=f"commit_{commit[:12]}",
+                assertions=assertions,
+                failures=failures,
             )
 
     summary_detail = (
@@ -301,28 +350,15 @@ def _check_head_tag(
         )
         return
 
-    expected_tag = f"v{head_version}"
-    tags = _tags_pointing_at(repo_root, head_rev)
-    tag_present = expected_tag in tags
-    _append_assertion(
-        assertions,
-        assertion_id="head_has_matching_release_tag",
-        passed=tag_present,
-        detail=f"head_rev={head_rev} expected_tag={expected_tag} tags={tags}",
+    _check_matching_tag(
+        repo_root,
+        ref=head_rev,
+        version=head_version,
+        subject=f"head revision {head_rev}",
+        assertion_prefix="head",
+        assertions=assertions,
+        failures=failures,
     )
-    if not tag_present:
-        failures.append(f"head revision {head_rev} is missing matching core release tag {expected_tag}")
-        return
-
-    annotated = _tag_is_annotated(repo_root, expected_tag)
-    _append_assertion(
-        assertions,
-        assertion_id="head_release_tag_is_annotated",
-        passed=annotated,
-        detail=f"head_rev={head_rev} tag={expected_tag} annotated={annotated}",
-    )
-    if not annotated:
-        failures.append(f"head revision {head_rev} tag is not annotated: {expected_tag}")
 
 
 def _check_tag(
@@ -402,6 +438,7 @@ def _build_payload(
     base_rev: str,
     head_rev: str,
     tag: str,
+    require_commit_tags: bool,
     require_head_tag: bool,
     transition_version: str,
 ) -> dict[str, Any]:
@@ -412,6 +449,7 @@ def _build_payload(
         "base_rev": str(base_rev or "").strip(),
         "head_rev": str(head_rev or "").strip(),
         "tag": str(tag or "").strip(),
+        "require_commit_tags": bool(require_commit_tags),
         "require_head_tag": bool(require_head_tag),
         "transition_version": transition_version,
         "assertions": assertions,
@@ -433,9 +471,19 @@ def main(argv: list[str] | None = None) -> int:
         base_rev=str(args.base_rev),
         head_rev=str(args.head_rev),
         transition=transition,
+        require_commit_tags=bool(args.require_commit_tags),
         assertions=assertions,
         failures=failures,
     )
+    if args.require_commit_tags and not _rev_exists(repo_root, str(args.base_rev)):
+        _check_head_tag(
+            repo_root,
+            head_rev=str(args.head_rev),
+            head_version=head_version,
+            transition=transition,
+            assertions=assertions,
+            failures=failures,
+        )
     if args.require_head_tag:
         _check_head_tag(
             repo_root,
@@ -460,6 +508,7 @@ def main(argv: list[str] | None = None) -> int:
         base_rev=str(args.base_rev),
         head_rev=str(args.head_rev),
         tag=str(args.tag),
+        require_commit_tags=bool(args.require_commit_tags),
         require_head_tag=bool(args.require_head_tag),
         transition_version=str(transition),
     )
