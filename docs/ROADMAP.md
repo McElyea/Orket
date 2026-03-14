@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-_None._
+1. live runtime proof for runtime-stability closeout -- Plan: `docs/projects/techdebt/LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`.
 
 ## Maintenance (Non-Priority)
 

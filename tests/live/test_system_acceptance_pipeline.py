@@ -11,9 +11,26 @@ from orket.orchestration.engine import OrchestrationEngine
 from orket.schema import CardStatus
 from orket.adapters.vcs.gitea_webhook_handler import GiteaWebhookHandler
 
+pytestmark = pytest.mark.end_to_end
+
 
 def _safe_console(text: str) -> str:
     return text.encode("ascii", errors="backslashreplace").decode("ascii")
+
+
+def _read_json(path) -> dict:
+    return json.loads(path.read_bytes().decode("utf-8"))
+
+
+def _read_text(path) -> str:
+    return path.read_bytes().decode("utf-8")
+
+
+def _run_roots(workspace):
+    runs_root = workspace / "runs"
+    if not runs_root.exists():
+        return []
+    return sorted(path for path in runs_root.iterdir() if path.is_dir())
 
 
 class MultiRoleAcceptanceProvider:
@@ -113,38 +130,43 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
 
     roles = {
         "requirements_analyst": {
-            "tools": ["get_issue_context", "add_issue_comment", "write_file", "update_issue_status"],
+            "tools": ["write_file", "update_issue_status"],
             "description": (
                 "Produce concrete requirements for a tiny CLI summation program. "
-                "You must write agent_output/requirements.txt and then set status to code_review."
+                "You must write agent_output/requirements.txt and then set status to code_review. "
+                "Do not call comment or context-only tools."
             ),
         },
         "architect": {
-            "tools": ["get_issue_context", "add_issue_comment", "read_file", "write_file", "update_issue_status"],
+            "tools": ["read_file", "write_file", "update_issue_status"],
             "description": (
                 "Design a one-class implementation based on requirements. "
-                "You must write agent_output/design.txt and then set status to code_review."
+                "You must write agent_output/design.txt and then set status to code_review. "
+                "Do not call comment or context-only tools."
             ),
         },
         "coder": {
-            "tools": ["get_issue_context", "add_issue_comment", "read_file", "write_file", "update_issue_status"],
+            "tools": ["read_file", "write_file", "update_issue_status"],
             "description": (
                 "Implement from requirements and design. "
-                "You must write runnable Python code to agent_output/main.py and then set status to code_review."
+                "You must write runnable Python code to agent_output/main.py and then set status to code_review. "
+                "Do not call comment or context-only tools."
             ),
         },
         "code_reviewer": {
-            "tools": ["get_issue_context", "add_issue_comment", "read_file", "update_issue_status"],
+            "tools": ["read_file", "update_issue_status"],
             "description": (
                 "Review implementation against requirements and design. "
-                "Read files, comment pass/fail rationale, then set status to code_review for guard finalization."
+                "Read files, then set status to code_review for guard finalization. "
+                "Do not call add_issue_comment."
             ),
         },
         "integrity_guard": {
-            "tools": ["read_file", "add_issue_comment", "update_issue_status"],
+            "tools": ["read_file", "update_issue_status"],
             "description": (
                 "Final gatekeeper. Decide approve/reject and finalize card status. "
-                "Set status to done when acceptable; otherwise blocked with a comment."
+                "Set status to done when acceptable; otherwise blocked. "
+                "Do not call add_issue_comment."
             ),
         },
     }
@@ -179,7 +201,7 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
     )
 
     (root / "model" / "core" / "environments" / "standard.json").write_text(
-        json.dumps({"name": "standard", "model": environment_model, "temperature": 0.1, "timeout": 300}),
+        json.dumps({"name": "standard", "model": environment_model, "temperature": 0.0, "timeout": 300}),
         encoding="utf-8",
     )
 
@@ -296,10 +318,11 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path):
     requirements_path = workspace / "agent_output" / "requirements.txt"
     design_path = workspace / "agent_output" / "design.txt"
     code_path = workspace / "agent_output" / "main.py"
+    runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
 
-    requirements_text = requirements_path.read_text(encoding="utf-8") if requirements_path.exists() else ""
-    design_text = design_path.read_text(encoding="utf-8") if design_path.exists() else ""
-    code_text = code_path.read_text(encoding="utf-8") if code_path.exists() else ""
+    requirements_text = _read_text(requirements_path) if requirements_path.exists() else ""
+    design_text = _read_text(design_path) if design_path.exists() else ""
+    code_text = _read_text(code_path) if code_path.exists() else ""
 
     print(f"[live] model={model_name}")
     print(f"[live] REQ-1 status={req_issue.status}")
@@ -321,6 +344,28 @@ async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path):
     assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
     assert design_path.exists(), "design.txt not produced for completed ARC-1"
     assert code_path.exists(), "main.py not produced for completed COD-1"
+    assert runtime_report.exists(), "runtime_verification.json missing for live acceptance run"
+
+    runtime_payload = _read_json(runtime_report)
+    assert isinstance(runtime_payload.get("ok"), bool)
+    assert isinstance(runtime_payload.get("command_results"), list)
+
+    run_roots = _run_roots(workspace)
+    assert len(run_roots) == 1, "Expected exactly one fresh run directory for live acceptance proof."
+    run_root = run_roots[0]
+    run_summary_path = run_root / "run_summary.json"
+    assert run_summary_path.exists(), "run_summary.json missing from live run root"
+    run_summary = _read_json(run_summary_path)
+    assert run_summary.get("run_id") == run_root.name
+    assert run_summary.get("status") == "done"
+    assert "workspace_state_snapshot" in list(run_summary.get("artifact_ids") or [])
+
+    run_ledger_mode = os.getenv("ORKET_RUN_LEDGER_MODE", "").strip().lower()
+    if run_ledger_mode in {"append_only", "append_only_protocol", "dual", "dual_write", "mirror", "protocol"}:
+        assert (run_root / "events.log").exists(), "events.log missing for protocol-capable live run"
+
+    print(f"[live] run_id={run_root.name}")
+    print(f"[live] run_root={run_root}")
 
 
 @pytest.mark.asyncio

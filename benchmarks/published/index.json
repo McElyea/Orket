@@ -1,8 +1,8 @@
 ﻿{
   "catalog_v": "1.0.0",
-  "updated_on": "2026-02-27",
+  "updated_on": "2026-03-13",
   "root": "benchmarks/published",
-  "highlight_id": "PUB-ODR-001",
+  "highlight_id": "PUB-GEN-005",
   "reading_paths": [
     {
       "name": "Product walkthrough",
@@ -33,7 +33,7 @@
         "SHAPE_VIOLATION",
         "trace_record_examples"
       ],
-      "source_path": "benchmarks/results/odr_live_io.json",
+      "source_path": "benchmarks/results/odr/odr_live_io.json",
       "publish_reviewed": true
     },
     {
@@ -47,7 +47,7 @@
         "anti_hallucination_hits",
         "hard_fail"
       ],
-      "source_path": "benchmarks/results/odr_experiment_role_matrix_v1_pilot.json",
+      "source_path": "benchmarks/results/odr/odr_experiment_role_matrix_v1_pilot.json",
       "publish_reviewed": true
     },
     {
@@ -61,7 +61,7 @@
         "odr_trace",
         "live_model_pairing"
       ],
-      "source_path": "benchmarks/results/odr_live_role_matrix.qwen14b_r1_32b.json",
+      "source_path": "benchmarks/results/odr/odr_live_role_matrix.qwen14b_r1_32b.json",
       "publish_reviewed": true
     },
     {
@@ -75,7 +75,7 @@
         "odr_trace",
         "live_model_pairing"
       ],
-      "source_path": "benchmarks/results/odr_live_role_matrix.qwen14b_gemma27b.json",
+      "source_path": "benchmarks/results/odr/odr_live_role_matrix.qwen14b_gemma27b.json",
       "publish_reviewed": true
     },
     {
@@ -89,7 +89,7 @@
         "per_task_score_bands",
         "pass_rate"
       ],
-      "source_path": "benchmarks/results/live_card_100_scored_report.json",
+      "source_path": "benchmarks/results/benchmarks/live_card_100_scored_report.json",
       "publish_reviewed": true
     },
     {
@@ -103,7 +103,23 @@
         "deterministic_tasks",
         "unique_hashes"
       ],
-      "source_path": "benchmarks/results/live_100_determinism_report.json",
+      "source_path": "benchmarks/results/benchmarks/live_100_determinism_report.json",
+      "publish_reviewed": true
+    },
+    {
+      "id": "PUB-GEN-005",
+      "category": "General",
+      "path": "General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json",
+      "title": "Live Runtime Stability Proof (Qwen2.5 Coder 7B)",
+      "summary": "Curated live proof package for runtime-stability closeout: acceptance success, replay success, strict compare drift, boundary evidence, and the current governed-runtime blocker.",
+      "signals": [
+        "provider_preflight_pass",
+        "protocol_replay_ok",
+        "deterministic_match_false",
+        "E_MARKDOWN_FENCE",
+        "boundary_drift"
+      ],
+      "source_path": "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/",
       "publish_reviewed": true
     }
   ]

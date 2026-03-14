@@ -53,7 +53,7 @@ These rules override more general file-link defaults for this repo.
 `docs/ROADMAP.md` is the active execution index.
 
 1. Keep roadmap entries execution-only. Process rules live in `docs/CONTRIBUTOR.md`.
-2. Follow roadmap hygiene, closeout, archive, and contract-extraction rules from `docs/CONTRIBUTOR.md`. Do not treat a requirements lane as complete merely because downstream implementation plans exist; requirements stay active until the user accepts them and explicitly asks for implementation or retirement.
+2. Follow roadmap hygiene, closeout, archive, contract-extraction, and requirements-to-implementation transition rules from `docs/CONTRIBUTOR.md`. Do not treat a requirements lane as complete merely because downstream implementation plans exist; requirements stay active until the user accepts them and explicitly asks for implementation or retirement.
 3. If a task changes contributor workflow or roadmap maintenance expectations, update `docs/CONTRIBUTOR.md` in the same change unless the user explicitly says not to.
 4. When the user explicitly says to put or add something on the roadmap, place it in `Priority Now` at the highest available non-blocking position.
 5. Do not move an explicit user-requested roadmap item to backlog or future lanes unless the user explicitly asks for backlog placement.

@@ -77,9 +77,7 @@ backups/
 .orket/
 orket_storage/
 .smoke/
-.pytest_cache/
-.pytest_live_loop/
-.pytest_live_tmp/
+.pytest_*
 .ruff_cache/
 benchmarks/results/**
 docs/internal/

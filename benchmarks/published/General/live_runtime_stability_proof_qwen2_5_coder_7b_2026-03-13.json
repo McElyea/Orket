@@ -1,0 +1,149 @@
+{
+  "artifact_version": "1.0",
+  "generated_on_local": "2026-03-13",
+  "proof_type": "live",
+  "status": "complete",
+  "observed_path": "primary",
+  "observed_result": "partial success",
+  "live_definition": "Local provider-backed model through Ollama or LM Studio only. No mocks, fakes, shims, or provider-free runs count.",
+  "proof_root": "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b",
+  "provider_preflight": {
+    "provider": "ollama",
+    "model": "qwen2.5-coder:7b",
+    "observed_path": "primary",
+    "result": "success",
+    "status": "pass",
+    "source_path": "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/environment.json"
+  },
+  "talking_points": [
+    "Acceptance pipeline completed live end-to-end on Ollama qwen2.5-coder:7b with run_id 17d0dacd.",
+    "Protocol replay on that fresh run returned status done with compatibility_validation.status=ok.",
+    "Strict compare across two fresh live runs reported deterministic_match=false, exposing real runtime drift.",
+    "Boundary illegal-transition protection fired live, while path traversal still showed two fail-closed regressions worth hardening.",
+    "Protocol-governed enforce mode on the same live path is currently blocked by E_MARKDOWN_FENCE."
+  ],
+  "claims": [
+    {
+      "claim_id": "A",
+      "label": "Acceptance pipeline completes live with runtime verification",
+      "observed_path": "primary",
+      "result": "success",
+      "run_id": "17d0dacd",
+      "highlights": {
+        "status": "done",
+        "workspace_state_snapshot_present": true,
+        "runtime_verification_ok": true,
+        "runtime_verification_command": "C:\\Python314\\python.exe -m compileall -q agent_output",
+        "runtime_verification_returncode": 0
+      },
+      "source_paths": [
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_a.log",
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/workspaces/claim_a_17d0dacd/runs/17d0dacd/run_summary.json",
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/workspaces/claim_a_17d0dacd/agent_output/verification/runtime_verification.json"
+      ]
+    },
+    {
+      "claim_id": "B",
+      "label": "Boundary violations fail closed in live runtime execution",
+      "observed_path": "degraded",
+      "result": "partial success",
+      "checks": [
+        {
+          "name": "illegal_state_transition",
+          "observed_path": "primary",
+          "result": "success",
+          "run_id": "059e2b50",
+          "violation_type": "state_transition",
+          "detail": "Governance Violation: Invalid transition for CardType.ISSUE: in_progress -> done",
+          "source_paths": [
+            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_b_rerun3.log",
+            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_b_rerun3/test_boundary_illegal_state_tr0/workspace/agent_output/policy_violation_ISSUE-B.json"
+          ]
+        },
+        {
+          "name": "path_traversal",
+          "observed_path": "degraded",
+          "result": "partial success",
+          "run_ids": [
+            "a9e30b8d",
+            "e646eed1"
+          ],
+          "drift_variants": [
+            "Security reprompt emitted a governance violation report, but ISSUE-B remained in_progress via retry.",
+            "Security reprompt sanitized ../secret.txt to secret.txt and the write completed inside the workspace."
+          ],
+          "source_paths": [
+            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_b_rerun2.log",
+            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_b_rerun3.log",
+            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_b_rerun2/test_boundary_path_traversal_l0/workspace/agent_output/policy_violation_ISSUE-B.json",
+            "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_b_rerun3/test_boundary_path_traversal_l0/workspace/orket.log"
+          ]
+        }
+      ]
+    },
+    {
+      "claim_id": "D",
+      "label": "Operator replay works against the fresh live run",
+      "observed_path": "primary",
+      "result": "success",
+      "run_id": "17d0dacd",
+      "highlights": {
+        "status": "done",
+        "compatibility_validation_status": "ok",
+        "run_determinism_class": "workspace"
+      },
+      "source_paths": [
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_d.log"
+      ]
+    },
+    {
+      "claim_id": "E",
+      "label": "Strict compare across equivalent live runs stays deterministic",
+      "observed_path": "primary",
+      "result": "failure",
+      "run_ids": [
+        "17d0dacd",
+        "d5e64e56"
+      ],
+      "highlights": {
+        "deterministic_match": false,
+        "state_digest_a": "0dff1919c86235fed88511929e41b8157e36454ae08f75e0181be0f6d532f0bc",
+        "state_digest_b": "b13baff3901f4c4cf121c4375a2bf4bac0003d1843f6e5d10615c086f804f37c"
+      },
+      "source_paths": [
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/replay_outputs/claim_e_script_compare.json",
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_e_cli_compare.log",
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stderr_claim_e_cli_compare.log"
+      ]
+    },
+    {
+      "claim_id": "F",
+      "label": "Replay rejects missing workspace_state_snapshot fail closed",
+      "observed_path": "primary",
+      "result": "success",
+      "run_id": "4e976c2f",
+      "highlights": {
+        "error": "E_REPLAY_ARTIFACTS_MISSING:workspace_state_snapshot.file_count,workspace_state_snapshot.workspace_hash,workspace_state_snapshot.workspace_type"
+      },
+      "source_paths": [
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/stdout_claim_f_rerun1.log"
+      ]
+    },
+    {
+      "claim_id": "G",
+      "label": "Protocol-governed live path emits manifest-ready tool data",
+      "observed_path": "blocked",
+      "result": "failure",
+      "run_id": "454dbd50",
+      "highlights": {
+        "error": "E_MARKDOWN_FENCE",
+        "violation_type": "governance",
+        "detail": "Unexpected error: E_MARKDOWN_FENCE"
+      },
+      "source_paths": [
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_g/test_system_acceptance_role_pi0/workspace/orket.log",
+        "benchmarks/results/techdebt/live_runtime_proof/2026-03-13_live-proof_runtime-stability-qwen2.5-coder-7b/pytest_tmp_claim_g/test_system_acceptance_role_pi0/workspace/agent_output/policy_violation_REQ-1.json"
+      ]
+    }
+  ]
+}

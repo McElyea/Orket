@@ -72,7 +72,7 @@
 
 1. Core engine release/versioning authority lives in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 2. Core engine version source of truth is `pyproject.toml`.
-3. Starting with `0.4.0`, each non-exempt commit kept on `main` must advance the core engine version and keep `CHANGELOG.md` aligned. The default release step is a patch bump; minor release steps are allowed only as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`. Docs-only commits may be exempt as defined there.
+3. Starting with `0.4.0`, each commit kept on `main` must advance the core engine version and keep `CHANGELOG.md` aligned. The default release step is a patch bump; minor release steps are allowed only as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 4. Minor version bumps require closure of a roadmap-tracked major project as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 5. Do not treat UI work as the default reason for `0.4.0`; follow the active release/versioning policy and roadmap instead.
 6. Use `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md` when evaluating core release readiness.

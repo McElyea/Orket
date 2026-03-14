@@ -1,6 +1,6 @@
 # Core Release Versioning Policy
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13
 Status: Active
 Owner: Orket Core
 
@@ -20,7 +20,7 @@ SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.
 
 ## 2. Effective Versioning Model Beginning With `0.4.0`
 
-1. Starting with core engine version `0.4.0`, every commit merged into `main` must bump the core engine patch version unless it qualifies for the docs-only exemption in this policy.
+1. Starting with core engine version `0.4.0`, every commit merged into `main` must advance the core engine version.
 2. Minor version bumps occur only after completion of a roadmap-tracked major project.
 3. A major project for core versioning purposes is a roadmap-tracked body of work whose completion materially changes runtime behavior, operator workflows, release governance, or public interfaces.
 4. Major-project completion requires:
@@ -38,7 +38,7 @@ SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.
    - the top matching version entry in `CHANGELOG.md`, and
    - the intended release boundary described by the release notes or closeout.
 3. Do not create a core release tag that claims a version not present in `pyproject.toml`.
-4. Earlier descriptive or nonconforming tags are historical exceptions and do not establish precedent for future core-engine releases.
+4. Earlier descriptive or nonconforming tags are historical and do not establish precedent for future core-engine releases.
 
 ## 4. Canonical User Surface
 
@@ -53,16 +53,12 @@ Alternative commands may exist, but they must be documented as secondary or expl
 
 ## 5. Commit Release Discipline
 
-1. Every non-exempt commit merged into `main` must advance the core engine version.
-2. The default release step for a non-exempt commit is a patch increment.
-3. A commit qualifies for the docs-only exemption only if it modifies documentation files exclusively and introduces no runtime, configuration, dependency, packaging, or release-artifact changes.
-4. Documentation-only commits are limited to:
-   - files under `docs/`
-   - root-level `*.md` files
-5. All non-exempt commits must create or update the matching top version entry in `CHANGELOG.md` for that exact released version.
-6. Non-exempt commits that are not approved minor or major release steps must increment the patch version in `pyproject.toml`.
-7. A non-exempt commit may advance the core version by an allowed minor or major release step instead of a patch step only when that release step is otherwise permitted by this policy.
-8. Revert commits follow the same rule as normal commits.
+1. Every commit merged into `main` must advance the core engine version.
+2. The default release step for a commit is a patch increment.
+3. Every commit must create or update the matching top version entry in `CHANGELOG.md` for that exact released version.
+4. Commits that are not approved minor or major release steps must increment the patch version in `pyproject.toml`.
+5. A commit may advance the core version by an allowed minor or major release step instead of a patch step only when that release step is otherwise permitted by this policy.
+6. Revert commits follow the same rule as normal commits.
 
 ## 6. Minor Release Proof Gates
 
@@ -152,7 +148,6 @@ Every minor release must include release notes that contain at minimum:
 3. Orket Core still owns:
    - release-proof content review
    - compatibility classification correctness
-   - docs-only exemption semantics when changed-surface intent is ambiguous
    - final proof-gate acceptance
 4. The automation entrypoints are:
    - `.gitea/workflows/core-release-policy.yml`

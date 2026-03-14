@@ -1,6 +1,6 @@
 # Published Benchmark Index
 
-Last updated: 2026-02-27
+Last updated: 2026-03-13
 
 This directory is the curated, share-safe benchmark lane.
 
@@ -11,8 +11,8 @@ This directory is the curated, share-safe benchmark lane.
    - Machine-readable catalog for automation and dashboards.
 
 ## Latest Highlight
-1. `ODR/odr_live_io.json` (`PUB-ODR-001`)
-   - Compact ODR live test artifact with explicit input/output and stop reason traces.
+1. `General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json` (`PUB-GEN-005`)
+   - Curated live proof package for runtime-stability closeout: acceptance success, replay success, strict compare drift, boundary evidence, and the current governed-runtime blocker.
 
 ## Artifact Directory
 
@@ -24,6 +24,7 @@ This directory is the curated, share-safe benchmark lane.
 | PUB-ODR-004 | ODR | `ODR/odr_live_role_matrix.qwen14b_gemma27b.json` | Live Role Matrix Trace (Qwen14b + Gemma27b) | Full round-level live run for architect/auditor pairing B. | `round_level_io`, `odr_trace`, `live_model_pairing` |
 | PUB-GEN-001 | General | `General/live_card_100_scored_report.json` | Live Card 100 Scored Report | Quality scoring summary across 100 live-card tasks. | `overall_avg_score`, `per_task_score_bands`, `pass_rate` |
 | PUB-GEN-002 | General | `General/live_100_determinism_report.json` | Live 100 Determinism Report | Determinism evidence across 100 tasks using hash-based repeatability checks. | `determinism_rate`, `deterministic_tasks`, `unique_hashes` |
+| PUB-GEN-005 | General | `General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json` | Live Runtime Stability Proof (Qwen2.5 Coder 7B) | Curated live proof package for runtime-stability closeout: acceptance success, replay success, strict compare drift, boundary evidence, and the current governed-runtime blocker. | `provider_preflight_pass`, `protocol_replay_ok`, `deterministic_match_false`, `E_MARKDOWN_FENCE`, `boundary_drift` |
 
 ## Reading Paths
 1. Product walkthrough: `PUB-ODR-001` -> `PUB-GEN-001` -> `PUB-GEN-002`
