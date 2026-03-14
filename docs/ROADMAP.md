@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. techdebt active cycle `DD03142026` deterministic drift remediation -- Active. Plan: `docs/projects/techdebt/DD03142026-deterministic-drift-remediation-plan.md`.
+None.
 
 ## Maintenance (Non-Priority)
 
@@ -32,5 +32,5 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
-| techdebt | maintenance + active cycle DD03142026 | P1-active | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane plus active deterministic-drift remediation cycle `DD03142026`. Checklist: `Recurring-Maintenance-Checklist.md`. Governance: `README.md`. |
+| techdebt | maintenance | P2-recurring | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane only. Checklist: `Recurring-Maintenance-Checklist.md`. Governance: `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes; truthful runtime hardening continuation remains staged pending explicit reentry. |

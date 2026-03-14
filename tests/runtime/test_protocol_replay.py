@@ -22,12 +22,13 @@ def _write_run_events(
     *,
     status: str,
     operation_ok: bool,
+    session_id: str = "sess-1",
     run_started_artifacts: dict[str, object] | None = None,
 ) -> None:
     ledger = AppendOnlyRunLedger(path)
     run_started_event = {
         "kind": "run_started",
-        "session_id": "sess-1",
+        "session_id": session_id,
         "run_type": "epic",
         "run_name": "Protocol Replay",
         "department": "core",
@@ -40,7 +41,7 @@ def _write_run_events(
     ledger.append_event(
         {
             "kind": "operation_result",
-            "session_id": "sess-1",
+            "session_id": session_id,
             "operation_id": "op-1",
             "tool": "write_file",
             "result": {"ok": operation_ok},
@@ -49,7 +50,7 @@ def _write_run_events(
     ledger.append_event(
         {
             "kind": "run_finalized",
-            "session_id": "sess-1",
+            "session_id": session_id,
             "status": status,
             "failure_class": None if status == "incomplete" else "ExecutionFailed",
             "failure_reason": None if status == "incomplete" else "failed",
@@ -200,6 +201,23 @@ def test_protocol_replay_engine_compare_reports_match_for_identical_runs(tmp_pat
     assert drift_report["drift_schema_version"] == "1.0"
     assert drift_report["drift_detected"] is False
     assert drift_report["primary_layer"] == "none"
+
+
+# Layer: integration
+def test_protocol_replay_engine_compare_ignores_fresh_session_identity_when_state_matches(tmp_path: Path) -> None:
+    run_a = tmp_path / "run_a" / "events.log"
+    run_b = tmp_path / "run_b" / "events.log"
+    _write_run_events(run_a, status="incomplete", operation_ok=True, session_id="sess-a")
+    _write_run_events(run_b, status="incomplete", operation_ok=True, session_id="sess-b")
+    _write_receipts(run_a.with_name("receipts.log"))
+    _write_receipts(run_b.with_name("receipts.log"))
+
+    engine = ProtocolReplayEngine()
+    comparison = engine.compare_replays(run_a_events_path=run_a, run_b_events_path=run_b)
+
+    assert comparison["deterministic_match"] is True
+    assert comparison["differences"] == []
+    assert comparison["state_digest_a"] == comparison["state_digest_b"]
 
 
 # Layer: integration

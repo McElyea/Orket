@@ -325,6 +325,7 @@ async def test_local_model_provider_applies_local_prompt_profile_overrides(monke
 
 @pytest.mark.asyncio
 async def test_local_model_provider_ollama_strict_tasks_request_json_format(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: contract. Verifies Ollama strict_json turns request provider JSON mode."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
     provider = LocalModelProvider(model="qwen2.5-coder:7b")
@@ -350,6 +351,43 @@ async def test_local_model_provider_ollama_strict_tasks_request_json_format(monk
     assert seen["format"] == "json"
     assert response.raw["ollama_request_format"] == "json"
     assert response.raw["ollama_format_fallback_used"] is False
+
+
+@pytest.mark.asyncio
+async def test_local_model_provider_ollama_legacy_tool_call_turns_do_not_request_json_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Layer: contract. Verifies legacy tool_call turns leave Ollama response format unconstrained for multi-call output."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
+    provider = LocalModelProvider(model="qwen2.5-coder:7b")
+    seen: dict[str, Any] = {}
+
+    class _CaptureClient:
+        async def chat(self, model, messages, options, format=None):  # type: ignore[no-untyped-def]
+            seen["format"] = format
+            return {
+                "message": {
+                    "content": (
+                        '{"tool":"read_file","args":{"path":"agent_output/requirements.txt"}}\n'
+                        '{"tool":"read_file","args":{"path":"agent_output/main.py"}}'
+                    )
+                },
+                "prompt_eval_count": 4,
+                "eval_count": 2,
+                "prompt_eval_duration": 100_000_000,
+                "eval_duration": 90_000_000,
+                "total_duration": 210_000_000,
+            }
+
+    provider.client = _CaptureClient()
+    response = await provider.complete(
+        [{"role": "user", "content": "Return required tool calls"}],
+        runtime_context={"required_action_tools": ["read_file", "update_issue_status"]},
+    )
+    assert seen["format"] is None
+    assert response.raw["ollama_request_format"] is None
+    assert response.raw["task_class"] == "tool_call"
 
 
 @pytest.mark.asyncio

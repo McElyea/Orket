@@ -1,7 +1,7 @@
 # Runtime Stability Live Compare Hardening Plan
 
 Last updated: 2026-03-14
-Status: Superseded by DD03142026
+Status: Superseded and closed by DD03142026
 Owner: Orket Core
 Lane type: Superseded staging ancestor
 
@@ -10,9 +10,11 @@ Lane type: Superseded staging ancestor
 Preserve the original staged Claim E hardening frame that was later activated as techdebt cycle `DD03142026`.
 
 This file is no longer the canonical active lane.
-Active authority now lives in:
-1. `docs/projects/techdebt/DD03142026-deterministic-drift-requirements.md`
-2. `docs/projects/techdebt/DD03142026-deterministic-drift-remediation-plan.md`
+Closure record now lives in:
+1. `docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-requirements.md`
+2. `docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-remediation-plan.md`
+3. `docs/projects/archive/techdebt/DD03142026/Closeout.md`
+4. `benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14.json`
 
 ## Current Truth
 

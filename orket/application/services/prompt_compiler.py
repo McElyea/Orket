@@ -83,7 +83,10 @@ class PromptCompiler:
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "architect": [
-                    "You MUST write design content using write_file(path='agent_output/design.txt', ...).",
+                    "You MUST write architecture decision JSON using write_file(path='agent_output/design.txt', ...).",
+                    "That JSON MUST include recommendation, confidence, and evidence keys.",
+                    "evidence MUST include: estimated_domains, external_integrations, independent_scaling_needs, deployment_complexity, team_parallelism, operational_maturity.",
+                    "If the turn contract specifies frontend_framework, include frontend_framework in the same JSON object.",
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "coder": [
@@ -95,7 +98,8 @@ class PromptCompiler:
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "code_reviewer": [
-                    "You MUST read required implementation artifacts with read_file(...).",
+                    "You MUST read every path listed in the Read Path Contract with read_file(...) in this same response.",
+                    "Do not stop after reading only a subset of required artifacts.",
                     "You MUST then call update_issue_status(status='code_review') for guard handoff.",
                 ],
                 "integrity_guard": [

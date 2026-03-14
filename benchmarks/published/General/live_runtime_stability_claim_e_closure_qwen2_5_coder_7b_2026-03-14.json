@@ -1,0 +1,101 @@
+{
+  "artifact_version": "1.0",
+  "generated_on_local": "2026-03-14",
+  "proof_type": "live",
+  "status": "complete",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "live_definition": "Local provider-backed model through Ollama or LM Studio only. No mocks, fakes, shims, or provider-free runs count.",
+  "proof_root": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14",
+  "supersedes": "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json#claim_e",
+  "provider_preflight": {
+    "provider": "ollama",
+    "model": "qwen2.5-coder:7b",
+    "observed_path": "primary",
+    "result": "success",
+    "status": "pass",
+    "source_path": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/provider_preflight_stdout.log"
+  },
+  "talking_points": [
+    "Published Claim E drift on 2026-03-13 was real operator-surface drift, not just volatile run noise.",
+    "Fresh live closure runs 66a2e31c, 2855ce28, and 8a1e9bb3 all completed successfully after the bounded runtime, prompt, and adapter fixes.",
+    "Unfiltered post-fix compare still drifted only in runtime-generated support artifacts and fresh run identity, so the compare contract was narrowed to the truthful operator surface in the same change.",
+    "Pairwise strict compare under the final governed scope now returns deterministic_match=true for A/B, A/C, and B/C.",
+    "Replay on fresh closure run 66a2e31c returned status done with compatibility_validation.status=ok."
+  ],
+  "claims": [
+    {
+      "claim_id": "A",
+      "label": "Fresh append-only live acceptance reruns still complete",
+      "observed_path": "primary",
+      "result": "success",
+      "run_ids": [
+        "66a2e31c",
+        "2855ce28",
+        "8a1e9bb3"
+      ],
+      "highlights": {
+        "status": "done",
+        "run_count": 3,
+        "anti_flake_mode": "three_run_pairwise"
+      },
+      "source_paths": [
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_run_a_run_summary.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_run_b_run_summary.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_run_c_run_summary.json"
+      ]
+    },
+    {
+      "claim_id": "D",
+      "label": "Replay still succeeds on the fresh closure run",
+      "observed_path": "primary",
+      "result": "success",
+      "run_id": "66a2e31c",
+      "highlights": {
+        "status": "done",
+        "compatibility_validation_status": "ok",
+        "run_determinism_class": "workspace"
+      },
+      "source_paths": [
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_replay_run_a.json"
+      ]
+    },
+    {
+      "claim_id": "E",
+      "label": "Strict compare across equivalent fresh live runs is deterministic at the final governed operator surface",
+      "observed_path": "primary",
+      "result": "success",
+      "run_ids": [
+        "66a2e31c",
+        "2855ce28",
+        "8a1e9bb3"
+      ],
+      "highlights": {
+        "closure_mode": "three_run_pairwise_strict",
+        "pairwise_results": {
+          "A_B": true,
+          "A_C": true,
+          "B_C": true
+        },
+        "deterministic_match": true,
+        "final_scope_excludes": [
+          "agent_output/observability/runtime_events.jsonl",
+          "agent_output/verification/runtime_verification.json",
+          "agent_output/**/__pycache__/*.pyc"
+        ],
+        "fresh_session_identity_ignored": true
+      },
+      "source_paths": [
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_pre_resolution_compare.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_pre_resolution_operator_surface_diff_summary.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_post_fix_unfiltered_compare_ab.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ab_filtered.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ac_filtered.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_bc_filtered.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_scope_delta.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_commands.json",
+        "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/resolution_note.md"
+      ]
+    }
+  ]
+}

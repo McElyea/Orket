@@ -1,0 +1,278 @@
+{
+  "deterministic_match": true,
+  "state_digest_a": "3120bec51dc84ae29e341f7bd0c0861ec2c00655f19a7813a2437422644e8800",
+  "state_digest_b": "3120bec51dc84ae29e341f7bd0c0861ec2c00655f19a7813a2437422644e8800",
+  "differences": [],
+  "drift_report": {
+    "drift_schema_version": "1.0",
+    "drift_detected": false,
+    "primary_layer": "none",
+    "detected_layers": [],
+    "layer_reasons": [],
+    "unclassified_fields": []
+  },
+  "run_a": {
+    "session_id": "66a2e31c",
+    "run_type": "epic",
+    "run_name": "Acceptance Pipeline",
+    "department": "core",
+    "build_id": "build-acceptance_pipeline_live",
+    "status": "done",
+    "failure_class": null,
+    "failure_reason": null,
+    "event_count": 2,
+    "last_event_seq": 2,
+    "operations": {},
+    "status_timeline": [
+      {
+        "event_seq": 1,
+        "status": "running"
+      },
+      {
+        "event_seq": 2,
+        "status": "done"
+      }
+    ],
+    "artifact_inventory": [
+      {
+        "path": ".env.example",
+        "sha256": "76b3c4c0c139a92504060a1e039c177b1a8934494ccddf582cb654e009899fbf",
+        "size_bytes": 34
+      },
+      {
+        "path": "README.md",
+        "sha256": "05369d9b345e22c81c512c32e95bf20ba38109bd7b881c9b0a1f505cae7c7f01",
+        "size_bytes": 53
+      },
+      {
+        "path": "dependencies/package.json",
+        "sha256": "be3ed1f04927c774a8b7fa2b93eb8080fd32f250410b3cbc5af53c1219aec56f",
+        "size_bytes": 150
+      },
+      {
+        "path": "dependencies/pyproject.toml",
+        "sha256": "f5a103f5c39e870122287c97d2efd107c7f4d3b3a8fa97170328b946375c88b2",
+        "size_bytes": 147
+      },
+      {
+        "path": "dependencies/requirements-dev.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "dependencies/requirements.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "deployment/Dockerfile",
+        "sha256": "99db87dcf2271830a7689227b0769d57f531e79f7460e77ec1e801c8b1d2cafb",
+        "size_bytes": 90
+      },
+      {
+        "path": "deployment/docker-compose.yml",
+        "sha256": "b7ce2773d4388dc478d4164ccf869b53b373c5f116ac07e4b2fadf61b3aab247",
+        "size_bytes": 150
+      },
+      {
+        "path": "deployment/run_local.sh",
+        "sha256": "d7bc784497087bf6af676eaffa3aae41d965273a4234347dba730aabbf6a29e6",
+        "size_bytes": 56
+      },
+      {
+        "path": "design.txt",
+        "sha256": "ebbfbf66056d5df607d3eaaff9346f1e3fcbb418975ae8c5cb508a7e54153d8e",
+        "size_bytes": 236
+      },
+      {
+        "path": "main.py",
+        "sha256": "5aeeb28f71a21b5dbdf7969f4ac345afabeb07f0da75750370374d715236293d",
+        "size_bytes": 123
+      },
+      {
+        "path": "requirements.txt",
+        "sha256": "d5c1a8cb7d8361c643045ef6b261007fbca8b84caafe66f220924215ba71704e",
+        "size_bytes": 706
+      },
+      {
+        "path": "src/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      }
+    ],
+    "receipt_inventory": [],
+    "runtime_contract_snapshots": {
+      "tool_registry_version": "1.2.0",
+      "artifact_schema_registry_version": "1.0",
+      "compatibility_map_schema_version": "1.0",
+      "tool_registry_snapshot_hash": "d0038f37b35523ff66eb35cc46cacfc4683307c7c0303121f37d70a12e2152d6",
+      "artifact_schema_snapshot_hash": "1df008686d5e022d2a3ae4328b5a4779960caea81c0de9b672619bc592a9a385",
+      "tool_contract_snapshot_hash": "347a353069cd659f1eb554f8bcfa6dc7787a1dbeb94a5365b73b9f029e046df2"
+    },
+    "runtime_policy_versions": {
+      "prompt_budget_policy": "1.0",
+      "retry_policy": "1.1",
+      "promotion_gate_policy": "1.0"
+    },
+    "ledger_schema_version": "1.0",
+    "runtime_contract_hash": "2a91749ef9d2344c2ad5a2f544e3290d135569b03862ea4b687997e5ca91aade",
+    "compatibility_validation": {
+      "path": "primary",
+      "status": "ok",
+      "missing_contract_fields": [],
+      "mismatch_fields": [],
+      "lifecycle_missing": [],
+      "run_determinism_class": "workspace"
+    },
+    "operation_count": 0,
+    "receipt_count": 0,
+    "state_digest": "3120bec51dc84ae29e341f7bd0c0861ec2c00655f19a7813a2437422644e8800"
+  },
+  "run_b": {
+    "session_id": "8a1e9bb3",
+    "run_type": "epic",
+    "run_name": "Acceptance Pipeline",
+    "department": "core",
+    "build_id": "build-acceptance_pipeline_live",
+    "status": "done",
+    "failure_class": null,
+    "failure_reason": null,
+    "event_count": 2,
+    "last_event_seq": 2,
+    "operations": {},
+    "status_timeline": [
+      {
+        "event_seq": 1,
+        "status": "running"
+      },
+      {
+        "event_seq": 2,
+        "status": "done"
+      }
+    ],
+    "artifact_inventory": [
+      {
+        "path": ".env.example",
+        "sha256": "76b3c4c0c139a92504060a1e039c177b1a8934494ccddf582cb654e009899fbf",
+        "size_bytes": 34
+      },
+      {
+        "path": "README.md",
+        "sha256": "05369d9b345e22c81c512c32e95bf20ba38109bd7b881c9b0a1f505cae7c7f01",
+        "size_bytes": 53
+      },
+      {
+        "path": "dependencies/package.json",
+        "sha256": "be3ed1f04927c774a8b7fa2b93eb8080fd32f250410b3cbc5af53c1219aec56f",
+        "size_bytes": 150
+      },
+      {
+        "path": "dependencies/pyproject.toml",
+        "sha256": "f5a103f5c39e870122287c97d2efd107c7f4d3b3a8fa97170328b946375c88b2",
+        "size_bytes": 147
+      },
+      {
+        "path": "dependencies/requirements-dev.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "dependencies/requirements.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "deployment/Dockerfile",
+        "sha256": "99db87dcf2271830a7689227b0769d57f531e79f7460e77ec1e801c8b1d2cafb",
+        "size_bytes": 90
+      },
+      {
+        "path": "deployment/docker-compose.yml",
+        "sha256": "b7ce2773d4388dc478d4164ccf869b53b373c5f116ac07e4b2fadf61b3aab247",
+        "size_bytes": 150
+      },
+      {
+        "path": "deployment/run_local.sh",
+        "sha256": "d7bc784497087bf6af676eaffa3aae41d965273a4234347dba730aabbf6a29e6",
+        "size_bytes": 56
+      },
+      {
+        "path": "design.txt",
+        "sha256": "ebbfbf66056d5df607d3eaaff9346f1e3fcbb418975ae8c5cb508a7e54153d8e",
+        "size_bytes": 236
+      },
+      {
+        "path": "main.py",
+        "sha256": "5aeeb28f71a21b5dbdf7969f4ac345afabeb07f0da75750370374d715236293d",
+        "size_bytes": 123
+      },
+      {
+        "path": "requirements.txt",
+        "sha256": "d5c1a8cb7d8361c643045ef6b261007fbca8b84caafe66f220924215ba71704e",
+        "size_bytes": 706
+      },
+      {
+        "path": "src/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      }
+    ],
+    "receipt_inventory": [],
+    "runtime_contract_snapshots": {
+      "tool_registry_version": "1.2.0",
+      "artifact_schema_registry_version": "1.0",
+      "compatibility_map_schema_version": "1.0",
+      "tool_registry_snapshot_hash": "d0038f37b35523ff66eb35cc46cacfc4683307c7c0303121f37d70a12e2152d6",
+      "artifact_schema_snapshot_hash": "1df008686d5e022d2a3ae4328b5a4779960caea81c0de9b672619bc592a9a385",
+      "tool_contract_snapshot_hash": "347a353069cd659f1eb554f8bcfa6dc7787a1dbeb94a5365b73b9f029e046df2"
+    },
+    "runtime_policy_versions": {
+      "prompt_budget_policy": "1.0",
+      "retry_policy": "1.1",
+      "promotion_gate_policy": "1.0"
+    },
+    "ledger_schema_version": "1.0",
+    "runtime_contract_hash": "2a91749ef9d2344c2ad5a2f544e3290d135569b03862ea4b687997e5ca91aade",
+    "compatibility_validation": {
+      "path": "primary",
+      "status": "ok",
+      "missing_contract_fields": [],
+      "mismatch_fields": [],
+      "lifecycle_missing": [],
+      "run_determinism_class": "workspace"
+    },
+    "operation_count": 0,
+    "receipt_count": 0,
+    "state_digest": "3120bec51dc84ae29e341f7bd0c0861ec2c00655f19a7813a2437422644e8800"
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-03-14T18:13:27.350199Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:7366bb31a583c92b23e79300fbc08c3a56854f19871cc93874a37796daeb0767",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 363,
+        "paths_total_reference": 363,
+        "churn_paths": 363,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

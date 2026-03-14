@@ -131,6 +131,7 @@ For `strict_json` and `tool_call` task classes, prompt assembly MUST include:
 2. explicit payload-only output constraint,
 3. no-markdown/no-prose constraint.
 4. for `tool_call`, serialization and role behavior MUST follow `tool_contract` in LP-01.
+5. provider-enforced single-object JSON response modes MUST NOT be required for legacy `tool_call` turns when the active runtime contract allows repeated tool-call objects in one response (for example multiple `read_file` calls to satisfy required read paths).
 
 ### LP-06: Assistant Prefill Policy (SHOULD; MUST when configured)
 

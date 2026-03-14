@@ -1,9 +1,9 @@
 # DD03142026 Deterministic Drift Remediation Plan
 
 Last updated: 2026-03-14
-Status: Active
+Status: Archived
 Owner: Orket Core
-Lane type: Active techdebt cycle
+Lane type: Archived techdebt cycle
 
 ## Purpose
 
@@ -15,7 +15,7 @@ Drive Claim E from live red to truthful closure without broadening scope beyond 
 2. `CURRENT_AUTHORITY.md`
 3. `docs/CONTRIBUTOR.md`
 4. `docs/ROADMAP.md`
-5. `docs/projects/techdebt/DD03142026-deterministic-drift-requirements.md`
+5. `docs/projects/archive/techdebt/DD03142026/DD03142026-deterministic-drift-requirements.md`
 6. `docs/projects/archive/runtime-stability-closeout/LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`
 7. `docs/projects/future/RUNTIME-STABILITY-LIVE-COMPARE-HARDENING-PLAN.md`
 8. `benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json`
@@ -250,10 +250,141 @@ Governance/doc gates:
 2. Stop early if the active hypothesis requires a repo-wide redesign instead of a bounded deterministic-drift fix; record the blocker truthfully.
 3. Stop and reassess if a proposed fix reopens previously closed claims A, D, or G.
 
+## Completion Result
+
+The lane conclusive gate is green.
+
+1. Closure mode used the three-run anti-flake path with fresh live runs `66a2e31c`, `2855ce28`, and `8a1e9bb3`.
+2. Pairwise strict compare passed for all three closure pairs under the final governed compare contract.
+3. Replay on run `66a2e31c` returned `status=done` and `compatibility_validation.status=ok`.
+4. Named hardening checks remained green.
+5. Published closure evidence lives in `benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/` with summary artifact `benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14.json`.
+
+## Active Evidence Record
+
+### Iteration 2026-03-14A
+
+What was wrong
+1. Baseline inspection pinned the active repo state at commit `81e056cb00164d9bab4dc29ad91e17e39064180e` with no tracked worktree drift from `git status --porcelain=v1 --untracked-files=no`.
+2. Published Claim E rerun4 evidence showed identical `messages.json` inputs for `REQ-1`, `ARC-1`, and `COD-1` across runs `6b3a2424` and `8faad44b`, but different `model_response.txt` outputs for each seat.
+3. The rerun4 raw provider telemetry for `REQ-1` showed `task_class=concise_text` with a stochastic Ollama sampling bundle (`temperature=0.2`, `top_p=0.9`, `top_k=40`, `seed_policy=provider_default`) even though the turn required tool-call output.
+4. Declared causal basis for this iteration: `adapter`.
+
+What changed
+1. Updated `orket/adapters/llm/local_prompting_policy.py` so any turn with non-empty `required_action_tools` resolves to `tool_call` even when `protocol_governed_enabled` is false.
+2. Added `tests/adapters/test_local_prompting_policy.py::test_resolve_local_prompting_policy_uses_tool_call_bundle_when_required_tools_exist_without_protocol_governance` to lock the legacy non-governed required-tool path onto the deterministic `tool_call` sampling bundle.
+3. Named hardening checks for this iteration:
+   1. `python -m pytest tests/adapters/test_local_prompting_policy.py tests/application/test_turn_executor_runtime_context_bridge.py -q`
+
+What the new evidence shows
+1. Structural proof only: `python -m pytest tests/adapters/test_local_prompting_policy.py tests/application/test_turn_executor_runtime_context_bridge.py -q` passed with `11 passed in 0.43s`.
+2. The touched surface now routes required-tool turns to the deterministic `tool_call` prompt profile bundle already defined in `model/core/contracts/local_prompt_profiles.json`.
+3. The bounded fix matches the observed defect statement: same prompt input, different provider output caused by the runtime selecting a stochastic task class for a structured tool-call turn.
+
+What remains
+1. Live proof is still required; this iteration does not claim Claim E closure.
+2. `DD-4` still needs provider preflight, fresh equivalent live reruns, strict compare success under the final contract, replay, and named hardening checks.
+3. No published artifacts were updated in this iteration.
+4. If fresh live reruns still drift after the task-class correction, stop and reassess rather than broadening the same fix path.
+
+### Iteration 2026-03-14B
+
+What was wrong
+1. The first live rerun after iteration `2026-03-14A` failed at `REQ-1` with `LOCAL_PROMPT.MARKDOWN_FENCE` even though the failing turn was a legacy non-protocol required-tool path.
+2. Declared causal basis for this iteration: `runtime`.
+
+What changed
+1. Updated `orket/application/workflows/turn_contract_validator.py` so the markdown-fence violation is emitted only when `protocol_governed_enabled` is true.
+2. Updated `tests/application/test_turn_contract_validator.py` to keep the protocol-governed fence rejection and to prove the legacy non-protocol tool path remains allowed.
+3. Named hardening checks for this iteration:
+   1. `python -m pytest tests/application/test_turn_contract_validator.py -q`
+
+What the new evidence shows
+1. Structural proof only: `python -m pytest tests/application/test_turn_contract_validator.py -q` passed after the validator change.
+2. The next live rerun advanced past `REQ-1`, showing the red path had moved off the legacy fence validator and onto later seats.
+
+What remains
+1. Claim E was still live-red after `REQ-1`; this iteration removed one false boundary but did not close the lane.
+2. `ARC-1` still drifted because the architect prompt contract did not yet match the JSON artifact validator.
+
+### Iteration 2026-03-14C
+
+What was wrong
+1. `ARC-1` wrote markdown-style `design.txt` content while the runtime and artifact validator required architecture-decision JSON.
+2. Reviewer prompt assets also still under-described the read-path contract needed for later live seats.
+3. Declared causal basis for this iteration: `prompt`.
+
+What changed
+1. Updated `orket/application/services/prompt_compiler.py` and `orket/application/services/canonical_role_templates.py` so the architect turn contract explicitly requires the architecture-decision JSON payload.
+2. Updated `model/core/roles/architect.json`, `model/core/roles/code_reviewer.json`, and the live acceptance seed prompt descriptions in `tests/live/test_system_acceptance_pipeline.py` to align the shipped role assets with the governed prompt contract.
+3. Added `tests/application/test_prompt_compiler.py::test_prompt_compiler_architect_requires_architecture_decision_json_artifact`.
+4. Named hardening checks for this iteration:
+   1. `python -m pytest tests/application/test_prompt_compiler.py tests/application/test_prompts_cli.py tests/live/test_system_acceptance_pipeline.py::test_system_acceptance_role_pipeline_with_guard -q`
+
+What the new evidence shows
+1. Structural proof only: the targeted prompt/compiler suite passed.
+2. Fresh live rerun then progressed through `ARC-1` and `COD-1`, proving the architect seat now matched the required JSON artifact contract.
+3. Reviewer still failed, so prompt strengthening alone was not the full Claim E fix.
+
+What remains
+1. `REV-1` still failed on the live path and needed a narrower causal basis than prompt wording alone.
+2. Prompt-only evidence was not sufficient for closure.
+
+### Iteration 2026-03-14D
+
+What was wrong
+1. `REV-1` still returned too few `read_file` calls even after reviewer prompt alignment.
+2. Raw live output inspection showed the local provider was forcing Ollama `format=\"json\"` on legacy `tool_call` turns, constraining the provider to a single top-level JSON object and preventing the repeated tool-call blocks that reviewer needs.
+3. Declared causal basis for this iteration: `adapter`.
+
+What changed
+1. Updated `orket/adapters/llm/local_model_provider.py` so `format=\"json\"` is requested only for `strict_json`, not for legacy `tool_call` turns.
+2. Updated `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md` to make the legacy multi-tool-call allowance explicit.
+3. Added `tests/adapters/test_local_model_provider_telemetry.py::test_local_model_provider_ollama_legacy_tool_call_turns_do_not_request_json_format`.
+4. Named hardening checks for this iteration:
+   1. `python -m pytest tests/adapters/test_local_model_provider_telemetry.py tests/application/test_prompt_compiler.py tests/application/test_prompts_cli.py tests/application/test_turn_contract_validator.py tests/adapters/test_local_prompting_policy.py tests/application/test_turn_executor_runtime_context_bridge.py tests/live/test_system_acceptance_pipeline.py::test_system_acceptance_role_pipeline_with_guard -q`
+
+What the new evidence shows
+1. Structural proof: the targeted adapter and prompt/runtime regression suite passed with `50 passed in 10.40s`.
+2. Fresh live runs `66a2e31c`, `2855ce28`, and `8a1e9bb3` all completed successfully through `REQ-1`, `ARC-1`, `COD-1`, and `REV-1`.
+3. Authored operator files matched across the three live runs, leaving only runtime-generated support artifact drift and session-identity compare drift to resolve.
+
+What remains
+1. Strict compare still needed truthful closure under the final governed compare contract.
+2. The remaining red surface had narrowed to compare semantics, not authored operator outputs.
+
+### Iteration 2026-03-14E
+
+What was wrong
+1. Unfiltered strict compare on the fresh live runs still drifted only in `observability/runtime_events.jsonl`, `verification/runtime_verification.json`, interpreter cache artifacts under `__pycache__`, and state digests that changed only because `session_id` differed per fresh run.
+2. Authored operator outputs and stable scaffold files were already matching, so the remaining failure was a compare-contract truth gap rather than authored-output nondeterminism.
+3. Declared causal basis for this iteration: `compare-contract narrowing or scope delta`.
+
+What changed
+1. Updated `orket/runtime/protocol_replay.py` so fresh `session_id` differences do not perturb strict-compare state digests when all governed replay state otherwise matches.
+2. Added `tests/runtime/test_protocol_replay.py::test_protocol_replay_engine_compare_ignores_fresh_session_identity_when_state_matches`.
+3. Updated `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md` and `docs/architecture/CONTRACT_DELTA_CLAIM_E_COMPARE_SURFACE_2026-03-14.md` to define the final strict compare operator surface and the excluded runtime-generated support artifacts.
+4. Published the closure packet under `benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/`.
+5. Named hardening checks for this iteration:
+   1. `python -m pytest tests/runtime/test_protocol_replay.py tests/scripts/test_run_protocol_replay_compare.py -q`
+   2. `python -m pytest tests/runtime/test_protocol_replay.py tests/interfaces/test_cli_protocol_replay.py tests/scripts/test_run_protocol_replay_compare.py -q`
+   3. `python scripts/providers/check_model_provider_preflight.py --provider ollama --model-id qwen2.5-coder:7b --auto-select-model --smoke-stream`
+
+What the new evidence shows
+1. Structural proof: `python -m pytest tests/runtime/test_protocol_replay.py tests/scripts/test_run_protocol_replay_compare.py -q` passed with `19 passed in 0.47s`.
+2. Structural proof: `python -m pytest tests/runtime/test_protocol_replay.py tests/interfaces/test_cli_protocol_replay.py tests/scripts/test_run_protocol_replay_compare.py -q` passed with `29 passed in 1.06s`.
+3. Live proof: provider preflight passed with `PREFLIGHT=PASS`.
+4. Live proof: pairwise strict compare under the final governed scope returned `deterministic_match=true` with returncode `0` for `A/B`, `A/C`, and `B/C`.
+5. Live proof: replay on run `66a2e31c` returned `status=done` with `compatibility_validation.status=ok`.
+6. Governance proof: `python scripts/governance/check_docs_project_hygiene.py` passed.
+
+What remains
+1. Nothing remains open for this cycle; the lane conclusive gate is green and the cycle moved to archive.
+
 ## Working Status
 
-1. `DD-1` active
-2. `DD-2` pending
-3. `DD-3` pending
-4. `DD-4` pending
-5. `DD-5` pending
+1. `DD-1` completed
+2. `DD-2` completed
+3. `DD-3` completed
+4. `DD-4` completed
+5. `DD-5` completed

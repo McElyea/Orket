@@ -222,7 +222,7 @@ class ProtocolReplayEngine:
         summary["receipt_count"] = len(summary["receipt_inventory"])
         summary["state_digest"] = hash_canonical_json(
             {
-                "session_id": summary["session_id"],
+                # Equivalent fresh runs must compare on governed replay state, not run identity.
                 "run_type": summary["run_type"],
                 "run_name": summary["run_name"],
                 "department": summary["department"],

@@ -1,6 +1,6 @@
 # Runtime Stability Focus Requirements
 
-Last updated: 2026-03-13  
+Last updated: 2026-03-14  
 Status: Active (requirements draft)  
 Owner: Orket Core
 
@@ -132,6 +132,13 @@ Behavior:
    2. prompt construction
    3. tool validator repair heuristics
 5. Replay mode uses recorded tool calls only.
+6. Strict replay compare evaluates the canonical operator surface only.
+7. The strict compare operator surface includes authored workspace outputs and stable scaffold files that are materialized for operator inspection.
+8. The strict compare operator surface excludes only these runtime-generated support artifacts:
+   1. `observability/runtime_events.jsonl`
+   2. `verification/runtime_verification.json`
+   3. interpreter cache artifacts matching `**/__pycache__/*.pyc`
+9. Fresh run identity fields such as `session_id` must not change a deterministic match when the governed replay state and all in-scope artifacts are otherwise identical.
 
 Interfaces:
 1. `orket protocol replay <run_id>`
@@ -181,8 +188,9 @@ Failure semantics:
    5. artifact formatting drift
 
 Proof:
-1. Replay of equivalent recorded protocol runs is deterministic-match clean at the canonical operator surface.
+1. Replay of equivalent recorded protocol runs is deterministic-match clean at the canonical operator surface defined above.
 2. Drift classifier identifies drift layer correctly.
+3. Comparator regression tests cover the excluded runtime-generated support artifacts and fresh session-identity handling so strict compare does not report false drift.
 
 ## Focus Item 3: Prompt Surface Budgets
 

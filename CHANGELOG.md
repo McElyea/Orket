@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.7] - 2026-03-14 - "The Claim E Closure Cut"
+
+### Added
+- **Claim E Closure Packet**: Added a curated published closure package for the remaining runtime-stability deterministic-drift gap, including pre-resolution drift evidence, the governed compare-scope delta, three-run strict-compare proof, replay proof, and provenance artifacts.
+- **Claim E Compare-Surface Delta Record**: Added an explicit contract-delta record for the final strict-compare surface so runtime-generated support artifacts and fresh run identity are excluded only under a governed authority change.
+- **DD03142026 Archive Closeout**: Added the archived requirements, remediation plan, and closeout summary for the completed deterministic-drift remediation cycle.
+
+### Changed
+- **Deterministic Drift Runtime Path**: Fixed legacy local required-tool prompting, legacy non-protocol markdown-fence validation, architect/reviewer prompt-contract alignment, Ollama legacy tool-call response formatting, and strict-compare session-identity handling so equivalent fresh live runs converge at the final governed operator surface.
+- **Runtime Stability Compare Authority**: Updated the canonical runtime-stability requirements to define the final Claim E operator surface explicitly and to exclude only runtime-generated support artifacts `observability/runtime_events.jsonl`, `verification/runtime_verification.json`, and `**/__pycache__/*.pyc`.
+- **Roadmap And Techdebt State**: Archived `DD03142026`, removed it from `Priority Now`, and refreshed the staged Claim E ancestor plus published index metadata to point at the closure packet instead of an active lane.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- None.
+
 ## [0.4.6] - 2026-03-14 - "The Causal Basis Cut"
 
 ### Added

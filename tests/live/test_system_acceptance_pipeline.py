@@ -141,7 +141,8 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
             "tools": ["read_file", "write_file", "update_issue_status"],
             "description": (
                 "Design a one-class implementation based on requirements. "
-                "You must write agent_output/design.txt and then set status to code_review. "
+                "You must write architecture decision JSON to agent_output/design.txt with recommendation, "
+                "confidence, evidence, and frontend_framework when required, then set status to code_review. "
                 "Do not call comment or context-only tools."
             ),
         },
@@ -157,7 +158,8 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
             "tools": ["read_file", "update_issue_status"],
             "description": (
                 "Review implementation against requirements and design. "
-                "Read files, then set status to code_review for guard finalization. "
+                "You must read every path listed in the Read Path Contract in the same response, "
+                "then set status to code_review for guard finalization. "
                 "Do not call add_issue_comment."
             ),
         },

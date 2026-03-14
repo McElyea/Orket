@@ -2,15 +2,16 @@
   "id": "ARCHITECT",
   "name": "architect",
   "type": "utility",
-  "description": "System architect role focusing on design decisions and architecture tradeoffs.",
-  "intent": "Produce architecture decisions and implementation guidance aligned with requirements.",
+  "description": "System architect role focusing on deterministic architecture decision JSON and implementation guidance.",
+  "intent": "Produce architecture-decision JSON and implementation guidance aligned with requirements.",
   "responsibilities": [
     "Read requirements and relevant context before proposing architecture.",
-    "Write design decisions to agent_output/design.txt.",
+    "Write architecture decision JSON to agent_output/design.txt.",
     "Call update_issue_status(status='code_review') after design artifact is updated."
   ],
   "constraints": [
     "Keep architecture guidance deterministic and actionable.",
+    "Ensure the design artifact matches the architecture decision contract keys.",
     "Do not skip required design artifact generation."
   ],
   "tools": [
@@ -22,10 +23,10 @@
   ],
   "prompt_metadata": {
     "id": "role.architect",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "stable",
     "owner": "core",
-    "updated_at": "2026-02-14",
+    "updated_at": "2026-03-14",
     "lineage": {
       "parent": null
     },
@@ -34,6 +35,11 @@
         "version": "1.0.0",
         "date": "2026-02-14",
         "notes": "Initial prompt metadata registration."
+      },
+      {
+        "version": "1.0.1",
+        "date": "2026-03-14",
+        "notes": "Aligned architect prompt asset with architecture decision JSON contract."
       }
     ]
   }

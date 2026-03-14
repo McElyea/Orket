@@ -1,6 +1,6 @@
 # Published Benchmark Index
 
-Last updated: 2026-03-13
+Last updated: 2026-03-14
 
 This directory is the curated, share-safe benchmark lane.
 
@@ -11,8 +11,8 @@ This directory is the curated, share-safe benchmark lane.
    - Machine-readable catalog for automation and dashboards.
 
 ## Latest Highlight
-1. `General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json` (`PUB-GEN-005`)
-   - Curated live proof package for runtime-stability closeout: acceptance success, replay success, fail-closed boundary evidence, fresh strict-compare drift, and governed-runtime manifest success.
+1. `General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14.json` (`PUB-GEN-006`)
+   - Curated closure packet for the remaining deterministic-drift gap in runtime-stability Claim E, including pre-resolution drift, final governed compare scope, three-run strict-compare success, replay success, and provenance.
 
 ## Artifact Directory
 
@@ -25,6 +25,7 @@ This directory is the curated, share-safe benchmark lane.
 | PUB-GEN-001 | General | `General/live_card_100_scored_report.json` | Live Card 100 Scored Report | Quality scoring summary across 100 live-card tasks. | `overall_avg_score`, `per_task_score_bands`, `pass_rate` |
 | PUB-GEN-002 | General | `General/live_100_determinism_report.json` | Live 100 Determinism Report | Determinism evidence across 100 tasks using hash-based repeatability checks. | `determinism_rate`, `deterministic_tasks`, `unique_hashes` |
 | PUB-GEN-005 | General | `General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json` | Live Runtime Stability Proof (Qwen2.5 Coder 7B) | Curated live proof package for runtime-stability closeout: acceptance success, replay success, fail-closed boundary evidence, fresh strict-compare drift, and governed-runtime manifest success. | `provider_preflight_pass`, `protocol_replay_ok`, `deterministic_match_false`, `governed_manifest_success`, `live_output_drift` |
+| PUB-GEN-006 | General | `General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14.json` | Live Runtime Stability Claim E Closure (Qwen2.5 Coder 7B) | Curated closure packet for the remaining deterministic-drift gap in runtime-stability Claim E, including pre-resolution drift, final governed compare scope, three-run strict-compare success, replay success, and provenance. | `claim_e_closure`, `deterministic_match_true`, `three_run_pairwise_success`, `protocol_replay_ok`, `compare_scope_delta` |
 
 ## Reading Paths
 1. Product walkthrough: `PUB-ODR-001` -> `PUB-GEN-001` -> `PUB-GEN-002`

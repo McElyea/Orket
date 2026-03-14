@@ -79,10 +79,16 @@ def _resolve_task_class(runtime_context: dict[str, Any]) -> str:
     explicit = str(runtime_context.get("local_prompt_task_class") or "").strip()
     if explicit:
         return _normalize_task_class(explicit)
+    required_tools = [
+        str(tool).strip()
+        for tool in (runtime_context.get("required_action_tools") or [])
+        if str(tool).strip()
+    ]
+    # Required tool turns are structured tool-call paths even when legacy prompt mode
+    # is still active, so they must use the deterministic tool_call bundle.
+    if required_tools:
+        return "tool_call"
     if bool(runtime_context.get("protocol_governed_enabled")):
-        required_tools = [str(tool).strip() for tool in (runtime_context.get("required_action_tools") or []) if str(tool).strip()]
-        if required_tools:
-            return "tool_call"
         return "strict_json"
     return "concise_text"
 def _role_forbidden_error(messages: list[dict[str, str]], profile: LocalPromptProfile) -> str | None:

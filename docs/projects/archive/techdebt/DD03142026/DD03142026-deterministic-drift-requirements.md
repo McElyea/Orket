@@ -1,7 +1,7 @@
 # DD03142026 Deterministic Drift Requirements
 
 Last updated: 2026-03-14
-Status: Active (cycle requirements)
+Status: Archived (requirements satisfied)
 Owner: Orket Core
 
 ## Purpose
@@ -37,6 +37,19 @@ equivalent fresh live runs still drift under the currently intended compare cont
    2. `agent_output/design.txt` drifted
    3. `agent_output/main.py` drifted
 7. The published diff classifier reports `primary_layer=artifact_formatting_drift`, but the changed paths are operator-visible outputs, so Orket cannot truthfully dismiss them as harmless formatting noise without narrowing the compare contract in the same change.
+
+## Closeout Result
+
+Resolved on 2026-03-14.
+
+1. Fresh live closure runs `66a2e31c`, `2855ce28`, and `8a1e9bb3` all completed successfully on the canonical live path.
+2. Authored operator outputs converged across those three runs under strict compare.
+3. The final governing compare contract now lives in `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md` and the delta record `docs/architecture/CONTRACT_DELTA_CLAIM_E_COMPARE_SURFACE_2026-03-14.md`.
+4. Final strict-compare scope:
+   1. in scope: authored workspace outputs and stable scaffold files materialized for operator inspection
+   2. excluded support artifacts: `agent_output/observability/runtime_events.jsonl`, `agent_output/verification/runtime_verification.json`, and interpreter cache artifacts matching `agent_output/**/__pycache__/*.pyc`
+   3. fresh run identity such as `session_id` is outside deterministic-match state when all governed replay state and in-scope artifacts are otherwise equal
+5. Published closure evidence lives under `benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/` with the summary artifact `benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14.json`.
 
 ## Problem Statement
 

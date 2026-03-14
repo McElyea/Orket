@@ -1,8 +1,8 @@
 ﻿{
   "catalog_v": "1.0.0",
-  "updated_on": "2026-03-13",
+  "updated_on": "2026-03-14",
   "root": "benchmarks/published",
-  "highlight_id": "PUB-GEN-005",
+  "highlight_id": "PUB-GEN-006",
   "reading_paths": [
     {
       "name": "Product walkthrough",
@@ -120,6 +120,22 @@
         "live_output_drift"
       ],
       "source_path": "benchmarks/published/General/live_runtime_stability_proof_qwen2_5_coder_7b_2026-03-13.json",
+      "publish_reviewed": true
+    },
+    {
+      "id": "PUB-GEN-006",
+      "category": "General",
+      "path": "General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14.json",
+      "title": "Live Runtime Stability Claim E Closure (Qwen2.5 Coder 7B)",
+      "summary": "Curated closure packet for the remaining deterministic-drift gap in runtime-stability Claim E, including pre-resolution drift, final governed compare scope, three-run strict-compare success, replay success, and provenance.",
+      "signals": [
+        "claim_e_closure",
+        "deterministic_match_true",
+        "three_run_pairwise_success",
+        "protocol_replay_ok",
+        "compare_scope_delta"
+      ],
+      "source_path": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14.json",
       "publish_reviewed": true
     }
   ]

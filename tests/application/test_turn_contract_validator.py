@@ -120,6 +120,7 @@ def test_contract_validator_allows_thinking_process_prefixed_tool_only_payload(t
 
 
 def test_contract_validator_local_prompt_reports_markdown_fence_leaf_code(tmp_path: Path) -> None:
+    """Layer: contract. Verifies protocol-governed local prompting rejects fenced JSON payloads."""
     validator = _validator(tmp_path)
     turn = ExecutionTurn(
         role="developer",
@@ -127,11 +128,33 @@ def test_contract_validator_local_prompt_reports_markdown_fence_leaf_code(tmp_pa
         content='```json\n{"ok":true}\n```',
         raw={"task_class": "strict_json"},
     )
-    diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context={})
+    diagnostics = validator.local_prompt_anti_meta_diagnostics(
+        turn,
+        context={"protocol_governed_enabled": True},
+    )
 
     violation = next(item for item in diagnostics["violations"] if item["rule_id"] == "LOCAL_PROMPT.MARKDOWN_FENCE")
     assert violation["error_code"] == ERR_JSON_MD_FENCE
     assert violation["error_family"] == EXTRANEOUS_TEXT
+
+
+def test_contract_validator_local_prompt_allows_markdown_fence_on_legacy_non_protocol_tool_path(tmp_path: Path) -> None:
+    """Layer: contract. Verifies legacy non-protocol tool-call turns allow fenced JSON blocks."""
+    validator = _validator(tmp_path)
+    turn = ExecutionTurn(
+        role="developer",
+        issue_id="ISSUE-1",
+        content='```json\n{"tool":"write_file","args":{"path":"a.txt","content":"ok"}}\n```',
+        raw={"task_class": "tool_call"},
+        tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "ok"})],
+    )
+
+    diagnostics = validator.local_prompt_anti_meta_diagnostics(
+        turn,
+        context={"protocol_governed_enabled": False},
+    )
+
+    assert diagnostics["violations"] == []
 
 
 def test_contract_validator_local_prompt_allows_leading_think_block_when_profile_permits(tmp_path: Path) -> None:

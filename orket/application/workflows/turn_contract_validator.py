@@ -314,6 +314,7 @@ class ContractValidator:
         task_class = str(context.get("local_prompt_task_class") or raw.get("task_class") or "").strip().lower()
         if task_class not in {"strict_json", "tool_call"}:
             return {"task_class": task_class, "violations": []}
+        protocol_governed_enabled = bool(context.get("protocol_governed_enabled", False))
         content = str(turn.content or "")
         trimmed, trim_error = self._trim_ascii_whitespace_once(content)
         violations: list[dict[str, Any]] = []
@@ -325,7 +326,7 @@ class ContractValidator:
                     excerpt=content[:240],
                 )
             )
-        if "```" in content:
+        if protocol_governed_enabled and "```" in content:
             violations.append(
                 self._local_prompt_violation(
                     rule_id="LOCAL_PROMPT.MARKDOWN_FENCE",

@@ -174,7 +174,9 @@ class LocalModelProvider:
             options["seed"] = self.seed
         options.update(local_prompting_policy.ollama_options_overrides())
         request_format = ""
-        if local_prompting_policy.task_class in {"strict_json", "tool_call"}:
+        # Legacy tool_call turns may need multiple top-level JSON tool blocks in one
+        # response; Ollama format=json constrains generations to a single JSON object.
+        if local_prompting_policy.task_class == "strict_json":
             request_format = "json"
 
         max_retries = 3

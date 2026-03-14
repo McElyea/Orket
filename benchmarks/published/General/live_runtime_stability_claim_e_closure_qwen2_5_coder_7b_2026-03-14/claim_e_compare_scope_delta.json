@@ -1,0 +1,33 @@
+{
+  "claim_id": "E",
+  "resolution_mode": "compare-contract narrowing after authored-output convergence",
+  "before_scope": {
+    "authored_operator_outputs": [
+      "agent_output/requirements.txt",
+      "agent_output/design.txt",
+      "agent_output/main.py"
+    ],
+    "runtime_generated_support_artifacts": [
+      "agent_output/observability/runtime_events.jsonl",
+      "agent_output/verification/runtime_verification.json"
+    ],
+    "identity_behavior": "state_digest changed for fresh run-specific session_id values"
+  },
+  "after_scope": {
+    "included_surface": [
+      "authored workspace outputs",
+      "stable scaffold files materialized for operator inspection"
+    ],
+    "excluded_support_artifacts": [
+      "agent_output/observability/runtime_events.jsonl",
+      "agent_output/verification/runtime_verification.json",
+      "agent_output/**/__pycache__/*.pyc"
+    ],
+    "identity_behavior": "fresh session_id does not perturb deterministic-match state when governed replay state and in-scope artifacts match"
+  },
+  "authority_paths": [
+    "docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md",
+    "docs/architecture/CONTRACT_DELTA_CLAIM_E_COMPARE_SURFACE_2026-03-14.md"
+  ],
+  "reason": "Live closure runs matched on authored operator outputs. Remaining drift came only from runtime-generated support artifacts and fresh run identity, so the broader prior compare claim was narrowed to the truthful operator surface."
+}

@@ -33,14 +33,15 @@ CANONICAL_ROLE_DEFAULTS: Dict[str, Dict[str, Any]] = {
         ],
     },
     "architect": {
-        "intent": "Produce architecture decisions and implementation guidance aligned with requirements.",
+        "intent": "Produce architecture-decision JSON and implementation guidance aligned with requirements.",
         "responsibilities": [
             "Read requirements and relevant context before proposing architecture.",
-            "Write design decisions to agent_output/design.txt.",
+            "Write architecture decision JSON to agent_output/design.txt.",
             "Call update_issue_status(status='code_review') after design artifact is updated.",
         ],
         "constraints": [
             "Keep architecture guidance deterministic and actionable.",
+            "Ensure the design artifact matches the architecture decision contract keys.",
             "Do not skip required design artifact generation.",
         ],
     },
@@ -59,12 +60,12 @@ CANONICAL_ROLE_DEFAULTS: Dict[str, Dict[str, Any]] = {
     "code_reviewer": {
         "intent": "Verify implementation against requirements, architecture, and runtime evidence.",
         "responsibilities": [
-            "Read required artifacts and verification outputs before issuing a review decision.",
+            "Read every required artifact and verification output before issuing a review decision.",
             "Record review rationale with concrete findings.",
             "Call update_issue_status(status='code_review') for integrity-guard handoff.",
         ],
         "constraints": [
-            "Do not approve based on assumptions without reading required artifacts.",
+            "Do not approve based on assumptions or partial reads of required artifacts.",
             "Keep findings tied to concrete evidence.",
         ],
     },

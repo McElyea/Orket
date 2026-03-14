@@ -84,6 +84,26 @@ async def test_resolve_local_prompting_policy_rejects_forbidden_role_on_tool_pat
 
 
 @pytest.mark.asyncio
+async def test_resolve_local_prompting_policy_uses_tool_call_bundle_when_required_tools_exist_without_protocol_governance() -> None:
+    """Layer: contract. Verifies required tool turns stay on deterministic tool_call sampling without protocol mode."""
+
+    result = await resolve_local_prompting_policy(
+        provider_backend="ollama",
+        model="qwen2.5-coder:7b",
+        messages=[{"role": "user", "content": "hello"}],
+        runtime_context={
+            "protocol_governed_enabled": False,
+            "required_action_tools": ["write_file", "update_issue_status"],
+        },
+    )
+
+    assert result.task_class == "tool_call"
+    assert result.sampling_bundle["temperature"] == 0.0
+    assert result.sampling_bundle["seed_policy"] == "fixed"
+    assert result.sampling_bundle["seed_value"] == 17
+
+
+@pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_lmstudio_fixed_session_injects_payload_override() -> None:
     result = await resolve_local_prompting_policy(
         provider_backend="openai_compat",

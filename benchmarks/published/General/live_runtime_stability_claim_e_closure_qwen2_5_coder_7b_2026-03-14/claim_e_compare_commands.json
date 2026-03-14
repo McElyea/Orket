@@ -1,0 +1,35 @@
+{
+  "strict_compare_commands": [
+    {
+      "pair": "A/B",
+      "returncode": 0,
+      "command": "python scripts/protocol/run_protocol_replay_compare.py --run-a-events benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/pytest_tmp_claim_e_run_a/test_system_acceptance_role_pi0/workspace/runs/66a2e31c/events.log --run-b-events benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/pytest_tmp_claim_e_run_b/test_system_acceptance_role_pi0/workspace/runs/2855ce28/events.log --run-a-artifacts benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/compare_surface/run_a --run-b-artifacts benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/compare_surface/run_b --out benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ab_filtered.json --strict",
+      "stdout_log": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ab_filtered.stdout.log",
+      "json_output": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ab_filtered.json"
+    },
+    {
+      "pair": "A/C",
+      "returncode": 0,
+      "command": "python scripts/protocol/run_protocol_replay_compare.py --run-a-events benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/pytest_tmp_claim_e_run_a/test_system_acceptance_role_pi0/workspace/runs/66a2e31c/events.log --run-b-events benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/pytest_tmp_claim_e_run_c/test_system_acceptance_role_pi0/workspace/runs/8a1e9bb3/events.log --run-a-artifacts benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/compare_surface/run_a --run-b-artifacts benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/compare_surface/run_c --out benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ac_filtered.json --strict",
+      "stdout_log": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ac_filtered.stdout.log",
+      "json_output": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_ac_filtered.json"
+    },
+    {
+      "pair": "B/C",
+      "returncode": 0,
+      "command": "python scripts/protocol/run_protocol_replay_compare.py --run-a-events benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/pytest_tmp_claim_e_run_b/test_system_acceptance_role_pi0/workspace/runs/2855ce28/events.log --run-b-events benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/pytest_tmp_claim_e_run_c/test_system_acceptance_role_pi0/workspace/runs/8a1e9bb3/events.log --run-a-artifacts benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/compare_surface/run_b --run-b-artifacts benchmarks/results/techdebt/live_runtime_proof/2026-03-14_dd03142026_closure_attempt6/compare_surface/run_c --out benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_bc_filtered.json --strict",
+      "stdout_log": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_bc_filtered.stdout.log",
+      "json_output": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_compare_bc_filtered.json"
+    }
+  ],
+  "replay_command": {
+    "returncode": 0,
+    "command": "python main.py protocol replay 66a2e31c --workspace c:\\Source\\Orket\\benchmarks\\results\\techdebt\\live_runtime_proof\\2026-03-14_dd03142026_closure_attempt6\\pytest_tmp_claim_e_run_a\\test_system_acceptance_role_pi0\\workspace",
+    "json_output": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/claim_e_replay_run_a.json"
+  },
+  "provider_preflight_command": {
+    "returncode": 0,
+    "command": "python scripts/providers/check_model_provider_preflight.py --provider ollama --model-id qwen2.5-coder:7b --auto-select-model --smoke-stream",
+    "stdout_log": "benchmarks/published/General/live_runtime_stability_claim_e_closure_qwen2_5_coder_7b_2026-03-14/provider_preflight_stdout.log"
+  }
+}
