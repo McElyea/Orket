@@ -699,7 +699,10 @@ async def test_execute_issue_turn_uses_custom_model_client_node(orchestrator, mo
     async def _noop(*args, **kwargs):
         return None
 
-    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect: "SYSTEM")
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.PromptCompiler.compile",
+        lambda skill, dialect, **kwargs: "SYSTEM",
+    )
 
     orch.memory = _Memory()
     orch._save_checkpoint = _noop
@@ -803,7 +806,10 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
     async def _noop(*args, **kwargs):
         return None
 
-    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect: "SYSTEM")
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.PromptCompiler.compile",
+        lambda skill, dialect, **kwargs: "SYSTEM",
+    )
 
     orch.memory = _Memory()
     orch._save_checkpoint = _noop
@@ -901,7 +907,10 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
         return None
 
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
-    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect: "SYSTEM")
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.PromptCompiler.compile",
+        lambda skill, dialect, **kwargs: "SYSTEM",
+    )
 
     orch.memory = _Memory()
     orch._save_checkpoint = _noop
@@ -1316,7 +1325,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
 
     monkeypatch.setattr(
         "orket.application.workflows.orchestrator.PromptCompiler.compile",
-        lambda skill, dialect: "COMPILER PROMPT",
+        lambda skill, dialect, **kwargs: "COMPILER PROMPT",
     )
     monkeypatch.setattr(
         "orket.application.workflows.orchestrator.PromptResolver.resolve",
@@ -2032,7 +2041,10 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
     async def _noop(*args, **kwargs):
         return None
 
-    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect: "SYSTEM")
+    monkeypatch.setattr(
+        "orket.application.workflows.orchestrator.PromptCompiler.compile",
+        lambda skill, dialect, **kwargs: "SYSTEM",
+    )
 
     orch.memory = _Memory()
     orch.model_client_node = _ModelClient()

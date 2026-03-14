@@ -112,6 +112,29 @@ Rules:
    4. retirement criterion
 4. Archive superseded recurring items into a dated appendix or PR notes instead of expanding the core checklist indefinitely.
 
+## Section E: Live Sandbox Baseline (Conditional)
+
+Run when:
+1. sandbox orchestration, lifecycle, cleanup, or reconciliation behavior changes
+2. a maintenance pass needs live proof of the current sandbox baseline
+
+Objective:
+1. revalidate the canonical live create-health-cleanup sandbox baseline against real Docker resources
+
+Command:
+1. `python scripts/techdebt/run_live_maintenance_baseline.py --baseline-id <baseline_id> --strict`
+
+Canonical live target:
+1. the runner executes `tests/acceptance/test_sandbox_orchestrator_live_docker.py::test_live_create_health_and_cleanup_flow` with `ORKET_RUN_SANDBOX_ACCEPTANCE=1`
+
+Pass criteria:
+1. result payload reports `proof_type=live`, `path=primary`, and `result=success`
+2. docker and docker-compose preflight checks pass
+3. the selected pytest target passes without skip
+
+Retirement criterion:
+1. retire or replace this item only when another single canonical live maintenance baseline command supersedes this runner in the same checklist
+
 ## Handoff Rules
 
 1. If any required section is red, open or update a scoped remediation lane in roadmap with explicit closure criteria.

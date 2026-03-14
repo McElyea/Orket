@@ -170,6 +170,7 @@ def _service(tmp_path: Path, runner: FakeRecoveryRunner) -> tuple[AsyncSandboxLi
 async def test_recovery_reconciles_blocked_starting_record_to_active_when_resources_exist(tmp_path) -> None:
     runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
     repo, recovery = _service(tmp_path, runner)
+    recovery.lifecycle_service._now = staticmethod(lambda: "2026-03-11T00:01:00+00:00")
     await repo.save_record(_record())
 
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
@@ -188,6 +189,7 @@ async def test_recovery_reconciles_blocked_starting_record_to_terminal_when_reso
         resources_present=False,
     )
     repo, recovery = _service(tmp_path, runner)
+    recovery.lifecycle_service._now = staticmethod(lambda: "2026-03-11T00:01:00+00:00")
     await repo.save_record(_record())
 
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")

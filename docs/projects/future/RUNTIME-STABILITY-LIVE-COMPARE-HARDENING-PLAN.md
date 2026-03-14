@@ -1,15 +1,18 @@
 # Runtime Stability Live Compare Hardening Plan
 
-Last updated: 2026-03-13
-Status: Staged / Waiting
+Last updated: 2026-03-14
+Status: Superseded by DD03142026
 Owner: Orket Core
-Lane type: Staged / Waiting (explicit reopen required)
+Lane type: Superseded staging ancestor
 
 ## Purpose
 
-Own the follow-on hardening work for archived runtime-stability Claim E.
+Preserve the original staged Claim E hardening frame that was later activated as techdebt cycle `DD03142026`.
 
-This lane exists because the live proof recovery lane is complete, but fresh provider-backed strict compare is still red on operator-visible outputs.
+This file is no longer the canonical active lane.
+Active authority now lives in:
+1. `docs/projects/techdebt/DD03142026-deterministic-drift-requirements.md`
+2. `docs/projects/techdebt/DD03142026-deterministic-drift-remediation-plan.md`
 
 ## Current Truth
 

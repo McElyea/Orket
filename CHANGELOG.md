@@ -5,6 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.6] - 2026-03-14 - "The Causal Basis Cut"
+
+### Added
+- **Deterministic Drift Remediation Authority**: Added the active `DD03142026` deterministic-drift requirements and remediation plan so Claim E implementation can proceed from a single governed techdebt lane with anti-flake closure gates, explicit compare-surface rules, and a publishable resolution package contract.
+- **Live Sandbox Maintenance Baseline Runner**: Added `scripts/techdebt/run_live_maintenance_baseline.py` plus contract coverage so maintenance work now has one canonical live sandbox baseline command with evidence payloads, diff-ledger output, and strict failure behavior.
+- **Recurring Maintenance Cycle Report**: Added the `2026-03-14_cycle-a` recurring maintenance report artifact recording gate audit, docs hygiene, and canonical pytest freshness results.
+
+### Changed
+- **Roadmap And Staging Authority**: Activated `DD03142026` in `Priority Now`, superseded the older staged Claim E future plan as a staging ancestor, and kept the future lane scoped to the remaining staged truthful-runtime work only.
+- **Maintenance Workflow Guidance**: Updated contributor and recurring-maintenance authority so live sandbox baseline proof now has a canonical command and checklist section instead of ad hoc maintenance handling.
+- **Deterministic Test Fixtures**: Updated prompt-compiler monkeypatches to accept keyword arguments across orchestrator tests and fixed sandbox recovery tests to pin lifecycle timestamps deterministically.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `python scripts/techdebt/run_live_maintenance_baseline.py --baseline-id <baseline_id> --strict` when maintenance work needs canonical live sandbox baseline proof.
+
 ## [0.4.5] - 2026-03-13 - "The Archived Recovery Cut"
 
 ### Added
