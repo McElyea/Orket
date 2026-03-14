@@ -1,6 +1,6 @@
 # Tech Debt Recurring Maintenance Checklist
 
-Last updated: 2026-03-07  
+Last updated: 2026-03-13  
 Status: Active (living document)  
 Owner: Orket Core
 
@@ -16,6 +16,8 @@ Provide one standing checklist for every techdebt/code-review/maintenance cycle 
 4. Narrative-only sign-off is not sufficient for closure of any checklist item.
 5. Folder-level closure/archiving semantics are defined in:
    - `docs/projects/techdebt/README.md`
+6. Cross-slice live runtime proof recovery is defined in:
+   - `docs/projects/techdebt/LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md`
 
 ## Cycle Triggers
 

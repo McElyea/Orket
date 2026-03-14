@@ -1,6 +1,6 @@
 # Tech Debt Folder Governance
 
-Last updated: 2026-03-08
+Last updated: 2026-03-13
 Status: Active  
 Owner: Orket Core
 
@@ -27,6 +27,7 @@ These stay in `docs/projects/techdebt/`:
 
 1. `README.md` (this governance contract)
 2. `Recurring-Maintenance-Checklist.md` (standing maintenance runbook)
+3. `LIVE-RUNTIME-PROOF-RECOVERY-PLAN.md` (standing live-proof runbook for recently closed runtime/governance work)
 
 ## Archivable Cycle Items
 
