@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2026-03-13 - "The Tag Truth Cut"
+
+### Added
+- **Head Tag Enforcement**: Added release-policy enforcement for matching annotated `v<version>` tags on pushed `main` `HEAD` commits, with targeted guard coverage for the required head-tag path.
+
+### Changed
+- **Release Workflow Truthfulness**: Clarified contributor and release-policy authority so a core version bump is not complete until the matching annotated tag is created and pushed.
+- **Commit Discipline Enforcement**: Removed the stale docs-only exemption from the core release policy guard so docs-only `main` commits must advance version and tag just like any other release step.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Ensure each `main` commit is pushed with its matching annotated `v<version>` tag.
+
 ## [0.4.3] - 2026-03-13 - "The Published Proof Bundle"
 
 ### Added

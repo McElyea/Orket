@@ -20,7 +20,7 @@ SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.
 
 ## 2. Effective Versioning Model Beginning With `0.4.0`
 
-1. Starting with core engine version `0.4.0`, every commit merged into `main` must advance the core engine version.
+1. Starting with core engine version `0.4.0`, every commit merged into `main` must advance the core engine version and end with a matching annotated Git tag on that commit.
 2. Minor version bumps occur only after completion of a roadmap-tracked major project.
 3. A major project for core versioning purposes is a roadmap-tracked body of work whose completion materially changes runtime behavior, operator workflows, release governance, or public interfaces.
 4. Major-project completion requires:
@@ -33,12 +33,13 @@ SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.
 ## 3. Tag Format and Alignment
 
 1. Core engine releases must use annotated Git tags in the form `v<major>.<minor>.<patch>`.
-2. The tagged commit must match:
+2. Every post-`0.4.0` commit kept on `main` must carry the matching annotated tag `v<version>` on that exact `HEAD` commit.
+3. The tagged commit must match:
    - `pyproject.toml` core version,
    - the top matching version entry in `CHANGELOG.md`, and
    - the intended release boundary described by the release notes or closeout.
-3. Do not create a core release tag that claims a version not present in `pyproject.toml`.
-4. Earlier descriptive or nonconforming tags are historical and do not establish precedent for future core-engine releases.
+4. Do not create a core release tag that claims a version not present in `pyproject.toml`.
+5. Earlier descriptive or nonconforming tags are historical and do not establish precedent for future core-engine releases.
 
 ## 4. Canonical User Surface
 
@@ -56,9 +57,11 @@ Alternative commands may exist, but they must be documented as secondary or expl
 1. Every commit merged into `main` must advance the core engine version.
 2. The default release step for a commit is a patch increment.
 3. Every commit must create or update the matching top version entry in `CHANGELOG.md` for that exact released version.
-4. Commits that are not approved minor or major release steps must increment the patch version in `pyproject.toml`.
-5. A commit may advance the core version by an allowed minor or major release step instead of a patch step only when that release step is otherwise permitted by this policy.
-6. Revert commits follow the same rule as normal commits.
+4. Every commit must create and push the matching annotated Git tag `v<version>` for that exact `HEAD` commit.
+5. Commits that are not approved minor or major release steps must increment the patch version in `pyproject.toml`.
+6. A commit may advance the core version by an allowed minor or major release step instead of a patch step only when that release step is otherwise permitted by this policy.
+7. Docs-only commits are not exempt from version or tag advancement.
+8. Revert commits follow the same rule as normal commits.
 
 ## 6. Minor Release Proof Gates
 
@@ -142,6 +145,7 @@ Every minor release must include release notes that contain at minimum:
 2. CI automation enforces:
    - `pyproject.toml` and `CHANGELOG.md` alignment
    - commit-range core version advancement on `main` and pull requests
+   - matching annotated core release tag presence on pushed `main` `HEAD`
    - canonical `v<major>.<minor>.<patch>` core tag format
    - annotated core release tags
    - presence of the minor-release proof report path for tagged minor releases
@@ -152,12 +156,13 @@ Every minor release must include release notes that contain at minimum:
 4. The automation entrypoints are:
    - `.gitea/workflows/core-release-policy.yml`
    - `scripts/governance/check_core_release_policy.py`
-5. The canonical operator prep path for a tagged core release is:
+5. The canonical operator prep path for release-only tagged core release prep is:
    - `scripts/governance/prepare_core_release.py --tag v<major>.<minor>.<patch>`
 6. Use `--commit-and-tag` only after:
    - the matching changelog entry is release-ready,
    - any required proof report is release-ready, and
    - the worktree is clean outside canonical release files.
+7. For normal non-release-only work already committed on `main`, create the matching annotated `v<version>` tag on `HEAD` and push the branch tip plus that tag together. A core version bump is incomplete until that tag is pushed.
 
 ## 11. Authority Roles and Boundaries
 

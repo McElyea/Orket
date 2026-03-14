@@ -48,6 +48,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--head-rev", default="HEAD", help="Head revision for commit-range or tag validation.")
     parser.add_argument("--tag", default="", help="Optional core release tag to validate, for example v0.4.0.")
     parser.add_argument(
+        "--require-head-tag",
+        action="store_true",
+        help="Require the head revision to carry the matching annotated core release tag.",
+    )
+    parser.add_argument(
         "--transition-version",
         default="0.4.0",
         help="Version where commit-based core release discipline becomes active.",
@@ -91,21 +96,6 @@ def _parse_top_changelog_version(text: str) -> str:
     if match is None:
         raise ValueError("CHANGELOG.md missing top version entry")
     return match.group(1)
-
-
-def _is_docs_only_path(path_text: str) -> bool:
-    normalized = str(path_text or "").strip().replace("\\", "/")
-    if not normalized:
-        return False
-    if normalized.startswith("docs/"):
-        return True
-    if "/" not in normalized and normalized.endswith(".md"):
-        return True
-    return False
-
-
-def _is_docs_only_change(paths: list[str]) -> bool:
-    return bool(paths) and all(_is_docs_only_path(path_text) for path_text in paths)
 
 
 def _load_version_at_ref(repo_root: Path, ref: str) -> str:
@@ -194,6 +184,11 @@ def _tag_is_annotated(repo_root: Path, tag: str) -> bool:
     return completed.stdout.strip() == "tag"
 
 
+def _tags_pointing_at(repo_root: Path, ref: str) -> list[str]:
+    output = _run_git(repo_root, "tag", "--points-at", ref)
+    return [line.strip() for line in output.splitlines() if line.strip()]
+
+
 def _append_assertion(assertions: list[dict[str, Any]], *, assertion_id: str, passed: bool, detail: str) -> None:
     assertions.append({"id": assertion_id, "passed": passed, "detail": detail})
 
@@ -240,16 +235,12 @@ def _check_commit_range(
 
     range_passed = True
     checked_commits = 0
-    exempt_commits = 0
     skipped_pre_transition = 0
     for commit in commits:
         parent = _commit_parent(repo_root, commit)
         if not parent:
             continue
         paths = _changed_paths_for_commit(repo_root, parent, commit)
-        if _is_docs_only_change(paths):
-            exempt_commits += 1
-            continue
 
         previous_version = SemVer.parse(_load_version_at_ref(repo_root, parent))
         current_version = SemVer.parse(_load_version_at_ref(repo_root, commit))
@@ -286,9 +277,52 @@ def _check_commit_range(
 
     summary_detail = (
         f"range={base_token}..{head_rev} commits={len(commits)} "
-        f"checked={checked_commits} exempt={exempt_commits} pre_transition_skipped={skipped_pre_transition}"
+        f"checked={checked_commits} pre_transition_skipped={skipped_pre_transition}"
     )
     _append_assertion(assertions, assertion_id="commit_range_summary", passed=range_passed, detail=summary_detail)
+
+
+def _check_head_tag(
+    repo_root: Path,
+    *,
+    head_rev: str,
+    head_version: str,
+    transition: SemVer,
+    assertions: list[dict[str, Any]],
+    failures: list[str],
+) -> None:
+    parsed_version = SemVer.parse(head_version)
+    if parsed_version < transition:
+        _append_assertion(
+            assertions,
+            assertion_id="head_tag_requirement",
+            passed=True,
+            detail=f"skipped head_version={head_version} transition={transition}",
+        )
+        return
+
+    expected_tag = f"v{head_version}"
+    tags = _tags_pointing_at(repo_root, head_rev)
+    tag_present = expected_tag in tags
+    _append_assertion(
+        assertions,
+        assertion_id="head_has_matching_release_tag",
+        passed=tag_present,
+        detail=f"head_rev={head_rev} expected_tag={expected_tag} tags={tags}",
+    )
+    if not tag_present:
+        failures.append(f"head revision {head_rev} is missing matching core release tag {expected_tag}")
+        return
+
+    annotated = _tag_is_annotated(repo_root, expected_tag)
+    _append_assertion(
+        assertions,
+        assertion_id="head_release_tag_is_annotated",
+        passed=annotated,
+        detail=f"head_rev={head_rev} tag={expected_tag} annotated={annotated}",
+    )
+    if not annotated:
+        failures.append(f"head revision {head_rev} tag is not annotated: {expected_tag}")
 
 
 def _check_tag(
@@ -368,6 +402,7 @@ def _build_payload(
     base_rev: str,
     head_rev: str,
     tag: str,
+    require_head_tag: bool,
     transition_version: str,
 ) -> dict[str, Any]:
     return {
@@ -377,6 +412,7 @@ def _build_payload(
         "base_rev": str(base_rev or "").strip(),
         "head_rev": str(head_rev or "").strip(),
         "tag": str(tag or "").strip(),
+        "require_head_tag": bool(require_head_tag),
         "transition_version": transition_version,
         "assertions": assertions,
         "failures": failures,
@@ -391,7 +427,7 @@ def main(argv: list[str] | None = None) -> int:
     assertions: list[dict[str, Any]] = []
     failures: list[str] = []
 
-    _check_head_alignment(repo_root, assertions, failures)
+    head_version = _check_head_alignment(repo_root, assertions, failures)
     _check_commit_range(
         repo_root,
         base_rev=str(args.base_rev),
@@ -400,6 +436,15 @@ def main(argv: list[str] | None = None) -> int:
         assertions=assertions,
         failures=failures,
     )
+    if args.require_head_tag:
+        _check_head_tag(
+            repo_root,
+            head_rev=str(args.head_rev),
+            head_version=head_version,
+            transition=transition,
+            assertions=assertions,
+            failures=failures,
+        )
     _check_tag(
         repo_root,
         tag=str(args.tag),
@@ -415,6 +460,7 @@ def main(argv: list[str] | None = None) -> int:
         base_rev=str(args.base_rev),
         head_rev=str(args.head_rev),
         tag=str(args.tag),
+        require_head_tag=bool(args.require_head_tag),
         transition_version=str(transition),
     )
 
