@@ -1,10 +1,13 @@
 # Truthful Runtime Packet-1 Contract
 
-Last updated: 2026-03-14
+Last updated: 2026-03-15
 Status: Active
 Owner: Orket Core
-Canonical requirements source: `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`
-Related authority: `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
+Canonical requirements source: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
+Related authority:
+1. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
+2. `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md`
+3. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PACKET1_BOUNDARY_REALIGNMENT_2026-03-15.md`
 
 ## Purpose
 
@@ -16,8 +19,13 @@ This contract governs the minimum runtime-owned truth surfaces for:
 3. silent fallback defect detection
 4. packet-1 conformance
 
-Implementation sequencing remains in:
-1. `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+Packet-1 proof artifacts demonstrate correctness of runtime truth surfaces. They do not claim semantic quality of generated artifacts.
+
+Implementation archive:
+1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+
+Broader Phase C continuation and the active packet-2 repair-ledger slice live in:
+1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
 
 ## Scope
 
@@ -64,23 +72,28 @@ Out of scope:
    2. the selected primary output boundary when one exists
 3. Primary-output selection authority order is:
    1. explicit completion contract
-   2. direct response surface
-   3. explicitly designated primary artifact
-   4. none
-4. Within direct response surfaces, precedence is:
+   2. explicitly designated work artifact
+   3. direct response surface
+   4. runtime verification artifact fallback
+   5. none
+4. When multiple candidate work artifacts exist, the runtime must designate one deterministically from runtime-owned artifact-provenance facts using:
+   1. greatest `turn_index`
+   2. then latest `produced_at`
+   3. then lexical `artifact_path`
+5. Within direct response surfaces, precedence is:
    1. structured protocol or API response surface
    2. CLI or terminal completion output surface
-5. `primary_output_kind` must be one of:
+6. `primary_output_kind` must be one of:
    1. `response`
    2. `artifact`
    3. `none`
-6. When `primary_output_kind = none`, `primary_output_id` must be omitted.
-7. If no primary output boundary exists:
+7. When `primary_output_kind = none`, `primary_output_id` must be omitted.
+8. If no primary output boundary exists:
    1. `classification_applicable` must be `false`
    2. `truth_classification` must be omitted
    3. `classification_basis` must be omitted
-8. Packet 1 must not fabricate truth classification when no primary output boundary exists.
-9. Optional packet-1 fields are omitted rather than set to `null`.
+9. Packet 1 must not fabricate truth classification when no primary output boundary exists.
+10. Optional packet-1 fields are omitted rather than set to `null`.
 
 ## Provenance Contract
 
@@ -110,6 +123,8 @@ Out of scope:
 4. `mismatch_reason` must be a stable code rather than free-form prose.
 5. Provenance facts must be attributable to deterministic ledger-recorded or ledger-derived runtime facts.
 6. Provenance facts must not exist only as prose in logs, prompts, or operator commentary.
+7. When required intended-path provenance data is absent, the runtime must emit the stable token `missing`.
+8. Required provenance fields must not emit implementation placeholder values such as `None` or `unknown`.
 
 ## Truth-Classification Contract
 

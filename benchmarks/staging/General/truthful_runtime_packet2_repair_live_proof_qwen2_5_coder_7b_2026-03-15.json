@@ -1,0 +1,116 @@
+{
+  "artifact_type": "truthful_runtime_packet2_repair_live_proof",
+  "schema_version": "1.0",
+  "captured_on": "2026-03-15",
+  "proof_type": "end-to-end_live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "proof_command": "python scripts/governance/record_truthful_runtime_packet2_repair_live_proof.py --model qwen2.5-coder:7b --provider ollama --json",
+  "provider": {
+    "requested_provider": "ollama",
+    "requested_model": "qwen2.5-coder:7b"
+  },
+  "run": {
+    "run_id": "a2e84c25",
+    "status": "done",
+    "repair_trigger_mode": "injected_integrity_guard_prefix",
+    "source_result_path": "benchmarks/results/governance/truthful_runtime_packet2_repair_live_proof.json"
+  },
+  "packet1_summary": {
+    "classification": {
+      "classification_applicable": true,
+      "classification_basis": {
+        "evidence_source": "validator_repair",
+        "rule": "repaired"
+      },
+      "truth_classification": "repaired"
+    },
+    "defects": {
+      "defect_families": [
+        "silent_repaired_success"
+      ],
+      "defects_present": true
+    },
+    "packet1_conformance": {
+      "reasons": [
+        "silent_repaired_success"
+      ],
+      "status": "non_conformant"
+    },
+    "provenance": {
+      "actual_model": "qwen2.5-coder:7b",
+      "actual_profile": "ollama.qwen.chatml.v1",
+      "actual_provider": "ollama",
+      "execution_profile": "normal",
+      "fallback_occurred": false,
+      "intended_model": "qwen2.5-coder:7b",
+      "intended_profile": "ollama.qwen.chatml.v1",
+      "intended_provider": "ollama",
+      "mismatch_reason": "none",
+      "path_mismatch": false,
+      "primary_output_id": "agent_output/main.py",
+      "primary_output_kind": "artifact",
+      "repair_occurred": true,
+      "retry_occurred": false,
+      "run_id": "a2e84c25",
+      "terminal_status": "done",
+      "truth_classification": "repaired"
+    },
+    "schema_version": "1.0"
+  },
+  "packet2_summary": {
+    "repair_ledger": {
+      "entries": [
+        {
+          "issue_id": "REQ-1",
+          "material_change": true,
+          "reasons": [
+            "consistency_scope_contract_not_met",
+            "local_prompt_anti_meta_contract_not_met"
+          ],
+          "repair_id": "repair:REQ-1:2:corrective_reprompt",
+          "source_event": "turn_corrective_reprompt",
+          "strategy": "corrective_reprompt",
+          "turn_index": 2
+        },
+        {
+          "issue_id": "REV-1",
+          "material_change": true,
+          "reasons": [
+            "read_path_contract_not_met"
+          ],
+          "repair_id": "repair:REV-1:8:corrective_reprompt",
+          "source_event": "turn_corrective_reprompt",
+          "strategy": "corrective_reprompt",
+          "turn_index": 8
+        }
+      ],
+      "final_disposition": "accepted_with_repair",
+      "repair_count": 2,
+      "repair_occurred": true
+    },
+    "schema_version": "1.0"
+  },
+  "live_evidence": {
+    "primary_output_id": "agent_output/main.py",
+    "corrective_reprompt_count": 2,
+    "packet2_fact_event_count": 1,
+    "protocol_event_count": 4,
+    "run_finalized_packet2_matches_summary": true,
+    "repair_issue_ids": [
+      "REQ-1",
+      "REV-1"
+    ],
+    "repair_reason_codes": [
+      "consistency_scope_contract_not_met",
+      "local_prompt_anti_meta_contract_not_met",
+      "read_path_contract_not_met"
+    ]
+  },
+  "notes": [
+    "This artifact supersedes the 2026-03-14 packet-2 repair proof for the active packet-1 boundary contract.",
+    "The repair path is intentionally forced by corrupting the first integrity_guard response, so this is live repaired-path proof rather than organic repair proof.",
+    "The superseding proof confirms that packet-1 now classifies agent_output/main.py and preserves intended-path values on the repaired path.",
+    "The canonical rerunnable source remains benchmarks/results/governance/truthful_runtime_packet2_repair_live_proof.json."
+  ]
+}

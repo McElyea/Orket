@@ -1,11 +1,20 @@
+import asyncio
 import json
 from pathlib import Path
 
 import pytest
 
 import orket.runtime.execution_pipeline as execution_pipeline_module
+from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.exceptions import ExecutionFailed
+from orket.logging import log_event
+from orket.application.workflows.tool_invocation_contracts import (
+    build_tool_invocation_manifest,
+    compute_tool_call_hash,
+)
 from orket.runtime.execution_pipeline import ExecutionPipeline
+from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
+from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.schema import CardStatus
 
 
@@ -54,6 +63,88 @@ def _write_epic_assets(root: Path, epic_id: str) -> None:
     )
 
 
+def _write_protocol_write_receipts(
+    workspace: Path,
+    *,
+    session_id: str,
+    rows: list[tuple[str, str, int, str, str]],
+) -> None:
+    for issue_id, role_name, turn_index, artifact_path, operation_id in rows:
+        resolved_artifact_path = workspace / artifact_path
+        resolved_artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        resolved_artifact_path.write_text(f"artifact:{artifact_path}", encoding="utf-8")
+        manifest = build_tool_invocation_manifest(run_id=session_id, tool_name="write_file")
+        tool_args = {"path": artifact_path, "content": f"artifact:{artifact_path}"}
+        receipt_path = (
+            workspace
+            / "observability"
+            / session_id
+            / issue_id
+            / f"{turn_index:03d}_{role_name}"
+            / "protocol_receipts.log"
+        )
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt_payload = {
+            "run_id": session_id,
+            "step_id": f"{issue_id}:{turn_index}",
+            "operation_id": operation_id,
+            "tool": "write_file",
+            "tool_index": 0,
+            "tool_args": tool_args,
+            "execution_result": {"ok": True, "path": str(resolved_artifact_path)},
+            "tool_invocation_manifest": manifest,
+            "tool_call_hash": compute_tool_call_hash(
+                tool_name="write_file",
+                tool_args=tool_args,
+                tool_contract_version=str(manifest["tool_contract_version"]),
+                capability_profile=str(manifest["capability_profile"]),
+            ),
+        }
+        receipt_path.write_text(json.dumps(receipt_payload), encoding="utf-8")
+
+
+def _log_successful_write_file(
+    workspace: Path,
+    *,
+    session_id: str,
+    issue_id: str,
+    role_name: str,
+    turn_index: int,
+    artifact_path: str,
+    operation_id: str,
+) -> None:
+    resolved_artifact_path = workspace / artifact_path
+    resolved_artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    resolved_artifact_path.write_text(f"artifact:{artifact_path}", encoding="utf-8")
+    log_event(
+        "tool_call_start",
+        {
+            "issue_id": issue_id,
+            "role": role_name,
+            "session_id": session_id,
+            "turn_index": turn_index,
+            "tool": "write_file",
+            "args": {"path": artifact_path, "content": f"artifact:{artifact_path}"},
+            "operation_id": operation_id,
+        },
+        workspace=workspace,
+    )
+    log_event(
+        "tool_call_result",
+        {
+            "issue_id": issue_id,
+            "role": role_name,
+            "session_id": session_id,
+            "turn_index": turn_index,
+            "tool": "write_file",
+            "ok": True,
+            "error": None,
+            "operation_id": operation_id,
+        },
+        workspace=workspace,
+    )
+
+
 @pytest.mark.asyncio
 async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_incomplete")
@@ -63,6 +154,7 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
         department="core",
         db_path=db_path,
         config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
     )
 
     async def _no_op_execute_epic(**_kwargs):
@@ -81,6 +173,10 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
 
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
     monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
+    _write_json(
+        workspace / "agent_output" / "verification" / "runtime_verification.json",
+        {"ok": True, "command_results": []},
+    )
 
     await pipeline.run_epic(
         "ledger_epic_incomplete",
@@ -97,6 +193,10 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
     assert ledger["summary_json"]["status"] == "incomplete"
     assert ledger["summary_json"]["failure_reason"] is None
     assert ledger["summary_json"]["duration_ms"] >= 0
+    packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
+    assert packet1["provenance"]["primary_output_kind"] == "artifact"
+    assert packet1["classification"]["truth_classification"] == "direct"
+    assert packet1["packet1_conformance"]["status"] == "conformant"
     assert "gitea_export" not in ledger["summary_json"]["artifact_ids"]
     assert ledger["artifact_json"]["workspace"] == str(workspace)
     assert ledger["artifact_json"]["run_summary"] == ledger["summary_json"]
@@ -116,6 +216,7 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
         department="core",
         db_path=db_path,
         config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
     )
 
     async def _raise_execute_epic(**_kwargs):
@@ -170,6 +271,7 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
         department="core",
         db_path=db_path,
         config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
     )
 
     async def _blocked_execute_epic(**_kwargs):
@@ -203,6 +305,263 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
     assert ledger["summary_json"]["failure_reason"] is None
     assert ledger["summary_json"]["duration_ms"] >= 0
     assert _read_json(Path(ledger["artifact_json"]["run_summary_path"])) == ledger["summary_json"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_harvests_local_prompt_fallback_telemetry(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_prompt_fallback")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _execute_with_fallback_telemetry(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_json(
+            workspace / "observability" / run_id / "ISSUE-1" / "001_lead_architect" / "model_response_raw.json",
+            {
+                "provider_backend": "ollama",
+                "model": "packet1-fallback-proof:7b",
+                "profile_id": "ollama.qwen.chatml.v1",
+                "profile_resolution_path": "fallback",
+                "retries": 0,
+            },
+        )
+        _write_json(
+            workspace / "agent_output" / "verification" / "runtime_verification.json",
+            {"ok": True, "command_results": []},
+        )
+        return None
+
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", "true")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "ollama.qwen.chatml.v1")
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_with_fallback_telemetry)
+
+    await pipeline.run_epic(
+        "ledger_epic_prompt_fallback",
+        build_id="build-ledger-epic-prompt-fallback",
+        session_id="sess-ledger-prompt-fallback",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-prompt-fallback")
+    assert ledger is not None
+    packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
+    assert packet1["provenance"]["actual_model"] == "packet1-fallback-proof:7b"
+    assert packet1["provenance"]["actual_profile"] == "ollama.qwen.chatml.v1"
+    assert packet1["provenance"]["fallback_occurred"] is True
+    assert packet1["provenance"]["execution_profile"] == "fallback"
+    assert packet1["classification"]["truth_classification"] == "degraded"
+    assert packet1["defects"]["defect_families"] == ["silent_degraded_success"]
+    assert packet1["packet1_conformance"]["status"] == "non_conformant"
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_marks_corrective_reprompt_runs_as_repaired(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_repaired")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+    )
+
+    async def _execute_with_repair_event(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_json(
+            workspace / "agent_output" / "verification" / "runtime_verification.json",
+            {"ok": True, "command_results": []},
+        )
+        log_event(
+            "turn_corrective_reprompt",
+            {
+                "session_id": run_id,
+                "issue_id": "ISSUE-1",
+                "turn_index": 1,
+                "contract_reasons": ["consistency_scope_contract_not_met"],
+            },
+            workspace=workspace,
+        )
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_with_repair_event)
+
+    await pipeline.run_epic(
+        "ledger_epic_repaired",
+        build_id="build-ledger-epic-repaired",
+        session_id="sess-ledger-repaired",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-repaired")
+    assert ledger is not None
+    packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
+    packet2 = ledger["summary_json"]["truthful_runtime_packet2"]
+    assert packet1["provenance"]["repair_occurred"] is True
+    assert packet1["provenance"]["intended_model"] != PACKET1_MISSING_TOKEN
+    assert packet1["provenance"]["intended_profile"] != PACKET1_MISSING_TOKEN
+    assert packet1["classification"]["truth_classification"] == "repaired"
+    assert packet1["defects"]["defect_families"] == ["silent_repaired_success"]
+    assert packet1["packet1_conformance"]["status"] == "non_conformant"
+    assert packet2["repair_ledger"]["repair_occurred"] is True
+    assert packet2["repair_ledger"]["repair_count"] == 1
+    assert packet2["repair_ledger"]["final_disposition"] == "accepted_with_repair"
+    assert packet2["repair_ledger"]["entries"] == [
+        {
+            "repair_id": "repair:ISSUE-1:1:corrective_reprompt",
+            "issue_id": "ISSUE-1",
+            "turn_index": 1,
+            "source_event": "turn_corrective_reprompt",
+            "strategy": "corrective_reprompt",
+            "reasons": ["consistency_scope_contract_not_met"],
+            "material_change": True,
+        }
+    ]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_records_artifact_provenance_for_generated_files(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_artifact_provenance")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+
+    async def _execute_with_artifacts(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_protocol_write_receipts(
+            workspace,
+            session_id=run_id,
+            rows=[
+                ("REQ-1", "requirements_analyst", 1, "agent_output/requirements.txt", "op-req"),
+                ("ARC-1", "architect", 1, "agent_output/design.txt", "op-arc"),
+                ("COD-1", "coder", 1, "agent_output/main.py", "op-cod"),
+            ],
+        )
+        _write_json(
+            workspace / "agent_output" / "verification" / "runtime_verification.json",
+            {"ok": True, "command_results": []},
+        )
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_with_artifacts)
+
+    await pipeline.run_epic(
+        "ledger_epic_artifact_provenance",
+        build_id="build-ledger-epic-artifact-provenance",
+        session_id="sess-ledger-artifact-provenance",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-artifact-provenance")
+    assert ledger is not None
+    packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
+    artifact_provenance = ledger["summary_json"]["truthful_runtime_artifact_provenance"]
+    entries = artifact_provenance["artifacts"]
+    assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
+    assert [entry["artifact_path"] for entry in entries] == [
+        "agent_output/design.txt",
+        "agent_output/main.py",
+        "agent_output/requirements.txt",
+    ]
+    requirements_entry = next(entry for entry in entries if entry["artifact_path"] == "agent_output/requirements.txt")
+    assert requirements_entry["artifact_type"] == "requirements_document"
+    assert requirements_entry["generator"] == "tool.write_file"
+    assert requirements_entry["truth_classification"] == "direct"
+    assert requirements_entry["issue_id"] == "REQ-1"
+    assert requirements_entry["role_name"] == "requirements_analyst"
+    assert requirements_entry["turn_index"] == 1
+    protocol_events = await pipeline.run_ledger.list_events("sess-ledger-artifact-provenance")
+    artifact_fact = next(row for row in protocol_events if row["kind"] == "artifact_provenance_fact")
+    assert normalize_artifact_provenance_facts(artifact_fact["artifact_provenance_facts"]) == {
+        "artifacts": entries
+    }
+    finalized = next(row for row in reversed(protocol_events) if row["kind"] == "run_finalized")
+    assert finalized["summary"]["truthful_runtime_artifact_provenance"] == artifact_provenance
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_falls_back_to_tool_event_provenance_when_receipts_are_absent(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(test_root, "ledger_epic_artifact_provenance_log_fallback")
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+
+    async def _execute_with_logged_artifacts(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _log_successful_write_file(
+            workspace,
+            session_id=run_id,
+            issue_id="REQ-1",
+            role_name="requirements_analyst",
+            turn_index=1,
+            artifact_path="agent_output/requirements.txt",
+            operation_id="op-req-log",
+        )
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_with_logged_artifacts)
+
+    await pipeline.run_epic(
+        "ledger_epic_artifact_provenance_log_fallback",
+        build_id="build-ledger-epic-artifact-provenance-log-fallback",
+        session_id="sess-ledger-artifact-provenance-log-fallback",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-artifact-provenance-log-fallback")
+    assert ledger is not None
+    artifact_provenance = ledger["summary_json"]["truthful_runtime_artifact_provenance"]
+    assert artifact_provenance["artifacts"] == [
+        {
+            "artifact_path": "agent_output/requirements.txt",
+            "artifact_type": "requirements_document",
+            "generator": "tool.write_file",
+            "generator_version": "unversioned",
+            "source_hash": artifact_provenance["artifacts"][0]["source_hash"],
+            "produced_at": artifact_provenance["artifacts"][0]["produced_at"],
+            "truth_classification": "direct",
+            "step_id": "REQ-1:1",
+            "operation_id": "op-req-log",
+            "issue_id": "REQ-1",
+            "role_name": "requirements_analyst",
+            "turn_index": 1,
+        }
+    ]
+    assert len(str(artifact_provenance["artifacts"][0]["source_hash"])) == 64
 
 
 # Layer: integration
@@ -250,6 +609,16 @@ async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_f
     assert ledger["summary_json"]["status"] == "incomplete"
     assert ledger["summary_json"]["duration_ms"] is None
     assert ledger["artifact_json"]["run_summary_generation_error"]["error_type"] == "ValueError"
+    runtime_events_path = workspace / "agent_output" / "observability" / "runtime_events.jsonl"
+    for _ in range(20):
+        if runtime_events_path.exists():
+            break
+        await asyncio.sleep(0.01)
+    assert runtime_events_path.exists()
+    runtime_events = [json.loads(line) for line in runtime_events_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    packet1_failure = next(event for event in runtime_events if event["event"] == "packet1_emission_failure")
+    assert packet1_failure["packet1_conformance"]["status"] == "non_conformant"
+    assert packet1_failure["packet1_conformance"]["reasons"] == ["packet1_emission_failure"]
     summary_path = Path(ledger["artifact_json"]["run_summary_path"])
     assert summary_path.exists()
     assert _read_json(summary_path) == ledger["summary_json"]

@@ -6,6 +6,17 @@ from pathlib import Path
 from typing import Any
 
 
+def _detect_lane(index: dict[str, Any], index_path: Path) -> str:
+    root = str(index.get("root", "")).replace("\\", "/").rstrip("/")
+    index_name = str(index_path).replace("\\", "/").rstrip("/")
+    haystack = " ".join((root, index_name))
+    if "benchmarks/staging" in haystack:
+        return "staging"
+    if "benchmarks/published" in haystack:
+        return "published"
+    return "catalog"
+
+
 def _load_index(path: Path) -> dict[str, Any]:
     try:
         return json.loads(path.read_text(encoding="utf-8-sig"))
@@ -75,18 +86,39 @@ def _validate_index(index: dict[str, Any], index_path: Path) -> None:
                 _require(artifact_id in ids, "E_READING_PATH_UNKNOWN_ID", str(artifact_id))
 
 
-def _render_readme(index: dict[str, Any]) -> str:
+def _render_sync_command(index: Path, readme: Path, action: str) -> str:
+    default_index = Path("benchmarks/published/index.json")
+    default_readme = Path("benchmarks/published/README.md")
+    if index == default_index and readme == default_readme:
+        return f"python scripts/governance/sync_published_index.py --{action}"
+    return (
+        "python scripts/governance/sync_published_index.py "
+        f"--index {index.as_posix()} --readme {readme.as_posix()} --{action}"
+    )
+
+
+def _render_readme(index: dict[str, Any], *, lane: str, index_path: Path, readme_path: Path) -> str:
     artifacts = list(index["artifacts"])
     categories = sorted({row["category"] for row in artifacts})
     by_id = {row["id"]: row for row in artifacts}
     highlight = by_id[index["highlight_id"]]
+    write_command = _render_sync_command(index_path, readme_path, "write")
+    check_command = _render_sync_command(index_path, readme_path, "check")
 
     lines: list[str] = []
-    lines.append("# Published Benchmark Index")
+    if lane == "staging":
+        lines.append("# Staged Benchmark Candidates")
+    else:
+        lines.append("# Published Benchmark Index")
     lines.append("")
     lines.append(f"Last updated: {index['updated_on']}")
     lines.append("")
-    lines.append("This directory is the curated, share-safe benchmark lane.")
+    if lane == "staging":
+        lines.append("This directory is the review lane for benchmark artifacts awaiting explicit publication approval.")
+    elif lane == "published":
+        lines.append("This directory is the curated, share-safe benchmark lane.")
+    else:
+        lines.append("This directory holds a validated benchmark artifact catalog.")
     lines.append("")
     lines.append("## Folder Layout")
     for idx, category in enumerate(categories, start=1):
@@ -94,7 +126,10 @@ def _render_readme(index: dict[str, Any]) -> str:
     lines.append(f"{len(categories) + 1}. `index.json`")
     lines.append("   - Machine-readable catalog for automation and dashboards.")
     lines.append("")
-    lines.append("## Latest Highlight")
+    if lane == "staging":
+        lines.append("## Current Review Highlight")
+    else:
+        lines.append("## Latest Highlight")
     lines.append(f"1. `{highlight['path']}` (`{highlight['id']}`)")
     lines.append(f"   - {highlight['summary']}")
     lines.append("")
@@ -117,24 +152,36 @@ def _render_readme(index: dict[str, Any]) -> str:
             lines.append(f"{idx}. {row['name']}: {ids}")
 
     lines.append("")
-    lines.append("## Publish Workflow")
-    lines.append("1. Copy curated artifact(s) into the correct category folder.")
-    lines.append("2. Add/update artifact rows in `index.json`.")
-    lines.append("3. Regenerate this README:")
+    if lane == "staging":
+        lines.append("## Staging Workflow")
+        lines.append("1. Copy candidate artifact(s) into the correct category folder.")
+        lines.append("2. Add/update artifact rows in `index.json` with `publish_reviewed=false`.")
+        lines.append("3. Regenerate this README:")
+    else:
+        lines.append("## Publish Workflow")
+        lines.append("1. Copy curated artifact(s) into the correct category folder.")
+        lines.append("2. Add/update artifact rows in `index.json`.")
+        lines.append("3. Regenerate this README:")
     lines.append("```bash")
-    lines.append("python scripts/governance/sync_published_index.py --write")
+    lines.append(write_command)
     lines.append("```")
     lines.append("4. Validate before commit:")
     lines.append("```bash")
-    lines.append("python scripts/governance/sync_published_index.py --check")
+    lines.append(check_command)
     lines.append("```")
-    lines.append("5. Do not overwrite prior published artifacts; add versioned files instead.")
+    if lane == "staging":
+        lines.append("5. Promote a candidate into `benchmarks/published/` only after explicit user approval.")
+    elif lane == "published":
+        lines.append("5. Only add artifacts here after explicit user approval and manual review.")
+        lines.append("6. Do not overwrite prior published artifacts; add versioned files instead.")
+    else:
+        lines.append("5. Do not overwrite prior artifacts; add versioned files instead.")
     lines.append("")
     return "\n".join(lines) + "\n"
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate and render benchmarks/published README from index.json")
+    parser = argparse.ArgumentParser(description="Validate and render benchmark catalog README from index.json")
     parser.add_argument("--index", default="benchmarks/published/index.json")
     parser.add_argument("--readme", default="benchmarks/published/README.md")
     parser.add_argument("--write", action="store_true", help="Write generated README.")
@@ -145,7 +192,8 @@ def main() -> int:
     readme_path = Path(args.readme)
     index = _load_index(index_path)
     _validate_index(index, index_path=index_path)
-    rendered = _render_readme(index)
+    lane = _detect_lane(index, index_path=index_path)
+    rendered = _render_readme(index, lane=lane, index_path=index_path, readme_path=readme_path)
 
     if args.write:
         readme_path.parent.mkdir(parents=True, exist_ok=True)
@@ -155,8 +203,8 @@ def main() -> int:
     if args.check:
         existing = readme_path.read_text(encoding="utf-8") if readme_path.exists() else ""
         if existing != rendered:
-            raise SystemExit("E_README_OUT_OF_SYNC run: python scripts/governance/sync_published_index.py --write")
-        print("PASS published index/readme sync")
+            raise SystemExit(f"E_README_OUT_OF_SYNC run: {_render_sync_command(index_path, readme_path, 'write')}")
+        print(f"PASS {lane} index/readme sync")
 
     if not args.write and not args.check:
         print("PASS index validated")

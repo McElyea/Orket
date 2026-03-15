@@ -1,0 +1,85 @@
+{
+  "artifact_type": "truthful_runtime_packet1_live_proof",
+  "schema_version": "1.0",
+  "captured_on": "2026-03-14",
+  "proof_type": "end-to-end_live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "proof_command": "ORKET_LIVE_ACCEPTANCE=1 ORKET_LIVE_MODEL=qwen2.5-coder:7b ORKET_LLM_PROVIDER=ollama ORKET_RUN_LEDGER_MODE=protocol python -m pytest tests/live/test_system_acceptance_pipeline.py::test_system_acceptance_role_pipeline_with_guard_live -q -s",
+  "provider": {
+    "requested_provider": "ollama",
+    "requested_model": "qwen2.5-coder:7b"
+  },
+  "run": {
+    "run_id": "ccb22dd4",
+    "status": "done",
+    "duration_ms": 14114,
+    "temp_run_root": "C:/Users/jonmc/AppData/Local/Temp/pytest-of-jonmc/pytest-2454/test_system_acceptance_role_pi0/workspace/runs/ccb22dd4",
+    "runtime_verification_path": "C:/Users/jonmc/AppData/Local/Temp/pytest-of-jonmc/pytest-2454/test_system_acceptance_role_pi0/workspace/agent_output/verification/runtime_verification.json",
+    "events_log_path": "C:/Users/jonmc/AppData/Local/Temp/pytest-of-jonmc/pytest-2454/test_system_acceptance_role_pi0/workspace/runs/ccb22dd4/events.log"
+  },
+  "packet1_summary": {
+    "schema_version": "1.0",
+    "classification": {
+      "classification_applicable": true,
+      "truth_classification": "direct",
+      "classification_basis": {
+        "rule": "direct",
+        "evidence_source": "direct_execution"
+      }
+    },
+    "defects": {
+      "defects_present": false,
+      "defect_families": []
+    },
+    "packet1_conformance": {
+      "status": "conformant",
+      "reasons": []
+    },
+    "provenance": {
+      "run_id": "ccb22dd4",
+      "terminal_status": "done",
+      "primary_output_kind": "artifact",
+      "primary_output_id": "agent_output/verification/runtime_verification.json",
+      "intended_provider": "ollama",
+      "intended_model": "qwen2.5-coder:7b",
+      "intended_profile": "default",
+      "actual_provider": "ollama",
+      "actual_model": "qwen2.5-coder:7b",
+      "actual_profile": "default",
+      "path_mismatch": false,
+      "mismatch_reason": "none",
+      "retry_occurred": false,
+      "repair_occurred": false,
+      "fallback_occurred": false,
+      "execution_profile": "normal",
+      "truth_classification": "direct"
+    }
+  },
+  "runtime_verification": {
+    "ok": true,
+    "checked_files": [
+      "agent_output/main.py",
+      "agent_output/src/__init__.py"
+    ],
+    "command_results": [
+      {
+        "command_display": "C:\\Python314\\python.exe -m compileall -q agent_output",
+        "returncode": 0,
+        "failure_class": "none",
+        "policy_source": "profile_default:polyglot"
+      }
+    ],
+    "guard_result": "pass"
+  },
+  "acceptance_result": {
+    "REQ-1": "done",
+    "ARC-1": "done",
+    "COD-1": "done",
+    "REV-1": "done"
+  },
+  "notes": [
+    "This artifact is a curated archive of a real local-model live run, not a mocked proof.",
+    "The generated main.py in the live run was weak, but the runtime proof target here is packet-1 emission and finalize-path truth surfaces, which were emitted and observed."
+  ]
+}

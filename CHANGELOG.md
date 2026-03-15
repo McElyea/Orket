@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.9] - 2026-03-15 - "The Provenance Ledger Cut"
+
+### Added
+- **Truthful Runtime Packet-2 Contracts**: Added the durable repair-ledger and artifact-provenance contracts in `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md` and `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`.
+- **Truthful Runtime Live Proof Recorders**: Added recorder scripts, staged candidate artifacts, and live proof coverage for packet-1 boundary cleanup, packet-2 repair history, and artifact provenance.
+
+### Changed
+- **Run Summary Truth Surfaces**: Extended `run_summary.json`, finalization, and run-ledger reconstruction so finalized runs can emit packet-1 provenance/conformance, packet-2 repair-ledger history, and artifact provenance derived from runtime-owned facts.
+- **Truthful Runtime Lane Authority**: Archived the completed packet-1 cleanup and frozen Phase C cycle-1 slices, extracted the packet-1 boundary realignment delta, and left only the remaining packet-2 backlog plus Phases D-E staged.
+- **Benchmark Artifact Workflow**: Added staging-catalog authority and sync rules so agent-proposed benchmark artifacts stay in `benchmarks/staging/` until explicit publication approval.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Stage new benchmark proof candidates under `benchmarks/staging/` and promote them to `benchmarks/published/` only after explicit approval.
+
 ## [0.4.8] - 2026-03-14 - "The Packet-1 Lane Cut"
 
 ### Added

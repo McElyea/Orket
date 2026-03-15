@@ -206,8 +206,8 @@ Canonical proof command families for packet-1 are:
    1. `python -m pytest tests/live/test_system_acceptance_pipeline.py::test_system_acceptance_role_pipeline_with_guard -q`
    2. expected user-visible verification anchor at `agent_output/verification/runtime_verification.json`
    3. expected run-summary anchor at `runs/<run_id>/run_summary.json`
-4. example artifact or transcript publication:
-   1. publish under one stable packet-1 proof directory in `benchmarks/published/General/`
+4. example artifact or transcript staging:
+   1. stage under one stable packet-1 proof directory in `benchmarks/staging/General/`
    2. do not leave the example artifact or transcript only in ad hoc workspace output paths
 
 ## 7. Completion Gate

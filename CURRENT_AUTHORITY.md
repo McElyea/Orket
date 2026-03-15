@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-13
+Last updated: 2026-03-15
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -27,25 +27,26 @@ It defines only the currently authoritative paths that agents and contributors m
 7. Active roadmap: `docs/ROADMAP.md`
 8. Active contributor workflow: `docs/CONTRIBUTOR.md`
 9. Long-lived specs root: `docs/specs/`
-10. Published artifact index: `benchmarks/published/index.json`
-11. Canonical provider runtime target selection: `orket/runtime/provider_runtime_target.py`
-12. Core release/versioning policy: `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`
-13. Core release gate checklist: `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md`
-14. Core release proof report template: `docs/specs/CORE_RELEASE_PROOF_REPORT.md`
-15. Core release proof report storage: `docs/releases/<version>/PROOF_REPORT.md`
-16. Core release evidence storage: `benchmarks/results/releases/<version>/`
-17. Core release automation workflow: `.gitea/workflows/core-release-policy.yml`
-18. Core release automation script: `scripts/governance/check_core_release_policy.py`
-19. Core release prep script for release-only worktrees: `scripts/governance/prepare_core_release.py`
-20. Canonical core release tag rule: every post-`0.4.0` versioned commit on pushed `main` must carry the matching annotated `v<major>.<minor>.<patch>` tag on that exact commit.
-21. Pytest sandbox fail-closed fixture: `tests/conftest.py`
+10. Staged artifact candidate index: `benchmarks/staging/index.json`
+11. Published artifact index: `benchmarks/published/index.json`
+12. Canonical provider runtime target selection: `orket/runtime/provider_runtime_target.py`
+13. Core release/versioning policy: `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`
+14. Core release gate checklist: `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md`
+15. Core release proof report template: `docs/specs/CORE_RELEASE_PROOF_REPORT.md`
+16. Core release proof report storage: `docs/releases/<version>/PROOF_REPORT.md`
+17. Core release evidence storage: `benchmarks/results/releases/<version>/`
+18. Core release automation workflow: `.gitea/workflows/core-release-policy.yml`
+19. Core release automation script: `scripts/governance/check_core_release_policy.py`
+20. Core release prep script for release-only worktrees: `scripts/governance/prepare_core_release.py`
+21. Canonical core release tag rule: every post-`0.4.0` versioned commit on pushed `main` must carry the matching annotated `v<major>.<minor>.<patch>` tag on that exact commit.
+22. Pytest sandbox fail-closed fixture: `tests/conftest.py`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-13",
+  "last_updated": "2026-03-15",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -105,7 +106,10 @@ It defines only the currently authoritative paths that agents and contributors m
         "docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md",
         "docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md",
         "docs/specs/RUNTIME_INVARIANTS.md",
-        "docs/specs/TOOL_CONTRACT_TEMPLATE.md"
+        "docs/specs/TOOL_CONTRACT_TEMPLATE.md",
+        "docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md"
       ],
       "offline_capability_matrix_source": "docs/specs/OFFLINE_CAPABILITY_MATRIX.md",
       "protocol_governed_contract_sources": [
@@ -125,10 +129,14 @@ It defines only the currently authoritative paths that agents and contributors m
       ]
     },
     "canonical_script_output_locations": {
+      "staged_artifacts_index": "benchmarks/staging/index.json",
+      "staged_artifacts_readme": "benchmarks/staging/README.md",
       "published_artifacts_index": "benchmarks/published/index.json",
       "published_artifacts_readme": "benchmarks/published/README.md",
+      "artifact_review_policy": "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
       "sources": [
-        "docs/CONTRIBUTOR.md"
+        "docs/CONTRIBUTOR.md",
+        "docs/process/PUBLISHED_ARTIFACTS_POLICY.md"
       ]
     },
     "core_release_versioning": {

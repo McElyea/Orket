@@ -1,0 +1,114 @@
+{
+  "artifact_type": "truthful_runtime_packet2_repair_live_proof",
+  "schema_version": "1.0",
+  "captured_on": "2026-03-14",
+  "proof_type": "end-to-end_live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "proof_command": "python scripts/governance/record_truthful_runtime_packet2_repair_live_proof.py --model qwen2.5-coder:7b --provider ollama --json",
+  "provider": {
+    "requested_provider": "ollama",
+    "requested_model": "qwen2.5-coder:7b"
+  },
+  "run": {
+    "run_id": "a78aad5f",
+    "status": "done",
+    "repair_trigger_mode": "injected_integrity_guard_prefix",
+    "source_result_path": "benchmarks/results/governance/truthful_runtime_packet2_repair_live_proof.json"
+  },
+  "packet1_summary": {
+    "schema_version": "1.0",
+    "classification": {
+      "classification_applicable": true,
+      "truth_classification": "repaired",
+      "classification_basis": {
+        "rule": "repaired",
+        "evidence_source": "validator_repair"
+      }
+    },
+    "defects": {
+      "defects_present": true,
+      "defect_families": [
+        "silent_repaired_success"
+      ]
+    },
+    "packet1_conformance": {
+      "status": "non_conformant",
+      "reasons": [
+        "silent_repaired_success"
+      ]
+    },
+    "provenance": {
+      "run_id": "a78aad5f",
+      "terminal_status": "done",
+      "primary_output_kind": "artifact",
+      "primary_output_id": "agent_output/verification/runtime_verification.json",
+      "intended_provider": "ollama",
+      "intended_model": "unknown",
+      "intended_profile": "None",
+      "actual_provider": "ollama",
+      "actual_model": "qwen2.5-coder:7b",
+      "actual_profile": "ollama.qwen.chatml.v1",
+      "path_mismatch": false,
+      "mismatch_reason": "none",
+      "retry_occurred": false,
+      "repair_occurred": true,
+      "fallback_occurred": false,
+      "execution_profile": "normal",
+      "truth_classification": "repaired"
+    }
+  },
+  "packet2_summary": {
+    "schema_version": "1.0",
+    "repair_ledger": {
+      "repair_occurred": true,
+      "repair_count": 2,
+      "final_disposition": "accepted_with_repair",
+      "entries": [
+        {
+          "repair_id": "repair:REQ-1:2:corrective_reprompt",
+          "issue_id": "REQ-1",
+          "turn_index": 2,
+          "source_event": "turn_corrective_reprompt",
+          "strategy": "corrective_reprompt",
+          "reasons": [
+            "consistency_scope_contract_not_met",
+            "local_prompt_anti_meta_contract_not_met"
+          ],
+          "material_change": true
+        },
+        {
+          "repair_id": "repair:REV-1:8:corrective_reprompt",
+          "issue_id": "REV-1",
+          "turn_index": 8,
+          "source_event": "turn_corrective_reprompt",
+          "strategy": "corrective_reprompt",
+          "reasons": [
+            "read_path_contract_not_met"
+          ],
+          "material_change": true
+        }
+      ]
+    }
+  },
+  "live_evidence": {
+    "corrective_reprompt_count": 2,
+    "packet2_fact_event_count": 1,
+    "protocol_event_count": 3,
+    "run_finalized_packet2_matches_summary": true,
+    "repair_issue_ids": [
+      "REQ-1",
+      "REV-1"
+    ],
+    "repair_reason_codes": [
+      "consistency_scope_contract_not_met",
+      "local_prompt_anti_meta_contract_not_met",
+      "read_path_contract_not_met"
+    ]
+  },
+  "notes": [
+    "This artifact is a curated archive of a real provider-backed repaired-path run.",
+    "The repair path is intentionally forced by corrupting the first integrity_guard response, so this is live repaired-path proof rather than organic repair proof.",
+    "The canonical rerunnable source remains benchmarks/results/governance/truthful_runtime_packet2_repair_live_proof.json."
+  ]
+}

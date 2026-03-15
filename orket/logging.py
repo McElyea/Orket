@@ -163,6 +163,7 @@ def _log_path(workspace: Path, role: str | None = None) -> Path:
 
 RUNTIME_EVENT_SCHEMA_VERSION = "v1"
 RUNTIME_EVENT_ARTIFACT_EVENTS = {
+    "packet1_emission_failure",
     "session_start",
     "session_end",
     "turn_start",
@@ -197,6 +198,10 @@ def _build_runtime_event(event: str, data: dict[str, Any], role: str) -> dict[st
             if isinstance(payload.get("guard_decision"), dict)
             else None
         ),
+        "stage": str(payload.get("stage") or ""),
+        "error_type": str(payload.get("error_type") or ""),
+        "error": str(payload.get("error") or ""),
+        "packet1_conformance": payload.get("packet1_conformance"),
         "duration_ms": int(payload.get("duration_ms") or 0),
         "tokens": payload.get("tokens"),
     }

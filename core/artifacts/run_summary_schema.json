@@ -48,7 +48,16 @@
         "string",
         "null"
       ]
+    },
+    "truthful_runtime_packet1": {
+      "type": "object"
+    },
+    "truthful_runtime_packet2": {
+      "type": "object"
+    },
+    "truthful_runtime_artifact_provenance": {
+      "type": "object"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

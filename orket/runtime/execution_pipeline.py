@@ -2,9 +2,12 @@
 
 import asyncio
 from datetime import UTC, datetime
+import json
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+import aiofiles
 
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.exceptions import CardNotFound, ComplexityViolation, ExecutionFailed
@@ -30,16 +33,19 @@ from orket.application.services.runtime_policy import (
     resolve_run_ledger_mode,
     resolve_state_backend_mode,
 )
+from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.run_summary import (
+    PACKET1_MISSING_TOKEN,
     build_degraded_run_summary_payload,
     generate_run_summary_for_finalize,
     write_run_summary_artifact,
 )
+from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
 from orket.runtime.state_transition_registry import validate_state_token
@@ -478,6 +484,7 @@ class ExecutionPipeline:
                 **dict(run_contract_artifacts),
                 "deterministic_mode_contract": dict(deterministic_mode_contract),
                 "route_decision_artifact": dict(route_decision_artifact),
+                "packet1_facts": self._build_packet1_facts(intended_model=env.model),
             },
         )
 
@@ -579,16 +586,17 @@ class ExecutionPipeline:
             artifacts.update(dict(run_contract_artifacts))
             artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
             artifacts["route_decision_artifact"] = dict(route_decision_artifact)
+            artifacts["packet1_facts"] = self._build_packet1_facts(intended_model=env.model)
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection
-            finalized_at = datetime.now(UTC).isoformat()
+            summary_finalized_at = datetime.now(UTC).isoformat()
             run_summary, artifacts = await self._materialize_run_summary(
                 run_id=run_id,
                 session_status=session_status,
                 failure_reason=None,
                 artifacts=artifacts,
-                finalized_at=finalized_at,
+                finalized_at=summary_finalized_at,
             )
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
@@ -601,12 +609,13 @@ class ExecutionPipeline:
             if gitea_export:
                 artifacts["gitea_export"] = gitea_export
 
+            ledger_finalized_at = datetime.now(UTC).isoformat()
             await self.run_ledger.finalize_run(
                 session_id=run_id,
                 status=session_status,
                 summary=run_summary,
                 artifacts=artifacts,
-                finalized_at=finalized_at,
+                finalized_at=ledger_finalized_at,
             )
 
         except (
@@ -640,16 +649,17 @@ class ExecutionPipeline:
             artifacts.update(dict(run_contract_artifacts))
             artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
             artifacts["route_decision_artifact"] = dict(route_decision_artifact)
+            artifacts["packet1_facts"] = self._build_packet1_facts(intended_model=env.model)
             receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
             if receipt_projection:
                 artifacts["protocol_receipts"] = receipt_projection
-            finalized_at = datetime.now(UTC).isoformat()
+            summary_finalized_at = datetime.now(UTC).isoformat()
             failure_summary, artifacts = await self._materialize_run_summary(
                 run_id=run_id,
                 session_status=failed_status,
                 failure_reason=str(exc)[:2000],
                 artifacts=artifacts,
-                finalized_at=finalized_at,
+                finalized_at=summary_finalized_at,
             )
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
@@ -663,6 +673,7 @@ class ExecutionPipeline:
             )
             if gitea_export:
                 artifacts["gitea_export"] = gitea_export
+            ledger_finalized_at = datetime.now(UTC).isoformat()
             await self.run_ledger.finalize_run(
                 session_id=run_id,
                 status=failed_status,
@@ -670,7 +681,7 @@ class ExecutionPipeline:
                 failure_reason=str(exc)[:2000],
                 summary=failure_summary,
                 artifacts=artifacts,
-                finalized_at=finalized_at,
+                finalized_at=ledger_finalized_at,
             )
             raise
 
@@ -683,6 +694,107 @@ class ExecutionPipeline:
             "observability_root": str(self.workspace / "observability" / sanitize_name(run_id)),
             "agent_output_root": str(self.workspace / "agent_output"),
         }
+
+    def _build_packet1_facts(
+        self,
+        *,
+        intended_model: str | None,
+        runtime_telemetry: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        provider = str(
+            os.environ.get("ORKET_LLM_PROVIDER")
+            or os.environ.get("ORKET_MODEL_PROVIDER")
+            or "ollama"
+        ).strip().lower()
+        configured_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_PROFILE_ID"))
+        fallback_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID"))
+        telemetry = dict(runtime_telemetry or {})
+        intended_model_token = self._normalize_packet1_token(intended_model) or self._normalize_packet1_token(
+            telemetry.get("requested_model")
+        )
+        actual_provider = str(
+            telemetry.get("provider_backend")
+            or telemetry.get("provider_name")
+            or telemetry.get("provider")
+            or provider
+        ).strip().lower() or provider
+        actual_model = self._normalize_packet1_token(telemetry.get("model")) or intended_model_token or PACKET1_MISSING_TOKEN
+        actual_profile = self._normalize_packet1_token(telemetry.get("profile_id")) or "default"
+        resolution_path = str(telemetry.get("profile_resolution_path") or "").strip().lower()
+        fallback_detected = resolution_path == "fallback"
+        retry_count = telemetry.get("retries")
+        retry_occurred = isinstance(retry_count, int) and retry_count > 0
+        intended_profile = configured_profile or (fallback_profile if fallback_detected else "") or actual_profile
+        return {
+            "intended_provider": provider,
+            "intended_model": intended_model_token or PACKET1_MISSING_TOKEN,
+            "intended_profile": intended_profile or PACKET1_MISSING_TOKEN,
+            "actual_provider": actual_provider,
+            "actual_model": actual_model,
+            "actual_profile": actual_profile,
+            "path_mismatch": False,
+            "mismatch_reason": "none",
+            "retry_occurred": retry_occurred,
+            "repair_occurred": False,
+            "fallback_occurred": fallback_detected,
+            "fallback_path_detected": fallback_detected,
+            "machine_mismatch_indicator": True,
+            "output_presented_as_normal_success": True,
+            "execution_profile": "fallback" if fallback_detected else "normal",
+        }
+
+    @staticmethod
+    def _normalize_packet1_token(value: Any) -> str:
+        if value is None:
+            return ""
+        raw = str(value).strip()
+        if not raw or raw.lower() in {"none", "unknown"}:
+            return ""
+        return raw
+
+    def _merge_packet1_facts(
+        self,
+        existing_packet1_facts: Dict[str, Any],
+        updated_packet1_facts: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        merged = dict(existing_packet1_facts)
+        for key, value in updated_packet1_facts.items():
+            if key in {
+                "intended_provider",
+                "intended_model",
+                "intended_profile",
+                "actual_provider",
+                "actual_model",
+                "actual_profile",
+            }:
+                if str(value).strip() == PACKET1_MISSING_TOKEN and self._normalize_packet1_token(
+                    existing_packet1_facts.get(key)
+                ):
+                    continue
+            merged[key] = value
+        return merged
+
+    def _select_primary_work_artifact_output(
+        self,
+        *,
+        artifact_provenance_facts: Dict[str, Any] | None = None,
+    ) -> Dict[str, str]:
+        facts = normalize_artifact_provenance_facts(artifact_provenance_facts)
+        entries = list(facts.get("artifacts") or [])
+        if not entries:
+            return {}
+        selected = max(
+            entries,
+            key=lambda entry: (
+                int(entry.get("turn_index") or 0),
+                str(entry.get("produced_at") or ""),
+                str(entry.get("artifact_path") or ""),
+            ),
+        )
+        artifact_path = str(selected.get("artifact_path") or "").strip()
+        if not artifact_path:
+            return {}
+        return {"id": artifact_path, "kind": "artifact"}
 
     async def _export_run_artifacts(
         self,
@@ -743,6 +855,40 @@ class ExecutionPipeline:
         finalized_at: str,
     ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         resolved_artifacts = dict(artifacts)
+        repair_entries = await self._resolve_packet2_repair_entries(run_id=run_id)
+        artifact_provenance_artifacts = await self._resolve_artifact_provenance_artifacts(run_id=run_id)
+        packet1_artifacts = await self._resolve_packet1_artifacts(
+            run_id=run_id,
+            repair_entries=repair_entries,
+            artifact_provenance_facts=artifact_provenance_artifacts.get("artifact_provenance_facts"),
+        )
+        packet2_artifacts = await self._resolve_packet2_artifacts(run_id=run_id, repair_entries=repair_entries)
+        existing_packet1_facts = dict(resolved_artifacts.get("packet1_facts") or {})
+        merged_packet1_facts = self._merge_packet1_facts(
+            existing_packet1_facts,
+            dict(packet1_artifacts.get("packet1_facts") or {}),
+        )
+        if merged_packet1_facts:
+            resolved_artifacts["packet1_facts"] = merged_packet1_facts
+        existing_packet2_facts = dict(resolved_artifacts.get("packet2_facts") or {})
+        merged_packet2_facts = {
+            **existing_packet2_facts,
+            **dict(packet2_artifacts.get("packet2_facts") or {}),
+        }
+        if merged_packet2_facts:
+            resolved_artifacts["packet2_facts"] = merged_packet2_facts
+        existing_artifact_provenance_facts = normalize_artifact_provenance_facts(
+            resolved_artifacts.get("artifact_provenance_facts")
+        )
+        merged_artifact_provenance_facts = {
+            **existing_artifact_provenance_facts,
+            **normalize_artifact_provenance_facts(artifact_provenance_artifacts.get("artifact_provenance_facts")),
+        }
+        if merged_artifact_provenance_facts:
+            resolved_artifacts["artifact_provenance_facts"] = merged_artifact_provenance_facts
+        runtime_verification_path = str(packet1_artifacts.get("runtime_verification_path") or "").strip()
+        if runtime_verification_path:
+            resolved_artifacts["runtime_verification_path"] = runtime_verification_path
         run_identity = resolved_artifacts.get("run_identity")
         started_at = None
         if isinstance(run_identity, dict):
@@ -762,6 +908,12 @@ class ExecutionPipeline:
                 "error_type": type(exc).__name__,
                 "error": str(exc),
             }
+            await self._record_packet1_emission_failure(
+                run_id=run_id,
+                stage="generation",
+                error_type=type(exc).__name__,
+                error=str(exc),
+            )
             log_event(
                 "run_summary_generation_failed",
                 {"run_id": run_id, "error_type": type(exc).__name__, "error": str(exc)},
@@ -781,6 +933,12 @@ class ExecutionPipeline:
             )
             resolved_artifacts["run_summary_path"] = str(run_summary_path)
         except (RuntimeError, ValueError, TypeError, OSError) as exc:
+            await self._record_packet1_emission_failure(
+                run_id=run_id,
+                stage="write",
+                error_type=type(exc).__name__,
+                error=str(exc),
+            )
             log_event(
                 "run_summary_artifact_write_failed",
                 {"run_id": run_id, "error_type": type(exc).__name__, "error": str(exc)},
@@ -788,6 +946,537 @@ class ExecutionPipeline:
             )
         resolved_artifacts["run_summary"] = dict(run_summary)
         return run_summary, resolved_artifacts
+
+    async def _resolve_packet1_artifacts(
+        self,
+        *,
+        run_id: str,
+        repair_entries: List[Dict[str, Any]] | None = None,
+        artifact_provenance_facts: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        runtime_verification_path = (
+            self.workspace / "agent_output" / "verification" / "runtime_verification.json"
+        )
+        runtime_telemetry = await self._resolve_packet1_runtime_telemetry(run_id=run_id)
+        repair_facts = self._build_packet1_repair_facts(repair_entries or [])
+        packet1_facts = {
+            **self._build_packet1_facts(intended_model=None, runtime_telemetry=runtime_telemetry),
+            **repair_facts,
+        }
+        primary_work_artifact = self._select_primary_work_artifact_output(
+            artifact_provenance_facts=artifact_provenance_facts
+        )
+        if primary_work_artifact:
+            packet1_facts["primary_work_artifact_output"] = primary_work_artifact
+        if runtime_verification_path.exists():
+            if "primary_work_artifact_output" not in packet1_facts:
+                packet1_facts["primary_artifact_output"] = {
+                    "id": "agent_output/verification/runtime_verification.json",
+                    "kind": "artifact",
+                }
+            return {
+                "runtime_verification_path": str(runtime_verification_path),
+                "packet1_facts": packet1_facts,
+            }
+        return {"packet1_facts": packet1_facts}
+
+    async def _resolve_packet2_artifacts(
+        self,
+        *,
+        run_id: str,
+        repair_entries: List[Dict[str, Any]] | None = None,
+    ) -> Dict[str, Any]:
+        packet2_facts = self._build_packet2_facts(repair_entries=repair_entries or [])
+        if not packet2_facts:
+            return {}
+        await self._record_packet2_facts(run_id=run_id, packet2_facts=packet2_facts)
+        return {"packet2_facts": packet2_facts}
+
+    async def _resolve_artifact_provenance_artifacts(self, *, run_id: str) -> Dict[str, Any]:
+        entries = await self._resolve_artifact_provenance_entries(run_id=run_id)
+        artifact_provenance_facts = self._build_artifact_provenance_facts(entries=entries)
+        if not artifact_provenance_facts:
+            return {}
+        await self._record_artifact_provenance_facts(
+            run_id=run_id,
+            artifact_provenance_facts=artifact_provenance_facts,
+        )
+        return {"artifact_provenance_facts": artifact_provenance_facts}
+
+    async def _resolve_packet1_runtime_telemetry(self, *, run_id: str) -> Dict[str, Any]:
+        candidate_paths = await asyncio.to_thread(self._packet1_model_response_paths, run_id)
+        selected: Dict[str, Any] = {}
+        for path in candidate_paths:
+            try:
+                async with aiofiles.open(path, mode="r", encoding="utf-8") as handle:
+                    payload = json.loads(await handle.read())
+            except (OSError, ValueError, TypeError):
+                continue
+            if not isinstance(payload, dict):
+                continue
+            selected = payload
+        return selected
+
+    async def _resolve_packet2_repair_entries(self, *, run_id: str) -> List[Dict[str, Any]]:
+        log_path = self.workspace / "orket.log"
+        if not log_path.exists():
+            return []
+        repairs_by_id: Dict[str, Dict[str, Any]] = {}
+        try:
+            async with aiofiles.open(log_path, mode="r", encoding="utf-8") as handle:
+                async for line in handle:
+                    if not line.strip():
+                        continue
+                    try:
+                        payload = json.loads(line)
+                    except (ValueError, TypeError):
+                        continue
+                    if not isinstance(payload, dict):
+                        continue
+                    if str(payload.get("event") or "").strip() != "turn_corrective_reprompt":
+                        continue
+                    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+                    if str(data.get("session_id") or "").strip() != str(run_id):
+                        continue
+                    reasons = sorted(
+                        {
+                            str(reason).strip()
+                            for reason in (data.get("contract_reasons") or [])
+                            if str(reason).strip()
+                        }
+                    )
+                    if not reasons:
+                        continue
+                    issue_id = str(data.get("issue_id") or "").strip()
+                    turn_index_raw = data.get("turn_index")
+                    turn_index = max(0, int(turn_index_raw)) if isinstance(turn_index_raw, int) else 0
+                    repair_id = (
+                        f"repair:{issue_id}:{turn_index}:corrective_reprompt"
+                        if issue_id
+                        else f"repair:turn:{turn_index}:corrective_reprompt"
+                    )
+                    existing = repairs_by_id.get(repair_id)
+                    if existing is None:
+                        entry: Dict[str, Any] = {
+                            "repair_id": repair_id,
+                            "turn_index": turn_index,
+                            "source_event": "turn_corrective_reprompt",
+                            "strategy": "corrective_reprompt",
+                            "reasons": reasons,
+                            "material_change": True,
+                        }
+                        if issue_id:
+                            entry["issue_id"] = issue_id
+                        repairs_by_id[repair_id] = entry
+                        continue
+                    existing["reasons"] = sorted(set(list(existing.get("reasons") or []) + reasons))
+        except OSError:
+            return []
+        return [repairs_by_id[key] for key in sorted(repairs_by_id)]
+
+    async def _resolve_artifact_provenance_entries(self, *, run_id: str) -> List[Dict[str, Any]]:
+        receipt_entries = await self._resolve_artifact_provenance_entries_from_receipts(run_id=run_id)
+        artifacts_by_path: Dict[str, Dict[str, Any]] = {
+            str(entry["artifact_path"]): dict(entry) for entry in receipt_entries
+        }
+        log_entries = await self._resolve_artifact_provenance_entries_from_logs(
+            run_id=run_id,
+            existing_paths=set(artifacts_by_path),
+        )
+        for entry in log_entries:
+            artifacts_by_path[str(entry["artifact_path"])] = dict(entry)
+        return [artifacts_by_path[key] for key in sorted(artifacts_by_path)]
+
+    async def _resolve_artifact_provenance_entries_from_receipts(self, *, run_id: str) -> List[Dict[str, Any]]:
+        receipt_paths = await asyncio.to_thread(self._artifact_provenance_receipt_paths, run_id)
+        artifacts_by_path: Dict[str, Dict[str, Any]] = {}
+        for receipt_path in receipt_paths:
+            issue_id, role_name, turn_index = self._artifact_provenance_receipt_context(
+                receipt_path=receipt_path,
+                run_id=run_id,
+            )
+            try:
+                async with aiofiles.open(receipt_path, mode="r", encoding="utf-8") as handle:
+                    async for line in handle:
+                        if not line.strip():
+                            continue
+                        try:
+                            payload = json.loads(line)
+                        except (ValueError, TypeError):
+                            continue
+                        if not isinstance(payload, dict):
+                            continue
+                        entry = await self._artifact_provenance_entry_from_receipt(
+                            receipt=payload,
+                            issue_id=issue_id,
+                            role_name=role_name,
+                            turn_index=turn_index,
+                        )
+                        if entry is not None:
+                            artifacts_by_path[str(entry["artifact_path"])] = entry
+            except OSError:
+                continue
+        return [artifacts_by_path[key] for key in sorted(artifacts_by_path)]
+
+    async def _resolve_artifact_provenance_entries_from_logs(
+        self,
+        *,
+        run_id: str,
+        existing_paths: set[str],
+    ) -> List[Dict[str, Any]]:
+        log_path = self.workspace / "orket.log"
+        if not log_path.exists():
+            return []
+        starts_by_operation: Dict[str, Dict[str, Any]] = {}
+        artifacts_by_path: Dict[str, Dict[str, Any]] = {}
+        try:
+            async with aiofiles.open(log_path, mode="r", encoding="utf-8") as handle:
+                async for line in handle:
+                    if not line.strip():
+                        continue
+                    try:
+                        payload = json.loads(line)
+                    except (ValueError, TypeError):
+                        continue
+                    if not isinstance(payload, dict):
+                        continue
+                    event_name = str(payload.get("event") or "").strip()
+                    if event_name not in {"tool_call_start", "tool_call_result"}:
+                        continue
+                    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+                    if str(data.get("session_id") or "").strip() != str(run_id):
+                        continue
+                    operation_id = str(data.get("operation_id") or "").strip()
+                    if not operation_id:
+                        continue
+                    if event_name == "tool_call_start":
+                        if str(data.get("tool") or "").strip() != "write_file":
+                            continue
+                        starts_by_operation[operation_id] = {
+                            "issue_id": str(data.get("issue_id") or "").strip(),
+                            "role_name": str(data.get("role") or payload.get("role") or "").strip(),
+                            "turn_index": int(data.get("turn_index") or 0),
+                            "tool_args": dict(data.get("args") or {}) if isinstance(data.get("args"), dict) else {},
+                        }
+                        continue
+                    if not bool(data.get("ok")):
+                        continue
+                    start = starts_by_operation.get(operation_id)
+                    if start is None:
+                        continue
+                    entry = await self._artifact_provenance_entry_from_log_pair(
+                        run_id=run_id,
+                        operation_id=operation_id,
+                        start=start,
+                    )
+                    if entry is None:
+                        continue
+                    artifact_path = str(entry.get("artifact_path") or "")
+                    if artifact_path in existing_paths:
+                        continue
+                    artifacts_by_path[artifact_path] = entry
+        except OSError:
+            return []
+        return [artifacts_by_path[key] for key in sorted(artifacts_by_path)]
+
+    async def _artifact_provenance_entry_from_receipt(
+        self,
+        *,
+        receipt: Dict[str, Any],
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+    ) -> Dict[str, Any] | None:
+        if str(receipt.get("tool") or "").strip() != "write_file":
+            return None
+        execution_result = receipt.get("execution_result")
+        if not isinstance(execution_result, dict) or not bool(execution_result.get("ok")):
+            return None
+        artifact_location = await asyncio.to_thread(
+            self._resolve_workspace_artifact_location,
+            execution_result,
+            receipt,
+        )
+        if artifact_location is None:
+            return None
+        artifact_path, resolved_artifact_path = artifact_location
+        source_hash = str(receipt.get("receipt_digest") or receipt.get("tool_call_hash") or "").strip()
+        if not source_hash:
+            return None
+        produced_at = await asyncio.to_thread(self._artifact_produced_at, resolved_artifact_path)
+        if not produced_at:
+            return None
+        manifest = (
+            dict(receipt.get("tool_invocation_manifest") or {})
+            if isinstance(receipt.get("tool_invocation_manifest"), dict)
+            else {}
+        )
+        entry: Dict[str, Any] = {
+            "artifact_path": artifact_path,
+            "artifact_type": self._artifact_type_for_path(artifact_path),
+            "generator": "tool.write_file",
+            "generator_version": str(manifest.get("tool_contract_version") or "1.0.0"),
+            "source_hash": source_hash,
+            "produced_at": produced_at,
+            "truth_classification": "direct",
+            "step_id": str(receipt.get("step_id") or "").strip(),
+            "operation_id": str(receipt.get("operation_id") or "").strip(),
+            "issue_id": str(issue_id or "").strip(),
+            "role_name": str(role_name or "").strip(),
+            "turn_index": int(turn_index),
+            "tool_call_hash": str(receipt.get("tool_call_hash") or "").strip(),
+            "receipt_digest": str(receipt.get("receipt_digest") or "").strip(),
+        }
+        return entry
+
+    async def _artifact_provenance_entry_from_log_pair(
+        self,
+        *,
+        run_id: str,
+        operation_id: str,
+        start: Dict[str, Any],
+    ) -> Dict[str, Any] | None:
+        artifact_location = await asyncio.to_thread(
+            self._resolve_workspace_artifact_location,
+            {},
+            {"tool_args": dict(start.get("tool_args") or {})},
+        )
+        if artifact_location is None:
+            return None
+        artifact_path, resolved_artifact_path = artifact_location
+        produced_at = await asyncio.to_thread(self._artifact_produced_at, resolved_artifact_path)
+        if not produced_at:
+            return None
+        issue_id = str(start.get("issue_id") or "").strip()
+        role_name = str(start.get("role_name") or "").strip()
+        turn_index = int(start.get("turn_index") or 0)
+        step_id = f"{issue_id}:{turn_index}" if issue_id and turn_index > 0 else ""
+        source_hash = self._artifact_log_source_hash(
+            run_id=run_id,
+            operation_id=operation_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            tool_args=dict(start.get("tool_args") or {}),
+        )
+        return {
+            "artifact_path": artifact_path,
+            "artifact_type": self._artifact_type_for_path(artifact_path),
+            "generator": "tool.write_file",
+            "generator_version": "unversioned",
+            "source_hash": source_hash,
+            "produced_at": produced_at,
+            "truth_classification": "direct",
+            "step_id": step_id,
+            "operation_id": operation_id,
+            "issue_id": issue_id,
+            "role_name": role_name,
+            "turn_index": turn_index,
+        }
+
+    def _build_packet1_repair_facts(self, repair_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+        if not repair_entries:
+            return {}
+        repair_reasons = sorted(
+            {
+                str(reason).strip()
+                for entry in repair_entries
+                for reason in list(entry.get("reasons") or [])
+                if str(reason).strip()
+            }
+        )
+        repair_strategies = sorted(
+            {
+                str(entry.get("strategy") or "").strip()
+                for entry in repair_entries
+                if str(entry.get("strategy") or "").strip()
+            }
+        )
+        return {
+            "repair_occurred": True,
+            "repair_material_change": True,
+            "repair_strategy": repair_strategies[0] if len(repair_strategies) == 1 else "multiple_repair_strategies",
+            "repair_reasons": repair_reasons,
+        }
+
+    def _build_packet2_facts(self, *, repair_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+        if not repair_entries:
+            return {}
+        return {
+            "repair_entries": [dict(entry) for entry in repair_entries],
+            "final_disposition": "accepted_with_repair",
+        }
+
+    def _build_artifact_provenance_facts(self, *, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+        if not entries:
+            return {}
+        return {
+            "artifacts": [dict(entry) for entry in entries],
+        }
+
+    def _packet1_model_response_paths(self, run_id: str) -> List[Path]:
+        observability_root = self.workspace / "observability" / sanitize_name(run_id)
+        if not observability_root.exists():
+            return []
+        return sorted(observability_root.rglob("model_response_raw.json"))
+
+    def _artifact_provenance_receipt_paths(self, run_id: str) -> List[Path]:
+        observability_root = self.workspace / "observability" / sanitize_name(run_id)
+        if not observability_root.exists():
+            return []
+        return sorted(observability_root.rglob("protocol_receipts.log"))
+
+    def _artifact_provenance_receipt_context(self, *, receipt_path: Path, run_id: str) -> tuple[str, str, int]:
+        session_root = self.workspace / "observability" / sanitize_name(run_id)
+        try:
+            relative_path = receipt_path.relative_to(session_root)
+        except ValueError:
+            return "", "", 0
+        parts = relative_path.parts
+        if len(parts) < 3:
+            return "", "", 0
+        issue_id = str(parts[0]).strip()
+        turn_token = str(parts[1]).strip()
+        turn_index = 0
+        role_name = ""
+        if "_" in turn_token:
+            raw_turn_index, role_name = turn_token.split("_", 1)
+            try:
+                turn_index = max(0, int(raw_turn_index))
+            except ValueError:
+                turn_index = 0
+        return issue_id, role_name.strip(), turn_index
+
+    def _resolve_workspace_artifact_location(
+        self,
+        execution_result: Dict[str, Any],
+        receipt: Dict[str, Any],
+    ) -> tuple[str, Path] | None:
+        raw_path = str(execution_result.get("path") or "").strip()
+        if not raw_path:
+            tool_args = receipt.get("tool_args") if isinstance(receipt.get("tool_args"), dict) else {}
+            raw_path = str(tool_args.get("path") or "").strip()
+        if not raw_path:
+            return None
+        workspace_root = self.workspace.resolve()
+        candidate = Path(raw_path)
+        if not candidate.is_absolute():
+            candidate = workspace_root / candidate
+        resolved = candidate.resolve(strict=False)
+        if not resolved.is_relative_to(workspace_root):
+            return None
+        if not resolved.exists() or not resolved.is_file():
+            return None
+        return resolved.relative_to(workspace_root).as_posix(), resolved
+
+    @staticmethod
+    def _artifact_type_for_path(artifact_path: str) -> str:
+        normalized = str(artifact_path or "").strip().lower()
+        if normalized.endswith("/requirements.txt"):
+            return "requirements_document"
+        if normalized.endswith("/design.txt"):
+            return "design_document"
+        if normalized.endswith(".py"):
+            return "source_code"
+        if normalized.endswith(".json"):
+            return "json_document"
+        if normalized.endswith(".txt") or normalized.endswith(".md"):
+            return "document"
+        return "file"
+
+    @staticmethod
+    def _artifact_produced_at(path: Path) -> str:
+        try:
+            stat_result = path.stat()
+        except OSError:
+            return ""
+        return datetime.fromtimestamp(stat_result.st_mtime, UTC).isoformat()
+
+    @staticmethod
+    def _artifact_log_source_hash(
+        *,
+        run_id: str,
+        operation_id: str,
+        issue_id: str,
+        role_name: str,
+        turn_index: int,
+        tool_args: Dict[str, Any],
+    ) -> str:
+        return hash_canonical_json(
+            {
+                "run_id": str(run_id),
+                "operation_id": str(operation_id),
+                "issue_id": str(issue_id),
+                "role_name": str(role_name),
+                "turn_index": int(turn_index),
+                "tool": "write_file",
+                "tool_args": dict(tool_args),
+            }
+        )
+
+    async def _record_packet1_emission_failure(
+        self,
+        *,
+        run_id: str,
+        stage: str,
+        error_type: str,
+        error: str,
+    ) -> None:
+        payload = {
+            "session_id": str(run_id),
+            "run_id": str(run_id),
+            "stage": str(stage),
+            "error_type": str(error_type),
+            "error": str(error),
+            "packet1_conformance": {
+                "status": "non_conformant",
+                "reasons": ["packet1_emission_failure"],
+            },
+        }
+        if hasattr(self.run_ledger, "append_event"):
+            try:
+                await self.run_ledger.append_event(
+                    session_id=str(run_id),
+                    kind="packet1_emission_failure",
+                    payload={"packet1_facts": payload["packet1_conformance"], **payload},
+                )
+            except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
+                pass
+        log_event("packet1_emission_failure", payload, workspace=self.workspace)
+
+    async def _record_packet2_facts(
+        self,
+        *,
+        run_id: str,
+        packet2_facts: Dict[str, Any],
+    ) -> None:
+        if not hasattr(self.run_ledger, "append_event"):
+            return
+        try:
+            await self.run_ledger.append_event(
+                session_id=str(run_id),
+                kind="packet2_fact",
+                payload={"packet2_facts": dict(packet2_facts)},
+            )
+        except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
+            return
+
+    async def _record_artifact_provenance_facts(
+        self,
+        *,
+        run_id: str,
+        artifact_provenance_facts: Dict[str, Any],
+    ) -> None:
+        if not hasattr(self.run_ledger, "append_event"):
+            return
+        try:
+            await self.run_ledger.append_event(
+                session_id=str(run_id),
+                kind="artifact_provenance_fact",
+                payload={"artifact_provenance_facts": dict(artifact_provenance_facts)},
+            )
+        except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
+            return
 
     async def _materialize_protocol_receipts(self, *, run_id: str) -> Dict[str, Any] | None:
         if not hasattr(self.run_ledger, "append_receipt"):

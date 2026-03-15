@@ -1,0 +1,120 @@
+{
+  "catalog_v": "1.0.0",
+  "updated_on": "2026-03-15",
+  "root": "benchmarks/staging",
+  "highlight_id": "STAGE-GEN-007",
+  "artifacts": [
+    {
+      "id": "STAGE-GEN-001",
+      "category": "General",
+      "path": "General/truthful_runtime_packet1_example_2026-03-14.json",
+      "title": "Truthful Runtime Packet-1 Example",
+      "summary": "Candidate packet-1 example run summary showing provenance, degraded classification, defect reporting, and packet-1 non-conformance on a fallback path.",
+      "signals": [
+        "truthful_runtime_packet1",
+        "execution_profile",
+        "truth_classification",
+        "defect_families",
+        "packet1_conformance"
+      ],
+      "source_path": "benchmarks/staging/General/truthful_runtime_packet1_example_2026-03-14.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-002",
+      "category": "General",
+      "path": "General/truthful_runtime_packet1_live_proof_qwen2_5_coder_7b_2026-03-14.json",
+      "title": "Truthful Runtime Packet-1 Live Proof (Qwen2.5 Coder 7B)",
+      "summary": "Candidate packet-1 live proof for the original March 14 packet-1 contract and live-boundary subset.",
+      "signals": [
+        "end-to-end_live",
+        "truthful_runtime_packet1",
+        "truth_classification",
+        "packet1_conformance",
+        "protocol_ledger_finalize"
+      ],
+      "source_path": "benchmarks/staging/General/truthful_runtime_packet1_live_proof_qwen2_5_coder_7b_2026-03-14.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-003",
+      "category": "General",
+      "path": "General/truthful_runtime_phase_c_cycle1_live_closure_qwen2_5_coder_7b_2026-03-14.json",
+      "title": "Truthful Runtime Phase C Cycle-1 Live Closure (Qwen2.5 Coder 7B)",
+      "summary": "Candidate closure packet for the bounded truthful-runtime Phase C live-proof subset frozen on March 14.",
+      "signals": [
+        "phase_c_cycle1",
+        "packet1_live_subset",
+        "cancellation_truth",
+        "voice_truth_without_avatars",
+        "carry_forward_packet2"
+      ],
+      "source_path": "benchmarks/staging/General/truthful_runtime_phase_c_cycle1_live_closure_qwen2_5_coder_7b_2026-03-14.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-004",
+      "category": "General",
+      "path": "General/truthful_runtime_packet2_repair_live_proof_qwen2_5_coder_7b_2026-03-14.json",
+      "title": "Truthful Runtime Packet-2 Repair-Ledger Live Proof (Qwen2.5 Coder 7B)",
+      "summary": "Candidate repaired-path proof for the March 14 packet-2 repair-ledger slice before the packet-1 boundary cleanup.",
+      "signals": [
+        "truthful_runtime_packet2",
+        "repair_ledger",
+        "accepted_with_repair",
+        "packet2_fact",
+        "corrective_reprompt"
+      ],
+      "source_path": "benchmarks/staging/General/truthful_runtime_packet2_repair_live_proof_qwen2_5_coder_7b_2026-03-14.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-005",
+      "category": "General",
+      "path": "General/truthful_runtime_artifact_provenance_live_proof_qwen2_5_coder_7b_2026-03-14.json",
+      "title": "Truthful Runtime Artifact-Provenance Live Proof (Qwen2.5 Coder 7B)",
+      "summary": "Candidate live proof showing artifact-level provenance for generated requirements, design, and code files plus ledger reconstruction.",
+      "signals": [
+        "truthful_runtime_artifact_provenance",
+        "artifact_generation_provenance",
+        "artifact_provenance_fact",
+        "write_file_effects",
+        "live_acceptance"
+      ],
+      "source_path": "benchmarks/staging/General/truthful_runtime_artifact_provenance_live_proof_qwen2_5_coder_7b_2026-03-14.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-006",
+      "category": "General",
+      "path": "General/truthful_runtime_packet1_boundary_cleanup_live_proof_qwen2_5_coder_7b_2026-03-15.json",
+      "title": "Truthful Runtime Packet-1 Boundary-Cleanup Live Proof (Qwen2.5 Coder 7B)",
+      "summary": "Candidate live proof for the corrected packet-1 boundary contract, showing agent_output/main.py as the primary boundary on a real fallback-profile run.",
+      "signals": [
+        "truthful_runtime_packet1",
+        "primary_output_main_py",
+        "boundary_cleanup",
+        "fallback_profile_live",
+        "artifact_provenance_alignment"
+      ],
+      "source_path": "benchmarks/staging/General/truthful_runtime_packet1_boundary_cleanup_live_proof_qwen2_5_coder_7b_2026-03-15.json",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-007",
+      "category": "General",
+      "path": "General/truthful_runtime_packet2_repair_live_proof_qwen2_5_coder_7b_2026-03-15.json",
+      "title": "Truthful Runtime Packet-2 Repair-Ledger Live Proof (Qwen2.5 Coder 7B, Boundary-Fixed)",
+      "summary": "Candidate repaired-path proof under the corrected packet-1 contract, including agent_output/main.py as the primary boundary and preserved intended-path provenance values.",
+      "signals": [
+        "truthful_runtime_packet2",
+        "repair_ledger",
+        "primary_output_main_py",
+        "intended_path_preserved",
+        "corrective_reprompt"
+      ],
+      "source_path": "benchmarks/staging/General/truthful_runtime_packet2_repair_live_proof_qwen2_5_coder_7b_2026-03-15.json",
+      "publish_reviewed": false
+    }
+  ]
+}

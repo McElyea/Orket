@@ -9,8 +9,44 @@ from typing import Any
 import aiofiles
 
 from orket.naming import sanitize_name
+from orket.runtime.run_summary_artifact_provenance import (
+    ARTIFACT_PROVENANCE_KEY,
+    build_artifact_provenance_extension,
+    normalize_artifact_provenance_facts,
+)
+from orket.runtime.run_summary_packet2 import (
+    PACKET2_KEY,
+    build_packet2_extension,
+    normalize_packet2_facts,
+)
 
 _EXCLUDED_ARTIFACT_IDS = {"gitea_export", "run_summary", "run_summary_path"}
+_PACKET1_SCHEMA_VERSION = "1.0"
+_PACKET1_KEY = "truthful_runtime_packet1"
+PACKET1_MISSING_TOKEN = "missing"
+_PRIMARY_OUTPUT_KEYS = (
+    "explicit_completion_output",
+    "primary_work_artifact_output",
+    "direct_response_output",
+    "primary_artifact_output",
+)
+_CLASSIFICATION_RULE_ORDER = ("degraded", "repaired", "estimated", "inferred", "direct")
+_EVIDENCE_SOURCE_BY_RULE = {
+    "direct": "direct_execution",
+    "inferred": "runtime_evidence",
+    "estimated": "estimation_marker",
+    "repaired": "validator_repair",
+    "degraded": "fallback_or_reduced_capability",
+}
+_CONFORMANCE_REASON_ORDER = (
+    "packet1_emission_failure",
+    "classification_divergence",
+    "silent_path_mismatch",
+    "silent_repaired_success",
+    "silent_degraded_success",
+    "silent_unrecorded_fallback",
+)
+_DEFECT_ORDER = _CONFORMANCE_REASON_ORDER[1:]
 
 
 def validate_run_summary_payload(payload: dict[str, Any]) -> None:
@@ -31,6 +67,15 @@ def validate_run_summary_payload(payload: dict[str, Any]) -> None:
         raise ValueError("run_summary_failure_reason_invalid")
     _validate_token_list(tools_used, field_name="tools_used")
     _validate_token_list(artifact_ids, field_name="artifact_ids")
+    packet1 = payload.get(_PACKET1_KEY)
+    if packet1 is not None and not isinstance(packet1, dict):
+        raise ValueError("run_summary_truthful_runtime_packet1_invalid")
+    packet2 = payload.get(PACKET2_KEY)
+    if packet2 is not None and not isinstance(packet2, dict):
+        raise ValueError("run_summary_truthful_runtime_packet2_invalid")
+    artifact_provenance = payload.get(ARTIFACT_PROVENANCE_KEY)
+    if artifact_provenance is not None and not isinstance(artifact_provenance, dict):
+        raise ValueError("run_summary_truthful_runtime_artifact_provenance_invalid")
 
 
 def build_run_summary_payload(
@@ -52,6 +97,20 @@ def build_run_summary_payload(
         "artifact_ids": _artifact_ids(artifacts),
         "failure_reason": _normalize_failure_reason(failure_reason),
     }
+    packet1 = _build_packet1_extension(
+        run_id=str(run_id).strip(),
+        status=str(status).strip(),
+        artifacts=artifacts,
+        failure_reason=failure_reason,
+    )
+    if packet1 is not None:
+        payload[_PACKET1_KEY] = packet1
+    packet2 = build_packet2_extension(artifacts=artifacts)
+    if packet2 is not None:
+        payload[PACKET2_KEY] = packet2
+    artifact_provenance = build_artifact_provenance_extension(artifacts=artifacts)
+    if artifact_provenance is not None:
+        payload[ARTIFACT_PROVENANCE_KEY] = artifact_provenance
     validate_run_summary_payload(payload)
     return payload
 
@@ -116,6 +175,9 @@ def reconstruct_run_summary(
     ended_at: str | None = None
     status = ""
     failure_reason: str | None = None
+    packet1_event_facts: dict[str, Any] = {}
+    packet2_event_facts: dict[str, Any] = {}
+    artifact_provenance_event_facts: dict[str, Any] = {}
 
     for event in ordered_events:
         kind = str(event.get("kind") or "").strip()
@@ -137,6 +199,17 @@ def reconstruct_run_summary(
             if tool_name:
                 tool_names.append(tool_name)
             continue
+        if kind == "packet1_fact":
+            packet1_event_facts.update(_normalize_packet1_facts(event.get("packet1_facts")))
+            continue
+        if kind == "packet2_fact":
+            packet2_event_facts.update(normalize_packet2_facts(event.get("packet2_facts")))
+            continue
+        if kind == "artifact_provenance_fact":
+            artifact_provenance_event_facts.update(
+                normalize_artifact_provenance_facts(event.get("artifact_provenance_facts"))
+            )
+            continue
         if kind != "run_finalized":
             continue
         status = str(event.get("status") or status).strip()
@@ -149,6 +222,21 @@ def reconstruct_run_summary(
         raise ValueError("run_summary_run_id_required")
     if not status:
         raise ValueError("run_summary_status_required")
+    if packet1_event_facts:
+        artifacts["packet1_facts"] = {
+            **_normalize_packet1_facts(artifacts.get("packet1_facts")),
+            **packet1_event_facts,
+        }
+    if packet2_event_facts:
+        artifacts["packet2_facts"] = {
+            **normalize_packet2_facts(artifacts.get("packet2_facts")),
+            **packet2_event_facts,
+        }
+    if artifact_provenance_event_facts:
+        artifacts["artifact_provenance_facts"] = {
+            **normalize_artifact_provenance_facts(artifacts.get("artifact_provenance_facts")),
+            **artifact_provenance_event_facts,
+        }
     return build_run_summary_payload(
         run_id=run_id,
         status=status,
@@ -260,3 +348,193 @@ def _validate_token_list(value: Any, *, field_name: str) -> None:
     normalized = _normalize_token_list([str(item) for item in value])
     if normalized != value:
         raise ValueError(f"run_summary_{field_name}_not_canonical")
+
+
+def _build_packet1_extension(
+    *,
+    run_id: str,
+    status: str,
+    artifacts: dict[str, Any],
+    failure_reason: str | None,
+) -> dict[str, Any] | None:
+    facts = _collect_packet1_facts(artifacts)
+    if not facts:
+        return None
+
+    selection = _select_primary_output(facts)
+    primary_kind = str(selection.get("kind") or "none")
+    primary_id = str(selection.get("id") or "").strip()
+    classification_applicable = primary_kind != "none"
+    primary_eval = _evaluate_classification(
+        facts.get("primary_output_facts") if isinstance(facts.get("primary_output_facts"), dict) else facts
+    )
+    run_eval = _evaluate_classification(
+        facts.get("run_surface_facts") if isinstance(facts.get("run_surface_facts"), dict) else facts
+    )
+    defects = _detect_packet1_defects(
+        facts=facts,
+        status=status,
+        classification_applicable=classification_applicable,
+        primary_eval=primary_eval,
+        run_eval=run_eval,
+    )
+    conformance_reasons = list(defects)
+    conformance_status = "non_conformant" if conformance_reasons else "conformant"
+
+    provenance = {
+        "run_id": run_id,
+        "terminal_status": status,
+        "primary_output_kind": primary_kind,
+        "intended_provider": _resolve_packet1_token(facts.get("intended_provider"), "ollama"),
+        "intended_model": _resolve_packet1_token(facts.get("intended_model")),
+        "intended_profile": _resolve_packet1_token(facts.get("intended_profile")),
+        "actual_provider": _resolve_packet1_token(facts.get("actual_provider"), facts.get("intended_provider"), "ollama"),
+        "actual_model": _resolve_packet1_token(facts.get("actual_model"), facts.get("intended_model")),
+        "actual_profile": _resolve_packet1_token(facts.get("actual_profile"), facts.get("intended_profile")),
+        "path_mismatch": bool(facts.get("path_mismatch", False)),
+        "mismatch_reason": str(facts.get("mismatch_reason") or "none"),
+        "retry_occurred": bool(facts.get("retry_occurred", False)),
+        "repair_occurred": bool(facts.get("repair_occurred", False)),
+        "fallback_occurred": bool(facts.get("fallback_occurred", False)),
+        "execution_profile": _resolve_execution_profile(facts),
+    }
+    if primary_id:
+        provenance["primary_output_id"] = primary_id
+
+    classification: dict[str, Any] = {"classification_applicable": classification_applicable}
+    if classification_applicable:
+        classification["truth_classification"] = str(primary_eval["rule"])
+        classification["classification_basis"] = {
+            "rule": str(primary_eval["rule"]),
+            "evidence_source": str(primary_eval["evidence_source"]),
+        }
+        provenance["truth_classification"] = str(primary_eval["rule"])
+
+    return {
+        "schema_version": _PACKET1_SCHEMA_VERSION,
+        "provenance": provenance,
+        "classification": classification,
+        "defects": {
+            "defects_present": bool(defects),
+            "defect_families": defects,
+        },
+        "packet1_conformance": {
+            "status": conformance_status,
+            "reasons": conformance_reasons,
+        },
+    }
+
+
+def _collect_packet1_facts(artifacts: dict[str, Any]) -> dict[str, Any]:
+    packet1_facts = _normalize_packet1_facts(artifacts.get("packet1_facts"))
+    runtime_verification_path = str(artifacts.get("runtime_verification_path") or "").strip()
+    if (
+        runtime_verification_path
+        and "primary_artifact_output" not in packet1_facts
+        and "primary_work_artifact_output" not in packet1_facts
+    ):
+        packet1_facts["primary_artifact_output"] = {
+            "id": runtime_verification_path,
+            "kind": "artifact",
+        }
+    if "intended_provider" not in packet1_facts:
+        packet1_facts["intended_provider"] = "ollama"
+    if "actual_provider" not in packet1_facts:
+        packet1_facts["actual_provider"] = packet1_facts.get("intended_provider")
+    return packet1_facts
+
+
+def _normalize_packet1_facts(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {str(key).strip(): item for key, item in value.items() if str(key).strip()}
+
+
+def _resolve_packet1_token(*values: Any) -> str:
+    for value in values:
+        if value is None:
+            continue
+        raw = str(value).strip()
+        if not raw:
+            continue
+        if raw.lower() in {"none", "unknown"}:
+            continue
+        return raw
+    return PACKET1_MISSING_TOKEN
+
+
+def _select_primary_output(facts: dict[str, Any]) -> dict[str, str]:
+    for key in _PRIMARY_OUTPUT_KEYS:
+        candidate = facts.get(key)
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = str(candidate.get("id") or "").strip()
+        candidate_kind = str(candidate.get("kind") or "").strip()
+        if candidate_kind in {"response", "artifact"}:
+            return {"kind": candidate_kind, "id": candidate_id}
+    return {"kind": "none", "id": ""}
+
+
+def _evaluate_classification(facts: dict[str, Any]) -> dict[str, str]:
+    for rule in _CLASSIFICATION_RULE_ORDER:
+        if _rule_matches(rule, facts):
+            return {
+                "rule": rule,
+                "evidence_source": _EVIDENCE_SOURCE_BY_RULE[rule],
+            }
+    return {
+        "rule": "direct",
+        "evidence_source": _EVIDENCE_SOURCE_BY_RULE["direct"],
+    }
+
+
+def _rule_matches(rule: str, facts: dict[str, Any]) -> bool:
+    if rule == "degraded":
+        return bool(facts.get("fallback_occurred")) or _resolve_execution_profile(facts) != "normal"
+    if rule == "repaired":
+        return bool(facts.get("repair_occurred")) and bool(facts.get("repair_material_change", True))
+    if rule == "estimated":
+        return bool(facts.get("estimated_output"))
+    if rule == "inferred":
+        return bool(facts.get("inferred_output"))
+    return True
+
+
+def _resolve_execution_profile(facts: dict[str, Any]) -> str:
+    explicit = str(facts.get("execution_profile") or "").strip()
+    if explicit in {"normal", "fallback", "reduced_capability"}:
+        return explicit
+    if bool(facts.get("fallback_occurred")):
+        return "fallback"
+    if bool(facts.get("reduced_capability")):
+        return "reduced_capability"
+    return "normal"
+
+
+def _detect_packet1_defects(
+    *,
+    facts: dict[str, Any],
+    status: str,
+    classification_applicable: bool,
+    primary_eval: dict[str, str],
+    run_eval: dict[str, str],
+) -> list[str]:
+    defects: list[str] = []
+    status_token = str(status or "").strip().lower()
+    success_like = status_token in {"done", "success", "succeeded", "incomplete"}
+    machine_mismatch_indicator = bool(facts.get("machine_mismatch_indicator", False))
+    if bool(facts.get("path_mismatch")) and not machine_mismatch_indicator:
+        defects.append("silent_path_mismatch")
+    if bool(facts.get("repair_occurred")) and success_like and bool(facts.get("output_presented_as_normal_success", True)):
+        defects.append("silent_repaired_success")
+    if (
+        success_like
+        and bool(facts.get("output_presented_as_normal_success", True))
+        and (_resolve_execution_profile(facts) == "reduced_capability" or bool(facts.get("fallback_occurred")))
+    ):
+        defects.append("silent_degraded_success")
+    if bool(facts.get("fallback_path_detected")) and not bool(facts.get("fallback_occurred")):
+        defects.append("silent_unrecorded_fallback")
+    if classification_applicable and str(primary_eval.get("rule") or "") != str(run_eval.get("rule") or ""):
+        defects.append("classification_divergence")
+    return [token for token in _DEFECT_ORDER if token in defects]

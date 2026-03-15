@@ -92,6 +92,7 @@ def test_run_summary_schema_contract_is_canonical() -> None:
         "artifact_ids",
         "failure_reason",
     ]
+    assert "truthful_runtime_artifact_provenance" in schema["properties"]
     assert payload["duration_ms"] == 5000
 
 

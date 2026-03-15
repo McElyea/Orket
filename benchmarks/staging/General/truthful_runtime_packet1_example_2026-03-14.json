@@ -1,0 +1,55 @@
+{
+  "artifact_ids": [
+    "packet1_facts",
+    "run_identity"
+  ],
+  "duration_ms": 5000,
+  "failure_reason": null,
+  "run_id": "packet1-example-run",
+  "status": "done",
+  "tools_used": [
+    "workspace.read"
+  ],
+  "truthful_runtime_packet1": {
+    "classification": {
+      "classification_applicable": true,
+      "classification_basis": {
+        "evidence_source": "fallback_or_reduced_capability",
+        "rule": "degraded"
+      },
+      "truth_classification": "degraded"
+    },
+    "defects": {
+      "defect_families": [
+        "silent_degraded_success"
+      ],
+      "defects_present": true
+    },
+    "packet1_conformance": {
+      "reasons": [
+        "silent_degraded_success"
+      ],
+      "status": "non_conformant"
+    },
+    "provenance": {
+      "actual_model": "qwen2.5-coder:7b",
+      "actual_profile": "fallback_low_context",
+      "actual_provider": "ollama",
+      "execution_profile": "fallback",
+      "fallback_occurred": true,
+      "intended_model": "qwen2.5-coder:7b",
+      "intended_profile": "default",
+      "intended_provider": "ollama",
+      "mismatch_reason": "none",
+      "path_mismatch": false,
+      "primary_output_id": "agent_output/verification/runtime_verification.json",
+      "primary_output_kind": "artifact",
+      "repair_occurred": false,
+      "retry_occurred": false,
+      "run_id": "packet1-example-run",
+      "terminal_status": "done",
+      "truth_classification": "degraded"
+    },
+    "schema_version": "1.0"
+  }
+}

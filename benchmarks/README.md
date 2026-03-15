@@ -16,6 +16,8 @@ This directory contains benchmark runners, task banks, and generated results.
 1. `benchmarks/task_bank/`: task definitions.
 2. `benchmarks/configs/`: matrix/profile configs.
 3. `benchmarks/results/`: generated artifacts.
+4. `benchmarks/staging/`: candidate artifacts awaiting explicit publication approval.
+5. `benchmarks/published/`: approved curated artifacts only.
 
 ## Minimal Commands
 Run a quant sweep via the operational runbook command set. Do not duplicate command matrices in this file.

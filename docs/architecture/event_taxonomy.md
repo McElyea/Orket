@@ -12,7 +12,7 @@ This document defines canonical runtime events and minimum fields.
 1. `turn_start`
    - `issue_id`, `session_id`, `turn_index`, `turn_trace_id`, `prompt_hash`, `selected_model`
 2. `turn_corrective_reprompt`
-   - `issue_id`, `session_id`, `turn_index`, `turn_trace_id`, `reason`
+   - `issue_id`, `session_id`, `turn_index`, `turn_trace_id`, `reason`, `contract_reasons`
 3. `turn_complete`
    - `issue_id`, `session_id`, `turn_index`, `turn_trace_id`, `duration_ms`, `tool_calls`
 4. `turn_non_progress`
@@ -39,6 +39,14 @@ This document defines canonical runtime events and minimum fields.
    - `run_id`, `issue_id`, `retry_count`, `error`
 3. `resume_requeue_issue`
    - `run_id`, `build_id`, `issue_id`, `previous_status`, `new_status`
+4. `packet1_fact`
+   - `session_id`, `packet1_facts`
+5. `packet1_emission_failure`
+   - `run_id`, `session_id`, `stage`, `error_type`, `error`, `packet1_conformance`
+6. `packet2_fact`
+   - `session_id`, `packet2_facts`
+7. `artifact_provenance_fact`
+   - `session_id`, `artifact_provenance_facts`
 
 ## Guard Lifecycle
 1. `guard_approved`

@@ -1,17 +1,20 @@
 # Published Artifacts Policy
 
-Last reviewed: 2026-02-27
+Last reviewed: 2026-03-15
 
 ## Purpose
-Define how curated benchmark artifacts are published without drift between files and docs.
+Define how benchmark artifacts move from candidate staging to approved publication without drift between files and docs.
 
-## Canonical Source
-1. `benchmarks/published/index.json` is the source of truth.
-2. `benchmarks/published/README.md` is generated from `index.json`.
+## Canonical Sources
+1. `benchmarks/staging/index.json` is the source of truth for candidate artifacts awaiting approval.
+2. `benchmarks/staging/README.md` is generated from `benchmarks/staging/index.json`.
+3. `benchmarks/published/index.json` is the source of truth for approved published artifacts.
+4. `benchmarks/published/README.md` is generated from `benchmarks/published/index.json`.
 
 ## Structure
-1. Published artifacts are grouped by category folders under `benchmarks/published/`.
-2. Current categories:
+1. Candidate artifacts are grouped by category folders under `benchmarks/staging/`.
+2. Approved artifacts are grouped by category folders under `benchmarks/published/`.
+3. Current categories:
    - `ODR/`
    - `General/`
 
@@ -26,31 +29,47 @@ Each artifact row in `index.json` must include:
 7. `source_path`
 8. `publish_reviewed`
 
-Top-level fields:
+Top-level fields for either catalog:
 1. `catalog_v`
 2. `updated_on`
 3. `root`
 4. `highlight_id`
 5. optional `reading_paths`
 
-## Publish Workflow (Mandatory)
-1. Copy artifact(s) into the right category folder.
-2. Update `benchmarks/published/index.json`.
-3. Regenerate README:
+## Staging Workflow (Mandatory For Agent-Proposed Artifacts)
+1. Copy candidate artifact(s) into the right category folder under `benchmarks/staging/`.
+2. Update `benchmarks/staging/index.json`.
+3. Keep `publish_reviewed=false` until the user explicitly approves publication.
+4. Regenerate the staging README:
+```bash
+python scripts/governance/sync_published_index.py --index benchmarks/staging/index.json --readme benchmarks/staging/README.md --write
+```
+5. Validate sync before commit:
+```bash
+python scripts/governance/sync_published_index.py --index benchmarks/staging/index.json --readme benchmarks/staging/README.md --check
+```
+6. Commit candidate artifact files, `benchmarks/staging/index.json`, and `benchmarks/staging/README.md` together.
+
+## Publish Workflow (Approval Required)
+1. Do not add or move artifacts into `benchmarks/published/` without explicit user approval.
+2. After approval, copy the approved artifact(s) into the right category folder under `benchmarks/published/`.
+3. Update `benchmarks/published/index.json`.
+4. Regenerate the published README:
 ```bash
 python scripts/governance/sync_published_index.py --write
 ```
-4. Validate sync before commit:
+5. Validate sync before commit:
 ```bash
 python scripts/governance/sync_published_index.py --check
 ```
-5. Commit artifact files, `index.json`, and `README.md` together.
+6. Commit approved artifact files, `benchmarks/published/index.json`, and `benchmarks/published/README.md` together.
 
 ## Retention Rules
 1. Published artifacts are treated as permanent records.
 2. Do not overwrite existing published evidence files.
 3. If superseded, add a new versioned file and mark older item in metadata/commentary instead of deleting by default.
+4. Staging artifacts are review candidates and may be revised, replaced, or withdrawn before publication approval.
 
 ## Privacy/Safety Rules
-1. Do not publish secrets, private tokens, or local machine-sensitive paths.
-2. Set `publish_reviewed=true` only after manual review.
+1. Do not stage or publish secrets, private tokens, or local machine-sensitive paths.
+2. Set `publish_reviewed=true` only after manual review and explicit user approval.

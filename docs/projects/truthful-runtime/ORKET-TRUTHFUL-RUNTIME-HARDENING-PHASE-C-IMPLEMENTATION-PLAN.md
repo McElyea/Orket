@@ -1,23 +1,40 @@
 # Orket Truthful Runtime Hardening Phase C Implementation Plan
 
-Last updated: 2026-03-14
-Status: Staged / Waiting (broader Phase C backlog beyond active packet-1 plan)
+Last updated: 2026-03-15
+Status: Staged after completion of packet-1 cleanup and packet-2 slices 1-2; remaining Phase C backlog staged
 Owner: Orket Core
 Canonical lane plan: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
 Depends on: Phase B completion
-Accepted requirements lane: `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`
-Active packet-1 implementation plan: `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+Accepted packet-1 requirements archive: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
+Archived packet-1 authority:
+1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
+3. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/CLOSEOUT.md`
+Frozen cycle-1 closeout:
+1. `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSURE-MATRIX.md`
+2. `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSEOUT.md`
+3. `benchmarks/staging/General/truthful_runtime_phase_c_cycle1_live_closure_qwen2_5_coder_7b_2026-03-14.json`
+Archived cleanup packet:
+1. `docs/projects/archive/truthful-runtime/TRH03152026-PACKET1-CLEANUP/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET1-CLEANUP-IMPLEMENTATION-PLAN.md`
+Next staged packet:
+1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
+Completed bounded packet-2 slice contracts:
+1. `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md`
+2. `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`
 
 ## 0. Current Role
 
-This file is no longer the active authority for the bounded first Phase C packet.
+This file is not the active authority for implementation details of the bounded first Phase C packet, the archived packet-1 cleanup packet, or future packet-2 slices.
 
 Accepted packet-1 requirements now live in:
-1. `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`
-Active packet-1 implementation now lives in:
-1. `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
+Packet-1 implementation and closeout now live in:
+1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/CLOSEOUT.md`
 
-This file remains staged continuation input only for broader Phase C backlog beyond packet-1 and must not be treated as authorization to widen the active packet-1 implementation scope.
+This file now governs the phase-level boundary while the packet-1 cleanup packet is archived and the remaining packet-2 backlog stays staged. It must not be treated as authorization to reopen packet-2 work without an explicit next-slice request.
+
+The live-proof closure boundary remains frozen in the cycle-1 archive. Repair-ledger and artifact-provenance slices are complete; the archived cleanup packet realigns packet-1 semantics and supersedes the affected live proofs; the remaining Phase C backlog stays staged.
 
 ## 1. Objective
 
@@ -41,7 +58,7 @@ Make execution provenance, repair behavior, fallback behavior, and truth classif
 ### Workstream C1 - Provenance and Repair Surfaces
 Tasks:
 1. Define/enforce provenance envelope fields (provider/model/profile/tool/retry/repair/fallback).
-2. Define structured repair ledger entries and final disposition rules.
+2. Define structured repair ledger entries and final disposition rules. Status: Completed in packet-2 slice 1.
 3. Link retry/repair/fallback events with stable idempotency keys.
 
 Acceptance:
@@ -63,7 +80,7 @@ Tasks:
 1. Define evidence-first synthesis requirements for high-stakes lanes.
 2. Define source attribution contract (cited facts vs uncited reasoning).
 3. Define voice truth separation (text completion, TTS generation, playback, lip-sync).
-4. Define artifact generation provenance envelope.
+4. Define artifact generation provenance envelope. Status: Completed in packet-2 slice 2.
 
 Acceptance:
 1. high-stakes mode blocks synthesis without required evidence path.
@@ -72,8 +89,8 @@ Acceptance:
 ## 4. Verification Plan
 
 1. Contract tests for provenance envelope, repair ledger, truth classification, and idempotency keys.
-2. Integration tests for cancellation truth, fallback detection, and audit behavior.
-3. End-to-end tests validating narration/effect alignment in user-visible flows.
+2. Integration tests for cancellation truth, fallback detection, repair-ledger reconstruction, and audit behavior.
+3. End-to-end tests validating repaired-path behavior and narration/effect alignment in user-visible flows.
 
 ## 5. Completion Gate
 

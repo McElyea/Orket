@@ -1,0 +1,81 @@
+{
+  "artifact_type": "truthful_runtime_artifact_provenance_live_proof",
+  "schema_version": "1.0",
+  "captured_on": "2026-03-14",
+  "proof_type": "end-to-end_live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "proof_command": "python scripts/governance/record_truthful_runtime_artifact_provenance_live_proof.py --model qwen2.5-coder:7b --provider ollama --json",
+  "provider": {
+    "requested_provider": "ollama",
+    "requested_model": "qwen2.5-coder:7b"
+  },
+  "run": {
+    "run_id": "16c9de93",
+    "status": "done",
+    "source_result_path": "benchmarks/results/governance/truthful_runtime_artifact_provenance_live_proof.json"
+  },
+  "artifact_provenance_summary": {
+    "schema_version": "1.0",
+    "artifacts": [
+      {
+        "artifact_path": "agent_output/design.txt",
+        "artifact_type": "design_document",
+        "generator": "tool.write_file",
+        "generator_version": "unversioned",
+        "issue_id": "ARC-1",
+        "operation_id": "a8dda2c881546fb726e00a52e9938ded82790494db14a8730045d0cf9be45137",
+        "produced_at": "2026-03-15T04:28:16.103687+00:00",
+        "role_name": "architect",
+        "source_hash": "23699750e4b47e46a97fe41a843274a191ec19b2bb884720d6ecd3db94df9936",
+        "step_id": "ARC-1:3",
+        "truth_classification": "direct",
+        "turn_index": 3
+      },
+      {
+        "artifact_path": "agent_output/main.py",
+        "artifact_type": "source_code",
+        "generator": "tool.write_file",
+        "generator_version": "unversioned",
+        "issue_id": "COD-1",
+        "operation_id": "d3dc31a09db801168e39b43382baae5b5342b4aa42e9abdd5186e0e43cfdd8d7",
+        "produced_at": "2026-03-15T04:28:18.611443+00:00",
+        "role_name": "coder",
+        "source_hash": "054d39dbb1d557415de6cad063388bd7561b3b94f36eafac0b3df4c8a4f7b780",
+        "step_id": "COD-1:5",
+        "truth_classification": "direct",
+        "turn_index": 5
+      },
+      {
+        "artifact_path": "agent_output/requirements.txt",
+        "artifact_type": "requirements_document",
+        "generator": "tool.write_file",
+        "generator_version": "unversioned",
+        "issue_id": "REQ-1",
+        "operation_id": "8a1deff2d40480b64c00137e805639e413ce40cf41fb8f2dd6553f4b2bc6ebb8",
+        "produced_at": "2026-03-15T04:28:12.725389+00:00",
+        "role_name": "requirements_analyst",
+        "source_hash": "3d836fec1c4d70d1b30bb48e094b5d8ccaede7750312a2eb63e239009c694010",
+        "step_id": "REQ-1:1",
+        "truth_classification": "direct",
+        "turn_index": 1
+      }
+    ]
+  },
+  "live_evidence": {
+    "artifact_count": 3,
+    "artifact_paths": [
+      "agent_output/design.txt",
+      "agent_output/main.py",
+      "agent_output/requirements.txt"
+    ],
+    "artifact_fact_event_count": 1,
+    "protocol_event_count": 4,
+    "run_finalized_matches_summary": true
+  },
+  "notes": [
+    "This artifact is a curated archive of a real provider-backed acceptance run.",
+    "The live run completed on the normal path and emitted truthful_runtime_artifact_provenance before run_finalized.",
+    "The canonical rerunnable source remains benchmarks/results/governance/truthful_runtime_artifact_provenance_live_proof.json."
+  ]
+}

@@ -42,5 +42,6 @@ python scripts/governance/sync_published_index.py --write
 ```bash
 python scripts/governance/sync_published_index.py --check
 ```
-5. Do not overwrite prior published artifacts; add versioned files instead.
+5. Only add artifacts here after explicit user approval and manual review.
+6. Do not overwrite prior published artifacts; add versioned files instead.
 

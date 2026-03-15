@@ -1,0 +1,169 @@
+{
+  "artifact_type": "truthful_runtime_packet1_boundary_cleanup_live_proof",
+  "schema_version": "1.0",
+  "captured_on": "2026-03-15",
+  "proof_type": "end-to-end_live",
+  "observed_path": "fallback",
+  "observed_result": "success",
+  "proof_command": "python scripts/governance/record_truthful_runtime_packet1_live_proof.py --model qwen2.5-coder:7b --provider ollama --json",
+  "provider": {
+    "requested_provider": "ollama",
+    "requested_model": "qwen2.5-coder:7b"
+  },
+  "run": {
+    "run_id": "ea196cd7",
+    "status": "done",
+    "fallback_profile_id": "ollama.qwen.chatml.v1",
+    "source_result_path": "benchmarks/results/governance/truthful_runtime_packet1_live_proof.json"
+  },
+  "packet1_summary": {
+    "classification": {
+      "classification_applicable": true,
+      "classification_basis": {
+        "evidence_source": "fallback_or_reduced_capability",
+        "rule": "degraded"
+      },
+      "truth_classification": "degraded"
+    },
+    "defects": {
+      "defect_families": [
+        "silent_repaired_success",
+        "silent_degraded_success"
+      ],
+      "defects_present": true
+    },
+    "packet1_conformance": {
+      "reasons": [
+        "silent_repaired_success",
+        "silent_degraded_success"
+      ],
+      "status": "non_conformant"
+    },
+    "provenance": {
+      "actual_model": "packet1-boundary-proof:7b",
+      "actual_profile": "ollama.qwen.chatml.v1",
+      "actual_provider": "ollama",
+      "execution_profile": "fallback",
+      "fallback_occurred": true,
+      "intended_model": "packet1-boundary-proof:7b",
+      "intended_profile": "ollama.qwen.chatml.v1",
+      "intended_provider": "ollama",
+      "mismatch_reason": "none",
+      "path_mismatch": false,
+      "primary_output_id": "agent_output/main.py",
+      "primary_output_kind": "artifact",
+      "repair_occurred": true,
+      "retry_occurred": false,
+      "run_id": "ea196cd7",
+      "terminal_status": "done",
+      "truth_classification": "degraded"
+    },
+    "schema_version": "1.0"
+  },
+  "artifact_provenance_summary": {
+    "artifacts": [
+      {
+        "artifact_path": "agent_output/design.txt",
+        "artifact_type": "design_document",
+        "generator": "tool.write_file",
+        "generator_version": "unversioned",
+        "issue_id": "ARC-1",
+        "operation_id": "788678de94b6c22b24f1e33384a0bc0adca8ab388726996a56ff90ca4bdb6ce3",
+        "produced_at": "2026-03-15T14:40:12.217153+00:00",
+        "role_name": "architect",
+        "source_hash": "effd19ed41485750e238cceda1c73e5bda03386de8a94576d5de4cf175cdd305",
+        "step_id": "ARC-1:3",
+        "truth_classification": "direct",
+        "turn_index": 3
+      },
+      {
+        "artifact_path": "agent_output/main.py",
+        "artifact_type": "source_code",
+        "generator": "tool.write_file",
+        "generator_version": "unversioned",
+        "issue_id": "COD-1",
+        "operation_id": "2a6475a902316fb208418701df6c453adda962145fd9dc4975cc6d378a6c9cda",
+        "produced_at": "2026-03-15T14:40:14.636769+00:00",
+        "role_name": "coder",
+        "source_hash": "f94256ee8b89643fed4ad4acfc45901d5733c55a5747c4f4e663a41262e6bd34",
+        "step_id": "COD-1:5",
+        "truth_classification": "direct",
+        "turn_index": 5
+      },
+      {
+        "artifact_path": "agent_output/requirements.txt",
+        "artifact_type": "requirements_document",
+        "generator": "tool.write_file",
+        "generator_version": "unversioned",
+        "issue_id": "REQ-1",
+        "operation_id": "c2151ed309834165a726a198c99a84345f10c42d6c6a6c0e2e9bd9bfdc834a68",
+        "produced_at": "2026-03-15T14:40:07.496918+00:00",
+        "role_name": "requirements_analyst",
+        "source_hash": "ca9af044728b80a43cb3f16bf075ad3a17349bc1cd6e80097be66d3395757e29",
+        "step_id": "REQ-1:1",
+        "truth_classification": "direct",
+        "turn_index": 1
+      }
+    ],
+    "schema_version": "1.0"
+  },
+  "runtime_verification": {
+    "run_id": "ea196cd7",
+    "issue_id": "REV-1",
+    "ok": true,
+    "checked_files": [
+      "agent_output/main.py",
+      "agent_output/src/__init__.py"
+    ],
+    "errors": [],
+    "command_results": [
+      {
+        "command_display": "C:\\Python314\\python.exe -m compileall -q agent_output",
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "failure_class": "none",
+        "policy_source": "profile_default:polyglot"
+      }
+    ],
+    "failure_breakdown": {},
+    "guard_contract": {
+      "result": "pass",
+      "violations": [],
+      "severity": "soft",
+      "fix_hint": null,
+      "terminal_failure": false,
+      "terminal_reason": null
+    },
+    "guard_decision": {
+      "action": "pass",
+      "next_retry_count": 0,
+      "terminal_failure": false,
+      "retry_fingerprint": null,
+      "repeated_fingerprint": false,
+      "terminal_reason": null
+    },
+    "timestamp": "2026-03-15T14:40:16.989378+00:00"
+  },
+  "live_evidence": {
+    "primary_output_id": "agent_output/main.py",
+    "truth_classification": "degraded",
+    "defect_families": [
+      "silent_repaired_success",
+      "silent_degraded_success"
+    ],
+    "artifact_paths": [
+      "agent_output/design.txt",
+      "agent_output/main.py",
+      "agent_output/requirements.txt"
+    ],
+    "protocol_event_count": 4,
+    "run_finalized_packet1_matches_summary": true
+  },
+  "notes": [
+    "This artifact supersedes the 2026-03-14 packet-1 live proof for the active packet-1 boundary contract.",
+    "The live path uses an explicit fallback-profile run because the direct-success provider-backed acceptance path is currently volatile.",
+    "The proof target is the corrected primary-output boundary and truthful packet-1 surfaces, not semantic artifact quality.",
+    "The canonical rerunnable source remains benchmarks/results/governance/truthful_runtime_packet1_live_proof.json."
+  ]
+}

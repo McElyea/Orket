@@ -55,10 +55,14 @@
 6. Do not add small project-subfolder `README.md` files by default.
 7. Workflow changes go in `.gitea/workflows/` only unless explicitly approved otherwise.
 8. When changing automation, implement and validate the `.gitea` workflow first.
-9. After any published artifact change, run:
+9. Agent-proposed benchmark artifacts must go to `benchmarks/staging/` until the user explicitly approves publication.
+10. After any staging artifact change, run:
+   - `python scripts/governance/sync_published_index.py --index benchmarks/staging/index.json --readme benchmarks/staging/README.md --write`
+   - `python scripts/governance/sync_published_index.py --index benchmarks/staging/index.json --readme benchmarks/staging/README.md --check`
+11. After any published artifact change, run:
    - `python scripts/governance/sync_published_index.py --write`
    - `python scripts/governance/sync_published_index.py --check`
-10. Commit published artifacts, `benchmarks/published/index.json`, and `benchmarks/published/README.md` together.
+12. Commit staged artifacts, `benchmarks/staging/index.json`, and `benchmarks/staging/README.md` together. Commit published artifacts, `benchmarks/published/index.json`, and `benchmarks/published/README.md` together.
 
 ## Canonical Commands
 

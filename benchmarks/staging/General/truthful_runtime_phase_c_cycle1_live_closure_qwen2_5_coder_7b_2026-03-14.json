@@ -1,0 +1,153 @@
+{
+  "artifact_type": "truthful_runtime_phase_c_cycle1_live_closure",
+  "schema_version": "1.0",
+  "captured_on": "2026-03-14",
+  "proof_type": "curated_live_closure",
+  "observed_path": "mixed",
+  "observed_result": "partial success",
+  "cycle_status": "closed_subset",
+  "provider": {
+    "requested_provider": "ollama",
+    "requested_model": "qwen2.5-coder:7b"
+  },
+  "related_authority": {
+    "closure_matrix": "docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSURE-MATRIX.md",
+    "closeout": "docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSEOUT.md",
+    "next_packet": "docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md",
+    "packet1_live_proof": "benchmarks/staging/General/truthful_runtime_packet1_live_proof_qwen2_5_coder_7b_2026-03-14.json"
+  },
+  "proof_commands": [
+    "ORKET_LIVE_ACCEPTANCE=1 ORKET_LIVE_MODEL=qwen2.5-coder:7b ORKET_LLM_PROVIDER=ollama python -m pytest tests/live/test_truthful_runtime_packet1_live.py -q -s",
+    "ORKET_LIVE_ACCEPTANCE=1 ORKET_LIVE_MODEL=qwen2.5-coder:7b python -m pytest tests/live/test_model_stream_v1_live.py -q -s",
+    "ORKET_LIVE_ACCEPTANCE=1 ORKET_LIVE_MODEL=qwen2.5-coder:7b python -m pytest tests/live/test_companion_voice_truth_live.py -q -s"
+  ],
+  "closure_matrix": {
+    "proved_live_now": [
+      {
+        "surface": "packet1 live envelope and truth-classification subset",
+        "test_result": "pass",
+        "observed_path": "mixed",
+        "observed_result": "partial success",
+        "tests": [
+          "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_failure_run_omits_classification_without_primary_output",
+          "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_emission_failure_uses_runtime_event_fallback",
+          "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_fallback_profile_marks_degraded_truth",
+          "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_corrective_reprompt_marks_repaired_truth"
+        ],
+        "observed": {
+          "failure_no_primary": {
+            "run_id": "7ab18729",
+            "status": "failed",
+            "primary_output_kind": "none"
+          },
+          "emission_failure_fallback": {
+            "run_id": "c65fd60a",
+            "status": "done",
+            "packet1_conformance_status": "non_conformant"
+          },
+          "fallback_profile": {
+            "run_id": "05982344",
+            "status": "done",
+            "truth_classification": "degraded",
+            "actual_profile": "ollama.qwen.chatml.v1"
+          },
+          "corrective_reprompt": {
+            "run_id": "d9cc7498",
+            "status": "done",
+            "truth_classification": "repaired"
+          }
+        }
+      },
+      {
+        "surface": "cancellation truth at the streaming interaction boundary",
+        "test_result": "pass",
+        "observed_path": "primary",
+        "observed_result": "success",
+        "tests": [
+          "tests/live/test_model_stream_v1_live.py::test_model_stream_v1_live_repeated_cancel_before_first_token_interrupts",
+          "tests/live/test_model_stream_v1_live.py::test_model_stream_v1_live_cancel_after_final_is_noop"
+        ],
+        "observed": {
+          "cancel_mid_generation": {
+            "session_id": "f8a750e5-2156-4fa4-944a-d4d7b12a862e",
+            "turn_id": "0b9cbf56-469a-4cdf-8afa-ad43f4c2e14b",
+            "terminal_event": "turn_interrupted",
+            "commit_outcome": "ok"
+          },
+          "cancel_after_final": {
+            "session_id": "16e4ae29-0777-4b3e-860f-f61eb04b0944",
+            "turn_id": "ba109b87-0708-4a5e-a842-08b2beedd808",
+            "terminal_event": "turn_final",
+            "commit_outcome": "ok"
+          }
+        }
+      },
+      {
+        "surface": "voice truth without avatars",
+        "test_result": "pass",
+        "observed_path": "mixed",
+        "observed_result": "success",
+        "tests": [
+          "tests/live/test_companion_voice_truth_live.py::test_companion_voice_truth_live_tts_generation_is_explicit",
+          "tests/live/test_companion_voice_truth_live.py::test_companion_voice_truth_live_text_chat_remains_distinct_from_tts",
+          "tests/live/test_companion_voice_truth_live.py::test_companion_voice_truth_live_gateway_playback_without_avatar"
+        ],
+        "observed": {
+          "host_tts_generation": {
+            "tts_available": true,
+            "voice_id": "en_US-lessac-medium",
+            "audio_bytes": 32768
+          },
+          "text_vs_tts": {
+            "session_id": "voice-truth-live",
+            "model": "qwen2.5-coder:7b",
+            "voice_id": "en_US-lessac-medium",
+            "audio_bytes": 33280
+          },
+          "gateway_playback_without_avatar": {
+            "avatar_mode": "off",
+            "chat_requests": 1,
+            "voice_synthesize_requests": 1,
+            "stop_playback_cleared": true
+          }
+        }
+      }
+    ],
+    "carry_forward_packet2": [
+      {
+        "surface": "structured repair ledger contract",
+        "reason": "runtime-wide durable repair history and disposition remain broader than the shipped packet1 repair stamp"
+      },
+      {
+        "surface": "narration-to-effect audit path",
+        "reason": "current live proofs do not yet establish a canonical narration/effect evidence path"
+      },
+      {
+        "surface": "idempotency key contract beyond cancel semantics",
+        "reason": "retries, writes, events, and repairs are not yet closed by a single durable idempotency contract"
+      },
+      {
+        "surface": "source attribution and evidence-first mode",
+        "reason": "high-stakes evidence gating and cited-vs-uncited synthesis remain unimplemented as canonical runtime behavior"
+      },
+      {
+        "surface": "artifact generation provenance contract",
+        "reason": "artifact-level authorship/provenance metadata is not yet emitted as a truthful runtime surface"
+      },
+      {
+        "surface": "remaining packet1 defect-family live evidence gaps",
+        "reason": "organic path-mismatch and silent-unrecorded-fallback live proof remain outside the currently exercised subset"
+      }
+    ],
+    "blocked": [
+      {
+        "surface": "lipsync and avatar-rendered playback truth",
+        "reason": "working avatars are not available in the current environment"
+      }
+    ]
+  },
+  "notes": [
+    "This artifact closes the current Phase C live-proof cycle on a bounded subset only; it does not claim full Phase C completion.",
+    "The carry-forward packet is intentional rather than implicit so the next scoped implementation request can reopen one bounded authority path."
+  ]
+}
