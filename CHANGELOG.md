@@ -5,17 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.7] - 2026-03-14 - "The Claim E Closure Cut"
+## [0.4.8] - 2026-03-14 - "The Packet-1 Lane Cut"
 
 ### Added
-- **Claim E Closure Packet**: Added a curated published closure package for the remaining runtime-stability deterministic-drift gap, including pre-resolution drift evidence, the governed compare-scope delta, three-run strict-compare proof, replay proof, and provenance artifacts.
-- **Claim E Compare-Surface Delta Record**: Added an explicit contract-delta record for the final strict-compare surface so runtime-generated support artifacts and fresh run identity are excluded only under a governed authority change.
-- **DD03142026 Archive Closeout**: Added the archived requirements, remediation plan, and closeout summary for the completed deterministic-drift remediation cycle.
+- **Truthful Runtime Packet-1 Contract**: Added the durable packet-1 runtime truth contract in `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md` covering provenance, truth classification, silent fallback defects, and packet-1 conformance.
+- **Truthful Runtime Project Lane**: Added the active truthful-runtime project lane under `docs/projects/truthful-runtime/` with the bounded Phase C packet-1 requirements and active implementation plan plus staged continuation plans for the remaining hardening backlog.
 
 ### Changed
-- **Deterministic Drift Runtime Path**: Fixed legacy local required-tool prompting, legacy non-protocol markdown-fence validation, architect/reviewer prompt-contract alignment, Ollama legacy tool-call response formatting, and strict-compare session-identity handling so equivalent fresh live runs converge at the final governed operator surface.
-- **Runtime Stability Compare Authority**: Updated the canonical runtime-stability requirements to define the final Claim E operator surface explicitly and to exclude only runtime-generated support artifacts `observability/runtime_events.jsonl`, `verification/runtime_verification.json`, and `**/__pycache__/*.pyc`.
-- **Roadmap And Techdebt State**: Archived `DD03142026`, removed it from `Priority Now`, and refreshed the staged Claim E ancestor plus published index metadata to point at the closure packet instead of an active lane.
+- **Roadmap And Project Authority**: Updated the active roadmap and archived truthful-runtime closeout/staging references so the current packet-1 work now points at the new truthful-runtime project paths instead of the old future-lane locations.
+- **Root UI Surface Cleanup**: Removed the leftover root `UI/` stub, stale contributor/vendor-tree references, and orphaned dashboard/UI env-template entries now that the UI will live in another codebase.
 
 ### Compatibility
 - `compatibility_status`: `preserved`
@@ -24,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Required Operator or Extension-Author Action
 - None.
+
+## [0.4.7] - 2026-03-14 - "The Claim E Closure Cut"
 
 ## [0.4.6] - 2026-03-14 - "The Causal Basis Cut"
 

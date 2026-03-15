@@ -1,10 +1,23 @@
 # Orket Truthful Runtime Hardening Phase C Implementation Plan
 
-Last updated: 2026-03-10
-Status: Staged / Waiting (proof not yet established)
+Last updated: 2026-03-14
+Status: Staged / Waiting (broader Phase C backlog beyond active packet-1 plan)
 Owner: Orket Core
-Canonical lane plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
+Canonical lane plan: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
 Depends on: Phase B completion
+Accepted requirements lane: `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`
+Active packet-1 implementation plan: `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+
+## 0. Current Role
+
+This file is no longer the active authority for the bounded first Phase C packet.
+
+Accepted packet-1 requirements now live in:
+1. `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`
+Active packet-1 implementation now lives in:
+1. `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+
+This file remains staged continuation input only for broader Phase C backlog beyond packet-1 and must not be treated as authorization to widen the active packet-1 implementation scope.
 
 ## 1. Objective
 

@@ -3,7 +3,7 @@
 Last updated: 2026-03-09
 Status: Completed (archived closeout)
 Owner: Orket Core
-Canonical lane plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
+Canonical lane plan: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
 Depends on: Phase A completion
 
 ## Closeout Verification (2026-03-10)

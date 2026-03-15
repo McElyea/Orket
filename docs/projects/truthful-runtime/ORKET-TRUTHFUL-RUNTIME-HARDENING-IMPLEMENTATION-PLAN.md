@@ -1,10 +1,14 @@
 # Orket Truthful Runtime Hardening Implementation Plan
 
-Last updated: 2026-03-13
-Status: Staged / Waiting (proof-gated for Phases C-E)
+Last updated: 2026-03-14
+Status: Staged / Waiting (Phase C implementation and Phases D-E)
 Owner: Orket Core
 Lane type: Staged / Waiting (externally gated by proof availability)
 Canonical staged-lane authority: This file owns detailed reentry criteria for this lane.
+Accepted Phase C requirements lane:
+1. `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`
+Active bounded Phase C packet-1 implementation plan:
+1. `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
 Primary input: operator-provided control-surface backlog (runtime truth, routing truth, provenance, conformance, and promotion hardening)
 Related authority inputs:
 1. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
@@ -38,9 +42,9 @@ Out of scope:
 ## 3. Phase Plan
 
 Phase-specific implementation plans:
-1. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
-2. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-D-IMPLEMENTATION-PLAN.md`
-3. `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-E-IMPLEMENTATION-PLAN.md`
+1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-D-IMPLEMENTATION-PLAN.md`
+3. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-E-IMPLEMENTATION-PLAN.md`
 
 Phase closeout archives:
 1. `docs/projects/archive/future/TRH03102026-PHASE-A-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-A-IMPLEMENTATION-PLAN.md`
@@ -138,12 +142,16 @@ Completed:
 2. Phase B (`docs/projects/archive/future/TRH03102026-PHASE-B-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-B-IMPLEMENTATION-PLAN.md`)
 
 Remaining strict order:
-1. Phase C
-2. Phase D
-3. Phase E
+1. Phase C packet-1 implementation
+2. remaining Phase C backlog if explicitly reopened
+3. Phase D
+4. Phase E
 
 Current staging state:
-1. Phase C-E are not marked complete in this session because phase-level completion proof is not yet established.
+1. Accepted requirements definition for the bounded first Phase C packet lives in `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`.
+2. Active bounded packet-1 implementation now lives in `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`.
+3. This staged lane now governs only remaining Phase C backlog beyond packet-1 plus later Phase D-E work.
+4. Phase C-E are not marked complete because phase-level completion proof is not yet established.
 
 Critical path:
 `C -> E`
@@ -173,10 +181,11 @@ Smallest acceptable reentry slice:
 4. Do not reopen Phase D or Phase E until the selected Phase C packet has acceptance proof.
 
 Required evidence to reopen:
-1. An explicit request naming Phase C as the target phase.
-2. A bounded deliverable list taken from existing Phase C deliverables in this file.
-3. Named exit artifacts for the packet: updated contracts/specs when required, contract/integration/end-to-end proof, and at least one example artifact or transcript showing the new truth surfaces.
-4. Explicit non-goals for the packet so scope does not expand into adjacent product work.
+1. Completion or explicit stop of the active packet-1 implementation plan.
+2. An explicit request naming the next Phase C slice as the target.
+3. A bounded deliverable list taken from accepted requirements or a later accepted scope update, not from the full future backlog.
+4. Named exit artifacts for the reopened slice.
+5. Explicit non-goals so scope does not expand into adjacent product work.
 
 ## 6. Initial Reentry Slice (Recommended)
 

@@ -3,7 +3,7 @@
 Last updated: 2026-03-10
 Status: Completed (archived closeout)
 Owner: Orket Core
-Canonical lane plan: `docs/projects/future/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
+Canonical lane plan: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
 Purpose: convert second-wave hardening backlog into executable slices with explicit acceptance gates.
 
 ## Closeout Verification (2026-03-10)

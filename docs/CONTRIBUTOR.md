@@ -8,7 +8,7 @@
    - `docs/ARCHITECTURE.md`
 2. Read `docs/architecture/ARCHITECTURE_COMPLIANCE_CHECKLIST.md` before merge when the change touches runtime, orchestration, adapters, interfaces, or decision nodes.
 3. Agents also follow `AGENTS.md`.
-4. Do not scan dependency or vendor trees (`node_modules/`, `ui/node_modules/`, `.venv/`) unless explicitly requested.
+4. Do not scan dependency or vendor trees (`node_modules/`, `.venv/`) unless explicitly requested.
 5. For `Last updated:` fields, use the local `America/Denver` date.
 
 ## Work Selection

@@ -33,8 +33,6 @@ user_settings.json
 
 # Node / Frontend
 node_modules/
-ui/node_modules/**
-ui/dist/
 dist/**
 .eslintcache
 .stylelintcache
