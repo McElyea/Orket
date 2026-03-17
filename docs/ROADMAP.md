@@ -1,6 +1,6 @@
 # Orket Roadmap
 
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
@@ -12,10 +12,8 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Staged / Waiting (Externally Gated)
 
-1. truthful runtime hardening continuation after Phase C closeout (Phases D-E) -- Staged. Plan: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`. Reopen only with an explicit scoped Phase D request.
-2. controller-workload v1 kickoff -- Planning handoff: `docs/projects/archive/controller-workload/CW03082026-Phase2D/07-V1-PLANNING-HANDOFF.md`. Reopen only with an explicit scoped implementation request.
-3. protocol-governed production-window operator sign-off -- Contract: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`. Archive: `docs/projects/archive/protocol-governed/PG03062026/`. Next review: `2026-04-06`.
-4. protocol-governed post-production six-month evidence -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Next review: `2026-04-06`.
+1. protocol-governed production-window operator sign-off -- Contract: `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`. Archive: `docs/projects/archive/protocol-governed/PG03062026/`. Next review: `2026-04-06`.
+2. protocol-governed post-production six-month evidence -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Next review: `2026-04-06`.
 
 ## Future Lanes (Non-Priority Backlog)
 
@@ -32,4 +30,3 @@ Every non-archive project under `docs/projects/` must appear here.
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
 | techdebt | maintenance | P2-recurring | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane only. Checklist: `Recurring-Maintenance-Checklist.md`. Governance: `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |
-| truthful-runtime | staged after Phase C closeout | P1-staged | `docs/projects/truthful-runtime/` | Orket Core | Packet-1, the frozen Phase C cycle-1 live-proof subset, the March 15 packet-1 cleanup packet, and the March 16 Phase C closeout are archived under `docs/projects/archive/truthful-runtime/`; Phases D-E stay staged. |

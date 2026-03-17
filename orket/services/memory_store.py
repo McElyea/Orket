@@ -4,6 +4,12 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
 
+from orket.runtime.truthful_memory_policy import (
+    classify_memory_trust_level,
+    evaluate_memory_write_policy,
+    synthesis_disposition_for_trust_level,
+)
+
 class MemoryEntry:
     def __init__(self, content: str, metadata: Dict[str, Any], timestamp: str):
         self.content = content
@@ -37,7 +43,13 @@ class MemoryStore:
     async def remember(self, content: str, metadata: Dict[str, Any] = None):
         """Stores a new memory."""
         await self._ensure_initialized()
-        metadata = metadata or {}
+        decision = evaluate_memory_write_policy(
+            scope="project_memory",
+            key="project_memory",
+            value=content,
+            metadata=metadata or {},
+        )
+        metadata = dict(decision.metadata)
         # Simple keyword extraction: lowercasing and splitting
         keywords = " ".join(set(content.lower().split()))
         
@@ -67,12 +79,20 @@ class MemoryStore:
                 content_words = set(row['keywords'].split())
                 score = len(query_words.intersection(content_words))
                 if score > 0 or not query: # Return recent if no query or matches
+                    metadata = json.loads(row['metadata_json'])
+                    trust_level = classify_memory_trust_level(
+                        scope="project_memory",
+                        metadata=metadata,
+                        timestamp=str(row['created_at']),
+                    )
                     results.append({
                         "content": row['content'],
-                        "metadata": json.loads(row['metadata_json']),
+                        "metadata": metadata,
                         "score": score,
                         "timestamp": row['created_at'],
-                        "id": row['id']
+                        "id": row['id'],
+                        "trust_level": trust_level,
+                        "synthesis_disposition": synthesis_disposition_for_trust_level(trust_level),
                     })
             
             # Sort by score then ID (recency)

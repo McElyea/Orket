@@ -8,6 +8,7 @@ import pytest
 import orket.application.services.companion_runtime_service as companion_runtime_service
 from orket.application.services.companion_runtime_service import CompanionRuntimeService
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider
+from orket.services.scoped_memory_store import ScopedMemoryStore
 from orket_extension_sdk.audio import AudioClip, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 from orket_extension_sdk.voice import TranscribeResponse
@@ -323,5 +324,47 @@ async def test_companion_runtime_service_applies_session_role_and_relationship_t
     assert "Relationship style: intermediate" in system_prompt
     assert "Role guidance: prioritize empathy, validation, and reflective listening before problem-solving." in system_prompt
     assert "Relationship guidance: closer and more personal than platonic while remaining respectful and grounded." in system_prompt
+
+
+@pytest.mark.asyncio
+async def test_companion_runtime_service_filters_stale_memory_and_labels_trust_in_prompt(tmp_path: Path) -> None:
+    """Layer: integration. Verifies governed memory synthesis excludes stale context and labels included trust levels."""
+    store = ScopedMemoryStore(tmp_path / "companion_memory.db")
+    await store.write_profile(
+        key="companion_setting.role_id",
+        value="strategist",
+        metadata={"observed_at": "2026-03-17T14:00:00+00:00"},
+    )
+    await store.write_episodic(
+        session_id="s-trust",
+        key="turn.000001.summary",
+        value="Fresh session summary",
+        metadata={"kind": "episodic_turn"},
+    )
+    await store.write_episodic(
+        session_id="s-trust",
+        key="turn.000000.summary",
+        value="Stale session summary",
+        metadata={"kind": "episodic_turn", "stale_at": "2000-01-01T00:00:00+00:00"},
+    )
+    model_provider = _CapturingModelProvider()
+    service = CompanionRuntimeService(
+        project_root=tmp_path,
+        model_provider=model_provider,  # type: ignore[arg-type]
+        memory_store=store,
+    )
+    await service.update_config(
+        session_id="s-trust",
+        scope="session",
+        patch={"memory": {"episodic_memory_enabled": True}},
+    )
+
+    result = await service.chat(session_id="s-trust", message="hello")
+
+    assert result["ok"] is True
+    system_prompt = model_provider.requests[-1].system_prompt
+    assert "[profile][trust=authoritative] companion_setting.role_id: strategist" in system_prompt
+    assert "[episodic][trust=advisory] turn.000001.summary: Fresh session summary" in system_prompt
+    assert "Stale session summary" not in system_prompt
 
 

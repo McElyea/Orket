@@ -87,6 +87,9 @@ from scripts.governance.check_safe_default_catalog import (
 from scripts.governance.check_evidence_package_generator_contract import (
     evaluate_evidence_package_generator_contract,
 )
+from scripts.governance.check_conformance_governance_contract import (
+    evaluate_conformance_governance_contract,
+)
 from scripts.governance.check_observability_redaction_tests import (
     evaluate_observability_redaction_tests,
 )
@@ -187,6 +190,7 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "non_fatal_error_budget.json",
     "interface_freeze_windows.json",
     "evidence_package_generator_contract.json",
+    "conformance_governance_contract.json",
     "observability_redaction_test_contract.json",
     "trust_language_review_policy.json",
     "local_remote_route_policy.json",
@@ -383,6 +387,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Skip evidence package generator contract check.",
     )
     parser.add_argument(
+        "--skip-conformance-governance-contract-check",
+        action="store_true",
+        help="Skip conformance governance contract check.",
+    )
+    parser.add_argument(
         "--skip-observability-redaction-tests-check",
         action="store_true",
         help="Skip observability redaction tests check.",
@@ -498,6 +507,7 @@ def evaluate_runtime_truth_acceptance_gate(
     check_non_fatal_error_budget: bool = True,
     check_interface_freeze_windows: bool = True,
     check_evidence_package_generator: bool = True,
+    check_conformance_governance_contract: bool = True,
     check_observability_redaction_tests: bool = True,
     check_trust_language_review: bool = True,
     check_local_remote_route_policy: bool = True,
@@ -861,6 +871,15 @@ def evaluate_runtime_truth_acceptance_gate(
         if not bool(evidence_contract_payload.get("ok")):
             failures.append("evidence_package_generator_contract_check_failed")
 
+    if check_conformance_governance_contract:
+        conformance_governance_payload = evaluate_conformance_governance_contract()
+        details["conformance_governance_contract_check"] = {
+            "ok": bool(conformance_governance_payload.get("ok")),
+            "section_count": int(conformance_governance_payload.get("section_count") or 0),
+        }
+        if not bool(conformance_governance_payload.get("ok")):
+            failures.append("conformance_governance_contract_check_failed")
+
     if check_observability_redaction_tests:
         redaction_tests_payload = evaluate_observability_redaction_tests()
         details["observability_redaction_tests_check"] = {
@@ -1036,6 +1055,7 @@ def main(argv: list[str] | None = None) -> int:
         check_non_fatal_error_budget=not bool(args.skip_non_fatal_error_budget_check),
         check_interface_freeze_windows=not bool(args.skip_interface_freeze_windows_check),
         check_evidence_package_generator=not bool(args.skip_evidence_package_generator_check),
+        check_conformance_governance_contract=not bool(args.skip_conformance_governance_contract_check),
         check_observability_redaction_tests=not bool(args.skip_observability_redaction_tests_check),
         check_trust_language_review=not bool(args.skip_trust_language_review_check),
         check_local_remote_route_policy=not bool(args.skip_local_remote_route_policy_check),

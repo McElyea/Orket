@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-03-16
+Last reviewed: 2026-03-17
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
@@ -55,6 +55,8 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 28. `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`
 29. `docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md`
 30. `docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md`
+31. `docs/specs/TRUTHFUL_RUNTIME_MEMORY_TRUST_CONTRACT.md`
+32. `docs/specs/TRUTHFUL_RUNTIME_CONFORMANCE_GOVERNANCE_CONTRACT.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -91,8 +93,10 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 5. `docs/architecture/event_taxonomy.md`
 6. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PACKET1_BOUNDARY_REALIGNMENT_2026-03-15.md`
 7. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PHASE_C_CLOSEOUT_2026-03-16.md`
-8. `docs/architecture/dependency_graph_snapshot.md`
-9. `docs/architecture/VOLATILITY_BASELINE.md`
+8. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PHASE_D_CLOSEOUT_2026-03-17.md`
+9. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PHASE_E_CLOSEOUT_2026-03-17.md`
+10. `docs/architecture/dependency_graph_snapshot.md`
+11. `docs/architecture/VOLATILITY_BASELINE.md`
 
 ## Projects
 1. Active plans: `docs/projects/<project>/`

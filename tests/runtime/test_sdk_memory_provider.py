@@ -109,3 +109,73 @@ def test_sqlite_memory_provider_profile_scope_supports_listing_and_exact_key_que
     assert exact.ok is True
     assert len(exact.records) == 1
     assert exact.records[0].value == "strategist"
+
+
+def test_sqlite_memory_provider_profile_scope_requires_explicit_user_correction_for_fact_replacement(tmp_path: Path) -> None:
+    """Layer: integration. Verifies contradicting durable user-fact writes fail closed without user-correction metadata."""
+    provider = SQLiteMemoryCapabilityProvider(tmp_path / "memory.db")
+    initial = provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="user_fact.name",
+            value="Aster",
+            metadata={"user_confirmed": True, "observed_at": "2026-03-17T14:00:00+00:00"},
+        )
+    )
+    assert initial.ok is True
+
+    contradicting = provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="user_fact.name",
+            value="Nova",
+            metadata={"user_confirmed": True, "observed_at": "2026-03-17T14:05:00+00:00"},
+        )
+    )
+    assert contradicting.ok is False
+    assert contradicting.error_code == "E_PROFILE_MEMORY_CONTRADICTION_REQUIRES_CORRECTION"
+
+    corrected = provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="user_fact.name",
+            value="Nova",
+            metadata={
+                "user_confirmed": True,
+                "user_correction": True,
+                "write_rationale": "user corrected the stored name",
+                "observed_at": "2026-03-17T14:06:00+00:00",
+            },
+        )
+    )
+    assert corrected.ok is True
+
+    exact = provider.query(MemoryQueryRequest(scope="profile_memory", query="key:user_fact.name", limit=10))
+    assert exact.ok is True
+    assert exact.records[0].value == "Nova"
+    assert exact.records[0].metadata["trust_level"] == "authoritative"
+    assert exact.records[0].metadata["conflict_resolution"] == "user_correction"
+
+
+def test_sqlite_memory_provider_profile_scope_rejects_stale_setting_updates(tmp_path: Path) -> None:
+    """Layer: integration. Verifies older durable-setting observations fail closed as stale updates."""
+    provider = SQLiteMemoryCapabilityProvider(tmp_path / "memory.db")
+    assert provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="companion_setting.role_id",
+            value="strategist",
+            metadata={"observed_at": "2026-03-17T14:00:00+00:00"},
+        )
+    ).ok
+
+    stale = provider.write(
+        MemoryWriteRequest(
+            scope="profile_memory",
+            key="companion_setting.role_id",
+            value="planner",
+            metadata={"observed_at": "2026-03-17T13:55:00+00:00"},
+        )
+    )
+    assert stale.ok is False
+    assert stale.error_code == "E_PROFILE_MEMORY_STALE_UPDATE"

@@ -42,6 +42,7 @@ _TRACE_IDS: dict[str, str] = {
     "non_fatal_error_budget": "TRUTH-W2E-NON-FATAL-ERROR-BUDGET",
     "interface_freeze_windows": "TRUTH-W2E-INTERFACE-FREEZE-WINDOWS",
     "evidence_package_generator_contract": "TRUTH-W2E-EVIDENCE-PACKAGE-GENERATOR",
+    "conformance_governance_contract": "TRUTH-W2E-CONFORMANCE-GOVERNANCE-CONTRACT",
     "observability_redaction_test_contract": "TRUTH-W2C-OBSERVABILITY-REDACTION-TESTS",
     "trust_language_review_policy": "TRUTH-W2C-TRUST-LANGUAGE-REVIEW",
     "local_remote_route_policy": "TRUTH-W2B-LOCAL-REMOTE-ROUTE-POLICY",

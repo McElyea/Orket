@@ -7,7 +7,8 @@ from typing import Any, Literal
 
 import aiosqlite
 
-from .profile_write_policy import ProfileWritePolicy
+from .profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
+from orket.runtime.truthful_memory_policy import evaluate_memory_write_policy
 
 MemoryScope = Literal["session_memory", "profile_memory", "episodic_memory"]
 
@@ -109,12 +110,18 @@ class ScopedMemoryStore:
         value: str,
         metadata: dict[str, Any] | None = None,
     ) -> ScopedMemoryRecord:
+        decision = evaluate_memory_write_policy(
+            scope="session_memory",
+            key=key,
+            value=value,
+            metadata=metadata or {},
+        )
         return await self._write_record(
             scope="session_memory",
             session_id=self.normalize_session_id("session_memory", session_id),
             key=key,
             value=value,
-            metadata=metadata or {},
+            metadata=decision.metadata,
         )
 
     async def write_episodic(
@@ -125,11 +132,17 @@ class ScopedMemoryStore:
         value: str,
         metadata: dict[str, Any] | None = None,
     ) -> ScopedMemoryRecord:
+        decision = evaluate_memory_write_policy(
+            scope="episodic_memory",
+            key=key,
+            value=value,
+            metadata=metadata or {},
+        )
         return await self._write_episodic_record(
             session_id=self.normalize_session_id("episodic_memory", session_id),
             key=key,
             value=value,
-            metadata=metadata or {},
+            metadata=decision.metadata,
         )
 
     async def write_profile(
@@ -141,12 +154,26 @@ class ScopedMemoryStore:
     ) -> ScopedMemoryRecord:
         metadata_payload = dict(metadata or {})
         self._profile_write_policy.validate(key=key, metadata=metadata_payload)
+        existing = await self.read_profile(key=key)
+        decision = evaluate_memory_write_policy(
+            scope="profile_memory",
+            key=key,
+            value=value,
+            metadata=metadata_payload,
+            existing_value=(existing.value if existing is not None else ""),
+            existing_metadata=(existing.metadata if existing is not None else {}),
+        )
+        if not decision.allow_write:
+            raise ProfileWritePolicyError(
+                code=str(decision.error_code or "E_PROFILE_MEMORY_WRITE_REJECTED"),
+                message=decision.error_message or f"Profile memory key '{key}' was rejected by memory policy.",
+            )
         return await self._write_record(
             scope="profile_memory",
             session_id=self.normalize_session_id("profile_memory", ""),
             key=key,
             value=value,
-            metadata=metadata_payload,
+            metadata=decision.metadata,
         )
 
     async def clear_session(self, *, session_id: str) -> int:

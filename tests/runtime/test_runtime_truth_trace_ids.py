@@ -41,6 +41,7 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "non_fatal_error_budget" in artifacts
     assert "interface_freeze_windows" in artifacts
     assert "evidence_package_generator_contract" in artifacts
+    assert "conformance_governance_contract" in artifacts
     assert "observability_redaction_test_contract" in artifacts
     assert "trust_language_review_policy" in artifacts
     assert "local_remote_route_policy" in artifacts

@@ -1,9 +1,10 @@
 # Orket Truthful Runtime Hardening Phase D Implementation Plan
 
-Last updated: 2026-03-16
-Status: Staged / Waiting after Phase C closeout
+Last updated: 2026-03-17
+Status: Completed / Archived
 Owner: Orket Core
 Canonical lane plan: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
+Archive authority: `docs/projects/archive/truthful-runtime/TRH03172026-PHASE-D-CLOSEOUT/CLOSEOUT.md`
 Depends on: Phase C completion
 Phase C closeout baseline: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
 

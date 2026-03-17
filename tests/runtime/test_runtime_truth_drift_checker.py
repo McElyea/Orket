@@ -47,6 +47,7 @@ def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> N
     assert "non_fatal_error_budget_valid" in checks
     assert "interface_freeze_windows_valid" in checks
     assert "evidence_package_generator_contract_valid" in checks
+    assert "conformance_governance_contract_valid" in checks
     assert "observability_redaction_test_contract_valid" in checks
     assert "trust_language_review_policy_valid" in checks
     assert "local_remote_route_policy_valid" in checks
@@ -211,6 +212,27 @@ def test_runtime_truth_contract_drift_report_fails_when_decision_record_operatin
     payload = checker.runtime_truth_contract_drift_report()
     target = next(
         row for row in payload["checks"] if row["check"] == "decision_record_operating_principles_contract_valid"
+    )
+    assert target["ok"] is False
+
+
+# Layer: contract
+def test_runtime_truth_contract_drift_report_fails_when_conformance_governance_contract_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from orket.runtime import runtime_truth_drift_checker as checker
+
+    def _raise_contract_error() -> tuple[str, ...]:
+        raise ValueError("E_CONFORMANCE_GOVERNANCE_CONTRACT_SECTION_SET_MISMATCH")
+
+    monkeypatch.setattr(
+        checker,
+        "validate_conformance_governance_contract",
+        _raise_contract_error,
+    )
+    payload = checker.runtime_truth_contract_drift_report()
+    target = next(
+        row for row in payload["checks"] if row["check"] == "conformance_governance_contract_valid"
     )
     assert target["ok"] is False
 

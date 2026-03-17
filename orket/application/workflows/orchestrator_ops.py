@@ -56,6 +56,7 @@ from orket.core.domain.workitem_transition import WorkItemTransitionService
 from orket.core.domain.guard_review import GuardReviewPayload
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.verification_scope import build_verification_scope
+from orket.runtime.truthful_memory_policy import render_reference_context_rows
 from orket.utils import sanitize_name
 from orket.settings import load_user_settings, load_user_preferences
 
@@ -1368,7 +1369,7 @@ async def _execute_issue_turn(
     # Phase 6.4: RAG (Memory Context)
     search_query = (issue.name or "") + " " + (issue.note or "")
     memories = await self.memory.search(search_query.strip())
-    memory_context = "\n".join([f"- {m['content']}" for m in memories])
+    memory_context = render_reference_context_rows(memories)
 
     prompt_mode = self._resolve_prompt_resolver_mode()
     selection_policy = self._resolve_prompt_selection_policy()
@@ -1584,7 +1585,12 @@ async def _execute_issue_turn(
             if success_eval.get("remember_decision"):
                 await self.memory.remember(
                     content=f"Decision by {seat_name} on {issue.id}: {result.turn.content[:200]}...",
-                    metadata={"issue_id": issue.id, "role": seat_name, "type": "decision"}
+                    metadata={
+                        "issue_id": issue.id,
+                        "role": seat_name,
+                        "type": "decision",
+                        "write_rationale": "successful_turn_decision_summary",
+                    },
                 )
 
             # Sandbox triggering

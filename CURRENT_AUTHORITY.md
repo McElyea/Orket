@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -46,7 +46,7 @@ It defines only the currently authoritative paths that agents and contributors m
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-16",
+  "last_updated": "2026-03-17",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -111,7 +111,9 @@ It defines only the currently authoritative paths that agents and contributors m
         "docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md",
         "docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md",
         "docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md",
-        "docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md"
+        "docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_MEMORY_TRUST_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_CONFORMANCE_GOVERNANCE_CONTRACT.md"
       ],
       "offline_capability_matrix_source": "docs/specs/OFFLINE_CAPABILITY_MATRIX.md",
       "protocol_governed_contract_sources": [

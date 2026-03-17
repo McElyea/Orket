@@ -1,18 +1,23 @@
 # Controller Workload v1 Planning Handoff
 
-Last updated: 2026-03-08
-Status: Published (Archived)
+Last updated: 2026-03-17
+Status: Closed (Archived historical planning record)
 Owner: Orket Core
 Phase authority:
 `docs/projects/archive/controller-workload/CW03082026-Phase2D/05-IMPLEMENTATION-PLAN-Phase-2D.md`
 
-## 1. Purpose
+Closeout outcome:
+1. Phase 2D is complete and no controller-workload follow-on lane remains active in `docs/ROADMAP.md`.
+2. This packet is retained as historical planning input only and is not current roadmap or runtime authority.
+3. Any future controller-workload expansion must begin from a new explicitly scoped request.
+
+## 1. Purpose At Publication
 
 Define actionable planning input for post-Phase-2 controller v1 work:
 1. bounded parallel child execution
 2. broader child contract-style support
 
-This document is planning authority only and does not change current v0 runtime behavior.
+This document is retained as historical planning input only and does not change current v0 runtime behavior.
 
 ## 2. Current Baseline (v0)
 

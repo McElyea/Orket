@@ -140,6 +140,9 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["evidence_package_generator_contract"]["schema_version"] == "1.0"
     required_sections = payload["evidence_package_generator_contract"]["required_sections"]
     assert "gate_summary" in required_sections
+    assert payload["conformance_governance_contract"]["schema_version"] == "1.0"
+    governance_section_ids = [row["section_id"] for row in payload["conformance_governance_contract"]["sections"]]
+    assert "operator_signoff_bundle" in governance_section_ids
     assert payload["observability_redaction_test_contract"]["schema_version"] == "1.0"
     redaction_check_ids = [row["check_id"] for row in payload["observability_redaction_test_contract"]["checks"]]
     assert "env_secret_values_masked" in redaction_check_ids
@@ -221,6 +224,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["non_fatal_error_budget_path"]).exists()
     assert Path(payload["interface_freeze_windows_path"]).exists()
     assert Path(payload["evidence_package_generator_contract_path"]).exists()
+    assert Path(payload["conformance_governance_contract_path"]).exists()
     assert Path(payload["observability_redaction_test_contract_path"]).exists()
     assert Path(payload["trust_language_review_policy_path"]).exists()
     assert Path(payload["local_remote_route_policy_path"]).exists()
@@ -990,6 +994,38 @@ def test_capture_run_start_artifacts_fails_closed_on_promotion_rollback_criteria
         _ = capture_run_start_artifacts(
             workspace=workspace,
             run_id="run-promotion-rollback-criteria-immutable",
+            workload="core_epic",
+            now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
+        )
+
+
+# Layer: contract
+def test_capture_run_start_artifacts_fails_closed_on_conformance_governance_contract_mutation(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    _ = capture_run_start_artifacts(
+        workspace=workspace,
+        run_id="run-conformance-governance-contract-immutable",
+        workload="core_epic",
+        now=datetime(2026, 3, 6, 17, 0, 0, tzinfo=UTC),
+    )
+    governance_contract_path = (
+        workspace
+        / "observability"
+        / "run-conformance-governance-contract-immutable"
+        / "runtime_contracts"
+        / "conformance_governance_contract.json"
+    )
+    governance_contract_path.write_text(
+        '{"schema_version":"999.0","sections":[]}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="E_RUN_CONFORMANCE_GOVERNANCE_CONTRACT_IMMUTABLE"):
+        _ = capture_run_start_artifacts(
+            workspace=workspace,
+            run_id="run-conformance-governance-contract-immutable",
             workload="core_epic",
             now=datetime(2026, 3, 6, 17, 30, 0, tzinfo=UTC),
         )

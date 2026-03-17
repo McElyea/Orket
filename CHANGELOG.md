@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.12] - 2026-03-17 - "The Truth Lane Closure Cut"
+
+### Added
+- **Truthful Runtime Phase D-E Contracts**: Added the durable memory trust and conformance governance contracts in `docs/specs/TRUTHFUL_RUNTIME_MEMORY_TRUST_CONTRACT.md` and `docs/specs/TRUTHFUL_RUNTIME_CONFORMANCE_GOVERNANCE_CONTRACT.md`.
+- **Truthful Runtime Governance Checks And Live Proof**: Added the conformance governance snapshot/checker, live Phase D-E acceptance coverage, and the corresponding archive closeout records and contract deltas for the final truthful-runtime phases.
+
+### Changed
+- **Governed Memory Trust Handling**: Memory writes and governed synthesis now stamp canonical memory-policy metadata, fail closed on stale or contradictory durable fact updates unless explicit user correction is provided, and filter stale/unverified memory from prompt-context rendering.
+- **Runtime Truth Contract Inventory And Gate Enforcement**: Run-start contract emission and the truthful-runtime acceptance gate now include `conformance_governance_contract.json` and enforce the new conformance-governance check alongside existing runtime-truth gates.
+- **Lane Authority Cleanup**: Archived the truthful-runtime lane after Phase E completion, updated the active docs indexes for the new durable contracts, and retired the archived controller-workload v1 planning handoff from the active roadmap.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Promotion evidence that is otherwise eligible now still requires explicit operator sign-off as defined by `docs/specs/TRUTHFUL_RUNTIME_CONFORMANCE_GOVERNANCE_CONTRACT.md`.
+
 ## [0.4.11] - 2026-03-16 - "The Phase C Truth Cut"
 
 ### Added

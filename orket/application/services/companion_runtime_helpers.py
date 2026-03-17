@@ -5,6 +5,7 @@ import os
 from datetime import UTC, datetime
 
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.runtime.truthful_memory_policy import render_scoped_memory_rows
 from orket.services.scoped_memory_store import ScopedMemoryRecord
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 
@@ -81,14 +82,7 @@ def _relationship_style_guidance(style_id: str) -> str:
 
 
 def format_memory_rows(rows: list[ScopedMemoryRecord], *, prefix: str) -> list[str]:
-    formatted: list[str] = []
-    for row in rows:
-        key = str(row.key or "").strip()
-        value = str(row.value or "").strip()
-        if not key and not value:
-            continue
-        formatted.append(f"- [{prefix}] {key}: {value}")
-    return formatted
+    return render_scoped_memory_rows(rows, prefix=prefix)
 
 
 def format_history_context(history_rows: list[dict[str, object]]) -> str:

@@ -6,6 +6,7 @@ from orket.runtime.capability_fallback_hierarchy import validate_capability_fall
 from orket.runtime.canonical_examples_library import validate_canonical_examples_library
 from orket.runtime.cold_start_truth_test_contract import validate_cold_start_truth_test_contract
 from orket.runtime.clock_time_authority_policy import validate_clock_time_authority_policy
+from orket.runtime.conformance_governance_contract import validate_conformance_governance_contract
 from orket.runtime.degradation_first_ui_standard import validate_degradation_first_ui_standard
 from orket.runtime.decision_record_operating_principles_contract import (
     validate_decision_record_operating_principles_contract,
@@ -759,6 +760,24 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "evidence_package_generator_contract_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        section_ids = validate_conformance_governance_contract()
+        checks.append(
+            {
+                "check": "conformance_governance_contract_valid",
+                "ok": True,
+                "count": len(section_ids),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "conformance_governance_contract_valid",
                 "ok": False,
                 "error": str(exc),
             }

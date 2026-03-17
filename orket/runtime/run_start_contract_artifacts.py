@@ -8,6 +8,7 @@ from orket.runtime.canonical_examples_library import canonical_examples_library_
 from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
 from orket.runtime.demo_production_labeling_policy import demo_production_labeling_policy_snapshot
 from orket.runtime.cold_start_truth_test_contract import cold_start_truth_test_contract_snapshot
+from orket.runtime.conformance_governance_contract import conformance_governance_contract_snapshot
 from orket.runtime.degradation_first_ui_standard import degradation_first_ui_standard_snapshot
 from orket.runtime.decision_record_operating_principles_contract import (
     decision_record_operating_principles_contract_snapshot,
@@ -337,6 +338,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "evidence_package_generator_contract.json",
         evidence_package_generator_contract_snapshot,
         "E_RUN_EVIDENCE_PACKAGE_GENERATOR_CONTRACT_IMMUTABLE",
+    ),
+    (
+        "conformance_governance_contract",
+        "conformance_governance_contract.json",
+        conformance_governance_contract_snapshot,
+        "E_RUN_CONFORMANCE_GOVERNANCE_CONTRACT_IMMUTABLE",
     ),
     (
         "observability_redaction_test_contract",
