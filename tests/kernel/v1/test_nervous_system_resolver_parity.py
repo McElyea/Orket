@@ -100,3 +100,25 @@ def test_fail_closed_when_pre_resolved_flags_disabled_and_resolver_off(monkeypat
     )
     assert admitted["admission_decision"]["decision"] == "NEEDS_APPROVAL"
     assert admitted["admission_decision"]["reason_codes"] == ["UNKNOWN_TOOL_PROFILE"]
+
+
+def test_resolver_mode_is_default_when_env_is_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", raising=False)
+    monkeypatch.delenv("ORKET_USE_TOOL_PROFILE_RESOLVER", raising=False)
+    admitted = admit_proposal_v1(
+        {
+            "contract_version": "kernel_api/v1",
+            "session_id": "sess-parity-default",
+            "trace_id": "trace-parity-default",
+            "proposal": {
+                "proposal_type": "action.tool_call",
+                "payload": {
+                    "tool_name": "fs.write_patch",
+                    "args": {"path": "./workspace/notes.md", "patch": "ADD LINE hello"},
+                },
+            },
+        }
+    )
+
+    assert admitted["admission_decision"]["decision"] == "NEEDS_APPROVAL"
+    assert admitted["admission_decision"]["reason_codes"] == ["APPROVAL_REQUIRED_DESTRUCTIVE"]

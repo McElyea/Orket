@@ -18,6 +18,7 @@ from orket.kernel.v1.nervous_system_runtime_state import _PENDING_APPROVALS_CACH
 def _enable_nervous_system(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
+    monkeypatch.setenv("ORKET_USE_TOOL_PROFILE_RESOLVER", "false")
     reset_runtime_state_for_tests()
 
 

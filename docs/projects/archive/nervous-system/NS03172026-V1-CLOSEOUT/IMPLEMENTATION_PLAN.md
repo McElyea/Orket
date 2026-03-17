@@ -1,5 +1,7 @@
 ﻿# Nervous System v1 Implementation Plan (Action-Path MVP, Locked v5)
 
+Archive note (2026-03-17): Historical planning record preserved after the Nervous System v1 action-path lane closed. See `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/CLOSEOUT.md`.
+
 ## Summary
 Build a feature-flagged Nervous System v1 for `action.tool_call` proposals only, with deterministic admission/commit, approval queue, scoped per-action credential tokens, append-only governance ledger, outbound leak blocking, and OpenClaw JSONL subprocess live verification.
 
@@ -7,6 +9,7 @@ Execution status (2026-03-03):
 1. Locked v1 slices implemented in repo (`orket/kernel/v1/*nervous_system*`, approval router integration, OpenClaw JSONL adapter).
 2. Live verification completed via `python scripts/nervous_system/run_nervous_system_live_evidence.py`.
 3. Evidence artifact: `benchmarks/results/nervous_system/nervous_system_live_evidence.json`.
+4. Archived closeout authority: `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/CLOSEOUT.md`.
 
 ## Scope and Semantics
 1. v1 handles action path only; no content arbitration.
@@ -173,7 +176,8 @@ Required v1 event types:
 3. Prove approval-required scenario (request, decision, execution).
 4. Prove credentialed token issuance/usage scenario.
 5. Write `benchmarks/results/nervous_system/nervous_system_live_evidence.json` including `session_id`, `trace_id`, optional `request_id`, `proposal_digest`, `admission_decision_digest`, `approval_id`, token hash/id hash, `policy_digest`, `tool_profile_digest`, and required event digests.
-6. If live flow fails, capture exact failing step/error in `docs/projects/future/NervousSystem/LIVE_BLOCKERS.md`.
+6. Prove operator surfaces for one approval-required lifecycle through approval queue rebuild, ledger inspection, replay, and audit output.
+7. Historical note: if a future rerun against this archived slice fails, record the exact failing step/error alongside this archive.
 
 ## Tests and Acceptance
 1. Endpoint contract tests for new kernel and approval APIs.
@@ -204,5 +208,5 @@ Acceptance criteria:
 4. Deterministic governance only.
 5. Append-only ledger with no purge in v1.
 6. Pending approvals remain a derived cache, not source of truth.
-7. Pre-resolved policy flags are temporary harness behavior and require `ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS=true`.
-8. Resolver rollout is gated by `ORKET_USE_TOOL_PROFILE_RESOLVER=true`; default mode is fail-closed when both flags are off.
+7. Tool-profile resolver mode is canonical; if `ORKET_USE_TOOL_PROFILE_RESOLVER` is unset, runtime defaults to resolver-backed policy admission.
+8. `ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS=true` remains compatibility-only harness behavior; if resolver is explicitly disabled and pre-resolved flags are also disabled, runtime fails closed with `UNKNOWN_TOOL_PROFILE`.

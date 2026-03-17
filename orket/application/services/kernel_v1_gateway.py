@@ -41,6 +41,18 @@ class KernelV1Gateway:
     def end_session(self, request: dict[str, Any]) -> dict[str, Any]:
         return kernel_api.end_session(request)
 
+    def list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.list_ledger_events(request)
+
+    def rebuild_pending_approvals(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.rebuild_pending_approvals(request)
+
+    def replay_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.replay_action_lifecycle(request)
+
+    def audit_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
+        return kernel_api.audit_action_lifecycle(request)
+
     def run_lifecycle(
         self,
         *,

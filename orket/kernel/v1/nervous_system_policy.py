@@ -19,7 +19,10 @@ def allow_pre_resolved_policy_flags() -> bool:
 
 
 def use_tool_profile_resolver() -> bool:
-    raw = str(os.environ.get("ORKET_USE_TOOL_PROFILE_RESOLVER") or "").strip().lower()
+    raw_value = os.environ.get("ORKET_USE_TOOL_PROFILE_RESOLVER")
+    if raw_value is None:
+        return True
+    raw = str(raw_value).strip().lower()
     return raw in {"1", "true", "yes", "on"}
 
 

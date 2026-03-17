@@ -2,8 +2,8 @@ Orket Federated Stream Fabric (Exploratory Requirements v0)
 
 Status note (2026-03-03):
 
-- Unified successor requirements live in `docs/projects/future/NervousSystem/GovernanceFabric.md`.
-- Locked Nervous System v1 action-path implementation lives in `docs/projects/future/NervousSystem/IMPLEMENTATION_PLAN.md`.
+- Unified successor requirements record lives in `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/GovernanceFabric.md`.
+- Locked Nervous System v1 action-path implementation record lives in `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/IMPLEMENTATION_PLAN.md`.
 1. Purpose
 
 Define requirements for an optional Orket capability that:
@@ -18,7 +18,7 @@ Preserves local-first philosophy
 
 Enables privacy-preserving workflows
 
-This document does not commit Orket to implementation. It defines a candidate capability for future evaluation.
+This document remains historical framing inside the archived Nervous System lane. Archived requirements authority lives in `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/GovernanceFabric.md`.
 
 2. Design Principles (Locked)
 

@@ -328,6 +328,18 @@ class OrchestrationEngine:
     def kernel_end_session(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self.kernel_gateway_facade.end_session(request)
 
+    def kernel_list_ledger_events(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.list_ledger_events(request)
+
+    def kernel_rebuild_pending_approvals(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.rebuild_pending_approvals(request)
+
+    def kernel_replay_action_lifecycle(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.replay_action_lifecycle(request)
+
+    def kernel_audit_action_lifecycle(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self.kernel_gateway_facade.audit_action_lifecycle(request)
+
     def kernel_run_lifecycle(
         self,
         *,

@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.13] - 2026-03-17 - "The Nervous System Closure Cut"
+
+### Added
+- **NervousSystem Operator Lifecycle Coverage**: Added operator-surface API coverage for approval queue inspection, ledger inspection, replay, and audit across a single governed action lifecycle, plus the archived NervousSystem closeout record under `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/`.
+- **Techdebt Remediation Lane Authority**: Added the code-review finding record and active remediation plan under `docs/projects/techdebt/code_review_orket.md` and `docs/projects/techdebt/remediation_plan.md`.
+
+### Changed
+- **Resolver-Canonical NervousSystem Admission**: The NervousSystem action path now treats the policy/tool-profile resolver as the canonical admission path, keeps pre-resolved flags as compatibility-only behavior, and exposes the operator surfaces through the kernel API/router/engine stack instead of temporary harness-only behavior.
+- **NervousSystem Lane Closeout**: Closed and archived the NervousSystem roadmap lane after live evidence completion, removed it from active roadmap execution, and refreshed the archive docs so they no longer claim active authority.
+- **Roadmap Priority Now**: Promoted the techdebt remediation plan to the first `Priority Now` slot while keeping standing techdebt maintenance as a separate recurring lane.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `docs/projects/techdebt/remediation_plan.md` as the canonical execution plan for the active techdebt lane.
+
 ## [0.4.12] - 2026-03-17 - "The Truth Lane Closure Cut"
 
 ### Added

@@ -1,6 +1,8 @@
 ﻿# Nervous System v1 Live Verification
 
-Date: 2026-03-03
+Date: 2026-03-17
+
+Archive note: This verification record is preserved under `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/` after the action-path v1 lane closed.
 
 ## Command
 `python scripts/nervous_system/run_nervous_system_live_evidence.py`
@@ -9,7 +11,7 @@ Date: 2026-03-03
 - Mode: `subprocess_jsonl`
 - Path: `primary`
 - Adapter command: `python tools/fake_openclaw_adapter_strict.py`
-- Policy flag mode: `pre_resolved_flags` (`ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS=true`, resolver off)
+- Policy flag mode: `resolver_canonical` (`ORKET_USE_TOOL_PROFILE_RESOLVER=true`, pre-resolved flags off)
 - Result: success
 
 ## Scenario Results
@@ -23,6 +25,7 @@ Date: 2026-03-03
 - admission decision: `NEEDS_APPROVAL`
 - approval status: `APPROVED`
 - commit status: `COMMITTED`
+- operator surfaces: approval queue rebuild consistent, ledger inspection present, replay parity present, audit `ok=true`
 
 3. credentialed_token
 - admission decision: `NEEDS_APPROVAL`
@@ -46,6 +49,17 @@ Lineage rule used in this run:
 `benchmarks/results/nervous_system/nervous_system_live_evidence.json`
 
 The artifact includes per-scenario `session_id`, `trace_id`, `request_id`, `proposal_digest`, `admission_decision_digest`, `approval_id` (where present), `token_id_hash` (hashed only), `policy_digest`, `tool_profile_digest`, optional `scope_digest`, explicit `admission_decision`, explicit `commit_status`, and `required_event_digests`.
+
+For the approval-required scenario, the artifact also records operator-surface output for:
+
+- approval queue inspection
+- ledger inspection
+- approval queue rebuild
+- action-lifecycle replay
+- action-lifecycle audit
+
+HTTP route coverage for the same lifecycle is enforced in:
+- `tests/interfaces/test_api_nervous_system_operator_surfaces.py`
 
 Resolver parity coverage is enforced in tests with:
 - `tests/kernel/v1/test_nervous_system_resolver_parity.py`

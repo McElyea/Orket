@@ -118,6 +118,18 @@ class KernelGatewayFacade:
     def end_session(self, request: Dict[str, Any]) -> Dict[str, Any]:
         return self._gw.end_session(request)
 
+    def list_ledger_events(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.list_ledger_events(request)
+
+    def rebuild_pending_approvals(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.rebuild_pending_approvals(request)
+
+    def replay_action_lifecycle(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.replay_action_lifecycle(request)
+
+    def audit_action_lifecycle(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return self._gw.audit_action_lifecycle(request)
+
     def run_lifecycle(
         self,
         *,

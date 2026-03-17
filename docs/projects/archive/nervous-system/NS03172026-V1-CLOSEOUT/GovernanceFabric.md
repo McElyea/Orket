@@ -4,7 +4,7 @@ Date: 2026-03-03
 
 Execution status note (2026-03-03):
 
-- Locked implementation plan for Nervous System v1: `docs/projects/future/NervousSystem/IMPLEMENTATION_PLAN.md`
+- Historical implementation plan for Nervous System v1: `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/IMPLEMENTATION_PLAN.md`
 - v1 execution scope is action-path only (`action.tool_call`), with UnifyGate intentionally out of the runtime path
 
 1. Purpose
@@ -23,7 +23,7 @@ Enables privacy-preserving workflows (PII + credential isolation)
 
 Produces measurable safety and performance outcomes
 
-This document does not commit Orket to implementation. It defines a candidate capability for evaluation.
+This document is the archived requirements record for the completed Nervous System rollout lane.
 
 2. Design Principles (Locked)
 2.1 Local Canonical Authority
@@ -771,7 +771,7 @@ Next step (execution source of truth)
 
 For implementation sequencing and locked v1 semantics, use:
 
-- `docs/projects/future/NervousSystem/IMPLEMENTATION_PLAN.md`
+- `docs/projects/archive/nervous-system/NS03172026-V1-CLOSEOUT/IMPLEMENTATION_PLAN.md`
 
 If you want to start implementing immediately, the most “first-week buildable” slice is:
 

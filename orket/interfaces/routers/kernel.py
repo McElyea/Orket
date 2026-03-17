@@ -60,6 +60,10 @@ class KernelEndSessionRequest(BaseModel):
     reason: Optional[str] = None
 
 
+class KernelRebuildPendingApprovalsRequest(BaseModel):
+    session_id: str
+
+
 def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
     router = APIRouter()
 
@@ -162,6 +166,68 @@ def build_kernel_router(engine_getter: Callable[[], Any]) -> APIRouter:
                     "trace_id": req.trace_id,
                     "request_id": req.request_id,
                     "reason": req.reason,
+                }
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.get("/kernel/ledger-events")
+    async def kernel_list_ledger_events(
+        session_id: str,
+        trace_id: Optional[str] = None,
+        event_type: Optional[str] = None,
+        limit: int = 200,
+    ):
+        engine = engine_getter()
+        try:
+            return engine.kernel_list_ledger_events(
+                {
+                    "contract_version": "kernel_api/v1",
+                    "session_id": session_id,
+                    "trace_id": trace_id,
+                    "event_type": event_type,
+                    "limit": limit,
+                }
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.post("/kernel/approvals/rebuild")
+    async def kernel_rebuild_pending_approvals(req: KernelRebuildPendingApprovalsRequest):
+        engine = engine_getter()
+        try:
+            return engine.kernel_rebuild_pending_approvals(
+                {
+                    "contract_version": "kernel_api/v1",
+                    "session_id": req.session_id,
+                }
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.get("/kernel/action-lifecycle/replay")
+    async def kernel_replay_action_lifecycle(session_id: str, trace_id: str):
+        engine = engine_getter()
+        try:
+            return engine.kernel_replay_action_lifecycle(
+                {
+                    "contract_version": "kernel_api/v1",
+                    "session_id": session_id,
+                    "trace_id": trace_id,
+                }
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.get("/kernel/action-lifecycle/audit")
+    async def kernel_audit_action_lifecycle(session_id: str, trace_id: str):
+        engine = engine_getter()
+        try:
+            return engine.kernel_audit_action_lifecycle(
+                {
+                    "contract_version": "kernel_api/v1",
+                    "session_id": session_id,
+                    "trace_id": trace_id,
                 }
             )
         except ValueError as exc:

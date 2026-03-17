@@ -22,6 +22,7 @@ from orket.kernel.v1.nervous_system_runtime_extensions import (  # noqa: E402
     issue_credential_token_v1,
 )
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests, utc_iso_now  # noqa: E402
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402
 
 REQUIRED_EVENT_TYPES = [
     "projection.issued",
@@ -42,7 +43,7 @@ DEFAULT_OUTPUT_PATH = Path("benchmarks/results/nervous_system/nervous_system_att
 
 
 def _load_corpus(path: Path) -> list[dict[str, Any]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = json.loads(path.read_bytes().decode("utf-8"))
     cases = payload.get("cases")
     if not isinstance(cases, list):
         raise ValueError("attack corpus must include a cases array")
@@ -253,8 +254,8 @@ def _scenario_result(
 
 async def _run_torture(corpus_path: Path) -> dict[str, Any]:
     os.environ["ORKET_ENABLE_NERVOUS_SYSTEM"] = "true"
-    os.environ["ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS"] = "true"
-    os.environ["ORKET_USE_TOOL_PROFILE_RESOLVER"] = "false"
+    os.environ["ORKET_USE_TOOL_PROFILE_RESOLVER"] = "true"
+    os.environ.pop("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", None)
     reset_runtime_state_for_tests()
 
     cases = _load_corpus(corpus_path)
@@ -290,6 +291,7 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
     ]
     return {
         "generated_at": utc_iso_now(),
+        "policy_flag_mode": "resolver_canonical",
         "corpus_path": corpus_path.as_posix(),
         "adapter_run": {
             "mode": "subprocess_jsonl",
@@ -321,9 +323,7 @@ async def main() -> int:
     artifact = await _run_torture(corpus_path)
 
     output_path = Path(args.out)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(artifact, ensure_ascii=False, indent=2)
-    await asyncio.to_thread(output_path.write_text, payload + "\n", "utf-8")
+    await asyncio.to_thread(write_payload_with_diff_ledger, output_path, artifact)
     print(output_path.as_posix())
     return 0 if int(artifact["summary"]["failed_cases"]) == 0 else 1
 

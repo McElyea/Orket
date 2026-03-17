@@ -1,28 +1,33 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
-import subprocess
 import sys
 
 
-def _run_live_script() -> dict:
-    result = subprocess.run(
-        [sys.executable, "scripts/nervous_system/run_nervous_system_live_evidence.py"],
-        capture_output=True,
-        text=True,
-        check=False,
+async def _run_script(script_path: str) -> tuple[int, str, str]:
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        script_path,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
     )
-    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    stdout, stderr = await process.communicate()
+    return int(process.returncode or 0), stdout.decode("utf-8"), stderr.decode("utf-8")
+
+
+def _run_live_script() -> dict:
+    returncode, stdout, stderr = asyncio.run(_run_script("scripts/nervous_system/run_nervous_system_live_evidence.py"))
+    assert returncode == 0, stdout + "\n" + stderr
     artifact_path = Path("benchmarks/results/nervous_system/nervous_system_live_evidence.json")
     assert artifact_path.exists()
-    return json.loads(artifact_path.read_text(encoding="utf-8"))
+    return json.loads(artifact_path.read_bytes().decode("utf-8"))
 
 
 def _scope_digests_by_scenario(payload: dict) -> dict[str, str]:
-    scenarios = list(payload.get("scenarios") or [])
     values: dict[str, str] = {}
-    for scenario in scenarios:
+    for scenario in list(payload.get("scenarios") or []):
         if not isinstance(scenario, dict):
             continue
         name = str(scenario.get("name") or "").strip()
@@ -49,6 +54,21 @@ def test_live_evidence_scope_digest_stable_across_runs() -> None:
     assert first_scope
     assert second_scope
     assert first_scope == second_scope
+
+
+def test_live_evidence_uses_resolver_canonical_mode_and_operator_audit() -> None:
+    payload = _run_live_script()
+    approval = _scenario_by_name(payload, "approval_required")
+    operator_surfaces = dict(approval.get("operator_surfaces") or {})
+    audit = dict(operator_surfaces.get("audit_action_lifecycle") or {})
+    replay = dict(operator_surfaces.get("replay_action_lifecycle") or {})
+    rebuild = dict(operator_surfaces.get("rebuild_pending_approvals") or {})
+
+    assert payload.get("policy_flag_mode") == "resolver_canonical"
+    assert audit.get("ok") is True
+    assert replay.get("commit_status") == "COMMITTED"
+    assert replay.get("approval_status") == "APPROVED"
+    assert rebuild.get("count") == 0
 
 
 def test_live_evidence_rejected_scenario_has_no_execution_validation_events() -> None:

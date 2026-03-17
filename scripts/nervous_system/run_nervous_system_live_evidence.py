@@ -1,7 +1,6 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
-import json
 import os
 from pathlib import Path
 import sys
@@ -12,15 +11,13 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from orket.adapters.execution import OpenClawJsonlSubprocessAdapter
+from orket.kernel.v1 import api as kernel_api
 from orket.kernel.v1.nervous_system_contract import tool_profile_digest
+from orket.kernel.v1.nervous_system_resolver import KNOWN_TOOL_PROFILES
 from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1, commit_proposal_v1, end_session_v1, projection_pack_v1
-from orket.kernel.v1.nervous_system_runtime_extensions import (
-    consume_credential_token_v1,
-    decide_approval_v1,
-    get_session_ledger_events_v1,
-    issue_credential_token_v1,
-)
+from orket.kernel.v1.nervous_system_runtime_extensions import consume_credential_token_v1, decide_approval_v1, get_session_ledger_events_v1, issue_credential_token_v1, list_approvals_v1
 from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests, utc_iso_now
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 REQUIRED_EVENT_TYPES = [
     "projection.issued",
@@ -36,6 +33,7 @@ REQUIRED_EVENT_TYPES = [
     "session.ended",
     "commit.recorded",
 ]
+OUTPUT_PATH = Path("benchmarks/results/nervous_system/nervous_system_live_evidence.json")
 
 
 def _collect_event_digests(events: list[dict[str, Any]]) -> dict[str, list[str]]:
@@ -49,12 +47,7 @@ def _collect_event_digests(events: list[dict[str, Any]]) -> dict[str, list[str]]
 
 
 def _base_request(*, session_id: str, trace_id: str, request_id: str) -> dict[str, str]:
-    return {
-        "contract_version": "kernel_api/v1",
-        "session_id": session_id,
-        "trace_id": trace_id,
-        "request_id": request_id,
-    }
+    return {"contract_version": "kernel_api/v1", "session_id": session_id, "trace_id": trace_id, "request_id": request_id}
 
 
 def _projection(session_id: str, trace_id: str, request_id: str, tool_name: str) -> dict[str, Any]:
@@ -68,15 +61,17 @@ def _projection(session_id: str, trace_id: str, request_id: str, tool_name: str)
     )
 
 
+def _proposal_tool_profile_digest(payload: dict[str, Any]) -> str:
+    tool_name = str(payload.get("tool_name") or "").strip()
+    profile = payload.get("tool_profile")
+    if not isinstance(profile, dict):
+        profile = KNOWN_TOOL_PROFILES.get(tool_name) or {}
+    return tool_profile_digest(dict(profile))
+
+
 def _finalize_session(session_id: str, trace_id: str, request_id: str) -> dict[str, list[str]]:
-    end_session_v1(
-        {
-            **_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id),
-            "reason": "live-evidence",
-        }
-    )
-    events = get_session_ledger_events_v1(session_id)
-    return _collect_event_digests(events)
+    end_session_v1({**_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id), "reason": "live-evidence"})
+    return _collect_event_digests(get_session_ledger_events_v1(session_id))
 
 
 def _scenario_base(
@@ -103,19 +98,77 @@ def _scenario_base(
     }
 
 
+def _operator_surface_snapshot(*, session_id: str, trace_id: str, approval_id: str) -> dict[str, Any]:
+    approval_items = list_approvals_v1(status=None, session_id=session_id, request_id=None, limit=20)
+    approvals_payload = {"items": approval_items, "count": len(approval_items)}
+    ledger_payload = kernel_api.list_ledger_events(
+        {"contract_version": "kernel_api/v1", "session_id": session_id, "trace_id": trace_id, "limit": 200}
+    )
+    rebuild_payload = kernel_api.rebuild_pending_approvals(
+        {"contract_version": "kernel_api/v1", "session_id": session_id}
+    )
+    replay_payload = kernel_api.replay_action_lifecycle(
+        {"contract_version": "kernel_api/v1", "session_id": session_id, "trace_id": trace_id}
+    )
+    audit_payload = kernel_api.audit_action_lifecycle(
+        {"contract_version": "kernel_api/v1", "session_id": session_id, "trace_id": trace_id}
+    )
+    approval_rows = [
+        row
+        for row in list(approvals_payload.get("items") or [])
+        if isinstance(row, dict) and str(row.get("approval_id") or "") == approval_id
+    ]
+    rebuild_ids = {
+        str(row.get("approval_id") or "")
+        for row in list(rebuild_payload.get("items") or [])
+        if isinstance(row, dict)
+    }
+    return {
+        "path": "primary",
+        "approvals": {
+            "count": int(approvals_payload.get("count") or 0),
+            "approval_present": bool(approval_rows),
+            "approval_statuses": sorted({str(row.get("status") or "") for row in approval_rows}),
+        },
+        "ledger_events": {
+            "count": int(ledger_payload.get("count") or 0),
+            "event_types": sorted(
+                {
+                    str(row.get("event_type") or "")
+                    for row in list(ledger_payload.get("items") or [])
+                    if isinstance(row, dict)
+                }
+            ),
+        },
+        "rebuild_pending_approvals": {
+            "count": int(rebuild_payload.get("count") or 0),
+            "approval_present": approval_id in rebuild_ids,
+        },
+        "replay_action_lifecycle": {
+            "event_count": int(replay_payload.get("event_count") or 0),
+            "admission_decision": str((replay_payload.get("decision_summary") or {}).get("admission_decision") or ""),
+            "approval_status": str((replay_payload.get("decision_summary") or {}).get("approval_status") or ""),
+            "commit_status": str((replay_payload.get("decision_summary") or {}).get("commit_status") or ""),
+        },
+        "audit_action_lifecycle": {
+            "ok": bool(audit_payload.get("ok")),
+            "checks": {
+                str(row.get("check") or ""): bool(row.get("ok"))
+                for row in list(audit_payload.get("checks") or [])
+                if isinstance(row, dict)
+            },
+        },
+    }
+
+
 def _run_blocked_scenario(response: dict[str, Any]) -> dict[str, Any]:
     session_id = "ns-live-blocked"
     trace_id = "trace-blocked-001"
     request_id = "req-blocked-001"
     proposal = dict(response["proposal"])
-
+    payload = dict(proposal.get("payload") or {})
     projection = _projection(session_id, trace_id, request_id, "fs.delete")
-    admission = admit_proposal_v1(
-        {
-            **_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id),
-            "proposal": proposal,
-        }
-    )
+    admission = admit_proposal_v1({**_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id), "proposal": proposal})
     commit = commit_proposal_v1(
         {
             **_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id),
@@ -124,7 +177,6 @@ def _run_blocked_scenario(response: dict[str, Any]) -> dict[str, Any]:
             "execution_result_digest": "1" * 64,
         }
     )
-    event_digests = _finalize_session(session_id, trace_id, request_id)
     record = _scenario_base(
         name="blocked_destructive",
         session_id=session_id,
@@ -132,16 +184,9 @@ def _run_blocked_scenario(response: dict[str, Any]) -> dict[str, Any]:
         request_id=request_id,
         projection=projection,
         admission=admission,
-        tool_profile_digest_value=tool_profile_digest(dict(proposal.get("payload", {}).get("tool_profile") or {})),
+        tool_profile_digest_value=_proposal_tool_profile_digest(payload),
     )
-    record.update(
-        {
-            "token_id_hash": None,
-            "commit_invoked": True,
-            "commit_status": commit["status"],
-            "required_event_digests": event_digests,
-        }
-    )
+    record.update({"token_id_hash": None, "commit_invoked": True, "commit_status": commit["status"], "required_event_digests": _finalize_session(session_id, trace_id, request_id)})
     return record
 
 
@@ -150,21 +195,11 @@ def _run_approval_scenario(response: dict[str, Any]) -> dict[str, Any]:
     trace_id = "trace-approval-001"
     request_id = "req-approval-001"
     proposal = dict(response["proposal"])
-
+    payload = dict(proposal.get("payload") or {})
     projection = _projection(session_id, trace_id, request_id, "fs.write_patch")
-    admission = admit_proposal_v1(
-        {
-            **_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id),
-            "proposal": proposal,
-        }
-    )
+    admission = admit_proposal_v1({**_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id), "proposal": proposal})
     approval_id = str(admission.get("approval_id") or "")
-    approval = decide_approval_v1(
-        approval_id=approval_id,
-        decision="approve",
-        edited_proposal=None,
-        notes="live-evidence approval",
-    )
+    approval = decide_approval_v1(approval_id=approval_id, decision="approve", edited_proposal=None, notes="live-evidence approval")
     commit = commit_proposal_v1(
         {
             **_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id),
@@ -174,7 +209,6 @@ def _run_approval_scenario(response: dict[str, Any]) -> dict[str, Any]:
             "execution_result_digest": "2" * 64,
         }
     )
-    event_digests = _finalize_session(session_id, trace_id, request_id)
     record = _scenario_base(
         name="approval_required",
         session_id=session_id,
@@ -182,7 +216,7 @@ def _run_approval_scenario(response: dict[str, Any]) -> dict[str, Any]:
         request_id=request_id,
         projection=projection,
         admission=admission,
-        tool_profile_digest_value=tool_profile_digest(dict(proposal.get("payload", {}).get("tool_profile") or {})),
+        tool_profile_digest_value=_proposal_tool_profile_digest(payload),
     )
     record.update(
         {
@@ -191,7 +225,8 @@ def _run_approval_scenario(response: dict[str, Any]) -> dict[str, Any]:
             "approval_status": approval["approval"]["status"],
             "commit_invoked": True,
             "commit_status": commit["status"],
-            "required_event_digests": event_digests,
+            "required_event_digests": _finalize_session(session_id, trace_id, request_id),
+            "operator_surfaces": _operator_surface_snapshot(session_id=session_id, trace_id=trace_id, approval_id=approval_id),
         }
     )
     return record
@@ -204,22 +239,10 @@ def _run_credential_scenario(response: dict[str, Any], *, replay: bool) -> dict[
     request_id = "req-credential-replay-001" if replay else "req-credential-001"
     proposal = dict(response["proposal"])
     token_request = dict(response.get("token_request") or {})
-
     projection = _projection(session_id, trace_id, request_id, "demo.credentialed_echo")
-    admission = admit_proposal_v1(
-        {
-            **_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id),
-            "proposal": proposal,
-        }
-    )
+    admission = admit_proposal_v1({**_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id), "proposal": proposal})
     approval_id = str(admission.get("approval_id") or "")
-    approval = decide_approval_v1(
-        approval_id=approval_id,
-        decision="approve",
-        edited_proposal=None,
-        notes="live-evidence approval",
-    )
-
+    approval = decide_approval_v1(approval_id=approval_id, decision="approve", edited_proposal=None, notes="live-evidence approval")
     issued = issue_credential_token_v1(
         {
             **_base_request(session_id=session_id, trace_id=trace_id, request_id=request_id),
@@ -241,7 +264,6 @@ def _run_credential_scenario(response: dict[str, Any], *, replay: bool) -> dict[
             "tool_profile_digest": issued["tool_profile_digest"],
         }
     )
-
     replay_reason = ""
     if replay:
         second = consume_credential_token_v1(
@@ -275,11 +297,9 @@ def _run_credential_scenario(response: dict[str, Any], *, replay: bool) -> dict[
                 "execution_result_digest": "3" * 64,
             }
         )
-
     event_digests = _finalize_session(session_id, trace_id, request_id)
     if replay and len(event_digests["credential.token_used"]) != 1:
         raise RuntimeError("token replay scenario emitted unexpected credential.token_used count")
-
     record = _scenario_base(
         name=name,
         session_id=session_id,
@@ -309,14 +329,10 @@ def _run_credential_scenario(response: dict[str, Any], *, replay: bool) -> dict[
 
 async def _run_live() -> dict[str, Any]:
     os.environ["ORKET_ENABLE_NERVOUS_SYSTEM"] = "true"
-    os.environ["ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS"] = "true"
-    os.environ["ORKET_USE_TOOL_PROFILE_RESOLVER"] = "false"
+    os.environ["ORKET_USE_TOOL_PROFILE_RESOLVER"] = "true"
+    os.environ.pop("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", None)
     reset_runtime_state_for_tests()
-
-    adapter = OpenClawJsonlSubprocessAdapter(
-        command=[sys.executable, "tools/fake_openclaw_adapter_strict.py"],
-        io_timeout_seconds=15.0,
-    )
+    adapter = OpenClawJsonlSubprocessAdapter(command=[sys.executable, "tools/fake_openclaw_adapter_strict.py"], io_timeout_seconds=15.0)
     requests = [
         {"type": "next_action", "scenario_kind": "blocked_destructive"},
         {"type": "next_action", "scenario_kind": "approval_required"},
@@ -326,17 +342,15 @@ async def _run_live() -> dict[str, Any]:
     responses = await adapter.run_requests(requests)
     if any(str(item.get("type") or "") != "action_proposal" for item in responses):
         raise RuntimeError("fake OpenClaw adapter returned unexpected message type")
-
     scenarios = [
         _run_blocked_scenario(responses[0]),
         _run_approval_scenario(responses[1]),
         _run_credential_scenario(responses[2], replay=False),
         _run_credential_scenario(responses[3], replay=True),
     ]
-
     return {
         "generated_at": utc_iso_now(),
-        "policy_flag_mode": "pre_resolved_flags",
+        "policy_flag_mode": "resolver_canonical",
         "adapter_run": {
             "mode": "subprocess_jsonl",
             "path": "primary",
@@ -352,11 +366,8 @@ async def _run_live() -> dict[str, Any]:
 
 async def main() -> int:
     artifact = await _run_live()
-    output_path = Path("benchmarks/results/nervous_system/nervous_system_live_evidence.json")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(artifact, ensure_ascii=False, indent=2)
-    await asyncio.to_thread(output_path.write_text, payload, "utf-8")
-    print(str(output_path))
+    await asyncio.to_thread(write_payload_with_diff_ledger, OUTPUT_PATH, artifact)
+    print(str(OUTPUT_PATH))
     return 0
 
 

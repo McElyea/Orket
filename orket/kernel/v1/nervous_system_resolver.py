@@ -10,6 +10,7 @@ KNOWN_TOOL_PROFILES = {
     "fs.write_patch": {"risk": "high", "destructive": True, "credentialed": False, "exfil": False},
     "demo.credentialed_echo": {"risk": "high", "destructive": False, "credentialed": True, "exfil": False},
     "demo.exfil_http": {"risk": "high", "destructive": False, "credentialed": False, "exfil": True},
+    "local.echo": {"risk": "low", "destructive": False, "credentialed": False, "exfil": False},
 }
 
 

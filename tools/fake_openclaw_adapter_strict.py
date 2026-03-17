@@ -41,13 +41,7 @@ def _build_proposal(
         "tool_name": "demo.tool",
         "args": {},
         "schema_valid": True,
-        "policy_forbidden": False,
         "leak_detected": False,
-        "scope_violation": False,
-        "known_tool_profile": True,
-        "approval_required_destructive": False,
-        "approval_required_exfil": False,
-        "approval_required_credentialed": False,
         "risk_class": "low",
     }
 
@@ -57,7 +51,6 @@ def _build_proposal(
             {
                 "tool_name": "fs.delete",
                 "args": {"path": "./workspace/important.txt"},
-                "scope_violation": True,
                 "risk_class": "critical",
             }
         )
@@ -66,7 +59,6 @@ def _build_proposal(
             {
                 "tool_name": "fs.write_patch",
                 "args": {"path": "./workspace/notes.md", "patch": "ADD LINE hello"},
-                "approval_required_destructive": True,
                 "risk_class": "high",
             }
         )
@@ -75,7 +67,6 @@ def _build_proposal(
             {
                 "tool_name": "demo.credentialed_echo",
                 "args": {"credential_alias": "demo_secret", "message": "hello"},
-                "approval_required_credentialed": True,
                 "risk_class": "high",
             }
         )

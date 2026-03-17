@@ -6,6 +6,8 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
+1. techdebt remediation plan execution -- Canonical plan: `docs/projects/techdebt/remediation_plan.md`.
+
 ## Maintenance (Non-Priority)
 
 1. techdebt -- Standing recurring maintenance. Checklist: `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`. Governance: `docs/projects/techdebt/README.md`.
@@ -18,8 +20,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 ## Future Lanes (Non-Priority Backlog)
 
 1. protocol-governed local provider compatibility expansion (`vLLM`, `llama.cpp`) -- Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`. Readiness: `benchmarks/results/protocol/local_prompting/promotion_decision/local_prompting_promotion_readiness.json` (`ready=false`). Reopen only with an explicit scoped implementation request.
-2. NervousSystem next-phase planning -- Hold until production rollout timing is explicitly scheduled.
-3. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.
+2. marshaller requirements hardening -- Hold until requirements are mature and explicitly approved for execution.
 
 ## Project Index
 
@@ -28,5 +29,5 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
-| techdebt | maintenance | P2-recurring | `docs/projects/techdebt/` | Orket Core | Standing maintenance lane only. Checklist: `Recurring-Maintenance-Checklist.md`. Governance: `README.md`. |
+| techdebt | active+maintenance | P0-now + P2-recurring | `docs/projects/techdebt/` | Orket Core | Active plan: `remediation_plan.md`. Standing maintenance also continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |
