@@ -617,6 +617,7 @@ class DefaultOrchestrationLoopPolicyNode:
             "architect": ["write_file", "update_issue_status"],
             "coder": ["write_file", "update_issue_status"],
             "developer": ["write_file", "update_issue_status"],
+            "evidence_reviewer": ["write_file", "update_issue_status"],
             "code_reviewer": ["read_file", "update_issue_status"],
             "reviewer": ["read_file", "update_issue_status"],
             "integrity_guard": ["update_issue_status"],
@@ -634,6 +635,7 @@ class DefaultOrchestrationLoopPolicyNode:
             "architect": ["code_review"],
             "coder": ["code_review"],
             "developer": ["code_review"],
+            "evidence_reviewer": ["code_review"],
             "code_reviewer": ["code_review"],
             "reviewer": ["code_review"],
             "integrity_guard": ["done", "blocked"],
@@ -669,6 +671,7 @@ class DefaultOrchestrationLoopPolicyNode:
             "architect": ["agent_output/design.txt"],
             "coder": ["agent_output/main.py"],
             "developer": ["agent_output/main.py"],
+            "evidence_reviewer": ["agent_output/source_attribution_receipt.json"],
         }
         return seat_paths.get(seat, [])
 

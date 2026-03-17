@@ -1,6 +1,6 @@
 # Truthful Runtime Packet-1 Contract
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 Status: Active
 Owner: Orket Core
 Canonical requirements source: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
@@ -25,7 +25,7 @@ Implementation archive:
 1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
 
 Broader Phase C continuation and the active packet-2 repair-ledger slice live in:
-1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
+1. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
 
 ## Scope
 

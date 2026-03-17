@@ -1,9 +1,9 @@
 # Orket Truthful Runtime Hardening Implementation Plan
 
-Last updated: 2026-03-15
-Status: Staged / waiting after completion of packet-1 cleanup and Phase C packet-2 slices 1-2; later Phase C backlog and Phases D-E staged
+Last updated: 2026-03-16
+Status: Staged / waiting after Phase C closeout; Phases D-E staged
 Owner: Orket Core
-Lane type: Mixed active / staged
+Lane type: Staged multi-phase lane
 Canonical staged-lane authority: This file owns detailed reentry criteria for this lane.
 Accepted Phase C requirements lane:
 1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
@@ -43,15 +43,14 @@ Out of scope:
 ## 3. Phase Plan
 
 Phase-specific implementation plans:
-1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
-2. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
-3. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-D-IMPLEMENTATION-PLAN.md`
-4. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-E-IMPLEMENTATION-PLAN.md`
+1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-D-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-E-IMPLEMENTATION-PLAN.md`
 
 Phase closeout archives:
 1. `docs/projects/archive/future/TRH03102026-PHASE-A-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-A-IMPLEMENTATION-PLAN.md`
 2. `docs/projects/archive/future/TRH03102026-PHASE-B-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-B-IMPLEMENTATION-PLAN.md`
 3. `docs/projects/archive/future/TRH03102026-WAVE2-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-WAVE-2-IMPLEMENTATION-PLAN.md`
+4. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
 
 ## Phase A - Contract and Vocabulary Freeze
 
@@ -142,78 +141,75 @@ Acceptance:
 Completed:
 1. Phase A (`docs/projects/archive/future/TRH03102026-PHASE-A-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-A-IMPLEMENTATION-PLAN.md`)
 2. Phase B (`docs/projects/archive/future/TRH03102026-PHASE-B-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-B-IMPLEMENTATION-PLAN.md`)
+3. Phase C (`docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`)
 
-Completed bounded packet-2 slices:
-1. Phase C packet-2 slice 1 (`structured repair ledger`)
-2. Phase C packet-2 slice 2 (`artifact provenance`)
-
-Remaining strict order after the completed bounded slices:
-1. remaining Phase C packet-2 backlog
-2. Phase D
-3. Phase E
+Remaining strict order:
+1. Phase D
+2. Phase E
 
 Current staging state:
 1. Accepted requirements definition for the bounded first Phase C packet is archived at `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`.
 2. Packet-1 implementation and closeout are archived at `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/`.
-3. The current live-proof cycle is closed and frozen at `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/`.
+3. The frozen cycle-1 subset remains archived at `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/`.
 4. The packet-1 cleanup packet is archived at `docs/projects/archive/truthful-runtime/TRH03152026-PACKET1-CLEANUP/`.
-5. Packet-2 slices 1-2 are complete and summarized in `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`.
-6. The completed bounded packet-2 slice contracts are `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md` and `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`.
-7. Remaining packet-2 backlog plus later Phase D-E work stay staged.
-8. Phase C-E are not marked complete because phase-level completion proof is not yet established.
+5. Phase C closeout is archived at `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/`.
+6. The completed Phase C contracts are:
+   `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`,
+   `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md`,
+   `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`,
+   `docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md`,
+   `docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md`.
+7. Phase D-E work stays staged.
 
 Critical path:
-`C -> E`
+`D -> E`
 
 Rationale:
 1. vocabulary/contracts and routing/prompt/tool policy baselines are complete from Phases A/B.
-2. provenance and fallback truth must exist before evidence-gated promotion is meaningful.
+2. memory and trust policy surfaces must exist before evidence-gated promotion is meaningful.
 
 ## 5. Reentry Authority
 
 This file is the canonical scope-control authority for the staged truthful-runtime lane. The roadmap entry stays terse; detailed remaining-proof status lives here.
 
 Why mixed-state now:
-1. Phase A, Phase B, and Wave 2 closeout artifacts exist, but Phase C-E do not have accepted phase-level completion proof.
-2. Explicit scoped work reopened Phase C packet-2 on 2026-03-14 for bounded slices only, and slices 1-2 are now complete.
-3. Explicit scoped work reopened packet-1 on 2026-03-15 for semantic cleanup of the primary boundary, intended-path provenance tokens, and proof supersession, and that cleanup packet is now archived.
-4. Provenance and fallback truth remain the critical path before memory/trust policy work or promotion-governance work should resume.
-5. Broad product expansion work is not a valid reason to widen this lane.
+1. Phase A, Phase B, and Phase C are complete and archived.
+2. Phase D and Phase E do not have accepted phase-level completion proof.
+3. Broad product expansion work is not a valid reason to widen this lane.
 
 Missing proof before broad reentry:
-1. The cycle-1 live-proof closeout proves only a bounded subset and is archived at `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/`.
-2. Packet-2 items such as narration-to-effect audit, broader idempotency, and evidence-first/source attribution remain unclosed beyond the completed repair-ledger and artifact-provenance slices.
-3. No accepted Phase D packet yet proves policy-bound memory mutation and trust-level synthesis behavior.
-4. No accepted Phase E packet yet proves conformance and promotion evidence gates on top of proven Phase C and Phase D behavior.
+1. Phase C closeout is archived at `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/`.
+2. No accepted Phase D packet yet proves policy-bound memory mutation and trust-level synthesis behavior.
+3. No accepted Phase E packet yet proves conformance and promotion evidence gates on top of proven Phase D behavior.
 
 Current staging state:
-1. No new packet-2 slice is active right now.
-2. Repair-ledger and artifact-provenance slices are complete and live-proven.
-3. The packet-1 cleanup packet is archived at `docs/projects/archive/truthful-runtime/TRH03152026-PACKET1-CLEANUP/`.
-4. Do not include net-new UI work, enterprise auth/admin surfaces, packaging work, unrelated provider expansion, or blocked avatar/lipsync work in future reopen work.
-5. Do not reopen Phase D or Phase E until the remaining packet-2 backlog has acceptance proof.
+1. No truthful-runtime implementation slice is active right now.
+2. Phase C is complete and archived.
+3. Do not include net-new UI work, enterprise auth/admin surfaces, packaging work, unrelated provider expansion, or blocked avatar/lipsync work in future reopen work.
+4. Do not reopen Phase E until Phase D has acceptance proof.
 
 Required evidence to reopen:
-1. Archived packet-1 closeout in `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/CLOSEOUT.md` remains the current baseline.
-2. Archived cycle-1 closeout in `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSEOUT.md` remains the frozen live-proof boundary.
-3. An explicit scope update naming the next packet-2 target.
-4. A bounded deliverable list taken from `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md` or a later accepted scope update, not from the full future backlog.
-5. Named exit artifacts for the reopened slice.
-6. Explicit non-goals so scope does not expand into adjacent product work.
+1. Archived Phase C closeout in `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md` remains the current baseline.
+2. An explicit scope update naming the next Phase D target.
+3. A bounded deliverable list taken from `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-D-IMPLEMENTATION-PLAN.md` or a later accepted scope update, not from the full future backlog.
+4. Named exit artifacts for the reopened slice.
+5. Explicit non-goals so scope does not expand into adjacent product work.
 
-## 6. Frozen Closure Matrix And Completed Bounded Slices
+## 6. Phase C Closure Authority
 
 Frozen closure authority:
 1. `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSURE-MATRIX.md`
 2. `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSEOUT.md`
 3. `benchmarks/staging/General/truthful_runtime_phase_c_cycle1_live_closure_qwen2_5_coder_7b_2026-03-14.json`
 
-Completed bounded packet authority:
-1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
-2. `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md`
-3. `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`
-4. `benchmarks/staging/General/truthful_runtime_packet2_repair_live_proof_qwen2_5_coder_7b_2026-03-15.json`
-5. `benchmarks/staging/General/truthful_runtime_artifact_provenance_live_proof_qwen2_5_coder_7b_2026-03-14.json`
+Phase closeout authority:
+1. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
+2. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
+3. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
+4. `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md`
+5. `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`
+6. `docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md`
+7. `docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md`
 
 ## 7. Verification Standards
 

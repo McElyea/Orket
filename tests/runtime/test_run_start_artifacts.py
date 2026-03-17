@@ -95,6 +95,12 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert payload["artifact_provenance_block_policy"]["schema_version"] == "1.0"
     required_provenance_fields = payload["artifact_provenance_block_policy"]["required_provenance_fields"]
     assert "run_id" in required_provenance_fields
+    assert payload["narration_effect_audit_policy"]["schema_version"] == "1.0"
+    narration_tools = [row["tool"] for row in payload["narration_effect_audit_policy"]["rows"]]
+    assert "write_file" in narration_tools
+    assert payload["source_attribution_policy"]["schema_version"] == "1.0"
+    source_modes = [row["mode"] for row in payload["source_attribution_policy"]["modes"]]
+    assert "required" in source_modes
     assert payload["operator_override_logging_policy"]["schema_version"] == "1.0"
     override_types = payload["operator_override_logging_policy"]["override_types"]
     assert "route_override" in override_types
@@ -200,6 +206,8 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert Path(payload["idempotency_discipline_policy_path"]).exists()
     assert Path(payload["result_error_invariant_contract_path"]).exists()
     assert Path(payload["artifact_provenance_block_policy_path"]).exists()
+    assert Path(payload["narration_effect_audit_policy_path"]).exists()
+    assert Path(payload["source_attribution_policy_path"]).exists()
     assert Path(payload["operator_override_logging_policy_path"]).exists()
     assert Path(payload["demo_production_labeling_policy_path"]).exists()
     assert Path(payload["human_correction_capture_policy_path"]).exists()

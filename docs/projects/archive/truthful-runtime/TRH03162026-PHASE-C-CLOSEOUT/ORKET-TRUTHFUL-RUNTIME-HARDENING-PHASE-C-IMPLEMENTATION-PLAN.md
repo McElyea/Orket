@@ -1,9 +1,11 @@
 # Orket Truthful Runtime Hardening Phase C Implementation Plan
 
-Last updated: 2026-03-15
-Status: Staged after completion of packet-1 cleanup and packet-2 slices 1-2; remaining Phase C backlog staged
+Last updated: 2026-03-16
+Status: Completed (archived after Phase C closeout)
 Owner: Orket Core
 Canonical lane plan: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
+Closeout:
+1. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
 Depends on: Phase B completion
 Accepted packet-1 requirements archive: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
 Archived packet-1 authority:
@@ -16,11 +18,13 @@ Frozen cycle-1 closeout:
 3. `benchmarks/staging/General/truthful_runtime_phase_c_cycle1_live_closure_qwen2_5_coder_7b_2026-03-14.json`
 Archived cleanup packet:
 1. `docs/projects/archive/truthful-runtime/TRH03152026-PACKET1-CLEANUP/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET1-CLEANUP-IMPLEMENTATION-PLAN.md`
-Next staged packet:
-1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
-Completed bounded packet-2 slice contracts:
+Archived packet-2 authority:
+1. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
+Completed Phase C contracts:
 1. `docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md`
 2. `docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md`
+3. `docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md`
+4. `docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md`
 
 ## 0. Current Role
 
@@ -32,9 +36,9 @@ Packet-1 implementation and closeout now live in:
 1. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
 2. `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/CLOSEOUT.md`
 
-This file now governs the phase-level boundary while the packet-1 cleanup packet is archived and the remaining packet-2 backlog stays staged. It must not be treated as authorization to reopen packet-2 work without an explicit next-slice request.
+This file is an archived historical plan for the completed Phase C lane.
 
-The live-proof closure boundary remains frozen in the cycle-1 archive. Repair-ledger and artifact-provenance slices are complete; the archived cleanup packet realigns packet-1 semantics and supersedes the affected live proofs; the remaining Phase C backlog stays staged.
+The live-proof closure boundary remains frozen in the cycle-1 archive. Packet-1 cleanup remains archived. Repair ledger, artifact provenance, narration-to-effect audit, broader idempotency coverage, and source attribution / evidence-first gating are complete under the Phase C closeout recorded in `CLOSEOUT.md`.
 
 ## 1. Objective
 
@@ -56,6 +60,7 @@ Make execution provenance, repair behavior, fallback behavior, and truth classif
 ## 3. Detailed Workstreams
 
 ### Workstream C1 - Provenance and Repair Surfaces
+Status: Completed
 Tasks:
 1. Define/enforce provenance envelope fields (provider/model/profile/tool/retry/repair/fallback).
 2. Define structured repair ledger entries and final disposition rules. Status: Completed in packet-2 slice 1.
@@ -66,6 +71,7 @@ Acceptance:
 2. repeated delivery paths remain idempotency-safe.
 
 ### Workstream C2 - Truth and Audit Semantics
+Status: Completed
 Tasks:
 1. Implement response truth classification states.
 2. Implement narration-to-effect audit checks and failure reason capture.
@@ -76,6 +82,7 @@ Acceptance:
 2. unannounced fallback is detectable and reportable as a defect class.
 
 ### Workstream C3 - High-Stakes Evidence and Voice Truth
+Status: Completed for the scoped Phase C backlog; avatar/lipsync truth remains excluded from this phase
 Tasks:
 1. Define evidence-first synthesis requirements for high-stakes lanes.
 2. Define source attribution contract (cited facts vs uncited reasoning).
@@ -88,9 +95,9 @@ Acceptance:
 
 ## 4. Verification Plan
 
-1. Contract tests for provenance envelope, repair ledger, truth classification, and idempotency keys.
-2. Integration tests for cancellation truth, fallback detection, repair-ledger reconstruction, and audit behavior.
-3. End-to-end tests validating repaired-path behavior and narration/effect alignment in user-visible flows.
+1. Contract tests for provenance envelope, repair ledger, truth classification, narration/effect audit, source attribution, and idempotency keys.
+2. Integration tests for repair-ledger reconstruction, source-attribution gating, artifact provenance, and narration/effect behavior.
+3. Provider-backed live tests validating required-source blocking, verified-source success, and missing-effect detection.
 
 ## 5. Completion Gate
 

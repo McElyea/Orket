@@ -771,6 +771,7 @@ def test_registry_resolves_default_orchestration_loop_policy():
         "update_issue_status",
     ]
     assert node.required_action_tools_for_seat("coder") == ["write_file", "update_issue_status"]
+    assert node.required_action_tools_for_seat("evidence_reviewer") == ["write_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("code_reviewer") == ["read_file", "update_issue_status"]
     assert node.required_action_tools_for_seat("integrity_guard") == ["update_issue_status"]
     assert node.required_action_tools_for_seat(
@@ -780,6 +781,7 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.required_action_tools_for_seat("lead_architect") == []
     assert node.required_statuses_for_seat("requirements_analyst") == ["code_review"]
     assert node.required_statuses_for_seat("coder") == ["code_review"]
+    assert node.required_statuses_for_seat("evidence_reviewer") == ["code_review"]
     assert node.required_statuses_for_seat("code_reviewer") == ["code_review"]
     assert node.required_statuses_for_seat("integrity_guard") == ["done", "blocked"]
     assert node.required_statuses_for_seat(
@@ -803,6 +805,7 @@ def test_registry_resolves_default_orchestration_loop_policy():
     assert node.required_write_paths_for_seat("requirements_analyst") == ["agent_output/requirements.txt"]
     assert node.required_write_paths_for_seat("architect") == ["agent_output/design.txt"]
     assert node.required_write_paths_for_seat("coder") == ["agent_output/main.py"]
+    assert node.required_write_paths_for_seat("evidence_reviewer") == ["agent_output/source_attribution_receipt.json"]
     assert node.required_read_paths_for_seat("coder") == []
     assert node.required_write_paths_for_seat("code_reviewer") == []
     assert node.gate_mode_for_seat("integrity_guard") == "review_required"

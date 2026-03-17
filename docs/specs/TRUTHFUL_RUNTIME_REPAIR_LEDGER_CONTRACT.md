@@ -1,9 +1,9 @@
 # Truthful Runtime Repair Ledger Contract
 
-Last updated: 2026-03-14
+Last updated: 2026-03-16
 Status: Active
 Owner: Orket Core
-Canonical packet authority: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
+Canonical packet authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
 Related authority:
 1. `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`
 2. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`

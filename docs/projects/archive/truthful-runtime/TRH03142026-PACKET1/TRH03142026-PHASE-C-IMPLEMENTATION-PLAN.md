@@ -1,14 +1,14 @@
 # TRH03142026 Phase C Packet-1 Implementation Plan
 
 Last updated: 2026-03-14
-Status: Active
+Status: Archived
 Owner: Orket Core
-Accepted requirements: `docs/projects/truthful-runtime/TRH03142026-PHASE-C-REQUIREMENTS.md`
+Accepted requirements: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
 Durable contract: `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`
 Runtime-stability authority: `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
 Related staged continuation:
 1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
-2. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
+2. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
 
 ## 0. Current Role
 

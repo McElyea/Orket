@@ -36,6 +36,12 @@ from orket.application.services.runtime_policy import (
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.logging import log_event
 from orket.runtime.config_loader import ConfigLoader
+from orket.runtime.phase_c_runtime_truth import (
+    collect_phase_c_packet2_facts,
+    collect_source_attribution_facts,
+    normalize_truthful_runtime_policy,
+    resolve_source_attribution_gate_failure_reason,
+)
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
@@ -347,6 +353,8 @@ class ExecutionPipeline:
 
         idesign_mode = self._resolve_idesign_mode()
         issue_count = len(epic.issues)
+        epic_params = epic.params if isinstance(epic.params, dict) else {}
+        phase_c_truth_policy = normalize_truthful_runtime_policy(epic_params.get("truthful_runtime"))
 
         if idesign_mode == "force_idesign" and not epic.architecture_governance.idesign:
             raise ComplexityViolation(
@@ -537,8 +545,39 @@ class ExecutionPipeline:
                 session_status = "incomplete"
             session_status = validate_state_token(domain="session", state=session_status)
 
+            failure_reason = None
+            artifacts = self._run_artifact_refs(run_id)
+            artifacts.update(dict(run_contract_artifacts))
+            artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
+            artifacts["route_decision_artifact"] = dict(route_decision_artifact)
+            artifacts["packet1_facts"] = self._build_packet1_facts(intended_model=env.model)
+            receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
+            if receipt_projection:
+                artifacts["protocol_receipts"] = receipt_projection
+            source_attribution_facts = await collect_source_attribution_facts(
+                workspace=self.workspace,
+                policy=phase_c_truth_policy,
+            )
+            gate_failure_reason = resolve_source_attribution_gate_failure_reason(source_attribution_facts)
+            if session_status == "done" and gate_failure_reason is not None:
+                session_status = validate_state_token(domain="session", state="terminal_failure")
+                failure_reason = gate_failure_reason
+                log_event(
+                    "source_attribution_gate_blocked",
+                    {
+                        "run_id": run_id,
+                        "failure_reason": failure_reason,
+                        "mode": source_attribution_facts.get("mode"),
+                        "missing_requirements": list(source_attribution_facts.get("missing_requirements") or []),
+                    },
+                    workspace=self.workspace,
+                )
+
             await self.sessions.complete_session(run_id, session_status, legacy_transcript)
-            log_event("session_end", {"run_id": run_id, "status": session_status}, workspace=self.workspace)
+            session_end_payload = {"run_id": run_id, "status": session_status}
+            if failure_reason is not None:
+                session_end_payload["failure_reason"] = failure_reason
+            log_event("session_end", session_end_payload, workspace=self.workspace)
             if not is_workflow_terminal:
                 non_terminal = [
                     {
@@ -564,7 +603,12 @@ class ExecutionPipeline:
                 ]
                 log_event(
                     "session_terminal_failure",
-                    {"run_id": run_id, "build_id": active_build, "issues": terminal_failure},
+                    {
+                        "run_id": run_id,
+                        "build_id": active_build,
+                        "issues": terminal_failure,
+                        "failure_reason": failure_reason,
+                    },
                     workspace=self.workspace,
                 )
             await self.snapshots.record(
@@ -573,7 +617,7 @@ class ExecutionPipeline:
                 legacy_transcript,
             )
 
-            if is_success_terminal:
+            if session_status == "done":
                 await self.success.record_success(
                     session_id=run_id,
                     success_type="EPIC_COMPLETED",
@@ -582,21 +626,14 @@ class ExecutionPipeline:
                 )
                 log_event("success_recorded", {"run_id": run_id, "type": "EPIC_COMPLETED"}, workspace=self.workspace)
 
-            artifacts = self._run_artifact_refs(run_id)
-            artifacts.update(dict(run_contract_artifacts))
-            artifacts["deterministic_mode_contract"] = dict(deterministic_mode_contract)
-            artifacts["route_decision_artifact"] = dict(route_decision_artifact)
-            artifacts["packet1_facts"] = self._build_packet1_facts(intended_model=env.model)
-            receipt_projection = await self._materialize_protocol_receipts(run_id=run_id)
-            if receipt_projection:
-                artifacts["protocol_receipts"] = receipt_projection
             summary_finalized_at = datetime.now(UTC).isoformat()
             run_summary, artifacts = await self._materialize_run_summary(
                 run_id=run_id,
                 session_status=session_status,
-                failure_reason=None,
+                failure_reason=failure_reason,
                 artifacts=artifacts,
                 finalized_at=summary_finalized_at,
+                phase_c_truth_policy=phase_c_truth_policy,
             )
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
@@ -605,6 +642,7 @@ class ExecutionPipeline:
                 build_id=active_build,
                 session_status=session_status,
                 summary=run_summary,
+                failure_reason=failure_reason,
             )
             if gitea_export:
                 artifacts["gitea_export"] = gitea_export
@@ -613,6 +651,7 @@ class ExecutionPipeline:
             await self.run_ledger.finalize_run(
                 session_id=run_id,
                 status=session_status,
+                failure_reason=failure_reason,
                 summary=run_summary,
                 artifacts=artifacts,
                 finalized_at=ledger_finalized_at,
@@ -660,6 +699,7 @@ class ExecutionPipeline:
                 failure_reason=str(exc)[:2000],
                 artifacts=artifacts,
                 finalized_at=summary_finalized_at,
+                phase_c_truth_policy=phase_c_truth_policy,
             )
             gitea_export = await self._export_run_artifacts(
                 run_id=run_id,
@@ -781,6 +821,7 @@ class ExecutionPipeline:
     ) -> Dict[str, str]:
         facts = normalize_artifact_provenance_facts(artifact_provenance_facts)
         entries = list(facts.get("artifacts") or [])
+        entries = [entry for entry in entries if str(entry.get("artifact_type") or "").strip() != "source_attribution_receipt"]
         if not entries:
             return {}
         selected = max(
@@ -853,6 +894,7 @@ class ExecutionPipeline:
         failure_reason: str | None,
         artifacts: Dict[str, Any],
         finalized_at: str,
+        phase_c_truth_policy: Dict[str, Any] | None = None,
     ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         resolved_artifacts = dict(artifacts)
         repair_entries = await self._resolve_packet2_repair_entries(run_id=run_id)
@@ -862,7 +904,12 @@ class ExecutionPipeline:
             repair_entries=repair_entries,
             artifact_provenance_facts=artifact_provenance_artifacts.get("artifact_provenance_facts"),
         )
-        packet2_artifacts = await self._resolve_packet2_artifacts(run_id=run_id, repair_entries=repair_entries)
+        packet2_artifacts = await self._resolve_packet2_artifacts(
+            run_id=run_id,
+            repair_entries=repair_entries,
+            artifact_provenance_facts=artifact_provenance_artifacts.get("artifact_provenance_facts"),
+            phase_c_truth_policy=phase_c_truth_policy,
+        )
         existing_packet1_facts = dict(resolved_artifacts.get("packet1_facts") or {})
         merged_packet1_facts = self._merge_packet1_facts(
             existing_packet1_facts,
@@ -985,8 +1032,17 @@ class ExecutionPipeline:
         *,
         run_id: str,
         repair_entries: List[Dict[str, Any]] | None = None,
+        artifact_provenance_facts: Dict[str, Any] | None = None,
+        phase_c_truth_policy: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
-        packet2_facts = self._build_packet2_facts(repair_entries=repair_entries or [])
+        packet2_facts = await collect_phase_c_packet2_facts(
+            workspace=self.workspace,
+            run_id=run_id,
+            cards_repo=self.async_cards,
+            policy=phase_c_truth_policy,
+            artifact_provenance_facts=artifact_provenance_facts,
+        )
+        packet2_facts.update(self._build_packet2_facts(repair_entries=repair_entries or []))
         if not packet2_facts:
             return {}
         await self._record_packet2_facts(run_id=run_id, packet2_facts=packet2_facts)
@@ -1372,6 +1428,8 @@ class ExecutionPipeline:
     @staticmethod
     def _artifact_type_for_path(artifact_path: str) -> str:
         normalized = str(artifact_path or "").strip().lower()
+        if normalized.endswith("/source_attribution_receipt.json"):
+            return "source_attribution_receipt"
         if normalized.endswith("/requirements.txt"):
             return "requirements_document"
         if normalized.endswith("/design.txt"):

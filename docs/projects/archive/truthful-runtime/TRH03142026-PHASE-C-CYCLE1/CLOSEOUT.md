@@ -4,7 +4,7 @@ Last updated: 2026-03-14
 Status: Completed
 Owner: Orket Core
 Frozen closure matrix: `docs/projects/archive/truthful-runtime/TRH03142026-PHASE-C-CYCLE1/CLOSURE-MATRIX.md`
-Next scoped packet: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
+Historical continuation archive: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
 
 ## Outcome
 
@@ -44,7 +44,7 @@ Supporting structural commands:
 The remaining Phase C work is intentionally carried into a new bounded continuation packet instead of being left as open-ended backlog.
 
 Carry-forward authority:
-1. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
+1. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
 
 Blocked separately:
 1. avatar/lipsync truth stays blocked until working avatars exist

@@ -23,6 +23,7 @@ from orket.runtime.interrupt_semantics_policy import validate_interrupt_semantic
 from orket.runtime.local_remote_route_policy import validate_local_remote_route_policy
 from orket.runtime.long_session_soak_test_contract import validate_long_session_soak_test_contract
 from orket.runtime.model_profile_bios import validate_model_profile_bios
+from orket.runtime.narration_effect_audit_policy import validate_narration_effect_audit_policy
 from orket.runtime.non_fatal_error_budget import validate_non_fatal_error_budget
 from orket.runtime.naming_discipline_policy import validate_naming_discipline_policy
 from orket.runtime.observability_redaction_test_contract import validate_observability_redaction_test_contract
@@ -34,6 +35,7 @@ from orket.runtime.release_confidence_scorecard import validate_release_confiden
 from orket.runtime.resource_pressure_simulation_lane import validate_resource_pressure_simulation_lane
 from orket.runtime.sampling_discipline_guide import validate_sampling_discipline_guide
 from orket.runtime.spec_debt_queue import validate_spec_debt_queue
+from orket.runtime.source_attribution_policy import validate_source_attribution_policy
 from orket.runtime.workspace_hygiene_rules import validate_workspace_hygiene_rules
 from orket.runtime.provider_runtime_target import PROVIDER_CHOICES
 from orket.runtime.runtime_boundary_audit_checklist import validate_runtime_boundary_audit_checklist
@@ -487,6 +489,42 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         checks.append(
             {
                 "check": "artifact_provenance_block_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        tools = validate_narration_effect_audit_policy()
+        checks.append(
+            {
+                "check": "narration_effect_audit_policy_valid",
+                "ok": True,
+                "count": len(tools),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "narration_effect_audit_policy_valid",
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+    try:
+        modes = validate_source_attribution_policy()
+        checks.append(
+            {
+                "check": "source_attribution_policy_valid",
+                "ok": True,
+                "count": len(modes),
+            }
+        )
+    except ValueError as exc:
+        checks.append(
+            {
+                "check": "source_attribution_policy_valid",
                 "ok": False,
                 "error": str(exc),
             }

@@ -26,6 +26,8 @@ def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     assert "idempotency_discipline_policy" in artifacts
     assert "result_error_invariant_contract" in artifacts
     assert "artifact_provenance_block_policy" in artifacts
+    assert "narration_effect_audit_policy" in artifacts
+    assert "source_attribution_policy" in artifacts
     assert "operator_override_logging_policy" in artifacts
     assert "demo_production_labeling_policy" in artifacts
     assert "human_correction_capture_policy" in artifacts

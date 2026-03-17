@@ -61,4 +61,4 @@ Architecture checklist review:
 
 1. The active March 15 packet-1 proof uses a fallback-profile provider-backed run rather than a clean direct-success run because the direct-success provider-backed acceptance path is currently volatile.
 2. Organic path mismatch and `silent_unrecorded_fallback` remain unproven live and stay outside this bounded cleanup packet.
-3. The remaining Phase C packet-2 backlog plus Phases D-E remain staged in `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`.
+3. Phase C is now closed in `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`, and Phases D-E remain staged in `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`.

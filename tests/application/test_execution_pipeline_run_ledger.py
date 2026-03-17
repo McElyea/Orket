@@ -6,12 +6,14 @@ import pytest
 
 import orket.runtime.execution_pipeline as execution_pipeline_module
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.application.workflows.protocol_hashing import hash_framed_fields
 from orket.exceptions import ExecutionFailed
 from orket.logging import log_event
 from orket.application.workflows.tool_invocation_contracts import (
     build_tool_invocation_manifest,
     compute_tool_call_hash,
 )
+from orket.naming import sanitize_name
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
@@ -27,7 +29,7 @@ def _read_json(path: Path) -> dict:
     return json.loads(path.read_bytes().decode("utf-8"))
 
 
-def _write_epic_assets(root: Path, epic_id: str) -> None:
+def _write_epic_assets(root: Path, epic_id: str, *, truthful_runtime: dict | None = None) -> None:
     _write_json(
         root / "model" / "core" / "teams" / "standard.json",
         {
@@ -49,6 +51,7 @@ def _write_epic_assets(root: Path, epic_id: str) -> None:
             "team": "standard",
             "environment": "standard",
             "description": "Run ledger test",
+            "params": {"truthful_runtime": truthful_runtime} if truthful_runtime else {},
             "architecture_governance": {"idesign": False, "pattern": "Standard"},
             "issues": [
                 {
@@ -100,7 +103,97 @@ def _write_protocol_write_receipts(
                 capability_profile=str(manifest["capability_profile"]),
             ),
         }
-        receipt_path.write_text(json.dumps(receipt_payload), encoding="utf-8")
+        existing = ""
+        if receipt_path.exists():
+            existing = receipt_path.read_text(encoding="utf-8")
+            if existing and not existing.endswith("\n"):
+                existing += "\n"
+        receipt_path.write_text(existing + json.dumps(receipt_payload) + "\n", encoding="utf-8")
+
+
+def _write_protocol_receipt(
+    workspace: Path,
+    *,
+    session_id: str,
+    issue_id: str,
+    role_name: str,
+    turn_index: int,
+    tool: str,
+    tool_args: dict[str, object],
+    execution_result: dict[str, object],
+    operation_id: str,
+    materialize_artifact: bool = True,
+) -> None:
+    artifact_path = str(tool_args.get("path") or execution_result.get("path") or "").strip()
+    if materialize_artifact and tool == "write_file" and artifact_path:
+        resolved_artifact_path = workspace / artifact_path
+        resolved_artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        if "content" in tool_args:
+            resolved_artifact_path.write_text(str(tool_args.get("content") or ""), encoding="utf-8")
+    manifest = build_tool_invocation_manifest(run_id=session_id, tool_name=tool)
+    receipt_path = (
+        workspace
+        / "observability"
+        / session_id
+        / issue_id
+        / f"{turn_index:03d}_{role_name}"
+        / "protocol_receipts.log"
+    )
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    receipt_payload = {
+        "run_id": session_id,
+        "step_id": f"{issue_id}:{turn_index}",
+        "operation_id": operation_id,
+        "tool": tool,
+        "tool_index": 0,
+        "tool_args": dict(tool_args),
+        "execution_result": dict(execution_result),
+        "tool_invocation_manifest": manifest,
+        "tool_call_hash": compute_tool_call_hash(
+            tool_name=tool,
+            tool_args=dict(tool_args),
+            tool_contract_version=str(manifest["tool_contract_version"]),
+            capability_profile=str(manifest["capability_profile"]),
+        ),
+    }
+    existing = ""
+    if receipt_path.exists():
+        existing = receipt_path.read_text(encoding="utf-8")
+        if existing and not existing.endswith("\n"):
+            existing += "\n"
+    receipt_path.write_text(existing + json.dumps(receipt_payload) + "\n", encoding="utf-8")
+
+
+def _write_legacy_turn_artifact(
+    workspace: Path,
+    *,
+    session_id: str,
+    issue_id: str,
+    role_name: str,
+    turn_index: int,
+    tool: str,
+    tool_args: dict[str, object],
+    execution_result: dict[str, object],
+    materialize_artifact: bool = True,
+) -> None:
+    artifact_path = str(tool_args.get("path") or execution_result.get("path") or "").strip()
+    if materialize_artifact and tool == "write_file" and artifact_path:
+        resolved_artifact_path = workspace / artifact_path
+        resolved_artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        resolved_artifact_path.write_text(str(tool_args.get("content") or ""), encoding="utf-8")
+    turn_dir = workspace / "observability" / session_id / issue_id / f"{turn_index:03d}_{role_name}"
+    turn_dir.mkdir(parents=True, exist_ok=True)
+    parsed_tool_calls_path = turn_dir / "parsed_tool_calls.json"
+    parsed_tool_calls = []
+    if parsed_tool_calls_path.exists():
+        parsed_tool_calls = json.loads(parsed_tool_calls_path.read_text(encoding="utf-8"))
+    parsed_tool_calls.append({"tool": tool, "args": dict(tool_args)})
+    parsed_tool_calls_path.write_text(json.dumps(parsed_tool_calls), encoding="utf-8")
+    replay_key = hash_framed_fields("tool_replay_key", [tool, dict(tool_args)])[:12]
+    (turn_dir / f"tool_result_{sanitize_name(tool)}_{replay_key}.json").write_text(
+        json.dumps(dict(execution_result)),
+        encoding="utf-8",
+    )
 
 
 def _log_successful_write_file(
@@ -562,6 +655,409 @@ async def test_run_ledger_falls_back_to_tool_event_provenance_when_receipts_are_
         }
     ]
     assert len(str(artifact_provenance["artifacts"][0]["source_hash"])) == 64
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_attribution(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(
+        test_root,
+        "ledger_epic_phase_c_verified",
+        truthful_runtime={"source_attribution_mode": "required"},
+    )
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+
+    async def _execute_phase_c_verified(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_protocol_write_receipts(
+            workspace,
+            session_id=run_id,
+            rows=[("ISSUE-1", "lead_architect", 1, "agent_output/main.py", "op-main")],
+        )
+        _write_json(
+            workspace / "agent_output" / "source_attribution_receipt.json",
+            {
+                "schema_version": "1.0",
+                "claims": [
+                    {
+                        "claim_id": "claim-1",
+                        "claim": "The implementation is supported by workspace artifacts.",
+                        "source_ids": ["design", "implementation", "requirements"],
+                    }
+                ],
+                "sources": [
+                    {
+                        "source_id": "design",
+                        "title": "Design",
+                        "uri": "agent_output/design.txt",
+                        "kind": "workspace_artifact",
+                    },
+                    {
+                        "source_id": "implementation",
+                        "title": "Implementation",
+                        "uri": "agent_output/main.py",
+                        "kind": "workspace_artifact",
+                    },
+                    {
+                        "source_id": "requirements",
+                        "title": "Requirements",
+                        "uri": "agent_output/requirements.txt",
+                        "kind": "workspace_artifact",
+                    },
+                ],
+            },
+        )
+        _write_protocol_receipt(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="write_file",
+            tool_args={
+                "path": "agent_output/source_attribution_receipt.json",
+                "content": json.dumps(
+                    {
+                        "schema_version": "1.0",
+                        "claims": [
+                            {
+                                "claim_id": "claim-1",
+                                "claim": "The implementation is supported by workspace artifacts.",
+                                "source_ids": ["design", "implementation", "requirements"],
+                            }
+                        ],
+                        "sources": [
+                            {
+                                "source_id": "design",
+                                "title": "Design",
+                                "uri": "agent_output/design.txt",
+                                "kind": "workspace_artifact",
+                            },
+                            {
+                                "source_id": "implementation",
+                                "title": "Implementation",
+                                "uri": "agent_output/main.py",
+                                "kind": "workspace_artifact",
+                            },
+                            {
+                                "source_id": "requirements",
+                                "title": "Requirements",
+                                "uri": "agent_output/requirements.txt",
+                                "kind": "workspace_artifact",
+                            },
+                        ],
+                    }
+                ),
+            },
+            execution_result={"ok": True, "path": str(workspace / "agent_output" / "source_attribution_receipt.json")},
+            operation_id="op-source-receipt",
+            materialize_artifact=False,
+        )
+        _write_protocol_receipt(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="update_issue_status",
+            tool_args={"issue_id": "ISSUE-1", "status": "done"},
+            execution_result={"ok": True, "issue_id": "ISSUE-1", "status": "done"},
+            operation_id="op-status-done",
+            materialize_artifact=False,
+        )
+        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_verified)
+
+    await pipeline.run_epic(
+        "ledger_epic_phase_c_verified",
+        build_id="build-ledger-epic-phase-c-verified",
+        session_id="sess-ledger-phase-c-verified",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-phase-c-verified")
+    assert ledger is not None
+    assert ledger["status"] == "done"
+    assert ledger["failure_reason"] is None
+    packet1 = ledger["summary_json"]["truthful_runtime_packet1"]
+    packet2 = ledger["summary_json"]["truthful_runtime_packet2"]
+    assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
+    assert packet2["source_attribution"]["synthesis_status"] == "verified"
+    assert packet2["source_attribution"]["claim_count"] == 1
+    assert packet2["source_attribution"]["source_count"] == 3
+    assert packet2["narration_to_effect_audit"]["missing_effect_count"] == 0
+    surfaces = {row["surface"] for row in packet2["idempotency"]["surfaces"]}
+    assert "artifact_write" in surfaces
+    assert "status_update" in surfaces
+    assert "source_attribution_receipt" in surfaces
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_artifacts(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(
+        test_root,
+        "ledger_epic_phase_c_legacy_verified",
+        truthful_runtime={"source_attribution_mode": "required"},
+    )
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+
+    async def _execute_phase_c_legacy_verified(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_legacy_turn_artifact(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="write_file",
+            tool_args={"path": "agent_output/main.py", "content": "print('ok')\n"},
+            execution_result={"ok": True, "path": str(workspace / "agent_output" / "main.py")},
+        )
+        (workspace / "agent_output" / "requirements.txt").write_text("requirements\n", encoding="utf-8")
+        (workspace / "agent_output" / "design.txt").write_text("design\n", encoding="utf-8")
+        _write_legacy_turn_artifact(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="write_file",
+            tool_args={
+                "path": "agent_output/source_attribution_receipt.json",
+                "content": json.dumps(
+                    {
+                        "schema_version": "1.0",
+                        "claims": [
+                            {
+                                "claim_id": "claim-1",
+                                "claim": "The implementation is supported by workspace artifacts.",
+                                "source_ids": ["design", "implementation", "requirements"],
+                            }
+                        ],
+                        "sources": [
+                            {
+                                "source_id": "design",
+                                "title": "Design",
+                                "uri": "agent_output/design.txt",
+                                "kind": "workspace_artifact",
+                            },
+                            {
+                                "source_id": "implementation",
+                                "title": "Implementation",
+                                "uri": "agent_output/main.py",
+                                "kind": "workspace_artifact",
+                            },
+                            {
+                                "source_id": "requirements",
+                                "title": "Requirements",
+                                "uri": "agent_output/requirements.txt",
+                                "kind": "workspace_artifact",
+                            },
+                        ],
+                    }
+                ),
+            },
+            execution_result={"ok": True, "path": str(workspace / "agent_output" / "source_attribution_receipt.json")},
+        )
+        _write_legacy_turn_artifact(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="update_issue_status",
+            tool_args={"status": "done"},
+            execution_result={"ok": True, "issue_id": "ISSUE-1", "status": "done"},
+            materialize_artifact=False,
+        )
+        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_legacy_verified)
+
+    await pipeline.run_epic(
+        "ledger_epic_phase_c_legacy_verified",
+        build_id="build-ledger-epic-phase-c-legacy-verified",
+        session_id="sess-ledger-phase-c-legacy-verified",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-phase-c-legacy-verified")
+    assert ledger is not None
+    assert ledger["status"] == "done"
+    packet2 = ledger["summary_json"]["truthful_runtime_packet2"]
+    assert packet2["source_attribution"]["synthesis_status"] == "verified"
+    assert packet2["narration_to_effect_audit"]["missing_effect_count"] == 0
+    surfaces = {row["surface"] for row in packet2["idempotency"]["surfaces"]}
+    assert "artifact_write" in surfaces
+    assert "status_update" in surfaces
+    assert "source_attribution_receipt" in surfaces
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_blocks_done_run_when_required_source_attribution_is_missing(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(
+        test_root,
+        "ledger_epic_phase_c_blocked",
+        truthful_runtime={"source_attribution_mode": "required"},
+    )
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+
+    async def _execute_phase_c_blocked(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_protocol_write_receipts(
+            workspace,
+            session_id=run_id,
+            rows=[("ISSUE-1", "lead_architect", 1, "agent_output/main.py", "op-main")],
+        )
+        _write_protocol_receipt(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="update_issue_status",
+            tool_args={"issue_id": "ISSUE-1", "status": "done"},
+            execution_result={"ok": True, "issue_id": "ISSUE-1", "status": "done"},
+            operation_id="op-status-done",
+            materialize_artifact=False,
+        )
+        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_blocked)
+
+    await pipeline.run_epic(
+        "ledger_epic_phase_c_blocked",
+        build_id="build-ledger-epic-phase-c-blocked",
+        session_id="sess-ledger-phase-c-blocked",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-phase-c-blocked")
+    assert ledger is not None
+    assert ledger["status"] == "terminal_failure"
+    assert ledger["failure_reason"] == "source_attribution_receipt_missing"
+    packet2 = ledger["summary_json"]["truthful_runtime_packet2"]
+    assert packet2["source_attribution"]["synthesis_status"] == "blocked"
+    assert packet2["source_attribution"]["missing_requirements"] == ["source_attribution_receipt_missing"]
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_run_ledger_narration_effect_audit_detects_missing_written_source_receipt(
+    test_root,
+    workspace,
+    db_path,
+    monkeypatch,
+):
+    _write_epic_assets(
+        test_root,
+        "ledger_epic_phase_c_missing_effect",
+        truthful_runtime={"source_attribution_mode": "optional"},
+    )
+
+    pipeline = ExecutionPipeline(
+        workspace=workspace,
+        department="core",
+        db_path=db_path,
+        config_root=test_root,
+        run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
+    )
+
+    async def _execute_phase_c_missing_effect(**kwargs):
+        run_id = str(kwargs["run_id"])
+        _write_protocol_write_receipts(
+            workspace,
+            session_id=run_id,
+            rows=[("ISSUE-1", "lead_architect", 1, "agent_output/main.py", "op-main")],
+        )
+        _write_protocol_receipt(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="write_file",
+            tool_args={
+                "path": "agent_output/source_attribution_receipt.json",
+                "content": '{"schema_version":"1.0"}',
+            },
+            execution_result={"ok": True, "path": str(workspace / "agent_output" / "source_attribution_receipt.json")},
+            operation_id="op-source-receipt",
+            materialize_artifact=False,
+        )
+        _write_protocol_receipt(
+            workspace,
+            session_id=run_id,
+            issue_id="ISSUE-1",
+            role_name="lead_architect",
+            turn_index=1,
+            tool="update_issue_status",
+            tool_args={"issue_id": "ISSUE-1", "status": "done"},
+            execution_result={"ok": True, "issue_id": "ISSUE-1", "status": "done"},
+            operation_id="op-status-done",
+            materialize_artifact=False,
+        )
+        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.DONE)
+        return None
+
+    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_phase_c_missing_effect)
+
+    await pipeline.run_epic(
+        "ledger_epic_phase_c_missing_effect",
+        build_id="build-ledger-epic-phase-c-missing-effect",
+        session_id="sess-ledger-phase-c-missing-effect",
+    )
+
+    ledger = await pipeline.run_ledger.get_run("sess-ledger-phase-c-missing-effect")
+    assert ledger is not None
+    assert ledger["status"] == "done"
+    packet2 = ledger["summary_json"]["truthful_runtime_packet2"]
+    audit_entries = packet2["narration_to_effect_audit"]["entries"]
+    missing_entry = next(
+        row for row in audit_entries if row["effect_target"] == "agent_output/source_attribution_receipt.json"
+    )
+    assert missing_entry["audit_status"] == "missing"
+    assert missing_entry["failure_reason"] == "workspace_artifact_missing"
+    assert packet2["source_attribution"]["synthesis_status"] == "optional_unverified"
 
 
 # Layer: integration

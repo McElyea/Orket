@@ -1,9 +1,9 @@
 # TRH03142026 Phase C Requirements
 
 Last updated: 2026-03-14
-Status: Accepted (implementation plan active)
+Status: Accepted (implementation archived)
 Owner: Orket Core
-Canonical implementation plan: `docs/projects/truthful-runtime/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
+Canonical implementation plan: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-IMPLEMENTATION-PLAN.md`
 Extracted durable contract: `docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`
 
 ## Purpose
@@ -19,7 +19,7 @@ what exactly must the first Phase C packet do for provenance, truth classificati
 2. `docs/CONTRIBUTOR.md`
 3. `docs/ROADMAP.md`
 4. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-IMPLEMENTATION-PLAN.md`
-5. `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
+5. `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-IMPLEMENTATION-PLAN.md`
 6. `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`
 7. `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
 8. `docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md`

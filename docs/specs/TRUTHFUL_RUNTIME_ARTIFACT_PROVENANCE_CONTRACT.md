@@ -1,9 +1,9 @@
 # Truthful Runtime Artifact Provenance Contract
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 Status: Active
 Owner: Orket Core
-Phase authority: `docs/projects/truthful-runtime/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
+Phase authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/ORKET-TRUTHFUL-RUNTIME-HARDENING-PHASE-C-PACKET2-IMPLEMENTATION-PLAN.md`
 
 ## 1. Objective
 

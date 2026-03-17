@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.11] - 2026-03-16 - "The Phase C Truth Cut"
+
+### Added
+- **Truthful Runtime Phase C Contracts**: Added the durable narration-effect audit and source-attribution contracts in `docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md` and `docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md`.
+- **Phase C Governance Checks**: Added policy check scripts, contract snapshots, and live acceptance coverage for narration/effect auditing and source-attribution enforcement.
+
+### Changed
+- **Phase C Runtime Truth Enforcement**: Extended the execution pipeline, packet-2 summary surfaces, and run-truth acceptance gate so live runs now reconstruct packet-2 facts from runtime-owned evidence, fail closed on missing source-attribution receipts, and record machine-readable failure reasons instead of success-shaped drift.
+- **Truthful Runtime Lane Authority**: Closed and archived the active Phase C plans, extracted the remaining durable contracts, and updated roadmap/lane authority so only Phases D-E remain staged after the Phase C closeout.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- None.
+
 ## [0.4.10] - 2026-03-16 - "The Sandbox Lifecycle Hardening Cut"
 
 ### Added

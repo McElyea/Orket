@@ -27,6 +27,8 @@ _TRACE_IDS: dict[str, str] = {
     "idempotency_discipline_policy": "TRUTH-W2B-IDEMPOTENCY-DISCIPLINE-POLICY",
     "result_error_invariant_contract": "TRUTH-W2B-RESULT-ERROR-INVARIANT-CHECKER",
     "artifact_provenance_block_policy": "TRUTH-W2C-ARTIFACT-PROVENANCE-BLOCK",
+    "narration_effect_audit_policy": "TRUTH-W2C-NARRATION-EFFECT-AUDIT",
+    "source_attribution_policy": "TRUTH-W2C-SOURCE-ATTRIBUTION-POLICY",
     "operator_override_logging_policy": "TRUTH-W2C-OPERATOR-OVERRIDE-LOGGING",
     "demo_production_labeling_policy": "TRUTH-W2C-DEMO-PRODUCTION-LABELING",
     "human_correction_capture_policy": "TRUTH-W2C-HUMAN-CORRECTION-CAPTURE",

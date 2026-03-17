@@ -6,6 +6,8 @@ from typing import Any
 IDEMPOTENCY_DISCIPLINE_POLICY_SCHEMA_VERSION = "1.0"
 
 _EXPECTED_SURFACES = {
+    "status_update",
+    "source_attribution_receipt",
     "run_finalize",
     "artifact_write",
     "task_execution",
@@ -24,6 +26,18 @@ _POLICY_ROWS: tuple[dict[str, Any], ...] = (
     {
         "surface": "artifact_write",
         "key_fields": ["run_id", "artifact_path", "artifact_hash"],
+        "conflict_action": "reuse",
+        "replay_allowed": True,
+    },
+    {
+        "surface": "status_update",
+        "key_fields": ["run_id", "issue_id", "status", "operation_id"],
+        "conflict_action": "reuse",
+        "replay_allowed": True,
+    },
+    {
+        "surface": "source_attribution_receipt",
+        "key_fields": ["run_id", "artifact_path", "operation_id", "source_hash"],
         "conflict_action": "reuse",
         "replay_allowed": True,
     },

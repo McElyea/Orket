@@ -64,6 +64,54 @@ def test_packet2_repair_ledger_contract() -> None:
 
 
 # Layer: contract
+def test_packet2_phase_c_contract_allows_non_repair_sections() -> None:
+    packet2 = _packet2_payload(
+        packet2_facts={
+            "narration_to_effect_audit": {
+                "entries": [
+                    {
+                        "operation_id": "op-source-receipt",
+                        "tool": "write_file",
+                        "effect_target": "agent_output/source_attribution_receipt.json",
+                        "audit_status": "missing",
+                        "failure_reason": "workspace_artifact_missing",
+                        "issue_id": "EVD-1",
+                        "role_name": "evidence_reviewer",
+                        "turn_index": 1,
+                    }
+                ]
+            },
+            "idempotency": {
+                "surfaces": [
+                    {
+                        "surface": "source_attribution_receipt",
+                        "operation_id": "op-source-receipt",
+                        "tool": "write_file",
+                        "target": "agent_output/source_attribution_receipt.json",
+                        "dedupe_status": "single_delivery",
+                        "conflict_action": "reuse",
+                        "replay_allowed": True,
+                    }
+                ]
+            },
+            "source_attribution": {
+                "mode": "required",
+                "high_stakes": True,
+                "synthesis_status": "blocked",
+                "artifact_provenance_verified": False,
+                "receipt_artifact_path": "agent_output/source_attribution_receipt.json",
+                "missing_requirements": ["source_attribution_receipt_missing"],
+            },
+        }
+    )
+    assert "repair_ledger" not in packet2
+    assert packet2["narration_to_effect_audit"]["missing_effect_count"] == 1
+    assert packet2["idempotency"]["observed_surface_count"] == 1
+    assert packet2["source_attribution"]["synthesis_status"] == "blocked"
+    assert packet2["source_attribution"]["missing_requirements"] == ["source_attribution_receipt_missing"]
+
+
+# Layer: contract
 def test_packet2_extension_is_omitted_without_repair_entries() -> None:
     payload = build_run_summary_payload(
         run_id="sess-packet2-none",
@@ -75,6 +123,112 @@ def test_packet2_extension_is_omitted_without_repair_entries() -> None:
         artifacts={"run_identity": {"run_id": "sess-packet2-none", "start_time": _STARTED_AT}},
     )
     assert _PACKET2_KEY not in payload
+
+
+# Layer: integration
+def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -> None:
+    events = [
+        {
+            "kind": "run_started",
+            "event_seq": 1,
+            "run_id": "sess-packet2-phase-c",
+            "timestamp": _STARTED_AT,
+            "artifacts": {
+                "run_identity": {"run_id": "sess-packet2-phase-c", "start_time": _STARTED_AT},
+            },
+        },
+        {
+            "kind": "packet2_fact",
+            "event_seq": 2,
+            "packet2_facts": {
+                "narration_to_effect_audit": {
+                    "entries": [
+                        {
+                            "operation_id": "op-main",
+                            "tool": "write_file",
+                            "effect_target": "agent_output/main.py",
+                            "audit_status": "verified",
+                            "failure_reason": "none",
+                        }
+                    ]
+                },
+                "idempotency": {
+                    "surfaces": [
+                        {
+                            "surface": "artifact_write",
+                            "operation_id": "op-main",
+                            "tool": "write_file",
+                            "target": "agent_output/main.py",
+                            "dedupe_status": "single_delivery",
+                            "conflict_action": "reuse",
+                            "replay_allowed": True,
+                        }
+                    ]
+                },
+                "source_attribution": {
+                    "mode": "required",
+                    "high_stakes": True,
+                    "synthesis_status": "verified",
+                    "artifact_provenance_verified": True,
+                    "receipt_artifact_path": "agent_output/source_attribution_receipt.json",
+                    "claims": [
+                        {
+                            "claim_id": "claim-1",
+                            "claim": "The implementation is supported by workspace artifacts.",
+                            "source_ids": ["design", "implementation", "requirements"],
+                        }
+                    ],
+                    "sources": [
+                        {
+                            "source_id": "design",
+                            "title": "Design",
+                            "uri": "agent_output/design.txt",
+                            "kind": "workspace_artifact",
+                        },
+                        {
+                            "source_id": "implementation",
+                            "title": "Implementation",
+                            "uri": "agent_output/main.py",
+                            "kind": "workspace_artifact",
+                        },
+                        {
+                            "source_id": "requirements",
+                            "title": "Requirements",
+                            "uri": "agent_output/requirements.txt",
+                            "kind": "workspace_artifact",
+                        },
+                    ],
+                    "missing_requirements": [],
+                },
+            },
+        },
+        {
+            "kind": "tool_call",
+            "event_seq": 3,
+            "tool_name": "write_file",
+        },
+        {
+            "kind": "run_finalized",
+            "event_seq": 4,
+            "run_id": "sess-packet2-phase-c",
+            "status": "done",
+            "timestamp": _FINALIZED_AT,
+        },
+    ]
+    reconstructed = reconstruct_run_summary(events, session_id="sess-packet2-phase-c")
+    emitted = build_run_summary_payload(
+        run_id="sess-packet2-phase-c",
+        status="done",
+        failure_reason=None,
+        started_at=_STARTED_AT,
+        ended_at=_FINALIZED_AT,
+        tool_names=["write_file"],
+        artifacts={
+            "run_identity": {"run_id": "sess-packet2-phase-c", "start_time": _STARTED_AT},
+            "packet2_facts": events[1]["packet2_facts"],
+        },
+    )
+    assert reconstructed == emitted
 
 
 # Layer: integration

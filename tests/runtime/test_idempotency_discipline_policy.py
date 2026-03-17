@@ -14,6 +14,8 @@ def test_idempotency_discipline_policy_snapshot_contains_expected_surfaces() -> 
     assert payload["schema_version"] == "1.0"
     surfaces = {row["surface"] for row in payload["rows"]}
     assert surfaces == {
+        "status_update",
+        "source_attribution_receipt",
         "run_finalize",
         "artifact_write",
         "task_execution",

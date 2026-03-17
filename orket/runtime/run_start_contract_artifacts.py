@@ -25,6 +25,7 @@ from orket.runtime.long_session_soak_test_contract import long_session_soak_test
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot
 from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
 from orket.runtime.naming_discipline_policy import naming_discipline_policy_snapshot
+from orket.runtime.narration_effect_audit_policy import narration_effect_audit_policy_snapshot
 from orket.runtime.observability_redaction_test_contract import observability_redaction_test_contract_snapshot
 from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
 from orket.runtime.persistence_corruption_test_contract import persistence_corruption_test_contract_snapshot
@@ -50,6 +51,7 @@ from orket.runtime.safe_default_catalog import safe_default_catalog_snapshot
 from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
 from orket.runtime.spec_debt_queue import spec_debt_queue_snapshot
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
+from orket.runtime.source_attribution_policy import source_attribution_policy_snapshot
 from orket.runtime.timeout_streaming_contracts import (
     streaming_semantics_snapshot,
     timeout_semantics_snapshot,
@@ -245,6 +247,18 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         "artifact_provenance_block_policy.json",
         artifact_provenance_block_policy_snapshot,
         "E_RUN_ARTIFACT_PROVENANCE_BLOCK_POLICY_IMMUTABLE",
+    ),
+    (
+        "narration_effect_audit_policy",
+        "narration_effect_audit_policy.json",
+        narration_effect_audit_policy_snapshot,
+        "E_RUN_NARRATION_EFFECT_AUDIT_POLICY_IMMUTABLE",
+    ),
+    (
+        "source_attribution_policy",
+        "source_attribution_policy.json",
+        source_attribution_policy_snapshot,
+        "E_RUN_SOURCE_ATTRIBUTION_POLICY_IMMUTABLE",
     ),
     (
         "operator_override_logging_policy",

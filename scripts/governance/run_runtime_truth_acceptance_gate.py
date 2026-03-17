@@ -93,8 +93,14 @@ from scripts.governance.check_observability_redaction_tests import (
 from scripts.governance.check_trust_language_review import (
     evaluate_trust_language_review,
 )
+from scripts.governance.check_narration_effect_audit_policy import (
+    evaluate_narration_effect_audit_policy,
+)
 from scripts.governance.check_local_remote_route_policy import (
     evaluate_local_remote_route_policy,
+)
+from scripts.governance.check_source_attribution_policy import (
+    evaluate_source_attribution_policy,
 )
 from scripts.governance.check_tool_invocation_policy_contract import (
     evaluate_tool_invocation_policy_contract,
@@ -166,6 +172,8 @@ REQUIRED_RUNTIME_CONTRACT_FILES: tuple[str, ...] = (
     "idempotency_discipline_policy.json",
     "result_error_invariant_contract.json",
     "artifact_provenance_block_policy.json",
+    "narration_effect_audit_policy.json",
+    "source_attribution_policy.json",
     "operator_override_logging_policy.json",
     "demo_production_labeling_policy.json",
     "human_correction_capture_policy.json",
@@ -298,6 +306,16 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--skip-artifact-provenance-policy-check",
         action="store_true",
         help="Skip strict artifact provenance block policy contract check.",
+    )
+    parser.add_argument(
+        "--skip-narration-effect-audit-policy-check",
+        action="store_true",
+        help="Skip narration-to-effect audit policy contract check.",
+    )
+    parser.add_argument(
+        "--skip-source-attribution-policy-check",
+        action="store_true",
+        help="Skip source attribution policy contract check.",
     )
     parser.add_argument(
         "--skip-operator-override-policy-check",
@@ -465,6 +483,8 @@ def evaluate_runtime_truth_acceptance_gate(
     check_idempotency_policy: bool = True,
     check_result_error_invariant: bool = True,
     check_artifact_provenance_policy: bool = True,
+    check_narration_effect_audit_policy: bool = True,
+    check_source_attribution_policy: bool = True,
     check_operator_override_policy: bool = True,
     check_demo_production_policy: bool = True,
     check_human_correction_policy: bool = True,
@@ -705,6 +725,24 @@ def evaluate_runtime_truth_acceptance_gate(
         }
         if not bool(provenance_policy_payload.get("ok")):
             failures.append("artifact_provenance_block_policy_check_failed")
+
+    if check_narration_effect_audit_policy:
+        narration_policy_payload = evaluate_narration_effect_audit_policy()
+        details["narration_effect_audit_policy_check"] = {
+            "ok": bool(narration_policy_payload.get("ok")),
+            "tool_count": int(narration_policy_payload.get("tool_count") or 0),
+        }
+        if not bool(narration_policy_payload.get("ok")):
+            failures.append("narration_effect_audit_policy_check_failed")
+
+    if check_source_attribution_policy:
+        source_attribution_payload = evaluate_source_attribution_policy()
+        details["source_attribution_policy_check"] = {
+            "ok": bool(source_attribution_payload.get("ok")),
+            "mode_count": int(source_attribution_payload.get("mode_count") or 0),
+        }
+        if not bool(source_attribution_payload.get("ok")):
+            failures.append("source_attribution_policy_check_failed")
 
     if check_operator_override_policy:
         override_policy_payload = evaluate_operator_override_logging_policy()
@@ -983,6 +1021,8 @@ def main(argv: list[str] | None = None) -> int:
         check_idempotency_policy=not bool(args.skip_idempotency_policy_check),
         check_result_error_invariant=not bool(args.skip_result_error_invariant_check),
         check_artifact_provenance_policy=not bool(args.skip_artifact_provenance_policy_check),
+        check_narration_effect_audit_policy=not bool(args.skip_narration_effect_audit_policy_check),
+        check_source_attribution_policy=not bool(args.skip_source_attribution_policy_check),
         check_operator_override_policy=not bool(args.skip_operator_override_policy_check),
         check_demo_production_policy=not bool(args.skip_demo_production_policy_check),
         check_human_correction_policy=not bool(args.skip_human_correction_policy_check),

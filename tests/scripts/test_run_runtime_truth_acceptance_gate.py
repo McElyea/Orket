@@ -72,6 +72,8 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["idempotency_discipline_policy_check"]["ok"] is True
     assert payload["details"]["result_error_invariant_check"]["ok"] is True
     assert payload["details"]["artifact_provenance_block_policy_check"]["ok"] is True
+    assert payload["details"]["narration_effect_audit_policy_check"]["ok"] is True
+    assert payload["details"]["source_attribution_policy_check"]["ok"] is True
     assert payload["details"]["operator_override_logging_policy_check"]["ok"] is True
     assert payload["details"]["demo_production_labeling_policy_check"]["ok"] is True
     assert payload["details"]["human_correction_capture_policy_check"]["ok"] is True
@@ -1272,6 +1274,8 @@ def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_ar
     assert "idempotency_discipline_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "result_error_invariant_contract.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "artifact_provenance_block_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "narration_effect_audit_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
+    assert "source_attribution_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "operator_override_logging_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "demo_production_labeling_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "human_correction_capture_policy.json" in REQUIRED_RUNTIME_CONTRACT_FILES
