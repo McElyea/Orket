@@ -77,6 +77,8 @@ These rules override more general file-link defaults for this repo.
 3. Do not present mock-heavy or structural tests as proof of runtime truth.
 4. For real-path bug fixes, prefer contract or integration proof over implementation-detail tests.
 5. For new or changed integrations, automations, or runtime or integration behavior, run the real flow end-to-end before declaring completion.
+   If the flow is not explicitly sandbox acceptance work, set `ORKET_DISABLE_SANDBOX=1` so routine proof runs do not create `orket-sandbox-*` resources.
+   If the flow intentionally creates real sandbox resources, prove teardown in the same execution path instead of relying on delayed TTL cleanup.
 6. Record the observed path as `primary`, `fallback`, `degraded`, or `blocked`.
 7. Record the observed result as `success`, `failure`, `partial success`, or `environment blocker`.
 8. If live verification is impossible, say so explicitly and report the exact blocker.

@@ -199,13 +199,13 @@ async def test_create_sandbox_uses_generated_password_in_database_url_and_compos
     async def _fake_deploy(*_args, **_kwargs):
         return None
 
-    async def _fake_mark_deployment_verified(**_kwargs):
-        return None
+    async def _fake_wait_for_initial_health(*_args, **_kwargs):
+        return True
 
     monkeypatch.setattr("orket.services.sandbox_orchestrator.secrets.token_urlsafe", _fake_token_urlsafe)
     monkeypatch.setattr(orchestrator.fs, "write_file", _fake_write_file)
     monkeypatch.setattr(orchestrator, "_deploy_sandbox", _fake_deploy)
-    monkeypatch.setattr(orchestrator.lifecycle_service, "mark_deployment_verified", _fake_mark_deployment_verified)
+    monkeypatch.setattr(orchestrator, "_wait_for_initial_health", _fake_wait_for_initial_health)
 
     sandbox = await orchestrator.create_sandbox(
         rock_id="rock-password",

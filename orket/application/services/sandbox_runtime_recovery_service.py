@@ -7,6 +7,8 @@ from uuid import uuid4
 
 from orket.application.services.sandbox_cleanup_scheduler_service import SandboxCleanupSchedulerService
 from orket.application.services.sandbox_lifecycle_reconciliation_service import SandboxObservation
+from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
+from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
 from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, OwnershipConfidence, SandboxLifecycleError, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 from orket.domain.verification import AGENT_OUTPUT_DIR
@@ -21,6 +23,8 @@ class SandboxRuntimeRecoveryService:
     def __init__(self, *, lifecycle_service: SandboxRuntimeLifecycleService) -> None:
         self.lifecycle_service = lifecycle_service
         self.scheduler = SandboxCleanupSchedulerService(lifecycle_service.mutations)
+        self.restart_policy = SandboxRestartPolicyService(lifecycle_service=lifecycle_service)
+        self.runtime_inspector = SandboxRuntimeInspectionService(command_runner=lifecycle_service.command_runner)
 
     async def reconcile_sandbox(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
         record = await self.lifecycle_service.repository.get_record(sandbox_id)
@@ -36,6 +40,16 @@ class SandboxRuntimeRecoveryService:
             return await self._schedule_cleanup_if_needed(record=terminal, observed_at=observed_at)
         observed_resources = await self.lifecycle_service._observe_project_resources(record.compose_project)
         docker_present = bool(observed_resources)
+        if record.state is SandboxState.ACTIVE and docker_present:
+            terminal = await self._terminalize_active_restart_loop_if_needed(
+                record=record,
+                observed_at=observed_at,
+            )
+            if terminal is not None:
+                return await self._schedule_cleanup_if_needed(record=terminal, observed_at=observed_at)
+            latest = await self.lifecycle_service.repository.get_record(sandbox_id)
+            if latest is not None:
+                record = latest
         if record.requires_reconciliation:
             return await self._recover_reconciliation_block(
                 record=record,
@@ -146,12 +160,15 @@ class SandboxRuntimeRecoveryService:
     ) -> SandboxLifecycleRecord:
         current = await self._clear_requires_reconciliation(record=record, reason="reconciliation completed")
         if current.state is SandboxState.STARTING:
-            return await self._recover_starting_record(
+            recovered = await self._recover_starting_record(
                 record=current,
                 observed_at=observed_at,
                 observed_resources=observed_resources,
                 docker_present=docker_present,
             )
+            if recovered.state is SandboxState.TERMINAL:
+                return await self._schedule_cleanup_if_needed(record=recovered, observed_at=observed_at)
+            return recovered
         if current.state not in {SandboxState.ACTIVE, SandboxState.TERMINAL}:
             return current
         result = await self.lifecycle_service.reconciler.reconcile_existing_record(
@@ -178,13 +195,33 @@ class SandboxRuntimeRecoveryService:
                     "managed_resource_inventory": self.lifecycle_service._inventory_from_resources(observed_resources)
                 },
             )
+            container_rows = await self.runtime_inspector.list_project_container_rows(
+                compose_project=current.compose_project
+            )
+            if self.runtime_inspector.all_core_services_running(container_rows):
+                return (
+                    await self.lifecycle_service.mutations.transition_state(
+                        sandbox_id=current.sandbox_id,
+                        operation_id=f"reconcile-starting-active:{current.sandbox_id}:{current.record_version}",
+                        expected_record_version=current.record_version,
+                        event=LifecycleEvent.HEALTH_VERIFIED,
+                        next_state=SandboxState.ACTIVE,
+                    )
+                ).record
             return (
                 await self.lifecycle_service.mutations.transition_state(
                     sandbox_id=current.sandbox_id,
-                    operation_id=f"reconcile-starting-active:{current.sandbox_id}:{current.record_version}",
+                    operation_id=f"reconcile-starting-failed-present:{current.sandbox_id}:{current.record_version}",
                     expected_record_version=current.record_version,
-                    event=LifecycleEvent.HEALTH_VERIFIED,
-                    next_state=SandboxState.ACTIVE,
+                    event=LifecycleEvent.STARTUP_FAILURE,
+                    next_state=SandboxState.TERMINAL,
+                    terminal_reason=TerminalReason.START_FAILED,
+                    terminal_at=observed_at,
+                    cleanup_due_at=self.lifecycle_service.policy.cleanup_due_at_for(
+                        state=SandboxState.TERMINAL,
+                        terminal_reason=TerminalReason.START_FAILED,
+                        reference_time=observed_at,
+                    ),
                 )
             ).record
         return (
@@ -285,6 +322,66 @@ class SandboxRuntimeRecoveryService:
         return await self.lifecycle_service.cleanup_executor.execute_claimed_cleanup(
             record=record,
             compose_path=self._compose_path(record.workspace_path),
+        )
+
+    async def _terminalize_active_restart_loop_if_needed(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> SandboxLifecycleRecord | None:
+        container_rows = await self.runtime_inspector.list_project_container_rows(
+            compose_project=record.compose_project
+        )
+        if not container_rows:
+            return None
+        tracked_rows = self.runtime_inspector.tracked_container_rows(container_rows)
+        if not tracked_rows:
+            return await self._terminalize_non_running_active_runtime(
+                record=record,
+                observed_at=observed_at,
+                tracked_rows=container_rows,
+            )
+        assessed = await self.restart_policy.observe_runtime_health(
+            sandbox_id=record.sandbox_id,
+            container_rows=tracked_rows,
+            observed_at=observed_at,
+        )
+        if assessed is not None and assessed.state is SandboxState.TERMINAL:
+            return assessed
+        if not self.runtime_inspector.all_core_services_running(container_rows):
+            return await self._terminalize_non_running_active_runtime(
+                record=record,
+                observed_at=observed_at,
+                tracked_rows=tracked_rows,
+            )
+        return None
+
+    async def _terminalize_non_running_active_runtime(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+        tracked_rows: list[dict[str, object]],
+    ) -> SandboxLifecycleRecord:
+        return await self.lifecycle_service.terminal_outcomes.record_workflow_terminal_outcome(
+            sandbox_id=record.sandbox_id,
+            terminal_reason=TerminalReason.RESTART_LOOP,
+            evidence_payload={
+                "kind": "sandbox_runtime_non_running_receipt",
+                "compose_project": record.compose_project,
+                "observed_at": observed_at,
+                "container_rows": tracked_rows,
+            },
+            operation_id_prefix="runtime-non-running",
+            expected_owner_instance_id=record.owner_instance_id,
+            expected_lease_epoch=record.lease_epoch,
+            terminal_at=observed_at,
+            cleanup_due_at=self.lifecycle_service.policy.cleanup_due_at_for(
+                state=SandboxState.TERMINAL,
+                terminal_reason=TerminalReason.RESTART_LOOP,
+                reference_time=observed_at,
+            ),
         )
 
     async def _schedule_cleanup_if_needed(

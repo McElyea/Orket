@@ -83,3 +83,27 @@ async def test_scheduler_skips_reconciliation_blocked_records(tmp_path) -> None:
     )
 
     assert result is None
+
+
+@pytest.mark.parametrize("initial_cleanup_state", [CleanupState.NONE, CleanupState.FAILED])
+@pytest.mark.asyncio
+async def test_scheduler_promotes_retryable_terminal_records_before_claiming(tmp_path, initial_cleanup_state: CleanupState) -> None:
+    repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    await repo.save_record(
+        _record(
+            "sb-a",
+            cleanup_due_at="2026-03-11T00:10:00+00:00",
+            record_version=1,
+        ).model_copy(update={"cleanup_state": initial_cleanup_state})
+    )
+    scheduler = SandboxCleanupSchedulerService(SandboxLifecycleMutationService(repo))
+
+    result = await scheduler.claim_next_due_cleanup(
+        observed_at="2026-03-11T00:15:00+00:00",
+        claimant_id="sweeper-a",
+        operation_id_prefix="scheduler-op",
+    )
+
+    assert result is not None
+    assert result.record.cleanup_state is CleanupState.IN_PROGRESS
+    assert result.record.cleanup_owner_instance_id == "sweeper-a"

@@ -290,7 +290,7 @@ class DefaultSandboxPolicyNode:
       orket.sandbox_id: "{sandbox.id}"
       orket.run_id: "{sandbox.rock_id}"
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@orket.local
+      - PGADMIN_DEFAULT_EMAIL=admin@orket.dev
       - PGADMIN_DEFAULT_PASSWORD={admin_password}
     ports:
       - "{sandbox.ports.admin_tool}:80"

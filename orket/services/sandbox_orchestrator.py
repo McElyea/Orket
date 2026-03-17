@@ -1,28 +1,32 @@
 ﻿"""
 Sandbox orchestration for Docker sandbox lifecycle management."""
 from __future__ import annotations
-from typing import Optional, Dict, Any
-from pathlib import Path
+
+import asyncio
+import json
 import os
 import secrets
 import socket
 import subprocess
-import json
 from datetime import datetime, UTC
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from orket.adapters.storage.async_executor_service import run_coroutine_blocking
+from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
-from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
+from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
 from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError, SandboxState as LifecycleState
-from orket.domain.sandbox import Sandbox, SandboxStatus, TechStack, PortAllocation, SandboxRegistry
 from orket.decision_nodes.registry import DecisionNodeRegistry
+from orket.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
 from orket.domain.verification import AGENT_OUTPUT_DIR
 from orket.logging import log_event
 from orket.runtime_paths import resolve_sandbox_lifecycle_db_path
+
 class SandboxOrchestrator:
     """Coordinates Docker sandbox creation, health, inspection, and cleanup."""
 
@@ -45,8 +49,9 @@ class SandboxOrchestrator:
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
         self.fs = fs or AsyncFileTools(workspace_root)
         self.instance_id = f"{socket.gethostname()}:{os.getpid()}"
+        default_docker_host_id = socket.gethostname()
         self.docker_context = os.getenv("DOCKER_CONTEXT", "default").strip() or "default"
-        self.docker_host_id = os.getenv("ORKET_DOCKER_HOST_ID", self.instance_id).strip() or self.instance_id
+        self.docker_host_id = os.getenv("ORKET_DOCKER_HOST_ID", default_docker_host_id).strip() or default_docker_host_id
         self.lifecycle_repository = AsyncSandboxLifecycleRepository(resolve_sandbox_lifecycle_db_path(lifecycle_db_path))
         self.lifecycle_service = SandboxRuntimeLifecycleService(
             repository=self.lifecycle_repository,
@@ -57,6 +62,7 @@ class SandboxOrchestrator:
         )
         self.lifecycle_recovery = SandboxRuntimeRecoveryService(lifecycle_service=self.lifecycle_service)
         self.restart_policy = SandboxRestartPolicyService(lifecycle_service=self.lifecycle_service)
+        self.runtime_inspector = SandboxRuntimeInspectionService(command_runner=self.command_runner)
         self._allowed_log_services = {
             "api",
             "frontend",
@@ -66,7 +72,8 @@ class SandboxOrchestrator:
             "mongo",
             "mongo-express",
         }
-        self._optional_health_services = {"pgadmin", "mongo-express"}
+        self._initial_health_attempts = int(os.getenv("ORKET_SANDBOX_INITIAL_HEALTH_ATTEMPTS", "20"))
+        self._initial_health_delay_seconds = float(os.getenv("ORKET_SANDBOX_INITIAL_HEALTH_DELAY_SECONDS", "0.5"))
 
     async def create_sandbox(
         self,
@@ -121,10 +128,8 @@ class SandboxOrchestrator:
                 "ports": ports.model_dump(),
             }, Path(workspace_path))
             await self._deploy_sandbox(sandbox, compose_path)
-            await self.lifecycle_service.mark_deployment_verified(
-                sandbox_id=sandbox_id,
-                compose_project=sandbox.compose_project,
-            )
+            if not await self._wait_for_initial_health(sandbox_id=sandbox_id):
+                raise RuntimeError("Sandbox startup health verification failed before reaching a running state.")
             sandbox.status = SandboxStatus.RUNNING
             sandbox.deployed_at = self._now()
             log_event("sandbox_deployed", {"sandbox_id": sandbox_id}, Path(workspace_path))
@@ -192,32 +197,11 @@ class SandboxOrchestrator:
         compose_project = record.compose_project if record else str(sandbox.compose_project)
 
         try:
-            result = await self.command_runner.run_async(
-                "docker-compose",
-                "-f",
-                str(self._compose_path(workspace_path)),
-                "-p",
-                compose_project,
-                "ps",
-                "--format",
-                "json",
+            container_rows = await self.runtime_inspector.list_project_container_rows(
+                compose_project=compose_project,
             )
-
-            if result.returncode != 0:
-                if sandbox:
-                    sandbox.health_checks_failed += 1
-                    sandbox.last_health_check = self._now()
-                return False
-
-            # Docker Compose emits either a JSON array or newline-delimited JSON objects.
-            containers = self._parse_compose_ps_output(result.stdout)
-            core_containers = [
-                container
-                for container in containers
-                if str(container.get("Service") or "").strip() not in self._optional_health_services
-            ]
-            tracked = core_containers or containers
-            all_running = all(c.get("State") == "running" for c in tracked)
+            tracked = self.runtime_inspector.tracked_container_rows(container_rows)
+            all_running = self.runtime_inspector.all_core_services_running(container_rows)
             observed_at = self._now()
             if record and tracked:
                 assessed_record = await self.restart_policy.observe_runtime_health(
@@ -244,8 +228,14 @@ class SandboxOrchestrator:
             if sandbox:
                 sandbox.last_health_check = self._now()
             if record and all_running:
-                await self.lifecycle_service.handle_healthy(sandbox_id=sandbox_id)
-            elif record and not containers and record.state is LifecycleState.ACTIVE:
+                if record.state is LifecycleState.STARTING:
+                    await self.lifecycle_service.mark_deployment_verified(
+                        sandbox_id=sandbox_id,
+                        compose_project=compose_project,
+                    )
+                else:
+                    await self.lifecycle_service.handle_healthy(sandbox_id=sandbox_id)
+            elif record and not container_rows and record.state is LifecycleState.ACTIVE:
                 await self.lifecycle_service.handle_missing_runtime(sandbox_id=sandbox_id)
             return all_running
 
@@ -344,24 +334,6 @@ class SandboxOrchestrator:
     def _compose_path(workspace_path: str | Path) -> Path:
         return Path(workspace_path) / AGENT_OUTPUT_DIR / "deployment" / "docker-compose.sandbox.yml"
 
-    @staticmethod
-    def _parse_compose_ps_output(raw: str) -> list[dict[str, Any]]:
-        payload = str(raw or "").strip()
-        if not payload:
-            return []
-        if payload.startswith("["):
-            parsed = json.loads(payload)
-            return parsed if isinstance(parsed, list) else []
-        rows: list[dict[str, Any]] = []
-        for line in payload.splitlines():
-            token = line.strip()
-            if not token:
-                continue
-            parsed_line = json.loads(token)
-            if isinstance(parsed_line, dict):
-                rows.append(parsed_line)
-        return rows
-
     async def _deploy_sandbox(self, sandbox: Sandbox, compose_path: Path) -> None:
         """Execute docker-compose up -d."""
         result = await self.command_runner.run_async(
@@ -389,6 +361,17 @@ class SandboxOrchestrator:
         )
         container_ids = ps_result.stdout.strip().split("\n")
         sandbox.container_ids = {f"container-{i}": cid for i, cid in enumerate(container_ids)}
+
+    async def _wait_for_initial_health(self, *, sandbox_id: str) -> bool:
+        for attempt in range(self._initial_health_attempts):
+            if await self.health_check(sandbox_id):
+                return True
+            record = await self.lifecycle_service.repository.get_record(sandbox_id)
+            if record and record.state is LifecycleState.TERMINAL:
+                return False
+            if attempt + 1 < self._initial_health_attempts:
+                await asyncio.sleep(self._initial_health_delay_seconds)
+        return False
 
     async def _delete_legacy_sandbox(self, sandbox_id: str) -> None:
         sandbox = self.registry.get(sandbox_id)

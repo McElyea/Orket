@@ -174,10 +174,11 @@ def _mutate_events_missing_workspace_snapshot(source: Path, target: Path) -> Non
 
 
 @pytest.mark.asyncio
-async def test_boundary_illegal_state_transition_live(tmp_path: Path) -> None:
+async def test_boundary_illegal_state_transition_live(tmp_path: Path, monkeypatch) -> None:
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof.")
 
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()
@@ -207,10 +208,11 @@ async def test_boundary_illegal_state_transition_live(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_boundary_path_traversal_live(tmp_path: Path) -> None:
+async def test_boundary_path_traversal_live(tmp_path: Path, monkeypatch) -> None:
     if not _live_enabled():
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof.")
 
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()
@@ -271,6 +273,7 @@ async def test_protocol_replay_missing_workspace_snapshot_live(tmp_path: Path, m
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof.")
 
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
 
     root = tmp_path
     workspace = root / "workspace"

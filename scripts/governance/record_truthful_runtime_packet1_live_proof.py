@@ -245,6 +245,7 @@ def record_truthful_runtime_packet1_live_proof(
         {
             "ORKET_RUN_LEDGER_MODE": "protocol",
             "ORKET_LLM_PROVIDER": provider,
+            "ORKET_DISABLE_SANDBOX": "1",
             "ORKET_LOCAL_PROMPTING_MODE": "enforce",
             "ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK": "true",
             "ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID": "ollama.qwen.chatml.v1",

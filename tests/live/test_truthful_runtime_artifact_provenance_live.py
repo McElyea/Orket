@@ -30,6 +30,7 @@ async def test_artifact_provenance_live_acceptance_run_records_generated_files(t
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live artifact provenance proof.")
 
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()

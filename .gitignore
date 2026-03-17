@@ -25,6 +25,7 @@ wheels/
 orket_persistence.db
 workspace/**
 tmp/**
+tmp_*
 logs/**
 *.log
 server.out

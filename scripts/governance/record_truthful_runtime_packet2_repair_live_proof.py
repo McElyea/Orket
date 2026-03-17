@@ -293,6 +293,7 @@ def record_truthful_runtime_packet2_repair_live_proof(
         {
             "ORKET_RUN_LEDGER_MODE": "protocol",
             "ORKET_LLM_PROVIDER": provider,
+            "ORKET_DISABLE_SANDBOX": "1",
         }
     )
     original_complete = LocalModelProvider.complete

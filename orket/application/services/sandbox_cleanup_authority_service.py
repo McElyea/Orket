@@ -35,7 +35,11 @@ class SandboxCleanupAuthorityService:
 
         for resource in observed_resources:
             matches_host = (
-                resource.docker_context == record.docker_context and resource.docker_host_id == record.docker_host_id
+                resource.docker_context == record.docker_context
+                and self._host_context_matches(
+                    record_host_id=record.docker_host_id,
+                    observed_host_id=resource.docker_host_id,
+                )
             )
             if not matches_host:
                 host_context_match = False
@@ -85,3 +89,15 @@ class SandboxCleanupAuthorityService:
         if run_id and labels.get("orket.run_id") != run_id:
             return False
         return True
+
+    @classmethod
+    def _host_context_matches(cls, *, record_host_id: str, observed_host_id: str) -> bool:
+        return cls._stable_host_token(record_host_id) == cls._stable_host_token(observed_host_id)
+
+    @staticmethod
+    def _stable_host_token(host_id: str) -> str:
+        token = str(host_id or "").strip()
+        head, separator, tail = token.partition(":")
+        if separator and tail.isdigit():
+            return head
+        return token

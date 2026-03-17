@@ -10,6 +10,7 @@ import pytest
 
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandResult
+from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
@@ -18,11 +19,22 @@ from orket.domain.verification import AGENT_OUTPUT_DIR
 
 
 class FakeRecoveryRunner:
-    def __init__(self, *, compose_project: str, sandbox_id: str, run_id: str, resources_present: bool = True):
+    def __init__(
+        self,
+        *,
+        compose_project: str,
+        sandbox_id: str,
+        run_id: str,
+        resources_present: bool = True,
+        container_state: str = "running",
+        inspect_payloads: list[list[dict[str, object]]] | None = None,
+    ):
         self.compose_project = compose_project
         self.sandbox_id = sandbox_id
         self.run_id = run_id
         self.resources_present = resources_present
+        self.container_state = container_state
+        self.inspect_payloads = list(inspect_payloads or [])
         self.async_calls: list[tuple[str, ...]] = []
 
     async def run_async(self, *cmd: str) -> CommandResult:
@@ -30,6 +42,9 @@ class FakeRecoveryRunner:
         if cmd[:2] == ("docker-compose", "-f") and "down" in cmd:
             self.resources_present = False
             return CommandResult(returncode=0, stdout="", stderr="")
+        if cmd[:2] == ("docker", "inspect"):
+            payload = self.inspect_payloads.pop(0) if self.inspect_payloads else self._inspect_payload()
+            return CommandResult(returncode=0, stdout=json.dumps(payload), stderr="")
         if cmd[:3] == ("docker", "rm", "-f") or cmd[:3] == ("docker", "network", "rm") or cmd[:3] == ("docker", "volume", "rm"):
             self.resources_present = False
             return CommandResult(returncode=0, stdout="", stderr="")
@@ -45,8 +60,8 @@ class FakeRecoveryRunner:
         if not self.resources_present:
             return ""
         return (
-            '{"Names":"%s-api-1","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            '{"Names":"%s-api-1","State":"%s","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s,com.docker.compose.service=api"}\n'
+            % (self.compose_project, self.container_state, self.sandbox_id, self.run_id)
         )
 
     def _network_rows(self) -> str:
@@ -64,6 +79,17 @@ class FakeRecoveryRunner:
             '{"Name":"%s_db-data","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
             % (self.compose_project, self.sandbox_id, self.run_id)
         )
+
+    def _inspect_payload(self) -> list[dict[str, object]]:
+        payload = {
+            "Name": f"/{self.compose_project}-api-1",
+            "RestartCount": 0,
+            "Config": {"Labels": {"com.docker.compose.service": "api"}},
+            "State": {"Status": self.container_state},
+        }
+        if self.container_state == "running":
+            payload["State"]["Health"] = {"Status": "healthy"}
+        return [payload]
 
 
 class FakeOrphanDiscoveryRunner:
@@ -195,6 +221,27 @@ async def test_recovery_reconciles_blocked_starting_record_to_terminal_when_reso
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
 
     assert record.state is SandboxState.TERMINAL
+    assert record.cleanup_state is CleanupState.SCHEDULED
+    assert record.terminal_reason is TerminalReason.START_FAILED
+    assert record.requires_reconciliation is False
+
+
+@pytest.mark.asyncio
+async def test_recovery_reconciles_blocked_starting_record_to_terminal_when_runtime_is_not_running(tmp_path) -> None:
+    runner = FakeRecoveryRunner(
+        compose_project="orket-sandbox-sb-1",
+        sandbox_id="sb-1",
+        run_id="run-1",
+        container_state="restarting",
+    )
+    repo, recovery = _service(tmp_path, runner)
+    recovery.lifecycle_service._now = staticmethod(lambda: "2026-03-11T00:01:00+00:00")
+    await repo.save_record(_record())
+
+    record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+
+    assert record.state is SandboxState.TERMINAL
+    assert record.cleanup_state is CleanupState.SCHEDULED
     assert record.terminal_reason is TerminalReason.START_FAILED
     assert record.requires_reconciliation is False
 
@@ -374,3 +421,92 @@ async def test_recovery_terminalizes_active_record_when_hard_max_age_is_elapsed(
     assert record.state is SandboxState.TERMINAL
     assert record.cleanup_state is CleanupState.SCHEDULED
     assert record.terminal_reason is TerminalReason.HARD_MAX_AGE
+
+
+@pytest.mark.asyncio
+async def test_recovery_terminalizes_active_restart_loop_without_manual_health_check(tmp_path, monkeypatch) -> None:
+    runner = FakeRecoveryRunner(
+        compose_project="orket-sandbox-sb-1",
+        sandbox_id="sb-1",
+        run_id="run-1",
+        inspect_payloads=[
+            [
+                {
+                    "Name": "/orket-sandbox-sb-1-api-1",
+                    "RestartCount": 0,
+                    "Config": {"Labels": {"com.docker.compose.service": "api"}},
+                    "State": {"Status": "running", "Health": {"Status": "unhealthy"}},
+                }
+            ],
+            [
+                {
+                    "Name": "/orket-sandbox-sb-1-api-1",
+                    "RestartCount": 0,
+                    "Config": {"Labels": {"com.docker.compose.service": "api"}},
+                    "State": {"Status": "running", "Health": {"Status": "unhealthy"}},
+                }
+            ],
+        ],
+    )
+    repo, recovery = _service(tmp_path, runner)
+    policy = SandboxLifecyclePolicy(
+        restart_threshold_count=5,
+        restart_window_seconds=300,
+        unhealthy_duration_seconds=1,
+    )
+    recovery.lifecycle_service.policy = policy
+    recovery.restart_policy.policy = policy
+    moments = iter(["2026-03-11T00:00:00+00:00", "2026-03-11T00:00:02+00:00"])
+    monkeypatch.setattr(recovery.lifecycle_service, "_now", staticmethod(lambda: next(moments)))
+    await repo.save_record(
+        _record(
+            state=SandboxState.ACTIVE,
+            cleanup_state=CleanupState.NONE,
+            record_version=2,
+            requires_reconciliation=False,
+        )
+    )
+
+    first = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+    second = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+
+    assert first.state is SandboxState.ACTIVE
+    assert second.state is SandboxState.TERMINAL
+    assert second.cleanup_state is CleanupState.SCHEDULED
+    assert second.terminal_reason is TerminalReason.RESTART_LOOP
+
+
+@pytest.mark.asyncio
+async def test_recovery_terminalizes_active_non_running_core_service_on_first_reconcile(tmp_path, monkeypatch) -> None:
+    runner = FakeRecoveryRunner(
+        compose_project="orket-sandbox-sb-1",
+        sandbox_id="sb-1",
+        run_id="run-1",
+        container_state="restarting",
+        inspect_payloads=[
+            [
+                {
+                    "Name": "/orket-sandbox-sb-1-api-1",
+                    "RestartCount": 681,
+                    "Config": {"Labels": {"com.docker.compose.service": "api"}},
+                    "State": {"Status": "restarting"},
+                }
+            ]
+        ],
+    )
+    repo, recovery = _service(tmp_path, runner)
+    monkeypatch.setattr(recovery.lifecycle_service, "_now", staticmethod(lambda: "2026-03-11T00:00:00+00:00"))
+    await repo.save_record(
+        _record(
+            state=SandboxState.ACTIVE,
+            cleanup_state=CleanupState.NONE,
+            record_version=2,
+            requires_reconciliation=False,
+        )
+    )
+
+    record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+
+    assert record.state is SandboxState.TERMINAL
+    assert record.cleanup_state is CleanupState.SCHEDULED
+    assert record.terminal_reason is TerminalReason.RESTART_LOOP

@@ -154,6 +154,7 @@ async def test_packet1_live_failure_run_omits_classification_without_primary_out
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof.")
 
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
 
     root = tmp_path
     workspace = root / "workspace"
@@ -193,6 +194,7 @@ async def test_packet1_live_emission_failure_uses_runtime_event_fallback(tmp_pat
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof.")
 
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
 
     async def _raise_summary_generation(**_kwargs):
         raise ValueError("forced live packet1 summary generation failure")
@@ -241,6 +243,7 @@ async def test_packet1_live_fallback_profile_marks_degraded_truth(tmp_path: Path
     await _ensure_ollama_alias(source_model, alias_model)
 
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "enforce")
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", "true")
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "ollama.qwen.chatml.v1")
@@ -287,6 +290,7 @@ async def test_packet1_live_corrective_reprompt_marks_repaired_truth(tmp_path: P
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof.")
 
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
 
     original_complete = LocalModelProvider.complete
     corrupted_guard_turn = {"value": False}

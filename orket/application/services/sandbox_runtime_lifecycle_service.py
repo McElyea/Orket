@@ -191,11 +191,11 @@ class SandboxRuntimeLifecycleService:
             ).record
         if current.state is not SandboxState.TERMINAL:
             raise ValueError(f"Sandbox {sandbox_id} is not cleanup-eligible from state {current.state.value}")
-        if current.cleanup_state is CleanupState.NONE:
+        if current.cleanup_state in {CleanupState.NONE, CleanupState.FAILED}:
             current = (
                 await self.mutations.transition_state(
                     sandbox_id=sandbox_id,
-                    operation_id=f"cleanup-scheduled:{sandbox_id}",
+                    operation_id=f"cleanup-scheduled:{sandbox_id}:{current.record_version}",
                     expected_record_version=current.record_version,
                     event=LifecycleEvent.CLEANUP_SCHEDULED,
                     next_state=SandboxState.TERMINAL,
@@ -206,7 +206,7 @@ class SandboxRuntimeLifecycleService:
         current = (
             await self.mutations.claim_cleanup(
                 sandbox_id=sandbox_id,
-                operation_id=f"cleanup-claim:{sandbox_id}",
+                operation_id=f"cleanup-claim:{sandbox_id}:{current.record_version}",
                 claimant_id=self.instance_id,
                 expected_record_version=current.record_version,
             )

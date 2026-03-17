@@ -93,6 +93,24 @@ def test_cleanup_is_blocked_on_cross_daemon_or_context_mismatch() -> None:
     assert "host_context_mismatch" in decision.reason_codes
 
 
+def test_cleanup_allows_legacy_pid_scoped_host_ids_on_same_host() -> None:
+    service = SandboxCleanupAuthorityService()
+    decision = service.decide(
+        record=_record(docker_host_id="host-a:4242"),
+        observed_resources=[
+            _resource(
+                "sb-1-api",
+                labels={"orket.managed": "true", "orket.sandbox_id": "sb-1", "orket.run_id": "run-1"},
+                host="host-a",
+            )
+        ],
+        compose_path_available=True,
+    )
+
+    assert decision.compose_cleanup_allowed is True
+    assert "host_context_mismatch" not in decision.reason_codes
+
+
 def test_break_glass_scope_only_allows_explicitly_approved_resources() -> None:
     service = SandboxCleanupAuthorityService()
     decision = service.decide(

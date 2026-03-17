@@ -95,3 +95,5 @@
 4. Provider-backed runtime selection and local warmup authority live in `orket/runtime/provider_runtime_target.py`. Runtime paths and provider verification scripts must reuse it.
 5. The general pytest suite fails closed on Docker sandbox creation through `tests/conftest.py`. Only explicit live sandbox acceptance work may create real `orket-sandbox-*` resources.
 6. When maintenance work needs live sandbox baseline proof, run `python scripts/techdebt/run_live_maintenance_baseline.py --baseline-id <baseline_id> --strict`.
+7. Provider-backed live proof scripts/tests that are not explicit sandbox acceptance work must set `ORKET_DISABLE_SANDBOX=1`.
+8. Any flow that intentionally creates real `orket-sandbox-*` resources must prove teardown in the same execution path before temp-workspace cleanup or handoff. Do not rely on delayed TTL cleanup for routine proof runs.

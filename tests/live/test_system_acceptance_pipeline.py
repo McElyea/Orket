@@ -110,6 +110,7 @@ def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
 
 @pytest.mark.asyncio
 async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     root = tmp_path
     workspace = root / "workspace"
     workspace.mkdir()
@@ -146,10 +147,11 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
 
 
 @pytest.mark.asyncio
-async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path):
+async def test_system_acceptance_role_pipeline_with_guard_live(tmp_path, monkeypatch):
     if os.getenv("ORKET_LIVE_ACCEPTANCE", "").lower() not in {"1", "true", "yes"}:
         pytest.skip("Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with Ollama.")
 
+    monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     model_name = os.getenv("ORKET_LIVE_MODEL", "llama3.2:3b")
 
     root = tmp_path

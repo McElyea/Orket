@@ -8,17 +8,27 @@ import aiofiles
 import pytest
 
 from orket.adapters.storage.command_runner import CommandResult
+from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 
 class FakeLifecycleRunner:
-    def __init__(self, *, compose_project: str, sandbox_id: str, run_id: str, down_returncode: int = 0):
+    def __init__(
+        self,
+        *,
+        compose_project: str,
+        sandbox_id: str,
+        run_id: str,
+        down_returncode: int = 0,
+        container_state: str = "running",
+    ):
         self.compose_project = compose_project
         self.sandbox_id = sandbox_id
         self.run_id = run_id
         self.down_returncode = down_returncode
+        self.container_state = container_state
         self.resources_present = True
         self.async_calls: list[tuple[str, ...]] = []
 
@@ -37,6 +47,8 @@ class FakeLifecycleRunner:
                 stdout='{"Service":"api","State":"running","Name":"%s-api-1"}\n' % self.compose_project,
                 stderr="",
             )
+        if cmd[:2] == ("docker", "inspect"):
+            return CommandResult(returncode=0, stdout=self._inspect_payload(), stderr="")
         if cmd[:3] == ("docker", "ps", "-a"):
             return CommandResult(returncode=0, stdout=self._container_rows(), stderr="")
         if cmd[:3] == ("docker", "network", "ls"):
@@ -52,8 +64,8 @@ class FakeLifecycleRunner:
         if not self.resources_present:
             return ""
         return (
-            '{"Names":"%s-api-1","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            '{"Names":"%s-api-1","State":"%s","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s,com.docker.compose.service=api"}\n'
+            % (self.compose_project, self.container_state, self.sandbox_id, self.run_id)
         )
 
     def _network_rows(self) -> str:
@@ -70,6 +82,15 @@ class FakeLifecycleRunner:
         return (
             '{"Name":"%s_db-data","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
             % (self.compose_project, self.sandbox_id, self.run_id)
+        )
+
+    def _inspect_payload(self) -> str:
+        health = ""
+        if self.container_state == "running":
+            health = ',"Health":{"Status":"healthy"}'
+        return (
+            '[{"Name":"/%s-api-1","RestartCount":0,"Config":{"Labels":{"com.docker.compose.service":"api"}},"State":{"Status":"%s"%s}}]'
+            % (self.compose_project, self.container_state, health)
         )
 
 
@@ -150,6 +171,49 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
 
 
 @pytest.mark.asyncio
+async def test_delete_sandbox_retries_terminal_records_after_a_failed_cleanup_attempt(tmp_path) -> None:
+    sandbox_id = "sandbox-rock-2b"
+    compose_project = "orket-sandbox-rock-2b"
+    runner = FakeLifecycleRunner(
+        compose_project=compose_project,
+        sandbox_id=sandbox_id,
+        run_id="rock-2b",
+        down_returncode=1,
+    )
+    orchestrator = _orchestrator(tmp_path, runner)
+
+    sandbox = await orchestrator.create_sandbox(
+        rock_id="rock-2b",
+        project_name="Cleanup Retry Sandbox",
+        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+        workspace_path=str(tmp_path),
+    )
+    record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+    assert record is not None
+    await orchestrator.lifecycle_service.repository.save_record(
+        record.model_copy(
+            update={
+                "state": SandboxState.TERMINAL,
+                "cleanup_state": CleanupState.FAILED,
+                "record_version": record.record_version + 1,
+                "terminal_reason": TerminalReason.SUCCESS,
+                "terminal_at": record.created_at,
+                "cleanup_due_at": record.created_at,
+                "cleanup_failure_reason": "cleanup_authority_blocked",
+            }
+        )
+    )
+
+    await orchestrator.delete_sandbox(sandbox.id)
+
+    stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+
+    assert stored is not None
+    assert stored.state.value == "cleaned"
+    assert stored.cleanup_state.value == "completed"
+
+
+@pytest.mark.asyncio
 async def test_create_sandbox_fails_closed_before_docker_when_lifecycle_store_is_unavailable(tmp_path, monkeypatch) -> None:
     sandbox_id = "sandbox-rock-3"
     compose_project = "orket-sandbox-rock-3"
@@ -172,3 +236,33 @@ async def test_create_sandbox_fails_closed_before_docker_when_lifecycle_store_is
     assert runner.async_calls == []
     assert orchestrator.registry.get(sandbox_id) is None
     assert sandbox_id not in orchestrator.registry.port_allocator.allocated_ports
+
+
+@pytest.mark.asyncio
+async def test_create_sandbox_terminalizes_when_initial_runtime_never_reaches_running_state(tmp_path) -> None:
+    sandbox_id = "sandbox-rock-4"
+    compose_project = "orket-sandbox-rock-4"
+    runner = FakeLifecycleRunner(
+        compose_project=compose_project,
+        sandbox_id=sandbox_id,
+        run_id="rock-4",
+        container_state="restarting",
+    )
+    orchestrator = _orchestrator(tmp_path, runner)
+    orchestrator._initial_health_attempts = 2
+    orchestrator._initial_health_delay_seconds = 0.0
+
+    with pytest.raises(RuntimeError, match="startup health verification failed"):
+        await orchestrator.create_sandbox(
+            rock_id="rock-4",
+            project_name="Broken Startup",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
+        )
+
+    record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+
+    assert record is not None
+    assert record.state.value == "terminal"
+    assert record.terminal_reason.value == "start_failed"
+    assert record.cleanup_due_at is not None

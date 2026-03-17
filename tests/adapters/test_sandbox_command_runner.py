@@ -84,9 +84,9 @@ async def test_sandbox_orchestrator_health_check_parses_compose_ndjson(tmp_path)
         async_result=CommandResult(
             returncode=0,
             stdout=(
-                '{"Service":"api","State":"running"}\n'
-                '{"Service":"frontend","State":"running"}\n'
-                '{"Service":"db","State":"running"}\n'
+                '{"Names":"sandbox-test-api-1","State":"running","Labels":"com.docker.compose.service=api"}\n'
+                '{"Names":"sandbox-test-frontend-1","State":"running","Labels":"com.docker.compose.service=frontend"}\n'
+                '{"Names":"sandbox-test-db-1","State":"running","Labels":"com.docker.compose.service=db"}\n'
             ),
             stderr="",
         )
@@ -112,10 +112,10 @@ async def test_sandbox_orchestrator_health_check_ignores_optional_admin_services
         async_result=CommandResult(
             returncode=0,
             stdout=(
-                '{"Service":"api","State":"running"}\n'
-                '{"Service":"frontend","State":"running"}\n'
-                '{"Service":"db","State":"running"}\n'
-                '{"Service":"pgadmin","State":"restarting"}\n'
+                '{"Names":"sandbox-test-api-1","State":"running","Labels":"com.docker.compose.service=api"}\n'
+                '{"Names":"sandbox-test-frontend-1","State":"running","Labels":"com.docker.compose.service=frontend"}\n'
+                '{"Names":"sandbox-test-db-1","State":"running","Labels":"com.docker.compose.service=db"}\n'
+                '{"Names":"sandbox-test-pgadmin-1","State":"restarting","Labels":"com.docker.compose.service=pgadmin"}\n'
             ),
             stderr="",
         )

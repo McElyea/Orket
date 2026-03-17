@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.10] - 2026-03-16 - "The Sandbox Lifecycle Hardening Cut"
+
+### Added
+- **Sandbox Runtime Inspection Service**: Added `SandboxRuntimeInspectionService` so sandbox startup, health checks, and recovery can read live Docker container state directly from project labels instead of relying on compose-file-local `docker-compose ps` output.
+- **Lifecycle Hardening Coverage**: Added contract and integration coverage for legacy host-id cleanup matching, retryable cleanup scheduling, startup-failure terminalization, and active runtime restart-loop detection.
+
+### Changed
+- **Sandbox Startup And Recovery**: Sandbox creation now waits for initial core-service health, starting records only become active after verified running state, and recovery terminalizes non-running or restart-looping runtimes with cleanup scheduling instead of leaving them in false-active state.
+- **Cleanup Claiming And Retention**: Cleanup authority now accepts legacy `host:pid` host ids on the same daemon, cleanup claims can retry terminal records stuck in `cleanup_state=failed`, and failed/blocked/canceled/reclaimable cleanup retention defaults now expire after one hour.
+- **Routine Live Proof Sandbox Guarding**: Updated contributor guidance, recorder scripts, and provider-backed live tests so non-acceptance proof runs set `ORKET_DISABLE_SANDBOX=1` and do not leave routine `orket-sandbox-*` resources behind.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Only explicit sandbox acceptance work should run without `ORKET_DISABLE_SANDBOX=1`; routine provider-backed live proof should keep sandbox creation disabled.
+
 ## [0.4.9] - 2026-03-15 - "The Provenance Ledger Cut"
 
 ### Added
