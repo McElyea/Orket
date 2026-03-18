@@ -60,4 +60,3 @@ def write_review_run_bundle(
         "run_manifest": str(manifest_path),
         "replay_instructions": str(replay_path),
     }
-

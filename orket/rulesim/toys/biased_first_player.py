@@ -8,7 +8,9 @@ from ..contracts import TerminalResult, TransitionResult
 
 
 class BiasedFirstPlayerRuleSystem:
-    def initial_state(self, seed: int, scenario: dict[str, Any], ruleset: dict[str, Any], agents: list[str]) -> dict[str, Any]:
+    def initial_state(
+        self, seed: int, scenario: dict[str, Any], ruleset: dict[str, Any], agents: list[str]
+    ) -> dict[str, Any]:
         return {"winner": None, "phase": "agent_0", "agent_0_passed": False}
 
     def legal_actions(self, state: dict[str, Any], agent_id: str) -> list[dict[str, Any]]:
@@ -56,4 +58,3 @@ class BiasedFirstPlayerRuleSystem:
 
     def action_key(self, action: dict[str, Any]) -> str:
         return str(action.get("kind", "unknown"))
-

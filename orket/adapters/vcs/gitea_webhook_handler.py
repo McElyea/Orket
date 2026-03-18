@@ -1,4 +1,5 @@
 """Gitea webhook entrypoint with delegated policy handlers."""
+
 from __future__ import annotations
 
 import os
@@ -26,8 +27,7 @@ class GiteaWebhookHandler:
         self.gitea_password = os.getenv("GITEA_ADMIN_PASSWORD")
         if not self.gitea_password:
             raise RuntimeError(
-                "GITEA_ADMIN_PASSWORD environment variable is not set. "
-                "Set it before initializing the webhook handler."
+                "GITEA_ADMIN_PASSWORD environment variable is not set. Set it before initializing the webhook handler."
             )
         self.workspace = workspace or Path.cwd()
         self.auth = (self.gitea_user, self.gitea_password)

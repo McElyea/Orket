@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any
 
@@ -19,7 +19,9 @@ from .nervous_system_tokens import (
 from .nervous_system_runtime_state import append_event
 
 
-def list_approvals_v1(*, status: str | None, session_id: str | None, request_id: str | None, limit: int) -> list[dict[str, Any]]:
+def list_approvals_v1(
+    *, status: str | None, session_id: str | None, request_id: str | None, limit: int
+) -> list[dict[str, Any]]:
     return list_approvals(status=status, session_id=session_id, request_id=request_id, limit=limit)
 
 
@@ -27,7 +29,9 @@ def get_approval_v1(approval_id: str) -> dict[str, Any] | None:
     return get_approval(approval_id)
 
 
-def _readmit_edited_proposal(session_id: str, trace_id: str, request_id: str | None, edited_proposal: dict[str, Any]) -> dict[str, Any]:
+def _readmit_edited_proposal(
+    session_id: str, trace_id: str, request_id: str | None, edited_proposal: dict[str, Any]
+) -> dict[str, Any]:
     return _admit_proposal_internal(
         session_id=session_id,
         trace_id=trace_id,
@@ -170,7 +174,9 @@ def audit_action_lifecycle_v1(*, session_id: str, trace_id: str) -> dict[str, An
     commit_status = str(decision_summary.get("commit_status") or "")
     admission_decision = str(decision_summary.get("admission_decision") or "")
     pending_after_rebuild = rebuild_pending_approvals(session_id)
-    pending_approval_ids = sorted(str(row.get("approval_id") or "") for row in pending_after_rebuild if str(row.get("approval_id") or ""))
+    pending_approval_ids = sorted(
+        str(row.get("approval_id") or "") for row in pending_after_rebuild if str(row.get("approval_id") or "")
+    )
 
     checks = [
         {
@@ -321,7 +327,9 @@ def _execution_path_consistent(*, commit_status: str, event_digests_by_type: dic
     return not executed and not validated
 
 
-def _approval_queue_rebuild_consistent(*, approval_id: str, approval_status: str, pending_approval_ids: list[str]) -> bool:
+def _approval_queue_rebuild_consistent(
+    *, approval_id: str, approval_status: str, pending_approval_ids: list[str]
+) -> bool:
     if not approval_id:
         return True
     if approval_status == "PENDING":

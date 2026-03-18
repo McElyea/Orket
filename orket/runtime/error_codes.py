@@ -60,11 +60,7 @@ def error_registry_snapshot() -> dict[str, object]:
     return {
         "schema_version": "local_prompt_error_registry.v1",
         "families": [
-            {"family": family, "description": _FAMILY_DESCRIPTIONS.get(family, "")}
-            for family in all_error_families()
+            {"family": family, "description": _FAMILY_DESCRIPTIONS.get(family, "")} for family in all_error_families()
         ],
-        "leaf_mappings": [
-            {"leaf_code": leaf, "family": _FAMILY_BY_LEAF[leaf]}
-            for leaf in all_error_leaf_codes()
-        ],
+        "leaf_mappings": [{"leaf_code": leaf, "family": _FAMILY_BY_LEAF[leaf]} for leaf in all_error_leaf_codes()],
     }

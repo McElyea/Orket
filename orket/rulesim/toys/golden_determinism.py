@@ -5,4 +5,3 @@ from .loop import LoopRuleSystem
 
 class GoldenDeterminismRuleSystem(LoopRuleSystem):
     pass
-

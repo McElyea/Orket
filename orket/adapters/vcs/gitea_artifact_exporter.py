@@ -76,7 +76,7 @@ class GiteaArtifactExporter:
         run_name: str,
         build_id: str,
         session_status: str,
-        summary: Dict[str, Any],
+        summary: dict[str, Any],
         failure_class: str | None = None,
         failure_reason: str | None = None,
     ) -> dict[str, Any] | None:
@@ -96,7 +96,12 @@ class GiteaArtifactExporter:
         prefix = os.getenv("ORKET_GITEA_ARTIFACT_PATH_PREFIX", "runs").strip().strip("/")
         private_repo = _env_enabled("ORKET_GITEA_ARTIFACT_PRIVATE", "1")
 
-        required = {"GITEA_URL": gitea_url, "GITEA_ADMIN_USER": username, "GITEA_ADMIN_PASSWORD": password, "OWNER": owner}
+        required = {
+            "GITEA_URL": gitea_url,
+            "GITEA_ADMIN_USER": username,
+            "GITEA_ADMIN_PASSWORD": password,
+            "OWNER": owner,
+        }
         missing = [key for key, value in required.items() if not value]
         if missing:
             raise RuntimeError(f"Missing Gitea artifact export settings: {', '.join(missing)}")
@@ -116,7 +121,19 @@ class GiteaArtifactExporter:
         payload_dir = export_root / "payload" / run_slug
         repo_dir = export_root / "repo_cache" / f"{_safe_slug(owner)}_{_safe_slug(repo_name)}"
 
-        await asyncio.to_thread(self._build_payload, payload_dir, run_path, run_id, run_type, run_name, build_id, session_status, summary, failure_class, failure_reason)
+        await asyncio.to_thread(
+            self._build_payload,
+            payload_dir,
+            run_path,
+            run_id,
+            run_type,
+            run_name,
+            build_id,
+            session_status,
+            summary,
+            failure_class,
+            failure_reason,
+        )
         async with self._lock:
             commit = await asyncio.to_thread(
                 self._commit_payload,
@@ -207,8 +224,14 @@ class GiteaArtifactExporter:
         if not repo_dir.exists():
             repo_dir.mkdir(parents=True, exist_ok=True)
             self._run_cmd(["git", "init"], cwd=repo_dir)
-            self._run_cmd(["git", "config", "user.email", os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_EMAIL", "orket@local")], cwd=repo_dir)
-            self._run_cmd(["git", "config", "user.name", os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_NAME", "Orket Artifact Bot")], cwd=repo_dir)
+            self._run_cmd(
+                ["git", "config", "user.email", os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_EMAIL", "orket@local")],
+                cwd=repo_dir,
+            )
+            self._run_cmd(
+                ["git", "config", "user.name", os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_NAME", "Orket Artifact Bot")],
+                cwd=repo_dir,
+            )
         self._run_cmd(["git", "config", "core.longpaths", "true"], cwd=repo_dir, allow_fail=True)
 
         repo_url = self._build_repo_url(gitea_url, owner, repo_name)

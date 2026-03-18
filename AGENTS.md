@@ -110,12 +110,17 @@ Use the lowest reasoning tier that can reliably finish the task.
 
 ### Async-reachable paths
 
+Context exemptions:
+1. `tools/ci/` scripts and their test wrappers are exempt; they run as standalone subprocesses and never inside the server event loop.
+2. `scripts/` tooling invoked exclusively from CI or the command line is exempt.
+3. In all other cases, if reachability is ambiguous, assume the path is async-reachable.
+
+Rules for async-reachable paths:
 1. Do not use `subprocess.run()` or `subprocess.call()`.
 2. Do not use `Path.read_text()`, `Path.write_text()`, or raw `open()`.
 3. Do not use sync HTTP clients such as `requests`.
 4. Do not use `time.sleep()`.
 5. Do not put `lru_cache` on sync-to-async bridge functions.
-6. If reachability is ambiguous, assume the path is async-reachable.
 
 Use `asyncio.create_subprocess_exec()`, `aiofiles`, `AsyncFileTools`, `await asyncio.to_thread(...)`, `httpx.AsyncClient`, and `await asyncio.sleep()` as appropriate.
 

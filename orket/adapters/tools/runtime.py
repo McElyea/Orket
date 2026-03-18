@@ -13,9 +13,10 @@ class ToolRuntimeExecutor:
         args: Dict[str, Any],
         context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        resolved_context = dict(context or {})
         try:
             if inspect.iscoroutinefunction(tool_fn):
-                return await tool_fn(args, context=context)
-            return tool_fn(args, context=context)
+                return await tool_fn(args, context=resolved_context)
+            return tool_fn(args, context=resolved_context)
         except (RuntimeError, ValueError, TypeError, KeyError, OSError) as exc:
             return {"ok": False, "error": str(exc)}

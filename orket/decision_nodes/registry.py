@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
 from orket.decision_nodes.builtins import (
-    DefaultApiRuntimeStrategyNode,
     DefaultEngineRuntimePolicyNode,
     DefaultExecutionRuntimeStrategyNode,
     DefaultEvaluatorNode,
@@ -46,18 +46,10 @@ class DecisionNodeRegistry:
         self._prompt_strategy_nodes: Dict[str, PromptStrategyNode] = {}
         self._evaluator_nodes: Dict[str, EvaluatorNode] = {"default": DefaultEvaluatorNode()}
         self._tool_strategy_nodes: Dict[str, ToolStrategyNode] = {"default": DefaultToolStrategyNode()}
-        self._api_runtime_nodes: Dict[str, ApiRuntimeStrategyNode] = {
-            "default": DefaultApiRuntimeStrategyNode()
-        }
-        self._sandbox_policy_nodes: Dict[str, SandboxPolicyNode] = {
-            "default": DefaultSandboxPolicyNode()
-        }
-        self._engine_runtime_nodes: Dict[str, EngineRuntimePolicyNode] = {
-            "default": DefaultEngineRuntimePolicyNode()
-        }
-        self._loader_strategy_nodes: Dict[str, LoaderStrategyNode] = {
-            "default": DefaultLoaderStrategyNode()
-        }
+        self._api_runtime_nodes: Dict[str, ApiRuntimeStrategyNode] = {"default": DefaultApiRuntimeStrategyNode()}
+        self._sandbox_policy_nodes: Dict[str, SandboxPolicyNode] = {"default": DefaultSandboxPolicyNode()}
+        self._engine_runtime_nodes: Dict[str, EngineRuntimePolicyNode] = {"default": DefaultEngineRuntimePolicyNode()}
+        self._loader_strategy_nodes: Dict[str, LoaderStrategyNode] = {"default": DefaultLoaderStrategyNode()}
         self._execution_runtime_nodes: Dict[str, ExecutionRuntimeStrategyNode] = {
             "default": DefaultExecutionRuntimeStrategyNode()
         }
@@ -67,9 +59,7 @@ class DecisionNodeRegistry:
         self._orchestration_loop_nodes: Dict[str, OrchestrationLoopPolicyNode] = {
             "default": DefaultOrchestrationLoopPolicyNode()
         }
-        self._model_client_nodes: Dict[str, ModelClientPolicyNode] = {
-            "default": DefaultModelClientPolicyNode()
-        }
+        self._model_client_nodes: Dict[str, ModelClientPolicyNode] = {"default": DefaultModelClientPolicyNode()}
 
     def register_planner(self, name: str, node: PlannerNode) -> None:
         self._planner_nodes[name] = node

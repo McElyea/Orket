@@ -9,6 +9,7 @@ from typing import Any, Dict, List
 
 from orket.core.domain.guard_contract import GuardContract, GuardViolation
 
+
 @dataclass(frozen=True)
 class RuntimeVerificationResult:
     ok: bool
@@ -71,9 +72,7 @@ class RuntimeVerifier:
         deployment_missing = await self._validate_deployment_artifacts_if_required()
         if deployment_missing:
             failure_breakdown["deployment_missing"] = failure_breakdown.get("deployment_missing", 0) + 1
-            errors.append(
-                "missing deployment artifacts: " + ", ".join(sorted(deployment_missing))
-            )
+            errors.append("missing deployment artifacts: " + ", ".join(sorted(deployment_missing)))
 
         guard_contract = build_runtime_guard_contract(ok=not errors, errors=errors)
         return RuntimeVerificationResult(
@@ -205,9 +204,9 @@ class RuntimeVerifier:
             if inferred:
                 return inferred
 
-        architecture_pattern = self.architecture_pattern or str(
-            process_rules.get("architecture_forced_pattern", "")
-        ).strip().lower()
+        architecture_pattern = (
+            self.architecture_pattern or str(process_rules.get("architecture_forced_pattern", "")).strip().lower()
+        )
         if architecture_pattern == "microservices":
             return [
                 "agent_output/deployment/Dockerfile.api",
@@ -217,9 +216,12 @@ class RuntimeVerifier:
 
         stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
         if stack_profile not in {"python", "node", "polyglot"}:
-            stack_profile = self._stack_profile_from_surface(
-                self.project_surface_profile or str(process_rules.get("project_surface_profile", "unspecified"))
-            ) or "python"
+            stack_profile = (
+                self._stack_profile_from_surface(
+                    self.project_surface_profile or str(process_rules.get("project_surface_profile", "unspecified"))
+                )
+                or "python"
+            )
         defaults = {
             "python": [
                 "agent_output/deployment/Dockerfile",

@@ -43,4 +43,3 @@ def compute_tree_digest(root: Path) -> str:
             }
         )
     return hash_canonical_json(entries)
-

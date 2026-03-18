@@ -191,9 +191,7 @@ def validate_lifecycle_transition(
 ) -> bool:
     rule = _LIFECYCLE_TRANSITIONS.get((current_state, event))
     if rule is None:
-        raise SandboxLifecycleError(
-            f"Illegal lifecycle transition event: {current_state.value} + {event.value}."
-        )
+        raise SandboxLifecycleError(f"Illegal lifecycle transition event: {current_state.value} + {event.value}.")
     if next_state is not rule.to_state:
         raise SandboxLifecycleError(
             f"Illegal lifecycle destination: {current_state.value} + {event.value} -> {next_state.value}."
@@ -211,9 +209,7 @@ def validate_lifecycle_transition(
 def validate_cleanup_state_transition(*, current_state: CleanupState, next_state: CleanupState) -> bool:
     allowed = _CLEANUP_TRANSITIONS[current_state]
     if next_state not in allowed:
-        raise SandboxLifecycleError(
-            f"Illegal cleanup state transition: {current_state.value} -> {next_state.value}."
-        )
+        raise SandboxLifecycleError(f"Illegal cleanup state transition: {current_state.value} -> {next_state.value}.")
     return True
 
 

@@ -72,7 +72,7 @@ def run_deterministic_lane(
     run_id: str,
     policy_digest: str,
 ) -> DeterministicReviewDecisionPayload:
-    checks = ((resolved_policy.get("deterministic") or {}).get("checks") or {})
+    checks = (resolved_policy.get("deterministic") or {}).get("checks") or {}
     findings: List[DeterministicFinding] = []
     executed_checks: List[str] = []
 
@@ -165,7 +165,9 @@ def run_deterministic_lane(
     executed_checks.append("test_hints")
     required_roots = [str(item) for item in list(checks.get("test_hint_required_roots") or [])]
     test_roots = [str(item) for item in list(checks.get("test_hint_test_roots") or [])]
-    src_changed = any(any(changed.path.startswith(root) for root in required_roots) for changed in snapshot.changed_files)
+    src_changed = any(
+        any(changed.path.startswith(root) for root in required_roots) for changed in snapshot.changed_files
+    )
     tests_changed = any(any(changed.path.startswith(root) for root in test_roots) for changed in snapshot.changed_files)
     if src_changed and not tests_changed:
         findings.append(

@@ -28,11 +28,7 @@ class FixtureVerifier:
         return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
 
     def _resolve_execution_mode(self) -> str:
-        profile = str(
-            os.getenv("ORKET_RUNTIME_PROFILE")
-            or os.getenv("ORKET_PROFILE")
-            or "development"
-        ).strip().lower()
+        profile = str(os.getenv("ORKET_RUNTIME_PROFILE") or os.getenv("ORKET_PROFILE") or "development").strip().lower()
         requested = str(os.getenv("ORKET_VERIFY_EXECUTION_MODE", "subprocess")).strip().lower() or "subprocess"
         if requested not in {"subprocess", "container"}:
             requested = "subprocess"
@@ -209,7 +205,9 @@ class FixtureVerifier:
                             if outcome.get("error"):
                                 logs.append(f"  [ERROR] Execution error: {outcome['error']}")
                             else:
-                                logs.append(f"  [FAIL] Expected {scenario.expected_output}, got {scenario.actual_output}")
+                                logs.append(
+                                    f"  [FAIL] Expected {scenario.expected_output}, got {scenario.actual_output}"
+                                )
                             scenario.status = "fail"
                             failed += 1
         except subprocess.TimeoutExpired:

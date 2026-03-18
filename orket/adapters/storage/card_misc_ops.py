@@ -27,7 +27,9 @@ class CardMiscOps:
 
     async def get_card_history(self, card_id: str) -> List[str]:
         async def _op(conn: aiosqlite.Connection) -> List[str]:
-            cursor = await conn.execute("SELECT * FROM card_transactions WHERE card_id = ? ORDER BY timestamp ASC", (card_id,))
+            cursor = await conn.execute(
+                "SELECT * FROM card_transactions WHERE card_id = ? ORDER BY timestamp ASC", (card_id,)
+            )
             rows = await cursor.fetchall()
             history: List[str] = []
             for row in rows:
@@ -54,7 +56,9 @@ class CardMiscOps:
 
     async def get_comments(self, issue_id: str) -> List[Dict[str, Any]]:
         async def _op(conn: aiosqlite.Connection) -> List[Dict[str, Any]]:
-            cursor = await conn.execute("SELECT * FROM comments WHERE issue_id = ? ORDER BY created_at ASC", (issue_id,))
+            cursor = await conn.execute(
+                "SELECT * FROM comments WHERE issue_id = ? ORDER BY created_at ASC", (issue_id,)
+            )
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
 

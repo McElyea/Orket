@@ -1,10 +1,10 @@
-﻿import asyncio
+import asyncio
 import json
 from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime, UTC
 from functools import lru_cache
-from typing import Any, Optional, List
+from typing import Any, Optional
 
 from fastapi import FastAPI, WebSocketDisconnect, HTTPException, APIRouter, Depends, Security, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -57,9 +57,12 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
+
+
 @lru_cache(maxsize=1)
 def _get_api_runtime_node():
     return DecisionNodeRegistry().resolve_api_runtime()
+
 
 class _ApiRuntimeNodeProxy:
     def __getattr__(self, name):
@@ -70,6 +73,8 @@ class _ApiRuntimeNodeProxy:
 
 
 api_runtime_node = _ApiRuntimeNodeProxy()
+
+
 class _EngineProxy:
     def __init__(self, factory):
         self._factory = factory
@@ -133,6 +138,7 @@ async def _schedule_async_invocation_task(
 def _invoke_sync_method(target: object, invocation: dict, error_prefix: str):
     method = _resolve_method(target, invocation, error_prefix)
     return method(*invocation.get("args", []), **invocation.get("kwargs", {}))
+
 
 SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
     "architecture_mode": {
@@ -369,7 +375,10 @@ def _discover_team_topology(model_root: Path) -> list[dict[str, Any]]:
 
         declared_roles: dict[str, Any] = payload.get("roles") if isinstance(payload.get("roles"), dict) else {}
         role_items: list[dict[str, Any]] = []
-        all_roles = sorted(set(referenced_roles) | {_normalize_role_name(role) for role in declared_roles.keys() if _normalize_role_name(role)})
+        all_roles = sorted(
+            set(referenced_roles)
+            | {_normalize_role_name(role) for role in declared_roles.keys() if _normalize_role_name(role)}
+        )
         for role_name in all_roles:
             declared = declared_roles.get(role_name)
             declared = declared if isinstance(declared, dict) else {}
@@ -380,11 +389,7 @@ def _discover_team_topology(model_root: Path) -> list[dict[str, Any]]:
                     "name": declared.get("name") or catalog_entry.get("name") or role_name,
                     "description": declared.get("description") or catalog_entry.get("description"),
                     "tools": list(declared.get("tools") or catalog_entry.get("tools") or []),
-                    "source": (
-                        "team"
-                        if bool(declared)
-                        else ("catalog" if bool(catalog_entry) else "seat_reference")
-                    ),
+                    "source": ("team" if bool(declared) else ("catalog" if bool(catalog_entry) else "seat_reference")),
                 }
             )
 
@@ -399,6 +404,7 @@ def _discover_team_topology(model_root: Path) -> list[dict[str, Any]]:
             }
         )
     return teams
+
 
 # Security dependency
 API_KEY_NAME = "X-API-Key"
@@ -515,17 +521,21 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
         detail=api_runtime_node.api_key_invalid_detail(),
     )
 
+
 # --- Lifespan ---
+
 
 def _on_log_record_factory(loop: asyncio.AbstractEventLoop):
     def on_log_record(record):
         loop.call_soon_threadsafe(runtime_state.event_queue.put_nowait, record)
+
     return on_log_record
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     from orket.utils import ensure_log_dir
+
     ensure_log_dir()
     broadcaster_task = asyncio.create_task(event_broadcaster())
     loop = asyncio.get_running_loop()
@@ -627,16 +637,22 @@ def _get_companion_service() -> CompanionRuntimeService:
         companion_service = CompanionRuntimeService(project_root=PROJECT_ROOT)
     return companion_service
 
+
 # --- System Endpoints ---
 
+
 @app.get("/health")
-async def health(): return {"status": "ok", "organization": "Orket"}
+async def health():
+    return {"status": "ok", "organization": "Orket"}
+
 
 # --- v1 Endpoints ---
+
 
 @v1_router.get("/version")
 async def get_version():
     return {"version": __version__, "api": "v1"}
+
 
 v1_router.include_router(build_kernel_router(lambda: engine))
 v1_router.include_router(build_cards_router(lambda: engine, api_runtime_node))
@@ -648,7 +664,9 @@ v1_router.include_router(
         load_user_settings=lambda: load_user_settings(),
         save_user_settings=lambda settings: save_user_settings(settings),
         runtime_policy_process_rules=lambda: _runtime_policy_process_rules(),
-        resolve_settings_snapshot=lambda user_settings, process_rules: _resolve_settings_snapshot(user_settings, process_rules),
+        resolve_settings_snapshot=lambda user_settings, process_rules: _resolve_settings_snapshot(
+            user_settings, process_rules
+        ),
         parse_setting_value=lambda field, value: _parse_setting_value(field, value),
         settings_validation_error=lambda errors: _settings_validation_error(errors),
         is_microservices_unlocked=lambda: is_microservices_unlocked(),
@@ -665,10 +683,12 @@ v1_router.include_router(
             process_value,
             user_value,
         ),
-        resolve_small_project_builder_variant=lambda env_value, process_value, user_value: resolve_small_project_builder_variant(
-            env_value,
-            process_value,
-            user_value,
+        resolve_small_project_builder_variant=lambda env_value, process_value, user_value: (
+            resolve_small_project_builder_variant(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
         resolve_state_backend_mode=lambda env_value, process_value, user_value: resolve_state_backend_mode(
             env_value,
@@ -680,50 +700,64 @@ v1_router.include_router(
             process_value,
             user_value,
         ),
-        resolve_protocol_timezone_setting=lambda env_value, process_value, user_value: resolve_protocol_timezone_setting(
-            env_value,
-            process_value,
-            user_value,
+        resolve_protocol_timezone_setting=lambda env_value, process_value, user_value: (
+            resolve_protocol_timezone_setting(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
         resolve_protocol_locale_setting=lambda env_value, process_value, user_value: resolve_protocol_locale_setting(
             env_value,
             process_value,
             user_value,
         ),
-        resolve_protocol_network_mode_setting=lambda env_value, process_value, user_value: resolve_protocol_network_mode_setting(
-            env_value,
-            process_value,
-            user_value,
+        resolve_protocol_network_mode_setting=lambda env_value, process_value, user_value: (
+            resolve_protocol_network_mode_setting(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
-        resolve_protocol_network_allowlist_setting=lambda env_value, process_value, user_value: resolve_protocol_network_allowlist_setting(
-            env_value,
-            process_value,
-            user_value,
+        resolve_protocol_network_allowlist_setting=lambda env_value, process_value, user_value: (
+            resolve_protocol_network_allowlist_setting(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
-        resolve_protocol_env_allowlist_setting=lambda env_value, process_value, user_value: resolve_protocol_env_allowlist_setting(
-            env_value,
-            process_value,
-            user_value,
+        resolve_protocol_env_allowlist_setting=lambda env_value, process_value, user_value: (
+            resolve_protocol_env_allowlist_setting(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
         resolve_local_prompting_mode=lambda env_value, process_value, user_value: resolve_local_prompting_mode(
             env_value,
             process_value,
             user_value,
         ),
-        resolve_local_prompting_allow_fallback=lambda env_value, process_value, user_value: resolve_local_prompting_allow_fallback(
-            env_value,
-            process_value,
-            user_value,
+        resolve_local_prompting_allow_fallback=lambda env_value, process_value, user_value: (
+            resolve_local_prompting_allow_fallback(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
-        resolve_local_prompting_fallback_profile_id=lambda env_value, process_value, user_value: resolve_local_prompting_fallback_profile_id(
-            env_value,
-            process_value,
-            user_value,
+        resolve_local_prompting_fallback_profile_id=lambda env_value, process_value, user_value: (
+            resolve_local_prompting_fallback_profile_id(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
-        resolve_gitea_state_pilot_enabled=lambda env_value, process_value, user_value: resolve_gitea_state_pilot_enabled(
-            env_value,
-            process_value,
-            user_value,
+        resolve_gitea_state_pilot_enabled=lambda env_value, process_value, user_value: (
+            resolve_gitea_state_pilot_enabled(
+                env_value,
+                process_value,
+                user_value,
+            )
         ),
         allowed_architecture_patterns=lambda: allowed_architecture_patterns(),
         is_microservices_pilot_stable=lambda: is_microservices_pilot_stable(),
@@ -764,6 +798,7 @@ v1_router.include_router(
 )
 v1_router.include_router(build_companion_router(service_getter=lambda: _get_companion_service()))
 companion_api_router.include_router(build_companion_router(service_getter=lambda: _get_companion_service()))
+
 
 def _normalize_setting_token(value: Any) -> str:
     return str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
@@ -842,7 +877,10 @@ def _resolve_settings_snapshot(user_settings: dict[str, Any], process_rules: dic
         source = "default"
         # Keep state backend settings stable across machines with ambient env vars.
         # API settings UX should primarily reflect explicit policy/user choices.
-        if field not in {"state_backend_mode", "run_ledger_mode"} and _parse_setting_value(field, env_value) is not None:
+        if (
+            field not in {"state_backend_mode", "run_ledger_mode"}
+            and _parse_setting_value(field, env_value) is not None
+        ):
             source = "env"
         elif _parse_setting_value(field, process_value) is not None:
             source = "process_rules"
@@ -969,18 +1007,10 @@ async def get_run_token_summary(session_id: str):
             continue
         runtime_event = data.get("runtime_event", {})
         runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
-        turn_trace_id = str(
-            runtime_event.get("turn_trace_id")
-            or data.get("turn_trace_id")
-            or ""
-        ).strip()
+        turn_trace_id = str(runtime_event.get("turn_trace_id") or data.get("turn_trace_id") or "").strip()
 
         if event == "turn_start":
-            selected_model = str(
-                runtime_event.get("selected_model")
-                or data.get("selected_model")
-                or ""
-            ).strip()
+            selected_model = str(runtime_event.get("selected_model") or data.get("selected_model") or "").strip()
             if turn_trace_id and selected_model:
                 model_by_turn_trace[turn_trace_id] = selected_model
             continue
@@ -989,12 +1019,16 @@ async def get_run_token_summary(session_id: str):
             continue
 
         role = str(record.get("role") or runtime_event.get("role") or data.get("role") or "unknown").strip().lower()
-        model = str(
-            model_by_turn_trace.get(turn_trace_id)
-            or runtime_event.get("selected_model")
-            or data.get("selected_model")
-            or "unknown"
-        ).strip().lower()
+        model = (
+            str(
+                model_by_turn_trace.get(turn_trace_id)
+                or runtime_event.get("selected_model")
+                or data.get("selected_model")
+                or "unknown"
+            )
+            .strip()
+            .lower()
+        )
         issue_id = str(runtime_event.get("issue_id") or data.get("issue_id") or "").strip()
         turn_index_raw = runtime_event.get("turn_index") or data.get("turn_index") or 0
         try:
@@ -1023,8 +1057,13 @@ async def get_run_token_summary(session_id: str):
         role_model_totals[role_model_key] = role_model_totals.get(role_model_key, 0) + tokens_total
 
     turns.sort(key=lambda item: (item["turn_index"], str(item["issue_id"] or ""), str(item["role"])))
-    by_role = [{"role": role, "tokens_total": value} for role, value in sorted(role_totals.items(), key=lambda item: item[0])]
-    by_model = [{"model": model, "tokens_total": value} for model, value in sorted(model_totals.items(), key=lambda item: item[0])]
+    by_role = [
+        {"role": role, "tokens_total": value} for role, value in sorted(role_totals.items(), key=lambda item: item[0])
+    ]
+    by_model = [
+        {"model": model, "tokens_total": value}
+        for model, value in sorted(model_totals.items(), key=lambda item: item[0])
+    ]
 
     by_role_model: list[dict[str, Any]] = []
     for key, value in sorted(role_model_totals.items(), key=lambda item: item[0]):
@@ -1077,18 +1116,10 @@ def _collect_replay_turns(session_id: str, role: Optional[str] = None) -> list[d
             continue
         runtime_event = data.get("runtime_event", {})
         runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
-        turn_trace_id = str(
-            runtime_event.get("turn_trace_id")
-            or data.get("turn_trace_id")
-            or ""
-        ).strip()
+        turn_trace_id = str(runtime_event.get("turn_trace_id") or data.get("turn_trace_id") or "").strip()
 
         if event == "turn_start":
-            selected_model = str(
-                runtime_event.get("selected_model")
-                or data.get("selected_model")
-                or ""
-            ).strip()
+            selected_model = str(runtime_event.get("selected_model") or data.get("selected_model") or "").strip()
             if turn_trace_id and selected_model:
                 model_by_turn_trace[turn_trace_id] = selected_model
             continue
@@ -1096,12 +1127,9 @@ def _collect_replay_turns(session_id: str, role: Optional[str] = None) -> list[d
         if event != "turn_complete":
             continue
 
-        normalized_role = str(
-            record.get("role")
-            or runtime_event.get("role")
-            or data.get("role")
-            or "unknown"
-        ).strip().lower()
+        normalized_role = (
+            str(record.get("role") or runtime_event.get("role") or data.get("role") or "unknown").strip().lower()
+        )
         if role_filter and normalized_role != role_filter:
             continue
 
@@ -1124,7 +1152,8 @@ def _collect_replay_turns(session_id: str, role: Optional[str] = None) -> list[d
                     or runtime_event.get("selected_model")
                     or data.get("selected_model")
                     or ""
-                ).strip() or None,
+                ).strip()
+                or None,
                 "timestamp": str(record.get("timestamp") or ""),
             }
         )
@@ -1180,6 +1209,7 @@ async def get_execution_graph(session_id: str):
     await asyncio.to_thread(_persist_execution_graph_snapshot, session_id, payload)
     return payload
 
+
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str):
     log_event("api_session_detail", {"session_id": session_id}, PROJECT_ROOT)
@@ -1213,7 +1243,11 @@ async def get_session_status(session_id: str):
         "task_state": (
             "running"
             if is_active
-            else ("completed" if task and task.done() and not task.cancelled() else ("canceled" if task and task.cancelled() else "idle"))
+            else (
+                "completed"
+                if task and task.done() and not task.cancelled()
+                else ("canceled" if task and task.cancelled() else "idle")
+            )
         ),
         "backlog": {
             "count": len(backlog),
@@ -1273,10 +1307,12 @@ async def get_session_snapshot(session_id: str):
         raise HTTPException(**api_runtime_node.session_snapshot_not_found_error(session_id))
     return snapshot
 
+
 @v1_router.get("/sandboxes")
 async def list_sandboxes():
     invocation = api_runtime_node.resolve_sandboxes_list_invocation()
     return await _invoke_async_method(engine, invocation, "sandboxes")
+
 
 @v1_router.post("/sandboxes/{sandbox_id}/stop")
 async def stop_sandbox(sandbox_id: str):
@@ -1287,11 +1323,10 @@ async def stop_sandbox(sandbox_id: str):
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"ok": True}
 
+
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
 async def get_sandbox_logs(sandbox_id: str, service: Optional[str] = None):
-    pipeline = api_runtime_node.create_execution_pipeline(
-        api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT)
-    )
+    pipeline = api_runtime_node.create_execution_pipeline(api_runtime_node.resolve_sandbox_workspace(PROJECT_ROOT))
     invocation = api_runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
     logs = await asyncio.to_thread(
         _invoke_sync_method,
@@ -1554,7 +1589,6 @@ async def list_logs(
     for path in candidate_files:
         records.extend(await asyncio.to_thread(_read_log_records, path))
 
-
     filtered: list[dict] = []
     for record in records:
         rec_event = str(record.get("event") or "")
@@ -1597,6 +1631,7 @@ async def list_logs(
         },
     }
 
+
 app.include_router(v1_router)
 app.include_router(companion_api_router)
 
@@ -1616,17 +1651,22 @@ def create_api_app(project_root: Optional[Path] = None) -> FastAPI:
     companion_service = CompanionRuntimeService(project_root=PROJECT_ROOT)
     return app
 
+
 # --- WS ---
+
 
 async def event_broadcaster():
     while True:
         record = await runtime_state.event_queue.get()
         for ws in await runtime_state.get_websockets():
-            try: await ws.send_json(record)
+            try:
+                await ws.send_json(record)
             except (WebSocketDisconnect, RuntimeError, ValueError) as exc:
                 if isinstance(exc, WebSocketDisconnect) or api_runtime_node.should_remove_websocket(exc):
                     await runtime_state.remove_websocket(ws)
         runtime_state.event_queue.task_done()
+
+
 register_streaming_routes(
     app,
     api_key_name=API_KEY_NAME,

@@ -23,4 +23,3 @@ class GreedyHeuristicStrategy:
                 best = action
                 best_score = score
         return best
-

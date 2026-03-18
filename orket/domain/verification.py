@@ -7,6 +7,7 @@ SECURITY: Fixtures are loaded from a READ-ONLY verification directory.
 Agents can only write to their workspace, NOT to the verification directory.
 This prevents the write-then-execute RCE vulnerability.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

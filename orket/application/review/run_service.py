@@ -16,7 +16,12 @@ from orket.application.review.models import (
     SnapshotBounds,
 )
 from orket.application.review.policy_resolver import resolve_review_policy
-from orket.application.review.snapshot_loader import filter_snapshot_paths, load_from_diff, load_from_files, load_from_pr
+from orket.application.review.snapshot_loader import (
+    filter_snapshot_paths,
+    load_from_diff,
+    load_from_files,
+    load_from_pr,
+)
 
 
 def _ulid() -> str:

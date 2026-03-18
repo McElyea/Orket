@@ -230,7 +230,9 @@ class AdapterEvalHarness(EvalHarness):
                 case_score = soft_case_score
                 if soft_case_score < 1.0:
                     soft_fail_count += 1
-                    failing_cases.append({"case_id": case_id, "severity": round(1.0 - soft_case_score, 3), "hard": False})
+                    failing_cases.append(
+                        {"case_id": case_id, "severity": round(1.0 - soft_case_score, 3), "hard": False}
+                    )
             score_sum += case_score
 
             per_case.append(
@@ -280,4 +282,3 @@ class AdapterEvalHarness(EvalHarness):
 class StubEvalHarness(AdapterEvalHarness):
     def __init__(self) -> None:
         super().__init__(adapter=HashStubModelAdapter())
-

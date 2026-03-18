@@ -86,11 +86,7 @@ def runtime_limit_violations(binding: dict[str, Any], context: dict[str, Any]) -
 
 
 def required_tools(context: dict[str, Any]) -> list[str]:
-    required = [
-        str(tool).strip()
-        for tool in (context.get("required_action_tools") or [])
-        if str(tool).strip()
-    ]
+    required = [str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()]
     deduped: list[str] = []
     for tool in required:
         if tool not in deduped:
@@ -187,9 +183,11 @@ def tool_policy_violation(
             f"{tool_name}:determinism_class={determinism_class}",
         )
 
-    run_determinism_class = str(
-        context.get("run_determinism_class") or context.get("run_determinism_policy") or "workspace"
-    ).strip().lower()
+    run_determinism_class = (
+        str(context.get("run_determinism_class") or context.get("run_determinism_policy") or "workspace")
+        .strip()
+        .lower()
+    )
     if run_determinism_class not in _VALID_DETERMINISM_CLASSES:
         run_determinism_class = "workspace"
     if _DETERMINISM_RANK[determinism_class] > _DETERMINISM_RANK[run_determinism_class]:

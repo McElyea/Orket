@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Any
 
 
+MINIMUM_RUNS_FOR_DETERMINISM_CLAIM = 2
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run benchmark tasks repeatedly and report output drift.")
     parser.add_argument("--task-bank", default="benchmarks/task_bank/v1/tasks.json")
@@ -425,14 +428,21 @@ def main() -> int:
         latency_samples.extend(run_latencies)
         cost_samples.extend(run_costs)
         unique_hashes = sorted(set(hashes))
-        is_deterministic = len(unique_hashes) == 1
-        if is_deterministic:
+        determinism_note: str | None = None
+        if len(unique_hashes) == 1 and len(runs) >= MINIMUM_RUNS_FOR_DETERMINISM_CLAIM:
+            deterministic_claim: bool | None = True
             deterministic_count += 1
+        elif len(runs) < MINIMUM_RUNS_FOR_DETERMINISM_CLAIM:
+            deterministic_claim = None
+            determinism_note = "single_run_insufficient"
+        else:
+            deterministic_claim = False
 
         details[task_id] = {
             "tier": task.get("tier"),
             "unique_hashes": len(unique_hashes),
-            "deterministic": is_deterministic,
+            "deterministic": deterministic_claim,
+            "determinism_note": determinism_note,
             "avg_latency_ms": round(sum(run_latencies) / len(run_latencies), 3) if run_latencies else 0.0,
             "avg_cost_usd": round(sum(run_costs) / len(run_costs), 6) if run_costs else 0.0,
             "hashes": hashes,

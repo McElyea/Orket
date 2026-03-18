@@ -8,6 +8,7 @@ import threading
 from pathlib import Path
 from typing import Any, Callable
 
+from orket.naming import sanitize_name
 from orket.time_utils import now_local
 
 # Initialize system logger
@@ -99,6 +100,7 @@ def setup_logging(workspace: Path) -> Path:
     _ensure_log_parent(path)
     return path
 
+
 # Global list of event subscribers (e.g. for WebSockets)
 _subscribers: list[Callable[[dict[str, Any]], None]] = []
 
@@ -107,9 +109,11 @@ MISSING_WORKSPACE_MODE_LEGACY = "legacy_default"
 MISSING_WORKSPACE_MODE_FAIL_FAST = "fail_fast"
 MISSING_WORKSPACE_ERROR_CODE = "E_LOG_WORKSPACE_REQUIRED"
 
+
 def subscribe_to_events(callback: Callable[[dict[str, Any]], None]) -> None:
     if callback not in _subscribers:
         _subscribers.append(callback)
+
 
 def unsubscribe_from_events(callback: Callable[[dict[str, Any]], None]) -> None:
     if callback in _subscribers:
@@ -144,19 +148,18 @@ def _resolve_workspace(workspace: Path | None) -> tuple[Path, dict[str, Any]]:
         },
     )
 
-from orket.naming import sanitize_name
 
 def _log_path(workspace: Path, role: str | None = None) -> Path:
     root_log = Path("workspace/default/orket.log")
     root_log.parent.mkdir(parents=True, exist_ok=True)
-    
+
     if role:
         agent_dir = workspace / "agents"
         agent_dir.mkdir(parents=True, exist_ok=True)
         # Sanitize name for filename consistency
         safe_name = sanitize_name(role)
         return agent_dir / f"{safe_name}.log"
-    
+
     workspace.mkdir(parents=True, exist_ok=True)
     return workspace / "orket.log"
 
@@ -233,7 +236,11 @@ def log_event(
     - log_event(level, component, event, payload) [Legacy Compat]
     """
     # 1. Handle legacy signature if 'event' looks like a level and data is component-like
-    if event in {"debug", "info", "warn", "warning", "error", "critical"} and isinstance(data, str) and len(kwargs) == 0:
+    if (
+        event in {"debug", "info", "warn", "warning", "error", "critical"}
+        and isinstance(data, str)
+        and len(kwargs) == 0
+    ):
         # Shift args: event -> level, data -> component, workspace -> event, role -> payload
         level = event
         component = data
@@ -254,7 +261,7 @@ def log_event(
     role_name = role or full_data.get("role") or "system"
     runtime_event = _build_runtime_event(event, full_data, role_name)
     full_data = {**full_data, "runtime_event": runtime_event}
-    
+
     record = {
         "timestamp": now_local().isoformat(),
         "level": level_name,
@@ -318,6 +325,7 @@ def log_model_usage(role: str, model: str, tokens: dict[str, Any], step_index: i
         workspace=workspace,
     )
 
+
 def get_member_metrics(workspace: Path) -> dict[str, Any]:
     """
     Aggregates stats per role from the workspace/orket.log.
@@ -332,16 +340,17 @@ def get_member_metrics(workspace: Path) -> dict[str, Any]:
             try:
                 record = json.loads(line)
                 role = record.get("role")
-                if not role: continue
-                
+                if not role:
+                    continue
+
                 if role not in metrics:
                     metrics[role] = {"tokens": 0, "lines_written": 0, "last_action": "Idle", "detail": ""}
-                
+
                 event = record.get("event")
                 data = record.get("data", {})
-                
+
                 if event == "model_usage":
-                    metrics[role]["tokens"] += (data.get("total_tokens") or 0)
+                    metrics[role]["tokens"] += data.get("total_tokens") or 0
                 elif event == "tool_call":
                     tool = data.get("tool")
                     metrics[role]["last_action"] = f"Executing {tool}"
@@ -355,26 +364,27 @@ def get_member_metrics(workspace: Path) -> dict[str, Any]:
                 continue
     return metrics
 
+
 def log_crash(exception: Exception, traceback_str: str, workspace: Path | None = None) -> None:
     """
     Safely logs a crash to a rotating file.
     """
     if workspace is None:
         workspace = Path("workspace/default")
-    
+
     workspace.mkdir(parents=True, exist_ok=True)
     crash_log = workspace / "orket_crash.log"
-    
+
     # Create a dedicated logger for crashes to avoid interference with the main logger
     crash_logger = logging.getLogger("orket_crash")
     crash_logger.setLevel(logging.ERROR)
-    
+
     if not crash_logger.handlers:
         handler = logging.handlers.RotatingFileHandler(
-            crash_log, maxBytes=5*1024*1024, backupCount=5, encoding="utf-8"
+            crash_log, maxBytes=5 * 1024 * 1024, backupCount=5, encoding="utf-8"
         )
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         handler.setFormatter(formatter)
         crash_logger.addHandler(handler)
-    
+
     crash_logger.error(f"CRITICAL CRASH: {type(exception).__name__}\n{traceback_str}")

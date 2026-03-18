@@ -212,7 +212,12 @@ CONTRACT_SNAPSHOT_DEFS: tuple[ContractSnapshotDef, ...] = (
         capability_fallback_hierarchy_snapshot,
         "E_RUN_CAPABILITY_FALLBACK_HIERARCHY_IMMUTABLE",
     ),
-    ("model_profile_bios", "model_profile_bios.json", model_profile_bios_snapshot, "E_RUN_MODEL_PROFILE_BIOS_IMMUTABLE"),
+    (
+        "model_profile_bios",
+        "model_profile_bios.json",
+        model_profile_bios_snapshot,
+        "E_RUN_MODEL_PROFILE_BIOS_IMMUTABLE",
+    ),
     (
         "interrupt_semantics_policy",
         "interrupt_semantics_policy.json",

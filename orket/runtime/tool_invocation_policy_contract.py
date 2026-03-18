@@ -75,9 +75,7 @@ def validate_tool_invocation_policy_contract(payload: dict[str, Any] | None = No
         run_type = str(row.get("run_type") or "").strip().lower()
         route_lane = str(row.get("route_lane") or "").strip()
         allowed_tool_rings = {
-            str(token).strip().lower()
-            for token in list(row.get("allowed_tool_rings") or [])
-            if str(token).strip()
+            str(token).strip().lower() for token in list(row.get("allowed_tool_rings") or []) if str(token).strip()
         }
         allowed_capability_profiles = {
             str(token).strip().lower()
@@ -88,9 +86,7 @@ def validate_tool_invocation_policy_contract(payload: dict[str, Any] | None = No
         tool_to_tool_invocation = str(row.get("tool_to_tool_invocation") or "").strip().lower()
         max_tool_invocations_per_run = int(row.get("max_tool_invocations_per_run") or 0)
         required_error_codes = [
-            str(token).strip()
-            for token in list(row.get("required_error_codes") or [])
-            if str(token).strip()
+            str(token).strip() for token in list(row.get("required_error_codes") or []) if str(token).strip()
         ]
 
         if not run_type:

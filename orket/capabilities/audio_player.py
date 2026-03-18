@@ -40,4 +40,3 @@ def build_audio_player(*, input_config: dict[str, Any]) -> AudioPlayer:
         return SounddevicePlayer()
     except RuntimeError:
         return NullAudioPlayer()
-

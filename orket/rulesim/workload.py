@@ -103,7 +103,9 @@ def _run_batch(run_config: RunConfig) -> BatchResult:
         "run_seed": run_config.run_seed,
         "episodes": run_config.episodes,
         "max_steps": run_config.max_steps,
-        "agents": [{"id": agent.id, "strategy": agent.strategy, "params": dict(agent.params)} for agent in run_config.agents],
+        "agents": [
+            {"id": agent.id, "strategy": agent.strategy, "params": dict(agent.params)} for agent in run_config.agents
+        ],
         "scenario": dict(run_config.scenario),
         "ruleset": dict(run_config.ruleset),
         "illegal_action_policy": run_config.illegal_action_policy,
@@ -192,7 +194,9 @@ def run_rulesim_v0_sync(*, input_config: dict[str, Any], workspace_path: str | P
         "run_seed": run_config.run_seed,
         "episodes": run_config.episodes,
         "max_steps": run_config.max_steps,
-        "agents": [{"id": agent.id, "strategy": agent.strategy, "params": dict(agent.params)} for agent in run_config.agents],
+        "agents": [
+            {"id": agent.id, "strategy": agent.strategy, "params": dict(agent.params)} for agent in run_config.agents
+        ],
         "scenario": dict(run_config.scenario),
         "ruleset": dict(run_config.ruleset),
         "illegal_action_policy": run_config.illegal_action_policy,

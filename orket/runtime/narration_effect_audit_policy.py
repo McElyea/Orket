@@ -63,11 +63,7 @@ def validate_narration_effect_audit_policy(payload: dict[str, Any] | None = None
             raise ValueError("E_NARRATION_EFFECT_AUDIT_POLICY_ROW_SCHEMA")
         tool = str(row.get("tool") or "").strip().lower()
         verification = str(row.get("verification") or "").strip().lower()
-        failure_reasons = {
-            str(token).strip().lower()
-            for token in row.get("failure_reasons", [])
-            if str(token).strip()
-        }
+        failure_reasons = {str(token).strip().lower() for token in row.get("failure_reasons", []) if str(token).strip()}
         if not tool:
             raise ValueError("E_NARRATION_EFFECT_AUDIT_POLICY_TOOL_REQUIRED")
         if not verification:
@@ -82,19 +78,11 @@ def validate_narration_effect_audit_policy(payload: dict[str, Any] | None = None
     if set(observed_tools) != _EXPECTED_TOOLS:
         raise ValueError("E_NARRATION_EFFECT_AUDIT_POLICY_TOOL_SET_MISMATCH")
 
-    audit_statuses = {
-        str(token).strip().lower()
-        for token in policy.get("audit_statuses", [])
-        if str(token).strip()
-    }
+    audit_statuses = {str(token).strip().lower() for token in policy.get("audit_statuses", []) if str(token).strip()}
     if audit_statuses != _EXPECTED_AUDIT_STATUSES:
         raise ValueError("E_NARRATION_EFFECT_AUDIT_POLICY_AUDIT_STATUS_SET_MISMATCH")
 
-    failure_reasons = {
-        str(token).strip().lower()
-        for token in policy.get("failure_reasons", [])
-        if str(token).strip()
-    }
+    failure_reasons = {str(token).strip().lower() for token in policy.get("failure_reasons", []) if str(token).strip()}
     if failure_reasons != _EXPECTED_FAILURE_REASONS or observed_failure_reasons != _EXPECTED_FAILURE_REASONS:
         raise ValueError("E_NARRATION_EFFECT_AUDIT_POLICY_FAILURE_REASON_SET_MISMATCH")
 

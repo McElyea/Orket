@@ -10,4 +10,3 @@ class RandomUniformStrategy:
             raise ValueError("legal_actions must not be empty")
         index = rng.randrange(len(legal_actions))
         return legal_actions[index]
-

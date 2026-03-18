@@ -12,7 +12,8 @@
     "demo.credentialed_echo": "6c9df2c5aa33039a6de6c06b857a380779dfc66bbc5d98bf53562b50c5cff804",
     "demo.exfil_http": "922737f8f41c4448c643272ef80a8530ad9fd78e4b4fe223a138b9a1c6fa00a2",
     "fs.delete": "825cfefd3f9bcfb6bdc7b5e500293c18f9f15fe3288e6a82abc7c5ed68b75130",
-    "fs.write_patch": "dfb855b033b739b890fc8f519ceae6390b4c01f7e744f7a56c1839600b8c16fe"
+    "fs.write_patch": "dfb855b033b739b890fc8f519ceae6390b4c01f7e744f7a56c1839600b8c16fe",
+    "local.echo": "e51eb5feb0ec1806367e40c72e17b981b5c7f980c241078b3f8b94015c339f7c"
   },
   "version": "nervous_system_policy_digest_snapshot/v2"
 }

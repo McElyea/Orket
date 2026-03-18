@@ -6,7 +6,7 @@ Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. techdebt remediation plan execution -- Canonical plan: `docs/projects/techdebt/remediation_plan.md`.
+1. None. No active non-recurring lane is currently open.
 
 ## Maintenance (Non-Priority)
 
@@ -29,5 +29,5 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
-| techdebt | active+maintenance | P0-now + P2-recurring | `docs/projects/techdebt/` | Orket Core | Active plan: `remediation_plan.md`. Standing maintenance also continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
+| techdebt | maintenance | P2-recurring | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

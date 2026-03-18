@@ -105,7 +105,10 @@ def _has_fence_block(text: str) -> bool:
 
 
 def _has_cli_context(fragment: str) -> bool:
-    return any(pattern.search(fragment) for pattern in _CLI_MARKER_PATTERNS) or _EXEC_VERB_PATTERN.search(fragment) is not None
+    return (
+        any(pattern.search(fragment) for pattern in _CLI_MARKER_PATTERNS)
+        or _EXEC_VERB_PATTERN.search(fragment) is not None
+    )
 
 
 def _tooling_hard_matches(text: str) -> tuple[list[str], list[dict[str, str]]]:

@@ -71,9 +71,7 @@ DEFAULT_GUARD_RULES: List[GuardRule] = [
 ]
 
 
-DEFAULT_GUARD_RULE_IDS: List[str] = [
-    rule.rule_id for rule in DEFAULT_GUARD_RULES
-]
+DEFAULT_GUARD_RULE_IDS: List[str] = [rule.rule_id for rule in DEFAULT_GUARD_RULES]
 
 
 def normalize_rule_ids(values: Iterable[object] | None) -> List[str]:
@@ -92,7 +90,9 @@ def normalize_rule_ids(values: Iterable[object] | None) -> List[str]:
     return normalized
 
 
-def ownership_conflicts(prompt_rule_ids: Iterable[object] | None, runtime_guard_rule_ids: Iterable[object] | None) -> List[str]:
+def ownership_conflicts(
+    prompt_rule_ids: Iterable[object] | None, runtime_guard_rule_ids: Iterable[object] | None
+) -> List[str]:
     prompt_ids = set(normalize_rule_ids(prompt_rule_ids))
     runtime_ids = set(normalize_rule_ids(runtime_guard_rule_ids))
     return sorted(prompt_ids.intersection(runtime_ids))
@@ -111,9 +111,7 @@ def build_guard_rule_registry(rules: Iterable[GuardRule] | None = None) -> Dict[
             raise ValueError(f"guard rule '{rule_id}' must declare at least one scope location")
         expected_prefix = f"{rule.owner.upper()}."
         if not rule_id.startswith(expected_prefix):
-            raise ValueError(
-                f"guard rule '{rule_id}' owner '{rule.owner}' must use prefix '{expected_prefix}'"
-            )
+            raise ValueError(f"guard rule '{rule_id}' owner '{rule.owner}' must use prefix '{expected_prefix}'")
         registry[rule_id] = rule
     return registry
 
@@ -129,11 +127,7 @@ def validate_runtime_guard_rule_ids(
 ) -> List[str]:
     if runtime_guard_rule_ids is None:
         return []
-    raw_values = [
-        str(value or "").strip()
-        for value in runtime_guard_rule_ids
-        if str(value or "").strip()
-    ]
+    raw_values = [str(value or "").strip() for value in runtime_guard_rule_ids if str(value or "").strip()]
     if len(raw_values) != len(set(raw_values)):
         seen = set()
         duplicates: List[str] = []
@@ -148,9 +142,7 @@ def validate_runtime_guard_rule_ids(
     registry = registry or DEFAULT_GUARD_RULE_REGISTRY
     unknown = sorted(rule_id for rule_id in normalized if rule_id not in registry)
     if unknown:
-        raise ValueError(
-            "Unknown runtime guard rule_id values: " + ", ".join(unknown)
-        )
+        raise ValueError("Unknown runtime guard rule_id values: " + ", ".join(unknown))
     return normalized
 
 
@@ -171,7 +163,5 @@ def resolve_runtime_guard_rule_ids(
 def prompt_guard_namespace_conflicts(prompt_rule_ids: Iterable[object] | None) -> List[str]:
     prompt_ids = normalize_rule_ids(prompt_rule_ids)
     return sorted(
-        rule_id
-        for rule_id in prompt_ids
-        if any(rule_id.startswith(prefix) for prefix in GUARD_OWNER_PREFIXES)
+        rule_id for rule_id in prompt_ids if any(rule_id.startswith(prefix) for prefix in GUARD_OWNER_PREFIXES)
     )

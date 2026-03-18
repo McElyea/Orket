@@ -211,26 +211,22 @@ class ScopedMemoryStore:
         normalized_query = str(query or "").strip()
         if normalized_query:
             like_query = f"%{normalized_query}%"
-            sql = (
-                """
+            sql = """
                 SELECT scope, session_id, memory_key, memory_value, metadata_json, created_at, updated_at
                 FROM extension_memory
                 WHERE scope = 'session_memory' AND session_id = ? AND (memory_key LIKE ? OR memory_value LIKE ?)
                 ORDER BY updated_at DESC, memory_key ASC
                 LIMIT ?
                 """
-            )
             args = (resolved_session, like_query, like_query, bounded_limit)
         else:
-            sql = (
-                """
+            sql = """
                 SELECT scope, session_id, memory_key, memory_value, metadata_json, created_at, updated_at
                 FROM extension_memory
                 WHERE scope = 'session_memory' AND session_id = ?
                 ORDER BY updated_at DESC, memory_key ASC
                 LIMIT ?
                 """
-            )
             args = (resolved_session, bounded_limit)
         return await self._query_records(sql=sql, args=args)
 
@@ -241,26 +237,22 @@ class ScopedMemoryStore:
         normalized_query = str(query or "").strip()
         if normalized_query:
             like_query = f"%{normalized_query}%"
-            sql = (
-                """
+            sql = """
                 SELECT 'episodic_memory', session_id, memory_key, memory_value, metadata_json, created_at, updated_at
                 FROM extension_episodic_memory
                 WHERE session_id = ? AND (memory_key LIKE ? OR memory_value LIKE ?)
                 ORDER BY updated_at DESC, memory_key ASC
                 LIMIT ?
                 """
-            )
             args = (resolved_session, like_query, like_query, bounded_limit)
         else:
-            sql = (
-                """
+            sql = """
                 SELECT 'episodic_memory', session_id, memory_key, memory_value, metadata_json, created_at, updated_at
                 FROM extension_episodic_memory
                 WHERE session_id = ?
                 ORDER BY updated_at DESC, memory_key ASC
                 LIMIT ?
                 """
-            )
             args = (resolved_session, bounded_limit)
         return await self._query_records(sql=sql, args=args)
 
@@ -317,7 +309,11 @@ class ScopedMemoryStore:
         async with aiosqlite.connect(self._db_path) as conn:
             await conn.execute(
                 """
-                INSERT INTO extension_episodic_memory (session_id, memory_key, memory_value, metadata_json, created_at, updated_at)
+                INSERT INTO extension_episodic_memory
+                (
+                    session_id, memory_key, memory_value, metadata_json,
+                    created_at, updated_at
+                )
                 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 ON CONFLICT(session_id, memory_key)
                 DO UPDATE SET
@@ -351,7 +347,11 @@ class ScopedMemoryStore:
         async with aiosqlite.connect(self._db_path) as conn:
             await conn.execute(
                 """
-                INSERT INTO extension_memory (scope, session_id, memory_key, memory_value, metadata_json, created_at, updated_at)
+                INSERT INTO extension_memory
+                (
+                    scope, session_id, memory_key, memory_value, metadata_json,
+                    created_at, updated_at
+                )
                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 ON CONFLICT(scope, session_id, memory_key)
                 DO UPDATE SET

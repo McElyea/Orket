@@ -214,7 +214,9 @@ def _evaluate_reference_write(metadata: dict[str, Any]) -> MemoryWritePolicyDeci
     if trust_level not in _ALLOWED_TRUST_LEVELS:
         trust_level = "advisory"
     metadata["write_threshold"] = "reference_context_capture"
-    metadata["write_rationale"] = _resolve_rationale(metadata, _REFERENCE_RATIONALES.get(kind, "reference_context_capture"))
+    metadata["write_rationale"] = _resolve_rationale(
+        metadata, _REFERENCE_RATIONALES.get(kind, "reference_context_capture")
+    )
     metadata["trust_level"] = trust_level
     metadata["conflict_resolution"] = "none"
     return MemoryWritePolicyDecision(

@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
-from orket.kernel.v1.canonical import canonical_json_bytes, fs_token, structural_digest, sorted_deterministically
+from orket.kernel.v1.canonical import canonical_json_bytes, fs_token, structural_digest
 from orket.kernel.v1.contracts import KernelIssue
 
 # ----------------------------
@@ -33,6 +33,7 @@ I_REF_MULTISOURCE = "I_REF_MULTISOURCE"
 # ----------------------------
 # Data helpers
 # ----------------------------
+
 
 @dataclass(frozen=True)
 class TripletDigests:
@@ -92,9 +93,19 @@ def _iter_refs_from_links(links: dict[str, Any]) -> Iterable[tuple[str, str, str
                 if not _is_ref_object(item):
                     continue
                 ptr = f"{key_ptr}/{idx}"
-                yield (item["type"], item["id"], ptr, item.get("relationship") if isinstance(item.get("relationship"), str) else None)
+                yield (
+                    item["type"],
+                    item["id"],
+                    ptr,
+                    item.get("relationship") if isinstance(item.get("relationship"), str) else None,
+                )
         elif _is_ref_object(val):
-            yield (val["type"], val["id"], key_ptr, val.get("relationship") if isinstance(val.get("relationship"), str) else None)
+            yield (
+                val["type"],
+                val["id"],
+                key_ptr,
+                val.get("relationship") if isinstance(val.get("relationship"), str) else None,
+            )
         else:
             # Not a ref container (minimal LSI doesn't validate shapes here)
             continue
@@ -103,6 +114,7 @@ def _iter_refs_from_links(links: dict[str, Any]) -> Iterable[tuple[str, str, str
 # ----------------------------
 # LSI path layout
 # ----------------------------
+
 
 def _root_index(root: str) -> Path:
     return Path(root) / DIR_INDEX
@@ -144,12 +156,13 @@ def _triplets_path(scope_root: Path, stem: str) -> Path:
 
 
 def _refs_by_id_path(scope_root: Path, ref_type: str, ref_id: str) -> Path:
-    return (scope_root / DIR_REFS / DIR_BY_ID / _fs_token(ref_type) / f"{_fs_token(ref_id)}.json")
+    return scope_root / DIR_REFS / DIR_BY_ID / _fs_token(ref_type) / f"{_fs_token(ref_id)}.json"
 
 
 # ----------------------------
 # Public minimal LSI API
 # ----------------------------
+
 
 class LocalSovereignIndex:
     """
@@ -241,9 +254,13 @@ class LocalSovereignIndex:
 
     # ---------- Read helpers (tests + kernel) ----------
 
-    def read_triplet_record(self, *, scope: str, stem: str, run_id: str | None = None, turn_id: str | None = None) -> dict[str, Any] | None:
+    def read_triplet_record(
+        self, *, scope: str, stem: str, run_id: str | None = None, turn_id: str | None = None
+    ) -> dict[str, Any] | None:
         stem = stem.replace("\\", "/").strip("/")
-        scope_root = _scope_root(self.root, scope, run_id, turn_id) if scope == DIR_STAGING else _scope_root(self.root, scope)
+        scope_root = (
+            _scope_root(self.root, scope, run_id, turn_id) if scope == DIR_STAGING else _scope_root(self.root, scope)
+        )
         path = _triplets_path(scope_root, stem)
         if not path.exists():
             return None
@@ -258,7 +275,9 @@ class LocalSovereignIndex:
         run_id: str | None = None,
         turn_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        scope_root = _scope_root(self.root, scope, run_id, turn_id) if scope == DIR_STAGING else _scope_root(self.root, scope)
+        scope_root = (
+            _scope_root(self.root, scope, run_id, turn_id) if scope == DIR_STAGING else _scope_root(self.root, scope)
+        )
         path = _refs_by_id_path(scope_root, ref_type, ref_id)
         if not path.exists():
             return []
@@ -298,14 +317,16 @@ class LocalSovereignIndex:
             issues = [
                 KernelIssue(
                     level="FAIL",
-                stage="lsi",
-                code=E_LSI_ORPHAN_TARGET,
-                location="/ci/schema",
-                message="Triplet not found in staging for validation.",
-                details={"stem": stem, "run_id": run_id, "turn_id": turn_id},
+                    stage="lsi",
+                    code=E_LSI_ORPHAN_TARGET,
+                    location="/ci/schema",
+                    message="Triplet not found in staging for validation.",
+                    details={"stem": stem, "run_id": run_id, "turn_id": turn_id},
                 )
             ]
-            events.append(_event_line("FAIL", "lsi", E_LSI_ORPHAN_TARGET, "/ci/schema", "Triplet missing in staging.", stem=stem))
+            events.append(
+                _event_line("FAIL", "lsi", E_LSI_ORPHAN_TARGET, "/ci/schema", "Triplet missing in staging.", stem=stem)
+            )
             return "FAIL", issues, events
 
         links_digest = triplet.get("links_digest")
@@ -320,7 +341,16 @@ class LocalSovereignIndex:
                     details={"stem": stem},
                 )
             ]
-            events.append(_event_line("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/manifest", "Triplet record missing links_digest.", stem=stem))
+            events.append(
+                _event_line(
+                    "FAIL",
+                    "base_shape",
+                    "E_BASE_SHAPE_INVALID_MANIFEST_VALUE",
+                    "/manifest",
+                    "Triplet record missing links_digest.",
+                    stem=stem,
+                )
+            )
             return "FAIL", issues, events
 
         links_obj = self._get_object_json(staged_root, links_digest)
@@ -335,7 +365,16 @@ class LocalSovereignIndex:
                     details={"stem": stem},
                 )
             ]
-            events.append(_event_line("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_LINKS_VALUE", "/links", "Links object must be a JSON object.", stem=stem))
+            events.append(
+                _event_line(
+                    "FAIL",
+                    "base_shape",
+                    "E_BASE_SHAPE_INVALID_LINKS_VALUE",
+                    "/links",
+                    "Links object must be a JSON object.",
+                    stem=stem,
+                )
+            )
             return "FAIL", issues, events
 
         # Evaluate refs deterministically in pointer order
@@ -367,14 +406,27 @@ class LocalSovereignIndex:
                     )
                 )
             else:
-                events.append(_event_line("INFO", "lsi", "I_REF_VISIBLE", id_ptr, "Reference target resolved.", layer=found_layer, type=ref_type, id=ref_id))
+                events.append(
+                    _event_line(
+                        "INFO",
+                        "lsi",
+                        "I_REF_VISIBLE",
+                        id_ptr,
+                        "Reference target resolved.",
+                        layer=found_layer,
+                        type=ref_type,
+                        id=ref_id,
+                    )
+                )
 
         # Deterministic issue ordering (stage fixed, then pointer, then code, then details)
         issues.sort(key=lambda i: (i.location, i.code, json.dumps(i.details, sort_keys=True, separators=(",", ":"))))
 
         if issues:
             for issue in issues:
-                events.append(_event_line("FAIL", issue.stage, issue.code, issue.location, issue.message, **issue.details))
+                events.append(
+                    _event_line("FAIL", issue.stage, issue.code, issue.location, issue.message, **issue.details)
+                )
             return "FAIL", issues, events
 
         return "PASS", [], events
@@ -430,7 +482,6 @@ class LocalSovereignIndex:
         - Emit multi-source collisions is left to promotion/host; we only persist truth.
         """
         # Group by (type,id) for minimal writes
-        grouped: dict[tuple[str, str], list[RefSource]] = {}
         for s in new_sources:
             # We need the ref's type/id; store them encoded in location? No.
             # For minimal v1: caller passes sources grouped per ref type/id via this method.
@@ -495,7 +546,9 @@ class LocalSovereignIndex:
           3) Committed: committed refs/by_id exists
         """
         # Self + staging
-        staging_sources = self.read_refs_sources(scope=DIR_STAGING, ref_type=ref_type, ref_id=ref_id, run_id=run_id, turn_id=turn_id)
+        staging_sources = self.read_refs_sources(
+            scope=DIR_STAGING, ref_type=ref_type, ref_id=ref_id, run_id=run_id, turn_id=turn_id
+        )
         if any(s.get("stem") == stem for s in staging_sources):
             return "Self"
         if staging_sources:
@@ -511,6 +564,7 @@ class LocalSovereignIndex:
 # ----------------------------
 # Patch: stage_triplet needs grouped ref update
 # ----------------------------
+
 
 def _event_line(level: str, stage: str, code: str, loc: str, message: str, **details: Any) -> str:
     # Minimal deterministic, single-line, pipe-guaranteed event format
@@ -532,7 +586,17 @@ def _event_line(level: str, stage: str, code: str, loc: str, message: str, **det
 # Monkey-patch the grouping behavior into stage_triplet cleanly without rewriting above block:
 # (keeps the file minimal and readable; you can refactor later.)
 
-def _stage_triplet_grouped_update(self: LocalSovereignIndex, *, run_id: str, turn_id: str, stem: str, body: dict[str, Any], links: dict[str, Any], manifest: dict[str, Any]) -> TripletDigests:
+
+def _stage_triplet_grouped_update(
+    self: LocalSovereignIndex,
+    *,
+    run_id: str,
+    turn_id: str,
+    stem: str,
+    body: dict[str, Any],
+    links: dict[str, Any],
+    manifest: dict[str, Any],
+) -> TripletDigests:
     stem = stem.replace("\\", "/").strip("/")
 
     scope_root = _scope_root(self.root, DIR_STAGING, run_id, turn_id)

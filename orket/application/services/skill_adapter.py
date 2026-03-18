@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable
+from typing import Any, Iterable
 
 from orket.application.services.skill_loader import load_skill_manifest_or_raise
 
@@ -30,7 +30,8 @@ def build_tool_profile_bindings(skill_manifest_payload: dict[str, Any]) -> dict[
             "tool_profile_version": str(entrypoint.get("tool_profile_version") or "").strip() or "unknown-v1",
             "ring": str(entrypoint.get("ring") or "core").strip().lower() or "core",
             "determinism_class": str(entrypoint.get("determinism_class") or "workspace").strip().lower() or "workspace",
-            "capability_profile": str(entrypoint.get("capability_profile") or "workspace").strip().lower() or "workspace",
+            "capability_profile": str(entrypoint.get("capability_profile") or "workspace").strip().lower()
+            or "workspace",
             "tool_contract_version": str(entrypoint.get("tool_contract_version") or "1.0.0").strip() or "1.0.0",
             "runtime_limits": dict(entrypoint.get("runtime_limits") or {}),
             "requested_permissions": dict(entrypoint.get("requested_permissions") or {}),

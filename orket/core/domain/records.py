@@ -54,4 +54,3 @@ class CardRecord(BaseModel):
     status: CardStatus
     summary: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
-

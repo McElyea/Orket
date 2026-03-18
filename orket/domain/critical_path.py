@@ -2,12 +2,13 @@ from typing import List, Dict, Set
 from orket.schema import EpicConfig
 from orket.core.critical_path import CriticalPathEngine as CoreCriticalPathEngine
 
+
 class CriticalPathEngine:
     """
     Shim for the new CoreCriticalPathEngine.
     Maintains compatibility with EpicConfig while delegating logic to core.
     """
-    
+
     @staticmethod
     def get_priority_queue(epic: EpicConfig) -> List[str]:
         """

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 import asyncio
 import hashlib
 import json
@@ -15,6 +15,7 @@ from orket.runtime.local_prompt_profiles import (
     LocalPromptProfile,
     load_local_prompt_profile_registry_file,
 )
+
 E_LOCAL_PROMPT_MODE_INVALID = "E_LOCAL_PROMPT_MODE_INVALID"
 E_LOCAL_PROMPT_TASK_CLASS_INVALID = "E_LOCAL_PROMPT_TASK_CLASS_INVALID"
 E_LOCAL_PROMPT_ROLE_FORBIDDEN = "E_LOCAL_PROMPT_ROLE_FORBIDDEN"
@@ -25,6 +26,8 @@ _TASK_CLASS_VALUES = {"strict_json", "tool_call", "concise_text", "reasoning"}
 _MODE_VALUES = {"shadow", "compat", "enforce"}
 _REGISTRY_CACHE_LOCK = threading.Lock()
 _REGISTRY_CACHE: dict[str, Any] = {}
+
+
 def _normalize_mode(value: Any) -> str:
     token = str(value or "").strip().lower().replace("-", "_")
     aliases = {
@@ -36,18 +39,26 @@ def _normalize_mode(value: Any) -> str:
     if not resolved:
         raise ValueError(f"{E_LOCAL_PROMPT_MODE_INVALID}:{token or '<empty>'}")
     return resolved
+
+
 def _normalize_task_class(value: Any) -> str:
     token = str(value or "").strip().lower().replace("-", "_")
     if token not in _TASK_CLASS_VALUES:
         raise ValueError(f"{E_LOCAL_PROMPT_TASK_CLASS_INVALID}:{token or '<empty>'}")
     return token
+
+
 def _parse_bool(value: Any) -> bool:
     token = str(value or "").strip().lower()
     return token in {"1", "true", "yes", "on", "enabled"}
+
+
 def _canonicalize_text(value: str) -> str:
     normalized = value.replace("\r\n", "\n").replace("\r", "\n")
     # LP-02 requires trailing whitespace normalization before hashing.
     return "\n".join(line.rstrip(" \t") for line in normalized.split("\n"))
+
+
 def _canonicalize_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
     normalized: list[dict[str, str]] = []
     for message in messages:
@@ -55,11 +66,15 @@ def _canonicalize_messages(messages: list[dict[str, str]]) -> list[dict[str, str
         content = _canonicalize_text(str((message or {}).get("content") or ""))
         normalized.append({"role": role, "content": content})
     return normalized
+
+
 def _render_hash(messages: list[dict[str, str]]) -> tuple[str, int]:
     canonical = json.dumps(messages, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     payload = canonical.encode("utf-8")
     digest = hashlib.sha256(payload).hexdigest()
     return digest, len(payload)
+
+
 def _profile_registry_with_hash(path: Path) -> tuple[Any, str]:
     resolved = path.resolve()
     stat = resolved.stat()
@@ -75,14 +90,14 @@ def _profile_registry_with_hash(path: Path) -> tuple[Any, str]:
         _REGISTRY_CACHE["registry"] = registry
         _REGISTRY_CACHE["hash"] = digest
     return registry, digest
+
+
 def _resolve_task_class(runtime_context: dict[str, Any]) -> str:
     explicit = str(runtime_context.get("local_prompt_task_class") or "").strip()
     if explicit:
         return _normalize_task_class(explicit)
     required_tools = [
-        str(tool).strip()
-        for tool in (runtime_context.get("required_action_tools") or [])
-        if str(tool).strip()
+        str(tool).strip() for tool in (runtime_context.get("required_action_tools") or []) if str(tool).strip()
     ]
     # Required tool turns are structured tool-call paths even when legacy prompt mode
     # is still active, so they must use the deterministic tool_call bundle.
@@ -91,6 +106,8 @@ def _resolve_task_class(runtime_context: dict[str, Any]) -> str:
     if bool(runtime_context.get("protocol_governed_enabled")):
         return "strict_json"
     return "concise_text"
+
+
 def _role_forbidden_error(messages: list[dict[str, str]], profile: LocalPromptProfile) -> str | None:
     allowed_roles = {str(role).strip().lower() for role in profile.allowed_roles if str(role).strip()}
     invalid_roles = sorted(
@@ -103,6 +120,8 @@ def _role_forbidden_error(messages: list[dict[str, str]], profile: LocalPromptPr
     if invalid_roles:
         return ",".join(invalid_roles)
     return None
+
+
 def _apply_user_injection(messages: list[dict[str, str]]) -> list[dict[str, str]]:
     system_rows: list[str] = []
     non_system: list[dict[str, str]] = []
@@ -116,11 +135,7 @@ def _apply_user_injection(messages: list[dict[str, str]]) -> list[dict[str, str]
         non_system.append({"role": role, "content": content})
     if not system_rows:
         return non_system
-    wrapper = (
-        "[SYSTEM_INSTRUCTION_BEGIN]\n"
-        + "\n\n".join(system_rows)
-        + "\n[SYSTEM_INSTRUCTION_END]"
-    )
+    wrapper = "[SYSTEM_INSTRUCTION_BEGIN]\n" + "\n\n".join(system_rows) + "\n[SYSTEM_INSTRUCTION_END]"
     for index, message in enumerate(non_system):
         if str(message.get("role") or "").strip().lower() == "user":
             content = str(message.get("content") or "")
@@ -128,6 +143,8 @@ def _apply_user_injection(messages: list[dict[str, str]]) -> list[dict[str, str]
             non_system[index] = {"role": "user", "content": merged}
             return non_system
     return [{"role": "user", "content": wrapper}, *non_system]
+
+
 def _dedupe_in_order(values: list[str]) -> list[str]:
     ordered: list[str] = []
     seen: set[str] = set()
@@ -138,11 +155,15 @@ def _dedupe_in_order(values: list[str]) -> list[str]:
         seen.add(token)
         ordered.append(token)
     return ordered
+
+
 def _estimate_tokens(text: str) -> int:
     if not text:
         return 0
     # Deterministic approximation for local profile budget enforcement.
     return max(1, len(text.encode("utf-8")) // 4)
+
+
 def _trim_messages_by_budget(
     messages: list[dict[str, str]],
     *,
@@ -169,19 +190,27 @@ def _trim_messages_by_budget(
         keep.insert(1, row)
         keep_cost += cost
     return keep, trimmed
+
+
 def _provider_default_stops(provider_backend: str) -> list[str]:
     if provider_backend == "openai_compat":
         return ["</s>"]
     return ["<|eot_id|>", "</s>"]
+
+
 def _effective_stops(provider_backend: str, profile: LocalPromptProfile, task_class: str) -> list[str]:
     sentinel = list(profile.stop_sequences_by_task_class.get(task_class) or [])
     provider_defaults = _provider_default_stops(provider_backend)
     return _dedupe_in_order(sentinel + provider_defaults)
+
+
 def _sampling_bundle(profile: LocalPromptProfile, task_class: str) -> dict[str, Any]:
     bundle = dict(profile.sampling_bundles[task_class].model_dump())
     if task_class == "strict_json" and float(bundle.get("repeat_penalty", 1.0)) > 1.05:
         raise ValueError(f"{E_LOCAL_PROMPT_REPEAT_PENALTY}:{bundle['repeat_penalty']}")
     return bundle
+
+
 @dataclass
 class LocalPromptingPolicyResult:
     mode: str
@@ -205,6 +234,7 @@ class LocalPromptingPolicyResult:
     resolution_path: str
     profile_registry_snapshot_hash: str
     warnings: list[str]
+
     def openai_payload_overrides(self) -> dict[str, Any]:
         if not self.sampling_bundle:
             if self.effective_stop_sequences:
@@ -223,6 +253,7 @@ class LocalPromptingPolicyResult:
         if self.lmstudio_session_mode != "none" and self.lmstudio_session_id:
             overrides["session_id"] = self.lmstudio_session_id
         return overrides
+
     def ollama_options_overrides(self) -> dict[str, Any]:
         if not self.sampling_bundle:
             if self.effective_stop_sequences:
@@ -241,6 +272,7 @@ class LocalPromptingPolicyResult:
         if seed_policy == "fixed" and self.sampling_bundle.get("seed_value") is not None:
             overrides["seed"] = int(self.sampling_bundle["seed_value"])
         return overrides
+
     def telemetry(self) -> dict[str, Any]:
         return {
             "local_prompting_mode": self.mode,
@@ -267,6 +299,8 @@ class LocalPromptingPolicyResult:
             "profile_registry_snapshot_hash": self.profile_registry_snapshot_hash,
             "local_prompting_warnings": list(self.warnings),
         }
+
+
 async def resolve_local_prompting_policy(
     *,
     provider_backend: str,
@@ -275,16 +309,11 @@ async def resolve_local_prompting_policy(
     runtime_context: dict[str, Any] | None = None,
 ) -> LocalPromptingPolicyResult:
     context = dict(runtime_context or {})
-    mode = _normalize_mode(
-        context.get("local_prompting_mode")
-        or os.getenv("ORKET_LOCAL_PROMPTING_MODE")
-        or "shadow"
-    )
+    mode = _normalize_mode(context.get("local_prompting_mode") or os.getenv("ORKET_LOCAL_PROMPTING_MODE") or "shadow")
     task_class = _resolve_task_class(context)
     strict_task = task_class in {"strict_json", "tool_call"}
     allow_fallback = _parse_bool(
-        context.get("local_prompting_allow_fallback")
-        or os.getenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK")
+        context.get("local_prompting_allow_fallback") or os.getenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK")
     )
     fallback_profile_id = str(
         context.get("local_prompting_fallback_profile_id")
@@ -292,9 +321,7 @@ async def resolve_local_prompting_policy(
         or ""
     ).strip()
     override_profile_id = str(
-        context.get("local_prompt_profile_id")
-        or os.getenv("ORKET_LOCAL_PROMPT_PROFILE_ID")
-        or ""
+        context.get("local_prompt_profile_id") or os.getenv("ORKET_LOCAL_PROMPT_PROFILE_ID") or ""
     ).strip()
     registry_path = Path(
         str(

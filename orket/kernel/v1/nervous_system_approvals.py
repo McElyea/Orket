@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Callable
 
@@ -29,7 +29,14 @@ _DECISION_TO_STATUS = {
 
 
 def _approval_id(session_id: str, proposal_digest: str, decision_digest: str) -> str:
-    return f"apr-{digest_of({'session_id': session_id, 'proposal_digest': proposal_digest, 'decision_digest': decision_digest})[:16]}"
+    digest = digest_of(
+        {
+            "session_id": session_id,
+            "proposal_digest": proposal_digest,
+            "decision_digest": decision_digest,
+        }
+    )
+    return f"apr-{digest[:16]}"
 
 
 def _normalize_status(value: str | None) -> str:

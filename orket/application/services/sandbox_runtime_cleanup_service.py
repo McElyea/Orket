@@ -17,9 +17,7 @@ class SandboxRuntimeCleanupService:
 
     def __init__(self, *, lifecycle_service: SandboxRuntimeLifecycleService) -> None:
         self.lifecycle_service = lifecycle_service
-        self.decision_service = SandboxCleanupDecisionService(
-            event_publisher=lifecycle_service.event_publisher
-        )
+        self.decision_service = SandboxCleanupDecisionService(event_publisher=lifecycle_service.event_publisher)
 
     async def preview_cleanup(
         self,
@@ -61,7 +59,9 @@ class SandboxRuntimeCleanupService:
             current = await self.lifecycle_service._apply_record_copy(
                 record=current,
                 operation_id=f"cleanup-inventory:{current.sandbox_id}:{current.record_version}",
-                updates={"managed_resource_inventory": self.lifecycle_service._inventory_from_resources(observed_before)},
+                updates={
+                    "managed_resource_inventory": self.lifecycle_service._inventory_from_resources(observed_before)
+                },
                 expected_cleanup_state=CleanupState.IN_PROGRESS,
             )
         authority = self.lifecycle_service.cleanup_authority.decide(
@@ -102,16 +102,19 @@ class SandboxRuntimeCleanupService:
             observed_resources=observed_after,
         )
         if observed_after or not verification.success:
-            error = "; ".join(
-                token
-                for token in [
-                    ", ".join(errors) if errors else "",
-                    ",".join(verification.remaining_expected),
-                    ",".join(verification.unexpected_managed_present),
-                    ",".join(sorted(resource.name for resource in observed_after)),
-                ]
-                if token
-            ) or "cleanup verification failed"
+            error = (
+                "; ".join(
+                    token
+                    for token in [
+                        ", ".join(errors) if errors else "",
+                        ",".join(verification.remaining_expected),
+                        ",".join(verification.unexpected_managed_present),
+                        ",".join(sorted(resource.name for resource in observed_after)),
+                    ]
+                    if token
+                )
+                or "cleanup verification failed"
+            )
             await self.lifecycle_service._mark_cleanup_failed(current, error)
             await self.decision_service.emit_execution_result(
                 decision=decision,
@@ -175,7 +178,9 @@ class SandboxRuntimeCleanupService:
             key=lambda resource: (priority[resource.resource_type], resource.name),
         )
         for resource in allowed_resources:
-            result = await self.lifecycle_service.command_runner.run_async(*self._remove_command(resource.resource_type, resource.name))
+            result = await self.lifecycle_service.command_runner.run_async(
+                *self._remove_command(resource.resource_type, resource.name)
+            )
             if result.stderr.strip():
                 errors.append(f"{resource.name}:{result.stderr.strip()}")
         if not allowed_resources:

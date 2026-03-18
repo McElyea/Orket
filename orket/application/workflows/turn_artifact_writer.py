@@ -84,7 +84,7 @@ class TurnArtifactWriter:
         tool_profile_version = str(context.get("tool_profile_version") or "unknown-v1").strip() or "unknown-v1"
 
         trace_tool_calls: list[dict[str, Any]] = []
-        for call in ((turn.tool_calls if turn is not None else []) or []):
+        for call in (turn.tool_calls if turn is not None else []) or []:
             trace_tool_calls.append(
                 {
                     "tool_name": str(call.tool or "").strip(),
@@ -407,7 +407,9 @@ class TurnArtifactWriter:
             raise ValueError("E_TOOL_CALL_HASH_REQUIRED")
         expected_tool_call_hash = compute_tool_call_hash(
             tool_name=str(manifest.get("tool_name") or ""),
-            tool_args=dict(base_receipt.get("tool_args") or {}) if isinstance(base_receipt.get("tool_args"), dict) else {},
+            tool_args=dict(base_receipt.get("tool_args") or {})
+            if isinstance(base_receipt.get("tool_args"), dict)
+            else {},
             tool_contract_version=str(manifest.get("tool_contract_version") or ""),
             capability_profile=str(manifest.get("capability_profile") or ""),
         )
@@ -428,12 +430,15 @@ class TurnArtifactWriter:
         receipt_digest = hash_canonical_json(base_receipt)
         base_receipt["receipt_digest"] = receipt_digest
         line = json.dumps(base_receipt, ensure_ascii=False, separators=(",", ":"))
-        receipt_path = self._turn_output_dir(
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-        ) / "protocol_receipts.log"
+        receipt_path = (
+            self._turn_output_dir(
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+            )
+            / "protocol_receipts.log"
+        )
         receipt_path.parent.mkdir(parents=True, exist_ok=True)
         with receipt_path.open("a", encoding="utf-8") as handle:
             handle.write(line)

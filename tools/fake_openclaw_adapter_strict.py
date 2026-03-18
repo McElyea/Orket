@@ -52,6 +52,7 @@ def _build_proposal(
                 "tool_name": "fs.delete",
                 "args": {"path": "./workspace/important.txt"},
                 "risk_class": "critical",
+                "scope_violation": True,
             }
         )
     elif scenario_kind == "approval_required":
@@ -60,6 +61,7 @@ def _build_proposal(
                 "tool_name": "fs.write_patch",
                 "args": {"path": "./workspace/notes.md", "patch": "ADD LINE hello"},
                 "risk_class": "high",
+                "approval_required_destructive": True,
             }
         )
     elif scenario_kind in {"credentialed_token", "credentialed_token_replay"}:
@@ -68,6 +70,7 @@ def _build_proposal(
                 "tool_name": "demo.credentialed_echo",
                 "args": {"credential_alias": "demo_secret", "message": "hello"},
                 "risk_class": "high",
+                "approval_required_credentialed": True,
             }
         )
         token_request = {

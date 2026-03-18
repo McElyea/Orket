@@ -81,12 +81,16 @@ def _load_verify_commands(repo_root: Path, profile_name: str) -> List[str]:
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"Invalid orket.config.json: {exc}") from exc
 
-    profiles = ((payload.get("verify") or {}).get("profiles") or {})
+    profiles = (payload.get("verify") or {}).get("profiles") or {}
     profile = profiles.get(profile_name)
     if not isinstance(profile, dict):
         raise ValueError(f"Verify profile not found: {profile_name}")
     commands = profile.get("commands")
-    if not isinstance(commands, list) or not commands or not all(isinstance(item, str) and item.strip() for item in commands):
+    if (
+        not isinstance(commands, list)
+        or not commands
+        or not all(isinstance(item, str) and item.strip() for item in commands)
+    ):
         raise ValueError(f"Verify profile '{profile_name}' must include non-empty commands list.")
     return [item.strip() for item in commands]
 
@@ -256,7 +260,9 @@ def run_refactor_transaction(
 
     scope_roots = [(repo_root / scope).resolve() for scope in scope_inputs]
     touch_set = _compute_touch_set(repo_root, scope_roots, rename_from)
-    plan_text = _render_plan(instruction, scope_inputs, [path.relative_to(repo_root) for path in touch_set], verify_commands)
+    plan_text = _render_plan(
+        instruction, scope_inputs, [path.relative_to(repo_root) for path in touch_set], verify_commands
+    )
     touch_rel = [path.relative_to(repo_root).as_posix() for path in touch_set]
     advisories = lookup_relevant_lessons(
         repo_root=repo_root,
@@ -338,7 +344,9 @@ def run_refactor_transaction(
                     "message": f"Planned write out of scope: {path.relative_to(repo_root)}",
                     "plan": plan_text,
                 }
-                write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+                write_replay_artifact(
+                    command_name="refactor", request=request_payload, result=result, repo_root=repo_root
+                )
                 return result
             source = path.read_text(encoding="utf-8")
             mutated = pattern.sub(rename_to, source)
@@ -396,7 +404,9 @@ def run_refactor_transaction(
                     failed_verify_command=verify_command,
                 )
                 result["failure_lesson_id"] = lesson_id
-                write_replay_artifact(command_name="refactor", request=request_payload, result=result, repo_root=repo_root)
+                write_replay_artifact(
+                    command_name="refactor", request=request_payload, result=result, repo_root=repo_root
+                )
                 return result
 
         after_hashes = {path.as_posix(): _sha256_file(repo_root / path) for path in touch_rel_path}
@@ -424,7 +434,9 @@ def run_refactor_transaction(
                 "status": "verified",
                 "changed_file_count": int(parity_payload["changed_file_count"]),
                 "artifact_path": (
-                    str(parity_artifact.relative_to(repo_root)).replace("\\", "/") if parity_artifact is not None else ""
+                    str(parity_artifact.relative_to(repo_root)).replace("\\", "/")
+                    if parity_artifact is not None
+                    else ""
                 ),
             },
         }

@@ -3,12 +3,13 @@ Auth Service - Phase 5: Production Readiness
 
 Handles user authentication, password hashing, and JWT issuance.
 """
+
 from __future__ import annotations
 import os
 from datetime import datetime, timedelta, UTC
 from typing import Optional, Dict, Any
 
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
@@ -18,7 +19,7 @@ if not SECRET_KEY:
     raise RuntimeError("ORKET_AUTH_SECRET environment variable is not set. Refusing to start in insecure mode.")
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 1 day
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

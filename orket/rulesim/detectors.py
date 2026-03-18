@@ -105,4 +105,3 @@ def suspicion_rank(anomaly_type: str) -> int:
         "first_player_skew": 1,
     }
     return ordering.get(anomaly_type, 0)
-

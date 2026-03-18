@@ -53,7 +53,9 @@ class WorkloadExecutor:
             self.artifacts.reproducibility.validate_clean_git_if_required()
 
         plan_hash = run_plan.plan_hash()
-        artifact_root = self.artifacts.artifact_root(extension.extension_id, workload.workload_id, plan_hash, input_config)
+        artifact_root = self.artifacts.artifact_root(
+            extension.extension_id, workload.workload_id, plan_hash, input_config
+        )
         artifact_root.mkdir(parents=True, exist_ok=True)
 
         run_result = await self._execute_plan_actions(
@@ -70,7 +72,9 @@ class WorkloadExecutor:
         if not isinstance(summary, dict):
             raise TypeError("summarize(run_artifacts) must return a dict")
         if interaction_context is not None:
-            await interaction_context.emit_event(StreamEventType.TURN_FINAL, {"authoritative": False, "summary": summary})
+            await interaction_context.emit_event(
+                StreamEventType.TURN_FINAL, {"authoritative": False, "summary": summary}
+            )
             await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload_id))
 
         artifact_manifest = self.artifacts.build_artifact_manifest(artifact_root)
@@ -117,7 +121,9 @@ class WorkloadExecutor:
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
-        artifact_root = self.artifacts.artifact_root(extension.extension_id, workload.workload_id, input_digest, input_config)
+        artifact_root = self.artifacts.artifact_root(
+            extension.extension_id, workload.workload_id, input_digest, input_config
+        )
         artifact_root.mkdir(parents=True, exist_ok=True)
         capability_registry = self.artifacts.build_sdk_capability_registry(
             workspace=workspace,
@@ -155,7 +161,9 @@ class WorkloadExecutor:
         }
 
         if interaction_context is not None:
-            await interaction_context.emit_event(StreamEventType.TURN_FINAL, {"authoritative": False, "summary": summary})
+            await interaction_context.emit_event(
+                StreamEventType.TURN_FINAL, {"authoritative": False, "summary": summary}
+            )
             await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload.workload_id))
 
         artifact_manifest = self.artifacts.build_artifact_manifest(artifact_root)
@@ -189,7 +197,9 @@ class WorkloadExecutor:
             summary=summary,
         )
 
-    def _compile_workload(self, workload: Any, input_config: dict[str, Any], interaction_context: Any | None) -> RunPlan:
+    def _compile_workload(
+        self, workload: Any, input_config: dict[str, Any], interaction_context: Any | None
+    ) -> RunPlan:
         compile_input = dict(input_config)
         compile_fn = workload.compile
         compile_sig = inspect.signature(compile_fn)

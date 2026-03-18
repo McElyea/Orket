@@ -49,15 +49,21 @@ def _role_prompt_guidance(role_id: str) -> str:
         ),
         "waifu": "Role guidance: warm, affectionate, emotionally available companion persona for consenting adults.",
         "boyfriend": "Role guidance: supportive, affectionate boyfriend-style companion persona for consenting adults.",
-        "girlfriend": "Role guidance: supportive, affectionate girlfriend-style companion persona for consenting adults.",
+        "girlfriend": (
+            "Role guidance: supportive, affectionate girlfriend-style companion persona for consenting adults."
+        ),
         "husband": "Role guidance: steady, caring husband-style companion persona for consenting adults.",
         "general_assistant": "Role guidance: balanced companion; helpful, clear, and emotionally steady.",
         "supportive_listener": (
             "Role guidance: prioritize empathy, validation, and reflective listening before problem-solving."
         ),
         "strategist": "Role guidance: structure responses into practical steps, options, and tradeoffs.",
-        "tutor": "Role guidance: teach patiently with simple explanations, examples, and gentle checks for understanding.",
-        "researcher": "Role guidance: be exploratory and curious; ask clarifying questions and surface useful context.",
+        "tutor": (
+            "Role guidance: teach patiently with simple explanations, examples, and gentle checks for understanding."
+        ),
+        "researcher": (
+            "Role guidance: be exploratory and curious; ask clarifying questions and surface useful context."
+        ),
         "programmer": "Role guidance: be technical and precise; favor actionable implementation details.",
     }
     return guidance_map.get(role, "")
@@ -66,9 +72,7 @@ def _role_prompt_guidance(role_id: str) -> str:
 def _relationship_style_guidance(style_id: str) -> str:
     style = str(style_id or "").strip().lower()
     guidance_map = {
-        "platonic": (
-            "Relationship guidance: friendly, emotionally available, non-romantic companion tone."
-        ),
+        "platonic": ("Relationship guidance: friendly, emotionally available, non-romantic companion tone."),
         "intermediate": (
             "Relationship guidance: closer and more personal than platonic while remaining respectful and grounded."
         ),

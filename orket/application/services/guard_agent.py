@@ -33,9 +33,7 @@ class GuardDecision:
             "terminal_failure": self.terminal_failure,
             "retry_fingerprint": self.retry_fingerprint,
             "repeated_fingerprint": self.repeated_fingerprint,
-            "terminal_reason": (
-                None if self.terminal_reason is None else self.terminal_reason.model_dump()
-            ),
+            "terminal_reason": (None if self.terminal_reason is None else self.terminal_reason.model_dump()),
         }
 
 

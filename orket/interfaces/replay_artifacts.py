@@ -13,7 +13,9 @@ def replay_recording_enabled() -> bool:
     return raw not in {"0", "false", "off", "no"}
 
 
-def write_replay_artifact(*, command_name: str, request: Dict[str, Any], result: Dict[str, Any], repo_root: Path) -> Path | None:
+def write_replay_artifact(
+    *, command_name: str, request: Dict[str, Any], result: Dict[str, Any], repo_root: Path
+) -> Path | None:
     if not replay_recording_enabled():
         return None
 

@@ -6,7 +6,7 @@ import shlex
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from orket.interfaces.failure_lessons import (
     ERROR_PREFLIGHT_FAILED,
@@ -93,12 +93,16 @@ def _load_verify_commands(repo_root: Path, profile_name: str) -> List[str]:
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"Invalid orket.config.json: {exc}") from exc
 
-    profiles = ((payload.get("verify") or {}).get("profiles") or {})
+    profiles = (payload.get("verify") or {}).get("profiles") or {}
     profile = profiles.get(profile_name)
     if not isinstance(profile, dict):
         raise ValueError(f"Verify profile not found: {profile_name}")
     commands = profile.get("commands")
-    if not isinstance(commands, list) or not commands or not all(isinstance(item, str) and item.strip() for item in commands):
+    if (
+        not isinstance(commands, list)
+        or not commands
+        or not all(isinstance(item, str) and item.strip() for item in commands)
+    ):
         raise ValueError(f"Verify profile '{profile_name}' must include non-empty commands list.")
     return [item.strip() for item in commands]
 
@@ -157,7 +161,7 @@ def _controller_template(route_name: str, method: str, fields: List[ParsedSchema
 
 def _types_template(route_name: str, fields: List[ParsedSchemaField]) -> str:
     rows = ",\n".join([f'  "{field.name}": "{field.field_type}"' for field in fields])
-    return "{\n" f'  "route": "{route_name}",\n' '  "request_schema": {\n' f"{rows}\n" "  }\n}\n"
+    return f'{{\n  "route": "{route_name}",\n  "request_schema": {{\n{rows}\n  }}\n}}\n'
 
 
 def _render_plan(route_name: str, scope_inputs: List[str], touch_set: List[Path], verify_commands: List[str]) -> str:
@@ -197,7 +201,11 @@ def run_api_add_transaction(
         write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
         return result
     if not _is_clean_worktree(repo_root):
-        result = {"ok": False, "code": ERROR_WORKTREE_DIRTY, "message": "Working tree must be clean before api-add transaction runs."}
+        result = {
+            "ok": False,
+            "code": ERROR_WORKTREE_DIRTY,
+            "message": "Working tree must be clean before api-add transaction runs.",
+        }
         write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
         return result
     if not scope_inputs:
@@ -247,7 +255,9 @@ def run_api_add_transaction(
             write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
             return result
 
-    plan_text = _render_plan(route_name, scope_inputs, [path.relative_to(repo_root) for path in touch_set], verify_commands)
+    plan_text = _render_plan(
+        route_name, scope_inputs, [path.relative_to(repo_root) for path in touch_set], verify_commands
+    )
     touch_rel = [path.relative_to(repo_root).as_posix() for path in touch_set]
     advisories = lookup_relevant_lessons(
         repo_root=repo_root,
@@ -306,7 +316,13 @@ def run_api_add_transaction(
         register_line = f"{route_registration}(router);"
         already_present = import_line in routes_index_text and register_line in routes_index_text
         if already_present and route_file.exists() and controller_file.exists() and types_file.exists():
-            result = {"ok": True, "code": "OK", "message": "Idempotent no-op: route already present.", "plan": plan_text, "idempotent": True}
+            result = {
+                "ok": True,
+                "code": "OK",
+                "message": "Idempotent no-op: route already present.",
+                "plan": plan_text,
+                "idempotent": True,
+            }
             write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
             return result
 
@@ -361,7 +377,9 @@ def run_api_add_transaction(
                     failed_verify_command=verify_command,
                 )
                 result["failure_lesson_id"] = lesson_id
-                write_replay_artifact(command_name="api_add", request=request_payload, result=result, repo_root=repo_root)
+                write_replay_artifact(
+                    command_name="api_add", request=request_payload, result=result, repo_root=repo_root
+                )
                 return result
 
         result = {

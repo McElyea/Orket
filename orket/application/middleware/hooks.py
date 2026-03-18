@@ -21,8 +21,7 @@ class TurnLifecycleInterceptor(Protocol):
         issue: Any,
         role: Any,
         context: Dict[str, Any],
-    ) -> MiddlewareOutcome | None:
-        ...
+    ) -> MiddlewareOutcome | None: ...
 
     def after_model(
         self,
@@ -31,8 +30,7 @@ class TurnLifecycleInterceptor(Protocol):
         issue: Any,
         role: Any,
         context: Dict[str, Any],
-    ) -> MiddlewareOutcome | None:
-        ...
+    ) -> MiddlewareOutcome | None: ...
 
     def before_tool(
         self,
@@ -42,8 +40,7 @@ class TurnLifecycleInterceptor(Protocol):
         issue: Any,
         role_name: str,
         context: Dict[str, Any],
-    ) -> MiddlewareOutcome | None:
-        ...
+    ) -> MiddlewareOutcome | None: ...
 
     def after_tool(
         self,
@@ -54,8 +51,7 @@ class TurnLifecycleInterceptor(Protocol):
         issue: Any,
         role_name: str,
         context: Dict[str, Any],
-    ) -> MiddlewareOutcome | None:
-        ...
+    ) -> MiddlewareOutcome | None: ...
 
     def on_turn_failure(
         self,
@@ -64,8 +60,7 @@ class TurnLifecycleInterceptor(Protocol):
         issue: Any,
         role: Any,
         context: Dict[str, Any],
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class TurnLifecycleInterceptors:

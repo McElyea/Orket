@@ -145,12 +145,8 @@ def hallucination_scope_diagnostics(
 
     workspace_scope = {str(path).strip() for path in (scope.get("workspace") or []) if str(path).strip()}
     active_context_scope = {str(item).strip() for item in (scope.get("active_context") or []) if str(item).strip()}
-    passive_context_scope = {
-        str(item).strip() for item in (scope.get("passive_context") or []) if str(item).strip()
-    }
-    archived_context_scope = {
-        str(item).strip() for item in (scope.get("archived_context") or []) if str(item).strip()
-    }
+    passive_context_scope = {str(item).strip() for item in (scope.get("passive_context") or []) if str(item).strip()}
+    archived_context_scope = {str(item).strip() for item in (scope.get("archived_context") or []) if str(item).strip()}
     declared_interfaces_scope = {
         str(item).strip() for item in (scope.get("declared_interfaces") or []) if str(item).strip()
     }
@@ -205,7 +201,7 @@ def hallucination_scope_diagnostics(
             }
         )
 
-    for call in (turn.tool_calls or []):
+    for call in turn.tool_calls or []:
         tool_name = str(call.tool or "").strip()
         if declared_interfaces_scope and tool_name and tool_name not in declared_interfaces_scope:
             violations.append(
@@ -290,7 +286,7 @@ def security_scope_diagnostics(turn: ExecutionTurn, context: dict[str, Any]) -> 
     enforce_path_hardening = bool(scope.get("enforce_path_hardening", True))
     violations: list[dict[str, Any]] = []
     if enforce_path_hardening:
-        for call in (turn.tool_calls or []):
+        for call in turn.tool_calls or []:
             tool_name = str(call.tool or "").strip()
             if tool_name not in {"read_file", "write_file", "list_directory", "list_dir"}:
                 continue
@@ -359,7 +355,10 @@ def _normalize_reasoning_residue(residue: str, *, has_tool_calls: bool) -> str:
         "## thinking",
         "### thinking",
     )
-    if any(collapsed.startswith(prefix) or collapsed_no_ws.startswith(prefix.replace(" ", "")) for prefix in reasoning_prefixes):
+    if any(
+        collapsed.startswith(prefix) or collapsed_no_ws.startswith(prefix.replace(" ", ""))
+        for prefix in reasoning_prefixes
+    ):
         return ""
     return stripped
 

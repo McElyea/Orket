@@ -46,9 +46,12 @@ def test_tool_map_default_parity(tmp_path):
 
 @pytest.mark.asyncio
 async def test_toolbox_execute_uses_resolved_tool_strategy(tmp_path):
+    """Layer: unit. Verifies execute() normalizes None context before dispatching through the runtime seam."""
     class CustomToolStrategy:
         def compose(self, toolbox):
-            return {"custom_sync": lambda args, context=None: {"ok": True, "value": args["x"]}}
+            return {
+                "custom_sync": lambda args, context=None: {"ok": True, "value": args["x"], "context": context}
+            }
 
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -65,9 +68,9 @@ async def test_toolbox_execute_uses_resolved_tool_strategy(tmp_path):
         decision_nodes=registry,
     )
 
-    res = await toolbox.execute("custom_sync", {"x": 7})
+    res = await toolbox.execute("custom_sync", {"x": 7}, context=None)
 
-    assert res == {"ok": True, "value": 7}
+    assert res == {"ok": True, "value": 7, "context": {}}
 
 @pytest.mark.asyncio
 async def test_filesystem_tools_security(tmp_path):

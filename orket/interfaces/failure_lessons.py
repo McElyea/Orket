@@ -65,7 +65,9 @@ def _read_lessons(repo_root: Path) -> list[Dict[str, Any]]:
 
 def _extract_preflight_checks(output_text: str) -> list[Dict[str, str]]:
     checks: list[Dict[str, str]] = []
-    env_vars = sorted({token for token in _ENV_VAR_CAPTURE.findall(output_text) if token not in {"FAIL", "ERROR", "TEST"}})
+    env_vars = sorted(
+        {token for token in _ENV_VAR_CAPTURE.findall(output_text) if token not in {"FAIL", "ERROR", "TEST"}}
+    )
     for name in env_vars:
         checks.append({"type": "env_var_present", "name": name})
 

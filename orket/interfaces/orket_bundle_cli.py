@@ -359,9 +359,7 @@ def pack_bundle(source: Path, out_path: Path | None = None) -> Dict[str, Any]:
     payload = _load_manifest_payload(manifest_path)
     manifest = OrketManifest.model_validate(payload)
     destination = (
-        out_path
-        if out_path is not None
-        else Path.cwd() / f"{manifest.metadata.name}-{manifest.metadata.version}.orket"
+        out_path if out_path is not None else Path.cwd() / f"{manifest.metadata.name}-{manifest.metadata.version}.orket"
     )
     destination = destination.resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -821,10 +819,7 @@ def _render_human(result: Dict[str, Any]) -> str:
             for item in advisories:
                 if not isinstance(item, dict):
                     continue
-                lines.append(
-                    f"  - [{item.get('score', '')}] {item.get('lesson_id', '')}: "
-                    f"{item.get('summary', '')}"
-                )
+                lines.append(f"  - [{item.get('score', '')}] {item.get('lesson_id', '')}: {item.get('summary', '')}")
         preflight_warnings = result.get("preflight_warnings")
         if isinstance(preflight_warnings, list) and preflight_warnings:
             lines.append("PREFLIGHT WARNINGS:")
@@ -847,10 +842,7 @@ def _render_human(result: Dict[str, Any]) -> str:
         return "\n".join(lines)
 
     if bool(result.get("ok")):
-        return (
-            f"OK: {result.get('manifest_name')} {result.get('manifest_version')} "
-            f"({result.get('manifest_path')})"
-        )
+        return f"OK: {result.get('manifest_name')} {result.get('manifest_version')} ({result.get('manifest_path')})"
     lines = [f"FAIL ({result.get('error_count', 0)} error(s))"]
     for item in result.get("errors", []):
         lines.append(f"[{item.get('code')}] {item.get('location')}: {item.get('message')}")

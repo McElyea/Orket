@@ -88,9 +88,7 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
 
     status_snapshot = runtime_status_vocabulary_snapshot()
     status_terms = {
-        str(token).strip().lower()
-        for token in status_snapshot.get("runtime_status_terms", [])
-        if str(token).strip()
+        str(token).strip().lower() for token in status_snapshot.get("runtime_status_terms", []) if str(token).strip()
     }
     transition_snapshot = state_transition_registry_snapshot()
     session_states: set[str] = set()
@@ -99,11 +97,7 @@ def runtime_truth_contract_drift_report() -> dict[str, Any]:
         if not isinstance(row, dict):
             continue
         domain = str(row.get("domain") or "").strip().lower()
-        states = {
-            str(token).strip().lower()
-            for token in row.get("states", [])
-            if str(token).strip()
-        }
+        states = {str(token).strip().lower() for token in row.get("states", []) if str(token).strip()}
         if domain == "session":
             session_states = states
         if domain == "run":

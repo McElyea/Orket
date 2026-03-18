@@ -75,3 +75,37 @@ def test_scoring_gate_passes_for_good_report() -> None:
 
     result = gate_module.evaluate_gate(scored=scored, policy=policy)
     assert result["ok"] is True
+
+
+def test_score_report_treats_single_run_determinism_as_not_proven() -> None:
+    """Layer: contract. Verifies single-run reports stay unproven instead of claiming deterministic output."""
+    score_module = _load_script_module("score_benchmark_run_c", "scripts/benchmarks/score_benchmark_run.py")
+    policy = json.loads(Path("model/core/contracts/benchmark_scoring_policy.json").read_text(encoding="utf-8"))
+    report = {
+        "task_bank": "benchmarks/task_bank/v1/tasks.json",
+        "venue": "standard",
+        "flow": "default",
+        "runs_per_task": 1,
+        "determinism_rate": 0.0,
+        "details": {
+            "001": {
+                "tier": 1,
+                "unique_hashes": 1,
+                "deterministic": None,
+                "determinism_note": "single_run_insufficient",
+                "runs": [{"run_index": 1, "exit_code": 0, "hash": "h1", "duration_ms": 12.5, "cost_usd": 0.001}],
+            }
+        },
+    }
+
+    scored = score_module.score_report(
+        report_payload=report,
+        tasks_by_id={"001": {"id": "001", "tier": 1}},
+        policy=policy,
+    )
+    task = scored["per_task_scores"]["001"]
+
+    assert task["deterministic"] is None
+    assert task["determinism_note"] == "single_run_insufficient"
+    assert "determinism_not_proven" in task["reason_codes"]
+    assert "deterministic_output" not in task["reason_codes"]

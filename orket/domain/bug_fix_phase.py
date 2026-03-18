@@ -4,12 +4,12 @@ Bug Fix Phase Manager - Phase 3: Elegant Failure & Recovery
 Domain Service: Manages the post-deployment bug discovery and fixing phase.
 Reconstructed for async persistence.
 """
+
 from __future__ import annotations
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta, UTC
 from pydantic import BaseModel, Field, model_validator
 import enum
-import json
 from pathlib import Path
 
 from orket.logging import log_event
@@ -17,6 +17,7 @@ from orket.logging import log_event
 
 class BugFixPhaseStatus(str, enum.Enum):
     """Bug fix phase lifecycle states."""
+
     ACTIVE = "active"
     EXTENDED = "extended"
     COMPLETED = "completed"
@@ -25,6 +26,7 @@ class BugFixPhaseStatus(str, enum.Enum):
 
 class BugDiscoveryMetrics(BaseModel):
     """Metrics for tracking bug discovery rate."""
+
     total_bugs: int = 0
     critical_bugs: int = 0
     bugs_found_today: int = 0
@@ -37,6 +39,7 @@ class BugDiscoveryMetrics(BaseModel):
 
 class BugFixPhase(BaseModel):
     """Domain Entity: Represents a post-deployment bug fix window."""
+
     id: str
     rock_id: str
     status: BugFixPhaseStatus = Field(default=BugFixPhaseStatus.ACTIVE)
@@ -70,11 +73,9 @@ class BugFixPhase(BaseModel):
     def extend_phase(self, reason: str, added_days: int = 7) -> None:
         new_duration = min(self.current_duration_days + added_days, self.max_duration_days)
         actual_added = new_duration - self.current_duration_days
-        self.extensions.append({
-            "date": datetime.now(UTC).isoformat(),
-            "reason": reason,
-            "added_days": str(actual_added)
-        })
+        self.extensions.append(
+            {"date": datetime.now(UTC).isoformat(), "reason": reason, "added_days": str(actual_added)}
+        )
         self.current_duration_days = new_duration
         self.scheduled_end = (datetime.fromisoformat(self.started_at) + timedelta(days=new_duration)).isoformat()
         self.status = BugFixPhaseStatus.EXTENDED
@@ -86,7 +87,9 @@ class BugFixPhase(BaseModel):
 class BugFixPhaseManager:
     """Application Service: Manages bug fix phases."""
 
-    def __init__(self, organization_config: Optional[Dict] = None, db: Optional[Any] = None, workspace: Optional[Path] = None):
+    def __init__(
+        self, organization_config: Optional[Dict] = None, db: Optional[Any] = None, workspace: Optional[Path] = None
+    ):
         self.config = organization_config or {}
         self.db = db
         self.workspace = workspace or Path(".")
@@ -100,10 +103,7 @@ class BugFixPhaseManager:
         high_rate = self.config.get("bug_discovery_high_rate", 5.0)
         critical_count = self.config.get("bug_critical_threshold", 3)
 
-        metrics = BugDiscoveryMetrics(
-            high_rate_threshold=high_rate,
-            critical_threshold=critical_count
-        )
+        metrics = BugDiscoveryMetrics(high_rate_threshold=high_rate, critical_threshold=critical_count)
 
         phase = BugFixPhase(
             id=f"phase-{rock_id}",
@@ -112,12 +112,12 @@ class BugFixPhaseManager:
             max_duration_days=max_days,
             current_duration_days=initial_days,
             metrics=metrics,
-            scheduled_end=(datetime.now(UTC) + timedelta(days=initial_days)).isoformat()
+            scheduled_end=(datetime.now(UTC) + timedelta(days=initial_days)).isoformat(),
         )
 
         if self.db and hasattr(self.db, "save_bug_fix_phase"):
             await self.db.save_bug_fix_phase(phase)
-            
+
         self.active_phases[rock_id] = phase
         log_event("bug_fix_phase_started", {"rock_id": rock_id, "ends_at": phase.scheduled_end}, self.workspace)
         return phase
@@ -128,9 +128,11 @@ class BugFixPhaseManager:
         if not phase and self.db:
             # Try loading from DB
             phase = await self.db.get_bug_fix_phase(rock_id)
-            if phase: self.active_phases[rock_id] = phase
+            if phase:
+                self.active_phases[rock_id] = phase
 
-        if not phase: return
+        if not phase:
+            return
 
         phase.bug_issue_ids = bug_issue_ids
         phase.metrics.total_bugs = len(bug_issue_ids)
@@ -145,7 +147,8 @@ class BugFixPhaseManager:
     async def check_and_extend(self, rock_id: str) -> bool:
         """Check and extend phase if needed."""
         phase = self.active_phases.get(rock_id)
-        if not phase: return False
+        if not phase:
+            return False
 
         if phase.should_extend():
             reasons = []
@@ -153,14 +156,18 @@ class BugFixPhaseManager:
                 reasons.append(f"High rate ({phase.metrics.discovery_rate:.1f}/d)")
             if phase.metrics.critical_bugs > phase.metrics.critical_threshold:
                 reasons.append(f"{phase.metrics.critical_bugs} critical bugs")
-            
+
             reason = "; ".join(reasons) or "Quality concerns"
             phase.extend_phase(reason)
-            
+
             if self.db:
                 await self.db.save_bug_fix_phase(phase)
-            
-            log_event("bug_fix_phase_extended", {"rock_id": rock_id, "new_end": phase.scheduled_end, "reason": reason}, self.workspace)
+
+            log_event(
+                "bug_fix_phase_extended",
+                {"rock_id": rock_id, "new_end": phase.scheduled_end, "reason": reason},
+                self.workspace,
+            )
             return True
 
         return False
@@ -168,7 +175,8 @@ class BugFixPhaseManager:
     async def end_phase(self, rock_id: str) -> Optional[str]:
         """End the bug fix phase."""
         phase = self.active_phases.get(rock_id)
-        if not phase: return None
+        if not phase:
+            return None
 
         phase.status = BugFixPhaseStatus.COMPLETED
         phase.actual_end = datetime.now(UTC).isoformat()

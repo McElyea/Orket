@@ -1,8 +1,10 @@
+import asyncio
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict
+
 from orket.orket import ConfigLoader
-from orket.schema import RockConfig, EpicConfig, IssueConfig
 from orket.exceptions import CardNotFound
+from orket.schema import EpicConfig, IssueConfig, RockConfig
 
 
 def _append_load_failure(
@@ -27,8 +29,8 @@ def _append_load_failure(
 
 def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dict[str, Any]:
     """
-    Builds a tree: Rock -> Epic -> Issue
-    Identifies orphaned Epics (no Rock) and orphaned Issues (no Epic).
+    CLI/test helper that builds a tree: Rock -> Epic -> Issue.
+    Blocks the calling thread while loading config assets.
     """
     auto_fix_error: Exception | None = None
     if auto_fix:
@@ -94,14 +96,14 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                 "name": rock.name,
                 "description": rock.description,
                 "status": rock.status,
-                "epics": []
+                "epics": [],
             }
-            
+
             for entry in rock.epics:
                 ename = entry["epic"]
                 edept = entry["department"]
                 epics_in_rocks.add(ename)
-                
+
                 try:
                     dept_loader = ConfigLoader(Path("model"), edept)
                     epic = dept_loader.load_asset("epics", ename, EpicConfig)
@@ -122,7 +124,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                         "name": epic.name,
                         "description": epic.description,
                         "status": epic.status,
-                        "issues": epic_issues
+                        "issues": epic_issues,
                     }
                     rock_node["epics"].append(epic_node)
                 except (FileNotFoundError, ValueError, CardNotFound, KeyError) as e:
@@ -157,7 +159,7 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
                     "name": epic.name,
                     "description": epic.description,
                     "status": epic.status,
-                    "issues": []
+                    "issues": [],
                 }
                 for i in epic.issues:
                     if getattr(i, "id", None):
@@ -200,12 +202,17 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
             )
 
     if hierarchy["orphaned_epics"] or hierarchy["orphaned_issues"]:
-        msg = f"Structure Alert: {len(hierarchy['orphaned_epics'])} Orphan Epics, {len(hierarchy['orphaned_issues'])} Orphaned Issues."
-        hierarchy["alerts"].append({
-            "type": "error",
-            "message": msg,
-            "action_required": "Assign orphans to parent structures to maintain engine integrity."
-        })
+        msg = (
+            f"Structure Alert: {len(hierarchy['orphaned_epics'])} Orphan Epics, "
+            f"{len(hierarchy['orphaned_issues'])} Orphaned Issues."
+        )
+        hierarchy["alerts"].append(
+            {
+                "type": "error",
+                "message": msg,
+                "action_required": "Assign orphans to parent structures to maintain engine integrity.",
+            }
+        )
 
     if hierarchy["load_failures"]:
         hierarchy["result_status"] = "partial_success"
@@ -213,8 +220,17 @@ def get_board_hierarchy(department: str = "core", auto_fix: bool = False) -> Dic
             {
                 "type": "warning",
                 "message": f"Partial board load: {len(hierarchy['load_failures'])} load failure(s).",
-                "action_required": "Inspect load_failures for broken or missing assets before treating this hierarchy as complete.",
+                "action_required": (
+                    "Inspect load_failures for broken or missing assets before treating this hierarchy as complete."
+                ),
             }
         )
 
     return hierarchy
+
+
+async def get_board_hierarchy_async(
+    department: str = "core",
+    auto_fix: bool = False,
+) -> Dict[str, Any]:
+    return await asyncio.to_thread(get_board_hierarchy, department, auto_fix)

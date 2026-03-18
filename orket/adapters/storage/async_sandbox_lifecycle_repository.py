@@ -19,14 +19,23 @@ from orket.adapters.storage.sandbox_lifecycle_row_serialization import (
     deserialize_operation_row,
     deserialize_record_row,
 )
-class SandboxOperationIntegrityError(SandboxLifecycleError): """Raised when an operation id is reused with a different payload hash."""
-class SandboxLifecycleConflictError(SandboxLifecycleError): """Raised when a compare-and-set lifecycle mutation loses its fence."""
+
+
+class SandboxOperationIntegrityError(SandboxLifecycleError):
+    """Raised when an operation id is reused with a different payload hash."""
+
+
+class SandboxLifecycleConflictError(SandboxLifecycleError):
+    """Raised when a compare-and-set lifecycle mutation loses its fence."""
+
+
 class AsyncSandboxLifecycleRepository:
     """Durable SQLite repository for sandbox lifecycle authority."""
 
     def __init__(self, db_path: str | Path):
         self.db_path = str(db_path)
         self._lock = asyncio.Lock()
+
     async def _ensure_initialized(self, conn: aiosqlite.Connection) -> None:
         await conn.execute(
             """
@@ -98,10 +107,16 @@ class AsyncSandboxLifecycleRepository:
             """
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_sandbox_approvals_sandbox_id ON sandbox_approvals (sandbox_id)"
+            """
+            CREATE INDEX IF NOT EXISTS idx_sandbox_approvals_sandbox_id
+            ON sandbox_approvals (sandbox_id)
+            """
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_sandbox_lifecycle_events_sandbox_id ON sandbox_lifecycle_events (sandbox_id)"
+            """
+            CREATE INDEX IF NOT EXISTS idx_sandbox_lifecycle_events_sandbox_id
+            ON sandbox_lifecycle_events (sandbox_id)
+            """
         )
 
     async def _execute(self, operation, *, row_factory: bool = False, commit: bool = False):
@@ -117,6 +132,7 @@ class AsyncSandboxLifecycleRepository:
 
     async def save_record(self, record: SandboxLifecycleRecord) -> None:
         payload = record.model_dump(mode="json")
+
         async def _op(conn: aiosqlite.Connection) -> None:
             await conn.execute(
                 """
@@ -160,7 +176,9 @@ class AsyncSandboxLifecycleRepository:
                     payload["docker_host_id"],
                 ),
             )
+
         await self._execute(_op, commit=True)
+
     async def apply_record_mutation(
         self,
         *,
@@ -179,6 +197,7 @@ class AsyncSandboxLifecycleRepository:
             "cleanup_state": record.cleanup_state.value,
             "requires_reconciliation": record.requires_reconciliation,
         }
+
         async def _op(conn: aiosqlite.Connection) -> dict[str, object]:
             existing_cursor = await conn.execute(
                 "SELECT * FROM sandbox_operation_dedupe WHERE operation_id = ?",
@@ -211,8 +230,10 @@ class AsyncSandboxLifecycleRepository:
                     run_id = ?, session_id = ?, owner_instance_id = ?, cleanup_owner_instance_id = ?,
                     lease_epoch = ?, lease_expires_at = ?, state = ?, cleanup_state = ?, record_version = ?,
                     created_at = ?, last_heartbeat_at = ?, terminal_at = ?, terminal_reason = ?, cleanup_due_at = ?,
-                    cleanup_attempts = ?, cleanup_last_error = ?, cleanup_failure_reason = ?, required_evidence_ref = ?,
-                    managed_resource_inventory_json = ?, requires_reconciliation = ?, docker_context = ?, docker_host_id = ?
+                    cleanup_attempts = ?, cleanup_last_error = ?,
+                    cleanup_failure_reason = ?, required_evidence_ref = ?,
+                    managed_resource_inventory_json = ?, requires_reconciliation = ?,
+                    docker_context = ?, docker_host_id = ?
                 WHERE {" AND ".join(where)}
                 """,
                 (
@@ -246,9 +267,7 @@ class AsyncSandboxLifecycleRepository:
                 ),
             )
             if update_cursor.rowcount <= 0:
-                raise SandboxLifecycleConflictError(
-                    f"CAS update rejected for sandbox_id {record.sandbox_id}."
-                )
+                raise SandboxLifecycleConflictError(f"CAS update rejected for sandbox_id {record.sandbox_id}.")
             await conn.execute(
                 """
                 INSERT INTO sandbox_operation_dedupe (
@@ -263,7 +282,9 @@ class AsyncSandboxLifecycleRepository:
                 ),
             )
             return {"reused": False, "result": result_payload}
+
         return await self._execute(_op, row_factory=True, commit=True)
+
     async def get_record(self, sandbox_id: str) -> SandboxLifecycleRecord | None:
         async def _op(conn: aiosqlite.Connection) -> SandboxLifecycleRecord | None:
             cursor = await conn.execute(
@@ -277,7 +298,9 @@ class AsyncSandboxLifecycleRepository:
                 return SandboxLifecycleRecord.model_validate(deserialize_record_row(dict(row)))
             except ValidationError as exc:
                 raise SandboxLifecycleError(str(exc)) from exc
+
         return await self._execute(_op, row_factory=True)
+
     async def list_records(self) -> list[SandboxLifecycleRecord]:
         async def _op(conn: aiosqlite.Connection) -> list[SandboxLifecycleRecord]:
             cursor = await conn.execute(
@@ -288,7 +311,9 @@ class AsyncSandboxLifecycleRepository:
                 return [SandboxLifecycleRecord.model_validate(deserialize_record_row(dict(row))) for row in rows]
             except ValidationError as exc:
                 raise SandboxLifecycleError(str(exc)) from exc
+
         return await self._execute(_op, row_factory=True)
+
     async def remember_operation(
         self,
         entry: SandboxOperationDedupeEntry,
@@ -320,9 +345,12 @@ class AsyncSandboxLifecycleRepository:
                     f"operation_id {entry.operation_id} reused with different payload hash."
                 )
             return stored
+
         return await self._execute(_op, row_factory=True, commit=True)
+
     async def save_approval(self, record: SandboxApprovalRecord) -> None:
         payload = record.model_dump(mode="json")
+
         async def _op(conn: aiosqlite.Connection) -> None:
             await conn.execute(
                 """
@@ -341,7 +369,9 @@ class AsyncSandboxLifecycleRepository:
                     payload.get("revoked_at"),
                 ),
             )
+
         await self._execute(_op, commit=True)
+
     async def list_approvals(self, sandbox_id: str) -> list[SandboxApprovalRecord]:
         async def _op(conn: aiosqlite.Connection) -> list[SandboxApprovalRecord]:
             cursor = await conn.execute(
@@ -354,7 +384,9 @@ class AsyncSandboxLifecycleRepository:
             )
             rows = await cursor.fetchall()
             return [SandboxApprovalRecord.model_validate(dict(row)) for row in rows]
+
         return await self._execute(_op, row_factory=True)
+
     async def revoke_approval(self, approval_id: str, *, revoked_by: str, revoked_at: str) -> bool:
         async def _op(conn: aiosqlite.Connection) -> bool:
             cursor = await conn.execute(
@@ -366,9 +398,12 @@ class AsyncSandboxLifecycleRepository:
                 (revoked_by, revoked_at, approval_id),
             )
             return cursor.rowcount > 0
+
         return await self._execute(_op, commit=True)
+
     async def append_event(self, record: SandboxLifecycleEventRecord) -> None:
         payload = record.model_dump(mode="json")
+
         async def _op(conn: aiosqlite.Connection) -> None:
             await conn.execute(
                 """
@@ -385,7 +420,9 @@ class AsyncSandboxLifecycleRepository:
                     json.dumps(payload["payload"], sort_keys=True),
                 ),
             )
+
         await self._execute(_op, commit=True)
+
     async def list_events(self, sandbox_id: str | None = None) -> list[SandboxLifecycleEventRecord]:
         async def _op(conn: aiosqlite.Connection) -> list[SandboxLifecycleEventRecord]:
             if sandbox_id:
@@ -403,4 +440,5 @@ class AsyncSandboxLifecycleRepository:
                 )
             rows = await cursor.fetchall()
             return [SandboxLifecycleEventRecord.model_validate(deserialize_event_row(dict(row))) for row in rows]
+
         return await self._execute(_op, row_factory=True)

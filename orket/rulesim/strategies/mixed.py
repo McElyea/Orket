@@ -9,7 +9,9 @@ class MixedStrategy:
         total = sum(max(0.0, float(weight)) for weight, _ in weighted_strategies)
         if total <= 0:
             raise ValueError("weighted_strategies must include positive weights")
-        self._weighted_strategies = [(max(0.0, float(weight)) / total, strategy) for weight, strategy in weighted_strategies]
+        self._weighted_strategies = [
+            (max(0.0, float(weight)) / total, strategy) for weight, strategy in weighted_strategies
+        ]
 
     def select_action(self, observation: Any, legal_actions: list[Any], rng: Random, context: dict[str, Any]) -> Any:
         needle = rng.random()
@@ -21,4 +23,3 @@ class MixedStrategy:
                 strategy = candidate
                 break
         return strategy.select_action(observation, legal_actions, rng, context)
-

@@ -9,7 +9,14 @@ from orket.application.services.sandbox_cleanup_scheduler_service import Sandbox
 from orket.application.services.sandbox_lifecycle_reconciliation_service import SandboxObservation
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
-from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, OwnershipConfidence, SandboxLifecycleError, SandboxState, TerminalReason
+from orket.core.domain.sandbox_lifecycle import (
+    CleanupState,
+    LifecycleEvent,
+    OwnershipConfidence,
+    SandboxLifecycleError,
+    SandboxState,
+    TerminalReason,
+)
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 from orket.domain.verification import AGENT_OUTPUT_DIR
 
@@ -31,7 +38,9 @@ class SandboxRuntimeRecoveryService:
         if record is None:
             raise ValueError(f"Sandbox lifecycle record not found for {sandbox_id}")
         observed_at = self.lifecycle_service._now()
-        if self.lifecycle_service.policy.hard_max_age_elapsed(created_at=record.created_at, observed_at=observed_at) and record.state not in {
+        if self.lifecycle_service.policy.hard_max_age_elapsed(
+            created_at=record.created_at, observed_at=observed_at
+        ) and record.state not in {
             SandboxState.TERMINAL,
             SandboxState.CLEANED,
             SandboxState.ORPHANED,
@@ -268,7 +277,9 @@ class SandboxRuntimeRecoveryService:
         observed_at: str,
         observed_resources,
     ) -> SandboxLifecycleRecord:
-        confidence, sandbox_id, run_id = self._ownership_metadata(compose_project=compose_project, observed_resources=observed_resources)
+        confidence, sandbox_id, run_id = self._ownership_metadata(
+            compose_project=compose_project, observed_resources=observed_resources
+        )
         terminal_reason = (
             TerminalReason.ORPHAN_DETECTED
             if confidence is OwnershipConfidence.VERIFIED
@@ -282,7 +293,9 @@ class SandboxRuntimeRecoveryService:
             session_id=None if run_id else f"orphan:{sandbox_id}",
             lease_epoch=0,
             state=SandboxState.ORPHANED,
-            cleanup_state=CleanupState.SCHEDULED if terminal_reason is TerminalReason.ORPHAN_DETECTED else CleanupState.NONE,
+            cleanup_state=CleanupState.SCHEDULED
+            if terminal_reason is TerminalReason.ORPHAN_DETECTED
+            else CleanupState.NONE,
             record_version=1,
             created_at=observed_at,
             terminal_at=observed_at,

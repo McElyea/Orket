@@ -6,7 +6,7 @@ class ImpactWeightCalculator:
     Calculates dependency impact weight for task prioritization.
     Pure domain logic: no I/O, no DB access.
     """
-    
+
     @staticmethod
     def get_priority_queue(issues: List[Any]) -> List[str]:
         """
@@ -21,13 +21,14 @@ class ImpactWeightCalculator:
         for issue in issues:
             i_id = issue.get("id") if isinstance(issue, dict) else issue.id
             weights[i_id] = ImpactWeightCalculator.calculate_weight(i_id, adj_map)
-        
+
         # 3. Calculate combined priority scores (base priority + dependency weight)
         def calculate_score(issue) -> float:
             i_id = issue.get("id") if isinstance(issue, dict) else issue.id
             # Handle priority if it's a string or missing
             p = issue.get("priority", 2.0) if isinstance(issue, dict) else getattr(issue, "priority", 2.0)
-            if isinstance(p, str): p = 2.0 # Default if not yet converted
+            if isinstance(p, str):
+                p = 2.0  # Default if not yet converted
             return p + weights.get(i_id, 0)
 
         # 4. Filter for READY issues and sort by combined score (descending)
@@ -68,17 +69,17 @@ class ImpactWeightCalculator:
         Input issues should be dicts or objects with 'id' and 'depends_on' (list of IDs).
         """
         adj_map: Dict[str, Set[str]] = {}
-        
+
         for issue in issues:
             # Handle both dictionary and object access
             i_id = issue.get("id") if isinstance(issue, dict) else issue.id
             deps = issue.get("depends_on", []) if isinstance(issue, dict) else getattr(issue, "depends_on", [])
-            
+
             for dep_id in deps:
                 if dep_id not in adj_map:
                     adj_map[dep_id] = set()
                 adj_map[dep_id].add(i_id)
-                
+
         return adj_map
 
 

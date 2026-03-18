@@ -1,6 +1,7 @@
 """
 Async Repositories for Session and Snapshot persistence.
 """
+
 from __future__ import annotations
 import aiosqlite
 import json
@@ -13,10 +14,12 @@ from datetime import datetime, UTC
 from orket.core.contracts.repositories import SessionRepository, SnapshotRepository
 from orket.runtime.result_error_invariants import validate_result_error_invariant
 
+
 class AsyncSessionRepository(SessionRepository):
     """
     Async implementation of SessionRepository using aiosqlite.
     """
+
     def __init__(self, db_path: str | Path):
         self.db_path = str(db_path)
         self._initialized = False
@@ -54,8 +57,20 @@ class AsyncSessionRepository(SessionRepository):
             async with aiosqlite.connect(self.db_path) as conn:
                 await self._ensure_initialized(conn)
                 await conn.execute(
-                    "INSERT OR IGNORE INTO sessions (id, type, name, department, status, task_input, start_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (session_id, data['type'], data['name'], data['department'], "Started", data['task_input'], datetime.now(UTC).isoformat())
+                    """
+                    INSERT OR IGNORE INTO sessions
+                    (id, type, name, department, status, task_input, start_time)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        session_id,
+                        data["type"],
+                        data["name"],
+                        data["department"],
+                        "Started",
+                        data["task_input"],
+                        datetime.now(UTC).isoformat(),
+                    ),
                 )
                 await conn.commit()
 
@@ -114,14 +129,16 @@ class AsyncSessionRepository(SessionRepository):
                 await self._ensure_initialized(conn)
                 await conn.execute(
                     "UPDATE sessions SET status = ?, transcript = ?, end_time = ? WHERE id = ?",
-                    (status, json.dumps(transcript), datetime.now(UTC).isoformat(), session_id)
+                    (status, json.dumps(transcript), datetime.now(UTC).isoformat(), session_id),
                 )
                 await conn.commit()
+
 
 class AsyncSnapshotRepository(SnapshotRepository):
     """
     Async implementation of SnapshotRepository using aiosqlite.
     """
+
     def __init__(self, db_path: str | Path):
         self.db_path = str(db_path)
         self._initialized = False
@@ -146,8 +163,12 @@ class AsyncSnapshotRepository(SnapshotRepository):
             async with aiosqlite.connect(self.db_path) as conn:
                 await self._ensure_initialized(conn)
                 await conn.execute(
-                    "INSERT OR REPLACE INTO session_snapshots (session_id, config_json, log_history, captured_at) VALUES (?, ?, ?, ?)",
-                    (session_id, json.dumps(config), json.dumps(logs), datetime.now(UTC).isoformat())
+                    """
+                    INSERT OR REPLACE INTO session_snapshots
+                    (session_id, config_json, log_history, captured_at)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (session_id, json.dumps(config), json.dumps(logs), datetime.now(UTC).isoformat()),
                 )
                 await conn.commit()
 
@@ -159,11 +180,13 @@ class AsyncSnapshotRepository(SnapshotRepository):
             row = await cursor.fetchone()
             return dict(row) if row else None
 
+
 class AsyncSuccessRepository:
     """
     Success Ledger - Irreversible Success Criterion enforcement.
     One row per run. Incomplete until a success record is written.
     """
+
     def __init__(self, db_path: str | Path):
         self.db_path = str(db_path)
         self._initialized = False
@@ -184,13 +207,19 @@ class AsyncSuccessRepository:
         await conn.commit()
         self._initialized = True
 
-    async def record_success(self, session_id: str, success_type: str, artifact_ref: str, human_ack: Optional[str] = None):
+    async def record_success(
+        self, session_id: str, success_type: str, artifact_ref: str, human_ack: Optional[str] = None
+    ):
         async with self._lock:
             async with aiosqlite.connect(self.db_path) as conn:
                 await self._ensure_initialized(conn)
                 await conn.execute(
-                    "INSERT OR REPLACE INTO success_ledger (session_id, success_type, artifact_ref, human_ack) VALUES (?, ?, ?, ?)",
+                    """
+                    INSERT OR REPLACE INTO success_ledger
                     (session_id, success_type, artifact_ref, human_ack)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (session_id, success_type, artifact_ref, human_ack),
                 )
                 await conn.commit()
 
@@ -405,12 +434,10 @@ class AsyncPendingGateRepository:
             """
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_pending_gate_requests_session "
-            "ON pending_gate_requests(session_id)"
+            "CREATE INDEX IF NOT EXISTS idx_pending_gate_requests_session ON pending_gate_requests(session_id)"
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_pending_gate_requests_status "
-            "ON pending_gate_requests(status)"
+            "CREATE INDEX IF NOT EXISTS idx_pending_gate_requests_status ON pending_gate_requests(status)"
         )
         await conn.commit()
         self._initialized = True

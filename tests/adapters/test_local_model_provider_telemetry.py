@@ -56,6 +56,31 @@ def test_local_model_provider_ns_to_ms_is_type_strict() -> None:
     assert LocalModelProvider._ns_to_ms("bad") is None
 
 
+@pytest.mark.parametrize(
+    ("raw_provider", "expected_backend", "expected_name"),
+    [
+        ("ollama", "ollama", "ollama"),
+        ("openai_compat", "openai_compat", "openai_compat"),
+        ("lmstudio", "openai_compat", "lmstudio"),
+        ("unknown-provider", "ollama", "ollama"),
+    ],
+)
+def test_local_model_provider_maps_provider_env_consistently(
+    monkeypatch: pytest.MonkeyPatch,
+    raw_provider: str,
+    expected_backend: str,
+    expected_name: str,
+) -> None:
+    """Layer: unit. Verifies provider backend and provider name share one normalization source."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", raw_provider)
+    monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
+
+    provider = LocalModelProvider(model="dummy")
+
+    assert provider.provider_backend == expected_backend
+    assert provider.provider_name == expected_name
+
+
 @pytest.mark.asyncio
 async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")

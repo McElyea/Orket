@@ -291,4 +291,3 @@ class AttemptRuntime:
             "tree_digest": tree_digest,
             "gate_results_normalized": gate_results_normalized,
         }
-

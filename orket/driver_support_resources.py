@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from orket.logging import log_event
 
@@ -61,9 +61,17 @@ class DriverResourceMixin:
                 }
                 epic_data["issues"].append(issue_entry)
                 await self.fs.write_file(str(path), epic_data)
-                log_event("create_issue", {"epic": parent_epic, "summary": issue_entry["summary"]}, workspace_path, role="DRIVER")
+                log_event(
+                    "create_issue",
+                    {"epic": parent_epic, "summary": issue_entry["summary"]},
+                    workspace_path,
+                    role="DRIVER",
+                )
                 migration_note = " Legacy epic child key was normalized to 'issues'." if migrated else ""
-                return f"Added issue '{issue_entry['summary']}' to Epic '{parent_epic}' in {path.parent.parent.name}.{migration_note}"
+                return (
+                    f"Added issue '{issue_entry['summary']}' to Epic "
+                    f"'{parent_epic}' in {path.parent.parent.name}.{migration_note}"
+                )
             return f"Error: Target epic {parent_epic} not found in core or {suggested_dept}."
 
         if action == "create_epic":
@@ -86,7 +94,12 @@ class DriverResourceMixin:
                     "epics": [{"epic": epic_name, "department": suggested_dept}],
                 }
                 await self.fs.write_file(str(nom_path), rock_data)
-                log_event("create_epic", {"name": epic_name, "rock": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
+                log_event(
+                    "create_epic",
+                    {"name": epic_name, "rock": parent_rock, "dept": suggested_dept},
+                    workspace_path,
+                    role="DRIVER",
+                )
                 log_event("create_rock", {"name": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
                 return f"Created Epic '{epic_name}' and nominated new parent Rock '{parent_rock}' in {suggested_dept}."
             rock_data = json.loads(await self.fs.read_file(str(rock_path)))
@@ -94,8 +107,16 @@ class DriverResourceMixin:
                 rock_data["epics"] = []
             rock_data["epics"].append({"epic": epic_name, "department": suggested_dept})
             await self.fs.write_file(str(rock_path), rock_data)
-            log_event("create_epic", {"name": epic_name, "rock": parent_rock, "dept": suggested_dept}, workspace_path, role="DRIVER")
-            return f"Created Epic '{epic_name}' and linked to existing Rock '{parent_rock}' in {rock_path.parent.parent.name}."
+            log_event(
+                "create_epic",
+                {"name": epic_name, "rock": parent_rock, "dept": suggested_dept},
+                workspace_path,
+                role="DRIVER",
+            )
+            return (
+                f"Created Epic '{epic_name}' and linked to existing Rock "
+                f"'{parent_rock}' in {rock_path.parent.parent.name}."
+            )
 
         if action == "create_rock":
             rock_name = new_asset.get("name", "new_rock")
@@ -180,7 +201,9 @@ class DriverResourceMixin:
         return self.model_root / department / folder
 
     def _find_asset_path(self, resource: str, name: str, department: str | None = None) -> Path | None:
-        search_departments = [department] if department else sorted([p.name for p in self.model_root.iterdir() if p.is_dir()])
+        search_departments = (
+            [department] if department else sorted([p.name for p in self.model_root.iterdir() if p.is_dir()])
+        )
         for dept in search_departments:
             resource_dir = self._resource_dir(resource, dept)
             if resource_dir is None:
@@ -201,12 +224,25 @@ class DriverResourceMixin:
                 "coder": {
                     "name": "coder",
                     "description": "Software Engineer role focusing on implementation.",
-                    "tools": ["read_file", "write_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"],
+                    "tools": [
+                        "read_file",
+                        "write_file",
+                        "list_directory",
+                        "add_issue_comment",
+                        "get_issue_context",
+                        "update_issue_status",
+                    ],
                 },
                 "code_reviewer": {
                     "name": "code_reviewer",
                     "description": "Code reviewer role for governance and quality review.",
-                    "tools": ["read_file", "list_directory", "add_issue_comment", "get_issue_context", "update_issue_status"],
+                    "tools": [
+                        "read_file",
+                        "list_directory",
+                        "add_issue_comment",
+                        "get_issue_context",
+                        "update_issue_status",
+                    ],
                 },
                 "integrity_guard": {
                     "name": "integrity_guard",

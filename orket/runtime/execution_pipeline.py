@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
@@ -182,9 +182,7 @@ class ExecutionPipeline:
         readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs())
         if not bool(readiness.get("ready")):
             failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
-            raise ValueError(
-                f"State backend mode 'gitea' pilot readiness failed: {failures}"
-            )
+            raise ValueError(f"State backend mode 'gitea' pilot readiness failed: {failures}")
 
     async def _emit_run_ledger_telemetry(self, payload: Dict[str, Any]) -> None:
         log_event(
@@ -431,9 +429,7 @@ class ExecutionPipeline:
             pipeline_wiring_node=self.pipeline_wiring_node,
             target_issue_id=target_issue_id,
             resume_mode=resume_mode,
-            deterministic_mode_enabled=bool(
-                deterministic_mode_contract.get("deterministic_mode_enabled")
-            ),
+            deterministic_mode_enabled=bool(deterministic_mode_contract.get("deterministic_mode_enabled")),
         )
 
         log_event(
@@ -454,16 +450,20 @@ class ExecutionPipeline:
                 for token in (capability_manifest.get("capabilities_allowed") or [])
                 if str(token).strip()
             ]
-            active_run_determinism_class = str(
-                capability_manifest.get("run_determinism_class")
-                or run_contract_artifacts.get("run_determinism_class")
-                or "workspace"
-            ).strip().lower()
+            active_run_determinism_class = (
+                str(
+                    capability_manifest.get("run_determinism_class")
+                    or run_contract_artifacts.get("run_determinism_class")
+                    or "workspace"
+                )
+                .strip()
+                .lower()
+            )
         else:
             active_capabilities_allowed = ["workspace"]
-            active_run_determinism_class = str(
-                run_contract_artifacts.get("run_determinism_class") or "workspace"
-            ).strip().lower()
+            active_run_determinism_class = (
+                str(run_contract_artifacts.get("run_determinism_class") or "workspace").strip().lower()
+            )
         if active_run_determinism_class not in {"pure", "workspace", "external"}:
             active_run_determinism_class = "workspace"
         compatibility_map_snapshot = run_contract_artifacts.get("compatibility_map_snapshot")
@@ -511,6 +511,7 @@ class ExecutionPipeline:
         session_status = "failed"
 
         try:
+
             async def _execute_cards_workload(_contract):
                 await self.orchestrator.execute_epic(
                     active_build=active_build,
@@ -613,7 +614,12 @@ class ExecutionPipeline:
                 )
             await self.snapshots.record(
                 run_id,
-                {"epic": epic.model_dump(), "team": team.model_dump(), "env": env.model_dump(), "build_id": active_build},
+                {
+                    "epic": epic.model_dump(),
+                    "team": team.model_dump(),
+                    "env": env.model_dump(),
+                    "build_id": active_build,
+                },
                 legacy_transcript,
             )
 
@@ -741,24 +747,31 @@ class ExecutionPipeline:
         intended_model: str | None,
         runtime_telemetry: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        provider = str(
-            os.environ.get("ORKET_LLM_PROVIDER")
-            or os.environ.get("ORKET_MODEL_PROVIDER")
-            or "ollama"
-        ).strip().lower()
+        provider = (
+            str(os.environ.get("ORKET_LLM_PROVIDER") or os.environ.get("ORKET_MODEL_PROVIDER") or "ollama")
+            .strip()
+            .lower()
+        )
         configured_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_PROFILE_ID"))
         fallback_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID"))
         telemetry = dict(runtime_telemetry or {})
         intended_model_token = self._normalize_packet1_token(intended_model) or self._normalize_packet1_token(
             telemetry.get("requested_model")
         )
-        actual_provider = str(
-            telemetry.get("provider_backend")
-            or telemetry.get("provider_name")
-            or telemetry.get("provider")
+        actual_provider = (
+            str(
+                telemetry.get("provider_backend")
+                or telemetry.get("provider_name")
+                or telemetry.get("provider")
+                or provider
+            )
+            .strip()
+            .lower()
             or provider
-        ).strip().lower() or provider
-        actual_model = self._normalize_packet1_token(telemetry.get("model")) or intended_model_token or PACKET1_MISSING_TOKEN
+        )
+        actual_model = (
+            self._normalize_packet1_token(telemetry.get("model")) or intended_model_token or PACKET1_MISSING_TOKEN
+        )
         actual_profile = self._normalize_packet1_token(telemetry.get("profile_id")) or "default"
         resolution_path = str(telemetry.get("profile_resolution_path") or "").strip().lower()
         fallback_detected = resolution_path == "fallback"
@@ -821,7 +834,9 @@ class ExecutionPipeline:
     ) -> Dict[str, str]:
         facts = normalize_artifact_provenance_facts(artifact_provenance_facts)
         entries = list(facts.get("artifacts") or [])
-        entries = [entry for entry in entries if str(entry.get("artifact_type") or "").strip() != "source_attribution_receipt"]
+        entries = [
+            entry for entry in entries if str(entry.get("artifact_type") or "").strip() != "source_attribution_receipt"
+        ]
         if not entries:
             return {}
         selected = max(
@@ -1001,9 +1016,7 @@ class ExecutionPipeline:
         repair_entries: List[Dict[str, Any]] | None = None,
         artifact_provenance_facts: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
-        runtime_verification_path = (
-            self.workspace / "agent_output" / "verification" / "runtime_verification.json"
-        )
+        runtime_verification_path = self.workspace / "agent_output" / "verification" / "runtime_verification.json"
         runtime_telemetry = await self._resolve_packet1_runtime_telemetry(run_id=run_id)
         repair_facts = self._build_packet1_repair_facts(repair_entries or [])
         packet1_facts = {
@@ -1095,11 +1108,7 @@ class ExecutionPipeline:
                     if str(data.get("session_id") or "").strip() != str(run_id):
                         continue
                     reasons = sorted(
-                        {
-                            str(reason).strip()
-                            for reason in (data.get("contract_reasons") or [])
-                            if str(reason).strip()
-                        }
+                        {str(reason).strip() for reason in (data.get("contract_reasons") or []) if str(reason).strip()}
                     )
                     if not reasons:
                         continue

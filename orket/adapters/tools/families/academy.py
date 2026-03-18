@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import shutil
 from pathlib import Path
@@ -22,7 +22,11 @@ class AcademyTools(BaseTools):
             return {"ok": False, "error": "session_id required"}
 
         src = self.workspace_root.parent / "runs" / session_id
-        dest = self.workspace_root.parent.parent / "evals" / f"{now_local().strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
+        dest = (
+            self.workspace_root.parent.parent
+            / "evals"
+            / f"{now_local().strftime('%Y%m%d_%H%M%S')}_{args.get('label', 'trial')}"
+        )
 
         try:
             dest.parent.mkdir(parents=True, exist_ok=True)
@@ -43,4 +47,3 @@ class AcademyTools(BaseTools):
             return {"ok": True, "path": path}
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
-

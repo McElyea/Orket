@@ -387,7 +387,9 @@ def run_compile_pipeline(
         "errors": list(plan.errors),
         "warnings": list(plan.warnings),
     }
-    (artifacts / "route_plan.json").write_text(json.dumps(route_plan_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (artifacts / "route_plan.json").write_text(
+        json.dumps(route_plan_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     if not plan.ok:
         return CompilerRunResult(
             ok=False,
@@ -403,10 +405,14 @@ def run_compile_pipeline(
     (artifacts / "canonical_blob.json").write_text(canonical_json + "\n", encoding="utf-8")
 
     inputs_manifest = _tree_manifest(input_dir)
-    (artifacts / "inputs_manifest.json").write_text(json.dumps(inputs_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (artifacts / "inputs_manifest.json").write_text(
+        json.dumps(inputs_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     scenario_pack = _load_scenario_pack(scenario_pack_path, mode=mode)
-    (artifacts / "scenario_pack.json").write_text(json.dumps(scenario_pack, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (artifacts / "scenario_pack.json").write_text(
+        json.dumps(scenario_pack, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     templates = _patch_templates(mode)
 
     candidates: list[dict[str, Any]] = []
@@ -478,7 +484,9 @@ def run_compile_pipeline(
 
     route.materialize(best_blob, materialized)
     outputs_manifest = _tree_manifest(materialized)
-    (artifacts / "outputs_manifest.json").write_text(json.dumps(outputs_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (artifacts / "outputs_manifest.json").write_text(
+        json.dumps(outputs_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     final_score = {
         "mode": mode,
@@ -492,20 +500,22 @@ def run_compile_pipeline(
         "baseline_score": float(candidates[0]["score"]),
         "baseline_hard_fail_count": int(candidates[0]["hard_fail_count"]),
     }
-    (artifacts / "final_score_report.json").write_text(json.dumps(final_score, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (artifacts / "final_score_report.json").write_text(
+        json.dumps(final_score, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     outputs_payload = {
         "inputs_manifest_digest": _json_sha({"inputs": inputs_manifest}),
         "outputs_manifest_digest": _json_sha({"outputs": outputs_manifest}),
         "canonical_blob_digest": _json_sha(best_blob),
-        "voice_profiles_digest": _json_sha(
-            {"voice_profiles": best_blob.get("banks", {}).get("voice_profiles", {})}
-        ),
+        "voice_profiles_digest": _json_sha({"voice_profiles": best_blob.get("banks", {}).get("voice_profiles", {})}),
         "route_id": route_id,
         "scenario_pack_id": scenario_pack["pack_id"],
         "scenario_pack_version": scenario_pack["version"],
     }
-    (artifacts / "bundle_digests.json").write_text(json.dumps(outputs_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (artifacts / "bundle_digests.json").write_text(
+        json.dumps(outputs_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     return CompilerRunResult(
         ok=int(best.get("hard_fail_count", 1)) == 0,

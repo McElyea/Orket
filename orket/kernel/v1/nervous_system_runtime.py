@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any
 
@@ -338,16 +338,18 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
                     if bool(request.get("block_result_leaks")):
                         status = "REJECTED_POLICY"
                     elif not reported_sanitization_digest and isinstance(execution_result_payload, str):
-                        reported_sanitization_digest = digest_of(
-                            {"sanitized": sanitize_text(execution_result_payload)}
-                        )
+                        reported_sanitization_digest = digest_of({"sanitized": sanitize_text(execution_result_payload)})
 
             if status == "COMMITTED" and request.get("execution_result_schema_valid") is False:
                 result_reason_codes.append("RESULT_SCHEMA_INVALID")
                 status = "REJECTED_POLICY"
 
             execution_error_reason_code = normalized_optional_str(request.get("execution_error_reason_code")).upper()
-            if status == "COMMITTED" and execution_error_reason_code in {"TOKEN_INVALID", "TOKEN_EXPIRED", "TOKEN_REPLAY"}:
+            if status == "COMMITTED" and execution_error_reason_code in {
+                "TOKEN_INVALID",
+                "TOKEN_EXPIRED",
+                "TOKEN_REPLAY",
+            }:
                 result_reason_codes.append(execution_error_reason_code)
                 status = "REJECTED_POLICY"
     except Exception:

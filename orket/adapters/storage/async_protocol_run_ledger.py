@@ -498,11 +498,7 @@ class AsyncProtocolRunLedgerRepository:
         return appended
 
     def _tool_invocation_count(self, events: list[dict[str, Any]]) -> int:
-        return sum(
-            1
-            for row in events
-            if str(row.get("kind") or "") in _TOOL_INVOCATION_KINDS
-        )
+        return sum(1 for row in events if str(row.get("kind") or "") in _TOOL_INVOCATION_KINDS)
 
     async def append_receipt(
         self,
@@ -676,9 +672,7 @@ class AsyncProtocolRunLedgerRepository:
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"{E_RECEIPT_SEQ_INVALID_PREFIX}:{raw_seq}") from exc
             if int(normalized["receipt_seq"]) <= last_seq:
-                raise ValueError(
-                    f"{E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX}:{normalized['receipt_seq']}<=last:{last_seq}"
-                )
+                raise ValueError(f"{E_RECEIPT_SEQ_NON_MONOTONIC_PREFIX}:{normalized['receipt_seq']}<=last:{last_seq}")
 
         line = json.dumps(normalized, ensure_ascii=False, separators=(",", ":"))
         receipts_path.parent.mkdir(parents=True, exist_ok=True)

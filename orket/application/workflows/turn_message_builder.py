@@ -120,14 +120,26 @@ class MessageBuilder:
             missing_lines = [
                 "- The following expected read paths are currently missing in workspace:",
                 *[f"  - {path}" for path in missing_required_read_paths],
-                "- Do not fabricate reads for missing paths; proceed with available files and state missing inputs explicitly.",
+                (
+                    "- Do not fabricate reads for missing paths; proceed with "
+                    "available files and state missing inputs explicitly."
+                ),
             ]
-            messages.append({"role": "user", "content": "Missing Input Preflight Notice:\n" + "\n".join(missing_lines)})
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Missing Input Preflight Notice:\n" + "\n".join(missing_lines),
+                }
+            )
 
         verification_scope = parse_verification_scope(context.get("verification_scope"))
         if isinstance(verification_scope, dict):
+            scope_payload = json.dumps(verification_scope, sort_keys=True)
             messages.append(
-                {"role": "user", "content": "Hallucination Verification Scope:\n" + json.dumps(verification_scope, sort_keys=True)}
+                {
+                    "role": "user",
+                    "content": "Hallucination Verification Scope:\n" + scope_payload,
+                }
             )
 
         if bool(context.get("architecture_decision_required")):
@@ -149,7 +161,11 @@ class MessageBuilder:
                 f"- Write architecture decision JSON to path: {decision_path}",
                 f"- recommendation must be one of: {', '.join(allowed_patterns)}",
                 "- confidence must be a number between 0 and 1",
-                "- evidence must include keys: estimated_domains, external_integrations, independent_scaling_needs, deployment_complexity, team_parallelism, operational_maturity",
+                (
+                    "- evidence must include keys: estimated_domains, "
+                    "external_integrations, independent_scaling_needs, "
+                    "deployment_complexity, team_parallelism, operational_maturity"
+                ),
                 f"- active architecture mode: {mode}",
                 f"- frontend_framework should be one of: {', '.join(allowed_frontend_frameworks)}",
             ]
@@ -157,7 +173,12 @@ class MessageBuilder:
                 lines.append(f"- recommendation MUST equal: {forced_pattern}")
             if forced_frontend_framework:
                 lines.append(f"- frontend_framework MUST equal: {forced_frontend_framework}")
-            messages.append({"role": "user", "content": "Architecture Decision Contract:\n" + "\n".join(lines)})
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Architecture Decision Contract:\n" + "\n".join(lines),
+                }
+            )
 
         if str(context.get("stage_gate_mode", "")).strip().lower() == "review_required":
             runtime_ok = context.get("runtime_verifier_ok")
@@ -166,19 +187,23 @@ class MessageBuilder:
                 runtime_line = "- Runtime verifier passed for this issue."
             elif runtime_ok is False:
                 runtime_line = "- Runtime verifier failed for this issue."
+            guard_contract_lines = [
+                "Guard Rejection Contract:",
+                (
+                    "- If you set update_issue_status.status to blocked, "
+                    "include a second JSON object in the same response."
+                ),
+                '- Required payload schema: {"rationale":"...", "violations":[...], "remediation_actions":[...]}.',
+                "- rationale must be non-empty.",
+                "- violations must contain at least one concrete defect.",
+                "- remediation_actions must contain at least one concrete action.",
+                runtime_line,
+                ("- If runtime verifier passed and no concrete defect is present, choose status=done."),
+            ]
             messages.append(
                 {
                     "role": "user",
-                    "content": (
-                        "Guard Rejection Contract:\n"
-                        "- If you set update_issue_status.status to blocked, include a second JSON object in the same response.\n"
-                        '- Required payload schema: {"rationale":"...", "violations":[...], "remediation_actions":[...]}.\n'
-                        "- rationale must be non-empty.\n"
-                        "- violations must contain at least one concrete defect.\n"
-                        "- remediation_actions must contain at least one concrete action.\n"
-                        f"{runtime_line}\n"
-                        "- If runtime verifier passed and no concrete defect is present, choose status=done."
-                    ),
+                    "content": "\n".join(guard_contract_lines),
                 }
             )
 

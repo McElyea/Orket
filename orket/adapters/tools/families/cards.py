@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
@@ -67,9 +67,13 @@ class CardManagementTools(BaseTools):
             return {"ok": False, "error": f"Issue not found: {issue_id}"}
 
         current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status))
-        raw_card_type = getattr(issue, "type", None) or context.get("card_type") or args.get("card_type") or CardType.ISSUE.value
+        raw_card_type = (
+            getattr(issue, "type", None) or context.get("card_type") or args.get("card_type") or CardType.ISSUE.value
+        )
         try:
-            card_type = raw_card_type if isinstance(raw_card_type, CardType) else CardType(str(raw_card_type).strip().lower())
+            card_type = (
+                raw_card_type if isinstance(raw_card_type, CardType) else CardType(str(raw_card_type).strip().lower())
+            )
         except ValueError:
             return {"ok": False, "error": f"Invalid card type: {raw_card_type}"}
 
@@ -148,4 +152,3 @@ class CardManagementTools(BaseTools):
             "summary": issue_payload.get("summary"),
             "comments": comments,
         }
-

@@ -149,8 +149,10 @@ async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(
     assert run["artifact_json"]["run_summary"] == run["summary_json"]
     assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
     assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
+    events = await protocol_repo.list_events("sess-protocol-incomplete")
+    assert [event["kind"] for event in events] == ["run_started", "packet2_fact", "run_finalized"]
     assert run["started_event_seq"] == 1
-    assert run["ended_event_seq"] == 2
+    assert run["ended_event_seq"] == 3
 
 
 @pytest.mark.asyncio

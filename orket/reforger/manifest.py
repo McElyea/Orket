@@ -22,4 +22,3 @@ class ModeSpec:
     suite_ref: str
     rubric: dict[str, object]
     path: Path
-

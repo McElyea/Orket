@@ -1,19 +1,25 @@
 from __future__ import annotations
-from typing import List, Optional
-from orket.schema import SkillConfig, DialectConfig
+
+from typing import Optional
+
+from orket.schema import DialectConfig, SkillConfig
+
 
 class PromptCompiler:
     """
     Service responsible for assembling the final system instruction string.
     Implements card system protocols and optional structural constraints.
     """
-    
+
     @staticmethod
     def _protocol_lines(protocol_governed_enabled: bool) -> list[str]:
         if protocol_governed_enabled:
             return [
                 "- DO NOT narrate your plan in prose. Return exactly one JSON object.",
-                '- Required response envelope: {"content":"","tool_calls":[{"tool":"<tool_name>","args":{"key":"value"}}]}',
+                (
+                    '- Required response envelope: {"content":"","tool_calls":'
+                    '[{"tool":"<tool_name>","args":{"key":"value"}}]}'
+                ),
                 "- In tool mode, content MUST be an empty string.",
                 "- Put every required tool call into tool_calls within that single JSON object.",
                 "- Do not use markdown fences or multiple top-level JSON objects.",
@@ -36,14 +42,14 @@ class PromptCompiler:
     ) -> str:
         prompt = f"IDENTITY: {skill.name}\n"
         prompt += f"INTENT: {skill.intent}\n\n"
-        
+
         prompt += "RESPONSIBILITIES:\n"
         for r in skill.responsibilities:
             prompt += f"- {r}\n"
 
         if skill.idesign_constraints:
             prompt += "\nSTRUCTURAL CONSTRAINTS (Optional):\n"
-            for c in (skill.idesign_constraints or []):
+            for c in skill.idesign_constraints or []:
                 prompt += f"- {c}\n"
 
         prompt += "\nCARD SYSTEM PROTOCOL:\n"
@@ -53,7 +59,10 @@ class PromptCompiler:
         prompt += "- The Card System is the Source of Truth for INTENT. Files are the result of EXECUTION.\n"
         for line in PromptCompiler._protocol_lines(protocol_governed_enabled):
             prompt += f"{line}\n"
-        prompt += "- If no valid action is possible, emit exactly one tool call to 'add_issue_comment' explaining the blocker.\n"
+        prompt += (
+            "- If no valid action is possible, emit exactly one tool call to "
+            "'add_issue_comment' explaining the blocker.\n"
+        )
         if skill.tools:
             prompt += "\nALLOWED TOOLS:\n"
             for t in skill.tools:
@@ -64,10 +73,19 @@ class PromptCompiler:
         prompt += "- read_file args MUST include: path (string)\n"
         prompt += "- add_issue_comment args MUST include: comment (string)\n"
         prompt += "- update_issue_status args MUST include: status (string)\n"
-        prompt += "- If update_issue_status.status is 'blocked', args MUST include wait_reason in: resource|dependency|review|input|system\n"
+        prompt += (
+            "- If update_issue_status.status is 'blocked', args MUST include "
+            "wait_reason in: resource|dependency|review|input|system\n"
+        )
         prompt += "- get_issue_context args MAY be {}\n"
-        prompt += "- If Execution Context JSON includes required_action_tools, your turn is INVALID unless all listed tools are called.\n"
-        prompt += "- If Execution Context JSON includes required_statuses, your update_issue_status.status MUST be one of them.\n"
+        prompt += (
+            "- If Execution Context JSON includes required_action_tools, your "
+            "turn is INVALID unless all listed tools are called.\n"
+        )
+        prompt += (
+            "- If Execution Context JSON includes required_statuses, your "
+            "update_issue_status.status MUST be one of them.\n"
+        )
         if protocol_governed_enabled:
             prompt += '- Return ONLY one JSON object matching {"content":"","tool_calls":[...]}.\n'
             prompt += "- Do not wrap the JSON object in markdown fences.\n"
@@ -85,8 +103,15 @@ class PromptCompiler:
                 "architect": [
                     "You MUST write architecture decision JSON using write_file(path='agent_output/design.txt', ...).",
                     "That JSON MUST include recommendation, confidence, and evidence keys.",
-                    "evidence MUST include: estimated_domains, external_integrations, independent_scaling_needs, deployment_complexity, team_parallelism, operational_maturity.",
-                    "If the turn contract specifies frontend_framework, include frontend_framework in the same JSON object.",
+                    (
+                        "evidence MUST include: estimated_domains, "
+                        "external_integrations, independent_scaling_needs, "
+                        "deployment_complexity, team_parallelism, operational_maturity."
+                    ),
+                    (
+                        "If the turn contract specifies frontend_framework, "
+                        "include frontend_framework in the same JSON object."
+                    ),
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "coder": [
@@ -98,7 +123,10 @@ class PromptCompiler:
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "code_reviewer": [
-                    "You MUST read every path listed in the Read Path Contract with read_file(...) in this same response.",
+                    (
+                        "You MUST read every path listed in the Read Path "
+                        "Contract with read_file(...) in this same response."
+                    ),
                     "Do not stop after reading only a subset of required artifacts.",
                     "You MUST then call update_issue_status(status='code_review') for guard handoff.",
                 ],
@@ -113,19 +141,19 @@ class PromptCompiler:
 
         prompt += f"\nSYNTAX DIALECT ({dialect.model_family}):\n"
         prompt += f"You MUST use this format for all file operations:\n{dialect.dsl_format}\n"
-        
+
         prompt += "\nCONSTRAINTS:\n"
         for c in dialect.constraints:
             prompt += f"- {c}\n"
-        
+
         prompt += f"\nGUARDRAIL: {dialect.hallucination_guard}\n"
 
         if next_member:
-            prompt += f"\nWARM HANDOFF PROTOCOL:\n"
+            prompt += "\nWARM HANDOFF PROTOCOL:\n"
             prompt += f"Your work will be handed off to the '{next_member}'.\n"
-            prompt += f"You MUST include a 'Member-to-Member Memo' in an 'add_issue_comment' call.\n"
+            prompt += "You MUST include a 'Member-to-Member Memo' in an 'add_issue_comment' call.\n"
 
         if patch:
             prompt += f"\n\nPATCH:\n{patch}"
-            
+
         return prompt

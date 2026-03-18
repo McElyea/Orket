@@ -57,9 +57,7 @@ def _validate_orket_number_domain(obj: Any) -> None:
             continue
 
         if isinstance(v, float):
-            raise CanonicalizationError(
-                "Non-integer number encountered (float). Orket digest profile forbids floats."
-            )
+            raise CanonicalizationError("Non-integer number encountered (float). Orket digest profile forbids floats.")
 
         if isinstance(v, int):
             if v < JS_SAFE_INT_MIN or v > JS_SAFE_INT_MAX:
@@ -71,9 +69,7 @@ def _validate_orket_number_domain(obj: Any) -> None:
 
         # If we got here, it’s a non-JSON type
         if not isinstance(v, (dict, list, tuple)):
-            raise CanonicalizationError(
-                f"Non-JSON value encountered during canonicalization: {type(v).__name__}"
-            )
+            raise CanonicalizationError(f"Non-JSON value encountered during canonicalization: {type(v).__name__}")
 
 
 def _jcs_canonicalize_to_str(obj: Any) -> str:
@@ -185,12 +181,7 @@ def fs_token(value: str) -> str:
     """
     Filesystem-safe token for IDs and stems used in path segments.
     """
-    return (
-        value.replace("%", "%25")
-        .replace("/", "%2F")
-        .replace("\\", "%5C")
-        .replace(":", "%3A")
-    )
+    return value.replace("%", "%25").replace("/", "%2F").replace("\\", "%5C").replace(":", "%3A")
 
 
 T = TypeVar("T")

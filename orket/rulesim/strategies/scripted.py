@@ -15,4 +15,3 @@ class ScriptedStrategy:
             self._cursor += 1
             return action
         return self._sequence[-1] if self._sequence else legal_actions[0]
-

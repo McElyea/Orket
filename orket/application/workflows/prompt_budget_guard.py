@@ -28,9 +28,7 @@ async def maybe_record_prompt_budget(
     context: dict[str, Any],
     model_client: Any,
 ) -> dict[str, Any] | None:
-    prompt_budget_enabled = bool(
-        context.get("prompt_budget_enabled", context.get("protocol_governed_enabled", False))
-    )
+    prompt_budget_enabled = bool(context.get("prompt_budget_enabled", context.get("protocol_governed_enabled", False)))
     if not prompt_budget_enabled:
         return None
 

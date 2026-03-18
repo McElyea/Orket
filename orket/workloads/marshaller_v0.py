@@ -16,7 +16,9 @@ async def run_marshaller_v0(
     interaction_context: InteractionContext,
 ) -> dict[str, int]:
     run_request_path = Path(str(input_config.get("run_request_path") or "").strip()).resolve()
-    proposal_paths = [Path(str(item)).resolve() for item in list(input_config.get("proposal_paths") or []) if str(item).strip()]
+    proposal_paths = [
+        Path(str(item)).resolve() for item in list(input_config.get("proposal_paths") or []) if str(item).strip()
+    ]
     workspace_root = Path(str(input_config.get("workspace_root") or ".")).resolve()
     run_id = str(input_config.get("run_id") or default_run_id()).strip()
     allowed_paths = [str(item).strip() for item in list(input_config.get("allowed_paths") or []) if str(item).strip()]

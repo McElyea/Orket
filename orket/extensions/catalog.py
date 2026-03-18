@@ -40,9 +40,7 @@ class ExtensionCatalog:
             security_mode = str(row.get("security_mode", "")).strip() or "compat"
             security_profile = str(row.get("security_profile", "")).strip() or "production"
             security_policy_version = str(row.get("security_policy_version", "")).strip()
-            compat_fallbacks = tuple(
-                str(item).strip() for item in row.get("compat_fallbacks", []) if str(item).strip()
-            )
+            compat_fallbacks = tuple(str(item).strip() for item in row.get("compat_fallbacks", []) if str(item).strip())
             if not extension_id or extension_id in seen_ids:
                 continue
             seen_ids.add(extension_id)

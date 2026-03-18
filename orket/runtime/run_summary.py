@@ -388,7 +388,9 @@ def _build_packet1_extension(
         "intended_provider": _resolve_packet1_token(facts.get("intended_provider"), "ollama"),
         "intended_model": _resolve_packet1_token(facts.get("intended_model")),
         "intended_profile": _resolve_packet1_token(facts.get("intended_profile")),
-        "actual_provider": _resolve_packet1_token(facts.get("actual_provider"), facts.get("intended_provider"), "ollama"),
+        "actual_provider": _resolve_packet1_token(
+            facts.get("actual_provider"), facts.get("intended_provider"), "ollama"
+        ),
         "actual_model": _resolve_packet1_token(facts.get("actual_model"), facts.get("intended_model")),
         "actual_profile": _resolve_packet1_token(facts.get("actual_profile"), facts.get("intended_profile")),
         "path_mismatch": bool(facts.get("path_mismatch", False)),
@@ -525,7 +527,11 @@ def _detect_packet1_defects(
     machine_mismatch_indicator = bool(facts.get("machine_mismatch_indicator", False))
     if bool(facts.get("path_mismatch")) and not machine_mismatch_indicator:
         defects.append("silent_path_mismatch")
-    if bool(facts.get("repair_occurred")) and success_like and bool(facts.get("output_presented_as_normal_success", True)):
+    if (
+        bool(facts.get("repair_occurred"))
+        and success_like
+        and bool(facts.get("output_presented_as_normal_success", True))
+    ):
         defects.append("silent_repaired_success")
     if (
         success_like

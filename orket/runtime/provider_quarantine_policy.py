@@ -8,11 +8,7 @@ def parse_quarantined_providers(value: Any) -> set[str]:
     raw = str(value or "").strip()
     if not raw:
         return set()
-    tokens = {
-        str(token).strip().lower()
-        for token in raw.split(",")
-        if str(token).strip()
-    }
+    tokens = {str(token).strip().lower() for token in raw.split(",") if str(token).strip()}
     return tokens
 
 

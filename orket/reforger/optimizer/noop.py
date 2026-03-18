@@ -26,4 +26,3 @@ class NoopOptimizer:
             encoding="utf-8",
         )
         return [target]
-

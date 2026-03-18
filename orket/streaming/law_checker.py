@@ -38,9 +38,7 @@ class StreamLawChecker:
         state.seen_seqs.add(event.seq)
 
         if state.last_seq is not None and event.seq <= state.last_seq:
-            raise StreamLawViolation(
-                f"R0 seq non-increasing: prev={state.last_seq} current={event.seq}"
-            )
+            raise StreamLawViolation(f"R0 seq non-increasing: prev={state.last_seq} current={event.seq}")
 
         if state.last_seq is not None and event.seq > (state.last_seq + 1):
             self._validate_gap_with_dropped_ranges(event, expected_start=state.last_seq + 1, expected_end=event.seq - 1)
@@ -53,7 +51,9 @@ class StreamLawChecker:
         if state.terminal_event is not None:
             if event.event_type != StreamEventType.COMMIT_FINAL:
                 raise StreamLawViolation(
-                    f"R3 post-terminal event forbidden: terminal={state.terminal_event.value} got={event.event_type.value}"
+                    "R3 post-terminal event forbidden: "
+                    f"terminal={state.terminal_event.value} "
+                    f"got={event.event_type.value}"
                 )
             if state.seen_commit_final:
                 raise StreamLawViolation("R1b duplicate commit_final for turn")
@@ -90,18 +90,14 @@ class StreamLawChecker:
         cursor = expected_start
         for start, end in normalized:
             if start > cursor:
-                raise StreamLawViolation(
-                    f"R0 dropped_seq_ranges missing coverage for seq={cursor}"
-                )
+                raise StreamLawViolation(f"R0 dropped_seq_ranges missing coverage for seq={cursor}")
             if end < cursor:
                 continue
             cursor = end + 1
             if cursor > expected_end:
                 break
         if cursor <= expected_end:
-            raise StreamLawViolation(
-                f"R0 dropped_seq_ranges incomplete coverage; first_uncovered={cursor}"
-            )
+            raise StreamLawViolation(f"R0 dropped_seq_ranges incomplete coverage; first_uncovered={cursor}")
 
     def _validate_commit_final(self, event: StreamEvent, state: TurnLawState) -> None:
         payload = event.payload
@@ -116,6 +112,4 @@ class StreamLawChecker:
         if state.terminal_seq is None:
             raise StreamLawViolation("R1b commit_final arrived before terminal turn event")
         if event.seq <= state.terminal_seq:
-            raise StreamLawViolation(
-                f"R1b commit_final seq must be > terminal seq ({state.terminal_seq})"
-            )
+            raise StreamLawViolation(f"R1b commit_final seq must be > terminal seq ({state.terminal_seq})")

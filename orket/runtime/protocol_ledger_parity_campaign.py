@@ -41,9 +41,7 @@ async def _discover_sqlite_session_ids(*, sqlite_db: Path, limit: int) -> list[s
     rows: list[str] = []
     async with aiosqlite.connect(str(sqlite_db)) as conn:
         conn.row_factory = aiosqlite.Row
-        cursor = await conn.execute(
-            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'run_ledger' LIMIT 1"
-        )
+        cursor = await conn.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'run_ledger' LIMIT 1")
         has_table = await cursor.fetchone()
         if not has_table:
             return []
@@ -204,4 +202,3 @@ async def compare_protocol_ledger_parity_campaign(
             "status_delta_counts": _sorted_counts(status_delta_counts),
         },
     }
-

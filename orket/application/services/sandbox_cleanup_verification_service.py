@@ -45,14 +45,10 @@ class SandboxCleanupVerificationService:
                 unexpected_managed_present.append(resource.name)
 
         remaining_expected = sorted(
-            name
-            for resource_type, names in expected.items()
-            for name in (names & observed_by_type[resource_type])
+            name for resource_type, names in expected.items() for name in (names & observed_by_type[resource_type])
         )
         absent_expected = sorted(
-            name
-            for resource_type, names in expected.items()
-            for name in (names - observed_by_type[resource_type])
+            name for resource_type, names in expected.items() for name in (names - observed_by_type[resource_type])
         )
         return CleanupVerificationResult(
             success=not remaining_expected and not unexpected_managed_present,

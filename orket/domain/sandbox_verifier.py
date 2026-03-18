@@ -46,7 +46,9 @@ class SandboxVerifier:
                             passed += 1
                     else:
                         logs.append(
-                            f"  [FAIL] Expected status {scenario.input_data.get('expected_status', 200)}, got {res.status_code}"
+                            "  [FAIL] Expected status "
+                            f"{scenario.input_data.get('expected_status', 200)}, "
+                            f"got {res.status_code}"
                         )
                         scenario.status = "fail"
                         failed += 1

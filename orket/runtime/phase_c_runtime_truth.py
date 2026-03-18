@@ -250,7 +250,9 @@ async def _load_protocol_receipts(*, workspace: Path, run_id: str) -> list[dict[
     protocol_turn_dirs: set[Path] = set()
     for receipt_path in sorted(observability_root.rglob("protocol_receipts.log")):
         protocol_turn_dirs.add(receipt_path.parent.resolve())
-        issue_id, role_name, turn_index = _receipt_context(receipt_path=receipt_path, run_id=run_id, workspace=workspace)
+        issue_id, role_name, turn_index = _receipt_context(
+            receipt_path=receipt_path, run_id=run_id, workspace=workspace
+        )
         try:
             async with aiofiles.open(receipt_path, mode="r", encoding="utf-8") as handle:
                 async for line in handle:
@@ -322,7 +324,9 @@ async def _load_legacy_turn_receipts(*, turn_dir: Path, run_id: str, workspace: 
         if not tool_name:
             continue
         tool_args = dict(item.get("args") or {}) if isinstance(item.get("args"), dict) else {}
-        result_path = turn_dir / f"tool_result_{sanitize_name(tool_name)}_{_legacy_tool_replay_key(tool_name, tool_args)}.json"
+        result_path = (
+            turn_dir / f"tool_result_{sanitize_name(tool_name)}_{_legacy_tool_replay_key(tool_name, tool_args)}.json"
+        )
         execution_result = await _load_json_payload(result_path)
         if not isinstance(execution_result, dict):
             continue
@@ -443,7 +447,9 @@ async def _status_update_audit_entry(
 ) -> dict[str, Any]:
     execution_result = dict(receipt.get("execution_result") or {})
     tool_args = dict(receipt.get("tool_args") or {}) if isinstance(receipt.get("tool_args"), dict) else {}
-    issue_id = str(execution_result.get("issue_id") or tool_args.get("issue_id") or receipt.get("_issue_id") or "").strip()
+    issue_id = str(
+        execution_result.get("issue_id") or tool_args.get("issue_id") or receipt.get("_issue_id") or ""
+    ).strip()
     status = str(execution_result.get("status") or tool_args.get("status") or "").strip().lower()
     target = f"{issue_id}:{status}" if issue_id and status else issue_id or status
     entry = _base_audit_entry(receipt=receipt, effect_target=target, tool="update_issue_status")
@@ -500,13 +506,7 @@ def _normalize_source_attribution_claims(value: Any) -> list[dict[str, Any]]:
             continue
         claim_id = str(item.get("claim_id") or "").strip()
         claim = str(item.get("claim") or "").strip()
-        source_ids = sorted(
-            {
-                str(token).strip()
-                for token in item.get("source_ids", [])
-                if str(token).strip()
-            }
-        )
+        source_ids = sorted({str(token).strip() for token in item.get("source_ids", []) if str(token).strip()})
         if not claim_id or not claim or not source_ids:
             continue
         claims[claim_id] = {
@@ -557,7 +557,9 @@ def _idempotency_target_for_receipt(receipt: dict[str, Any]) -> str:
     execution_result = dict(receipt.get("execution_result") or {})
     tool_args = dict(receipt.get("tool_args") or {}) if isinstance(receipt.get("tool_args"), dict) else {}
     if tool == "update_issue_status":
-        issue_id = str(execution_result.get("issue_id") or tool_args.get("issue_id") or receipt.get("_issue_id") or "").strip()
+        issue_id = str(
+            execution_result.get("issue_id") or tool_args.get("issue_id") or receipt.get("_issue_id") or ""
+        ).strip()
         status = str(execution_result.get("status") or tool_args.get("status") or "").strip().lower()
         return f"{issue_id}:{status}" if issue_id and status else issue_id or status
     return _normalized_workspace_path(str(tool_args.get("path") or execution_result.get("path") or "").strip())

@@ -147,6 +147,7 @@ def build_sessions_router(
                 await interaction_manager.finalize(session_id, turn_id)
 
         _logger = logging.getLogger(__name__)
+
         def _log_turn_failure(done_task: asyncio.Task[Any]) -> None:
             try:
                 error = done_task.exception()

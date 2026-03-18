@@ -8,13 +8,12 @@ Persists:
 
 Reconstructed to use aiosqlite for true async I/O.
 """
+
 from __future__ import annotations
 import asyncio
 import aiosqlite
-import json
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from datetime import datetime, UTC
 
 from orket.logging import log_event
 from orket.runtime_paths import resolve_webhook_db_path
@@ -92,7 +91,9 @@ class WebhookDatabase:
                 """)
 
                 await conn.execute("CREATE INDEX IF NOT EXISTS idx_pr_key ON pr_review_cycles(pr_key)")
-                await conn.execute("CREATE INDEX IF NOT EXISTS idx_repo_pr ON pr_review_cycles(repo_full_name, pr_number)")
+                await conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_repo_pr ON pr_review_cycles(repo_full_name, pr_number)"
+                )
                 await conn.execute("CREATE INDEX IF NOT EXISTS idx_failure_pr_key ON review_failures(pr_key)")
 
                 await conn.commit()
@@ -109,10 +110,7 @@ class WebhookDatabase:
 
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
-            cursor = await conn.execute(
-                "SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?",
-                (pr_key,)
-            )
+            cursor = await conn.execute("SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?", (pr_key,))
             row = await cursor.fetchone()
             return row["cycle_count"] if row else 0
 
@@ -126,13 +124,16 @@ class WebhookDatabase:
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
             # Insert or update
-            await conn.execute("""
+            await conn.execute(
+                """
                 INSERT INTO pr_review_cycles (pr_key, repo_full_name, pr_number, cycle_count, updated_at)
                 VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
                 ON CONFLICT(pr_key) DO UPDATE SET
                     cycle_count = cycle_count + 1,
                     updated_at = CURRENT_TIMESTAMP
-            """, (pr_key, repo_full_name, pr_number))
+            """,
+                (pr_key, repo_full_name, pr_number),
+            )
 
             # Get new count
             cursor = await conn.execute("SELECT cycle_count FROM pr_review_cycles WHERE pr_key = ?", (pr_key,))
@@ -152,10 +153,13 @@ class WebhookDatabase:
         cycle_count = await self.get_pr_cycle_count(repo_full_name, pr_number)
 
         async with aiosqlite.connect(self.db_path) as conn:
-            await conn.execute("""
+            await conn.execute(
+                """
                 INSERT INTO review_failures (pr_key, cycle_number, reviewer, reason)
                 VALUES (?, ?, ?, ?)
-            """, (pr_key, cycle_count, reviewer, reason))
+            """,
+                (pr_key, cycle_count, reviewer, reason),
+            )
             await conn.commit()
             log_event("webhook_db", {"message": f"Recorded failure reason for {pr_key}"}, level="info")
 
@@ -168,12 +172,15 @@ class WebhookDatabase:
 
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
-            cursor = await conn.execute("""
+            cursor = await conn.execute(
+                """
                 SELECT cycle_number, reviewer, reason, created_at
                 FROM review_failures
                 WHERE pr_key = ?
                 ORDER BY cycle_number ASC
-            """, (pr_key,))
+            """,
+                (pr_key,),
+            )
 
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
@@ -182,22 +189,23 @@ class WebhookDatabase:
         """Save a bug fix phase to the database."""
         await self._ensure_initialized()
         async with aiosqlite.connect(self.db_path) as conn:
-            await conn.execute("""
+            await conn.execute(
+                """
                 INSERT OR REPLACE INTO bug_fix_phases (rock_id, data_json, status, updated_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            """, (phase.rock_id, phase.model_dump_json(), phase.status.value))
+            """,
+                (phase.rock_id, phase.model_dump_json(), phase.status.value),
+            )
             await conn.commit()
 
     async def get_bug_fix_phase(self, rock_id: str) -> Optional[Any]:
         """Retrieve a bug fix phase from the database."""
         await self._ensure_initialized()
         from orket.domain.bug_fix_phase import BugFixPhase
+
         async with aiosqlite.connect(self.db_path) as conn:
             conn.row_factory = aiosqlite.Row
-            cursor = await conn.execute(
-                "SELECT data_json FROM bug_fix_phases WHERE rock_id = ?",
-                (rock_id,)
-            )
+            cursor = await conn.execute("SELECT data_json FROM bug_fix_phases WHERE rock_id = ?", (rock_id,))
             row = await cursor.fetchone()
             if row:
                 return BugFixPhase.model_validate_json(row["data_json"])
@@ -211,11 +219,14 @@ class WebhookDatabase:
         pr_key = f"{repo_full_name}#{pr_number}"
 
         async with aiosqlite.connect(self.db_path) as conn:
-            await conn.execute("""
+            await conn.execute(
+                """
                 UPDATE pr_review_cycles
                 SET status = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE pr_key = ?
-            """, (status, pr_key))
+            """,
+                (status, pr_key),
+            )
             await conn.commit()
             log_event("webhook_db", {"message": f"Closed PR cycle: {pr_key} ({status})"}, level="info")
 

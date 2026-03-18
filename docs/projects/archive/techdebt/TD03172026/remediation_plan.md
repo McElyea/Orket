@@ -1,8 +1,12 @@
 # Remediation Plan — Orket Code Review Findings
 
+Last updated: 2026-03-17
+Status: Archived (closeout complete; superseded by standing maintenance)
+Cycle ID: TD03172026
+
 > Sequenced for safe, incremental delivery. Each task is self-contained and testable in isolation.
 > Prerequisites are noted where one fix unblocks another.
-> Refer to `docs\projects\techdebt\code_review_orket.md` to identify provenance for this document. 
+> Read [docs/projects/archive/techdebt/TD03172026/code_review_orket.md](docs/projects/archive/techdebt/TD03172026/code_review_orket.md) to view the code review this document is based on.
 ---
 
 ## Sequencing Overview
@@ -642,3 +646,22 @@ A task is complete when:
 3. If the fix touches a path listed in `CURRENT_AUTHORITY.md`, that file is updated in the same change.
 4. The corresponding finding number is referenced in the commit message (e.g. `fix: resolve context=None type lie in ToolBox.execute [finding-3]`).
 5. `python -m pytest -q` passes.
+
+---
+
+## Closeout Status (2026-03-17)
+
+Implemented remediation status:
+
+1. Tasks 1 through 14 have landed with targeted code and test coverage for the findings addressed in this plan.
+2. Touched-surface verification is green for the remediation slice, including targeted pytest coverage and targeted `ruff check` on modified runtime files.
+3. Repo-wide `ruff check orket/` now passes.
+4. `python -m pytest -q` now passes (`2751 passed, 40 skipped`).
+5. Task 8 raised the CI coverage floor to `89%` and recorded module debt in `docs/internal/COVERAGE_DEBT.md`.
+6. This cycle is complete under the Definition of Done above and is archived to [docs/projects/archive/techdebt/TD03172026/](docs/projects/archive/techdebt/TD03172026/).
+
+Residual recurring-maintenance debt:
+
+1. Measured repo coverage from `python -m pytest tests/ --cov=orket --cov-report=term --cov-fail-under=89 -q` is `83.90%`, below the truthful CI floor of `89%`.
+2. The red coverage gate is continuing techdebt maintenance debt and remains tracked in `docs/internal/COVERAGE_DEBT.md`.
+3. Because the plan’s Definition of Done is now satisfied, that ongoing coverage debt returns to the standing recurring maintenance lane instead of keeping this finite remediation cycle active.

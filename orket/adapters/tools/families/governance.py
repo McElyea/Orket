@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List
@@ -42,6 +42,7 @@ class GovernanceTools(BaseTools):
     def refinement_proposal(self, args: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
         from orket.logging import log_event
 
+        context = context or {}
         log_event("refinement_proposed", args, self.workspace_root, role="SYS")
         return {"ok": True, "message": "Proposal logged."}
 

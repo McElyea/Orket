@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any
 
@@ -39,15 +39,9 @@ def _tool_profile_definition(tool_name: str, profile: dict[str, Any]) -> dict[st
 
 
 def build_policy_digest_snapshot() -> dict[str, Any]:
-    policy_context_digest_expectations = {
-        name: digest_of(context)
-        for name, context in sorted(POLICY_CONTEXTS.items())
-    }
+    policy_context_digest_expectations = {name: digest_of(context) for name, context in sorted(POLICY_CONTEXTS.items())}
 
-    deny_rule_digest_expectations = {
-        name: digest_of(rule)
-        for name, rule in sorted(DENY_RULE_EXAMPLES.items())
-    }
+    deny_rule_digest_expectations = {name: digest_of(rule) for name, rule in sorted(DENY_RULE_EXAMPLES.items())}
 
     tool_profile_digest_expectations = {
         tool_name: tool_profile_digest(_tool_profile_definition(tool_name, profile))

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 from orket.adapters.storage.async_dual_write_run_ledger import (
     AsyncDualWriteRunLedgerRepository,

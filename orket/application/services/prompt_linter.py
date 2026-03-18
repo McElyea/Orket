@@ -41,7 +41,9 @@ def _violation(
 
 
 def _extract_placeholders(text: str) -> List[str]:
-    return sorted({m.group(1).strip() for m in re.finditer(r"\{\{\s*([^{}]+?)\s*\}\}", text or "") if m.group(1).strip()})
+    return sorted(
+        {m.group(1).strip() for m in re.finditer(r"\{\{\s*([^{}]+?)\s*\}\}", text or "") if m.group(1).strip()}
+    )
 
 
 def _collect_unbalanced_placeholder_violations(text: str, path: Path, field: str) -> List[Dict[str, Any]]:
@@ -132,7 +134,9 @@ def lint_prompt_asset(path: Path, payload: Dict[str, Any], kind: str) -> List[Di
         )
     if not version:
         violations.append(
-            _violation(file=path, rule_id="PL005", code="VERSION_MISSING", message="prompt_metadata.version is required.")
+            _violation(
+                file=path, rule_id="PL005", code="VERSION_MISSING", message="prompt_metadata.version is required."
+            )
         )
     if status not in VALID_STATUSES:
         violations.append(
@@ -150,13 +154,17 @@ def lint_prompt_asset(path: Path, payload: Dict[str, Any], kind: str) -> List[Di
         )
     if not updated_at:
         violations.append(
-            _violation(file=path, rule_id="PL005", code="UPDATED_AT_MISSING", message="prompt_metadata.updated_at is required.")
+            _violation(
+                file=path, rule_id="PL005", code="UPDATED_AT_MISSING", message="prompt_metadata.updated_at is required."
+            )
         )
 
     lineage = metadata.get("lineage")
     if not isinstance(lineage, dict):
         violations.append(
-            _violation(file=path, rule_id="PL005", code="LINEAGE_INVALID", message="prompt_metadata.lineage must be an object.")
+            _violation(
+                file=path, rule_id="PL005", code="LINEAGE_INVALID", message="prompt_metadata.lineage must be an object."
+            )
         )
 
     changelog = metadata.get("changelog")
@@ -186,11 +194,32 @@ def lint_prompt_asset(path: Path, payload: Dict[str, Any], kind: str) -> List[Di
             d = str(entry.get("date") or "").strip()
             n = str(entry.get("notes") or "").strip()
             if not v:
-                violations.append(_violation(file=path, rule_id="PL005", code="CHANGELOG_VERSION_MISSING", message=f"prompt_metadata.changelog[{idx}].version missing."))
+                violations.append(
+                    _violation(
+                        file=path,
+                        rule_id="PL005",
+                        code="CHANGELOG_VERSION_MISSING",
+                        message=f"prompt_metadata.changelog[{idx}].version missing.",
+                    )
+                )
             if not d:
-                violations.append(_violation(file=path, rule_id="PL005", code="CHANGELOG_DATE_MISSING", message=f"prompt_metadata.changelog[{idx}].date missing."))
+                violations.append(
+                    _violation(
+                        file=path,
+                        rule_id="PL005",
+                        code="CHANGELOG_DATE_MISSING",
+                        message=f"prompt_metadata.changelog[{idx}].date missing.",
+                    )
+                )
             if not n:
-                violations.append(_violation(file=path, rule_id="PL005", code="CHANGELOG_NOTES_MISSING", message=f"prompt_metadata.changelog[{idx}].notes missing."))
+                violations.append(
+                    _violation(
+                        file=path,
+                        rule_id="PL005",
+                        code="CHANGELOG_NOTES_MISSING",
+                        message=f"prompt_metadata.changelog[{idx}].notes missing.",
+                    )
+                )
             if v:
                 versions.add(v)
         if version and version not in versions:

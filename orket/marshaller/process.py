@@ -60,4 +60,3 @@ def _build_env(env: Mapping[str, str] | None) -> dict[str, str]:
     if env:
         merged.update({str(k): str(v) for k, v in env.items()})
     return merged
-

@@ -149,6 +149,7 @@ class DefaultApiRuntimeStrategyNode:
 
     def resolve_current_sprint(self, now: Any) -> str:
         from orket.utils import get_eos_sprint
+
         return get_eos_sprint(now)
 
     def resolve_explorer_path(self, project_root: Any, path: str) -> Any | None:
@@ -225,10 +226,12 @@ class DefaultApiRuntimeStrategyNode:
 
     def create_preview_builder(self, model_root: Any) -> Any:
         from orket.preview import PreviewBuilder
+
         return PreviewBuilder(model_root)
 
     def create_chat_driver(self) -> Any:
         from orket.driver import OrketDriver
+
         return OrketDriver()
 
     def resolve_chat_driver_invocation(self, message: str) -> Dict[str, Any]:
@@ -242,6 +245,7 @@ class DefaultApiRuntimeStrategyNode:
 
     def create_member_metrics_reader(self) -> Any:
         from orket.logging import get_member_metrics
+
         return get_member_metrics
 
     def resolve_sandbox_workspace(self, project_root: Any) -> Any:
@@ -249,6 +253,7 @@ class DefaultApiRuntimeStrategyNode:
 
     def create_execution_pipeline(self, workspace_root: Any) -> Any:
         from orket.orket import ExecutionPipeline
+
         return ExecutionPipeline(workspace_root)
 
     def resolve_sandbox_logs_invocation(self, sandbox_id: str, service: str | None) -> Dict[str, Any]:
@@ -259,15 +264,23 @@ class DefaultApiRuntimeStrategyNode:
 
     def create_engine(self, workspace_root: Any) -> Any:
         from orket.orchestration.engine import OrchestrationEngine
+
         return OrchestrationEngine(workspace_root)
 
     def create_file_tools(self, project_root: Any) -> Any:
         from orket.adapters.storage.async_file_tools import AsyncFileTools
+
         return AsyncFileTools(project_root)
 
     def resolve_system_board(self, department: str) -> Any:
         from orket.board import get_board_hierarchy
+
         return get_board_hierarchy(department)
+
+    async def resolve_system_board_async(self, department: str) -> Any:
+        from orket.board import get_board_hierarchy_async
+
+        return await get_board_hierarchy_async(department)
 
     def should_remove_websocket(self, exception: Exception) -> bool:
         return isinstance(exception, (RuntimeError, ValueError))

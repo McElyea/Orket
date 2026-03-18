@@ -61,12 +61,22 @@ def _score_to_band(score: float, score_bands: dict[str, float]) -> int:
     return 0
 
 
-def _task_reason_codes(success_rate: float, unique_hashes: int, deterministic: bool) -> list[str]:
+def _determinism_rate(deterministic: bool | None, unique_hashes: int) -> float:
+    if deterministic is True:
+        return 1.0
+    if deterministic is None:
+        return 0.0
+    return 1.0 / float(max(1, unique_hashes))
+
+
+def _task_reason_codes(success_rate: float, unique_hashes: int, deterministic: bool | None) -> list[str]:
     reasons: list[str] = []
     if success_rate < 1.0:
         reasons.append("non_zero_exit_detected")
     if unique_hashes > 1:
         reasons.append("hash_drift_detected")
+    if deterministic is None:
+        reasons.append("determinism_not_proven")
     if deterministic:
         reasons.append("deterministic_output")
     return reasons
@@ -110,9 +120,12 @@ def score_report(
         latency_samples.extend(run_latencies)
         cost_samples.extend(run_costs)
 
-        deterministic = bool(task_detail.get("deterministic"))
+        deterministic = task_detail.get("deterministic")
+        if deterministic not in {True, False, None}:
+            deterministic = None
+        determinism_note = str(task_detail.get("determinism_note") or "").strip() or None
         unique_hashes = int(task_detail.get("unique_hashes", max(1, run_count)) or max(1, run_count))
-        determinism_rate = 1.0 if deterministic else (1.0 / float(max(1, unique_hashes)))
+        determinism_rate = _determinism_rate(deterministic, unique_hashes)
         numeric_score = _score_value(success_rate=success_rate, determinism_rate=determinism_rate)
         band = _score_to_band(score=numeric_score, score_bands=score_bands)
 
@@ -129,6 +142,7 @@ def score_report(
             "success_rate": round(success_rate, 3),
             "unique_hashes": unique_hashes,
             "deterministic": deterministic,
+            "determinism_note": determinism_note,
             "avg_latency_ms": round(sum(run_latencies) / len(run_latencies), 3) if run_latencies else 0.0,
             "avg_cost_usd": round(sum(run_costs) / len(run_costs), 6) if run_costs else 0.0,
             "score": numeric_score,

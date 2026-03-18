@@ -3,12 +3,14 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
 
+
 @dataclass
 class ToolCall:
     tool: str
     args: Dict[str, Any]
     result: Optional[Any] = None
     error: Optional[str] = None
+
 
 @dataclass
 class ExecutionTurn:
@@ -22,11 +24,12 @@ class ExecutionTurn:
     note: str = ""
     raw: Dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class ExecutionResult:
     session_id: str
     turns: List[ExecutionTurn] = field(default_factory=list)
     status: str = "in_progress"
-    
+
     def add_turn(self, turn: ExecutionTurn):
         self.turns.append(turn)

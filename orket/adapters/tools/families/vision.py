@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List
@@ -16,7 +16,9 @@ class VisionTools(BaseTools):
     def image_analyze(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
         return {
             "ok": False,
-            "error": "Visual analysis tool not implemented. Image analysis requires a vision-capable model or secondary API.",
+            "error": (
+                "Visual analysis tool not implemented. Image analysis requires a vision-capable model or secondary API."
+            ),
         }
 
     def image_generate(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:

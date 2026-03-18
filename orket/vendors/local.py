@@ -1,15 +1,17 @@
-﻿from pathlib import Path
-from typing import List, Optional, Dict, Any
+from pathlib import Path
+from typing import List, Optional
 from orket.vendors.base import VendorInterface, VendorRock, VendorEpic, VendorCard
 from orket.orket import ConfigLoader
 from orket.schema import RockConfig, EpicConfig
 from orket.runtime_paths import resolve_runtime_db_path
+
 
 class LocalVendor(VendorInterface):
     """
     Default vendor that uses the local model/*.json files.
     Ensures backward compatibility with zero-config setup.
     """
+
     def __init__(self, department: str = "core"):
         self.loader = ConfigLoader(Path("model"), department)
         self.dept = department
@@ -31,7 +33,8 @@ class LocalVendor(VendorInterface):
                 try:
                     e = self.loader.load_asset("epics", ename, EpicConfig)
                     epics.append(VendorEpic(id=ename, rock_id=rock_id, name=e.name, description=e.description))
-                except (FileNotFoundError, ValueError): pass
+                except (FileNotFoundError, ValueError):
+                    pass
         else:
             # Return all standalone epics
             for name in self.loader.list_assets("epics"):
@@ -44,20 +47,23 @@ class LocalVendor(VendorInterface):
         if epic_id:
             e = self.loader.load_asset("epics", epic_id, EpicConfig)
             for c in e.cards:
-                cards.append(VendorCard(
-                    id=c.id, 
-                    epic_id=epic_id, 
-                    summary=c.summary, 
-                    description=c.note, 
-                    status=c.status, 
-                    priority=c.priority,
-                    assignee=c.assignee
-                ))
+                cards.append(
+                    VendorCard(
+                        id=c.id,
+                        epic_id=epic_id,
+                        summary=c.summary,
+                        description=c.note,
+                        status=c.status,
+                        priority=c.priority,
+                        assignee=c.assignee,
+                    )
+                )
         return cards
 
     async def update_card_status(self, card_id: str, status: str) -> bool:
         from orket.adapters.storage.async_card_repository import AsyncCardRepository
         from orket.schema import CardStatus
+
         repo = AsyncCardRepository(resolve_runtime_db_path())
         await repo.update_status(card_id, CardStatus(status))
         return True
@@ -67,9 +73,14 @@ class LocalVendor(VendorInterface):
 
     async def get_card_details(self, card_id: str) -> VendorCard:
         from orket.adapters.storage.async_card_repository import AsyncCardRepository
+
         repo = AsyncCardRepository(resolve_runtime_db_path())
         record = await repo.get_by_id(card_id)
         if record:
-            return VendorCard(id=record.id, summary=record.summary or "Local Card", status=record.status.value, priority=record.priority or "Medium")
+            return VendorCard(
+                id=record.id,
+                summary=record.summary or "Local Card",
+                status=record.status.value,
+                priority=record.priority or "Medium",
+            )
         return VendorCard(id=card_id, summary="Local Card", status="ready", priority="Medium")
-

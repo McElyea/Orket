@@ -46,9 +46,7 @@ def build_verification_scope(
             return None
         return max(0, parsed)
 
-    resolved_active = normalize_scope_values(
-        active_context if active_context is not None else provided_context
-    )
+    resolved_active = normalize_scope_values(active_context if active_context is not None else provided_context)
     return {
         "workspace": normalize_scope_values(workspace),
         "provided_context": list(resolved_active),

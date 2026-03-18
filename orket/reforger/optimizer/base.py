@@ -15,4 +15,3 @@ class Optimizer(Protocol):
         out_dir: Path,
     ) -> list[Path]:
         """Generate candidate resolved packs."""
-

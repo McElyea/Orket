@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, Dict, Optional
 
-from pydantic import ValidationError
 
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType, WaitReason
@@ -88,7 +87,9 @@ class GiteaStateTransitioner:
         self.validate_transition(from_state=str(snapshot.state), to_state=target_state)
 
         etag = issue_response.headers.get("ETag")
-        released_lease = LeaseInfo(owner_id=None, acquired_at=None, expires_at=None, epoch=int(snapshot.lease.epoch or 0))
+        released_lease = LeaseInfo(
+            owner_id=None, acquired_at=None, expires_at=None, epoch=int(snapshot.lease.epoch or 0)
+        )
         new_snapshot = CardSnapshot(
             card_id=snapshot.card_id,
             state=target_state,
@@ -112,7 +113,10 @@ class GiteaStateTransitioner:
         except GiteaAdapterConflictError as exc:
             raise ValueError(f"Stale release/fail rejected for {card_id}: compare-and-swap conflict.") from exc
 
-        event_payload = {"final_state": target_state, "idempotency_key": f"release:{new_snapshot.version}:{target_state}"}
+        event_payload = {
+            "final_state": target_state,
+            "idempotency_key": f"release:{new_snapshot.version}:{target_state}",
+        }
         if error:
             event_payload["error"] = error
         await self.adapter.append_event(str(issue_number), event_type="release_or_fail", payload=event_payload)

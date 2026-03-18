@@ -11,10 +11,10 @@ class SandboxLifecyclePolicy:
     lease_duration_seconds: int = 300
     heartbeat_interval_seconds: int = 30
     ttl_success_minutes: int = 15
-    ttl_failed_hours: int = 1
-    ttl_blocked_hours: int = 1
-    ttl_canceled_hours: int = 1
-    ttl_reclaimable_hours: int = 1
+    ttl_failed_hours: int = 24
+    ttl_blocked_hours: int = 24
+    ttl_canceled_hours: int = 2
+    ttl_reclaimable_hours: int = 2
     ttl_orphan_verified_hours: int = 1
     ttl_hard_max_age_hours: int = 72
     restart_threshold_count: int = 5

@@ -50,7 +50,7 @@ product/**/*.log
 *.db
 
 # Agent Settings
-.claude/settings.local.json
+.claude/
 
 # Temp
 .env

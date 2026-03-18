@@ -8,6 +8,7 @@ from orket.orchestration.engine import OrchestrationEngine
 from orket.discovery import print_orket_manifest, perform_first_run_setup
 from orket.extensions import ExtensionManager
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Run an Orket Card (Rock, Epic, or Issue).")
     parser.add_argument("command", nargs="?", help="Optional command group (e.g. extensions, run).")
@@ -30,31 +31,112 @@ def parse_args():
     parser.add_argument("--loop", action="store_true", help="Start the Vibe Rail Organization Loop.")
     parser.add_argument("--archive-card", action="append", default=[], help="Archive a card by ID (repeatable).")
     parser.add_argument("--archive-build", type=str, default=None, help="Archive all cards in a build.")
-    parser.add_argument("--archive-related", action="append", default=[], help="Archive cards matching token in id/build/summary/note (repeatable).")
-    parser.add_argument("--archive-reason", type=str, default="manual archive", help="Reason stored with archive transaction.")
-    parser.add_argument("--replay-turn", type=str, default=None, help="Replay diagnostics for one turn: <session_id>:<issue_id>:<turn_index>[:role].")
+    parser.add_argument(
+        "--archive-related",
+        action="append",
+        default=[],
+        help="Archive cards matching token in id/build/summary/note (repeatable).",
+    )
+    parser.add_argument(
+        "--archive-reason", type=str, default="manual archive", help="Reason stored with archive transaction."
+    )
+    parser.add_argument(
+        "--replay-turn",
+        type=str,
+        default=None,
+        help="Replay diagnostics for one turn: <session_id>:<issue_id>:<turn_index>[:role].",
+    )
     parser.add_argument("--marshaller-request", type=str, default=None, help="Path to marshaller RunRequest JSON.")
-    parser.add_argument("--marshaller-proposal", action="append", default=[], help="Path to a marshaller PatchProposal JSON (repeatable).")
+    parser.add_argument(
+        "--marshaller-proposal",
+        action="append",
+        default=[],
+        help="Path to a marshaller PatchProposal JSON (repeatable).",
+    )
     parser.add_argument("--marshaller-run-id", type=str, default=None, help="Optional marshaller run id override.")
-    parser.add_argument("--marshaller-allow-path", action="append", default=[], help="Allowed touched path prefix for marshaller intake checks (repeatable).")
-    parser.add_argument("--marshaller-promote", action="store_true", help="Promote accepted marshaller result to canonical git branch.")
-    parser.add_argument("--marshaller-actor-id", type=str, default=None, help="Actor id for marshaller promotion metadata.")
-    parser.add_argument("--marshaller-actor-source", type=str, default="cli", help="Actor source for marshaller promotion metadata.")
+    parser.add_argument(
+        "--marshaller-allow-path",
+        action="append",
+        default=[],
+        help="Allowed touched path prefix for marshaller intake checks (repeatable).",
+    )
+    parser.add_argument(
+        "--marshaller-promote", action="store_true", help="Promote accepted marshaller result to canonical git branch."
+    )
+    parser.add_argument(
+        "--marshaller-actor-id", type=str, default=None, help="Actor id for marshaller promotion metadata."
+    )
+    parser.add_argument(
+        "--marshaller-actor-source", type=str, default="cli", help="Actor source for marshaller promotion metadata."
+    )
     parser.add_argument("--marshaller-branch", type=str, default="main", help="Target branch for marshaller promotion.")
-    parser.add_argument("--marshaller-inspect-attempt", type=int, default=None, help="Attempt index to inspect for 'orket marshaller inspect <run_id>'.")
+    parser.add_argument(
+        "--marshaller-inspect-attempt",
+        type=int,
+        default=None,
+        help="Attempt index to inspect for 'orket marshaller inspect <run_id>'.",
+    )
     parser.add_argument("--marshaller-list-limit", type=int, default=20, help="Max rows for 'orket marshaller list'.")
-    parser.add_argument("--protocol-run-b", type=str, default=None, help="Second run id for 'orket protocol compare <run_a> --protocol-run-b <run_b>'.")
-    parser.add_argument("--protocol-events-a", type=str, default=None, help="Optional explicit events.log path for protocol run A.")
-    parser.add_argument("--protocol-events-b", type=str, default=None, help="Optional explicit events.log path for protocol run B.")
-    parser.add_argument("--protocol-artifacts-a", type=str, default=None, help="Optional artifact root path for protocol run A.")
-    parser.add_argument("--protocol-artifacts-b", type=str, default=None, help="Optional artifact root path for protocol run B.")
-    parser.add_argument("--protocol-runs-root", type=str, default=None, help="Optional runs root for 'orket protocol campaign'. Defaults to <workspace>/runs.")
-    parser.add_argument("--protocol-campaign-run-id", action="append", default=[], help="Optional run id filter for 'orket protocol campaign' (repeatable).")
-    parser.add_argument("--protocol-baseline-run-id", type=str, default=None, help="Optional baseline run id for 'orket protocol campaign'.")
-    parser.add_argument("--protocol-parity-session-id", action="append", default=[], help="Optional session id filter for 'orket protocol parity-campaign' (repeatable).")
-    parser.add_argument("--protocol-parity-discover-limit", type=int, default=200, help="SQLite discovery limit for 'orket protocol parity-campaign'.")
-    parser.add_argument("--protocol-max-parity-mismatches", type=int, default=0, help="Allowed mismatches under --protocol-strict for 'orket protocol parity-campaign'.")
-    parser.add_argument("--protocol-sqlite-db", type=str, default=None, help="Optional sqlite run ledger DB path for 'orket protocol parity <run_id>'.")
+    parser.add_argument(
+        "--protocol-run-b",
+        type=str,
+        default=None,
+        help="Second run id for 'orket protocol compare <run_a> --protocol-run-b <run_b>'.",
+    )
+    parser.add_argument(
+        "--protocol-events-a", type=str, default=None, help="Optional explicit events.log path for protocol run A."
+    )
+    parser.add_argument(
+        "--protocol-events-b", type=str, default=None, help="Optional explicit events.log path for protocol run B."
+    )
+    parser.add_argument(
+        "--protocol-artifacts-a", type=str, default=None, help="Optional artifact root path for protocol run A."
+    )
+    parser.add_argument(
+        "--protocol-artifacts-b", type=str, default=None, help="Optional artifact root path for protocol run B."
+    )
+    parser.add_argument(
+        "--protocol-runs-root",
+        type=str,
+        default=None,
+        help="Optional runs root for 'orket protocol campaign'. Defaults to <workspace>/runs.",
+    )
+    parser.add_argument(
+        "--protocol-campaign-run-id",
+        action="append",
+        default=[],
+        help="Optional run id filter for 'orket protocol campaign' (repeatable).",
+    )
+    parser.add_argument(
+        "--protocol-baseline-run-id",
+        type=str,
+        default=None,
+        help="Optional baseline run id for 'orket protocol campaign'.",
+    )
+    parser.add_argument(
+        "--protocol-parity-session-id",
+        action="append",
+        default=[],
+        help="Optional session id filter for 'orket protocol parity-campaign' (repeatable).",
+    )
+    parser.add_argument(
+        "--protocol-parity-discover-limit",
+        type=int,
+        default=200,
+        help="SQLite discovery limit for 'orket protocol parity-campaign'.",
+    )
+    parser.add_argument(
+        "--protocol-max-parity-mismatches",
+        type=int,
+        default=0,
+        help="Allowed mismatches under --protocol-strict for 'orket protocol parity-campaign'.",
+    )
+    parser.add_argument(
+        "--protocol-sqlite-db",
+        type=str,
+        default=None,
+        help="Optional sqlite run ledger DB path for 'orket protocol parity <run_id>'.",
+    )
     parser.add_argument("--protocol-strict", action="store_true", help="Return non-zero on protocol replay mismatch.")
     return parser.parse_args()
 
@@ -104,8 +186,9 @@ async def _run_extension_workload(args, manager: ExtensionManager) -> None:
     print(f"Artifact root: {result.artifact_root}")
     print(f"Provenance: {result.provenance_path}")
 
+
 def print_board(hierarchy: dict):
-    print(f"\n{'='*60}\n ORKET PROJECT BOARD (The Card Hierarchy)\n{'='*60}")
+    print(f"\n{'=' * 60}\n ORKET PROJECT BOARD (The Card Hierarchy)\n{'=' * 60}")
     for rock in hierarchy["rocks"]:
         print(f"\n[ROCK] {rock['name']} (Status: {rock.get('status', 'on_track')})")
         for epic in rock.get("epics", []):
@@ -115,8 +198,10 @@ def print_board(hierarchy: dict):
             print(f"  - [EPIC] {epic['name']} (Status: {epic.get('status', 'planning')})")
             for issue in epic.get("issues", []):
                 summary = issue.get("summary") or issue.get("name") or "Unnamed Unit"
-                print(f"    * [{issue['id']}] {summary} ({issue['seat']}) [Priority: {issue.get('priority', 'Medium')}, Status: {issue.get('status', 'ready')}]")
-    print(f"\n{'='*60}\n")
+                priority = issue.get("priority", "Medium")
+                status = issue.get("status", "ready")
+                print(f"    * [{issue['id']}] {summary} ({issue['seat']}) [Priority: {priority}, Status: {status}]")
+    print(f"\n{'=' * 60}\n")
 
 
 def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
@@ -125,11 +210,12 @@ def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
     if str(startup_status.get("reconciliation") or "").strip().lower() == "failed":
         print("[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.", file=sys.stderr)
 
+
 async def run_cli():
     # Force UTF-8
     if sys.platform == "win32":
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
     try:
         startup_status = perform_first_run_setup()
@@ -144,7 +230,10 @@ async def run_cli():
             if args.subcommand == "install":
                 _install_extension(args, extension_manager)
                 return
-            raise ValueError("Supported extensions commands: 'orket extensions list' and 'orket extensions install <repo> [--ref <ref>]'.")
+            raise ValueError(
+                "Supported extensions commands: 'orket extensions list' and "
+                "'orket extensions install <repo> [--ref <ref>]'."
+            )
 
         if args.command == "run":
             await _run_extension_workload(args, extension_manager)
@@ -166,7 +255,9 @@ async def run_cli():
             if args.subcommand == "inspect":
                 run_id = str(args.target or "").strip()
                 if not run_id:
-                    raise ValueError("marshaller inspect requires target run_id (e.g. 'orket marshaller inspect <run_id>').")
+                    raise ValueError(
+                        "marshaller inspect requires target run_id (e.g. 'orket marshaller inspect <run_id>')."
+                    )
                 result = await inspect_marshaller_attempt(
                     workspace_root,
                     run_id=run_id,
@@ -271,7 +362,9 @@ async def run_cli():
                 sqlite_db = (
                     Path(str(args.protocol_sqlite_db)).resolve()
                     if str(args.protocol_sqlite_db or "").strip()
-                    else (Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+                    else (
+                        Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db"
+                    ).resolve()
                 )
                 if not sqlite_db.exists():
                     raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
@@ -306,7 +399,9 @@ async def run_cli():
                 sqlite_db = (
                     Path(str(args.protocol_sqlite_db)).resolve()
                     if str(args.protocol_sqlite_db or "").strip()
-                    else (Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db").resolve()
+                    else (
+                        Path(args.workspace).resolve() / ".orket" / "durable" / "db" / "orket_persistence.db"
+                    ).resolve()
                 )
                 if not sqlite_db.exists():
                     raise ValueError(f"SQLite run ledger database not found: {sqlite_db}")
@@ -342,6 +437,7 @@ async def run_cli():
 
         if args.loop:
             from orket.organization_loop import OrganizationLoop
+
             await OrganizationLoop().run_forever()
             return
 
@@ -354,9 +450,13 @@ async def run_cli():
                 archived_ids.extend(result.get("archived", []))
                 missing_ids.extend(result.get("missing", []))
             if args.archive_build:
-                archived_count += await engine.archive_build(args.archive_build, archived_by="cli", reason=args.archive_reason)
+                archived_count += await engine.archive_build(
+                    args.archive_build, archived_by="cli", reason=args.archive_reason
+                )
             if args.archive_related:
-                result = await engine.archive_related_cards(args.archive_related, archived_by="cli", reason=args.archive_reason)
+                result = await engine.archive_related_cards(
+                    args.archive_related, archived_by="cli", reason=args.archive_reason
+                )
                 archived_ids.extend(result.get("archived", []))
                 missing_ids.extend(result.get("missing", []))
 
@@ -396,29 +496,36 @@ async def run_cli():
         if not args.epic:
             # Interactive Driver Mode
             from orket.driver import OrketDriver
-            print(f"\n{'='*60}\n ORKET DRIVER (Interactive)\n{'='*60}")
+
+            print(f"\n{'=' * 60}\n ORKET DRIVER (Interactive)\n{'=' * 60}")
             driver = OrketDriver(model=args.model)
             while True:
                 try:
                     user_input = await asyncio.to_thread(input, "Driver> ")
-                    if user_input.lower() in ["exit", "quit", "q"]: break
-                    if not user_input: continue
+                    if user_input.lower() in ["exit", "quit", "q"]:
+                        break
+                    if not user_input:
+                        continue
                     print("Thinking...", end="", flush=True)
                     response = await driver.process_request(user_input)
                     print(f"\r{response}\n")
-                except EOFError: break
+                except EOFError:
+                    break
             return
 
         print(f"Running Orket Epic: {args.epic}")
-        transcript = await engine.run_card(args.epic, build_id=args.build_id, driver_steered=args.driver_steered, target_issue_id=args.resume)
+        transcript = await engine.run_card(
+            args.epic, build_id=args.build_id, driver_steered=args.driver_steered, target_issue_id=args.resume
+        )
         print("\n=== Orket EOS Run Complete ===")
         for entry in transcript:
             print(f"\n--- Card {entry.get('step_index', '?')} ({entry['role']}) ---")
-            print(entry['summary'])
+            print(entry["summary"])
 
     except KeyboardInterrupt:
         print("\n[HALT] Interrupted by user.")
     except (RuntimeError, ValueError, OSError, TypeError) as e:
         import traceback
+
         traceback.print_exc()
         print(f"\n[FATAL] {e}")

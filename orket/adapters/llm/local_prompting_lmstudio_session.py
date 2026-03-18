@@ -29,9 +29,7 @@ def resolve_lmstudio_session_settings(context: dict[str, Any], provider_backend:
     if provider_backend != "openai_compat":
         return "none", ""
     mode = normalize_lmstudio_session_mode(
-        context.get("lmstudio_session_mode")
-        or os.getenv("ORKET_LMSTUDIO_SESSION_MODE")
-        or "none"
+        context.get("lmstudio_session_mode") or os.getenv("ORKET_LMSTUDIO_SESSION_MODE") or "none"
     )
     if mode == "none":
         return mode, ""
@@ -51,4 +49,3 @@ def resolve_lmstudio_session_settings(context: dict[str, Any], provider_backend:
             os.getenv("ORKET_LMSTUDIO_SESSION_ID"),
         ]
     )
-

@@ -15,4 +15,3 @@ class ModuleManifest(BaseModel):
     required_modules: List[str] = Field(default_factory=list)
     entrypoints: List[str] = Field(default_factory=list)
     contract_version_range: str = f">={MODULE_MANIFEST_CONTRACT_VERSION}"
-

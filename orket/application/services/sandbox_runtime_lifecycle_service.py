@@ -12,14 +12,24 @@ from orket.application.services.sandbox_cleanup_verification_service import Sand
 from orket.application.services.sandbox_lifecycle_event_publisher import SandboxLifecycleEventPublisher
 from orket.application.services.sandbox_lifecycle_mutation_service import SandboxLifecycleMutationService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
-from orket.application.services.sandbox_lifecycle_reconciliation_service import SandboxLifecycleReconciliationService, SandboxObservation
+from orket.application.services.sandbox_lifecycle_reconciliation_service import (
+    SandboxLifecycleReconciliationService,
+    SandboxObservation,
+)
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.application.services.sandbox_terminal_outcome_service import SandboxTerminalOutcomeService
 from orket.application.services.sandbox_lifecycle_view_service import SandboxLifecycleViewService
 from orket.application.services.sandbox_runtime_cleanup_service import SandboxRuntimeCleanupService
 from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource
-from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxLifecycleError, SandboxState, TerminalReason
+from orket.core.domain.sandbox_lifecycle import (
+    CleanupState,
+    LifecycleEvent,
+    SandboxLifecycleError,
+    SandboxState,
+    TerminalReason,
+)
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
+
 
 class SandboxRuntimeLifecycleService:
     """Coordinates durable sandbox lifecycle state with live Docker observations."""
@@ -83,15 +93,17 @@ class SandboxRuntimeLifecycleService:
         return record
 
     async def mark_create_accepted(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
-        return (await self.mutations.transition_state(
-            sandbox_id=sandbox_id,
-            operation_id=f"create-accepted:{sandbox_id}",
-            expected_record_version=1,
-            event=LifecycleEvent.CREATE_ACCEPTED,
-            next_state=SandboxState.STARTING,
-            expected_owner_instance_id=self.instance_id,
-            expected_lease_epoch=1,
-        )).record
+        return (
+            await self.mutations.transition_state(
+                sandbox_id=sandbox_id,
+                operation_id=f"create-accepted:{sandbox_id}",
+                expected_record_version=1,
+                event=LifecycleEvent.CREATE_ACCEPTED,
+                next_state=SandboxState.STARTING,
+                expected_owner_instance_id=self.instance_id,
+                expected_lease_epoch=1,
+            )
+        ).record
 
     async def mark_deployment_verified(
         self,

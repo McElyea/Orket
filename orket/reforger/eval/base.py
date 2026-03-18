@@ -15,8 +15,7 @@ class ModelAdapter(Protocol):
         prompt: str,
         pack_digest: str,
         pack_path: Path,
-    ) -> str:
-        ...
+    ) -> str: ...
 
 
 @dataclass(frozen=True)
@@ -45,5 +44,4 @@ class EvalHarness(Protocol):
         pack_path: Path,
         suite_path: Path,
         out_dir: Path,
-    ) -> EvalResult:
-        ...
+    ) -> EvalResult: ...

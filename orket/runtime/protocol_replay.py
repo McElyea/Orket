@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.application.workflows.protocol_hashing import hash_canonical_json
@@ -142,11 +142,7 @@ class ProtocolReplayEngine:
         if resolved_receipts_path is None:
             candidate = events_log_path.with_name("receipts.log")
             resolved_receipts_path = candidate if candidate.exists() else None
-        receipts = (
-            receipt_digest_inventory(resolved_receipts_path)
-            if resolved_receipts_path is not None
-            else []
-        )
+        receipts = receipt_digest_inventory(resolved_receipts_path) if resolved_receipts_path is not None else []
 
         summary: dict[str, Any] = {
             "session_id": "",
@@ -215,7 +211,9 @@ class ProtocolReplayEngine:
                 summary["operations"][operation_id] = {
                     "event_seq": event_seq,
                     "tool": str(event.get("tool") or ""),
-                    "ok": bool((event.get("result") or {}).get("ok")) if isinstance(event.get("result"), dict) else None,
+                    "ok": bool((event.get("result") or {}).get("ok"))
+                    if isinstance(event.get("result"), dict)
+                    else None,
                 }
 
         summary["operation_count"] = len(summary["operations"])
@@ -273,8 +271,12 @@ class ProtocolReplayEngine:
         differences: list[dict[str, Any]] = []
         self._maybe_add_difference(differences, "status", replay_a["status"], replay_b["status"])
         self._maybe_add_difference(differences, "failure_class", replay_a["failure_class"], replay_b["failure_class"])
-        self._maybe_add_difference(differences, "failure_reason", replay_a["failure_reason"], replay_b["failure_reason"])
-        self._maybe_add_difference(differences, "last_event_seq", replay_a["last_event_seq"], replay_b["last_event_seq"])
+        self._maybe_add_difference(
+            differences, "failure_reason", replay_a["failure_reason"], replay_b["failure_reason"]
+        )
+        self._maybe_add_difference(
+            differences, "last_event_seq", replay_a["last_event_seq"], replay_b["last_event_seq"]
+        )
         self._maybe_add_difference(
             differences,
             "ledger_schema_version",

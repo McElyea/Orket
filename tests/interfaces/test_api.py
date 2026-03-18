@@ -383,6 +383,7 @@ def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
     monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder", "reviewer"])
     monkeypatch.setattr(api_module, "load_user_preferences", lambda: {"models": {"coder": "qwen2.5-coder:14b"}})
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "_engine", type("FakeEngine", (), {"org": object()})())
 
     class FakeSelector:
         def __init__(self, organization=None, preferences=None, user_settings=None):
@@ -431,6 +432,7 @@ def test_model_assignments_endpoint_respects_role_filter(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(api_module, "load_user_preferences", lambda: {})
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {})
+    monkeypatch.setattr(api_module.engine, "_engine", type("FakeEngine", (), {"org": object()})())
 
     class FakeSelector:
         def __init__(self, organization=None, preferences=None, user_settings=None):
@@ -486,8 +488,18 @@ def test_runtime_policy_get_uses_precedence(monkeypatch):
     monkeypatch.setattr(api_module, "load_user_settings", lambda: {"architecture_mode": "force_monolith"})
     monkeypatch.setattr(
         api_module.engine,
-        "org",
-        type("Org", (), {"process_rules": {"architecture_mode": "force_monolith", "frontend_framework_mode": "force_vue"}})(),
+        "_engine",
+        type(
+            "FakeEngine",
+            (),
+            {
+                "org": type(
+                    "Org",
+                    (),
+                    {"process_rules": {"architecture_mode": "force_monolith", "frontend_framework_mode": "force_vue"}},
+                )(),
+            },
+        )(),
     )
 
     response = client.get("/v1/system/runtime-policy", headers={"X-API-Key": "test-key"})
@@ -747,10 +759,10 @@ def test_metrics():
 def test_system_board_uses_dept_query(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
-    def fake_board(department):
+    async def fake_board(department):
         return {"department": department}
 
-    monkeypatch.setattr(api_module.api_runtime_node, "resolve_system_board", fake_board)
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_system_board_async", fake_board)
 
     response = client.get("/v1/system/board?dept=product", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
@@ -760,11 +772,11 @@ def test_system_board_defaults_to_core(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
-    def fake_board(department):
+    async def fake_board(department):
         captured["department"] = department
         return {"department": department}
 
-    monkeypatch.setattr(api_module.api_runtime_node, "resolve_system_board", fake_board)
+    monkeypatch.setattr(api_module.api_runtime_node, "resolve_system_board_async", fake_board)
 
     response = client.get("/v1/system/board", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200

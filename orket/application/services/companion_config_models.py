@@ -34,8 +34,7 @@ BLOCKED_MODE_COMBINATIONS: frozenset[tuple[CompanionRoleId, RelationshipStyleId]
 def validate_mode_combination(role_id: CompanionRoleId, relationship_style: RelationshipStyleId) -> None:
     if (role_id, relationship_style) in BLOCKED_MODE_COMBINATIONS:
         raise ValueError(
-            "E_COMPANION_MODE_COMBINATION_BLOCKED: "
-            f"role={role_id.value};relationship_style={relationship_style.value}"
+            f"E_COMPANION_MODE_COMBINATION_BLOCKED: role={role_id.value};relationship_style={relationship_style.value}"
         )
 
 

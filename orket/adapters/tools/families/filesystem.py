@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
@@ -11,7 +11,6 @@ _MAX_PATH_LOCKS = 1024
 
 
 class FileSystemTools(BaseTools):
-
     def __init__(self, workspace_root: Path, references: List[Path]):
         super().__init__(workspace_root, references)
         from orket.adapters.storage.async_file_tools import AsyncFileTools
@@ -62,4 +61,3 @@ class FileSystemTools(BaseTools):
             return {"ok": False, "error": "Dir not found"}
         except (PermissionError, FileNotFoundError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
-

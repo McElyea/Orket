@@ -84,9 +84,7 @@ class DriverConversationMixin:
                 "/list, /show, /create, /list-cards, and /add-card."
             )
         if re.search(r"\bcan you\b.*\b(converse|talk|chat)\b", lowered):
-            return (
-                "Yes. I can converse normally and also run Orket operations when you ask explicitly."
-            )
+            return "Yes. I can converse normally and also run Orket operations when you ask explicitly."
         if lowered in {"what?", "what"}:
             return "I can explain capabilities, answer simple questions, and run explicit Orket CLI commands."
         if "didn't think so" in lowered:
@@ -153,7 +151,9 @@ class DriverConversationMixin:
         return text
 
     def _capabilities_summary(self) -> str:
-        departments = sorted([p.name for p in self.model_root.iterdir() if p.is_dir()]) if self.model_root.exists() else []
+        departments = (
+            sorted([p.name for p in self.model_root.iterdir() if p.is_dir()]) if self.model_root.exists() else []
+        )
         summary = [self._cli_help_text()]
         summary.append("\n".join(self._supported_action_summary_lines()))
         if departments:
@@ -181,7 +181,7 @@ class DriverConversationMixin:
         expr = lowered
         for prefix in prefixes:
             if expr.startswith(prefix):
-                expr = expr[len(prefix):]
+                expr = expr[len(prefix) :]
                 break
         expr = expr.strip().rstrip("?").strip()
         if not expr:

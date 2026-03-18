@@ -122,9 +122,7 @@ def is_microservices_unlocked() -> bool:
     env_override = _env_bool("ORKET_ENABLE_MICROSERVICES")
     if env_override is not None:
         return bool(env_override)
-    report_path = Path(
-        str(os.environ.get("ORKET_MICROSERVICES_UNLOCK_REPORT") or DEFAULT_MICROSERVICES_UNLOCK_REPORT)
-    )
+    report_path = Path(str(os.environ.get("ORKET_MICROSERVICES_UNLOCK_REPORT") or DEFAULT_MICROSERVICES_UNLOCK_REPORT))
     report = _read_unlock_report(report_path)
     return bool(report.get("unlocked"))
 
@@ -132,8 +130,7 @@ def is_microservices_unlocked() -> bool:
 def is_microservices_pilot_stable() -> bool:
     report_path = Path(
         str(
-            os.environ.get("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT")
-            or DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT
+            os.environ.get("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT") or DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT
         )
     )
     report = _read_unlock_report(report_path)
@@ -188,7 +185,10 @@ def runtime_policy_options() -> Dict[str, Any]:
             {"value": "force_monolith", "label": "Monolith (Forced)"},
             {"value": "architect_decides", "label": "Architect Decides (Monolith Only While Locked)"},
         ]
-    text_option = lambda default: {"default": default, "options": [], "input_style": "text"}
+
+    def text_option(default):
+        return {"default": default, "options": [], "input_style": "text"}
+
     return {
         "architecture_mode": {
             "default": DEFAULT_ARCHITECTURE_MODE,
@@ -307,8 +307,12 @@ def resolve_run_ledger_mode(*values: Any) -> str:
 
 def resolve_protocol_timezone_setting(*values: Any) -> str:
     return resolve_protocol_timezone(*values)
+
+
 def resolve_protocol_locale_setting(*values: Any) -> str:
     return resolve_protocol_locale(*values)
+
+
 def resolve_protocol_network_mode_setting(*values: Any) -> str:
     return resolve_protocol_network_mode(*values)
 

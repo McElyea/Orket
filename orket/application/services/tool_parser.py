@@ -2,6 +2,7 @@ import json
 import re
 from typing import List, Dict, Any, Callable, Optional
 
+
 class ToolParser:
     """
     Service responsible for extracting structured tool calls from raw model text.
@@ -12,14 +13,9 @@ class ToolParser:
     def _decode_relaxed_string(value: str) -> str:
         raw = value or ""
         try:
-            return json.loads(f"\"{raw}\"")
+            return json.loads(f'"{raw}"')
         except json.JSONDecodeError:
-            return (
-                raw.replace("\\\\", "\\")
-                .replace("\\n", "\n")
-                .replace("\\t", "\t")
-                .replace('\\"', '"')
-            )
+            return raw.replace("\\\\", "\\").replace("\\n", "\n").replace("\\t", "\t").replace('\\"', '"')
 
     @staticmethod
     def _dedupe_tool_calls(tool_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -105,7 +101,7 @@ class ToolParser:
                 payload["skipped_tools"] = skipped_tools
             diagnostics("parse_partial_recovery", payload)
         return recovered
-    
+
     @staticmethod
     def parse(
         text: str,
@@ -170,20 +166,21 @@ class ToolParser:
                 diagnostics(stage, data)
 
         emit("parse_start", {"text_length": len(text)})
-        
+
         # 1. Stack-based JSON extraction (Robust against nested blocks and conversational noise)
         stack = []
         start_idx = -1
-        
+
         for i, char in enumerate(text):
-            if char == '{':
-                if not stack: start_idx = i
-                stack.append('{')
-            elif char == '}':
+            if char == "{":
+                if not stack:
+                    start_idx = i
+                stack.append("{")
+            elif char == "}":
                 if stack:
                     stack.pop()
                     if not stack:
-                        candidate = text[start_idx:i+1]
+                        candidate = text[start_idx : i + 1]
                         try:
                             data = json.loads(candidate)
                             parsed = _extract_tool_calls(data)
@@ -217,15 +214,27 @@ class ToolParser:
             return merged
 
         # 2. Legacy DSL Fallback (Regex based - fragile)
-        dsl_blocks = re.split(r"(?:\[|TOOL:\s*)(write_file|create_issue|add_issue_comment|get_issue_context)(?:\]|\s*)", text)
+        dsl_blocks = re.split(
+            r"(?:\[|TOOL:\s*)(write_file|create_issue|add_issue_comment|get_issue_context)(?:\]|\s*)", text
+        )
         if len(dsl_blocks) > 1:
             for i in range(1, len(dsl_blocks), 2):
                 tool_name = dsl_blocks[i]
-                block_content = dsl_blocks[i+1]
+                block_content = dsl_blocks[i + 1]
                 path_match = re.search(r"(?:path|PATH):\s*([^\n]+)", block_content)
-                content_match = re.search(r"(?:content|CONTENT):\s*\"*\"*\"*\n?(.*?)(?:\n\"*\"*\"*|$)", block_content, re.DOTALL)
+                content_match = re.search(
+                    r"(?:content|CONTENT):\s*\"*\"*\"*\n?(.*?)(?:\n\"*\"*\"*|$)", block_content, re.DOTALL
+                )
                 if path_match and content_match:
-                    results.append({"tool": tool_name, "args": {"path": path_match.group(1).strip().strip("'").strip('"'), "content": content_match.group(1).strip()}})
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "args": {
+                                "path": path_match.group(1).strip().strip("'").strip('"'),
+                                "content": content_match.group(1).strip(),
+                            },
+                        }
+                    )
                 else:
                     emit(
                         "dsl_block_rejected",

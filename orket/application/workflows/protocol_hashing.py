@@ -106,13 +106,7 @@ def hash_env_allowlist(env_allowlist: dict[str, Any] | None) -> str:
 
 
 def hash_network_allowlist(destinations: list[str] | None) -> str:
-    normalized = sorted(
-        {
-            str(item).strip()
-            for item in (destinations or [])
-            if str(item).strip()
-        }
-    )
+    normalized = sorted({str(item).strip() for item in (destinations or []) if str(item).strip()})
     return hash_framed_fields("network_allowlist", [normalized])
 
 

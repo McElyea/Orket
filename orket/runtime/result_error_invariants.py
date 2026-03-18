@@ -18,7 +18,9 @@ def validate_result_error_invariant_contract(
     payload: dict[str, object] | None = None,
 ) -> tuple[str, ...]:
     contract = dict(payload or result_error_invariant_contract_snapshot())
-    statuses = [str(token).strip().lower() for token in contract.get("failure_forbidden_statuses", []) if str(token).strip()]
+    statuses = [
+        str(token).strip().lower() for token in contract.get("failure_forbidden_statuses", []) if str(token).strip()
+    ]
     if not statuses:
         raise ValueError("E_RESULT_ERROR_INVARIANT_CONTRACT_EMPTY")
     if len(set(statuses)) != len(statuses):

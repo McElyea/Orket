@@ -50,4 +50,3 @@ def _frequent_failures(results: Iterable[EvalResult]) -> list[tuple[str, int]]:
         for row in result.failing_cases:
             counter[row.case_id] += 1
     return sorted(counter.items(), key=lambda row: (-row[1], row[0]))
-

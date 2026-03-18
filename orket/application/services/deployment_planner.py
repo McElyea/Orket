@@ -24,10 +24,7 @@ class DeploymentPlanner:
 
     _DEFAULT_FILES: Dict[str, str] = {
         "agent_output/deployment/Dockerfile": (
-            "FROM python:3.11-slim\n"
-            "WORKDIR /app\n"
-            "COPY . /app\n"
-            "CMD [\"python\", \"agent_output/main.py\"]\n"
+            'FROM python:3.11-slim\nWORKDIR /app\nCOPY . /app\nCMD ["python", "agent_output/main.py"]\n'
         ),
         "agent_output/deployment/docker-compose.yml": (
             "services:\n"
@@ -37,31 +34,17 @@ class DeploymentPlanner:
             "      dockerfile: agent_output/deployment/Dockerfile\n"
             "    command: python agent_output/main.py\n"
         ),
-        "agent_output/deployment/run_local.sh": (
-            "#!/usr/bin/env sh\n"
-            "set -e\n"
-            "python agent_output/main.py\n"
-        ),
+        "agent_output/deployment/run_local.sh": ("#!/usr/bin/env sh\nset -e\npython agent_output/main.py\n"),
     }
     _BACKEND_ONLY_FILES: Dict[str, str] = {
         "agent_output/deployment/Dockerfile": (
-            "FROM python:3.11-slim\n"
-            "WORKDIR /app\n"
-            "COPY . /app\n"
-            "CMD [\"python\", \"agent_output/main.py\"]\n"
+            'FROM python:3.11-slim\nWORKDIR /app\nCOPY . /app\nCMD ["python", "agent_output/main.py"]\n'
         ),
-        "agent_output/deployment/run_local.sh": (
-            "#!/usr/bin/env sh\n"
-            "set -e\n"
-            "python agent_output/main.py\n"
-        ),
+        "agent_output/deployment/run_local.sh": ("#!/usr/bin/env sh\nset -e\npython agent_output/main.py\n"),
     }
     _API_VUE_FILES: Dict[str, str] = {
         "agent_output/deployment/Dockerfile": (
-            "FROM python:3.11-slim\n"
-            "WORKDIR /app\n"
-            "COPY . /app\n"
-            "CMD [\"python\", \"agent_output/main.py\"]\n"
+            'FROM python:3.11-slim\nWORKDIR /app\nCOPY . /app\nCMD ["python", "agent_output/main.py"]\n'
         ),
         "agent_output/deployment/docker-compose.yml": (
             "services:\n"
@@ -73,26 +56,22 @@ class DeploymentPlanner:
             "  frontend:\n"
             "    image: node:20-alpine\n"
             "    working_dir: /app/agent_output/frontend\n"
-            "    command: sh -c \"echo frontend placeholder\"\n"
+            '    command: sh -c "echo frontend placeholder"\n'
         ),
-        "agent_output/deployment/run_local.sh": (
-            "#!/usr/bin/env sh\n"
-            "set -e\n"
-            "python agent_output/main.py\n"
-        ),
+        "agent_output/deployment/run_local.sh": ("#!/usr/bin/env sh\nset -e\npython agent_output/main.py\n"),
     }
     _MICROSERVICES_FILES: Dict[str, str] = {
         "agent_output/deployment/Dockerfile.api": (
             "FROM python:3.11-slim\n"
             "WORKDIR /app\n"
             "COPY . /app\n"
-            "CMD [\"python\", \"agent_output/services/api/src/main.py\"]\n"
+            'CMD ["python", "agent_output/services/api/src/main.py"]\n'
         ),
         "agent_output/deployment/Dockerfile.worker": (
             "FROM python:3.11-slim\n"
             "WORKDIR /app\n"
             "COPY . /app\n"
-            "CMD [\"python\", \"agent_output/services/worker/src/main.py\"]\n"
+            'CMD ["python", "agent_output/services/worker/src/main.py"]\n'
         ),
         "agent_output/deployment/docker-compose.yml": (
             "services:\n"
@@ -106,9 +85,7 @@ class DeploymentPlanner:
             "      dockerfile: agent_output/deployment/Dockerfile.worker\n"
         ),
         "agent_output/deployment/run_local.sh": (
-            "#!/usr/bin/env sh\n"
-            "set -e\n"
-            "python agent_output/services/api/src/main.py\n"
+            "#!/usr/bin/env sh\nset -e\npython agent_output/services/api/src/main.py\n"
         ),
     }
 
@@ -143,12 +120,12 @@ class DeploymentPlanner:
             rules.get("deployment_planner_required_files"),
             self._DEFAULT_FILES,
         )
-        profile = self.project_surface_profile or str(
-            rules.get("project_surface_profile", "unspecified")
-        ).strip().lower()
-        architecture_pattern = self.architecture_pattern or str(
-            rules.get("architecture_forced_pattern", "")
-        ).strip().lower()
+        profile = (
+            self.project_surface_profile or str(rules.get("project_surface_profile", "unspecified")).strip().lower()
+        )
+        architecture_pattern = (
+            self.architecture_pattern or str(rules.get("architecture_forced_pattern", "")).strip().lower()
+        )
         if architecture_pattern == "microservices":
             required_files = dict(self._MICROSERVICES_FILES)
         elif profile in {"backend_only", "cli", "tui"}:
@@ -175,9 +152,7 @@ class DeploymentPlanner:
             if not exists:
                 missing.append(rel_path)
         if missing:
-            raise DeploymentValidationError(
-                "missing deployment files: " + ", ".join(sorted(missing))
-            )
+            raise DeploymentValidationError("missing deployment files: " + ", ".join(sorted(missing)))
 
     @staticmethod
     def _normalize_file_map(raw: Any, default: Mapping[str, str]) -> Dict[str, str]:

@@ -79,26 +79,18 @@ def validate_source_attribution_policy(payload: dict[str, Any] | None = None) ->
         raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_MODE_SET_MISMATCH")
 
     required_claim_fields = tuple(
-        str(token).strip()
-        for token in policy.get("required_claim_fields", [])
-        if str(token).strip()
+        str(token).strip() for token in policy.get("required_claim_fields", []) if str(token).strip()
     )
     if required_claim_fields != _EXPECTED_REQUIRED_CLAIM_FIELDS:
         raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_REQUIRED_CLAIM_FIELDS_MISMATCH")
 
     required_source_fields = tuple(
-        str(token).strip()
-        for token in policy.get("required_source_fields", [])
-        if str(token).strip()
+        str(token).strip() for token in policy.get("required_source_fields", []) if str(token).strip()
     )
     if required_source_fields != _EXPECTED_REQUIRED_SOURCE_FIELDS:
         raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_REQUIRED_SOURCE_FIELDS_MISMATCH")
 
-    failure_reasons = {
-        str(token).strip().lower()
-        for token in policy.get("failure_reasons", [])
-        if str(token).strip()
-    }
+    failure_reasons = {str(token).strip().lower() for token in policy.get("failure_reasons", []) if str(token).strip()}
     if failure_reasons != _EXPECTED_FAILURE_REASONS:
         raise ValueError("E_SOURCE_ATTRIBUTION_POLICY_FAILURE_REASON_SET_MISMATCH")
 

@@ -107,7 +107,9 @@ def _collect_differences(
         differences.append({"path": path, "expected": expected, "actual": actual})
 
 
-def compare_controller_replay_outputs(*, expected_output: dict[str, Any], actual_output: dict[str, Any]) -> dict[str, Any]:
+def compare_controller_replay_outputs(
+    *, expected_output: dict[str, Any], actual_output: dict[str, Any]
+) -> dict[str, Any]:
     expected_normalized = _normalize_controller_output(expected_output)
     actual_normalized = _normalize_controller_output(actual_output)
     differences: list[dict[str, Any]] = []

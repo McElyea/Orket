@@ -19,4 +19,3 @@ def compute_equivalence_key(
         "gate_results_normalized": gate_results_normalized,
     }
     return hash_canonical_json(payload)
-

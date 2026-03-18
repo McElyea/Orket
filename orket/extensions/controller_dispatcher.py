@@ -217,7 +217,10 @@ class ControllerDispatcher:
                 error_code=ERROR_CHILD_EXECUTION_FAILED,
             )
         extension_record, workload_record = resolved
-        if workload_record.contract_style != CONTRACT_STYLE_SDK_V0 and extension_record.contract_style != CONTRACT_STYLE_SDK_V0:
+        if (
+            workload_record.contract_style != CONTRACT_STYLE_SDK_V0
+            and extension_record.contract_style != CONTRACT_STYLE_SDK_V0
+        ):
             return _ChildOutcome(
                 result=failed_child_result(
                     child=child,
@@ -241,8 +244,10 @@ class ControllerDispatcher:
                 workspace=workspace,
                 department=department,
             )
-            run_result = await run_call if enforced_timeout_value is None else await asyncio.wait_for(
-                run_call, timeout=float(enforced_timeout_value)
+            run_result = (
+                await run_call
+                if enforced_timeout_value is None
+                else await asyncio.wait_for(run_call, timeout=float(enforced_timeout_value))
             )
         except asyncio.TimeoutError:
             return _ChildOutcome(
@@ -351,7 +356,9 @@ class ControllerDispatcher:
         policy = self._runtime_policy_caps
         requested = requested_caps or ControllerPolicyCaps()
         requested_resolved = ControllerPolicyCaps(
-            max_depth=int(requested.max_depth if requested.max_depth is not None else policy.max_depth or DEFAULT_MAX_DEPTH),
+            max_depth=int(
+                requested.max_depth if requested.max_depth is not None else policy.max_depth or DEFAULT_MAX_DEPTH
+            ),
             max_fanout=int(
                 requested.max_fanout if requested.max_fanout is not None else policy.max_fanout or DEFAULT_MAX_FANOUT
             ),
@@ -362,7 +369,9 @@ class ControllerDispatcher:
             ),
         )
         enforced = ControllerPolicyCaps(
-            max_depth=min(int(requested_resolved.max_depth or DEFAULT_MAX_DEPTH), int(policy.max_depth or DEFAULT_MAX_DEPTH)),
+            max_depth=min(
+                int(requested_resolved.max_depth or DEFAULT_MAX_DEPTH), int(policy.max_depth or DEFAULT_MAX_DEPTH)
+            ),
             max_fanout=min(
                 int(requested_resolved.max_fanout or DEFAULT_MAX_FANOUT), int(policy.max_fanout or DEFAULT_MAX_FANOUT)
             ),
@@ -372,7 +381,6 @@ class ControllerDispatcher:
             ),
         )
         return _ResolvedCaps(requested=requested_resolved, enforced=enforced)
-
 
 
 __all__ = [

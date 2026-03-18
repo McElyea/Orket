@@ -32,6 +32,8 @@ class RaceCommandRunner:
             return CommandResult(returncode=0, stdout="", stderr="")
         if cmd[:3] == ("docker", "ps", "-a"):
             return CommandResult(returncode=0, stdout=self._container_rows(), stderr="")
+        if cmd[:2] == ("docker", "inspect"):
+            return CommandResult(returncode=0, stdout=self._container_inspect_rows(), stderr="")
         if cmd[:3] == ("docker", "network", "ls"):
             return CommandResult(returncode=0, stdout=self._network_rows(), stderr="")
         if cmd[:3] == ("docker", "volume", "ls"):
@@ -44,9 +46,24 @@ class RaceCommandRunner:
     def _container_rows(self) -> str:
         if not self.resources_present:
             return ""
+        labels = (
+            "orket.managed=true,"
+            "orket.sandbox_id=%s,"
+            "orket.run_id=%s,"
+            "com.docker.compose.project=%s,"
+            "com.docker.compose.service=api"
+        ) % (self.sandbox_id, self.run_id, self.compose_project)
         return (
-            '{"Names":"%s-api-1","Labels":"orket.managed=true,orket.sandbox_id=%s,orket.run_id=%s"}\n'
-            % (self.compose_project, self.sandbox_id, self.run_id)
+            '{"Names":"%s-api-1","Labels":"%s","State":"running","Status":"Up 10 seconds (healthy)"}\n'
+            % (self.compose_project, labels)
+        )
+
+    def _container_inspect_rows(self) -> str:
+        if not self.resources_present:
+            return "[]"
+        return (
+            '[{"Name":"/%s-api-1","Config":{"Labels":{"com.docker.compose.service":"api"}},"State":{"Status":"running","Health":{"Status":"healthy"}},"RestartCount":0}]'
+            % self.compose_project
         )
 
     def _network_rows(self) -> str:

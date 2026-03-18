@@ -231,7 +231,9 @@ async def materialize_protocol_receipts(
                 tool_args=tool_args,
             ),
         )
-        if str(call_event.get("kind") or "") == "operation_rejected" and bool(call_event.get("idempotent_reuse", False)):
+        if str(call_event.get("kind") or "") == "operation_rejected" and bool(
+            call_event.get("idempotent_reuse", False)
+        ):
             winner_seq = int(call_event.get("winner_event_seq") or 0)
             winner_range = [winner_seq, winner_seq]
             existing_ranges[operation_id] = winner_range

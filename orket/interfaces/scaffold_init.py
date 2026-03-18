@@ -26,7 +26,7 @@ class Blueprint:
 def _builtin_blueprints() -> Dict[str, Blueprint]:
     minimal_node = Blueprint(
         name="minimal-node",
-        verify_commands=["python -c \"pass\""],
+        verify_commands=['python -c "pass"'],
         templates={
             "README.md": "# {{project_name}}\n\nScaffolded by `orket init`.\n",
             "package.json": json.dumps(

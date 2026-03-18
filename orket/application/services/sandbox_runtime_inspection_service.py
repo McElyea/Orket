@@ -45,13 +45,9 @@ class SandboxRuntimeInspectionService:
 
     @staticmethod
     def tracked_container_rows(container_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        labeled_rows = [
-            row for row in container_rows if str(row.get("Service") or "").strip()
-        ]
+        labeled_rows = [row for row in container_rows if str(row.get("Service") or "").strip()]
         core_rows = [
-            row
-            for row in labeled_rows
-            if str(row.get("Service") or "").strip() not in OPTIONAL_SANDBOX_HEALTH_SERVICES
+            row for row in labeled_rows if str(row.get("Service") or "").strip() not in OPTIONAL_SANDBOX_HEALTH_SERVICES
         ]
         if labeled_rows:
             return core_rows
@@ -60,9 +56,7 @@ class SandboxRuntimeInspectionService:
     @classmethod
     def all_core_services_running(cls, container_rows: list[dict[str, Any]]) -> bool:
         tracked_rows = cls.tracked_container_rows(container_rows)
-        return bool(tracked_rows) and all(
-            str(row.get("State") or "").strip() == "running" for row in tracked_rows
-        )
+        return bool(tracked_rows) and all(str(row.get("State") or "").strip() == "running" for row in tracked_rows)
 
     @staticmethod
     def _parse_rows(raw: str) -> list[dict[str, Any]]:

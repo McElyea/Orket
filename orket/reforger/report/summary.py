@@ -80,4 +80,3 @@ def write_summary(
     status = "PASS" if hard_violations == 0 else "FAIL"
     lines.extend(["", "Hard Constraint Gate", f"- status: {status}", f"- hard_violations: {hard_violations}"])
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-

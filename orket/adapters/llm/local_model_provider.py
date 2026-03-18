@@ -37,6 +37,24 @@ class ModelResponse:
     raw: Dict[str, Any]
 
 
+def _read_provider_env() -> str:
+    return str(os.getenv("ORKET_LLM_PROVIDER") or os.getenv("ORKET_MODEL_PROVIDER") or "ollama").strip().lower()
+
+
+def _map_provider_backend(raw: str) -> str:
+    if raw in {"openai_compat", "lmstudio"}:
+        return "openai_compat"
+    return "ollama"
+
+
+def _map_provider_name(raw: str) -> str:
+    if raw == "lmstudio":
+        return "lmstudio"
+    if raw == "openai_compat":
+        return "openai_compat"
+    return "ollama"
+
+
 class LocalModelProvider:
     """Asynchronous local model provider for ollama and openai-compatible backends."""
 
@@ -46,19 +64,14 @@ class LocalModelProvider:
         self.temperature = self._resolve_temperature_override(temperature)
         self.seed = self._resolve_seed_override(seed)
         self.timeout = timeout
-        self.provider_backend = self._resolve_provider_backend()
-        self.provider_name = self._resolve_provider_name()
+        provider_env = _read_provider_env()
+        self.provider_backend = _map_provider_backend(provider_env)
+        self.provider_name = _map_provider_name(provider_env)
         self.openai_base_url = self._resolve_openai_base_url()
         self.openai_api_key = str(
-            os.getenv("ORKET_LLM_OPENAI_API_KEY")
-            or os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY")
-            or ""
+            os.getenv("ORKET_LLM_OPENAI_API_KEY") or os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY") or ""
         ).strip()
-        self.ollama_host = str(
-            os.getenv("ORKET_LLM_OLLAMA_HOST")
-            or os.getenv("OLLAMA_HOST")
-            or ""
-        ).strip()
+        self.ollama_host = str(os.getenv("ORKET_LLM_OLLAMA_HOST") or os.getenv("OLLAMA_HOST") or "").strip()
 
         if self.provider_backend == "openai_compat":
             self.client = httpx.AsyncClient(
@@ -114,26 +127,10 @@ class LocalModelProvider:
         return f"{base_session_id}-ctx{epoch}"
 
     def _resolve_provider_backend(self) -> str:
-        raw = str(
-            os.getenv("ORKET_LLM_PROVIDER")
-            or os.getenv("ORKET_MODEL_PROVIDER")
-            or "ollama"
-        ).strip().lower()
-        if raw in {"openai_compat", "lmstudio"}:
-            return "openai_compat"
-        return "ollama"
+        return _map_provider_backend(_read_provider_env())
 
     def _resolve_provider_name(self) -> str:
-        raw = str(
-            os.getenv("ORKET_LLM_PROVIDER")
-            or os.getenv("ORKET_MODEL_PROVIDER")
-            or "ollama"
-        ).strip().lower()
-        if raw == "lmstudio":
-            return "lmstudio"
-        if raw == "openai_compat":
-            return "openai_compat"
-        return "ollama"
+        return _map_provider_name(_read_provider_env())
 
     def _resolve_openai_base_url(self) -> str:
         raw = str(
@@ -422,7 +419,9 @@ class LocalModelProvider:
         if bool(getattr(self, "_closed", False)):
             return
         client = getattr(self, "client", None)
-        close_method = (getattr(client, "aclose", None) or getattr(client, "close", None)) if client is not None else None
+        close_method = None
+        if client is not None:
+            close_method = getattr(client, "aclose", None) or getattr(client, "close", None)
         if callable(close_method):
             maybe_awaitable = close_method()
             if inspect.isawaitable(maybe_awaitable):

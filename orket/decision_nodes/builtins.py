@@ -1,17 +1,20 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Callable, Dict, List
 from pathlib import Path
-from datetime import timedelta
 import uuid
 import re
 import os
 
+from orket.decision_nodes.api_runtime_strategy_node import (
+    DefaultApiRuntimeStrategyNode as _DefaultApiRuntimeStrategyNode,
+)
 from orket.decision_nodes.contracts import PlanningInput
 from orket.schema import CardStatus
 from orket.adapters.tools.default_strategy import compose_default_tool_map
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
-from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
+
+DefaultApiRuntimeStrategyNode = _DefaultApiRuntimeStrategyNode
 
 
 class DefaultPlannerNode:
@@ -175,10 +178,7 @@ class DefaultEvaluatorNode:
         return f"Governance Violation: {error}"
 
     def catastrophic_failure_message(self, issue_id: str, max_retries: int) -> str:
-        return (
-            f"MAX RETRIES EXCEEDED for {issue_id}. "
-            f"Limit: {max_retries}. Shutting down project orchestration."
-        )
+        return f"MAX RETRIES EXCEEDED for {issue_id}. Limit: {max_retries}. Shutting down project orchestration."
 
     def unexpected_failure_action_message(self, action: str, issue_id: str) -> str:
         return f"Unexpected evaluator action '{action}' for {issue_id}"
@@ -408,7 +408,9 @@ networks:
       - "{sandbox.ports.frontend}:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=appdb;User=sa;Password={db_password};TrustServerCertificate=True
+      - >-
+        ConnectionStrings__DefaultConnection=Server=db;Database=appdb;User=sa;
+        Password={db_password};TrustServerCertificate=True
     depends_on:
       - db
     restart: unless-stopped
@@ -454,6 +456,7 @@ class DefaultEngineRuntimePolicyNode:
 
     def bootstrap_environment(self) -> None:
         from orket.settings import load_env
+
         load_env()
 
     def resolve_config_root(self, config_root: Any) -> Any:
@@ -530,14 +533,17 @@ class DefaultPipelineWiringStrategyNode:
 
     def create_sandbox_orchestrator(self, workspace: Any, organization: Any) -> Any:
         from orket.services.sandbox_orchestrator import SandboxOrchestrator
+
         return SandboxOrchestrator(workspace, organization=organization)
 
     def create_webhook_database(self) -> Any:
         from orket.adapters.vcs.webhook_db import WebhookDatabase
+
         return WebhookDatabase()
 
     def create_bug_fix_manager(self, organization: Any, webhook_db: Any) -> Any:
         from orket.domain.bug_fix_phase import BugFixPhaseManager
+
         return BugFixPhaseManager(
             organization_config=organization.process_rules if organization else {},
             db=webhook_db,
@@ -555,6 +561,7 @@ class DefaultPipelineWiringStrategyNode:
         sandbox_orchestrator: Any,
     ) -> Any:
         from orket.application.workflows.orchestrator import Orchestrator
+
         return Orchestrator(
             workspace=workspace,
             async_cards=async_cards,
@@ -754,8 +761,8 @@ class DefaultModelClientPolicyNode:
 
     def create_provider(self, selected_model: str, env: Any) -> Any:
         from orket.adapters.llm.local_model_provider import LocalModelProvider
+
         return LocalModelProvider(model=selected_model, temperature=env.temperature, timeout=env.timeout)
 
     def create_client(self, provider: Any) -> Any:
         return _DefaultAsyncModelClient(provider)
-

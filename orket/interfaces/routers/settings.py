@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any, Callable, Optional
 
@@ -63,7 +64,7 @@ def build_settings_router(
 
     @router.get("/settings")
     async def get_settings():
-        user_settings = load_user_settings()
+        user_settings = await asyncio.to_thread(load_user_settings)
         process_rules = runtime_policy_process_rules()
         return {"settings": resolve_settings_snapshot(user_settings, process_rules)}
 
@@ -93,7 +94,9 @@ def build_settings_router(
                         "field": field,
                         "code": "invalid_value",
                         "provided": raw_value,
-                        "allowed_values": [item.get("value") for item in options[field].get("options", []) if isinstance(item, dict)],
+                        "allowed_values": [
+                            item.get("value") for item in options[field].get("options", []) if isinstance(item, dict)
+                        ],
                     }
                 )
                 continue
@@ -108,7 +111,7 @@ def build_settings_router(
                 continue
             normalized[field] = parsed
 
-        user_settings = load_user_settings().copy()
+        user_settings = (await asyncio.to_thread(load_user_settings)).copy()
         process_rules = runtime_policy_process_rules()
         candidate = user_settings.copy()
         candidate.update(normalized)
@@ -126,7 +129,7 @@ def build_settings_router(
             raise settings_validation_error(errors)
 
         user_settings.update(normalized)
-        save_user_settings(user_settings)
+        await asyncio.to_thread(save_user_settings, user_settings)
         return {
             "ok": True,
             "saved": normalized,
@@ -135,7 +138,7 @@ def build_settings_router(
 
     @router.get("/system/runtime-policy")
     async def get_runtime_policy():
-        user_settings = load_user_settings()
+        user_settings = await asyncio.to_thread(load_user_settings)
         process_rules = runtime_policy_process_rules()
 
         architecture_mode = resolve_architecture_mode(
@@ -237,13 +240,21 @@ def build_settings_router(
 
     @router.post("/system/runtime-policy")
     async def update_runtime_policy(req: RuntimePolicyUpdateRequest):
-        current = load_user_settings().copy()
+        current = (await asyncio.to_thread(load_user_settings)).copy()
         if req.architecture_mode is not None:
             current["architecture_mode"] = resolve_architecture_mode(req.architecture_mode, None, None)
         if req.frontend_framework_mode is not None:
-            current["frontend_framework_mode"] = resolve_frontend_framework_mode(req.frontend_framework_mode, None, None)
+            current["frontend_framework_mode"] = resolve_frontend_framework_mode(
+                req.frontend_framework_mode,
+                None,
+                None,
+            )
         if req.project_surface_profile is not None:
-            current["project_surface_profile"] = resolve_project_surface_profile(req.project_surface_profile, None, None)
+            current["project_surface_profile"] = resolve_project_surface_profile(
+                req.project_surface_profile,
+                None,
+                None,
+            )
         if req.small_project_builder_variant is not None:
             current["small_project_builder_variant"] = resolve_small_project_builder_variant(
                 req.small_project_builder_variant,
@@ -259,7 +270,11 @@ def build_settings_router(
         if req.protocol_locale is not None:
             current["protocol_locale"] = resolve_protocol_locale_setting(req.protocol_locale, None, None)
         if req.protocol_network_mode is not None:
-            current["protocol_network_mode"] = resolve_protocol_network_mode_setting(req.protocol_network_mode, None, None)
+            current["protocol_network_mode"] = resolve_protocol_network_mode_setting(
+                req.protocol_network_mode,
+                None,
+                None,
+            )
         if req.protocol_network_allowlist is not None:
             current["protocol_network_allowlist"] = resolve_protocol_network_allowlist_setting(
                 req.protocol_network_allowlist,
@@ -288,7 +303,7 @@ def build_settings_router(
             current["gitea_state_pilot_enabled"] = bool(
                 resolve_gitea_state_pilot_enabled(req.gitea_state_pilot_enabled, None, None)
             )
-        save_user_settings(current)
+        await asyncio.to_thread(save_user_settings, current)
         return {
             "ok": True,
             "saved": {

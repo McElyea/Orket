@@ -35,11 +35,7 @@ def evaluate_gitea_state_pilot_readiness(inputs: Dict[str, Any]) -> Dict[str, An
     if not pilot_enabled:
         failures.append("ORKET_ENABLE_GITEA_STATE_PILOT must be enabled")
 
-    missing = [
-        key
-        for key in REQUIRED_CONFIG_KEYS
-        if not str(inputs.get(key) or "").strip()
-    ]
+    missing = [key for key in REQUIRED_CONFIG_KEYS if not str(inputs.get(key) or "").strip()]
     if missing:
         failures.append(f"missing required gitea config: {', '.join(missing)}")
 

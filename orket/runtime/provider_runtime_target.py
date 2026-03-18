@@ -12,19 +12,23 @@ from orket.runtime.provider_quarantine_policy import (
     is_provider_quarantined,
     resolve_provider_quarantine_policy,
 )
-from orket.runtime.unknown_input_policy import validate_allowed_token
 from orket.runtime.provider_runtime_inventory import (
-    ProviderRuntimeWarmupError,
+    ProviderRuntimeWarmupError as _ProviderRuntimeWarmupError,
     _run_coro_sync,
     list_installed_lmstudio_models_sync as _list_installed_lmstudio_models_sync,
     list_installed_ollama_models_sync as _list_installed_ollama_models_sync,
     list_loaded_lmstudio_model_ids_sync as _list_loaded_lmstudio_model_ids_sync,
     list_ollama_models as _list_ollama_models,
-    list_ollama_models_sync as _list_ollama_models_sync,
+    list_ollama_models_sync as _inventory_list_ollama_models_sync,
     list_openai_compat_models as _list_openai_compat_models,
-    list_openai_compat_models_sync as _list_openai_compat_models_sync,
+    list_openai_compat_models_sync as _inventory_list_openai_compat_models_sync,
     load_lmstudio_model_sync as _load_lmstudio_model_sync,
 )
+from orket.runtime.unknown_input_policy import validate_allowed_token
+
+ProviderRuntimeWarmupError = _ProviderRuntimeWarmupError
+_list_ollama_models_sync = _inventory_list_ollama_models_sync
+_list_openai_compat_models_sync = _inventory_list_openai_compat_models_sync
 
 
 PROVIDER_CHOICES = ("ollama", "openai_compat", "lmstudio")
@@ -381,11 +385,15 @@ async def resolve_provider_runtime_target(
 
     available_models = await asyncio.to_thread(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
     loaded_models_before = await asyncio.to_thread(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
-    if requested_model_token and requested_model_token in loaded_models_before and is_model_quarantined(
-        requested_provider=requested_provider,
-        canonical_provider=canonical_provider,
-        model_id=requested_model_token,
-        quarantined_provider_models=quarantined_provider_models,
+    if (
+        requested_model_token
+        and requested_model_token in loaded_models_before
+        and is_model_quarantined(
+            requested_provider=requested_provider,
+            canonical_provider=canonical_provider,
+            model_id=requested_model_token,
+            quarantined_provider_models=quarantined_provider_models,
+        )
     ):
         return _target_payload(
             requested_provider=requested_provider,

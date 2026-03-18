@@ -1,2 +1,1 @@
 """Runtime platform components."""
-

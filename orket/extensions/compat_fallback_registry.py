@@ -46,4 +46,3 @@ def iter_compat_fallback_rules() -> Iterable[CompatFallbackRule]:
 
 def compat_fallback_codes() -> set[str]:
     return {rule.fallback_code for rule in _RULES}
-

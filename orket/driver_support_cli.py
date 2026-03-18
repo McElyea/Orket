@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import json
 import shlex
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 
 class DriverCliMixin:
@@ -186,7 +185,11 @@ class DriverCliMixin:
                 "- /list-cards <epic> [department]",
                 "- /add-card <epic> <seat> <priority> <summary...> [--department <department>]",
                 "- /reforge inspect [--route <id>] [--in <dir>] [--mode truth_only] [--scenario-pack <id|path>]",
-                "- /reforge run --route <id> --in <dir> --out <dir> [--mode truth_only] [--scenario-pack <id|path>] [--seed N] [--max-iters K] [--force]",
+                (
+                    "- /reforge run --route <id> --in <dir> --out <dir> "
+                    "[--mode truth_only] [--scenario-pack <id|path>] "
+                    "[--seed N] [--max-iters K] [--force]"
+                ),
                 "- /capabilities",
             ]
         )

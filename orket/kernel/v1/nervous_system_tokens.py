@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 import hmac
@@ -152,7 +152,9 @@ def consume_credential_token(
         if bound_executor and bound_executor != str(executor_instance_id or "").strip():
             return {"ok": False, "reason_code": "TOKEN_INVALID"}
 
-        if expected_tool_profile_digest and str(record.get("tool_profile_digest") or "") != str(expected_tool_profile_digest):
+        if expected_tool_profile_digest and str(record.get("tool_profile_digest") or "") != str(
+            expected_tool_profile_digest
+        ):
             return {"ok": False, "reason_code": "TOKEN_INVALID"}
 
         if _is_token_expired(record):

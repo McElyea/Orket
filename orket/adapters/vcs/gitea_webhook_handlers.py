@@ -54,7 +54,10 @@ class PRReviewHandler:
                 if escalation_error is not None:
                     return {
                         "status": "error",
-                        "message": f"PR #{pr_number} hit architect escalation threshold but escalation failed: {escalation_error}",
+                        "message": (
+                            f"PR #{pr_number} hit architect escalation threshold "
+                            f"but escalation failed: {escalation_error}"
+                        ),
                     }
                 return {"status": "escalated", "message": f"PR #{pr_number} escalated to architect"}
             if cycles >= 4:
@@ -181,7 +184,11 @@ class PRLifecycleHandler:
         pr_number = pr["number"]
         repo_full_name = f"{repo['owner']['login']}/{repo['name']}"
 
-        log_event("pr_opened", {"pr": pr_number, "repo": repo_full_name, "action": payload.get("action")}, self.handler.workspace)
+        log_event(
+            "pr_opened",
+            {"pr": pr_number, "repo": repo_full_name, "action": payload.get("action")},
+            self.handler.workspace,
+        )
         issue_match = re.search(r"ISSUE-[A-Z0-9]+", pr["title"])
         issue_id = issue_match.group(0) if issue_match else None
         if not issue_id:
@@ -193,10 +200,13 @@ class PRLifecycleHandler:
         await engine.cards.update_status(issue_id, CardStatus.CODE_REVIEW)
         task = asyncio.create_task(engine.run_card(issue_id))
         task.add_done_callback(
-            lambda t: t.exception() and log_event(
-                "webhook_run_card_error",
-                {"issue_id": issue_id, "error": str(t.exception())},
-                self.handler.workspace,
+            lambda t: (
+                t.exception()
+                and log_event(
+                    "webhook_run_card_error",
+                    {"issue_id": issue_id, "error": str(t.exception())},
+                    self.handler.workspace,
+                )
             )
         )
         return {"status": "success", "message": f"PR #{pr_number} review triggered for {issue_id}"}
@@ -241,7 +251,10 @@ class PRLifecycleHandler:
 
         failure_reasons = await self.handler.db.get_failure_reasons(repo_full_name, pr_number)
         reasons_text = "\n".join(
-            [f"Cycle {reason['cycle_number']} ({reason['created_at']}): {reason['reason']}" for reason in failure_reasons]
+            [
+                f"Cycle {reason['cycle_number']} ({reason['created_at']}): {reason['reason']}"
+                for reason in failure_reasons
+            ]
         )
         body = (
             f"Requirements Review: PR #{pr_number} failed after 4 cycles\n\n"
@@ -324,9 +337,7 @@ class PRLifecycleHandler:
 class SandboxDeploymentHandler:
     """Handles sandbox deployment and PR comment publication."""
 
-    _UNSUPPORTED_REASON = (
-        "Orket is not yet positioned to produce deployable code projects from this merge path."
-    )
+    _UNSUPPORTED_REASON = "Orket is not yet positioned to produce deployable code projects from this merge path."
 
     def __init__(self, handler: Any) -> None:
         self.handler = handler

@@ -1,4 +1,5 @@
 """Turn executor coordinator with delegated workflow components."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -109,8 +110,12 @@ class TurnExecutor:
             "_hint_for_rule_id": self.corrective_prompt_builder.hint_for_rule_id,
             "_deterministic_failure_message": self.corrective_prompt_builder.deterministic_failure_message,
             "_required_read_paths": lambda context: PathResolver.required_read_paths(context, self.workspace),
-            "_missing_required_read_paths": lambda context: PathResolver.missing_required_read_paths(context, self.workspace),
-            "_partition_required_read_paths": lambda context: PathResolver.partition_required_read_paths(context, self.workspace),
+            "_missing_required_read_paths": lambda context: PathResolver.missing_required_read_paths(
+                context, self.workspace
+            ),
+            "_partition_required_read_paths": lambda context: PathResolver.partition_required_read_paths(
+                context, self.workspace
+            ),
             "_required_write_paths": PathResolver.required_write_paths,
             "_observed_read_paths": PathResolver.observed_read_paths,
             "_observed_write_paths": PathResolver.observed_write_paths,
@@ -126,8 +131,12 @@ class TurnExecutor:
             "_load_operation_result": self.artifact_writer.load_operation_result,
             "_persist_operation_result": self.artifact_writer.persist_operation_result,
             "_append_protocol_receipt": self.artifact_writer.append_protocol_receipt,
-            "_state_delta_from_tool_calls": lambda context, turn: turn_executor_ops.state_delta_from_tool_calls(context, turn),
-            "_synthesize_required_status_tool_call": lambda turn, context: turn_executor_ops.synthesize_required_status_tool_call(turn, context),
+            "_state_delta_from_tool_calls": lambda context, turn: turn_executor_ops.state_delta_from_tool_calls(
+                context, turn
+            ),
+            "_synthesize_required_status_tool_call": lambda turn, context: (
+                turn_executor_ops.synthesize_required_status_tool_call(turn, context)
+            ),
         }
         target = delegated.get(name)
         if target is not None:
@@ -259,9 +268,7 @@ class TurnExecutor:
             CardStatus.CODE_REVIEW,
             CardStatus.AWAITING_GUARD_REVIEW,
         ]:
-            raise StateMachineError(
-                f"Issue {issue.id} cannot execute turn from context status {context_status.value}"
-            )
+            raise StateMachineError(f"Issue {issue.id} cannot execute turn from context status {context_status.value}")
 
         if issue_status != context_status:
             raise StateMachineError(

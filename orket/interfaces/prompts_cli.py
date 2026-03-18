@@ -280,8 +280,7 @@ def enforce_candidate_prompt_sla(
             prompt_id=prompt_id,
             mode="deprecate",
             notes=(
-                f"SLA auto-deprecate at {anchor.isoformat()}: "
-                f"candidate age exceeded {max_candidate_age_days} days."
+                f"SLA auto-deprecate at {anchor.isoformat()}: candidate age exceeded {max_candidate_age_days} days."
             ),
             apply_changes=apply_changes,
         )
@@ -382,10 +381,7 @@ def _assert_status_transition_allowed(*, current_status: str, target_status: str
         return
     allowed = ALLOWED_STATUS_TRANSITIONS.get(current, set())
     if target not in allowed:
-        raise ValueError(
-            f"Invalid status transition: {current} -> {target}. "
-            f"Allowed: {sorted(allowed)}"
-        )
+        raise ValueError(f"Invalid status transition: {current} -> {target}. Allowed: {sorted(allowed)}")
 
 
 def update_prompt_metadata(
@@ -533,9 +529,13 @@ def _build_parser() -> argparse.ArgumentParser:
     p_deprecate.add_argument("--notes", default="")
     p_deprecate.add_argument("--apply", action="store_true")
 
-    p_sla = sub.add_parser("enforce-sla", help="Enforce candidate prompt SLA by renewing or auto-deprecating stale candidates.")
+    p_sla = sub.add_parser(
+        "enforce-sla", help="Enforce candidate prompt SLA by renewing or auto-deprecating stale candidates."
+    )
     p_sla.add_argument("--max-candidate-age-days", type=int, default=14)
-    p_sla.add_argument("--renew", action="append", default=[], help="Prompt id to keep in candidate via explicit renewal.")
+    p_sla.add_argument(
+        "--renew", action="append", default=[], help="Prompt id to keep in candidate via explicit renewal."
+    )
     p_sla.add_argument("--as-of", default="", help="Optional YYYY-MM-DD anchor date.")
     p_sla.add_argument("--apply", action="store_true")
     return parser

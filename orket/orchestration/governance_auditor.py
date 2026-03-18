@@ -9,9 +9,10 @@ Checks:
 - No security policy violations
 - Budget/credit limits respected
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from pathlib import Path
 
 from orket.domain.execution import ExecutionTurn, ToolCall
@@ -23,6 +24,7 @@ from orket.logging import log_event
 @dataclass
 class AuditResult:
     """Result of auditing an execution turn."""
+
     passed: bool
     violations: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
@@ -44,9 +46,8 @@ class GovernanceAuditor:
     This is the mechanical enforcement layer - no discretion, no mercy.
     """
 
-    
     # Default limit: 1MB to prevent memory exhaustion and token limit issues
-    DEFAULT_MAX_FILE_SIZE = 1_000_000 
+    DEFAULT_MAX_FILE_SIZE = 1_000_000
 
     def __init__(
         self,
@@ -76,9 +77,7 @@ class GovernanceAuditor:
 
         # 1. Check tool call count
         if len(turn.tool_calls) > self.max_tool_calls:
-            violations.append(
-                f"Too many tool calls: {len(turn.tool_calls)} (max {self.max_tool_calls})"
-            )
+            violations.append(f"Too many tool calls: {len(turn.tool_calls)} (max {self.max_tool_calls})")
 
         # 2. Check each tool call
         for tc in turn.tool_calls:
@@ -92,16 +91,10 @@ class GovernanceAuditor:
         # 4. Check for error-only turns
         error_calls = [tc for tc in turn.tool_calls if tc.error]
         if error_calls and len(error_calls) == len(turn.tool_calls):
-            violations.append(
-                f"All {len(error_calls)} tool calls failed"
-            )
+            violations.append(f"All {len(error_calls)} tool calls failed")
 
         # Log audit result
-        result = AuditResult(
-            passed=len(violations) == 0,
-            violations=violations,
-            warnings=warnings
-        )
+        result = AuditResult(passed=len(violations) == 0, violations=violations, warnings=warnings)
 
         log_event(
             "governance_audit",
@@ -111,9 +104,9 @@ class GovernanceAuditor:
                 "passed": result.passed,
                 "violations": result.violations,
                 "warnings": result.warnings,
-                "tool_calls_audited": len(turn.tool_calls)
+                "tool_calls_audited": len(turn.tool_calls),
             },
-            self.workspace
+            self.workspace,
         )
 
         return result
@@ -126,9 +119,7 @@ class GovernanceAuditor:
         if self.role_permissions:
             allowed_tools = self.role_permissions.get(role_name, [])
             if allowed_tools and tool_call.tool not in allowed_tools:
-                violations.append(
-                    f"Role '{role_name}' not permitted to use tool '{tool_call.tool}'"
-                )
+                violations.append(f"Role '{role_name}' not permitted to use tool '{tool_call.tool}'")
 
         # Check write_file specifics
         if tool_call.tool == "write_file":
@@ -156,18 +147,14 @@ class GovernanceAuditor:
         # Check file size
         content = args.get("content", "")
         if isinstance(content, str) and len(content.encode("utf-8")) > self.max_file_size:
-            violations.append(
-                f"File content exceeds max size: {len(content.encode('utf-8'))} bytes"
-            )
+            violations.append(f"File content exceeds max size: {len(content.encode('utf-8'))} bytes")
 
         # Check for suspicious paths
         path = args.get("path", "")
         suspicious_patterns = [".env", "credentials", "secret", "password", ".ssh", ".git"]
         for pattern in suspicious_patterns:
             if pattern in path.lower():
-                violations.append(
-                    f"Suspicious file path detected: '{path}' (contains '{pattern}')"
-                )
+                violations.append(f"Suspicious file path detected: '{path}' (contains '{pattern}')")
 
         return violations
 

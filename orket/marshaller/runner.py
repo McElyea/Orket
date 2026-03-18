@@ -149,4 +149,3 @@ class MarshallerRunner:
             return RunRequest.model_validate(payload)
         except ValidationError as exc:
             raise ValueError(f"{SCHEMA_INVALID}: {exc}") from exc
-

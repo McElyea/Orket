@@ -113,8 +113,7 @@ def validate_model_stream_v1_start(*, input_config: dict[str, Any], turn_params:
     provider_name = _real_provider_name()
     if provider_name not in {"ollama", "openai_compat", "lmstudio"}:
         raise ValueError(
-            f"Unsupported ORKET_MODEL_STREAM_REAL_PROVIDER='{provider_name}'. "
-            "Expected: ollama|openai_compat|lmstudio."
+            f"Unsupported ORKET_MODEL_STREAM_REAL_PROVIDER='{provider_name}'. Expected: ollama|openai_compat|lmstudio."
         )
 
 

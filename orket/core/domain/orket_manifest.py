@@ -44,9 +44,7 @@ class OrketMetadata(BaseModel):
         try:
             SpecifierSet(text)
         except InvalidSpecifier as exc:
-            raise ValueError(
-                f"metadata.engineVersion is not parseable as a version specifier: {value}"
-            ) from exc
+            raise ValueError(f"metadata.engineVersion is not parseable as a version specifier: {value}") from exc
         return text
 
 
@@ -206,9 +204,6 @@ def resolve_model_selection(
     return {
         "ok": False,
         "code": "E_MODEL_CANDIDATE_UNAVAILABLE",
-        "message": (
-            "No compatible model candidate is available. "
-            f"Candidates={candidates}, available={available}"
-        ),
+        "message": (f"No compatible model candidate is available. Candidates={candidates}, available={available}"),
         "selected_model": None,
     }

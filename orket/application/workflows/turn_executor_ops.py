@@ -11,7 +11,16 @@ from orket.core.domain.state_machine import StateMachineError
 from orket.schema import IssueConfig, RoleConfig
 from .prompt_budget_guard import maybe_record_prompt_budget
 from .turn_failure_traces import emit_turn_failure_traces
-from .turn_executor_runtime import invoke_model_complete as _invoke_model_complete
+from .turn_executor_runtime import (
+    invoke_model_complete as _invoke_model_complete,
+    runtime_tokens_payload as _runtime_tokens_payload,
+    state_delta_from_tool_calls as _state_delta_from_tool_calls,
+    synthesize_required_status_tool_call as _synthesize_required_status_tool_call,
+)
+
+runtime_tokens_payload = _runtime_tokens_payload
+state_delta_from_tool_calls = _state_delta_from_tool_calls
+synthesize_required_status_tool_call = _synthesize_required_status_tool_call
 
 
 async def execute_turn(
@@ -160,7 +169,9 @@ async def execute_turn(
             interceptor="after_model",
             decision_type="model_response_processed",
         )
-        response_content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
+        response_content = (
+            getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
+        )
         response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
         await asyncio.to_thread(
             executor._write_turn_artifact,
@@ -264,7 +275,11 @@ async def execute_turn(
             role_name,
             turn_index,
             "parsed_tool_calls.json",
-            json.dumps([{"tool": tool_call.tool, "args": tool_call.args} for tool_call in turn.tool_calls], indent=2, ensure_ascii=False),
+            json.dumps(
+                [{"tool": tool_call.tool, "args": tool_call.args} for tool_call in turn.tool_calls],
+                indent=2,
+                ensure_ascii=False,
+            ),
         )
         await asyncio.to_thread(
             executor._write_turn_checkpoint,
@@ -395,6 +410,3 @@ async def execute_turn(
         )
         await emit_failure(str(exc), type(exc).__name__)
         return TurnResult.failed(f"Unexpected error: {exc}", should_retry=False)
-
-
-from .turn_executor_runtime import runtime_tokens_payload, state_delta_from_tool_calls, synthesize_required_status_tool_call

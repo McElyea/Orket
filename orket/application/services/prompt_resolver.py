@@ -29,6 +29,7 @@ class PromptResolver:
     Precedence order:
     role/base -> dialect adapter -> guards -> context overlays
     """
+
     ALLOWED_GUARDS = {"hallucination", "security", "consistency"}
     GUARD_PROMPT_OVERLAYS = {
         "hallucination": [
@@ -99,9 +100,7 @@ class PromptResolver:
         resolver_policy = str(context.get("prompt_resolver_policy") or "resolver_v1")
         role_status = str(role_meta.get("status") or "draft").strip().lower()
         dialect_status = str(dialect_meta.get("status") or "draft").strip().lower()
-        resolved_selection_policy = str(
-            context.get("prompt_selection_policy") or selection_policy
-        ).strip().lower()
+        resolved_selection_policy = str(context.get("prompt_selection_policy") or selection_policy).strip().lower()
         PromptResolver._validate_selection_policy(
             policy=resolved_selection_policy,
             role_status=role_status,
@@ -221,16 +220,15 @@ class PromptResolver:
         strict = bool(context.get("prompt_selection_strict", False))
         if policy == "stable":
             if strict and (role_status != "stable" or dialect_status != "stable"):
-                raise ValueError(
-                    f"Stable policy requires stable assets (role={role_status}, dialect={dialect_status})"
-                )
+                raise ValueError(f"Stable policy requires stable assets (role={role_status}, dialect={dialect_status})")
             return
 
         if policy == "canary":
             canary_allowed = {"stable", "candidate", "canary"}
             if strict and (role_status not in canary_allowed or dialect_status not in canary_allowed):
                 raise ValueError(
-                    f"Canary policy requires candidate/canary/stable assets (role={role_status}, dialect={dialect_status})"
+                    "Canary policy requires candidate/canary/stable assets "
+                    f"(role={role_status}, dialect={dialect_status})"
                 )
             return
 
@@ -256,15 +254,9 @@ class PromptResolver:
         runtime_guard_rule_ids = validate_runtime_guard_rule_ids(raw_runtime_guard_rule_ids)
         namespace_conflicts = prompt_guard_namespace_conflicts(prompt_rule_ids)
         if namespace_conflicts:
-            raise ValueError(
-                "Prompt rule_ids cannot use runtime guard namespaces: "
-                + ", ".join(namespace_conflicts)
-            )
+            raise ValueError("Prompt rule_ids cannot use runtime guard namespaces: " + ", ".join(namespace_conflicts))
         if not prompt_rule_ids or not runtime_guard_rule_ids:
             return
         overlap = ownership_conflicts(prompt_rule_ids, runtime_guard_rule_ids)
         if overlap:
-            raise ValueError(
-                "Rule ownership conflict between prompt and runtime guard catalogs: "
-                + ", ".join(overlap)
-            )
+            raise ValueError("Rule ownership conflict between prompt and runtime guard catalogs: " + ", ".join(overlap))

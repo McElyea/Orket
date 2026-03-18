@@ -12,6 +12,8 @@ RUN_GRAPH_SCHEMA_VERSION = "1.0"
 _TOOL_RESULT_KINDS = {"operation_result", "tool_result"}
 _NODE_TYPES = {"tool_call", "compat_mapping", "workload_stage", "artifact"}
 _EDGE_TYPES = {"call_result", "artifact_produced", "compat_expansion", "execution_order"}
+
+
 def reconstruct_run_graph(
     events: list[dict[str, Any]],
     *,
@@ -215,6 +217,8 @@ def reconstruct_run_graph(
     )
     validate_run_graph_payload(payload)
     return payload
+
+
 def reconstruct_run_graph_from_events_log(
     *,
     events_log_path: Path,
@@ -225,6 +229,8 @@ def reconstruct_run_graph_from_events_log(
     if not resolved_session_id:
         resolved_session_id = str(Path(events_log_path).parent.name).strip()
     return reconstruct_run_graph(events, session_id=resolved_session_id)
+
+
 def write_run_graph_artifact(
     *,
     root: Path,
@@ -236,6 +242,8 @@ def write_run_graph_artifact(
     run_graph_path.parent.mkdir(parents=True, exist_ok=True)
     run_graph_path.write_text(json.dumps(payload, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
     return run_graph_path
+
+
 def validate_run_graph_payload(payload: dict[str, Any]) -> None:
     schema_version = str(payload.get("run_graph_schema_version") or "").strip()
     if schema_version != RUN_GRAPH_SCHEMA_VERSION:
@@ -274,6 +282,8 @@ def validate_run_graph_payload(payload: dict[str, Any]) -> None:
         node_id = str(node.get("id") or "").strip()
         if node_id not in artifact_targets:
             raise ValueError("run_graph_artifact_lineage_missing")
+
+
 def _resolve_run_id(*, events: list[dict[str, Any]], session_id: str | None) -> str:
     explicit_session_id = str(session_id or "").strip()
     if explicit_session_id:
@@ -283,6 +293,8 @@ def _resolve_run_id(*, events: list[dict[str, Any]], session_id: str | None) -> 
         if run_id:
             return run_id
     return "unknown-run"
+
+
 def _event_sequence(event: dict[str, Any]) -> int:
     return int(event.get("event_seq") or event.get("sequence_number") or 0)
 

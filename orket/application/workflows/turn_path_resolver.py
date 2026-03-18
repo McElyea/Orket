@@ -23,11 +23,7 @@ class PathResolver:
 
     @staticmethod
     def partition_required_read_paths(context: dict[str, Any], workspace: Path) -> tuple[list[str], list[str]]:
-        required_paths = [
-            str(path).strip()
-            for path in (context.get("required_read_paths") or [])
-            if str(path).strip()
-        ]
+        required_paths = [str(path).strip() for path in (context.get("required_read_paths") or []) if str(path).strip()]
         if not required_paths:
             return [], []
 
@@ -43,27 +39,15 @@ class PathResolver:
 
     @staticmethod
     def required_write_paths(context: dict[str, Any]) -> list[str]:
-        return [
-            str(path).strip()
-            for path in (context.get("required_write_paths") or [])
-            if str(path).strip()
-        ]
+        return [str(path).strip() for path in (context.get("required_write_paths") or []) if str(path).strip()]
 
     @staticmethod
     def observed_read_paths(turn: ExecutionTurn) -> list[str]:
-        return [
-            str(call.args.get("path", "")).strip()
-            for call in turn.tool_calls
-            if call.tool == "read_file"
-        ]
+        return [str(call.args.get("path", "")).strip() for call in turn.tool_calls if call.tool == "read_file"]
 
     @staticmethod
     def observed_write_paths(turn: ExecutionTurn) -> list[str]:
-        return [
-            str(call.args.get("path", "")).strip()
-            for call in turn.tool_calls
-            if call.tool == "write_file"
-        ]
+        return [str(call.args.get("path", "")).strip() for call in turn.tool_calls if call.tool == "write_file"]
 
     @staticmethod
     def workspace_constraint_violation(*, tool_name: str, args: dict[str, Any], workspace: Path) -> str | None:

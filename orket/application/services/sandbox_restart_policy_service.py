@@ -111,7 +111,8 @@ class SandboxRestartPolicyService:
             history = [
                 snapshot
                 for snapshot in prior_snapshots
-                if snapshot.service_name == current.service_name and datetime.fromisoformat(snapshot.observed_at) >= window_start
+                if snapshot.service_name == current.service_name
+                and datetime.fromisoformat(snapshot.observed_at) >= window_start
             ]
             restart_baseline = min([current.restart_count, *[snapshot.restart_count for snapshot in history]])
             restart_delta = max(0, current.restart_count - restart_baseline)
@@ -169,7 +170,9 @@ class SandboxRestartPolicyService:
         container_rows: list[dict[str, object]],
         observed_at: str,
     ) -> list[SandboxServiceRuntimeSnapshot]:
-        container_names = [str(row.get("Name") or "").strip() for row in container_rows if str(row.get("Name") or "").strip()]
+        container_names = [
+            str(row.get("Name") or "").strip() for row in container_rows if str(row.get("Name") or "").strip()
+        ]
         if not container_names:
             return []
         result = await self.lifecycle_service.command_runner.run_async("docker", "inspect", *container_names)
@@ -229,11 +232,7 @@ class SandboxRestartPolicyService:
         if current.health_status != "unhealthy":
             return 0
         streak_start = datetime.fromisoformat(current.observed_at)
-        history = [
-            snapshot
-            for snapshot in prior_snapshots
-            if snapshot.service_name == current.service_name
-        ]
+        history = [snapshot for snapshot in prior_snapshots if snapshot.service_name == current.service_name]
         for snapshot in sorted(history, key=lambda item: item.observed_at, reverse=True):
             if snapshot.health_status != "unhealthy":
                 break

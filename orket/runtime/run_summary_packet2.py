@@ -91,7 +91,8 @@ def _normalize_repair_entries(value: Any) -> list[dict[str, Any]]:
         entry = {
             "repair_id": repair_id,
             "turn_index": _normalize_turn_index(item.get("turn_index")),
-            "source_event": str(item.get("source_event") or "turn_corrective_reprompt").strip() or "turn_corrective_reprompt",
+            "source_event": str(item.get("source_event") or "turn_corrective_reprompt").strip()
+            or "turn_corrective_reprompt",
             "strategy": str(item.get("strategy") or "corrective_reprompt").strip() or "corrective_reprompt",
             "reasons": reasons,
             "material_change": bool(item.get("material_change", True)),
@@ -187,7 +188,13 @@ def _normalize_idempotency_surfaces(value: Any) -> list[dict[str, Any]]:
         tool = str(item.get("tool") or "").strip()
         target = str(item.get("target") or "").strip()
         dedupe_status = str(item.get("dedupe_status") or "").strip().lower()
-        if not surface or not operation_id or not tool or not target or dedupe_status not in _IDEMPOTENCY_DEDUPE_STATUSES:
+        if (
+            not surface
+            or not operation_id
+            or not tool
+            or not target
+            or dedupe_status not in _IDEMPOTENCY_DEDUPE_STATUSES
+        ):
             continue
         entry = {
             "surface": surface,

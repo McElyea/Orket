@@ -38,7 +38,9 @@ class SandboxLifecycleViewService:
             views.append(self.build_view(record=record, observed_at=observed_at, events=events))
         return sorted(views, key=lambda item: (item.cleanup_due_at or "", item.sandbox_id))
 
-    def build_view(self, *, record: SandboxLifecycleRecord, observed_at: str, events: list | None = None) -> SandboxLifecycleOperatorView:
+    def build_view(
+        self, *, record: SandboxLifecycleRecord, observed_at: str, events: list | None = None
+    ) -> SandboxLifecycleOperatorView:
         heartbeat_age = self._heartbeat_age_seconds(record.last_heartbeat_at, observed_at)
         cleanup_eligible = (
             record.state in {SandboxState.TERMINAL, SandboxState.RECLAIMABLE, SandboxState.ORPHANED}
@@ -72,7 +74,9 @@ class SandboxLifecycleViewService:
     @staticmethod
     def _restart_summary(events: list) -> dict[str, object]:
         for event in sorted(events, key=lambda item: (item.created_at, item.event_id), reverse=True):
-            if str(event.event_type).startswith("sandbox.runtime_health") or str(event.event_type).startswith("sandbox.restart_loop"):
+            if str(event.event_type).startswith("sandbox.runtime_health") or str(event.event_type).startswith(
+                "sandbox.restart_loop"
+            ):
                 if isinstance(event.payload, dict):
                     return dict(event.payload)
         return {}

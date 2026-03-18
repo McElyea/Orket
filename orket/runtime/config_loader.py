@@ -1,17 +1,20 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, List, Optional, Type
+from typing import TYPE_CHECKING, Any, List, Optional, Type
 
 from pydantic import BaseModel, ValidationError
 
+from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.exceptions import CardNotFound
-from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.logging import log_event
+
+if TYPE_CHECKING:
+    from orket.schema import DepartmentConfig, OrganizationConfig
 
 
 class ConfigLoader:
@@ -52,10 +55,10 @@ class ConfigLoader:
             relative_path = str(p)
         return await self.file_tools.read_file(relative_path)
 
-    def load_organization(self) -> Optional["OrganizationConfig"]:
+    def load_organization(self) -> OrganizationConfig | None:
         return self._run_async(self.load_organization_async())
 
-    async def load_organization_async(self) -> Optional["OrganizationConfig"]:
+    async def load_organization_async(self) -> OrganizationConfig | None:
         from orket.schema import OrganizationConfig
         from orket.settings import get_setting
 
@@ -91,10 +94,10 @@ class ConfigLoader:
 
         return self.loader_strategy_node.apply_organization_overrides(org, get_setting)
 
-    def load_department(self, name: str) -> Optional["DepartmentConfig"]:
+    def load_department(self, name: str) -> DepartmentConfig | None:
         return self._run_async(self.load_department_async(name))
 
-    async def load_department_async(self, name: str) -> Optional["DepartmentConfig"]:
+    async def load_department_async(self, name: str) -> DepartmentConfig | None:
         from orket.schema import DepartmentConfig
 
         paths = self.loader_strategy_node.department_paths(self.config_dir, self.model_dir, name)
@@ -148,4 +151,3 @@ class ConfigLoader:
             return sorted(list(assets))
 
         return await asyncio.to_thread(_collect_assets)
-

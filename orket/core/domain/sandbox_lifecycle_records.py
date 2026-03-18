@@ -59,12 +59,16 @@ class SandboxLifecycleRecord(BaseModel):
             raise SandboxLifecycleError("Sandbox lifecycle lease_epoch must be >= 0.")
         if self.cleanup_attempts < 0:
             raise SandboxLifecycleError("Sandbox lifecycle cleanup_attempts must be >= 0.")
-        if self.state in {
-            SandboxState.TERMINAL,
-            SandboxState.RECLAIMABLE,
-            SandboxState.ORPHANED,
-            SandboxState.CLEANED,
-        } and self.terminal_reason is None:
+        if (
+            self.state
+            in {
+                SandboxState.TERMINAL,
+                SandboxState.RECLAIMABLE,
+                SandboxState.ORPHANED,
+                SandboxState.CLEANED,
+            }
+            and self.terminal_reason is None
+        ):
             raise SandboxLifecycleError(
                 "Sandbox lifecycle terminal_reason is required for terminal, reclaimable, orphaned, and cleaned states."
             )

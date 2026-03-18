@@ -71,10 +71,12 @@ class ReforgerTools(BaseTools):
             "version": "validation_v0",
             "issues": self._issues_from_plan(plan),
         }
-        (artifact_root / "route_plan.json").write_text(json.dumps(route_plan_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        (
-            artifact_root / "validation_report.normalize.json"
-        ).write_text(json.dumps(validation_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        (artifact_root / "route_plan.json").write_text(
+            json.dumps(route_plan_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        (artifact_root / "validation_report.normalize.json").write_text(
+            json.dumps(validation_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         return {
             "ok": bool(plan.ok),
             "tool": "reforger_inspect",

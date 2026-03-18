@@ -77,22 +77,16 @@ def synthesize_required_status_tool_call(turn: Any, context: Dict[str, Any]) -> 
     from orket.domain.execution import ToolCall
 
     role_names = {
-        str(value).strip().lower()
-        for value in (context.get("roles") or [context.get("role")])
-        if str(value).strip()
+        str(value).strip().lower() for value in (context.get("roles") or [context.get("role")]) if str(value).strip()
     }
-    required_tools = {
-        str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()
-    }
+    required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
     if "update_issue_status" not in required_tools:
         return
     if any(str(call.tool or "").strip() == "update_issue_status" for call in (turn.tool_calls or [])):
         return
 
     required_statuses = [
-        str(status).strip().lower()
-        for status in (context.get("required_statuses") or [])
-        if str(status).strip()
+        str(status).strip().lower() for status in (context.get("required_statuses") or []) if str(status).strip()
     ]
     required_status: Optional[str] = None
     if len(required_statuses) == 1:

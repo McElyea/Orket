@@ -125,4 +125,3 @@ class MutateOptimizer:
         line = f"Style: {qualifier}"
         updated = (original.rstrip() + "\n" + line + "\n").lstrip("\n")
         return updated, f"added style qualifier '{qualifier}'"
-

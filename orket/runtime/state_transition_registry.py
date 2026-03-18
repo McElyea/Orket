@@ -114,5 +114,7 @@ def validate_state_transition(*, domain: str, from_state: str, to_state: str) ->
     transitions = payload["transitions"]
     allowed_targets = tuple(str(token) for token in transitions.get(resolved_from, ()))
     if resolved_to not in allowed_targets:
-        raise ValueError(f"E_STATE_TRANSITION_INVALID:{str(domain or '').strip().lower()}:{resolved_from}->{resolved_to}")
+        raise ValueError(
+            f"E_STATE_TRANSITION_INVALID:{str(domain or '').strip().lower()}:{resolved_from}->{resolved_to}"
+        )
     return resolved_from, resolved_to

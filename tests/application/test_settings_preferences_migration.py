@@ -27,8 +27,8 @@ def test_migrate_legacy_model_preferences_moves_keys_and_strips_user_settings(mo
         },
     )
 
-    monkeypatch.setattr(settings_module, "SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "PREFERENCES_FILE", preferences_path)
+    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
+    monkeypatch.setattr(settings_module, "_PREFERENCES_FILE", preferences_path)
     monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
     monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
 
@@ -51,8 +51,8 @@ def test_load_user_preferences_returns_existing_models_without_legacy(monkeypatc
     _write_json(settings_path, {"setup_complete": True})
     _write_json(preferences_path, {"models": {"architect": "deepseek-r1:32b"}})
 
-    monkeypatch.setattr(settings_module, "SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "PREFERENCES_FILE", preferences_path)
+    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
+    monkeypatch.setattr(settings_module, "_PREFERENCES_FILE", preferences_path)
     monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
     monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
 
@@ -68,8 +68,8 @@ def test_load_user_preferences_skips_second_migration_save_once_marker_exists(mo
     preferences_path = tmp_path / "preferences.json"
     _write_json(settings_path, {"setup_complete": True})
 
-    monkeypatch.setattr(settings_module, "SETTINGS_FILE", settings_path)
-    monkeypatch.setattr(settings_module, "PREFERENCES_FILE", preferences_path)
+    monkeypatch.setattr(settings_module, "_SETTINGS_FILE", settings_path)
+    monkeypatch.setattr(settings_module, "_PREFERENCES_FILE", preferences_path)
     monkeypatch.setattr(settings_module, "_SETTINGS_CACHE", None)
     monkeypatch.setattr(settings_module, "_PREFERENCES_CACHE", None)
 

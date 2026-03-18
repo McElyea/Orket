@@ -43,4 +43,3 @@ class SnapshotRepository(ABC):
 
     @abstractmethod
     async def get(self, session_id: str) -> Optional[Dict]: ...
-

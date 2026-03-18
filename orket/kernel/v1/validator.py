@@ -20,7 +20,9 @@ DEFAULT_CAPABILITY_POLICY_VERSION = "v1"
 DEFAULT_CAPABILITY_POLICY_PATH = Path("model/core/contracts/kernel_capability_policy_v1.json")
 
 
-def _issue(*, stage: str, code: str, location: str, message: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
+def _issue(
+    *, stage: str, code: str, location: str, message: str, details: dict[str, Any] | None = None
+) -> dict[str, Any]:
     return {
         "contract_version": CONTRACT_VERSION,
         "level": "FAIL",
@@ -80,7 +82,9 @@ def _base_turn_result(
     }
 
 
-def _capability_decision(*, subject: str, action: str, resource: str, result: str, reason_code: str, evidence: dict[str, Any]) -> dict[str, Any]:
+def _capability_decision(
+    *, subject: str, action: str, resource: str, result: str, reason_code: str, evidence: dict[str, Any]
+) -> dict[str, Any]:
     return {
         "contract_version": CONTRACT_VERSION,
         "subject": subject,
@@ -128,7 +132,12 @@ def _capability_decision_record(
 
 def _capability_evidence(context: dict[str, Any]) -> dict[str, Any]:
     policy = _load_capability_policy()
-    source = context.get("policy_source") or policy.get("policy_source") or context.get("policy_ref") or DEFAULT_CAPABILITY_POLICY_SOURCE
+    source = (
+        context.get("policy_source")
+        or policy.get("policy_source")
+        or context.get("policy_ref")
+        or DEFAULT_CAPABILITY_POLICY_SOURCE
+    )
     version = context.get("policy_version") or policy.get("policy_version") or DEFAULT_CAPABILITY_POLICY_VERSION
     return {
         "policy_ref": str(context.get("policy_ref", source)),
@@ -321,7 +330,13 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                 )
             ],
             events=[
-                _event("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/contract_version", "Invalid contract_version.")
+                _event(
+                    "FAIL",
+                    "base_shape",
+                    "E_BASE_SHAPE_INVALID_MANIFEST_VALUE",
+                    "/contract_version",
+                    "Invalid contract_version.",
+                )
             ],
         )
 
@@ -341,7 +356,11 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     message="run_handle must be an object.",
                 )
             ],
-            events=[_event("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/run_handle", "run_handle missing.")],
+            events=[
+                _event(
+                    "FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/run_handle", "run_handle missing."
+                )
+            ],
         )
 
     run_id = run_handle.get("run_id")
@@ -359,7 +378,9 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     message="run_id is required.",
                 )
             ],
-            events=[_event("FAIL", "base_shape", "E_BASE_SHAPE_MISSING_RUN_ID", "/run_handle/run_id", "run_id missing.")],
+            events=[
+                _event("FAIL", "base_shape", "E_BASE_SHAPE_MISSING_RUN_ID", "/run_handle/run_id", "run_id missing.")
+            ],
         )
 
     if not isinstance(turn_id, str) or not turn_id:
@@ -376,7 +397,9 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     message="turn_id is required.",
                 )
             ],
-            events=[_event("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/turn_id", "turn_id missing.")],
+            events=[
+                _event("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/turn_id", "turn_id missing.")
+            ],
         )
 
     workspace_root = run_handle.get("workspace_root") or DEFAULT_WORKSPACE_ROOT
@@ -425,7 +448,9 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
             )
             capabilities["decisions_v1_2_1"] = [decision_record]
             events.append(
-                _event("INFO", "capability", "I_CAPABILITY_SKIPPED", "/turn_input/context", "Capability module disabled.")
+                _event(
+                    "INFO", "capability", "I_CAPABILITY_SKIPPED", "/turn_input/context", "Capability module disabled."
+                )
             )
         else:
             capabilities["mode"] = "enabled"
@@ -458,7 +483,11 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     reason_code="E_SIDE_EFFECT_UNDECLARED",
                     evidence=evidence,
                 )
-            elif isinstance(requested, list) and isinstance(declared, list) and not set(requested).issubset(set(declared)):
+            elif (
+                isinstance(requested, list)
+                and isinstance(declared, list)
+                and not set(requested).issubset(set(declared))
+            ):
                 decision = _capability_decision(
                     subject=subject,
                     action=action,
@@ -557,7 +586,13 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                 )
             )
             events.append(
-                _event("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/turn_input/stage_triplet", "stage_triplet invalid.")
+                _event(
+                    "FAIL",
+                    "base_shape",
+                    "E_BASE_SHAPE_INVALID_MANIFEST_VALUE",
+                    "/turn_input/stage_triplet",
+                    "stage_triplet invalid.",
+                )
             )
             outcome = "FAIL"
             stage = "base_shape"
@@ -566,7 +601,12 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
             body = triplet.get("body")
             links = triplet.get("links")
             manifest = triplet.get("manifest", {})
-            if not isinstance(stem, str) or not isinstance(body, dict) or not isinstance(links, dict) or not isinstance(manifest, dict):
+            if (
+                not isinstance(stem, str)
+                or not isinstance(body, dict)
+                or not isinstance(links, dict)
+                or not isinstance(manifest, dict)
+            ):
                 issues.append(
                     _issue(
                         stage="base_shape",
@@ -576,7 +616,13 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     )
                 )
                 events.append(
-                    _event("FAIL", "base_shape", "E_BASE_SHAPE_INVALID_MANIFEST_VALUE", "/turn_input/stage_triplet", "stage_triplet shape invalid.")
+                    _event(
+                        "FAIL",
+                        "base_shape",
+                        "E_BASE_SHAPE_INVALID_MANIFEST_VALUE",
+                        "/turn_input/stage_triplet",
+                        "stage_triplet shape invalid.",
+                    )
                 )
                 outcome = "FAIL"
                 stage = "base_shape"
@@ -590,7 +636,9 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
                     manifest=manifest,
                 )
                 stage = "lsi"
-                events.append(_event("INFO", "lsi", "I_GATEKEEPER_PASS", "/turn_input/stage_triplet", "Triplet staged."))
+                events.append(
+                    _event("INFO", "lsi", "I_GATEKEEPER_PASS", "/turn_input/stage_triplet", "Triplet staged.")
+                )
 
     if outcome == "PASS" and commit_intent == "stage_and_request_promotion":
         promotion = promote_turn(root=str(root), run_id=run_id, turn_id=turn_id)
@@ -787,7 +835,11 @@ def replay_run_v1(request: dict[str, Any]) -> dict[str, Any]:
             mode="replay_run",
             outcome="FAIL",
             issues=[issue],
-            events=[_event("FAIL", "replay", "E_REPLAY_INPUT_MISSING", f"/run_descriptor/{missing[0]}", "Replay input missing.")],
+            events=[
+                _event(
+                    "FAIL", "replay", "E_REPLAY_INPUT_MISSING", f"/run_descriptor/{missing[0]}", "Replay input missing."
+                )
+            ],
             parity=parity,
             runs_compared=1,
             turns_compared=0,
@@ -891,10 +943,16 @@ def compare_runs_v1(request: dict[str, Any]) -> dict[str, Any]:
             mode="compare_runs",
             outcome="FAIL",
             issues=[issue],
-            events=[_event("FAIL", "replay", "E_REPLAY_EQUIVALENCE_FAILED", "/run_a/turn_digests", "Replay equivalence failed.")],
+            events=[
+                _event(
+                    "FAIL", "replay", "E_REPLAY_EQUIVALENCE_FAILED", "/run_a/turn_digests", "Replay equivalence failed."
+                )
+            ],
             parity=parity,
             runs_compared=2,
-            turns_compared=max(len(surface_a["stage_outcomes"]), len(surface_b["stage_outcomes"]), len(sorted_a), len(sorted_b)),
+            turns_compared=max(
+                len(surface_a["stage_outcomes"]), len(surface_b["stage_outcomes"]), len(sorted_a), len(sorted_b)
+            ),
         )
 
     return _build_replay_report(

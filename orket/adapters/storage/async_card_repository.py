@@ -3,6 +3,7 @@ Async Card Repository - The Reconstruction (V2)
 
 Hardened for parallel execution with safe locking patterns.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +15,7 @@ from typing import Any, Dict, List, Optional
 import aiosqlite
 
 from orket.core.contracts.repositories import CardRepository
-from orket.core.domain.records import CardRecord, IssueRecord
+from orket.core.domain.records import IssueRecord
 from orket.schema import CardStatus
 
 from .card_archive_ops import CardArchiveOps
@@ -112,12 +113,7 @@ class AsyncCardRepository(CardRepository):
             params.append(str(status).lower())
 
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-        query = (
-            "SELECT * FROM issues "
-            f"{where_sql} "
-            "ORDER BY datetime(created_at) DESC, id DESC "
-            "LIMIT ? OFFSET ?"
-        )
+        query = f"SELECT * FROM issues {where_sql} ORDER BY datetime(created_at) DESC, id DESC LIMIT ? OFFSET ?"
         params.extend([max(1, int(limit)), max(0, int(offset))])
 
         async def _op(conn: aiosqlite.Connection) -> List[Dict[str, Any]]:
@@ -138,10 +134,15 @@ class AsyncCardRepository(CardRepository):
 
         async def _op(conn: aiosqlite.Connection) -> None:
             await conn.execute(
-                """INSERT OR REPLACE INTO issues
-                   (id, session_id, build_id, seat, summary, type, priority, sprint,
-                    status, note, retry_count, max_retries, verification_json, metrics_json, depends_on_json, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                """
+                INSERT OR REPLACE INTO issues
+                (
+                    id, session_id, build_id, seat, summary, type, priority, sprint,
+                    status, note, retry_count, max_retries, verification_json,
+                    metrics_json, depends_on_json, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
                 (
                     record.id,
                     record.session_id,
@@ -178,7 +179,9 @@ class AsyncCardRepository(CardRepository):
             prev_status = prev_row["status"] if prev_row else None
 
             if assignee:
-                await conn.execute("UPDATE issues SET status = ?, assignee = ? WHERE id = ?", (status.value, assignee, card_id))
+                await conn.execute(
+                    "UPDATE issues SET status = ?, assignee = ? WHERE id = ?", (status.value, assignee, card_id)
+                )
             else:
                 await conn.execute("UPDATE issues SET status = ? WHERE id = ?", (status.value, card_id))
 

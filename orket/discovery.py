@@ -1,13 +1,13 @@
-﻿import subprocess
-import json
-import os
+import subprocess
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Dict, List
+
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.logging import log_event
 from orket.orket import ConfigLoader
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
+from orket.settings import load_user_settings, save_user_settings
 from orket.schema import RockConfig, EpicConfig, TeamConfig, EngineRegistry
-from orket.logging import log_event
 
 
 def _default_project_root() -> Path:
@@ -39,7 +39,9 @@ def get_installed_models() -> List[str]:
         lines = result.stdout.strip().splitlines()
         # Filter out 'NAME' header and empty lines
         return [line.split()[0] for line in lines if line and not line.startswith("NAME")]
-    except (subprocess.SubprocessError, FileNotFoundError, OSError): return []
+    except (subprocess.SubprocessError, FileNotFoundError, OSError):
+        return []
+
 
 def refresh_engine_mappings():
     """
@@ -47,11 +49,13 @@ def refresh_engine_mappings():
     Returns a dictionary of recommended overrides.
     """
     from orket.hardware import get_current_profile, can_handle_model_tier
+
     hw = get_current_profile()
     models = get_installed_models()
-    
+
     registry_path = _default_model_root() / "core" / "engines.json"
-    if not registry_path.exists(): return {}
+    if not registry_path.exists():
+        return {}
 
     fs = AsyncFileTools(_default_project_root())
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
@@ -60,17 +64,18 @@ def refresh_engine_mappings():
     for cat, mapping in registry.mappings.items():
         if not can_handle_model_tier(mapping.tier, hw):
             continue
-            
+
         best_match = None
         for m in models:
             if any(k in m.lower() for k in mapping.keywords):
                 # Simple heuristic: pick the one with 'latest' or the first one found
                 if not best_match or "latest" in m:
                     best_match = m
-        
+
         recommendations[cat] = best_match or mapping.fallback
-        
+
     return recommendations
+
 
 def get_engine_recommendations():
     """
@@ -78,11 +83,13 @@ def get_engine_recommendations():
     to suggest what the user is missing for a 'Best-in-Class' setup.
     """
     from orket.hardware import get_current_profile, can_handle_model_tier
+
     hw = get_current_profile()
     installed = get_installed_models()
-    
+
     registry_path = _default_model_root() / "core" / "engines.json"
-    if not registry_path.exists(): return []
+    if not registry_path.exists():
+        return []
 
     fs = AsyncFileTools(_default_project_root())
     registry = EngineRegistry.model_validate_json(fs.read_file_sync(str(registry_path)))
@@ -112,15 +119,18 @@ def get_engine_recommendations():
                         best_in_catalog = item
 
         if best_in_catalog and _model_tier_rank(best_in_catalog.tier) > best_installed_rank:
-            suggestions.append({
-                "category": category,
-                "suggestion": best_in_catalog.model,
-                "tier": best_in_catalog.tier,
-                "reason": best_in_catalog.description,
-                "command": f"ollama run {best_in_catalog.model}"
-            })
-            
+            suggestions.append(
+                {
+                    "category": category,
+                    "suggestion": best_in_catalog.model,
+                    "tier": best_in_catalog.tier,
+                    "reason": best_in_catalog.description,
+                    "command": f"ollama run {best_in_catalog.model}",
+                }
+            )
+
     return suggestions
+
 
 def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
     loader = ConfigLoader(_default_model_root(), department)
@@ -130,7 +140,6 @@ def discover_project_assets(department: str = "core") -> Dict[str, List[str]]:
         "teams": loader.list_assets("teams"),
     }
 
-from orket.settings import load_user_settings, save_user_settings
 
 def run_startup_reconciliation() -> str:
     """Run every-startup structural reconciliation and emit explicit path telemetry."""
@@ -174,31 +183,46 @@ def perform_first_run_setup() -> Dict[str, str]:
     """Backward-compatible wrapper around explicit startup checks."""
     return perform_startup_checks()
 
+
 def print_orket_manifest(department: str = "core"):
     from orket.hardware import get_current_profile, can_handle_model_tier, ModelTier
+
     models, assets, hw = get_installed_models(), discover_project_assets(department), get_current_profile()
     loader = ConfigLoader(_default_model_root(), department)
-    
-    print(f"\n{'='*60}\n ORKET EOS MANIFEST (Dept: {department})\n Hardware: {hw.cpu_cores} Cores | {hw.ram_gb:.1f}GB RAM | {hw.vram_gb:.1f}GB VRAM\n{'='*60}")
-    
+
+    manifest_header = (
+        f"\n{'=' * 60}\n"
+        f" ORKET EOS MANIFEST (Dept: {department})\n"
+        f" Hardware: {hw.cpu_cores} Cores | {hw.ram_gb:.1f}GB RAM | {hw.vram_gb:.1f}GB VRAM\n"
+        f"{'=' * 60}"
+    )
+    print(manifest_header)
+
     def find_best(keywords, tier):
-        if not can_handle_model_tier(tier, hw): return f"Skipped ({tier})"
+        if not can_handle_model_tier(tier, hw):
+            return f"Skipped ({tier})"
         for m in models:
-            if any(k in m.lower() for k in keywords): return m
+            if any(k in m.lower() for k in keywords):
+                return m
         return "None found"
 
-    print(f"\n[LOCAL ENGINES]\n  > Coder: {find_best(['coder'], ModelTier.T3_MID)}\n  > Arch:  {find_best(['llama', 'r1'], ModelTier.T2_BASE)}")
+    local_engines = (
+        "\n[LOCAL ENGINES]\n"
+        f"  > Coder: {find_best(['coder'], ModelTier.T3_MID)}\n"
+        f"  > Arch:  {find_best(['llama', 'r1'], ModelTier.T2_BASE)}"
+    )
+    print(local_engines)
 
     # --- UPGRADE SUGGESTIONS ---
     recs = get_engine_recommendations()
     if recs:
-        print(f"\n[MEMBER UPGRADES AVAILABLE]")
+        print("\n[MEMBER UPGRADES AVAILABLE]")
         for r in recs:
             print(f"  ! {r['category'].upper():<10} | Suggestion: {r['suggestion']:<20} | {r['reason']}")
             print(f"    Command: {r['command']}")
 
     if assets["rocks"]:
-        print(f"\n[ROCKS & ACCOUNTABILITY]")
+        print("\n[ROCKS & ACCOUNTABILITY]")
         for rock_name in assets["rocks"]:
             try:
                 rock = loader.load_asset("rocks", rock_name, RockConfig)
@@ -206,16 +230,16 @@ def print_orket_manifest(department: str = "core"):
                 for entry in rock.epics:
                     dept = entry["department"]
                     epic_name = entry["epic"]
-                    
+
                     # Load the Epic to see the Seats
                     try:
                         dept_loader = ConfigLoader(_default_model_root(), dept)
                         epic = dept_loader.load_asset("epics", epic_name, EpicConfig)
-                        team = dept_loader.load_asset("teams", epic.team, TeamConfig)
-                        
+                        dept_loader.load_asset("teams", epic.team, TeamConfig)
+
                         seats = [i.seat for i in epic.issues]
-                        unique_seats = list(dict.fromkeys(seats)) # Preserve order
-                        
+                        unique_seats = list(dict.fromkeys(seats))  # Preserve order
+
                         print(f"    * {dept.upper():<12} | Epic: {epic_name:<20} | Members: {', '.join(unique_seats)}")
                     except (FileNotFoundError, ValueError, KeyError) as e:
                         print(f"    * {dept.upper():<12} | Epic: {epic_name:<20} | [Error: {e}]")
@@ -223,9 +247,9 @@ def print_orket_manifest(department: str = "core"):
                 print(f"  - ROCK: {rock_name} [Metadata load failed: {e}]")
 
     else:
-        print(f"\n[EPICS (Standalone)]")
+        print("\n[EPICS (Standalone)]")
         for e in assets["epics"]:
             print(f"  - {e}")
 
-    print(f"\n[COMMAND SUGGESTION]\n  python main.py --rock {assets['rocks'][0] if assets['rocks'] else '...'} --department {department}\n{'='*60}\n")
-
+    suggestion_rock = assets["rocks"][0] if assets["rocks"] else "..."
+    print(f"\n[COMMAND SUGGESTION]\n  python main.py --rock {suggestion_rock} --department {department}\n{'=' * 60}\n")

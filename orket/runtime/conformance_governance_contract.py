@@ -201,9 +201,7 @@ def validate_conformance_governance_contract(payload: dict[str, Any] | None = No
 
 
 def _validate_behavioral_contract_suite(row: dict[str, Any]) -> None:
-    structural_targets = {
-        str(token).strip() for token in row.get("structural_targets", []) if str(token).strip()
-    }
+    structural_targets = {str(token).strip() for token in row.get("structural_targets", []) if str(token).strip()}
     if structural_targets != _EXPECTED_BEHAVIORAL_STRUCTURAL_TARGETS:
         raise ValueError("E_CONFORMANCE_GOVERNANCE_CONTRACT_BEHAVIORAL_TARGETS_MISMATCH")
     live_target = str(row.get("live_target") or "").strip()

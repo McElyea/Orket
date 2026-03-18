@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
-import os
 
 from orket.adapters.storage.async_repositories import (
     AsyncPendingGateRepository,
@@ -24,23 +23,27 @@ from orket.orchestration.engine_services import (
 )
 from orket.orchestration import engine_approvals
 
+
 class OrchestrationEngine:
     """
     The Single Source of Truth for executing Orket Units.
     Encapsulates all logic previously smeared across main.py and server.py.
     """
-    def __init__(self, 
-                 workspace_root: Path, 
-                 department: str = "core", 
-                 db_path: Optional[str] = None, 
-                 config_root: Optional[Path] = None,
-                 cards_repo: Optional[AsyncCardRepository] = None,
-                 sessions_repo: Optional[AsyncSessionRepository] = None,
-                 snapshots_repo: Optional[AsyncSnapshotRepository] = None,
-                 success_repo: Optional[AsyncSuccessRepository] = None,
-                 run_ledger_repo: Optional[Any] = None,
-                 decision_nodes: Optional[DecisionNodeRegistry] = None,
-                 kernel_gateway: Optional[KernelV1Gateway] = None):
+
+    def __init__(
+        self,
+        workspace_root: Path,
+        department: str = "core",
+        db_path: Optional[str] = None,
+        config_root: Optional[Path] = None,
+        cards_repo: Optional[AsyncCardRepository] = None,
+        sessions_repo: Optional[AsyncSessionRepository] = None,
+        snapshots_repo: Optional[AsyncSnapshotRepository] = None,
+        success_repo: Optional[AsyncSuccessRepository] = None,
+        run_ledger_repo: Optional[Any] = None,
+        decision_nodes: Optional[DecisionNodeRegistry] = None,
+        kernel_gateway: Optional[KernelV1Gateway] = None,
+    ):
         self.decision_nodes = decision_nodes or DecisionNodeRegistry()
         self.engine_runtime_node = self.decision_nodes.resolve_engine_runtime()
         self.engine_runtime_node.bootstrap_environment()
@@ -51,8 +54,9 @@ class OrchestrationEngine:
 
         # Config & Assets
         from orket.orket import ConfigLoader
+
         self.loader = ConfigLoader(self.config_root, self.department)
-        
+
         # Load Organization (Global Policy)
         self.org = self.loader.load_organization()
         self.orchestration_config = OrchestrationConfig(self.org)
@@ -82,13 +86,13 @@ class OrchestrationEngine:
         self.pending_gates = AsyncPendingGateRepository(self.db_path)
         self.kernel_gateway = kernel_gateway or KernelV1Gateway()
 
-        
         # PERSISTENT PIEPELINE (Avoid rebuilds)
         from orket.orket import ExecutionPipeline
+
         self._pipeline = ExecutionPipeline(
-            self.workspace_root, 
-            self.department, 
-            db_path=self.db_path, 
+            self.workspace_root,
+            self.department,
+            db_path=self.db_path,
             config_root=self.config_root,
             cards_repo=self.cards,
             sessions_repo=self.sessions,
@@ -111,44 +115,48 @@ class OrchestrationEngine:
             workspace=self.workspace_root,
         )
 
-    async def run_card(self, card_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False, target_issue_id: str = None) -> Dict[str, Any]:
+    async def run_card(
+        self,
+        card_id: str,
+        build_id: str = None,
+        session_id: str = None,
+        driver_steered: bool = False,
+        target_issue_id: str = None,
+    ) -> Dict[str, Any]:
         """
-        [DEPRECATED] Generic card runner. 
+        [DEPRECATED] Generic card runner.
         Use run_epic, run_rock, or run_issue for explicit intent.
         """
         return await self._pipeline.run_card(
-            card_id, 
-            build_id=build_id, 
-            session_id=session_id, 
-            driver_steered=driver_steered, 
-            target_issue_id=target_issue_id
+            card_id,
+            build_id=build_id,
+            session_id=session_id,
+            driver_steered=driver_steered,
+            target_issue_id=target_issue_id,
         )
 
-    async def run_epic(self, epic_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> List[Dict]:
+    async def run_epic(
+        self, epic_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
+    ) -> List[Dict]:
         """Executes a full epic orchestration."""
         return await self._pipeline.run_epic(
-            epic_id,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered
+            epic_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered
         )
 
-    async def run_rock(self, rock_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> Dict:
+    async def run_rock(
+        self, rock_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
+    ) -> Dict:
         """Executes a multi-epic rock orchestration."""
         return await self._pipeline.run_rock(
-            rock_id,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered
+            rock_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered
         )
 
-    async def run_issue(self, issue_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False) -> Dict[str, Any]:
+    async def run_issue(
+        self, issue_id: str, build_id: str = None, session_id: str = None, driver_steered: bool = False
+    ) -> Dict[str, Any]:
         """Resumes or executes a single atomic issue."""
         return await self._pipeline.run_card(
-            issue_id,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered
+            issue_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered
         )
 
     async def run_gitea_state_loop(
@@ -176,9 +184,9 @@ class OrchestrationEngine:
             summary_out=summary_out,
         )
 
-
     def get_board(self) -> Dict[str, Any]:
         from orket.board import get_board_hierarchy
+
         return get_board_hierarchy(self.department)
 
     async def get_sandboxes(self) -> List[Dict[str, Any]]:
@@ -260,7 +268,9 @@ class OrchestrationEngine:
             limit=limit,
         )
 
-    def replay_turn(self, session_id: str, issue_id: str, turn_index: int, role: Optional[str] = None) -> Dict[str, Any]:
+    def replay_turn(
+        self, session_id: str, issue_id: str, turn_index: int, role: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Replay diagnostics for one turn from persisted observability artifacts.
         """

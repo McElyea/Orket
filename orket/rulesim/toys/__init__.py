@@ -19,4 +19,3 @@ def build_toy_rulesystem(rulesystem_id: str):
     if normalized in {"toy_golden_determinism", "golden_determinism"}:
         return LoopRuleSystem()
     raise ValueError(f"Unknown rulesystem_id '{rulesystem_id}'")
-

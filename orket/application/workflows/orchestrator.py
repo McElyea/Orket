@@ -31,17 +31,24 @@ load_user_preferences = orchestrator_ops.load_user_preferences
 _THIS_MODULE_NAME = __name__
 
 _PATCHABLE_NAMES = (
-    "Scaffolder", "ScaffoldValidationError",
-    "DependencyManager", "DependencyValidationError",
-    "DeploymentPlanner", "DeploymentValidationError",
-    "RuntimeVerifier", "PromptCompiler", "PromptResolver",
-    "load_user_settings", "load_user_preferences",
+    "Scaffolder",
+    "ScaffoldValidationError",
+    "DependencyManager",
+    "DependencyValidationError",
+    "DeploymentPlanner",
+    "DeploymentValidationError",
+    "RuntimeVerifier",
+    "PromptCompiler",
+    "PromptResolver",
+    "load_user_settings",
+    "load_user_preferences",
 )
 
 
 def _sync_patchable_symbols() -> None:
     """Keep ops-layer globals aligned with orchestrator module monkeypatches."""
     import sys
+
     this_mod = sys.modules[_THIS_MODULE_NAME]
     for name in _PATCHABLE_NAMES:
         setattr(orchestrator_ops, name, getattr(this_mod, name))

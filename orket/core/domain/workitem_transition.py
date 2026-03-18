@@ -35,8 +35,7 @@ class TransitionGateBoundary(Protocol):
         current_status: CardStatus,
         requested_status: CardStatus,
         payload: Dict[str, Any],
-    ) -> TransitionResult | None:
-        ...
+    ) -> TransitionResult | None: ...
 
     def post_transition(
         self,
@@ -45,8 +44,7 @@ class TransitionGateBoundary(Protocol):
         current_status: CardStatus,
         requested_status: CardStatus,
         payload: Dict[str, Any],
-    ) -> TransitionResult | None:
-        ...
+    ) -> TransitionResult | None: ...
 
 
 class WorkItemTransitionService:
@@ -140,7 +138,12 @@ class WorkItemTransitionService:
             )
 
         unresolved = [str(item) for item in (payload.get("unresolved_dependencies") or []) if str(item).strip()]
-        if unresolved and requested not in {CardStatus.DONE, CardStatus.CANCELED, CardStatus.ARCHIVED, CardStatus.GUARD_APPROVED}:
+        if unresolved and requested not in {
+            CardStatus.DONE,
+            CardStatus.CANCELED,
+            CardStatus.ARCHIVED,
+            CardStatus.GUARD_APPROVED,
+        }:
             return TransitionResult(
                 ok=False,
                 action=normalized_action,

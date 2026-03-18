@@ -174,10 +174,7 @@ class ToolGate:
 
         if normalized_roles & allowed_role_set:
             return None
-        return (
-            f"Policy violation: dependency manifest '{rel_path}' is owned by roles "
-            f"{sorted(allowed_role_set)}"
-        )
+        return f"Policy violation: dependency manifest '{rel_path}' is owned by roles {sorted(allowed_role_set)}"
 
     def _validate_deployment_file_ownership(
         self,
@@ -222,10 +219,7 @@ class ToolGate:
 
         if normalized_roles & allowed_role_set:
             return None
-        return (
-            f"Policy violation: deployment artifact '{rel_path}' is owned by roles "
-            f"{sorted(allowed_role_set)}"
-        )
+        return f"Policy violation: deployment artifact '{rel_path}' is owned by roles {sorted(allowed_role_set)}"
 
     def _validate_state_change(
         self,

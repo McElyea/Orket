@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 import hashlib
 from pathlib import Path
 import re
@@ -23,11 +23,15 @@ from .turn_contract_rules import (
     security_scope_diagnostics,
 )
 from .turn_response_parser import ResponseParser
+
+
 class ContractValidator:
     """Evaluate turn contract compliance and produce deterministic diagnostics."""
+
     def __init__(self, workspace: Path, response_parser: ResponseParser) -> None:
         self.workspace = workspace
         self.response_parser = response_parser
+
     def collect_contract_violations(
         self,
         turn: ExecutionTurn,
@@ -39,6 +43,7 @@ class ContractValidator:
         self._append_contract_violations(violations, turn, context)
         self._append_scope_violations(violations, turn, context)
         return violations
+
     def _append_progress_violations(
         self,
         violations: list[dict[str, Any]],
@@ -59,6 +64,7 @@ class ContractValidator:
                 "observed_statuses": progress_diag.get("observed_statuses", []),
             }
         )
+
     def _append_contract_violations(
         self,
         violations: list[dict[str, Any]],
@@ -105,6 +111,7 @@ class ContractValidator:
                     "task_class": anti_meta.get("task_class"),
                 }
             )
+
     def _append_scope_violations(
         self,
         violations: list[dict[str, Any]],
@@ -126,6 +133,7 @@ class ContractValidator:
                     "violations": diagnostics.get("violations", []),
                 }
             )
+
     def progress_contract_diagnostics(
         self,
         turn: ExecutionTurn,
@@ -154,13 +162,16 @@ class ContractValidator:
             "missing_required_tools": missing_required,
             "observed_statuses": observed_statuses,
         }
+
     def meets_progress_contract(self, turn: ExecutionTurn, role: RoleConfig, context: dict[str, Any]) -> bool:
         allowed = set(role.tools or [])
         called_tools = {call.tool for call in (turn.tool_calls or []) if call.tool}
         required_tools = {str(tool) for tool in (context.get("required_action_tools") or []) if tool}
         if allowed:
             required_tools = {tool for tool in required_tools if tool in allowed}
-        required_statuses = {str(status).strip().lower() for status in (context.get("required_statuses") or []) if status}
+        required_statuses = {
+            str(status).strip().lower() for status in (context.get("required_statuses") or []) if status
+        }
         observational_tools = {"get_issue_context", "read_file", "list_directory", "list_dir"}
         blocked_wait_reasons = {"resource", "dependency", "review", "input", "system"}
         if allowed:
@@ -193,6 +204,7 @@ class ContractValidator:
             if not status_match:
                 return False
         return True
+
     def meets_write_path_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         required_paths = self.required_write_paths(context)
         if not required_paths:
@@ -202,6 +214,7 @@ class ContractValidator:
             return False
         observed_set = {p for p in observed_paths if p}
         return set(required_paths).issubset(observed_set)
+
     def meets_guard_rejection_payload_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         stage_gate_mode = str(context.get("stage_gate_mode", "")).strip().lower()
         if stage_gate_mode != "review_required":
@@ -229,6 +242,7 @@ class ContractValidator:
                 if not unresolved:
                     return False
         return bool(rationale and violations and actions)
+
     def meets_read_path_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         required_paths = self.required_read_paths(context)
         if not required_paths:
@@ -238,33 +252,45 @@ class ContractValidator:
             return False
         observed_set = {p for p in observed_paths if p}
         return set(required_paths).issubset(observed_set)
+
     def meets_architecture_decision_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
         return meets_architecture_decision_contract(turn, context)
+
     @staticmethod
     def parse_architecture_decision_payload(raw_content: str) -> dict[str, Any] | None:
         return parse_architecture_decision_payload(raw_content)
+
     def hallucination_scope_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         return hallucination_scope_diagnostics(turn, context, self.non_json_residue)
+
     @staticmethod
     def security_scope_diagnostics(turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         return security_scope_diagnostics(turn, context)
+
     def consistency_scope_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         return consistency_scope_diagnostics(turn, context, self.non_json_residue)
+
     def required_read_paths(self, context: dict[str, Any]) -> list[str]:
         return required_read_paths(context, self.workspace)
+
     @staticmethod
     def required_write_paths(context: dict[str, Any]) -> list[str]:
         return required_write_paths(context)
+
     @staticmethod
     def observed_read_paths(turn: ExecutionTurn) -> list[str]:
         return observed_read_paths(turn)
+
     @staticmethod
     def observed_write_paths(turn: ExecutionTurn) -> list[str]:
         return observed_write_paths(turn)
+
     def non_json_residue(self, content: str) -> str:
         return self.response_parser.non_json_residue(content)
+
     def extract_guard_review_payload(self, content: str) -> dict[str, Any]:
         return self.response_parser.extract_guard_review_payload(content)
+
     @staticmethod
     def _trim_ascii_whitespace_once(content: str) -> tuple[str, str]:
         allowed = {" ", "\t", "\n", "\r"}
@@ -279,6 +305,7 @@ class ContractValidator:
         while end > start and content[end - 1] in allowed:
             end -= 1
         return content[start:end], ""
+
     @staticmethod
     def _resolve_intro_denylist(raw: dict[str, Any], context: dict[str, Any]) -> list[str]:
         source = (
@@ -290,6 +317,7 @@ class ContractValidator:
         if not isinstance(source, list):
             return []
         return [str(item).strip().lower() for item in source if str(item).strip()]
+
     @staticmethod
     def _local_prompt_violation(
         *,
@@ -309,6 +337,7 @@ class ContractValidator:
         if error_code:
             payload["error_code"] = error_code
         return payload
+
     def local_prompt_anti_meta_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         raw = turn.raw if isinstance(turn.raw, dict) else {}
         task_class = str(context.get("local_prompt_task_class") or raw.get("task_class") or "").strip().lower()

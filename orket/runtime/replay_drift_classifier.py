@@ -36,7 +36,9 @@ TOOL_SCHEMA_DRIFT_FIELDS: Final[frozenset[str]] = frozenset(
 
 PROMPT_DRIFT_FIELDS: Final[frozenset[str]] = frozenset({"prompt_hash", "prompt_structure", "proposal_hash"})
 
-TOOL_BEHAVIOR_DRIFT_FIELDS: Final[frozenset[str]] = frozenset({"status", "failure_class", "failure_reason", "operations"})
+TOOL_BEHAVIOR_DRIFT_FIELDS: Final[frozenset[str]] = frozenset(
+    {"status", "failure_class", "failure_reason", "operations"}
+)
 
 ARTIFACT_FORMAT_DRIFT_FIELDS: Final[frozenset[str]] = frozenset({"artifact_inventory", "receipt_inventory"})
 

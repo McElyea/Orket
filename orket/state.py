@@ -5,12 +5,16 @@ from typing import Dict, List, Any
 
 class GlobalState:
     """Global singleton for cross-module coordination."""
+
     def __init__(self):
         self.interventions: Dict[str, Dict[str, str]] = {}
         self.event_queue = asyncio.Queue()
         self.active_websockets: List[Any] = []
         self.active_tasks: Dict[str, asyncio.Task] = {}
 
+        # Locks are created at import time. This is safe on Python 3.11 because
+        # asyncio locks no longer bind to a running loop at construction time.
+        # Tests that replace loop-scoped state should also create a fresh GlobalState.
         self._ws_lock = asyncio.Lock()
         self._tasks_lock = asyncio.Lock()
         self._interventions_lock = asyncio.Lock()

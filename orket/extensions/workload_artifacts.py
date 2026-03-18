@@ -139,16 +139,22 @@ class WorkloadArtifacts:
         for artifact in artifacts:
             artifact_path = str(artifact.path).strip().replace("\\", "/")
             if not artifact_path:
-                failures.append(WorkloadArtifacts._failure(path_norm="", code="E_SDK_ARTIFACT_PATH_INVALID", detail="empty"))
+                failures.append(
+                    WorkloadArtifacts._failure(path_norm="", code="E_SDK_ARTIFACT_PATH_INVALID", detail="empty")
+                )
                 continue
             if Path(artifact_path).is_absolute():
                 failures.append(
-                    WorkloadArtifacts._failure(path_norm=artifact_path, code="E_ARTIFACT_PATH_ABSOLUTE", detail=artifact_path)
+                    WorkloadArtifacts._failure(
+                        path_norm=artifact_path, code="E_ARTIFACT_PATH_ABSOLUTE", detail=artifact_path
+                    )
                 )
                 continue
             if ".." in Path(artifact_path).parts:
                 failures.append(
-                    WorkloadArtifacts._failure(path_norm=artifact_path, code="E_ARTIFACT_PATH_TRAVERSAL", detail=artifact_path)
+                    WorkloadArtifacts._failure(
+                        path_norm=artifact_path, code="E_ARTIFACT_PATH_TRAVERSAL", detail=artifact_path
+                    )
                 )
                 continue
             target_path = artifact_root / artifact_path
@@ -166,12 +172,16 @@ class WorkloadArtifacts:
                 target.relative_to(artifact_root_resolved)
             except ValueError:
                 failures.append(
-                    WorkloadArtifacts._failure(path_norm=artifact_path, code="E_ARTIFACT_PATH_ESCAPE", detail=artifact_path)
+                    WorkloadArtifacts._failure(
+                        path_norm=artifact_path, code="E_ARTIFACT_PATH_ESCAPE", detail=artifact_path
+                    )
                 )
                 continue
             if not target.exists() or not target.is_file():
                 failures.append(
-                    WorkloadArtifacts._failure(path_norm=artifact_path, code="E_SDK_ARTIFACT_MISSING", detail=artifact_path)
+                    WorkloadArtifacts._failure(
+                        path_norm=artifact_path, code="E_SDK_ARTIFACT_MISSING", detail=artifact_path
+                    )
                 )
                 continue
             file_size = target.stat().st_size
@@ -375,9 +385,7 @@ class WorkloadArtifacts:
                 raise ValueError(f"E_ARTIFACT_TOTAL_SIZE_CAP: {rel}")
             file_hash = WorkloadArtifacts._stream_sha256(resolved)
             files.append({"path": rel, "sha256": file_hash})
-        digest = hashlib.sha256(
-            json.dumps(files, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        ).hexdigest()
+        digest = hashlib.sha256(json.dumps(files, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
         return {"files": files, "manifest_sha256": digest}
 
     @classmethod
@@ -450,9 +458,7 @@ class WorkloadArtifacts:
     @staticmethod
     def _redacted_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
         keys = sorted(str(key) for key in payload.keys())
-        digest = hashlib.sha256(
-            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        ).hexdigest()
+        digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
         return {
             "keys": keys,
             "item_count": len(keys),

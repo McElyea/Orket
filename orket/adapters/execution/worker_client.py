@@ -10,16 +10,13 @@ class ResponseLike(Protocol):
     status_code: int
     text: str
 
-    def json(self) -> dict[str, Any] | list[dict[str, Any]]:
-        ...
+    def json(self) -> dict[str, Any] | list[dict[str, Any]]: ...
 
 
 class ClientLike(Protocol):
-    def get(self, url: str) -> ResponseLike:
-        ...
+    def get(self, url: str) -> ResponseLike: ...
 
-    def post(self, url: str, json: dict[str, Any]) -> ResponseLike:
-        ...
+    def post(self, url: str, json: dict[str, Any]) -> ResponseLike: ...
 
 
 class Worker:
@@ -102,7 +99,9 @@ class Worker:
                 next_renew = now + self.renew_interval
             self.sleep_fn(0.005)
 
-    def run_claimed_work(self, card_id: str, *, work_duration: float, completion_result: dict[str, Any]) -> ResponseLike:
+    def run_claimed_work(
+        self, card_id: str, *, work_duration: float, completion_result: dict[str, Any]
+    ) -> ResponseLike:
         stop_event = threading.Event()
         renew_thread = threading.Thread(target=self._renew_loop, args=(card_id, stop_event), daemon=True)
         renew_thread.start()

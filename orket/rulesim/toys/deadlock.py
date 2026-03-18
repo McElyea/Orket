@@ -8,7 +8,9 @@ from ..contracts import TerminalResult, TransitionResult
 
 
 class DeadlockRuleSystem:
-    def initial_state(self, seed: int, scenario: dict[str, Any], ruleset: dict[str, Any], agents: list[str]) -> dict[str, Any]:
+    def initial_state(
+        self, seed: int, scenario: dict[str, Any], ruleset: dict[str, Any], agents: list[str]
+    ) -> dict[str, Any]:
         return {"ticks": 0}
 
     def legal_actions(self, state: dict[str, Any], agent_id: str) -> list[dict[str, Any]]:
@@ -38,4 +40,3 @@ class DeadlockRuleSystem:
 
     def action_key(self, action: dict[str, Any]) -> str:
         return str(action.get("kind", "unknown"))
-

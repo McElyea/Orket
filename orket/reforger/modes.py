@@ -59,4 +59,3 @@ def load_mode(mode_path: Path) -> ModeSpec:
         rubric=normalized_rubric,
         path=mode_path.resolve(),
     )
-

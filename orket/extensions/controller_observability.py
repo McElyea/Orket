@@ -39,8 +39,7 @@ _SCHEMA_CACHE: dict[str, Any] | None = None
 
 
 class ObservabilityBatchSink(Protocol):
-    async def emit_batch(self, *, run_id: str, events: list[dict[str, Any]]) -> None:
-        ...
+    async def emit_batch(self, *, run_id: str, events: list[dict[str, Any]]) -> None: ...
 
 
 def emit_controller_run(
@@ -222,7 +221,9 @@ def _child_observability_status(child_status: str) -> str:
 async def _load_schema(*, schema_path: Path | None = None) -> dict[str, Any]:
     global _SCHEMA_CACHE
     if _SCHEMA_CACHE is None:
-        target_path = schema_path or Path(__file__).resolve().parents[2] / "schemas" / "controller_observability_v1.json"
+        target_path = (
+            schema_path or Path(__file__).resolve().parents[2] / "schemas" / "controller_observability_v1.json"
+        )
         async with aiofiles.open(target_path, "r", encoding="utf-8") as handle:
             _SCHEMA_CACHE = json.loads(await handle.read())
     return _SCHEMA_CACHE

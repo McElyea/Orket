@@ -4,11 +4,9 @@ Orket Setup Wizard - Phase 5: Production Readiness
 Interactive CLI tool to initialize an Orket workspace.
 Created during the v1.0 maturation phase.
 """
+
 from __future__ import annotations
-import json
-import os
 from pathlib import Path
-from typing import Dict, Any
 
 from orket.schema import OrganizationConfig, BrandingConfig, ArchitecturePrescription
 from orket.settings import load_user_settings, save_user_settings
@@ -30,9 +28,13 @@ def run_wizard():
     workspace_path = input("Workspace Path [./workspace]: ") or "./workspace"
     model_path = input("Model/Asset Path [./model]: ") or "./model"
     module_profile = (
-        input("Module Profile [developer-local] (engine-only/developer-local/api-runtime/api-webhook-runtime): ")
-        or "developer-local"
-    ).strip().lower()
+        (
+            input("Module Profile [developer-local] (engine-only/developer-local/api-runtime/api-webhook-runtime): ")
+            or "developer-local"
+        )
+        .strip()
+        .lower()
+    )
 
     config = OrganizationConfig(
         name=org_name,
@@ -40,7 +42,7 @@ def run_wizard():
         ethos=org_ethos,
         branding=BrandingConfig(),
         architecture=ArchitecturePrescription(idesign_threshold=7),
-        departments=["core"]
+        departments=["core"],
     )
 
     # 3. Create Directories
@@ -55,7 +57,7 @@ def run_wizard():
     # 4. Save Config
     config_dir = base / "config"
     config_dir.mkdir(exist_ok=True)
-    
+
     org_file = config_dir / "organization.json"
     with org_file.open("w", encoding="utf-8") as f:
         f.write(config.model_dump_json(indent=4))

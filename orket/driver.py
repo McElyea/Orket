@@ -73,7 +73,9 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
         strict_from_env = str(os.getenv("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
-        self.strict_config_mode = strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
+        self.strict_config_mode = (
+            strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
+        )
         parse_mode_from_env = str(os.getenv("ORKET_DRIVER_JSON_PARSE_MODE", "")).strip().lower()
         self.json_parse_mode = "compatibility"
         self.prompting_mode = "fallback"
@@ -176,8 +178,12 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             if dept_dir.is_dir():
                 dept_name = dept_dir.name
                 inventory["departments"][dept_name] = {
-                    "teams": [f.stem for f in (dept_dir / "teams").glob("*.json")] if (dept_dir / "teams").exists() else [],
-                    "skills": [f.stem for f in (dept_dir / "skills").glob("*.json")] if (dept_dir / "skills").exists() else [],
+                    "teams": [f.stem for f in (dept_dir / "teams").glob("*.json")]
+                    if (dept_dir / "teams").exists()
+                    else [],
+                    "skills": [f.stem for f in (dept_dir / "skills").glob("*.json")]
+                    if (dept_dir / "skills").exists()
+                    else [],
                 }
         return inventory
 
@@ -229,9 +235,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             "- Never propose structural changes unless the user request clearly requires it.\n"
             "- Never repeat instructions back to the user.\n"
             "- Never explain JSON; just produce it.\n\n"
-            "SUPPORTED ACTIONS:\n"
-            + "\n".join(grouped_actions)
-            + "\n\n"
+            "SUPPORTED ACTIONS:\n" + "\n".join(grouped_actions) + "\n\n"
             "If the request needs an unsupported action, return action='converse' with a short clarification.\n\n"
             "THINKING STYLE:\n"
             "- Be concise, explicit, and deterministic.\n"
@@ -249,7 +253,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
             "2. Structural request matching supported structural actions\n"
             "   -> choose the correct Orket action and produce only the JSON.\n\n"
             "3. Ambiguous request\n"
-            "   -> ask a single clarifying question using action: \"converse\".\n\n"
+            '   -> ask a single clarifying question using action: "converse".\n\n'
             "CONTEXT PROVIDED:\n"
             "- inventory: current assets\n"
             "- active_rocks: available rocks\n"
@@ -355,7 +359,9 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                     role="DRIVER",
                 )
             action = str(plan.get("action") or "").strip().lower()
-            if action in {"create_issue", "create_epic", "create_rock"} and not self._has_explicit_structural_intent(request_text):
+            if action in {"create_issue", "create_epic", "create_rock"} and not self._has_explicit_structural_intent(
+                request_text
+            ):
                 self._log_operator_metric("operator_structural_action_blocked", action=action)
                 log_event(
                     "operator_structural_action_blocked",
@@ -364,8 +370,7 @@ class OrketDriver(DriverCliMixin, DriverConversationMixin, DriverResourceMixin):
                     role="DRIVER",
                 )
                 return (
-                    compatibility_warning
-                    + "I can do that, but please ask explicitly for a board change. "
+                    compatibility_warning + "I can do that, but please ask explicitly for a board change. "
                     "For example: '/create epic <name> <department>' or 'create epic <name>'."
                 )
             self._log_operator_metric("operator_request_total", route="model")

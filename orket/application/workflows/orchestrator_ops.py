@@ -1,24 +1,28 @@
 import asyncio
 import inspect
 import json
-import uuid
 import re
 import os
 from types import SimpleNamespace
-from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime, UTC
-from collections import defaultdict
 
 from orket.schema import (
-    EpicConfig, TeamConfig, EnvironmentConfig, IssueConfig,
-    CardStatus, RoleConfig, DialectConfig, SkillConfig, SeatConfig, WaitReason
+    EpicConfig,
+    TeamConfig,
+    EnvironmentConfig,
+    IssueConfig,
+    CardStatus,
+    RoleConfig,
+    DialectConfig,
+    SkillConfig,
+    SeatConfig,
+    WaitReason,
 )
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.orchestration.models import ModelSelector
-from orket.orchestration.notes import NoteStore, Note
+from orket.orchestration.notes import Note
 from orket.decision_nodes.contracts import PlanningInput
-from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.prompt_resolver import PromptResolver
 from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
@@ -46,9 +50,7 @@ from orket.application.services.runtime_policy import (
 )
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.core.policies.tool_gate import ToolGate
-from orket.core.contracts.repositories import CardRepository, SnapshotRepository
-from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
-from orket.tools import ToolBox, get_tool_map
+from orket.tools import ToolBox
 from orket.logging import log_event
 from orket.exceptions import CardNotFound, ExecutionFailed
 from orket.core.domain.state_machine import StateMachine
@@ -123,6 +125,7 @@ def _resolve_architecture_mode(self) -> str:
     user_raw = str(load_user_settings().get("architecture_mode", "")).strip()
     return resolve_architecture_mode(env_raw, process_raw, user_raw)
 
+
 def _resolve_frontend_framework_mode(self) -> str:
     env_raw = (os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE") or "").strip()
     process_raw = ""
@@ -130,6 +133,7 @@ def _resolve_frontend_framework_mode(self) -> str:
         process_raw = str(self.org.process_rules.get("frontend_framework_mode", "")).strip()
     user_raw = str(load_user_settings().get("frontend_framework_mode", "")).strip()
     return resolve_frontend_framework_mode(env_raw, process_raw, user_raw)
+
 
 def _resolve_architecture_pattern(self) -> str | None:
     mode = self._resolve_architecture_mode()
@@ -139,6 +143,7 @@ def _resolve_architecture_pattern(self) -> str | None:
         return "monolith"
     return None
 
+
 def _resolve_project_surface_profile(self) -> str:
     env_raw = (os.environ.get("ORKET_PROJECT_SURFACE_PROFILE") or "").strip()
     process_raw = ""
@@ -146,6 +151,7 @@ def _resolve_project_surface_profile(self) -> str:
         process_raw = str(self.org.process_rules.get("project_surface_profile", "")).strip()
     user_raw = str(load_user_settings().get("project_surface_profile", "")).strip()
     return resolve_project_surface_profile(env_raw, process_raw, user_raw)
+
 
 def _resolve_small_project_builder_variant(self) -> str:
     env_raw = (os.environ.get("ORKET_SMALL_PROJECT_BUILDER_VARIANT") or "").strip()
@@ -155,12 +161,13 @@ def _resolve_small_project_builder_variant(self) -> str:
     user_raw = str(load_user_settings().get("small_project_builder_variant", "")).strip()
     return resolve_small_project_builder_variant(env_raw, process_raw, user_raw)
 
+
 def _resolve_protocol_governed_enabled(self) -> bool:
     env_raw = (
-        os.environ.get("ORKET_PROTOCOL_GOVERNED_ENABLED")
-        or os.environ.get("ORKET_PROTOCOL_GOVERNED")
-        or ""
-    ).strip().lower()
+        (os.environ.get("ORKET_PROTOCOL_GOVERNED_ENABLED") or os.environ.get("ORKET_PROTOCOL_GOVERNED") or "")
+        .strip()
+        .lower()
+    )
     if env_raw in {"1", "true", "yes", "on", "enabled"}:
         return True
     if env_raw in {"0", "false", "no", "off", "disabled"}:
@@ -175,10 +182,15 @@ def _resolve_protocol_governed_enabled(self) -> bool:
     user_raw = str(load_user_settings().get("protocol_governed_enabled", "")).strip().lower()
     return user_raw in {"1", "true", "yes", "on", "enabled"}
 
+
 def _resolve_protocol_max_response_bytes(self) -> int:
     values = [
         os.environ.get("ORKET_PROTOCOL_MAX_RESPONSE_BYTES"),
-        (self.org.process_rules.get("protocol_max_response_bytes") if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else None),
+        (
+            self.org.process_rules.get("protocol_max_response_bytes")
+            if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
+            else None
+        ),
         load_user_settings().get("protocol_max_response_bytes"),
     ]
     for value in values:
@@ -192,10 +204,15 @@ def _resolve_protocol_max_response_bytes(self) -> int:
         return max(256, parsed)
     return 8192
 
+
 def _resolve_protocol_max_tool_calls(self) -> int:
     values = [
         os.environ.get("ORKET_PROTOCOL_MAX_TOOL_CALLS"),
-        (self.org.process_rules.get("protocol_max_tool_calls") if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else None),
+        (
+            self.org.process_rules.get("protocol_max_tool_calls")
+            if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
+            else None
+        ),
         load_user_settings().get("protocol_max_tool_calls"),
     ]
     for value in values:
@@ -209,11 +226,10 @@ def _resolve_protocol_max_tool_calls(self) -> int:
         return max(1, parsed)
     return 8
 
+
 def _resolve_protocol_determinism_context(self) -> Dict[str, Any]:
     process_rules = (
-        self.org.process_rules
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
-        else {}
+        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
     )
     user_settings = load_user_settings()
     controls = resolve_protocol_determinism_controls(
@@ -267,11 +283,10 @@ def _resolve_protocol_determinism_context(self) -> Dict[str, Any]:
         "env_allowlist_hash": str(controls.get("env_allowlist_hash") or ""),
     }
 
+
 def _resolve_local_prompting_mode(self) -> str:
     process_rules = (
-        self.org.process_rules
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
-        else {}
+        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
     )
     user_settings = load_user_settings()
     return resolve_local_prompting_mode(
@@ -283,9 +298,7 @@ def _resolve_local_prompting_mode(self) -> str:
 
 def _resolve_local_prompting_allow_fallback(self) -> bool:
     process_rules = (
-        self.org.process_rules
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
-        else {}
+        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
     )
     user_settings = load_user_settings()
     return bool(
@@ -299,9 +312,7 @@ def _resolve_local_prompting_allow_fallback(self) -> bool:
 
 def _resolve_local_prompting_fallback_profile_id(self) -> str:
     process_rules = (
-        self.org.process_rules
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
-        else {}
+        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
     )
     user_settings = load_user_settings()
     return resolve_local_prompting_fallback_profile_id(
@@ -309,6 +320,7 @@ def _resolve_local_prompting_fallback_profile_id(self) -> str:
         process_rules.get("local_prompting_fallback_profile_id"),
         user_settings.get("local_prompting_fallback_profile_id"),
     )
+
 
 def _resolve_workflow_profile(self) -> str:
     env_raw = (os.environ.get("ORKET_WORKFLOW_PROFILE") or "").strip().lower()
@@ -328,6 +340,7 @@ def _resolve_workflow_profile(self) -> str:
             return default_process
     return "legacy_cards_v1"
 
+
 async def _request_issue_transition(
     self,
     *,
@@ -339,7 +352,9 @@ async def _request_issue_transition(
     roles: Optional[List[str]] = None,
     allow_policy_override: bool = True,
 ) -> None:
-    current_status = issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status).strip().lower())
+    current_status = (
+        issue.status if isinstance(issue.status, CardStatus) else CardStatus(str(issue.status).strip().lower())
+    )
     wait_reason = _resolve_transition_wait_reason(
         target_status=target_status,
         reason=reason,
@@ -404,6 +419,7 @@ async def _request_issue_transition(
     )
     issue.status = target_status
 
+
 def _small_project_issue_threshold(self) -> int:
     raw = 3
     if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
@@ -412,6 +428,7 @@ def _small_project_issue_threshold(self) -> int:
         return max(1, int(raw))
     except (TypeError, ValueError):
         return 3
+
 
 def _should_auto_inject_small_project_reviewer(self) -> bool:
     env_raw = (os.environ.get("ORKET_SMALL_PROJECT_AUTO_INJECT_REVIEWER") or "").strip().lower()
@@ -428,6 +445,7 @@ def _should_auto_inject_small_project_reviewer(self) -> bool:
             return lowered in {"1", "true", "yes", "on"}
     return False
 
+
 def _small_project_reviewer_seat_name(self) -> str:
     if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
         configured = str(
@@ -440,6 +458,7 @@ def _small_project_reviewer_seat_name(self) -> str:
         if configured:
             return configured
     return "auto_code_reviewer"
+
 
 def _auto_inject_small_project_reviewer_seat(self, team: TeamConfig) -> str:
     seat_name = self._small_project_reviewer_seat_name()
@@ -457,6 +476,7 @@ def _auto_inject_small_project_reviewer_seat(self, team: TeamConfig) -> str:
     if "code_reviewer" not in normalized_roles:
         existing.roles = existing_roles + ["code_reviewer"]
     return seat_name
+
 
 def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> Dict[str, Any]:
     issue_count = len(list(getattr(epic, "issues", []) or []))
@@ -497,6 +517,7 @@ def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> Dict[str, 
         "reviewer_seat": reviewer_seat,
     }
 
+
 def _resolve_bool_flag(self, env_key: str, org_key: str, default: bool = False) -> bool:
     env_raw = (os.environ.get(env_key) or "").strip().lower()
     if env_raw in {"1", "true", "yes", "on"}:
@@ -511,20 +532,26 @@ def _resolve_bool_flag(self, env_key: str, org_key: str, default: bool = False) 
             return value.strip().lower() in {"1", "true", "yes", "on"}
     return default
 
+
 def _is_sandbox_disabled(self) -> bool:
     return self._resolve_bool_flag("ORKET_DISABLE_SANDBOX", "disable_sandbox")
+
 
 def _is_scaffolder_disabled(self) -> bool:
     return self._resolve_bool_flag("ORKET_DISABLE_SCAFFOLDER", "disable_scaffolder")
 
+
 def _is_dependency_manager_disabled(self) -> bool:
     return self._resolve_bool_flag("ORKET_DISABLE_DEPENDENCY_MANAGER", "disable_dependency_manager")
+
 
 def _is_runtime_verifier_disabled(self) -> bool:
     return self._resolve_bool_flag("ORKET_DISABLE_RUNTIME_VERIFIER", "disable_runtime_verifier")
 
+
 def _is_deployment_planner_disabled(self) -> bool:
     return self._resolve_bool_flag("ORKET_DISABLE_DEPLOYMENT_PLANNER", "disable_deployment_planner")
+
 
 def _resolve_prompt_resolver_mode(self) -> str:
     env_raw = (os.environ.get("ORKET_PROMPT_RESOLVER_MODE") or "").strip().lower()
@@ -536,6 +563,7 @@ def _resolve_prompt_resolver_mode(self) -> str:
             return value
     return "compiler"
 
+
 def _resolve_prompt_selection_policy(self) -> str:
     env_raw = (os.environ.get("ORKET_PROMPT_SELECTION_POLICY") or "").strip().lower()
     if env_raw in {"stable", "canary", "exact"}:
@@ -545,6 +573,7 @@ def _resolve_prompt_selection_policy(self) -> str:
         if value in {"stable", "canary", "exact"}:
             return value
     return "stable"
+
 
 def _resolve_prompt_selection_strict(self) -> bool:
     env_raw = (os.environ.get("ORKET_PROMPT_SELECTION_STRICT") or "").strip().lower()
@@ -564,6 +593,7 @@ def _resolve_prompt_selection_strict(self) -> bool:
                 return False
     return True
 
+
 def _resolve_prompt_version_exact(self) -> str:
     env_raw = (os.environ.get("ORKET_PROMPT_VERSION_EXACT") or "").strip()
     if env_raw:
@@ -571,6 +601,7 @@ def _resolve_prompt_version_exact(self) -> str:
     if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
         return str(self.org.process_rules.get("prompt_version_exact", "")).strip()
     return ""
+
 
 def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
     defaults: Dict[str, int | None] = {
@@ -597,14 +628,13 @@ def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
             resolved[key] = None
     return resolved
 
+
 def _history_context(self, seat_name: str | None = None) -> List[Dict[str, str]]:
-    history_rows = self.transcript[-self.context_window:]
+    history_rows = self.transcript[-self.context_window :]
     normalized_seat = str(seat_name or "").strip().lower()
     if normalized_seat:
         history_rows = [
-            row
-            for row in history_rows
-            if str(getattr(row, "role", "") or "").strip().lower() == normalized_seat
+            row for row in history_rows if str(getattr(row, "role", "") or "").strip().lower() == normalized_seat
         ]
     return [
         {
@@ -614,17 +644,19 @@ def _history_context(self, seat_name: str | None = None) -> List[Dict[str, str]]
         for row in history_rows
     ]
 
+
 async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
     """
     Runs empirical verification for a specific issue.
     """
-    from orket.domain.verification import VerificationResult, VerificationEngine
+    from orket.domain.verification import VerificationEngine
     from orket.domain.sandbox import SandboxStatus
 
     # 1. Load the latest IssueConfig from DB
     issue_data = await self.async_cards.get_by_id(issue_id)
     if not issue_data:
         from orket.exceptions import CardNotFound
+
         raise CardNotFound(f"Cannot verify non-existent issue {issue_id}")
 
     if hasattr(issue_data, "model_dump"):
@@ -662,9 +694,11 @@ async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
     await self.async_cards.save(issue.model_dump())
     return result
 
+
 async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
     """Helper to trigger sandbox deployment with per-epic locking."""
     from orket.domain.sandbox import TechStack, SandboxStatus
+
     rock_id = epic.parent_id or epic.id
     if rock_id in self._sandbox_failed_rocks:
         return
@@ -686,7 +720,7 @@ async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
                 rock_id=rock_id,
                 project_name=epic.name,
                 tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-                workspace_path=str(self.workspace)
+                workspace_path=str(self.workspace),
             )
         except (RuntimeError, ValueError, OSError) as e:
             self._sandbox_failed_rocks.add(rock_id)
@@ -695,13 +729,14 @@ async def _trigger_sandbox(self, epic: EpicConfig, run_id: str | None = None):
                 deploy_failed["run_id"] = run_id
             log_event("sandbox_deploy_failed", deploy_failed, self.workspace)
 
+
 async def execute_epic(
-    self, 
-    active_build: str, 
-    run_id: str, 
-    epic: EpicConfig, 
-    team: TeamConfig, 
-    env: EnvironmentConfig, 
+    self,
+    active_build: str,
+    run_id: str,
+    epic: EpicConfig,
+    team: TeamConfig,
+    env: EnvironmentConfig,
     target_issue_id: str = None,
     resume_mode: bool = False,
 ):
@@ -709,7 +744,6 @@ async def execute_epic(
     Main execution loop for an Epic.
     Executes independent issues in parallel using a TAG-based DAG.
     """
-    from orket.orchestration.models import ModelSelector
     small_policy = self._resolve_small_project_team_policy(epic, team)
     if (
         small_policy["active"]
@@ -893,6 +927,7 @@ async def execute_epic(
     executor = TurnExecutor(StateMachine(), tool_gate, self.workspace)
 
     from orket.policy import create_session_policy
+
     policy = create_session_policy(str(self.workspace), epic.references)
     toolbox = ToolBox(
         policy,
@@ -909,7 +944,11 @@ async def execute_epic(
     concurrency_limit = self.loop_policy_node.concurrency_limit(self.org)
     semaphore = asyncio.Semaphore(concurrency_limit)
 
-    log_event("orchestrator_hyper_loop_start", {"epic": epic.name, "run_id": run_id, "concurrency": concurrency_limit}, self.workspace)
+    log_event(
+        "orchestrator_hyper_loop_start",
+        {"epic": epic.name, "run_id": run_id, "concurrency": concurrency_limit},
+        self.workspace,
+    )
 
     iteration_count = 0
     max_iterations = self.loop_policy_node.max_iterations(self.org)
@@ -952,9 +991,7 @@ async def execute_epic(
                 {
                     "id": getattr(item, "id", "unknown"),
                     "status": (
-                        getattr(item.status, "value", str(item.status))
-                        if hasattr(item, "status")
-                        else "unknown"
+                        getattr(item.status, "value", str(item.status)) if hasattr(item, "status") else "unknown"
                     ),
                 }
                 for item in backlog
@@ -983,8 +1020,16 @@ async def execute_epic(
         async def semaphore_wrapper(issue_data):
             async with semaphore:
                 return await self._execute_issue_turn(
-                    issue_data, epic, team, env, run_id, active_build, 
-                    prompt_strategy_node, executor, toolbox, resume_mode=resume_mode
+                    issue_data,
+                    epic,
+                    team,
+                    env,
+                    run_id,
+                    active_build,
+                    prompt_strategy_node,
+                    executor,
+                    toolbox,
+                    resume_mode=resume_mode,
                 )
 
         await asyncio.gather(*(semaphore_wrapper(c) for c in candidates))
@@ -998,6 +1043,7 @@ async def execute_epic(
             should_raise = not self.loop_policy_node.is_backlog_done(final_backlog)
         if should_raise:
             raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
+
 
 async def _propagate_dependency_blocks(self, backlog: List[Any], run_id: str) -> int:
     blocker_statuses = {CardStatus.BLOCKED, CardStatus.CANCELED, CardStatus.GUARD_REJECTED}
@@ -1029,6 +1075,7 @@ async def _propagate_dependency_blocks(self, backlog: List[Any], run_id: str) ->
             self.workspace,
         )
     return len(propagated)
+
 
 async def _maybe_schedule_team_replan(
     self,
@@ -1126,13 +1173,14 @@ async def _maybe_schedule_team_replan(
     )
     return True
 
+
 async def _execute_issue_turn(
-    self, 
-    issue_data: Any, 
-    epic: EpicConfig, 
-    team: TeamConfig, 
-    env: EnvironmentConfig, 
-    run_id: str, 
+    self,
+    issue_data: Any,
+    epic: EpicConfig,
+    team: TeamConfig,
+    env: EnvironmentConfig,
+    run_id: str,
     active_build: str,
     prompt_strategy_node: Any,
     executor: TurnExecutor,
@@ -1216,10 +1264,7 @@ async def _execute_issue_turn(
         if not runtime_result.ok:
             if guard_decision.action == "retry":
                 issue.retry_count = guard_decision.next_retry_count
-                issue.note = (
-                    "runtime_guard_retry_scheduled: "
-                    + " | ".join(runtime_result.errors[:1])
-                )
+                issue.note = "runtime_guard_retry_scheduled: " + " | ".join(runtime_result.errors[:1])
                 await self._request_issue_transition(
                     issue=issue,
                     target_status=CardStatus.READY,
@@ -1248,9 +1293,8 @@ async def _execute_issue_turn(
                     )
                 )
             else:
-                issue.note = (
-                    "runtime_guard_terminal_failure: "
-                    + (guard_decision.terminal_reason.code if guard_decision.terminal_reason else "unknown")
+                issue.note = "runtime_guard_terminal_failure: " + (
+                    guard_decision.terminal_reason.code if guard_decision.terminal_reason else "unknown"
                 )
                 await self._request_issue_transition(
                     issue=issue,
@@ -1284,7 +1328,9 @@ async def _execute_issue_turn(
     # RUN EMPIRICAL VERIFICATION (FIT) for review turns
     if is_review_turn:
         verification_result = await self.verify_issue(issue.id, run_id=run_id)
-        v_msg = f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
+        v_msg = (
+            f"EMPIRICAL VERIFICATION RESULT: {verification_result.passed}/{verification_result.total_scenarios} Passed."
+        )
         self.notes.add(Note(from_role="system", content=v_msg, step_index=len(self.transcript)))
 
     # Select Seat via router decision node
@@ -1411,18 +1457,8 @@ async def _execute_issue_turn(
         "context_profile": "default",
     }
     if prompt_mode == "resolver":
-        role_rule_ids = list(
-            (
-                getattr(role_config, "prompt_metadata", {}) or {}
-            ).get("owned_rule_ids", [])
-            or []
-        )
-        dialect_rule_ids = list(
-            (
-                getattr(dialect, "prompt_metadata", {}) or {}
-            ).get("owned_rule_ids", [])
-            or []
-        )
+        role_rule_ids = list((getattr(role_config, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
+        dialect_rule_ids = list((getattr(dialect, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
         runtime_guard_rule_ids: List[str] = resolve_runtime_guard_rule_ids(None)
         guard_layers: List[str] = ["hallucination"]
         if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
@@ -1466,6 +1502,7 @@ async def _execute_issue_turn(
         system_desc += f"\n\nPROJECT CONTEXT (PAST DECISIONS):\n{memory_context}"
 
     import hashlib
+
     prompt_metadata["prompt_checksum"] = hashlib.sha256(system_desc.encode("utf-8")).hexdigest()[:16]
 
     context = self._build_turn_context(
@@ -1621,6 +1658,7 @@ async def _execute_issue_turn(
     finally:
         await _close_provider_transport(provider)
 
+
 def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> Dict[str, Any]:
     validate_fn = getattr(self.loop_policy_node, "validate_guard_rejection_payload", None)
     if callable(validate_fn):
@@ -1636,6 +1674,7 @@ def _validate_guard_rejection_payload(self, payload: GuardReviewPayload) -> Dict
     if not actions:
         return {"valid": False, "reason": "missing_remediation_actions"}
     return {"valid": True, "reason": None}
+
 
 async def _create_pending_gate_request(
     self,
@@ -1672,6 +1711,7 @@ async def _create_pending_gate_request(
         payload=payload,
     )
 
+
 async def _create_pending_tool_approval_request(
     self,
     *,
@@ -1695,6 +1735,7 @@ async def _create_pending_tool_approval_request(
             "issue_status": str(issue.status.value if hasattr(issue.status, "value") else issue.status),
         },
     )
+
 
 def _build_turn_context(
     self,
@@ -1834,9 +1875,7 @@ def _build_turn_context(
     scope_limits = self._resolve_verification_scope_limits()
     architecture_patterns = allowed_architecture_patterns()
     process_rules = (
-        self.org.process_rules
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
-        else {}
+        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
     )
     allowed_tool_rings = [
         str(token).strip().lower()
@@ -1849,9 +1888,7 @@ def _build_turn_context(
     raw_active_capabilities = getattr(self, "active_capabilities_allowed", None)
     if isinstance(raw_active_capabilities, list) and raw_active_capabilities:
         allowed_capability_profiles = [
-            str(token).strip().lower()
-            for token in raw_active_capabilities
-            if str(token).strip()
+            str(token).strip().lower() for token in raw_active_capabilities if str(token).strip()
         ]
     else:
         allowed_capability_profiles = [
@@ -1862,11 +1899,15 @@ def _build_turn_context(
     if not allowed_capability_profiles:
         allowed_capability_profiles = ["workspace"]
 
-    run_determinism_class = str(
-        getattr(self, "active_run_determinism_class", None)
-        or process_rules.get("run_determinism_class")
-        or "workspace"
-    ).strip().lower()
+    run_determinism_class = (
+        str(
+            getattr(self, "active_run_determinism_class", None)
+            or process_rules.get("run_determinism_class")
+            or "workspace"
+        )
+        .strip()
+        .lower()
+    )
     if run_determinism_class not in {"pure", "workspace", "external"}:
         run_determinism_class = "workspace"
     raw_compatibility_mappings = getattr(self, "active_compatibility_mappings", None)
@@ -1882,7 +1923,9 @@ def _build_turn_context(
     raw_max_tool_execution_time = process_rules.get("skill_max_execution_time")
     raw_max_tool_memory = process_rules.get("skill_max_memory")
     try:
-        max_tool_execution_time = float(raw_max_tool_execution_time) if raw_max_tool_execution_time is not None else None
+        max_tool_execution_time = (
+            float(raw_max_tool_execution_time) if raw_max_tool_execution_time is not None else None
+        )
     except (TypeError, ValueError):
         max_tool_execution_time = None
     try:
@@ -1890,9 +1933,7 @@ def _build_turn_context(
     except (TypeError, ValueError):
         max_tool_memory = None
     resolved_skill_tool_bindings = {
-        str(key).strip(): dict(value or {})
-        for key, value in (skill_tool_bindings or {}).items()
-        if str(key).strip()
+        str(key).strip(): dict(value or {}) for key, value in (skill_tool_bindings or {}).items() if str(key).strip()
     }
     profile_versions = sorted(
         {
@@ -1921,9 +1962,13 @@ def _build_turn_context(
     if isinstance(prompt_budget_require_backend_tokenizer_raw, bool):
         prompt_budget_require_backend_tokenizer = prompt_budget_require_backend_tokenizer_raw
     elif isinstance(prompt_budget_require_backend_tokenizer_raw, str):
-        prompt_budget_require_backend_tokenizer = (
-            prompt_budget_require_backend_tokenizer_raw.strip().lower() in {"1", "true", "yes", "on", "enabled"}
-        )
+        prompt_budget_require_backend_tokenizer = prompt_budget_require_backend_tokenizer_raw.strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+            "enabled",
+        }
     prompt_budget_policy_path = (
         str(process_rules.get("prompt_budget_policy_path") or "core/policies/prompt_budget.yaml").strip()
         or "core/policies/prompt_budget.yaml"
@@ -2018,6 +2063,7 @@ def _build_turn_context(
         "prompt_budget_policy_path": prompt_budget_policy_path,
     }
 
+
 async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:
     depends_on = list(issue.depends_on or [])
     dependency_statuses: Dict[str, str] = {}
@@ -2046,6 +2092,7 @@ async def _build_dependency_context(self, issue: IssueConfig) -> Dict[str, Any]:
         "dependency_statuses": dependency_statuses,
         "unresolved_dependencies": unresolved_dependencies,
     }
+
 
 def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
     blob = content or ""
@@ -2086,6 +2133,7 @@ def _extract_guard_review_payload(self, content: str) -> GuardReviewPayload:
         remediation_actions=[],
     )
 
+
 def _resolve_guard_event(self, status: Any) -> Optional[str]:
     if status == CardStatus.DONE:
         return "guard_approved"
@@ -2094,6 +2142,7 @@ def _resolve_guard_event(self, status: Any) -> Optional[str]:
     if status in {CardStatus.IN_PROGRESS, CardStatus.GUARD_REQUESTED_CHANGES, CardStatus.READY_FOR_TESTING}:
         return "guard_requested_changes"
     return None
+
 
 async def _dispatch_turn(
     self,
@@ -2114,19 +2163,20 @@ async def _dispatch_turn(
         system_prompt=system_prompt,
     )
 
-async def _save_checkpoint(self, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str):
+
+async def _save_checkpoint(
+    self, run_id: str, epic: EpicConfig, team: TeamConfig, env: EnvironmentConfig, active_build: str
+):
     snapshot_data = {
         "epic": epic.model_dump(),
         "team": team.model_dump(),
         "env": env.model_dump(),
         "build_id": active_build,
-        "timestamp": datetime.now(UTC).isoformat()
+        "timestamp": datetime.now(UTC).isoformat(),
     }
-    legacy_transcript = [
-        {"role": t.role, "issue": t.issue_id, "content": t.content}
-        for t in self.transcript
-    ]
+    legacy_transcript = [{"role": t.role, "issue": t.issue_id, "content": t.content} for t in self.transcript]
     await self.snapshots.record(run_id, snapshot_data, legacy_transcript)
+
 
 async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, roles: List[str]):
     from orket.domain.failure_reporter import FailureReporter
@@ -2137,7 +2187,7 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
         card_id=issue.id,
         violation=result.error or "Unknown failure",
         transcript=self.transcript,
-        roles=roles
+        roles=roles,
     )
 
     eval_decision = self.evaluator_node.evaluate_failure(issue, result)
@@ -2164,12 +2214,11 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
     if action == "catastrophic":
         event_name = self.evaluator_node.failure_event_name(action)
         if event_name:
-            log_event(event_name, {
-                "run_id": run_id,
-                "issue_id": issue.id,
-                "retry_count": issue.retry_count,
-                "error": result.error
-            }, self.workspace)
+            log_event(
+                event_name,
+                {"run_id": run_id, "issue_id": issue.id, "retry_count": issue.retry_count, "error": result.error},
+                self.workspace,
+            )
         failure_status = self.evaluator_node.status_for_failure_action(action)
         await self._request_issue_transition(
             issue=issue,
@@ -2182,6 +2231,7 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
 
         # Catastrophic failure shuts down the session
         from orket.state import runtime_state
+
         if self.evaluator_node.should_cancel_session(action):
             task = await runtime_state.get_task(run_id)
             if task:
@@ -2189,9 +2239,7 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
                 if asyncio.iscoroutine(cancel_result):
                     await cancel_result
 
-        raise failure_exception_class(
-            self.evaluator_node.catastrophic_failure_message(issue.id, issue.max_retries)
-        )
+        raise failure_exception_class(self.evaluator_node.catastrophic_failure_message(issue.id, issue.max_retries))
 
     if action != "retry":
         raise failure_exception_class(self.evaluator_node.unexpected_failure_action_message(action, issue.id))
@@ -2199,13 +2247,17 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
     # Log retry and reset to READY
     event_name = self.evaluator_node.failure_event_name(action)
     if event_name:
-        log_event(event_name, {
-            "run_id": run_id,
-            "issue_id": issue.id,
-            "retry_count": issue.retry_count,
-            "max_retries": issue.max_retries,
-            "error": result.error
-        }, self.workspace)
+        log_event(
+            event_name,
+            {
+                "run_id": run_id,
+                "issue_id": issue.id,
+                "retry_count": issue.retry_count,
+                "max_retries": issue.max_retries,
+                "error": result.error,
+            },
+            self.workspace,
+        )
 
     await self._request_issue_transition(
         issue=issue,
@@ -2230,11 +2282,13 @@ async def _handle_failure(self, issue: IssueConfig, result: Any, run_id: str, ro
         )
     )
 
+
 def _is_issue_idesign_enabled(self, issue: IssueConfig) -> bool:
     params = getattr(issue, "params", None)
     if not isinstance(params, dict):
         return False
     return bool(params.get("idesign_enabled", False))
+
 
 def _normalize_governance_violation_message(self, message: str | None) -> str:
     normalized = str(message or "")

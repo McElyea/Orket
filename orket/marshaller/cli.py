@@ -60,7 +60,9 @@ async def list_marshaller_runs(workspace_root: Path, *, limit: int = 20) -> list
     runs_root = _runs_root(workspace_root)
     if not await asyncio.to_thread(runs_root.exists):
         return []
-    run_dirs = await asyncio.to_thread(lambda: sorted([p for p in runs_root.iterdir() if p.is_dir()], key=lambda p: p.name, reverse=True))
+    run_dirs = await asyncio.to_thread(
+        lambda: sorted([p for p in runs_root.iterdir() if p.is_dir()], key=lambda p: p.name, reverse=True)
+    )
     rows: list[dict[str, Any]] = []
     for run_dir in run_dirs[: max(1, int(limit))]:
         summary_path = run_dir / "summary.json"
@@ -90,9 +92,13 @@ async def inspect_marshaller_attempt(
     selected_attempt = await _resolve_attempt_index(run_path, attempt_index)
     attempt_dir = run_path / "attempts" / str(selected_attempt)
     checks_dir = attempt_dir / "checks"
-    check_files = await asyncio.to_thread(
-        lambda: sorted([p for p in checks_dir.glob("*.json") if p.is_file()], key=lambda p: p.name)
-    ) if await asyncio.to_thread(checks_dir.exists) else []
+    check_files = (
+        await asyncio.to_thread(
+            lambda: sorted([p for p in checks_dir.glob("*.json") if p.is_file()], key=lambda p: p.name)
+        )
+        if await asyncio.to_thread(checks_dir.exists)
+        else []
+    )
     checks = {path.stem: await _read_json(path) for path in check_files}
     return {
         "run_id": run_id,
@@ -131,7 +137,11 @@ async def _resolve_attempt_index(run_path: Path, attempt_index: int | None) -> i
         if isinstance(accepted, int) and accepted >= 1:
             return accepted
     attempts_root = run_path / "attempts"
-    names = await asyncio.to_thread(lambda: [p.name for p in attempts_root.iterdir() if p.is_dir()]) if await asyncio.to_thread(attempts_root.exists) else []
+    names = (
+        await asyncio.to_thread(lambda: [p.name for p in attempts_root.iterdir() if p.is_dir()])
+        if await asyncio.to_thread(attempts_root.exists)
+        else []
+    )
     numeric = sorted(int(name) for name in names if name.isdigit())
     if not numeric:
         raise ValueError(f"No attempts found under {attempts_root}")
@@ -146,9 +156,4 @@ def _resolve_actor_id(actor_id: str | None) -> str:
     value = (actor_id or "").strip()
     if value:
         return value
-    return (
-        os.environ.get("GIT_AUTHOR_NAME")
-        or os.environ.get("USERNAME")
-        or os.environ.get("USER")
-        or "unknown"
-    )
+    return os.environ.get("GIT_AUTHOR_NAME") or os.environ.get("USERNAME") or os.environ.get("USER") or "unknown"

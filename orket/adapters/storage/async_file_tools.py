@@ -4,9 +4,10 @@ Async File Tools - The Reconstruction
 Provides non-blocking file I/O operations using aiofiles.
 Enforces security boundaries using Path.is_relative_to().
 
-This replaces the blocking Path.write_text and Path.read_text 
+This replaces the blocking Path.write_text and Path.read_text
 calls in the agent tools.
 """
+
 from __future__ import annotations
 import asyncio
 import aiofiles
@@ -16,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from .async_executor_service import run_coroutine_blocking
+
 
 class AsyncFileTools:
     """
@@ -63,9 +65,7 @@ class AsyncFileTools:
             # We enforce workspace boundaries for writes.
             # Specialized governance (like AGENT_OUTPUT_DIR) is handled by ToolGate.
             if not is_in_workspace:
-                raise PermissionError(
-                    f"Write access denied: {path_str} is outside the workspace."
-                )
+                raise PermissionError(f"Write access denied: {path_str} is outside the workspace.")
 
         return resolved
 
@@ -77,7 +77,7 @@ class AsyncFileTools:
         if not path.exists():
             raise FileNotFoundError(f"File not found: {path_str}")
 
-        async with aiofiles.open(path, mode='r', encoding='utf-8') as f:
+        async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
             return await f.read()
 
     async def write_file(self, path_str: str, content: str | dict[str, Any]) -> str:
@@ -90,9 +90,9 @@ class AsyncFileTools:
         if not isinstance(content, str):
             content = json.dumps(content, indent=2)
 
-        async with aiofiles.open(path, mode='w', encoding='utf-8') as f:
+        async with aiofiles.open(path, mode="w", encoding="utf-8") as f:
             await f.write(content)
-        
+
         return str(path)
 
     async def list_directory(self, path_str: str = ".") -> list[str]:

@@ -82,7 +82,9 @@ def validate_evidence_package_generator_contract(payload: dict[str, Any] | None 
     if output_schema_version != "runtime_truth_evidence_package.v1":
         raise ValueError("E_EVIDENCE_PACKAGE_GENERATOR_CONTRACT_OUTPUT_SCHEMA_VERSION_INVALID")
 
-    metadata_fields = {str(token).strip() for token in contract.get("required_metadata_fields", []) if str(token).strip()}
+    metadata_fields = {
+        str(token).strip() for token in contract.get("required_metadata_fields", []) if str(token).strip()
+    }
     if metadata_fields != _EXPECTED_METADATA_FIELDS:
         raise ValueError("E_EVIDENCE_PACKAGE_GENERATOR_CONTRACT_METADATA_FIELDS_MISMATCH")
 
@@ -94,9 +96,7 @@ def validate_evidence_package_generator_contract(payload: dict[str, Any] | None 
     if not isinstance(decision_record_contract, dict):
         raise ValueError("E_EVIDENCE_PACKAGE_GENERATOR_CONTRACT_DECISION_RECORD_SCHEMA")
     decision_fields = {
-        str(token).strip()
-        for token in decision_record_contract.get("required_fields", [])
-        if str(token).strip()
+        str(token).strip() for token in decision_record_contract.get("required_fields", []) if str(token).strip()
     }
     if decision_fields != _EXPECTED_DECISION_FIELDS:
         raise ValueError("E_EVIDENCE_PACKAGE_GENERATOR_CONTRACT_DECISION_FIELDS_MISMATCH")

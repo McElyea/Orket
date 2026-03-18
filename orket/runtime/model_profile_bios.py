@@ -54,9 +54,7 @@ def validate_model_profile_bios(payload: dict[str, Any] | None = None) -> tuple[
 
     truth_rows = [row for row in provider_truth_table_snapshot().get("providers", []) if isinstance(row, dict)]
     truth_providers = {
-        str(row.get("provider") or "").strip().lower()
-        for row in truth_rows
-        if str(row.get("provider") or "").strip()
+        str(row.get("provider") or "").strip().lower() for row in truth_rows if str(row.get("provider") or "").strip()
     }
     allowed_strictness = {"low", "medium", "high"}
     profile_ids: list[str] = []

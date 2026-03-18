@@ -173,3 +173,42 @@ async def test_async_dual_write_run_ledger_supports_protocol_primary_reads(tmp_p
     assert run is not None
     assert run["session_id"] == "sess-primary"
     assert run["status"] == "incomplete"
+
+
+@pytest.mark.asyncio
+async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupting(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Layer: unit. Verifies telemetry sink failures stay non-fatal and emit an explicit warning signal."""
+    sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
+    protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
+    logged: list[dict[str, Any]] = []
+
+    def _capture_log(event: str, data: dict[str, Any] | None = None, **_: Any) -> None:
+        logged.append({"event": event, "data": dict(data or {})})
+
+    def _broken_sink(_payload: dict[str, Any]) -> None:
+        raise RuntimeError("forced telemetry sink failure")
+
+    monkeypatch.setattr("orket.adapters.storage.async_dual_write_run_ledger.log_event", _capture_log)
+    dual_repo = AsyncDualWriteRunLedgerRepository(
+        sqlite_repo=sqlite_repo,
+        protocol_repo=protocol_repo,
+        telemetry_sink=_broken_sink,
+    )
+
+    await dual_repo.start_run(
+        session_id="sess-sink",
+        run_type="epic",
+        run_name="Sink Failure",
+        department="core",
+        build_id="build-1",
+    )
+
+    assert dual_repo.sink_failure_count >= 1
+    assert any(
+        row["event"] == "telemetry_sink_error"
+        and row["data"].get("error_type") == "RuntimeError"
+        for row in logged
+    )

@@ -19,7 +19,9 @@ def ui_lane_security_boundary_test_contract_snapshot() -> dict[str, Any]:
         "checks": [
             {
                 "check_id": "explorer_path_traversal_blocked",
-                "surface": "orket.decision_nodes.api_runtime_strategy_node.DefaultApiRuntimeStrategyNode.resolve_explorer_path",
+                "surface": (
+                    "orket.decision_nodes.api_runtime_strategy_node.DefaultApiRuntimeStrategyNode.resolve_explorer_path"
+                ),
                 "expected_behavior": "path traversal requests are rejected with None target",
             },
             {

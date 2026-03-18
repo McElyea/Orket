@@ -57,13 +57,6 @@ class FilesystemPolicy:
 
 def create_session_policy(workspace: str, references: list[str] = None) -> FilesystemPolicy:
     """Creates a fresh, isolated policy for a single orchestration session."""
-    spaces = {
-        "work_domain": str(Path.cwd()),
-        "workspaces": [workspace],
-        "reference_spaces": references or []
-    }
-    policy_rules = {
-        "read_scope": ["workspace", "reference", "domain"],
-        "write_scope": ["workspace"]
-    }
+    spaces = {"work_domain": str(Path.cwd()), "workspaces": [workspace], "reference_spaces": references or []}
+    policy_rules = {"read_scope": ["workspace", "reference", "domain"], "write_scope": ["workspace"]}
     return FilesystemPolicy(spaces=spaces, policy=policy_rules)

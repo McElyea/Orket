@@ -96,7 +96,7 @@ class CardArchiveOps:
         query = f"""
             SELECT id
             FROM issues
-            WHERE {' OR '.join(clauses)}
+            WHERE {" OR ".join(clauses)}
             ORDER BY created_at DESC
             LIMIT ?
         """

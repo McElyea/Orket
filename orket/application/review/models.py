@@ -18,7 +18,9 @@ def _normalize_newlines(value: str) -> str:
 
 def _normalize_for_canonical_json(value: Any) -> Any:
     if isinstance(value, dict):
-        return {str(k): _normalize_for_canonical_json(v) for k, v in sorted(value.items(), key=lambda item: str(item[0]))}
+        return {
+            str(k): _normalize_for_canonical_json(v) for k, v in sorted(value.items(), key=lambda item: str(item[0]))
+        }
     if isinstance(value, list):
         return [_normalize_for_canonical_json(v) for v in value]
     if isinstance(value, str):
@@ -136,7 +138,9 @@ class ReviewSnapshot:
             "head_ref": self.head_ref,
             "bounds": self.bounds.to_dict(),
             "truncation": self.truncation.to_dict(),
-            "changed_files": [item.to_dict() for item in sorted(self.changed_files, key=lambda row: (row.path, row.status))],
+            "changed_files": [
+                item.to_dict() for item in sorted(self.changed_files, key=lambda row: (row.path, row.status))
+            ],
             "diff_unified": self.diff_unified,
             "context_blobs": [blob.to_dict() for blob in self.context_blobs],
             "metadata": dict(self.metadata),
@@ -156,7 +160,9 @@ class ReviewSnapshot:
             "head_ref": self.head_ref,
             "bounds": self.bounds.to_dict(),
             "truncation": self.truncation.to_dict(),
-            "changed_files": [item.to_dict() for item in sorted(self.changed_files, key=lambda row: (row.path, row.status))],
+            "changed_files": [
+                item.to_dict() for item in sorted(self.changed_files, key=lambda row: (row.path, row.status))
+            ],
             "diff_unified": self.diff_unified,
             "context_blobs": [blob.to_dict() for blob in self.context_blobs],
             "metadata": dict(self.metadata),

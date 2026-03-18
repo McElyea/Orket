@@ -3,4 +3,3 @@
 from orket.adapters.vcs.webhook_db import WebhookDatabase
 
 __all__ = ["WebhookDatabase"]
-

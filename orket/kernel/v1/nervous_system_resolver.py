@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any
 
@@ -17,6 +17,7 @@ KNOWN_TOOL_PROFILES = {
 def resolve_tool_policy_flags(payload: dict[str, Any]) -> dict[str, Any]:
     tool_name = str(payload.get("tool_name") or "").strip()
     args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
+    inline_profile = payload.get("tool_profile") if isinstance(payload.get("tool_profile"), dict) else {}
 
     resolved = {
         "policy_forbidden": False,
@@ -26,6 +27,15 @@ def resolve_tool_policy_flags(payload: dict[str, Any]) -> dict[str, Any]:
         "approval_required_exfil": False,
         "approval_required_credentialed": False,
     }
+
+    if not tool_name:
+        if bool(inline_profile.get("destructive")):
+            resolved["approval_required_destructive"] = True
+        if bool(inline_profile.get("credentialed")):
+            resolved["approval_required_credentialed"] = True
+        if bool(inline_profile.get("exfil")) or is_exfil_payload(payload):
+            resolved["approval_required_exfil"] = True
+        return resolved
 
     profile = KNOWN_TOOL_PROFILES.get(tool_name)
     if profile is None:

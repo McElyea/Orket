@@ -49,7 +49,7 @@ def _extract_sections(text: str, required_headers: List[str]) -> Tuple[Dict[str,
         if len(hits) > 1:
             return {}, _err("DUPLICATE_HEADER", f"Duplicate header detected: {header}")
 
-    found_order = [header for header in required_headers if positions[header]]
+    [header for header in required_headers if positions[header]]
     missing = [header for header in required_headers if not positions[header]]
     if missing:
         return {}, _err("MISSING_HEADER", f"Missing required header(s): {', '.join(missing)}")
@@ -62,8 +62,7 @@ def _extract_sections(text: str, required_headers: List[str]) -> Tuple[Dict[str,
     if found_sequence != required_headers:
         return {}, _err(
             "HEADER_OUT_OF_ORDER",
-            "Required headers are out of order. "
-            f"expected={required_headers} found={found_sequence}",
+            f"Required headers are out of order. expected={required_headers} found={found_sequence}",
         )
 
     # Contract lock: no prose/prefix before the first required header.

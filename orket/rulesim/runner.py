@@ -115,7 +115,9 @@ def run_episode(
                 if _canonical_legal_actions(rulesystem, legal_actions) != _canonical_legal_actions(
                     rulesystem, legal_actions_second
                 ):
-                    raise RuleSystemContractError("RuleSystem.legal_actions is non-deterministic for same state snapshot")
+                    raise RuleSystemContractError(
+                        "RuleSystem.legal_actions is non-deterministic for same state snapshot"
+                    )
                 state_after_legal_2, _ = _state_canonical(rulesystem, state)
                 if state_before_turn != state_after_legal_2:
                     raise RuleSystemContractError("RuleSystem.legal_actions mutated input state")
@@ -176,7 +178,9 @@ def run_episode(
                 if state_snapshot_before_apply != state_after_apply_input:
                     raise RuleSystemContractError("RuleSystem.apply_action mutated input state in place")
                 if transition.next_state is state_input:
-                    raise RuleSystemContractError("RuleSystem.apply_action returned the input state object (in-place update)")
+                    raise RuleSystemContractError(
+                        "RuleSystem.apply_action returned the input state object (in-place update)"
+                    )
             state = transition.next_state
             if transition.skip_agent:
                 pending_skips.add(str(transition.skip_agent))

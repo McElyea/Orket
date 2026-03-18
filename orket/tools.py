@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
@@ -55,25 +55,39 @@ class ToolBox:
         self.academy = AcademyTools(self.root, self.refs)
         self.reforger = ReforgerTools(self.root, self.refs)
 
-    async def execute(self, tool_name: str, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def execute(
+        self,
+        tool_name: str,
+        args: Dict[str, Any],
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         tool_map = get_tool_map(self)
         if tool_name not in tool_map:
             return {"ok": False, "error": f"Unknown tool '{tool_name}'"}
 
         tool_fn = tool_map[tool_name]
-        return await self.runtime_executor.invoke(tool_fn, args, context=context)
+        resolved_context = dict(context or {})
+        return await self.runtime_executor.invoke(tool_fn, args, context=resolved_context)
 
-    def nominate_card(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        return self.governance.nominate_card(args, context=context)
+    def nominate_card(self, args: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        return self.governance.nominate_card(args, context=dict(context or {}))
 
-    async def report_credits(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        return await self.governance.report_credits(args, context=context)
+    async def report_credits(self, args: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        return await self.governance.report_credits(args, context=dict(context or {}))
 
-    def refinement_proposal(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        return self.governance.refinement_proposal(args, context=context)
+    def refinement_proposal(
+        self,
+        args: Dict[str, Any],
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        return self.governance.refinement_proposal(args, context=dict(context or {}))
 
-    async def request_excuse(self, args: Dict[str, Any], context: Dict[str, Any] = None) -> Dict[str, Any]:
-        return await self.governance.request_excuse(args, context=context)
+    async def request_excuse(
+        self,
+        args: Dict[str, Any],
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        return await self.governance.request_excuse(args, context=dict(context or {}))
 
 
 def get_tool_map(toolbox: ToolBox) -> Dict[str, Callable]:
@@ -91,4 +105,3 @@ __all__ = [
     "ToolBox",
     "get_tool_map",
 ]
-

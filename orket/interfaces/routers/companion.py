@@ -216,4 +216,3 @@ def _resolve_error_code(detail: str) -> str:
     if prefix.startswith("E_"):
         return prefix
     return "E_COMPANION_REQUEST_INVALID"
-

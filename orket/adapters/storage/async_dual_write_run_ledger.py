@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 from typing import Any, Awaitable, Callable, Optional, Protocol
 
+from orket.logging import log_event
 from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
 
@@ -76,6 +77,7 @@ class AsyncDualWriteRunLedgerRepository:
         self.telemetry_sink = telemetry_sink
         normalized_primary = str(primary_mode or "sqlite").strip().lower()
         self.primary_mode = "protocol" if normalized_primary == "protocol" else "sqlite"
+        self.sink_failure_count = 0
 
     async def start_run(
         self,
@@ -258,5 +260,19 @@ class AsyncDualWriteRunLedgerRepository:
             outcome = sink(payload)
             if inspect.isawaitable(outcome):
                 await outcome
-        except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
+        except (RuntimeError, ValueError, TypeError, OSError, AttributeError) as exc:
+            self.sink_failure_count += 1
+            # Telemetry sink failure must stay non-fatal but observable.
+            try:
+                log_event(
+                    "telemetry_sink_error",
+                    {
+                        "component": "run_ledger_dual_write",
+                        "error_type": type(exc).__name__,
+                        "error": str(exc),
+                    },
+                    role="system",
+                )
+            except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
+                pass
             return

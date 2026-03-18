@@ -40,14 +40,12 @@ class Scaffolder:
     }
     _DEFAULT_FORBIDDEN_EXTENSIONS: tuple[str, ...] = (".exe", ".dll", ".so", ".dylib")
     _DEFAULT_SCAN_ROOTS: tuple[str, ...] = ("agent_output",)
-    _API_VUE_DIRECTORIES: tuple[str, ...] = (
-        "agent_output/frontend/src",
-    )
+    _API_VUE_DIRECTORIES: tuple[str, ...] = ("agent_output/frontend/src",)
     _API_VUE_FILES: Dict[str, str] = {
         "agent_output/frontend/index.html": (
             "<!doctype html>\n"
-            "<html><head><meta charset=\"UTF-8\"><title>Orket Frontend</title></head>"
-            "<body><div id=\"app\"></div><script type=\"module\" src=\"./src/main.js\"></script></body></html>\n"
+            '<html><head><meta charset="UTF-8"><title>Orket Frontend</title></head>'
+            '<body><div id="app"></div><script type="module" src="./src/main.js"></script></body></html>\n'
         ),
         "agent_output/frontend/src/main.js": "console.log('orket frontend bootstrap');\n",
     }
@@ -87,9 +85,7 @@ class Scaffolder:
             scan_roots=spec.scan_roots,
         )
         if violations:
-            raise ScaffoldValidationError(
-                "Forbidden file types detected: " + ", ".join(sorted(violations))
-            )
+            raise ScaffoldValidationError("Forbidden file types detected: " + ", ".join(sorted(violations)))
 
         return {
             "created_directories": created_dirs,
@@ -120,15 +116,15 @@ class Scaffolder:
             rules.get("scaffolder_scan_roots"),
             self._DEFAULT_SCAN_ROOTS,
         )
-        profile = self.project_surface_profile or str(
-            rules.get("project_surface_profile", "unspecified")
-        ).strip().lower()
+        profile = (
+            self.project_surface_profile or str(rules.get("project_surface_profile", "unspecified")).strip().lower()
+        )
         if profile == "api_vue":
             required_directories.extend(self._API_VUE_DIRECTORIES)
             required_files = {**required_files, **self._API_VUE_FILES}
-        architecture_pattern = self.architecture_pattern or str(
-            rules.get("architecture_forced_pattern", "")
-        ).strip().lower()
+        architecture_pattern = (
+            self.architecture_pattern or str(rules.get("architecture_forced_pattern", "")).strip().lower()
+        )
         if architecture_pattern == "microservices":
             required_directories.extend(self._MICROSERVICES_DIRECTORIES)
             required_files = {**required_files, **self._MICROSERVICES_FILES}

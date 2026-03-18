@@ -140,7 +140,9 @@ def build_system_router(
         engine = engine_getter()
         role_filter = parse_roles_filter(roles)
         active_roles = role_filter or await asyncio.to_thread(discover_active_roles, project_root / "model")
-        selector = model_selector_factory(engine.org, load_user_preferences(), load_user_settings())
+        preferences = await asyncio.to_thread(load_user_preferences)
+        user_settings = await asyncio.to_thread(load_user_settings)
+        selector = model_selector_factory(engine.org, preferences, user_settings)
 
         items: list[dict[str, Any]] = []
         for role in active_roles:
@@ -215,7 +217,7 @@ def build_system_router(
     @router.get("/system/board")
     async def get_system_board(dept: str = "core"):
         api_runtime_node = api_runtime_node_getter()
-        return api_runtime_node.resolve_system_board(dept)
+        return await api_runtime_node.resolve_system_board_async(dept)
 
     @router.get("/system/preview-asset")
     async def preview_asset(path: str, issue_id: Optional[str] = None):

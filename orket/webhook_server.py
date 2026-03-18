@@ -4,6 +4,7 @@ FastAPI Webhook Server for Gitea Integration
 Receives webhook events from Gitea and routes them to appropriate handlers.
 Includes HMAC signature validation for security.
 """
+
 from __future__ import annotations
 import hmac
 import hashlib
@@ -17,6 +18,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, HTTPException, Header
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, ValidationError
 import uvicorn
 
 from orket import __version__
@@ -26,7 +28,7 @@ from orket.logging import log_event
 app = FastAPI(
     title="Orket Webhook Server",
     description="Handles webhooks from Gitea for PR review automation",
-    version=__version__
+    version=__version__,
 )
 
 WEBHOOK_SECRET: bytes | None = None
@@ -71,8 +73,7 @@ def _resolve_webhook_secret(required: bool = False) -> bytes | None:
     WEBHOOK_SECRET = None
     if required:
         raise RuntimeError(
-            "GITEA_WEBHOOK_SECRET environment variable is not set. "
-            "Configure it before starting the webhook server."
+            "GITEA_WEBHOOK_SECRET environment variable is not set. Configure it before starting the webhook server."
         )
     return None
 
@@ -81,7 +82,9 @@ def _is_truthy(value: str | None) -> bool:
     return (value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _validate_test_webhook_auth(x_api_key: str | None, x_webhook_test_token: str | None) -> tuple[bool, str | None, int]:
+def _validate_test_webhook_auth(
+    x_api_key: str | None, x_webhook_test_token: str | None
+) -> tuple[bool, str | None, int]:
     """
     Validate auth for /webhook/test.
     Priority:
@@ -153,11 +156,7 @@ def validate_signature(payload: bytes, signature: str) -> bool:
         )
         return False  # Reject if not configured
 
-    expected_signature = hmac.new(
-        secret,
-        payload,
-        hashlib.sha256
-    ).hexdigest()
+    expected_signature = hmac.new(secret, payload, hashlib.sha256).hexdigest()
 
     return hmac.compare_digest(signature, expected_signature)
 
@@ -165,11 +164,7 @@ def validate_signature(payload: bytes, signature: str) -> bool:
 @app.get("/")
 async def root():
     """Health check endpoint."""
-    return {
-        "service": "Orket Webhook Server",
-        "status": "running",
-        "version": __version__
-    }
+    return {"service": "Orket Webhook Server", "status": "running", "version": __version__}
 
 
 @app.get("/health")
@@ -177,8 +172,6 @@ async def health():
     """Kubernetes-style health check."""
     return {"status": "healthy"}
 
-
-from pydantic import BaseModel, Field, ValidationError
 
 class GiteaWebhookPayload(BaseModel):
     action: Optional[str] = None
@@ -194,12 +187,9 @@ class TestWebhookPayload(BaseModel):
     action: Optional[str] = None
     payload: Dict[str, Any] = Field(default_factory=dict)
 
+
 @app.post("/webhook/gitea")
-async def gitea_webhook(
-    request: Request,
-    x_gitea_event: str = Header(None),
-    x_gitea_signature: str = Header(None)
-):
+async def gitea_webhook(request: Request, x_gitea_event: str = Header(None), x_gitea_signature: str = Header(None)):
     """
     Main Gitea webhook endpoint.
     """
@@ -238,13 +228,17 @@ async def gitea_webhook(
         raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
 
     # Log webhook event
-    log_event("webhook", {
-        "message": f"Received Gitea webhook: {x_gitea_event}",
-        "level": "info",
-        "event": x_gitea_event,
-        "repo": payload.repository.get("full_name") if payload.repository else None,
-        "pr_number": payload.number,
-    }, workspace=Path.cwd())
+    log_event(
+        "webhook",
+        {
+            "message": f"Received Gitea webhook: {x_gitea_event}",
+            "level": "info",
+            "event": x_gitea_event,
+            "repo": payload.repository.get("full_name") if payload.repository else None,
+            "pr_number": payload.number,
+        },
+        workspace=Path.cwd(),
+    )
 
     # Route to handler
     try:
@@ -295,15 +289,14 @@ def start_server(host: str = "127.0.0.1", port: int = 8080):
         host: Host to bind to (default: 127.0.0.1 for local-only binding)
         port: Port to bind to (default: 8080)
     """
-    log_event("webhook_server", {"message": f"Starting webhook server on {host}:{port}", "level": "info"}, workspace=Path.cwd())
+    log_event(
+        "webhook_server",
+        {"message": f"Starting webhook server on {host}:{port}", "level": "info"},
+        workspace=Path.cwd(),
+    )
     create_webhook_app(require_config=True)
 
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
+    uvicorn.run(app, host=host, port=port, log_level="info")
 
 
 def create_webhook_app(require_config: bool = False) -> FastAPI:

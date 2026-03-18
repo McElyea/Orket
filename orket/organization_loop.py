@@ -1,12 +1,13 @@
-﻿import asyncio
+import asyncio
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.orket import ConfigLoader, ExecutionPipeline
-from orket.schema import CardStatus, RockConfig, EpicConfig, OrganizationConfig
+from orket.schema import EpicConfig, OrganizationConfig
 from orket.domain.critical_path import CriticalPathEngine
 from orket.logging import log_event
+
 
 class OrganizationLoop:
     def __init__(self, organization_path: Path = Path("config/organization.json")):
@@ -26,15 +27,15 @@ class OrganizationLoop:
         while self.running:
             # 1. Scan for next priority work based on Critical Path
             next_card = await asyncio.to_thread(self._find_next_critical_card)
-            
+
             if next_card:
                 log_event(
                     "organization_loop_execute_card",
                     {"card_id": next_card["id"], "department": next_card["dept"]},
                     workspace=Path("workspace/default"),
                 )
-                pipeline = ExecutionPipeline(Path("workspace/default"), next_card['dept'])
-                await pipeline.run_card(next_card['id'])
+                pipeline = ExecutionPipeline(Path("workspace/default"), next_card["dept"])
+                await pipeline.run_card(next_card["id"])
             else:
                 # Idle jitter
                 await asyncio.sleep(10)
@@ -43,7 +44,7 @@ class OrganizationLoop:
     def _find_next_critical_card(self) -> Optional[dict]:
         """Finds the most critical READY card across all departments."""
         candidates = []
-        
+
         for dept in self.org.departments:
             loader = ConfigLoader(Path("model"), dept)
             for epic_name in loader.list_assets("epics"):
@@ -51,17 +52,19 @@ class OrganizationLoop:
                     epic = loader.load_asset("epics", epic_name, EpicConfig)
                     # Use Engine to get sorted IDs
                     priority_ids = CriticalPathEngine.get_priority_queue(epic)
-                    
+
                     if priority_ids:
                         top_id = priority_ids[0]
                         # Fetch original issue for priority check
                         issue = next(i for i in epic.issues if i.id == top_id)
-                        candidates.append({
-                            "id": top_id,
-                            "weight": len(priority_ids), # Simplified global weight
-                            "priority": issue.priority,
-                            "dept": dept
-                        })
+                        candidates.append(
+                            {
+                                "id": top_id,
+                                "weight": len(priority_ids),  # Simplified global weight
+                                "priority": issue.priority,
+                                "dept": dept,
+                            }
+                        )
                 except (FileNotFoundError, ValueError, StopIteration) as e:
                     # Log skip for visibility but continue scan
                     log_event(
@@ -70,11 +73,12 @@ class OrganizationLoop:
                         workspace=Path("workspace/default"),
                     )
                     continue
-        
-        if not candidates: return None
-            
+
+        if not candidates:
+            return None
+
         # Sort by Weight (Length of remaining critical path) then Priority
         p_map = {"High": 0, "Medium": 1, "Low": 2}
         candidates.sort(key=lambda x: (-x["weight"], p_map.get(x["priority"], 3)))
-        
+
         return candidates[0]

@@ -138,7 +138,9 @@ def classify_trust_language_phrase(phrase: str, *, policy: dict[str, Any] | None
         if not isinstance(row, dict):
             continue
         claim = _normalize_phrase(str(row.get("claim") or "").replace("_", " "))
-        qualifiers = [_normalize_phrase(token) for token in row.get("required_qualifier_tokens", []) if str(token).strip()]
+        qualifiers = [
+            _normalize_phrase(token) for token in row.get("required_qualifier_tokens", []) if str(token).strip()
+        ]
         if claim and claim in normalized_phrase:
             if qualifiers and all(token in normalized_phrase for token in qualifiers):
                 return "qualified"

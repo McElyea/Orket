@@ -3,14 +3,16 @@ from typing import Dict, Any, Optional, List
 import json
 import os
 
-from orket.schema import OrganizationConfig, EpicConfig, RockConfig
+from orket.schema import OrganizationConfig
 from orket.settings import load_user_settings, load_user_preferences
+
 
 class ModelSelector:
     """
     Centralized engine for selecting models based on organization standards,
     user preferences, and per-asset overrides.
     """
+
     def __init__(
         self,
         organization: Optional[OrganizationConfig] = None,
@@ -24,11 +26,9 @@ class ModelSelector:
         self._compliance_score_cache_path: Optional[str] = None
         self._last_selection_decision: Dict[str, Any] = {}
 
-    def select(self, 
-               role: str, 
-               department: str = "core", 
-               override: Optional[str] = None, 
-               asset_config: Optional[Any] = None) -> str:
+    def select(
+        self, role: str, department: str = "core", override: Optional[str] = None, asset_config: Optional[Any] = None
+    ) -> str:
         """
         Determines the best model for a specific role using a strict precedence chain:
         1. CLI/API Override
@@ -38,7 +38,7 @@ class ModelSelector:
         5. Organizational Standards (organization.json)
         6. Hardcoded Fallbacks (The 'Safety Net')
         """
-        
+
         # 1. CLI/API Override (Highest priority)
         if override:
             self._last_selection_decision = {
@@ -178,11 +178,7 @@ class ModelSelector:
             return selected_model
 
         fallback_model = str(policy.get("fallback_model") or "").strip() or self._fallback_model_for_role(role)
-        blocked_models = {
-            str(item).strip()
-            for item in (policy.get("blocked_models") or [])
-            if str(item).strip()
-        }
+        blocked_models = {str(item).strip() for item in (policy.get("blocked_models") or []) if str(item).strip()}
         if selected_model in blocked_models and fallback_model:
             self._last_selection_decision = {
                 "role": role,
@@ -255,19 +251,26 @@ class ModelSelector:
     def get_dialect_name(self, model: str) -> str:
         """Maps a model name to its syntax dialect (e.g. qwen, llama, deepseek)."""
         m = model.lower()
-        if "qwen" in m: return "qwen"
-        if "llama" in m: return "llama3"
-        if "deepseek" in m: return "deepseek-r1"
-        if "phi" in m: return "phi"
+        if "qwen" in m:
+            return "qwen"
+        if "llama" in m:
+            return "llama3"
+        if "deepseek" in m:
+            return "deepseek-r1"
+        if "phi" in m:
+            return "phi"
         return "generic"
+
 
 class ModelRegistry:
     """
     Helper to list available models and their capabilities.
     """
+
     @staticmethod
     def get_installed_models() -> List[str]:
         import subprocess
+
         try:
             result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=True)
             lines = result.stdout.strip().splitlines()

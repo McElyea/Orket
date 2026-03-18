@@ -155,7 +155,8 @@ class SandboxLifecycleReconciliationService:
                 target_cleanup_state=record.cleanup_state,
                 terminal_reason=TerminalReason.LOST_RUNTIME,
                 cleanup_due_at=due,
-                action_required=record.terminal_reason is not TerminalReason.LOST_RUNTIME or record.cleanup_due_at != due,
+                action_required=record.terminal_reason is not TerminalReason.LOST_RUNTIME
+                or record.cleanup_due_at != due,
             )
         if classification.classification is ReconciliationClassification.TERMINAL_AWAITING_CLEANUP:
             reason = record.terminal_reason or TerminalReason.FAILED
@@ -192,7 +193,9 @@ class SandboxLifecycleReconciliationService:
                 or record.cleanup_state is not CleanupState.COMPLETED
                 or record.terminal_reason is not TerminalReason.CLEANED_EXTERNALLY,
             )
-        raise SandboxLifecycleError(f"Unsupported reconciliation classification: {classification.classification.value}.")
+        raise SandboxLifecycleError(
+            f"Unsupported reconciliation classification: {classification.classification.value}."
+        )
 
     def plan_missing_record_presence(
         self,
@@ -200,7 +203,9 @@ class SandboxLifecycleReconciliationService:
         observation: SandboxObservation,
     ) -> SandboxReconciliationPlan:
         if not observation.docker_present or observation.ownership_confidence is None:
-            raise SandboxLifecycleError("Missing-record reconciliation requires present Docker resources and ownership confidence.")
+            raise SandboxLifecycleError(
+                "Missing-record reconciliation requires present Docker resources and ownership confidence."
+            )
         classification = classify_reconciliation(
             durable_state=None,
             docker_present=True,

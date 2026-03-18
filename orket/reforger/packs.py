@@ -76,7 +76,7 @@ def _resolve_extends_path(*, extends: str, current_path: Path, packs_root: Path 
     if packs_root is None:
         raise PackValidationError(
             "E_PACK_EXTENDS_ROOT_REQUIRED",
-            f"Pack extends value '{extends}' requires packs_root for id-based resolution: {current_path}"
+            f"Pack extends value '{extends}' requires packs_root for id-based resolution: {current_path}",
         )
     return (packs_root / extends).resolve()
 
@@ -143,9 +143,7 @@ def write_resolved_pack(resolved: ResolvedPack, out_dir: Path) -> Path:
         "id": resolved.metadata.pack_id,
         "version": resolved.metadata.pack_version,
         "extends": resolved.metadata.extends,
-        "resolved_inheritance_chain": [
-            str(path).replace("\\", "/") for path in resolved.inheritance_chain
-        ],
+        "resolved_inheritance_chain": [str(path).replace("\\", "/") for path in resolved.inheritance_chain],
     }
     (target / "pack.json").write_text(json.dumps(pack_payload, indent=2) + "\n", encoding="utf-8")
     return target

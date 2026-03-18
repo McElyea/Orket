@@ -115,7 +115,9 @@ class PiperTTSProvider:
         if proc.returncode != 0:
             stderr = proc.stderr.decode("utf-8", errors="replace")
             raise RuntimeError(f"Piper synthesis failed (voice_id={voice_id}): {stderr.strip()}")
-        return AudioClip(sample_rate=self._config.sample_rate, channels=1, samples=bytes(proc.stdout), format="pcm_s16le")
+        return AudioClip(
+            sample_rate=self._config.sample_rate, channels=1, samples=bytes(proc.stdout), format="pcm_s16le"
+        )
 
     @staticmethod
     def _resolve_executable(value: str) -> list[str]:
@@ -154,14 +156,8 @@ def build_tts_provider(*, input_config: dict[str, Any]) -> TTSProvider:
     backend = str(input_config.get("tts_backend") or os.getenv("ORKET_TTS_BACKEND", "null")).strip().lower()
     if backend != "piper":
         return NullTTSProvider()
-    model_path_raw = str(
-        input_config.get("tts_model_path")
-        or os.getenv("ORKET_TTS_PIPER_MODEL_PATH", "")
-    ).strip()
-    voices_dir_raw = str(
-        input_config.get("tts_voices_dir")
-        or os.getenv("ORKET_TTS_PIPER_VOICES_DIR", "")
-    ).strip()
+    model_path_raw = str(input_config.get("tts_model_path") or os.getenv("ORKET_TTS_PIPER_MODEL_PATH", "")).strip()
+    voices_dir_raw = str(input_config.get("tts_voices_dir") or os.getenv("ORKET_TTS_PIPER_VOICES_DIR", "")).strip()
     executable = str(input_config.get("tts_executable") or os.getenv("ORKET_TTS_PIPER_BIN", "piper")).strip() or "piper"
     sample_rate = int(input_config.get("tts_sample_rate") or os.getenv("ORKET_TTS_SAMPLE_RATE", "22050") or 22050)
     if not model_path_raw:

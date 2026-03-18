@@ -99,7 +99,9 @@ class ToolDispatcher:
                     ],
                 }
             )
-        validator_version = str(raw_payload.get("validator_version") or context.get("validator_version") or VALIDATOR_VERSION)
+        validator_version = str(
+            raw_payload.get("validator_version") or context.get("validator_version") or VALIDATOR_VERSION
+        )
         protocol_hash = str(raw_payload.get("protocol_hash") or context.get("protocol_hash") or default_protocol_hash())
         tool_schema_hash = str(
             raw_payload.get("tool_schema_hash") or context.get("tool_schema_hash") or default_tool_schema_hash()
@@ -172,7 +174,9 @@ class ToolDispatcher:
                         tool_calls=[
                             {
                                 "tool_name": tool_name,
-                                "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_name or "unknown"),
+                                "tool_profile_id": str(
+                                    (binding or {}).get("tool_profile_id") or tool_name or "unknown"
+                                ),
                                 "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
                                 "normalized_args": dict(tool_call.args or {}),
                                 "normalization_version": str(context.get("normalization_version") or "json-v1"),
@@ -358,11 +362,15 @@ class ToolDispatcher:
                         tool_calls=[
                             {
                                 "tool_name": tool_name,
-                                "tool_profile_id": str((binding or {}).get("tool_profile_id") or tool_name or "unknown"),
+                                "tool_profile_id": str(
+                                    (binding or {}).get("tool_profile_id") or tool_name or "unknown"
+                                ),
                                 "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
                                 "normalized_args": dict(tool_call.args or {}),
                                 "normalization_version": str(context.get("normalization_version") or "json-v1"),
-                                "tool_result_fingerprint": self.hash_payload(result if isinstance(result, dict) else {}),
+                                "tool_result_fingerprint": self.hash_payload(
+                                    result if isinstance(result, dict) else {}
+                                ),
                                 "side_effect_fingerprint": None,
                             }
                         ],
@@ -423,9 +431,7 @@ class ToolDispatcher:
                                 "execution_capsule": execution_capsule,
                                 "replayed": bool(replayed),
                                 **(
-                                    {
-                                        "compat_translation": dict(result.get("compat_translation") or {})
-                                    }
+                                    {"compat_translation": dict(result.get("compat_translation") or {})}
                                     if isinstance(result, dict) and isinstance(result.get("compat_translation"), dict)
                                     else {}
                                 ),

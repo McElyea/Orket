@@ -84,7 +84,9 @@ class CommitOrchestrator:
         }
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
-        authority_path = self.project_root / "workspace" / "interactions" / session_id / turn_id / "authority_commit.json"
+        authority_path = (
+            self.project_root / "workspace" / "interactions" / session_id / turn_id / "authority_commit.json"
+        )
         self._write_commit_artifact(
             authority_path,
             {
@@ -112,7 +114,9 @@ class CommitOrchestrator:
 
 
 class InteractionManager:
-    def __init__(self, *, bus: StreamBus, commit_orchestrator: CommitOrchestrator, project_root: Path | None = None) -> None:
+    def __init__(
+        self, *, bus: StreamBus, commit_orchestrator: CommitOrchestrator, project_root: Path | None = None
+    ) -> None:
         self.bus = bus
         self.commit_orchestrator = commit_orchestrator
         self.project_root = (project_root or Path.cwd()).resolve()
@@ -139,7 +143,9 @@ class InteractionManager:
             )
         return session_id
 
-    async def begin_turn(self, session_id: str, input_payload: dict[str, Any] | None = None, turn_params: dict[str, Any] | None = None) -> str:
+    async def begin_turn(
+        self, session_id: str, input_payload: dict[str, Any] | None = None, turn_params: dict[str, Any] | None = None
+    ) -> str:
         async with self._lock:
             session = self._require_session(session_id)
             if session.active_turn_id is not None:

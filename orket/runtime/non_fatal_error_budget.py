@@ -73,7 +73,9 @@ def validate_non_fatal_error_budget(payload: dict[str, Any] | None = None) -> tu
             raise ValueError("E_NON_FATAL_ERROR_BUDGET_ROW_SCHEMA")
         budget_id = str(row.get("budget_id") or "").strip()
         metric = str(row.get("metric") or "").strip()
-        max_fraction = _coerce_fraction(row.get("max_fraction"), error_code="E_NON_FATAL_ERROR_BUDGET_MAX_FRACTION_INVALID")
+        max_fraction = _coerce_fraction(
+            row.get("max_fraction"), error_code="E_NON_FATAL_ERROR_BUDGET_MAX_FRACTION_INVALID"
+        )
         breach_action = str(row.get("breach_action") or "").strip()
         if not budget_id:
             raise ValueError("E_NON_FATAL_ERROR_BUDGET_ID_REQUIRED")

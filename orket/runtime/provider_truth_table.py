@@ -99,9 +99,7 @@ def validate_provider_truth_table() -> tuple[str, ...]:
             raise ValueError(f"E_PROVIDER_TRUTH_CAPABILITIES_SCHEMA:{provider}")
         for capability_name, state in capabilities.items():
             if str(state or "").strip().lower() not in CAPABILITY_STATES:
-                raise ValueError(
-                    f"E_PROVIDER_TRUTH_CAPABILITY_STATE:{provider}:{str(capability_name or '').strip()}"
-                )
+                raise ValueError(f"E_PROVIDER_TRUTH_CAPABILITY_STATE:{provider}:{str(capability_name or '').strip()}")
     if len(set(providers)) != len(providers):
         raise ValueError("E_PROVIDER_TRUTH_DUPLICATE_PROVIDER")
     return tuple(sorted(providers))

@@ -34,12 +34,9 @@ class SandboxCleanupAuthorityService:
         positive_authority_present = False
 
         for resource in observed_resources:
-            matches_host = (
-                resource.docker_context == record.docker_context
-                and self._host_context_matches(
-                    record_host_id=record.docker_host_id,
-                    observed_host_id=resource.docker_host_id,
-                )
+            matches_host = resource.docker_context == record.docker_context and self._host_context_matches(
+                record_host_id=record.docker_host_id,
+                observed_host_id=resource.docker_host_id,
             )
             if not matches_host:
                 host_context_match = False

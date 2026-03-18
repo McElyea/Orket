@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orket.board import get_board_hierarchy
+import pytest
+
+from orket.board import get_board_hierarchy, get_board_hierarchy_async
 from orket.exceptions import CardNotFound
 
 
@@ -163,3 +165,21 @@ def test_get_board_hierarchy_auto_fix_failure_is_explicit_partial_success(monkey
 
     assert hierarchy["result_status"] == "partial_success"
     assert any(item["stage"] == "auto_fix" for item in hierarchy["load_failures"])
+
+
+@pytest.mark.asyncio
+async def test_get_board_hierarchy_async_uses_thread_wrapper(monkeypatch):
+    """Layer: integration. Verifies the async board helper delegates to the sync hierarchy builder for API callers."""
+    seen: dict[str, object] = {}
+
+    def _fake_get_board_hierarchy(department: str = "core", auto_fix: bool = False):
+        seen["department"] = department
+        seen["auto_fix"] = auto_fix
+        return {"department": department, "auto_fix": auto_fix}
+
+    monkeypatch.setattr("orket.board.get_board_hierarchy", _fake_get_board_hierarchy)
+
+    result = await get_board_hierarchy_async("product", auto_fix=True)
+
+    assert result == {"department": "product", "auto_fix": True}
+    assert seen == {"department": "product", "auto_fix": True}

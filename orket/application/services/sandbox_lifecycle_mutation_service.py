@@ -70,7 +70,9 @@ class SandboxLifecycleMutationService:
                 "state": next_state,
                 "cleanup_state": cleanup_state or current.cleanup_state,
                 "terminal_reason": terminal_reason if terminal_reason is not None else current.terminal_reason,
-                "owner_instance_id": next_owner_instance_id if next_owner_instance_id is not None else current.owner_instance_id,
+                "owner_instance_id": next_owner_instance_id
+                if next_owner_instance_id is not None
+                else current.owner_instance_id,
                 "lease_epoch": next_lease_epoch if next_lease_epoch is not None else current.lease_epoch,
                 "terminal_at": terminal_at if terminal_at is not None else current.terminal_at,
                 "cleanup_due_at": cleanup_due_at if cleanup_due_at is not None else current.cleanup_due_at,

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
-from orket.kernel.v1.canonical import canonical_json_bytes, fs_token, structural_digest
+from orket.kernel.v1.canonical import canonical_json_bytes, fs_token
 from orket.kernel.v1.contracts import KernelIssue
 
 # Keep these aligned with lsi.py (minimal v1)
@@ -225,7 +225,11 @@ def _load_tombstone_stems(staging_root: Path, turn_id: str) -> tuple[set[str], l
                     details={"error": str(exc)},
                 )
             )
-            events.append(_event_line("FAIL", "promotion", E_TOMBSTONE_INVALID, loc_base, "Tombstone JSON parse failed.", error=str(exc)))
+            events.append(
+                _event_line(
+                    "FAIL", "promotion", E_TOMBSTONE_INVALID, loc_base, "Tombstone JSON parse failed.", error=str(exc)
+                )
+            )
             continue
 
         valid_shape = (
@@ -593,7 +597,18 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
             if isinstance(sources_list, list) and len(sources_list) > 1:
                 stems = sorted({str(s.get("stem") or "") for s in sources_list if isinstance(s, dict)})
                 loc = f"/index/refs/by_id/{_pointer_token(ref_type)}/{_pointer_token(ref_id)}"
-                events.append(_event_line("INFO", "promotion", I_REF_MULTISOURCE, loc, "Multiple stems reference the same {type,id}.", type=ref_type, id=ref_id, stems=stems))
+                events.append(
+                    _event_line(
+                        "INFO",
+                        "promotion",
+                        I_REF_MULTISOURCE,
+                        loc,
+                        "Multiple stems reference the same {type,id}.",
+                        type=ref_type,
+                        id=ref_id,
+                        stems=stems,
+                    )
+                )
 
         # 5) Directory swap to make promotion atomic
         if committed_root.exists():
@@ -620,7 +635,18 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
                     turn_id=turn_id,
                 )
             )
-        events.append(_event_line("INFO", "promotion", "I_PROMOTION_PASS", "/index/committed", "Promotion completed.", run_id=run_id, turn_id=turn_id, stems=promoted_stems))
+        events.append(
+            _event_line(
+                "INFO",
+                "promotion",
+                "I_PROMOTION_PASS",
+                "/index/committed",
+                "Promotion completed.",
+                run_id=run_id,
+                turn_id=turn_id,
+                stems=promoted_stems,
+            )
+        )
         return PromotionResult(outcome="PASS", promoted_stems=promoted_stems, events=events, issues=[])
 
     except (OSError, ValueError, TypeError, json.JSONDecodeError, shutil.Error) as exc:
@@ -636,7 +662,18 @@ def promote_turn(*, root: str, run_id: str, turn_id: str) -> PromotionResult:
                 details={"error": msg, "run_id": run_id, "turn_id": turn_id},
             )
         )
-        events.append(_event_line("FAIL", "promotion", E_PROMOTION_FAILED, "/index/committed", "Promotion failed.", error=msg, run_id=run_id, turn_id=turn_id))
+        events.append(
+            _event_line(
+                "FAIL",
+                "promotion",
+                E_PROMOTION_FAILED,
+                "/index/committed",
+                "Promotion failed.",
+                error=msg,
+                run_id=run_id,
+                turn_id=turn_id,
+            )
+        )
 
         # Cleanup new_root if it exists; do NOT delete bak_root automatically.
         if new_root.exists():

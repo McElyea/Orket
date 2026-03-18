@@ -1,13 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 from typing import Dict, Any, List, Optional
 from pathlib import Path
-import json
 import re
-import asyncio
 import inspect
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.logging import log_event, log_model_usage
+from orket.logging import log_event
 from orket.utils import sanitize_name
 from orket.schema import SkillConfig, DialectConfig
 from orket.exceptions import CardNotFound
@@ -15,13 +13,24 @@ from orket.domain.execution import ExecutionTurn, ToolCall
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.application.services.tool_parser import ToolParser
 
+
 class Agent:
     """
     Application Service: Orchestrates the execution of a single agent turn.
     Delegates to specialized services for prompt compilation and tool parsing.
     """
 
-    def __init__(self, name: str, description: str, tools: Dict[str, callable], provider: LocalModelProvider, next_member: str = None, prompt_patch: str = None, config_root: Optional[Path] = None, tool_gate=None):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        tools: Dict[str, callable],
+        provider: LocalModelProvider,
+        next_member: str = None,
+        prompt_patch: str = None,
+        config_root: Optional[Path] = None,
+        tool_gate=None,
+    ):
         self.name = name
         self.description = description
         self.tools = tools
@@ -37,6 +46,7 @@ class Agent:
 
     def _load_configs(self):
         from orket.orket import ConfigLoader
+
         loader = ConfigLoader(self.config_root, "core")
         try:
             self.skill = loader.load_asset("roles", sanitize_name(self.name), SkillConfig)
@@ -50,11 +60,15 @@ class Agent:
 
         model_name = self.provider.model.lower()
         family = "generic"
-        if "deepseek" in model_name: family = "deepseek-r1"
-        elif "llama" in model_name: family = "llama3"
-        elif "phi" in model_name: family = "phi"
-        elif "qwen" in model_name: family = "qwen"
-            
+        if "deepseek" in model_name:
+            family = "deepseek-r1"
+        elif "llama" in model_name:
+            family = "llama3"
+        elif "phi" in model_name:
+            family = "phi"
+        elif "qwen" in model_name:
+            family = "qwen"
+
         try:
             self.dialect = loader.load_asset("dialects", family, DialectConfig)
         except (FileNotFoundError, ValueError, CardNotFound) as e:
@@ -71,11 +85,17 @@ class Agent:
             return PromptCompiler.compile(self.skill, self.dialect, self.next_member, self._prompt_patch)
         return self.description
 
-    async def run(self, task: Dict[str, Any], context: Dict[str, Any], workspace: Path, transcript: List[Dict] = None) -> ExecutionTurn:
+    async def run(
+        self, task: Dict[str, Any], context: Dict[str, Any], workspace: Path, transcript: List[Dict] = None
+    ) -> ExecutionTurn:
         """Executes the turn and returns a structured ExecutionTurn object."""
-        
+
         # 1. COMPILE INSTRUCTIONS
-        system_prompt = PromptCompiler.compile(self.skill, self.dialect, self.next_member, self._prompt_patch) if self.skill and self.dialect else self.description
+        system_prompt = (
+            PromptCompiler.compile(self.skill, self.dialect, self.next_member, self._prompt_patch)
+            if self.skill and self.dialect
+            else self.description
+        )
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -91,7 +111,7 @@ class Agent:
         # 2. GENERATE RESPONSE
         result = await self.provider.complete(messages)
         text = result.content if hasattr(result, "content") else str(result)
-        
+
         # Extract Thought
         thought = None
         thought_match = re.search(r"<thought>(.*?)</thought>", text, re.DOTALL)
@@ -102,12 +122,12 @@ class Agent:
         # 3. PARSE & EXECUTE TOOLS
         parsed_calls = ToolParser.parse(text)
         turn = ExecutionTurn(
-            role=self.name, 
+            role=self.name,
             issue_id=context.get("issue_id", "unknown"),
             thought=thought,
             content=text,
             tokens_used=getattr(result, "raw", {}).get("total_tokens", 0),
-            raw=getattr(result, "raw", {})
+            raw=getattr(result, "raw", {}),
         )
 
         for call in parsed_calls:
@@ -124,13 +144,22 @@ class Agent:
                 gate_error = self.tool_gate.validate(tool_name, args, context, roles)
                 if gate_error:
                     turn.tool_calls.append(ToolCall(tool=tool_name, args=args, error=f"[GATE] {gate_error}"))
-                    log_event("tool_blocked", {"tool": tool_name, "args": args, "reason": gate_error}, workspace, role=self.name)
+                    log_event(
+                        "tool_blocked",
+                        {"tool": tool_name, "args": args, "reason": gate_error},
+                        workspace,
+                        role=self.name,
+                    )
                     continue
 
             # --- TOOL EXECUTION ---
             tool_fn = self.tools[tool_name]
             try:
-                res = await tool_fn(args, context=context) if inspect.iscoroutinefunction(tool_fn) else tool_fn(args, context=context)
+                res = (
+                    await tool_fn(args, context=context)
+                    if inspect.iscoroutinefunction(tool_fn)
+                    else tool_fn(args, context=context)
+                )
                 turn.tool_calls.append(ToolCall(tool=tool_name, args=args, result=res))
                 log_event("tool_call", {"tool": tool_name, "args": args, "result": res}, workspace, role=self.name)
             except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:

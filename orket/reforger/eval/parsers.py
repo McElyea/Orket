@@ -57,4 +57,3 @@ def normalize_external_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "soft_fail_count": soft_fail_count,
         "failing_cases": normalized,
     }
-

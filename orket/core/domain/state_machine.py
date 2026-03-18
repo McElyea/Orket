@@ -64,7 +64,12 @@ class StateMachine:
                 CardStatus.CANCELED,
                 CardStatus.ARCHIVED,
             },
-            CardStatus.GUARD_REJECTED: {CardStatus.BLOCKED, CardStatus.IN_PROGRESS, CardStatus.CANCELED, CardStatus.ARCHIVED},
+            CardStatus.GUARD_REJECTED: {
+                CardStatus.BLOCKED,
+                CardStatus.IN_PROGRESS,
+                CardStatus.CANCELED,
+                CardStatus.ARCHIVED,
+            },
             CardStatus.GUARD_APPROVED: {CardStatus.DONE, CardStatus.ARCHIVED},
             CardStatus.DONE: {CardStatus.ARCHIVED},
             CardStatus.CANCELED: {CardStatus.ARCHIVED},

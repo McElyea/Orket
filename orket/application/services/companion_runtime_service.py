@@ -16,7 +16,12 @@ from orket.services.profile_write_policy import ProfileWritePolicy
 from orket.services.scoped_memory_store import ScopedMemoryStore
 from orket_extension_sdk.audio import TTSProvider, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
-from orket_extension_sdk.voice import TranscribeRequest, TranscribeResponse, VoiceTurnControlRequest, VoiceTurnControlResponse
+from orket_extension_sdk.voice import (
+    TranscribeRequest,
+    TranscribeResponse,
+    VoiceTurnControlRequest,
+    VoiceTurnControlResponse,
+)
 
 from .companion_config_models import CompanionConfig
 from .config_precedence_resolver import ConfigPrecedenceResolver
@@ -100,11 +105,15 @@ class CompanionRuntimeService:
         session = await self._session_state(session_id)
         return session.resolver.preview(include_pending_next_turn=True)
 
-    async def update_config(self, *, session_id: str, scope: CompanionConfigScope, patch: dict[str, Any]) -> CompanionConfig:
+    async def update_config(
+        self, *, session_id: str, scope: CompanionConfigScope, patch: dict[str, Any]
+    ) -> CompanionConfig:
         await self.ensure_initialized()
         normalized_patch = _normalize_config_patch(patch)
         session = await self._session_state(session_id)
-        current_payload = session.resolver.preview(include_pending_next_turn=True).model_dump(mode="json", exclude_none=True)
+        current_payload = session.resolver.preview(include_pending_next_turn=True).model_dump(
+            mode="json", exclude_none=True
+        )
         candidate_payload = _merge_nested(current_payload, normalized_patch)
         CompanionConfig.model_validate(candidate_payload)
 
@@ -173,7 +182,9 @@ class CompanionRuntimeService:
         config = session.resolver.resolve()
         memory_context = await self._build_memory_context(session_id=session_id, config=config)
         history_context = format_history_context(session.history[-6:])
-        system_prompt = build_system_prompt(config=config, memory_context=memory_context, history_context=history_context)
+        system_prompt = build_system_prompt(
+            config=config, memory_context=memory_context, history_context=history_context
+        )
 
         request = GenerateRequest(
             system_prompt=system_prompt,
@@ -237,7 +248,12 @@ class CompanionRuntimeService:
         session.history = []
         session.turn_index = 0
         session.resolver.clear_session()
-        return {"ok": True, "session_id": session_id, "deleted_records": deleted + deleted_episodic, "deleted_episodic_records": deleted_episodic}
+        return {
+            "ok": True,
+            "session_id": session_id,
+            "deleted_records": deleted + deleted_episodic,
+            "deleted_episodic_records": deleted_episodic,
+        }
 
     async def voice_state(self) -> dict[str, Any]:
         await self.ensure_initialized()
@@ -247,7 +263,9 @@ class CompanionRuntimeService:
             "silence_delay_sec": self._voice_controller.silence_delay_seconds(),
         }
 
-    async def voice_control(self, *, command: str, silence_delay_seconds: float | None = None) -> VoiceTurnControlResponse:
+    async def voice_control(
+        self, *, command: str, silence_delay_seconds: float | None = None
+    ) -> VoiceTurnControlResponse:
         await self.ensure_initialized()
         request = VoiceTurnControlRequest(
             command=str(command).strip() or "stop",  # type: ignore[arg-type]
@@ -262,7 +280,14 @@ class CompanionRuntimeService:
             raise ValueError("E_COMPANION_CADENCE_TEXT_REQUIRED")
         voice = session.resolver.preview(include_pending_next_turn=True).voice
         if not voice.adaptive_cadence_enabled:
-            return {"ok": True, "session_id": session_id, "adaptive_cadence_enabled": False, "source": "manual", "suggested_silence_delay_sec": float(voice.silence_delay_sec), "input_words": max(1, len(utterance.split()))}
+            return {
+                "ok": True,
+                "session_id": session_id,
+                "adaptive_cadence_enabled": False,
+                "source": "manual",
+                "suggested_silence_delay_sec": float(voice.silence_delay_sec),
+                "input_words": max(1, len(utterance.split())),
+            }
         suggested, words = suggest_adaptive_silence_delay(
             text=utterance,
             silence_delay_min_sec=float(voice.silence_delay_min_sec),
@@ -270,7 +295,14 @@ class CompanionRuntimeService:
             adaptive_cadence_min_sec=float(voice.adaptive_cadence_min_sec),
             adaptive_cadence_max_sec=float(voice.adaptive_cadence_max_sec),
         )
-        return {"ok": True, "session_id": session_id, "adaptive_cadence_enabled": True, "source": "adaptive", "suggested_silence_delay_sec": suggested, "input_words": words}
+        return {
+            "ok": True,
+            "session_id": session_id,
+            "adaptive_cadence_enabled": True,
+            "source": "adaptive",
+            "suggested_silence_delay_sec": suggested,
+            "input_words": words,
+        }
 
     async def transcribe(self, *, audio_b64: str, mime_type: str, language_hint: str = "") -> TranscribeResponse:
         await self.ensure_initialized()
@@ -329,7 +361,12 @@ class CompanionRuntimeService:
             }
             for voice in voices
         ]
-        return {"ok": True, "tts_available": bool(serialized), "default_voice_id": str(serialized[0]["voice_id"] if serialized else ""), "voices": serialized}
+        return {
+            "ok": True,
+            "tts_available": bool(serialized),
+            "default_voice_id": str(serialized[0]["voice_id"] if serialized else ""),
+            "voices": serialized,
+        }
 
     async def _session_state(self, session_id: str) -> _SessionState:
         await self.ensure_initialized()
@@ -454,4 +491,3 @@ def _merge_nested(base: dict[str, Any], override: dict[str, Any]) -> dict[str, A
         else:
             merged[key] = value
     return merged
-

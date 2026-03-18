@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 from pydantic import BaseModel
+
 
 class VendorRock(BaseModel):
     id: str
@@ -8,11 +9,13 @@ class VendorRock(BaseModel):
     description: Optional[str] = None
     status: str
 
+
 class VendorEpic(BaseModel):
     id: str
     rock_id: Optional[str] = None
     name: str
     description: Optional[str] = None
+
 
 class VendorCard(BaseModel):
     id: str
@@ -23,11 +26,12 @@ class VendorCard(BaseModel):
     assignee: Optional[str] = None
     priority: str
 
+
 class VendorInterface(ABC):
     """
     Abstract interface for all Project Management Vendors (Gitea, ADO, Jira).
     """
-    
+
     @abstractmethod
     async def get_rocks(self) -> List[VendorRock]:
         pass
