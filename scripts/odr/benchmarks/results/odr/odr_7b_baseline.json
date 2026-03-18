@@ -1,0 +1,176 @@
+{
+  "run_v": "7b_baseline.v1",
+  "generated_at": "2026-03-18T22:47:23.779377+00:00",
+  "ended_at": "2026-03-18T22:47:24.603403+00:00",
+  "duration_ms": 824,
+  "config": {
+    "architect_models": [
+      "qwen2.5-coder:7b"
+    ],
+    "auditor_models": [
+      "qwen2.5:7b"
+    ],
+    "scenario_ids": [
+      "missing_constraint",
+      "contradiction",
+      "overfitting"
+    ],
+    "rounds": 5,
+    "odr_config": {
+      "max_rounds": 5,
+      "diff_floor_pct": 0.05,
+      "stable_rounds": 2,
+      "shingle_k": 3,
+      "margin": 0.02,
+      "min_loop_sim": 0.65,
+      "code_leak_patterns": [
+        "(?s)```(?:[^\\n]*)\\n.*?\\n```",
+        "\\b(def|class|import|fn|let|const|interface|type)\\b",
+        "\\b(npm|pip|cargo|docker|venv|node_modules)\\b"
+      ],
+      "leak_gate_mode": "balanced_v1"
+    },
+    "temperature": 0.1,
+    "timeout": 120
+  },
+  "environment": {
+    "os": "Windows",
+    "os_release": "11",
+    "arch": "AMD64",
+    "python_version": "3.14.0",
+    "ollama_version": "ollama version is 0.18.1",
+    "llm_provider": "ollama",
+    "ollama_host": "http://localhost:11434"
+  },
+  "results": [
+    {
+      "architect_model": "qwen2.5-coder:7b",
+      "auditor_model": "qwen2.5:7b",
+      "started_at": "2026-03-18T22:47:24.100451+00:00",
+      "ended_at": "2026-03-18T22:47:24.603357+00:00",
+      "scenarios": [
+        {
+          "scenario_id": "missing_constraint",
+          "original_input": {
+            "id": "missing_constraint",
+            "path": "missing_constraint",
+            "R0": "# Requirement Spec\n\n## Scope\nLocal-first requirement refinement for user profile storage.\n\n## Definitions\n- Local storage: data remains on user device.\n- Retention window: how long logs are preserved.\n\n## Non-goals\n- No cloud data export.\n\n## Invariants\n- User profile data remains local.\n\n## Failure Codes\n- REQ_MISSING_CONSTRAINT\n\n## Acceptance Tests\n- Confirm profile data is never uploaded.\n\n## Change Log\n- Initial baseline.\n\n```orket-constraints\n{\n  \"must_have\": [\n    {\"id\": \"MH-LOCAL-001\", \"text\": \"Store user profile data locally.\"}\n  ],\n  \"forbidden\": [\n    {\"id\": \"FB-CLOUD-001\", \"text\": \"Upload profile data to external services.\"}\n  ],\n  \"definitions\": {\n    \"DEF-LOCAL\": \"Data remains on the device.\"\n  },\n  \"acceptance_checks\": [\n    {\"id\": \"AC-LOCAL-001\", \"text\": \"No outbound profile-data API call.\"}\n  ],\n  \"auditor_resolution\": []\n}\n```\n",
+            "A0": [
+              {
+                "id": "AUD-001",
+                "status": "open",
+                "required_action": "Add retention policy"
+              },
+              {
+                "id": "AUD-002",
+                "status": "open",
+                "required_action": "Add encryption requirement"
+              }
+            ],
+            "seed": {
+              "decisions": {
+                "retention_days": null
+              }
+            }
+          },
+          "rounds": [],
+          "final_state": {
+            "history_v": [],
+            "history_round_count": 0,
+            "stable_count": 0,
+            "stop_reason": "RUNNER_ERROR:FileNotFoundError",
+            "history_rounds": []
+          },
+          "runner_error": "[WinError 3] The system cannot find the path specified: 'C:\\\\Source\\\\Orket\\\\scripts\\\\odr\\\\model\\\\core\\\\contracts\\\\local_prompt_profiles.json'"
+        },
+        {
+          "scenario_id": "contradiction",
+          "original_input": {
+            "id": "contradiction",
+            "path": "contradiction",
+            "R0": "# Requirement Spec\n\n## Scope\nDefine deletion policy for local audit records.\n\n## Definitions\n- Immediate delete: remove within 1 minute.\n- Retained delete: remove after retention window.\n\n## Non-goals\n- No remote archival.\n\n## Invariants\n- Local-only storage.\n\n## Failure Codes\n- REQ_POLICY_CONTRADICTION\n\n## Acceptance Tests\n- Verify deletion behavior is deterministic.\n\n## Change Log\n- Initial contradictory baseline.\n\n```orket-constraints\n{\n  \"must_have\": [\n    {\"id\": \"MH-LOCAL-001\", \"text\": \"Store records locally only.\"},\n    {\"id\": \"MH-DELETE-IMMEDIATE\", \"text\": \"Delete records immediately after use.\"},\n    {\"id\": \"MH-DELETE-30D\", \"text\": \"Retain records for 30 days before deletion.\"}\n  ],\n  \"forbidden\": [\n    {\"id\": \"FB-REMOTE-001\", \"text\": \"Mirror records to remote storage.\"}\n  ],\n  \"definitions\": {\n    \"DEF-DELETE\": \"Deletion timing policy.\"\n  },\n  \"acceptance_checks\": [\n    {\"id\": \"AC-DELETE-001\", \"text\": \"Deletion window is explicit.\"}\n  ],\n  \"auditor_resolution\": []\n}\n```\n",
+            "A0": [
+              {
+                "id": "AUD-101",
+                "status": "open",
+                "required_action": "Resolve deletion contradiction"
+              }
+            ],
+            "seed": {}
+          },
+          "rounds": [],
+          "final_state": {
+            "history_v": [],
+            "history_round_count": 0,
+            "stable_count": 0,
+            "stop_reason": "RUNNER_ERROR:FileNotFoundError",
+            "history_rounds": []
+          },
+          "runner_error": "[WinError 3] The system cannot find the path specified: 'C:\\\\Source\\\\Orket\\\\scripts\\\\odr\\\\model\\\\core\\\\contracts\\\\local_prompt_profiles.json'"
+        },
+        {
+          "scenario_id": "overfitting",
+          "original_input": {
+            "id": "overfitting",
+            "path": "overfitting",
+            "R0": "# Requirement Spec\n\n## Scope\nDefine offline assistant memory behavior.\n\n## Definitions\n- Offline mode: no network access.\n\n## Non-goals\n- No social feed integrations.\n\n## Invariants\n- Memory runs without external APIs.\n\n## Failure Codes\n- REQ_SCOPE_DRIFT\n\n## Acceptance Tests\n- Verify no outbound network call in offline mode.\n\n## Change Log\n- Initial baseline.\n\n```orket-constraints\n{\n  \"must_have\": [\n    {\"id\": \"MH-OFFLINE-001\", \"text\": \"Runtime must operate offline.\"}\n  ],\n  \"forbidden\": [\n    {\"id\": \"FB-TELEMETRY-001\", \"text\": \"Send data to third-party analytics.\"},\n    {\"id\": \"FB-SOCIAL-001\", \"text\": \"Auto-post updates to social networks.\"}\n  ],\n  \"definitions\": {\n    \"DEF-OFFLINE\": \"No external network dependency.\"\n  },\n  \"acceptance_checks\": [\n    {\"id\": \"AC-OFFLINE-001\", \"text\": \"All core flows pass without internet.\"}\n  ],\n  \"auditor_resolution\": []\n}\n```\n",
+            "A0": [
+              {
+                "id": "AUD-201",
+                "status": "open",
+                "required_action": "Add deterministic index integrity clause"
+              }
+            ],
+            "seed": {}
+          },
+          "rounds": [],
+          "final_state": {
+            "history_v": [],
+            "history_round_count": 0,
+            "stable_count": 0,
+            "stop_reason": "RUNNER_ERROR:FileNotFoundError",
+            "history_rounds": []
+          },
+          "runner_error": "[WinError 3] The system cannot find the path specified: 'C:\\\\Source\\\\Orket\\\\scripts\\\\odr\\\\model\\\\core\\\\contracts\\\\local_prompt_profiles.json'"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "summary_v": "7b_baseline.v1",
+    "generated_at": "2026-03-18T22:47:24.603429+00:00",
+    "pairing_count": 1,
+    "pairings": [
+      {
+        "architect_model": "qwen2.5-coder:7b",
+        "auditor_model": "qwen2.5:7b",
+        "total_scenarios": 3,
+        "converged": 0,
+        "convergence_rate": 0.0,
+        "mean_rounds_to_stop": 0.0,
+        "code_leak_scenarios": 0,
+        "code_leak_rate": 0.0,
+        "format_violation_scenarios": 0,
+        "format_violation_rate": 0.0,
+        "empty_requirement_scenarios": 0,
+        "max_rounds_scenarios": 0,
+        "stop_reason_distribution": {
+          "RUNNER_ERROR:FileNotFoundError": 3
+        }
+      }
+    ],
+    "interpretation": {
+      "verdict": "FAIL_NO_CONVERGENCE",
+      "best_pairing": {
+        "architect": "qwen2.5-coder:7b",
+        "auditor": "qwen2.5:7b",
+        "convergence_rate": 0.0
+      },
+      "notes": [
+        "No model pair achieved ODR convergence across any scenario.",
+        "This indicates 7B models cannot reliably maintain the structured REQUIREMENT/CHANGELOG/ASSUMPTIONS/OPEN_QUESTIONS format across rounds.",
+        "Recommended action: review FORMAT_VIOLATION rates and consider prompt hardening before attempting task-level workloads."
+      ]
+    }
+  }
+}

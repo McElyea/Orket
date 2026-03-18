@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-03-17
+Last updated: 2026-03-18
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. None. No active non-recurring lane is currently open.
+1. runtime-gap remediation after Phase 1 closeout -- Plan: `docs/projects/techdebt/RG03182026/02-IMPLEMENTATION-PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
