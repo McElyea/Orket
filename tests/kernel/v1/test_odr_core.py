@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round
+import pytest
+
+from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, check_code_leak, run_round
+from orket.kernel.v1.odr.leak_policy import DEFAULT_LEAK_GATE_MODE, detect_code_leak
+
+pytestmark = pytest.mark.unit
 
 
 def _architect(requirement: str) -> str:
@@ -151,3 +156,32 @@ def test_leading_preface_before_header_is_shape_violation() -> None:
         and "out of order" in str(err["message"]).lower()
         for err in record["parse_errors"]
     )
+
+
+def test_run_round_does_not_mutate_input_state() -> None:
+    cfg = ReactorConfig()
+    state_before = ReactorState()
+
+    state_after = run_round(state_before, _architect("snapshot"), _auditor(), cfg)
+
+    assert state_after is not state_before
+    assert state_before.history_v == []
+    assert state_before.history_rounds == []
+    assert state_before.stable_count == 0
+    assert state_before.stop_reason is None
+    assert state_after.history_v == ["snapshot"]
+
+
+def test_check_code_leak_matches_authoritative_detector() -> None:
+    pseudo_code = "{\n    value = compute(x);\n    next = call(y);\n}\n"
+    patterns = ReactorConfig().code_leak_patterns
+
+    delegated = check_code_leak(pseudo_code, patterns)
+    authoritative = detect_code_leak(
+        architect_raw=pseudo_code,
+        auditor_raw="",
+        mode=DEFAULT_LEAK_GATE_MODE,
+        patterns=patterns,
+    ).hard_leak
+
+    assert delegated is authoritative

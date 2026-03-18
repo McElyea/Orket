@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import os
@@ -15,10 +16,12 @@ import pytest
 from orket.kernel.v1.canon import canonical_bytes, first_diff_path, raw_signature
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round
 
+pytestmark = pytest.mark.contract
+
 SEED = 1729
 EXPECTED_TORTURE_SHA256 = "b43af67501d9b910dafc622d05f5c92ce414e257965b7bdfbf01d44a2c1663b4"
 EXPECTED_NEAR_MISS_SHA256 = "e42c01cbe0ba88ab2197d528110001d476f85f1ec8b3a48666ddd3aecf5b6aca"
-EXPECTED_SHAPE_SHA256 = "bffedc3c51768a2a63715c5ab6642bd2d7eddd695d65939d354cd9d802e271c7"
+EXPECTED_HEADER_ORDER_SHA256 = "bffedc3c51768a2a63715c5ab6642bd2d7eddd695d65939d354cd9d802e271c7"
 
 
 def _fixture_path(name: str) -> Path:
@@ -107,7 +110,7 @@ def _assert_bytes_equal(
     )
 
 
-def _shape_violation_output() -> Dict[str, Any]:
+def _header_order_violation_output() -> Dict[str, Any]:
     cfg = ReactorConfig()
     state = ReactorState()
     architect = (
@@ -118,6 +121,28 @@ def _shape_violation_output() -> Dict[str, Any]:
     )
     auditor = (
         "### CRITIQUE\n- c\n\n"
+        "### PATCHES\n- p\n\n"
+        "### EDGE_CASES\n- e\n\n"
+        "### TEST_GAPS\n- t\n"
+    )
+    state = run_round(state, architect, auditor, cfg)
+    return {
+        "stop_reason": state.stop_reason,
+        "trace": state.history_rounds[-1],
+    }
+
+
+def _code_leak_output() -> Dict[str, Any]:
+    cfg = ReactorConfig()
+    state = ReactorState()
+    architect = (
+        "### REQUIREMENT\nKeep runtime outputs free of code blocks.\n\n"
+        "### CHANGELOG\n- baseline\n\n"
+        "### ASSUMPTIONS\n- deterministic\n\n"
+        "### OPEN_QUESTIONS\n- none\n"
+    )
+    auditor = (
+        "### CRITIQUE\n```python\nprint('x')\n```\n\n"
         "### PATCHES\n- p\n\n"
         "### EDGE_CASES\n- e\n\n"
         "### TEST_GAPS\n- t\n"
@@ -362,28 +387,28 @@ def _run_gate(permutations: int, repeats: int, *, include_scale: bool = False) -
             )
         )
 
-    shape_one = _shape_violation_output()
-    shape_two = _shape_violation_output()
-    shape_one_bytes = canonical_bytes(shape_one)
-    shape_two_bytes = canonical_bytes(shape_two)
+    header_order_one = _header_order_violation_output()
+    header_order_two = _header_order_violation_output()
+    header_order_one_bytes = canonical_bytes(header_order_one)
+    header_order_two_bytes = canonical_bytes(header_order_two)
     _assert_bytes_equal(
-        expected=shape_one_bytes,
-        actual=shape_two_bytes,
+        expected=header_order_one_bytes,
+        actual=header_order_two_bytes,
         seed=SEED,
         perm_index=0,
         round_index=1,
-        stop_reason=str(shape_one.get("stop_reason") or "NONE"),
-        reason="SHAPE_VIOLATION_NONDETERMINISTIC",
+        stop_reason=str(header_order_one.get("stop_reason") or "NONE"),
+        reason="HEADER_ORDER_VIOLATION_NONDETERMINISTIC",
     )
-    if _sha256(shape_one_bytes) != EXPECTED_SHAPE_SHA256:
+    if _sha256(header_order_one_bytes) != EXPECTED_HEADER_ORDER_SHA256:
         pytest.fail(
             _fail_line(
                 seed=SEED,
                 perm_index=0,
                 round_index=1,
                 path="$",
-                stop_reason=str(shape_one.get("stop_reason") or "NONE"),
-                reason="SHAPE_VIOLATION_NONDETERMINISTIC",
+                stop_reason=str(header_order_one.get("stop_reason") or "NONE"),
+                reason="HEADER_ORDER_VIOLATION_NONDETERMINISTIC",
             )
         )
 
@@ -491,3 +516,23 @@ def test_odr_determinism_gate_nightly() -> None:
     permutations = int(os.getenv("ODR_PERMUTATIONS", "50"))
     repeats = int(os.getenv("ODR_REPEATS", "20"))
     _run_gate(permutations=permutations, repeats=repeats, include_scale=True)
+
+
+def test_odr_determinism_gate_imports_odr_canonicalizer_only() -> None:
+    module = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    imported_modules = {
+        node.module
+        for node in ast.walk(module)
+        if isinstance(node, ast.ImportFrom) and node.module is not None
+    }
+
+    assert "orket.kernel.v1.canon" in imported_modules
+    assert "orket.kernel.v1.canonical" not in imported_modules
+
+
+def test_code_leak_shape_detection_fires() -> None:
+    leaked = _code_leak_output()
+
+    assert leaked["stop_reason"] == "CODE_LEAK"
+    assert leaked["trace"]["metrics"]["code_leak_hit"] is True
+    assert leaked["trace"]["code_leak_matches_hard"]

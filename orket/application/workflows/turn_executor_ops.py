@@ -23,6 +23,44 @@ state_delta_from_tool_calls = _state_delta_from_tool_calls
 synthesize_required_status_tool_call = _synthesize_required_status_tool_call
 
 
+def _response_artifact_payload(response: Any) -> tuple[str, Any]:
+    response_content = (
+        getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
+    )
+    response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
+    return response_content or "", response_raw
+
+
+async def _write_response_artifacts(
+    executor: Any,
+    *,
+    session_id: str,
+    issue_id: str,
+    role_name: str,
+    turn_index: int,
+    response: Any,
+) -> None:
+    response_content, response_raw = _response_artifact_payload(response)
+    await asyncio.to_thread(
+        executor._write_turn_artifact,
+        session_id,
+        issue_id,
+        role_name,
+        turn_index,
+        "model_response.txt",
+        response_content,
+    )
+    await asyncio.to_thread(
+        executor._write_turn_artifact,
+        session_id,
+        issue_id,
+        role_name,
+        turn_index,
+        "model_response_raw.json",
+        json.dumps(response_raw, indent=2, ensure_ascii=False, default=str),
+    )
+
+
 async def execute_turn(
     executor: Any,
     issue: IssueConfig,
@@ -169,27 +207,13 @@ async def execute_turn(
             interceptor="after_model",
             decision_type="model_response_processed",
         )
-        response_content = (
-            getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
-        )
-        response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
-        await asyncio.to_thread(
-            executor._write_turn_artifact,
-            session_id,
-            issue_id,
-            role_name,
-            turn_index,
-            "model_response.txt",
-            response_content or "",
-        )
-        await asyncio.to_thread(
-            executor._write_turn_artifact,
-            session_id,
-            issue_id,
-            role_name,
-            turn_index,
-            "model_response_raw.json",
-            json.dumps(response_raw, indent=2, ensure_ascii=False, default=str),
+        await _write_response_artifacts(
+            executor,
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            response=response,
         )
 
         turn = executor._parse_response(response=response, issue_id=issue_id, role_name=role_name, context=context)
@@ -238,6 +262,14 @@ async def execute_turn(
                 role_name=role_name,
                 interceptor="after_model",
                 decision_type="model_response_reprompt_processed",
+            )
+            await _write_response_artifacts(
+                executor,
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+                response=response,
             )
 
             turn = executor._parse_response(response=response, issue_id=issue_id, role_name=role_name, context=context)

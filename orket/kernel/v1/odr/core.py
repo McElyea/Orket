@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, List, Optional
 
 from .leak_policy import (
@@ -38,7 +37,7 @@ class ReactorConfig:
         }
 
 
-@dataclass
+@dataclass(frozen=True)
 class ReactorState:
     history_v: List[str] = field(default_factory=list)
     history_rounds: List[Dict[str, Any]] = field(default_factory=list)
@@ -47,11 +46,14 @@ class ReactorState:
 
 
 def check_code_leak(text: str, patterns: List[str]) -> bool:
-    normalized = normalize_newlines(text)
-    for pattern in patterns:
-        if re.search(pattern, normalized) is not None:
-            return True
-    return False
+    """Delegate to the authoritative leak detector used by `run_round`."""
+    detection = detect_code_leak(
+        architect_raw=text,
+        auditor_raw="",
+        mode=DEFAULT_LEAK_GATE_MODE,
+        patterns=patterns or None,
+    )
+    return detection.hard_leak
 
 
 def _base_metrics(*, n: int, code_leak_hit: bool, stable_count: int) -> Dict[str, Any]:
@@ -63,6 +65,23 @@ def _base_metrics(*, n: int, code_leak_hit: bool, stable_count: int) -> Dict[str
         "sim_loop": None,
         "stable_count": int(stable_count),
     }
+
+
+def _state_with_record(
+    state: ReactorState,
+    *,
+    record: Dict[str, Any],
+    stop_reason: Optional[str],
+    history_v: List[str] | None = None,
+    stable_count: int | None = None,
+) -> ReactorState:
+    return replace(
+        state,
+        history_v=list(state.history_v if history_v is None else history_v),
+        history_rounds=[*state.history_rounds, record],
+        stable_count=state.stable_count if stable_count is None else int(stable_count),
+        stop_reason=stop_reason,
+    )
 
 
 def run_round(
@@ -101,9 +120,7 @@ def run_round(
             "stop_reason": "CODE_LEAK",
         }
         record.update(leak_detection.as_trace_fields())
-        state.history_rounds.append(record)
-        state.stop_reason = "CODE_LEAK"
-        return state
+        return _state_with_record(state, record=record, stop_reason="CODE_LEAK")
 
     architect_parse = parse_architect(normalized_architect_raw)
     auditor_parse = parse_auditor(normalized_auditor_raw)
@@ -138,33 +155,32 @@ def run_round(
             "stop_reason": "FORMAT_VIOLATION",
         }
         record.update(leak_detection.as_trace_fields())
-        state.history_rounds.append(record)
-        state.stop_reason = "FORMAT_VIOLATION"
-        return state
+        return _state_with_record(state, record=record, stop_reason="FORMAT_VIOLATION")
 
     architect_data = dict(architect_parse["data"])
     auditor_data = dict(auditor_parse["data"])
     current_requirement = str(architect_data["requirement"])
-    state.history_v.append(current_requirement)
-    n = len(state.history_v)
+    history_v = [*state.history_v, current_requirement]
+    n = len(history_v)
 
     metrics = _base_metrics(n=n, code_leak_hit=False, stable_count=state.stable_count)
+    next_stable_count = state.stable_count
 
     diff_hit = False
     if n >= 2:
-        prev_requirement = state.history_v[-2]
+        prev_requirement = history_v[-2]
         metrics["diff_ratio"] = diff_ratio(current_requirement, prev_requirement)
         if metrics["diff_ratio"] < float(cfg.diff_floor_pct):
-            state.stable_count += 1
+            next_stable_count += 1
         else:
-            state.stable_count = 0
-        metrics["stable_count"] = int(state.stable_count)
-        diff_hit = state.stable_count >= int(cfg.stable_rounds)
+            next_stable_count = 0
+        metrics["stable_count"] = int(next_stable_count)
+        diff_hit = next_stable_count >= int(cfg.stable_rounds)
 
     circ_hit = False
     if n >= 3:
-        sim_prev = jaccard_sim(state.history_v[-1], state.history_v[-2], int(cfg.shingle_k))
-        sim_loop = jaccard_sim(state.history_v[-1], state.history_v[-3], int(cfg.shingle_k))
+        sim_prev = jaccard_sim(history_v[-1], history_v[-2], int(cfg.shingle_k))
+        sim_loop = jaccard_sim(history_v[-1], history_v[-3], int(cfg.shingle_k))
         metrics["sim_prev"] = sim_prev
         metrics["sim_loop"] = sim_loop
         circ_hit = sim_loop > (sim_prev + float(cfg.margin)) and sim_loop >= float(cfg.min_loop_sim)
@@ -191,7 +207,10 @@ def run_round(
         "stop_reason": stop_reason,
     }
     record.update(leak_detection.as_trace_fields())
-    state.history_rounds.append(record)
-    if stop_reason is not None:
-        state.stop_reason = stop_reason
-    return state
+    return _state_with_record(
+        state,
+        record=record,
+        stop_reason=stop_reason,
+        history_v=history_v,
+        stable_count=next_stable_count,
+    )

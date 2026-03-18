@@ -146,19 +146,27 @@ class ExecutionPipeline:
         setattr(self.orchestrator, "run_ledger", self.run_ledger)
         self.workload_shell = SharedWorkloadShell()
 
+    def _process_rules_value(self, key: str) -> str:
+        process_rules = getattr(self.org, "process_rules", None) if self.org else None
+        if process_rules is None:
+            return ""
+        if isinstance(process_rules, dict):
+            value = process_rules.get(key, "")
+        elif hasattr(process_rules, "get"):
+            value = process_rules.get(key, "")
+        else:
+            value = getattr(process_rules, key, "")
+        return str(value or "").strip()
+
     def _resolve_state_backend_mode(self) -> str:
         env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("state_backend_mode", "")).strip()
+        process_raw = self._process_rules_value("state_backend_mode")
         user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
         return resolve_state_backend_mode(env_raw, process_raw, user_raw)
 
     def _resolve_run_ledger_mode(self) -> str:
         env_raw = (os.environ.get("ORKET_RUN_LEDGER_MODE") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("run_ledger_mode", "")).strip()
+        process_raw = self._process_rules_value("run_ledger_mode")
         user_raw = str(load_user_settings().get("run_ledger_mode", "")).strip()
         return resolve_run_ledger_mode(env_raw, process_raw, user_raw)
 
@@ -196,9 +204,7 @@ class ExecutionPipeline:
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
         env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
-        process_raw = ""
-        if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            process_raw = str(self.org.process_rules.get("gitea_state_pilot_enabled", "")).strip()
+        process_raw = self._process_rules_value("gitea_state_pilot_enabled")
         user_raw = str(load_user_settings().get("gitea_state_pilot_enabled", "")).strip()
         return bool(resolve_gitea_state_pilot_enabled(env_raw, process_raw, user_raw))
 
@@ -241,24 +247,25 @@ class ExecutionPipeline:
             failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
             raise RuntimeError(f"State backend mode 'gitea' pilot readiness failed: {failures}")
 
-        process_rules = getattr(self.org, "process_rules", {}) if self.org else {}
+        process_rules = getattr(self.org, "process_rules", None) if self.org else None
+        process_rules_get = process_rules.get if hasattr(process_rules, "get") else lambda key, default=None: getattr(process_rules, key, default) if process_rules is not None else default
         user_settings = load_user_settings()
         effective_max_iterations = resolve_gitea_worker_max_iterations(
             max_iterations,
             os.environ.get("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
-            process_rules.get("gitea_worker_max_iterations"),
+            process_rules_get("gitea_worker_max_iterations"),
             user_settings.get("gitea_worker_max_iterations"),
         )
         effective_max_idle_streak = resolve_gitea_worker_max_idle_streak(
             max_idle_streak,
             os.environ.get("ORKET_GITEA_WORKER_MAX_IDLE_STREAK"),
-            process_rules.get("gitea_worker_max_idle_streak"),
+            process_rules_get("gitea_worker_max_idle_streak"),
             user_settings.get("gitea_worker_max_idle_streak"),
         )
         effective_max_duration_seconds = resolve_gitea_worker_max_duration_seconds(
             max_duration_seconds,
             os.environ.get("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS"),
-            process_rules.get("gitea_worker_max_duration_seconds"),
+            process_rules_get("gitea_worker_max_duration_seconds"),
             user_settings.get("gitea_worker_max_duration_seconds"),
         )
 
@@ -314,8 +321,8 @@ class ExecutionPipeline:
         env_raw = (os.environ.get("ORKET_IDESIGN_MODE") or "").strip()
         if env_raw:
             raw = env_raw
-        elif self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-            raw = str(self.org.process_rules.get("idesign_mode", "")).strip()
+        else:
+            raw = self._process_rules_value("idesign_mode")
 
         normalized = raw.lower().replace("-", "_").replace(" ", "_")
         aliases = {

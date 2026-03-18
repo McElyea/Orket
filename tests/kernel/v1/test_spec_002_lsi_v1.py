@@ -11,6 +11,9 @@ import pytest
 
 from .adapter import LSIAdapter
 from orket.kernel.v1.canonical import canonical_json_bytes, structural_digest
+from orket.kernel.v1.state.lsi import DIR_STAGING, LocalSovereignIndex
+
+pytestmark = pytest.mark.contract
 
 
 def _to_plain(obj: Any) -> Any:
@@ -110,6 +113,36 @@ def _read_json(path: Path) -> dict[str, Any]:
 @pytest.fixture()
 def lsi_adapter(tmp_path: Path) -> LSIAdapter:
     return LSIAdapter(tmp_path)
+
+
+def test_stage_triplet_is_defined_directly_on_lsi_class(tmp_path: Path) -> None:
+    assert "stage_triplet" in LocalSovereignIndex.__dict__
+
+    lsi = LocalSovereignIndex(str(tmp_path))
+    digests = lsi.stage_triplet(
+        run_id="run-class-check",
+        turn_id="turn-class-check",
+        stem="data/dto/class/direct_stage_triplet",
+        body={"dto_type": "invocation", "id": "inv:class-check"},
+        links={"declares": {"type": "skill", "id": "skill:class-check", "relationship": "declares"}},
+        manifest={"kind": "manifest"},
+    )
+
+    assert digests.links_digest
+    assert lsi.read_refs_sources(
+        scope=DIR_STAGING,
+        ref_type="skill",
+        ref_id="skill:class-check",
+        run_id="run-class-check",
+        turn_id="turn-class-check",
+    ) == [
+        {
+            "stem": "data/dto/class/direct_stage_triplet",
+            "location": "/links/declares",
+            "relationship": "declares",
+            "artifact_digest": digests.links_digest,
+        }
+    ]
 
 
 def test_law_1_fortress_invariant_read_committed_write_staging(lsi_adapter: LSIAdapter, tmp_path: Path):

@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from orket.adapters.storage.async_dual_write_run_ledger import AsyncDualWriteRunLedgerRepository
+from orket.adapters.storage.async_dual_write_run_ledger import AsyncProtocolPrimaryRunLedgerRepository
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 
@@ -35,7 +35,7 @@ async def test_async_dual_write_run_ledger_writes_both_backends_and_reports_clea
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
     telemetry: list[dict[str, Any]] = []
 
-    dual_repo = AsyncDualWriteRunLedgerRepository(
+    dual_repo = AsyncProtocolPrimaryRunLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         telemetry_sink=lambda payload: telemetry.append(dict(payload)),
@@ -59,6 +59,7 @@ async def test_async_dual_write_run_ledger_writes_both_backends_and_reports_clea
     run = await dual_repo.get_run("sess-1")
     assert run is not None
     assert run["status"] == "incomplete"
+    assert "dual" not in dual_repo.__class__.__name__.lower()
     parity_events = [row for row in telemetry if row.get("kind") == "run_ledger_dual_write_parity"]
     assert len(parity_events) >= 2
     assert any(row.get("phase") == "start_run" and row.get("parity_ok") is True for row in parity_events)
@@ -119,7 +120,7 @@ class _FailingProtocolRepository:
 async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_sqlite_authoritative(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     telemetry: list[dict[str, Any]] = []
-    dual_repo = AsyncDualWriteRunLedgerRepository(
+    dual_repo = AsyncProtocolPrimaryRunLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=_FailingProtocolRepository(),
         telemetry_sink=lambda payload: telemetry.append(dict(payload)),
@@ -146,6 +147,7 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
     assert len(errors) >= 2
     parity_events = [row for row in telemetry if row.get("kind") == "run_ledger_dual_write_parity"]
     assert any(row.get("parity_ok") is False for row in parity_events)
+    assert any(row.get("parity_skip_reason") == "protocol_write_failed" for row in parity_events)
     assert any("OSError:forced protocol write failure" in str(row.get("protocol_error")) for row in parity_events)
 
 
@@ -153,7 +155,7 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
 async def test_async_dual_write_run_ledger_supports_protocol_primary_reads(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace")
-    dual_repo = AsyncDualWriteRunLedgerRepository(
+    dual_repo = AsyncProtocolPrimaryRunLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         primary_mode="protocol",
@@ -192,7 +194,7 @@ async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupti
         raise RuntimeError("forced telemetry sink failure")
 
     monkeypatch.setattr("orket.adapters.storage.async_dual_write_run_ledger.log_event", _capture_log)
-    dual_repo = AsyncDualWriteRunLedgerRepository(
+    dual_repo = AsyncProtocolPrimaryRunLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         telemetry_sink=_broken_sink,

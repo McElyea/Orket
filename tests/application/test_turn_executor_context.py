@@ -144,6 +144,78 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted_response(tmp_path):
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+    )
+    issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
+    role = RoleConfig(
+        id="DEV",
+        summary="developer",
+        description="Builds code",
+        tools=["write_file", "update_issue_status"],
+    )
+
+    class _ModelClient:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def complete(self, messages):
+            _ = messages
+            self.calls += 1
+            if self.calls == 1:
+                return SimpleNamespace(
+                    content='{"tool":"write_file","args":{"path":"agent_output/other.py","content":"print(1)"}}',
+                    raw={"response_id": "first"},
+                )
+            return SimpleNamespace(
+                content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}'
+                '\n{"tool":"update_issue_status","args":{"status":"code_review"}}',
+                raw={"response_id": "second"},
+            )
+
+    class _Toolbox:
+        async def execute(self, tool_name, args, context=None):
+            return {"ok": True, "tool": tool_name, "args": args}
+
+    context = {
+        "session_id": "sess-reprompt",
+        "turn_index": 1,
+        "issue_id": "ISSUE-1",
+        "role": "developer",
+        "roles": ["developer"],
+        "current_status": "in_progress",
+        "selected_model": "dummy-model",
+        "dependency_context": {},
+        "required_action_tools": ["write_file", "update_issue_status"],
+        "required_statuses": ["code_review"],
+        "required_read_paths": [],
+        "required_write_paths": ["agent_output/main.py"],
+        "stage_gate_mode": "auto",
+        "history": [],
+    }
+
+    result = await executor.execute_turn(
+        issue=issue,
+        role=role,
+        model_client=_ModelClient(),
+        toolbox=_Toolbox(),
+        context=context,
+        system_prompt="SYSTEM",
+    )
+
+    assert result.success is True
+    out_dir = Path(tmp_path) / "observability" / "sess-reprompt" / "ISSUE-1" / "001_developer"
+    assert "agent_output/main.py" in (out_dir / "model_response.txt").read_text(encoding="utf-8")
+    response_raw = json.loads((out_dir / "model_response_raw.json").read_text(encoding="utf-8"))
+    parsed_calls = json.loads((out_dir / "parsed_tool_calls.json").read_text(encoding="utf-8"))
+    assert response_raw["response_id"] == "second"
+    assert parsed_calls[0]["args"]["path"] == "agent_output/main.py"
+
+
+@pytest.mark.asyncio
 async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_path):
     executor = TurnExecutor(
         StateMachine(),

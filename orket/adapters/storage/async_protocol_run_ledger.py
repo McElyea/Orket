@@ -31,6 +31,17 @@ _TOOL_INVOCATION_KINDS = {"tool_call", "operation_result", "tool_result"}
 _TOOL_RESULT_KINDS = {"operation_result", "tool_result"}
 
 
+def _parse_event_timestamp(value: Any) -> datetime | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    normalized = f"{raw[:-1]}+00:00" if raw.endswith("Z") else raw
+    try:
+        return datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+
+
 class AsyncProtocolRunLedgerRepository:
     """Async wrapper over append-only LPJ-C32 run ledger files."""
 
@@ -485,9 +496,9 @@ class AsyncProtocolRunLedgerRepository:
         if existing is None:
             existing = await asyncio.to_thread(self._ledger(session_id).replay_events)
         if existing:
-            previous_ts = str(existing[-1].get("timestamp") or "").strip()
-            current_ts = str(event.get("timestamp") or "").strip()
-            if previous_ts and current_ts and current_ts < previous_ts:
+            previous_ts = _parse_event_timestamp(existing[-1].get("timestamp"))
+            current_ts = _parse_event_timestamp(event.get("timestamp"))
+            if previous_ts is not None and current_ts is not None and current_ts < previous_ts:
                 raise ValueError("E_LEDGER_TIMESTAMP_NON_MONOTONIC")
         next_seq = await asyncio.to_thread(self._ledger(session_id).next_event_seq)
         payload = dict(event)
@@ -540,11 +551,13 @@ class AsyncProtocolRunLedgerRepository:
         artifacts: Dict[str, Any] = {}
         started_event_seq = 0
         ended_event_seq = 0
+        started_seen = False
 
         for event in events:
             kind = str(event.get("kind") or "")
             event_seq = int(event.get("event_seq") or 0)
             if kind == "run_started":
+                started_seen = True
                 run_type = str(event.get("run_type") or run_type)
                 run_name = str(event.get("run_name") or run_name)
                 department = str(event.get("department") or department)
@@ -562,6 +575,9 @@ class AsyncProtocolRunLedgerRepository:
                 artifacts.update(event.get("artifacts") or {})
                 ended_event_seq = event_seq
                 continue
+
+        if not started_seen:
+            return None
 
         return {
             "session_id": str(session_id),

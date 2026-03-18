@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -31,7 +31,7 @@ class TurnResult:
     turn: Optional[ExecutionTurn] = None
     error: Optional[str] = None
     should_retry: bool = False
-    violations: List[str] = None
+    violations: List[str] = field(default_factory=list)
 
     @classmethod
     def succeeded(cls, turn: ExecutionTurn) -> TurnResult:

@@ -70,7 +70,7 @@ STATE_BACKEND_MODE_OPTIONS: List[Dict[str, str]] = [
 RUN_LEDGER_MODE_OPTIONS: List[Dict[str, str]] = [
     {"value": "sqlite", "label": "SQLite (Compat Default)"},
     {"value": "protocol", "label": "Protocol Append-Only"},
-    {"value": "dual_write", "label": "Dual Write + Parity Telemetry"},
+    {"value": "dual_write", "label": "Protocol Primary + SQLite Lifecycle Mirror"},
 ]
 PROTOCOL_NETWORK_MODE_OPTIONS: List[Dict[str, str]] = [
     {"value": "off", "label": "Off (Deterministic Default)"},

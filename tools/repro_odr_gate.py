@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.kernel.v1.canon import canonical_bytes, first_diff_path, raw_signature  # noqa: E402
+from orket.kernel.v1.canon import canonical_bytes, raw_signature  # noqa: E402
 from orket.kernel.v1.odr.core import ReactorConfig, ReactorState, run_round  # noqa: E402
 
 
@@ -110,14 +110,11 @@ def main() -> int:
         )
 
     if args.expected_hash and canon_hash != args.expected_hash:
-        expected_payload = {"expected_hash": args.expected_hash}
-        expected_bytes = canonical_bytes(expected_payload)
-        diff_path = first_diff_path(canon, expected_bytes)
         return _print_failure(
             seed=args.seed,
             perm_index=args.perm_index,
             round_index=max(1, len(output.get("history_rounds", []))),
-            diff_path=diff_path,
+            diff_path="$",
             stop_reason=stop_reason,
             reason="CANON_MISMATCH",
         )

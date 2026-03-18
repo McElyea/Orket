@@ -49,7 +49,6 @@ def _extract_sections(text: str, required_headers: List[str]) -> Tuple[Dict[str,
         if len(hits) > 1:
             return {}, _err("DUPLICATE_HEADER", f"Duplicate header detected: {header}")
 
-    [header for header in required_headers if positions[header]]
     missing = [header for header in required_headers if not positions[header]]
     if missing:
         return {}, _err("MISSING_HEADER", f"Missing required header(s): {', '.join(missing)}")

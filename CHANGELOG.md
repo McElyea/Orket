@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.14] - 2026-03-17 - "The Behavioral Review Closure Cut"
+
+### Added
+- **Behavioral Review Archive Closeout**: Added the archived remediation closeout record under `docs/projects/archive/techdebt/BR03172026/Closeout.md` for the completed behavioral-review cycle.
+- **Regression Coverage For Behavioral Review Findings**: Added targeted regression coverage for run-ledger naming/parity behavior, protocol timestamp/run reconstruction, process-rules object access, provider timeout/cancel handling, reprompt artifact overwrite, and the fake OpenClaw empty-corpus edge.
+
+### Changed
+- **Behavioral Review Remediation Completion**: Completed the remaining Wave 2 and Wave 3 fixes across the turn executor, run ledger, protocol ledger, execution pipeline, streaming providers, ODR tooling, and OpenClaw torture adapter paths.
+- **Run Ledger Authority Naming**: Renamed the dual-write compatibility repository implementation to a protocol-primary, SQLite-lifecycle-mirror authority while preserving the external `dual_write` runtime policy mode for config compatibility.
+- **Roadmap And Techdebt Lane Closeout**: Archived the behavioral review source and remediation plan, removed the completed non-recurring lane from `Priority Now`, and returned `docs/projects/techdebt/` to standing maintenance only.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `docs/projects/archive/techdebt/BR03172026/Closeout.md` and the archived remediation artifacts for historical proof; the active roadmap no longer carries this lane.
+
 ## [0.4.13] - 2026-03-17 - "The Nervous System Closure Cut"
 
 ### Added

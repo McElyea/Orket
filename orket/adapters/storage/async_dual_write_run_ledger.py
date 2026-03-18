@@ -57,11 +57,10 @@ class _ProtocolLedgerRepository(_RunLedgerRepository, Protocol):
 TelemetrySink = Callable[[dict[str, Any]], Awaitable[None] | None]
 
 
-class AsyncDualWriteRunLedgerRepository:
+class AsyncProtocolPrimaryRunLedgerRepository:
     """
-    Compatibility adapter that writes to SQLite and protocol ledgers in parallel.
-
-    SQLite remains the primary source of truth while protocol parity telemetry is captured.
+    Compatibility adapter that treats the protocol ledger as the primary event source
+    while mirroring run lifecycle state into SQLite and emitting parity telemetry.
     """
 
     def __init__(
@@ -219,6 +218,23 @@ class AsyncDualWriteRunLedgerRepository:
         session_id: str,
         protocol_error: str | None,
     ) -> None:
+        if protocol_error is not None:
+            await self._emit(
+                {
+                    "kind": "run_ledger_dual_write_parity",
+                    "phase": str(phase),
+                    "session_id": str(session_id),
+                    "parity_ok": False,
+                    "parity_skip_reason": "protocol_write_failed",
+                    "difference_count": 0,
+                    "differences": [],
+                    "sqlite_digest": None,
+                    "protocol_digest": None,
+                    "protocol_error": protocol_error,
+                    "parity_error": None,
+                }
+            )
+            return
         parity_error: str | None = None
         parity_ok = False
         differences: list[dict[str, Any]] = []

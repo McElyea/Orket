@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from orket.adapters.storage.async_dual_write_run_ledger import AsyncDualWriteRunLedgerRepository
+from orket.adapters.storage.async_dual_write_run_ledger import AsyncProtocolPrimaryRunLedgerRepository
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.runtime.execution_pipeline import ExecutionPipeline
@@ -39,4 +39,4 @@ def test_execution_pipeline_uses_dual_write_run_ledger_mode(test_root, workspace
         config_root=test_root,
     )
     assert pipeline.run_ledger_mode == "dual_write"
-    assert isinstance(pipeline.run_ledger, AsyncDualWriteRunLedgerRepository)
+    assert isinstance(pipeline.run_ledger, AsyncProtocolPrimaryRunLedgerRepository)

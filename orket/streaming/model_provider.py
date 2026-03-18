@@ -76,7 +76,7 @@ class StubModelStreamProvider(ModelStreamProvider):
     async def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
         provider_turn_id = f"provider-turn-{uuid.uuid4().hex[:12]}"
         async with self._lock:
-            self._canceled[provider_turn_id] = asyncio.Event()
+            self._canceled.setdefault(provider_turn_id, asyncio.Event())
         try:
             seed = _int_value(req.input_config.get("seed"), 0)
             mode = str(req.input_config.get("mode") or req.turn_params.get("mode") or "basic").strip().lower()
@@ -153,7 +153,14 @@ class StubModelStreamProvider(ModelStreamProvider):
 
 
 class OllamaModelStreamProvider(ModelStreamProvider):
-    def __init__(self, *, model_id: str, base_url: str | None = None, timeout_s: float = 60.0) -> None:
+    def __init__(
+        self,
+        *,
+        model_id: str,
+        base_url: str | None = None,
+        timeout_s: float = 60.0,
+        stream_timeout_s: float | None = None,
+    ) -> None:
         try:
             import ollama  # type: ignore
         except ModuleNotFoundError as exc:  # pragma: no cover - environment-dependent
@@ -162,7 +169,9 @@ class OllamaModelStreamProvider(ModelStreamProvider):
         self._base_url = str(base_url or "").strip()
         self._client = ollama.AsyncClient(host=self._base_url) if self._base_url else ollama.AsyncClient()
         self._model_id = model_id
-        self._timeout_s = max(1.0, float(timeout_s))
+        self._connect_timeout_s = max(1.0, float(timeout_s))
+        resolved_stream_timeout = stream_timeout_s if stream_timeout_s is not None else float(timeout_s) * 3.0
+        self._stream_timeout_s = max(1.0, float(resolved_stream_timeout))
         self._canceled: dict[str, asyncio.Event] = {}
         self._lock = asyncio.Lock()
 
@@ -209,10 +218,10 @@ class OllamaModelStreamProvider(ModelStreamProvider):
                     options=options,
                     stream=True,
                 ),
-                timeout=self._timeout_s,
+                timeout=self._connect_timeout_s,
             )
             index = 0
-            async with asyncio.timeout(self._timeout_s):
+            async with asyncio.timeout(self._stream_timeout_s):
                 async for chunk in stream:
                     canceled = await self._is_canceled(provider_turn_id)
                     if canceled.is_set():

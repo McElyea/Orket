@@ -1,3 +1,11 @@
+"""ODR-domain canonicalizer for graph comparison and determinism gates.
+
+This module is intentionally not RFC 8785. It strips ODR-specific
+non-semantic keys and sorts selected unordered list fields. Do not use it for
+object storage or cross-system digests; use `orket.kernel.v1.canonical`
+instead.
+"""
+
 from __future__ import annotations
 
 import json
@@ -49,7 +57,9 @@ def canonicalize(obj: Any, *, _parent_key: str = "") -> Any:
     if isinstance(obj, list):
         canonical_items = [canonicalize(item, _parent_key=_parent_key) for item in obj]
         if _parent_key in UNORDERED_LIST_KEYS:
-            canonical_items.sort(key=lambda item: canonical_bytes(item))
+            keyed_items = [(canonical_bytes(item), item) for item in canonical_items]
+            keyed_items.sort(key=lambda pair: pair[0])
+            canonical_items = [item for _, item in keyed_items]
         return canonical_items
 
     if isinstance(obj, str):

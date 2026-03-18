@@ -231,10 +231,9 @@ class LocalSovereignIndex:
         }
         _atomic_write_json(_triplets_path(scope_root, stem), record)
 
-        # Update refs/by_id for all refs in /links
-        sources = []
+        grouped: dict[tuple[str, str], list[RefSource]] = {}
         for ref_type, ref_id, ptr, relationship in _iter_refs_from_links(links):
-            sources.append(
+            grouped.setdefault((ref_type, ref_id), []).append(
                 RefSource(
                     stem=stem,
                     location=ptr,
@@ -243,7 +242,7 @@ class LocalSovereignIndex:
                 )
             )
 
-        self._update_refs_by_id(scope_root, sources)
+        self._update_refs_by_id_grouped(scope_root, grouped)
 
         return TripletDigests(
             dto_type=dto_type,
@@ -472,26 +471,6 @@ class LocalSovereignIndex:
             return None
         return _read_json(path)
 
-    def _update_refs_by_id(self, scope_root: Path, new_sources: list[RefSource]) -> None:
-        """
-        Non-owning symbol table update (within a single scope):
-        - For each (type,id), load record (if any)
-        - Remove all existing sources with same stem (stem-scoped pruning within scope)
-        - Add new sources
-        - Sort deterministically and write canonical JSON
-        - Emit multi-source collisions is left to promotion/host; we only persist truth.
-        """
-        # Group by (type,id) for minimal writes
-        for s in new_sources:
-            # We need the ref's type/id; store them encoded in location? No.
-            # For minimal v1: caller passes sources grouped per ref type/id via this method.
-            # stage_triplet builds sources from links, but we didn’t carry type/id in RefSource.
-            # So: rebuild from location is impossible. Fix: accept sources grouped externally.
-            raise RuntimeError(
-                "Internal contract error: _update_refs_by_id requires ref_type/ref_id grouping. "
-                "Call _update_refs_by_id_grouped()."
-            )
-
     def _update_refs_by_id_grouped(self, scope_root: Path, grouped: dict[tuple[str, str], list[RefSource]]) -> None:
         for (ref_type, ref_id), sources_for_ref in grouped.items():
             path = _refs_by_id_path(scope_root, ref_type, ref_id)
@@ -560,12 +539,6 @@ class LocalSovereignIndex:
 
         return None
 
-
-# ----------------------------
-# Patch: stage_triplet needs grouped ref update
-# ----------------------------
-
-
 def _event_line(level: str, stage: str, code: str, loc: str, message: str, **details: Any) -> str:
     # Minimal deterministic, single-line, pipe-guaranteed event format
     escaped_msg = str(message).replace("\r", r"\r").replace("\n", r"\n")
@@ -581,74 +554,3 @@ def _event_line(level: str, stage: str, code: str, loc: str, message: str, **det
 
     detail_text = " ".join(f"{k}={fmt(details[k])}" for k in sorted(details.keys()))
     return f"[{level}] [STAGE:{stage}] [CODE:{code}] [LOC:{loc}] {escaped_msg} | {detail_text}"
-
-
-# Monkey-patch the grouping behavior into stage_triplet cleanly without rewriting above block:
-# (keeps the file minimal and readable; you can refactor later.)
-
-
-def _stage_triplet_grouped_update(
-    self: LocalSovereignIndex,
-    *,
-    run_id: str,
-    turn_id: str,
-    stem: str,
-    body: dict[str, Any],
-    links: dict[str, Any],
-    manifest: dict[str, Any],
-) -> TripletDigests:
-    stem = stem.replace("\\", "/").strip("/")
-
-    scope_root = _scope_root(self.root, DIR_STAGING, run_id, turn_id)
-
-    body_bytes = canonical_json_bytes(body)
-    links_bytes = canonical_json_bytes(links)
-    manifest_bytes = canonical_json_bytes(manifest)
-
-    body_digest = structural_digest(body_bytes)
-    links_digest = structural_digest(links_bytes)
-    manifest_digest = structural_digest(manifest_bytes)
-
-    self._put_object(scope_root, body_digest, body_bytes)
-    self._put_object(scope_root, links_digest, links_bytes)
-    self._put_object(scope_root, manifest_digest, manifest_bytes)
-
-    dto_type = None
-    if isinstance(body.get("dto_type"), str):
-        dto_type = body["dto_type"].strip().lower()
-
-    record = {
-        "lsi_version": LSI_VERSION,
-        "stem": stem,
-        "dto_type": dto_type,
-        "body_digest": body_digest,
-        "links_digest": links_digest,
-        "manifest_digest": manifest_digest,
-        "updated_at_turn": turn_id,
-    }
-    _atomic_write_json(_triplets_path(scope_root, stem), record)
-
-    # Build grouped refs
-    grouped: dict[tuple[str, str], list[RefSource]] = {}
-    for ref_type, ref_id, ptr, relationship in _iter_refs_from_links(links):
-        grouped.setdefault((ref_type, ref_id), []).append(
-            RefSource(
-                stem=stem,
-                location=ptr,
-                relationship=relationship,
-                artifact_digest=links_digest,
-            )
-        )
-
-    self._update_refs_by_id_grouped(scope_root, grouped)
-
-    return TripletDigests(
-        dto_type=dto_type,
-        body_digest=body_digest,
-        links_digest=links_digest,
-        manifest_digest=manifest_digest,
-    )
-
-
-# Replace the earlier stage_triplet with the grouped implementation
-LocalSovereignIndex.stage_triplet = _stage_triplet_grouped_update  # type: ignore[attr-defined]

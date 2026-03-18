@@ -4,7 +4,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-from orket.kernel.v1.canon import canonical_bytes
+from orket.kernel.v1.canonical import canonical_json_bytes
 
 
 @dataclass(frozen=True)
@@ -93,7 +93,7 @@ def normalize_spec(request: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def spec_hash(spec: Dict[str, Any]) -> str:
-    payload = canonical_bytes(spec)
+    payload = canonical_json_bytes(spec)
     return hashlib.sha256(payload).hexdigest()
 
 
@@ -130,7 +130,7 @@ def run_identity(
         "repeat_index": int(repeat_index),
         "model_map": {k: model_map[k] for k in sorted(model_map.keys())},
     }
-    digest = hashlib.sha256(canonical_bytes(material)).hexdigest()
+    digest = hashlib.sha256(canonical_json_bytes(material)).hexdigest()
     return digest
 
 

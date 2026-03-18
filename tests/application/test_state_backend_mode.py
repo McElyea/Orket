@@ -1,6 +1,6 @@
 import pytest
 
-from orket.adapters.storage.async_dual_write_run_ledger import AsyncDualWriteRunLedgerRepository
+from orket.adapters.storage.async_dual_write_run_ledger import AsyncProtocolPrimaryRunLedgerRepository
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.application.services.runtime_policy import (
@@ -114,4 +114,4 @@ def test_engine_uses_dual_write_run_ledger_mode(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "dual_write")
     engine = OrchestrationEngine(tmp_path, config_root=tmp_path)
     assert engine.run_ledger_mode == "dual_write"
-    assert isinstance(engine.run_ledger, AsyncDualWriteRunLedgerRepository)
+    assert isinstance(engine.run_ledger, AsyncProtocolPrimaryRunLedgerRepository)

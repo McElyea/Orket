@@ -1,3 +1,10 @@
+"""RFC 8785/JCS canonicalizer for object storage and turn-result digests.
+
+This module is the cross-language digest authority. It does not strip
+ODR-specific non-semantic keys or reorder domain-specific list fields; use
+`orket.kernel.v1.canon` for the ODR-domain canonicalizer.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -49,11 +56,9 @@ def _validate_orket_number_domain(obj: Any) -> None:
     """
     for v in _iter_json_values(obj):
         # dict keys yielded as strings, ok.
+        # bool is a subclass of int in Python. Catch it here alongside str/None
+        # before the int path so True/False are never validated as integers.
         if v is None or isinstance(v, (str, bool)):
-            continue
-
-        # bool is subclass of int in Python; ensure we don't treat True/False as numbers.
-        if isinstance(v, bool):
             continue
 
         if isinstance(v, float):

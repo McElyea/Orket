@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
-from orket.kernel.v1.canon import canonical_bytes
+from orket.kernel.v1.canonical import canonical_json_bytes
 
 from .scoring import aggregate_pairing
 
@@ -56,4 +56,4 @@ def build_report(*, spec_hash: str, spec: Dict[str, Any], run_rows: List[Dict[st
 
 
 def report_canonical_bytes(report: Dict[str, Any]) -> bytes:
-    return canonical_bytes(report)
+    return canonical_json_bytes(report)

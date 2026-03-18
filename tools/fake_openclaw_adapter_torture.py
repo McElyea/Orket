@@ -134,6 +134,8 @@ def _select_case_id(request: dict[str, Any], known_case_ids: list[str]) -> str:
     requested = str(request.get("case_id") or request.get("scenario_kind") or "").strip()
     if requested:
         return requested
+    if not known_case_ids:
+        return ""
     return known_case_ids[0]
 
 
@@ -166,6 +168,9 @@ def main() -> int:
             continue
 
         case_id = _select_case_id(request, known_case_ids)
+        if not case_id:
+            _write_line({"type": "error", "code": "NO_CASES_LOADED", "message": "Corpus is empty."})
+            continue
         case = cases_by_id.get(case_id)
         if case is None:
             _write_line(

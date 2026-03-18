@@ -413,6 +413,46 @@ async def test_async_protocol_run_ledger_rejects_non_monotonic_timestamps(tmp_pa
 
 # Layer: contract
 @pytest.mark.asyncio
+async def test_async_protocol_run_ledger_accepts_later_timestamp_with_different_offset_format(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    timestamps = iter(
+        [
+            "2025-01-01T00:30:00+01:00",
+            "2025-01-01T00:00:00Z",
+        ]
+    )
+    original_build_event = repo._build_event
+
+    def _fake_build_event(*, session_id: str, kind: str, event_type: str, **extra):
+        event = original_build_event(session_id=session_id, kind=kind, event_type=event_type, **extra)
+        event["timestamp"] = next(timestamps)
+        return event
+
+    monkeypatch.setattr(repo, "_build_event", _fake_build_event)
+
+    first = await repo.append_event(session_id="sess-ts-offset", kind="event_a", payload={"x": 1})
+    second = await repo.append_event(session_id="sess-ts-offset", kind="event_b", payload={"x": 2})
+
+    assert first["event_seq"] == 1
+    assert second["event_seq"] == 2
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_async_protocol_run_ledger_get_run_returns_none_without_run_started(tmp_path: Path) -> None:
+    repo = AsyncProtocolRunLedgerRepository(tmp_path)
+    _ = await repo.append_event(session_id="sess-no-start", kind="tool_call", payload=_tool_call_payload(session_id="sess-no-start", operation_id="op-1"))
+
+    run = await repo.get_run("sess-no-start")
+
+    assert run is None
+
+
+# Layer: contract
+@pytest.mark.asyncio
 async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_events(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
     call_payload = _tool_call_payload(session_id="sess-manifest", operation_id="op-1")
