@@ -1,0 +1,31 @@
+{
+  "fixture_id": "s05_slugify_title_v1",
+  "artifact_path": "agent_output/slugify_title.py",
+  "module_name": "slugify_title",
+  "function_name": "slugify_title",
+  "signature": "slugify_title(title: str) -> str",
+  "docstring": "Return a lowercase slug made from ASCII letters and digits joined by single hyphens. Collapse repeated separators, trim leading and trailing separators, and return 'n-a' if no letters or digits remain.",
+  "issue_summary": "Write agent_output/slugify_title.py containing a Python function slugify_title(title: str) -> str. The function must lowercase the input, keep only ASCII letters and digits, join word groups with single hyphens, collapse repeated separators, trim leading and trailing separators, and return 'n-a' if no letters or digits remain. Then call update_issue_status with status code_review in the same response.",
+  "test_cases": [
+    {
+      "name": "basic punctuation",
+      "args": ["Hello, World!"],
+      "expected": "hello-world"
+    },
+    {
+      "name": "repeated separators",
+      "args": ["  Already--Slugged  "],
+      "expected": "already-slugged"
+    },
+    {
+      "name": "fallback value",
+      "args": ["***"],
+      "expected": "n-a"
+    },
+    {
+      "name": "digits preserved",
+      "args": ["Python_3.12 Release"],
+      "expected": "python-3-12-release"
+    }
+  ]
+}

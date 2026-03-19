@@ -1,0 +1,30 @@
+{
+  "fixture_id": "s06_task_store_v1",
+  "task_summary": "Build a tiny task-store toolkit split into schema, writer, and reader artifacts.",
+  "task_description": "Create a tiny task-store toolkit as three separate artifacts. The schema must describe task objects with id, title, and status fields. The writer must append one task object to a JSON list stored on disk. The reader must load and return the stored JSON list.",
+  "artifacts": [
+    {
+      "path": "agent_output/schema.json",
+      "kind": "artifact",
+      "issue_hint": "Write agent_output/schema.json describing a task object with id, title, and status string fields.",
+      "required_read_paths": []
+    },
+    {
+      "path": "agent_output/writer.py",
+      "kind": "artifact",
+      "issue_hint": "Write agent_output/writer.py with a function append_task(path, task) that appends a task object to a JSON list on disk.",
+      "required_read_paths": ["agent_output/schema.json"]
+    },
+    {
+      "path": "agent_output/reader.py",
+      "kind": "artifact",
+      "issue_hint": "Write agent_output/reader.py with a function list_tasks(path) that returns the parsed JSON list from disk.",
+      "required_read_paths": ["agent_output/schema.json"]
+    }
+  ],
+  "sample_task": {
+    "id": "task-1",
+    "title": "demo",
+    "status": "ready"
+  }
+}

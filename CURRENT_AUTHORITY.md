@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-17
+Last updated: 2026-03-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -40,13 +40,14 @@ It defines only the currently authoritative paths that agents and contributors m
 20. Core release prep script for release-only worktrees: `scripts/governance/prepare_core_release.py`
 21. Canonical core release tag rule: every post-`0.4.0` versioned commit on pushed `main` must carry the matching annotated `v<major>.<minor>.<patch>` tag on that exact commit.
 22. Pytest sandbox fail-closed fixture: `tests/conftest.py`
+23. Determinism claim/gate policy: `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-17",
+  "last_updated": "2026-03-19",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -125,6 +126,7 @@ It defines only the currently authoritative paths that agents and contributors m
         "docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md"
       ],
       "operating_principles_source": "docs/specs/ORKET_OPERATING_PRINCIPLES.md",
+      "determinism_gate_policy_source": "docs/specs/ORKET_DETERMINISM_GATE_POLICY.md",
       "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
       "sources": [
         "docs/README.md",

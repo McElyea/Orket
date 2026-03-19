@@ -1,0 +1,115 @@
+{
+  "fixture_id": "s04_corrupt_order_processor_v1",
+  "description": "Single-file code review fixture with obvious security, correctness, and fake-verification drift.",
+  "scoring": {
+    "must_catch_weight": 5,
+    "nice_catch_weight": 2,
+    "reasoning_weight": 2,
+    "fix_weight": 1
+  },
+  "issues": [
+    {
+      "issue_id": "RAW_PAYLOAD_EVAL",
+      "category": "security",
+      "severity": "blocker",
+      "must_catch": true,
+      "files": ["scripts/workloads/fixtures/code_review_probe_v1/corrupt_order_processor.py"],
+      "fingerprints": [
+        "eval",
+        "eval(raw_payload",
+        "payload = eval("
+      ],
+      "why": "Using eval on request data allows arbitrary code execution.",
+      "expected_reasoning": [
+        "Untrusted input must not be passed to eval",
+        "This is remote code execution risk, not just parsing drift",
+        "Use a real parser such as json.loads with validation"
+      ],
+      "expected_fix": [
+        "Replace eval with json.loads",
+        "Validate payload shape before use"
+      ]
+    },
+    {
+      "issue_id": "DEBUG_PAYLOAD_LEAK",
+      "category": "security",
+      "severity": "high",
+      "must_catch": true,
+      "files": ["scripts/workloads/fixtures/code_review_probe_v1/corrupt_order_processor.py"],
+      "fingerprints": [
+        "DEBUG payload=",
+        "print(\"DEBUG payload=\", raw_payload)"
+      ],
+      "why": "Printing raw payloads can leak customer data and makes accidental production disclosure more likely.",
+      "expected_reasoning": [
+        "Raw request payloads should not be printed",
+        "Use structured logging with redaction if logging is required"
+      ],
+      "expected_fix": [
+        "Remove the print statement",
+        "Log only safe summary fields behind an explicit debug gate"
+      ]
+    },
+    {
+      "issue_id": "DISCOUNT_PERCENT_UNBOUNDED",
+      "category": "correctness",
+      "severity": "high",
+      "must_catch": false,
+      "files": ["scripts/workloads/fixtures/code_review_probe_v1/corrupt_order_processor.py"],
+      "fingerprints": [
+        "discount_percent = float(payload.get(\"discount_percent\", 0.0))",
+        "total = subtotal - (subtotal * discount_percent)"
+      ],
+      "why": "Discount percent is not validated, so values like 25 mean 2500 percent off and can drive totals negative.",
+      "expected_reasoning": [
+        "Input validation is missing for discount_percent",
+        "Financial calculations should constrain or reject invalid percentages"
+      ],
+      "expected_fix": [
+        "Validate discount_percent range before use",
+        "Add tests for negative, over-one, and integer-style percent inputs"
+      ]
+    },
+    {
+      "issue_id": "VERIFY_SIGNATURE_ALWAYS_TRUE",
+      "category": "security",
+      "severity": "blocker",
+      "must_catch": true,
+      "files": ["scripts/workloads/fixtures/code_review_probe_v1/corrupt_order_processor.py"],
+      "fingerprints": [
+        "verify_signature",
+        "return bool\\(signature\\)"
+      ],
+      "why": "The function pretends to verify a signature but accepts any non-empty string.",
+      "expected_reasoning": [
+        "The checksum work is decorative because the result is ignored",
+        "Any non-empty signature currently passes",
+        "This defeats the integrity check entirely"
+      ],
+      "expected_fix": [
+        "Compare against a real expected signature or HMAC",
+        "Remove fake checksum code and fail closed on mismatch"
+      ]
+    },
+    {
+      "issue_id": "PERSIST_ORDER_SWALLOWS_FAILURE",
+      "category": "correctness",
+      "severity": "high",
+      "must_catch": true,
+      "files": ["scripts/workloads/fixtures/code_review_probe_v1/corrupt_order_processor.py"],
+      "fingerprints": [
+        "except Exception:",
+        "return True"
+      ],
+      "why": "Write failures are swallowed and reported as success, so callers cannot tell whether the order was persisted.",
+      "expected_reasoning": [
+        "Broad exception swallowing hides real persistence failures",
+        "Success should not be reported when the write failed"
+      ],
+      "expected_fix": [
+        "Catch narrower exceptions or let them raise",
+        "Return False or raise on write failure"
+      ]
+    }
+  ]
+}

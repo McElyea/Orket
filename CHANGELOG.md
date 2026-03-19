@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.15] - 2026-03-19 - "The Governed Workload Proof Cut"
+
+### Added
+- **Phase 3 Standalone Workload Probes**: Added new bounded workload probes under `scripts/workloads/` for S-04 code review, S-05 generate-and-verify, and S-06 decompose-and-route, along with dedicated fixtures and targeted application coverage.
+- **Determinism Gate Policy Authority**: Added `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md` as the canonical claim-tier and gate-policy document for determinism, replay, verdict stability, and publication wording.
+
+### Changed
+- **S-04 Review Probe Hardening**: Reworked the code-review probe around governed prompt/method profiles, a deterministic static-fingerprint lane, and truthful provider-usage accounting so must-catch coverage and stability can be evaluated independently from raw prose quality.
+- **Structured Review Scoring**: Hardened `scripts/reviewrun/score_answer_key.py` to score structured review artifacts semantically instead of relying on brittle whole-blob matching, restoring reasoning and fix credit when the model review is materially correct.
+- **Authority Indexing**: Updated `docs/README.md` and `CURRENT_AUTHORITY.md` so the new determinism policy is tracked as an active governance source.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md` when making determinism, replay, or verdict-stability claims for proof, release, and publication artifacts.
+
 ## [0.4.14] - 2026-03-17 - "The Behavioral Review Closure Cut"
 
 ### Added

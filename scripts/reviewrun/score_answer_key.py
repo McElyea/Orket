@@ -7,6 +7,50 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List
 
+_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "but",
+    "by",
+    "for",
+    "from",
+    "how",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "its",
+    "just",
+    "like",
+    "not",
+    "of",
+    "on",
+    "or",
+    "so",
+    "such",
+    "than",
+    "that",
+    "the",
+    "their",
+    "then",
+    "there",
+    "these",
+    "this",
+    "to",
+    "use",
+    "uses",
+    "using",
+    "was",
+    "when",
+    "with",
+}
+
 
 def _load_json(path: Path) -> Dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -50,6 +94,81 @@ def _normalize_text(value: str) -> str:
     return " ".join(str(value or "").lower().split())
 
 
+def _stem_token(token: str) -> str:
+    text = str(token or "").strip().lower()
+    replacements = {
+        "json.loads": "json_loads",
+        "rce": "remote_code_execution",
+        "non-empty": "nonempty",
+        "nonempty": "nonempty",
+    }
+    text = replacements.get(text, text)
+    if len(text) <= 4:
+        return text
+    suffixes = (
+        "izations",
+        "ization",
+        "ations",
+        "ation",
+        "ments",
+        "ment",
+        "ness",
+        "tion",
+        "sion",
+        "able",
+        "ible",
+        "ally",
+        "edly",
+        "ingly",
+        "ance",
+        "ence",
+        "ious",
+        "ing",
+        "ies",
+        "ied",
+        "ers",
+        "er",
+        "ed",
+        "ly",
+        "es",
+        "s",
+    )
+    for suffix in suffixes:
+        if len(text) > len(suffix) + 2 and text.endswith(suffix):
+            if suffix in {"ies", "ied"}:
+                return text[: -len(suffix)] + "y"
+            return text[: -len(suffix)]
+    return text
+
+
+def _semantic_tokens(value: str) -> set[str]:
+    normalized = _normalize_text(value).replace("_", " ")
+    raw_tokens = re.findall(r"[a-z0-9]+", normalized)
+    return {
+        _stem_token(token)
+        for token in raw_tokens
+        if len(token) >= 3 and token not in _STOPWORDS
+    }
+
+
+def _semantic_match(expected: str, actual: str) -> bool:
+    expected_tokens = _semantic_tokens(expected)
+    actual_tokens = _semantic_tokens(actual)
+    if not expected_tokens or not actual_tokens:
+        return False
+    overlap = expected_tokens & actual_tokens
+    overlap_count = len(overlap)
+    if overlap_count == 0:
+        return False
+    expected_count = len(expected_tokens)
+    overlap_ratio = overlap_count / float(expected_count)
+    if expected_count <= 2:
+        return overlap_count == expected_count
+    if expected_count == 3:
+        return overlap_count >= 2
+    return overlap_count >= 2 and overlap_ratio >= 0.34
+
+
 def _contains_theme(corpus: str, theme: str) -> bool:
     norm = _normalize_text(theme)
     if not norm:
@@ -57,6 +176,97 @@ def _contains_theme(corpus: str, theme: str) -> bool:
     token_len = max(5, min(16, len(norm.split())))
     needle = " ".join(norm.split()[:token_len])
     return needle in _normalize_text(corpus)
+
+
+def _model_review_entries(model: Dict[str, Any] | None) -> List[Dict[str, Any]]:
+    if not isinstance(model, dict):
+        return []
+    entries: List[Dict[str, Any]] = []
+    for index, issue in enumerate(list(model.get("high_risk_issues") or [])):
+        if not isinstance(issue, dict):
+            continue
+        why = str(issue.get("why") or "")
+        where = str(issue.get("where") or "")
+        impact = str(issue.get("impact") or "")
+        suggested_fix = str(issue.get("suggested_fix") or "")
+        entries.append(
+            {
+                "entry_index": index,
+                "reasoning_corpus": " ".join(part for part in (why, where, impact) if part),
+                "fix_corpus": suggested_fix,
+                "full_corpus": " ".join(part for part in (why, where, impact, suggested_fix) if part),
+            }
+        )
+    global_corpus_parts: List[str] = []
+    global_corpus_parts.extend(str(item or "") for item in list(model.get("summary") or []))
+    global_corpus_parts.extend(str(item or "") for item in list(model.get("missing_tests") or []))
+    global_corpus_parts.extend(str(item or "") for item in list(model.get("questions_for_author") or []))
+    global_corpus_parts.extend(str(item or "") for item in list(model.get("nits") or []))
+    global_corpus_parts.extend(str(item or "") for item in list(model.get("refs") or []))
+    global_corpus = " ".join(part for part in global_corpus_parts if str(part).strip())
+    if global_corpus:
+        entries.append(
+            {
+                "entry_index": -1,
+                "reasoning_corpus": global_corpus,
+                "fix_corpus": global_corpus,
+                "full_corpus": global_corpus,
+            }
+        )
+    return entries
+
+
+def _score_model_issue(
+    *,
+    issue: Dict[str, Any],
+    issue_id: str,
+    compiled: List[re.Pattern[str]],
+    entries: List[Dict[str, Any]],
+) -> tuple[bool, int, int]:
+    expected_reasoning = [str(item or "") for item in list(issue.get("expected_reasoning") or []) if str(item or "").strip()]
+    expected_fix = [str(item or "") for item in list(issue.get("expected_fix") or []) if str(item or "").strip()]
+    canonical_why = str(issue.get("why") or "")
+    best_hit = False
+    best_reason_hits = 0
+    best_fix_hits = 0
+    best_rank = (-1, -1, -1, -1)
+
+    for entry in entries:
+        full_corpus = str(entry.get("full_corpus") or "")
+        reasoning_corpus = str(entry.get("reasoning_corpus") or "")
+        fix_corpus = str(entry.get("fix_corpus") or "")
+        structured_flag = 1 if int(entry.get("entry_index", -1)) >= 0 else 0
+
+        hit = False
+        if issue_id and issue_id in full_corpus:
+            hit = True
+        elif compiled and _matches_any(compiled, full_corpus):
+            hit = True
+        elif canonical_why and _semantic_match(canonical_why, reasoning_corpus):
+            hit = True
+        elif any(_semantic_match(bullet, fix_corpus) for bullet in expected_fix):
+            hit = True
+
+        reason_hits = 0
+        fix_hits = 0
+        if hit:
+            for bullet in expected_reasoning:
+                if _semantic_match(bullet, reasoning_corpus):
+                    reason_hits += 1
+            if reason_hits == 0 and canonical_why and _semantic_match(canonical_why, reasoning_corpus):
+                reason_hits = 1
+            for bullet in expected_fix:
+                if _semantic_match(bullet, fix_corpus):
+                    fix_hits += 1
+
+        rank = (1 if hit else 0, reason_hits, fix_hits, structured_flag)
+        if rank > best_rank:
+            best_rank = rank
+            best_hit = hit
+            best_reason_hits = reason_hits
+            best_fix_hits = fix_hits
+
+    return best_hit, best_reason_hits, best_fix_hits
 
 
 def score_answer_key(
@@ -74,6 +284,7 @@ def score_answer_key(
     diff_unified = str(snapshot.get("diff_unified") or "")
     finding_text = _json_blob(deterministic.get("findings") or [])
     model_text = _json_blob(model) if isinstance(model, dict) else ""
+    review_entries = _model_review_entries(model)
 
     scoring = dict(key.get("scoring") or {})
     must_weight = int(scoring.get("must_catch_weight") or 5)
@@ -121,16 +332,25 @@ def score_answer_key(
         fix_hits = 0
         model_hit = False
         if model_text:
-            if issue_id and issue_id in model_text:
-                model_hit = True
-            elif compiled:
-                model_hit = _matches_any(compiled, model_text)
-            for bullet in list(issue.get("expected_reasoning") or []):
-                if _contains_theme(model_text, str(bullet or "")):
-                    reason_hits += 1
-            for bullet in list(issue.get("expected_fix") or []):
-                if _contains_theme(model_text, str(bullet or "")):
-                    fix_hits += 1
+            model_hit, reason_hits, fix_hits = _score_model_issue(
+                issue=issue,
+                issue_id=issue_id,
+                compiled=compiled,
+                entries=review_entries,
+            )
+            if not model_hit:
+                if issue_id and issue_id in model_text:
+                    model_hit = True
+                elif compiled:
+                    model_hit = _matches_any(compiled, model_text)
+            if reason_hits == 0:
+                for bullet in list(issue.get("expected_reasoning") or []):
+                    if _contains_theme(model_text, str(bullet or "")):
+                        reason_hits += 1
+            if fix_hits == 0:
+                for bullet in list(issue.get("expected_fix") or []):
+                    if _contains_theme(model_text, str(bullet or "")):
+                        fix_hits += 1
 
         row = {
             "issue_id": issue_id,
