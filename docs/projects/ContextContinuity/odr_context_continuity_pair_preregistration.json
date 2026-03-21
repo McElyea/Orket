@@ -1,0 +1,229 @@
+{
+  "schema_version": "odr.context_continuity.pair_preregistration.v1",
+  "last_updated": "2026-03-21",
+  "requirements_authority": "docs/projects/ContextContinuity/odr_context_continuity_requirements.md",
+  "implementation_authority": "docs/projects/ContextContinuity/odr_context_continuity_implementation_plan.md",
+  "selection_policy_reference": {
+    "path": "docs/projects/ContextContinuity/odr_context_continuity_requirements.md",
+    "sections": [
+      "12.8",
+      "12.9",
+      "12.10",
+      "12.11",
+      "13",
+      "15"
+    ]
+  },
+  "matrix_scope": "single_pair_bounded",
+  "selection_summary": {
+    "qualified_pair_count": 1,
+    "primary_pair_count": 1,
+    "secondary_sensitivity_pair_count": 0,
+    "notes": [
+      "Exactly one pair satisfies the Section 13 split structural-failure gate.",
+      "No secondary sensitivity pair is currently admissible without loosening the pre-registered thresholds."
+    ]
+  },
+  "threshold_snapshot": {
+    "overall_structural_failure_rate_max": 0.5,
+    "compare_structural_failure_rate_max": 0.5,
+    "exclude_when_compare_structural_dominant_artifacts_exceed_ratio": 0.5,
+    "ranking_order": [
+      "lower overall_structural_failure_rate",
+      "lower compare_structural_failure_rate",
+      "higher semantic_failure_share",
+      "higher prior_convergence_rate"
+    ]
+  },
+  "selected_primary_pairs": [
+    {
+      "pair_id": "magistral_small_2509__gemma3_27b",
+      "architect_model": "mistralai/magistral-small-2509",
+      "architect_provider": "lmstudio",
+      "auditor_model": "gemma3:27b",
+      "auditor_provider": "ollama",
+      "selection_status": "selected_primary",
+      "bounded_evidence_scope": "single_pair_bounded",
+      "evidence_metrics": {
+        "overall_structural_failure_rate": 0.4,
+        "compare_structural_failure_rate": 0.5,
+        "semantic_failure_share": 0.6,
+        "prior_convergence_rate": 0.0
+      },
+      "selection_reason": "Only qualifying pair under the split gate; compare slice remains structurally admissible at the locked <= 0.5 threshold."
+    }
+  ],
+  "secondary_sensitivity_pairs": [],
+  "excluded_pairs": [
+    {
+      "pair_id": "gemma3_27b__magistral_small_2509",
+      "architect_model": "gemma3:27b",
+      "architect_provider": "ollama",
+      "auditor_model": "mistralai/magistral-small-2509",
+      "auditor_provider": "lmstudio",
+      "selection_status": "excluded",
+      "evidence_metrics": {
+        "overall_structural_failure_rate": 0.4,
+        "compare_structural_failure_rate": 1.0,
+        "semantic_failure_share": 0.6,
+        "prior_convergence_rate": 0.0
+      },
+      "exclusion_reason": "Excluded because compare_structural_failure_rate exceeds the locked <= 0.5 threshold."
+    },
+    {
+      "pair_id": "qwen3_5_35b_a3b__gemma3_27b",
+      "architect_model": "qwen/qwen3.5-35b-a3b",
+      "architect_provider": "lmstudio",
+      "auditor_model": "gemma3:27b",
+      "auditor_provider": "ollama",
+      "selection_status": "excluded",
+      "evidence_metrics": {
+        "overall_structural_failure_rate": 1.0,
+        "compare_structural_failure_rate": 1.0,
+        "semantic_failure_share": 0.0,
+        "prior_convergence_rate": 0.0
+      },
+      "exclusion_reason": "Excluded because the pair is structurally dominant in both baseline and compare artifacts."
+    },
+    {
+      "pair_id": "gemma3_27b__qwen3_5_35b_a3b",
+      "architect_model": "gemma3:27b",
+      "architect_provider": "ollama",
+      "auditor_model": "qwen/qwen3.5-35b-a3b",
+      "auditor_provider": "lmstudio",
+      "selection_status": "excluded",
+      "evidence_metrics": {
+        "overall_structural_failure_rate": 1.0,
+        "compare_structural_failure_rate": null,
+        "semantic_failure_share": 0.0,
+        "prior_convergence_rate": 0.0
+      },
+      "exclusion_reason": "Excluded because the baseline artifact is already structurally contaminated above the locked overall threshold."
+    },
+    {
+      "pair_id": "qwen3_5_35b_a3b__magistral_small_2509",
+      "architect_model": "qwen/qwen3.5-35b-a3b",
+      "architect_provider": "lmstudio",
+      "auditor_model": "mistralai/magistral-small-2509",
+      "auditor_provider": "lmstudio",
+      "selection_status": "excluded",
+      "evidence_metrics": {
+        "overall_structural_failure_rate": 1.0,
+        "compare_structural_failure_rate": null,
+        "semantic_failure_share": 0.0,
+        "prior_convergence_rate": 0.0
+      },
+      "exclusion_reason": "Excluded because the baseline artifact shows total structural failure via code leakage."
+    },
+    {
+      "pair_id": "magistral_small_2509__qwen3_5_35b_a3b",
+      "architect_model": "mistralai/magistral-small-2509",
+      "architect_provider": "lmstudio",
+      "auditor_model": "qwen/qwen3.5-35b-a3b",
+      "auditor_provider": "lmstudio",
+      "selection_status": "excluded",
+      "evidence_metrics": {
+        "overall_structural_failure_rate": 1.0,
+        "compare_structural_failure_rate": null,
+        "semantic_failure_share": 0.0,
+        "prior_convergence_rate": 0.0
+      },
+      "exclusion_reason": "Excluded because the baseline artifact shows total structural failure via code leakage."
+    }
+  ],
+  "cited_prior_artifacts": [
+    {
+      "pair_id": "magistral_small_2509__gemma3_27b",
+      "artifact_kind": "baseline",
+      "artifact_name": ".tmp/odr_pair_matrix_baseline_magistral2509__gemma27b.json",
+      "scenario_runs": 3,
+      "structural_failure_scenario_runs": 1,
+      "semantic_failure_scenario_runs": 2,
+      "convergence_rate": 0.0,
+      "stop_reason_distribution": {
+        "MAX_ROUNDS": 1,
+        "CODE_LEAK": 1,
+        "INVALID_CONVERGENCE": 1
+      }
+    },
+    {
+      "pair_id": "magistral_small_2509__gemma3_27b",
+      "artifact_kind": "compare",
+      "artifact_name": ".tmp/odr_pair_matrix_compare_magistral2509__gemma27b.json",
+      "scenario_runs": 2,
+      "structural_failure_scenario_runs": 1,
+      "semantic_failure_scenario_runs": 1,
+      "convergence_rate": 0.0,
+      "verdict": "FAIL_LOW_CONVERGENCE"
+    },
+    {
+      "pair_id": "gemma3_27b__magistral_small_2509",
+      "artifact_kind": "baseline",
+      "artifact_name": ".tmp/odr_pair_matrix_baseline_gemma27b__magistral2509.json",
+      "scenario_runs": 3,
+      "structural_failure_scenario_runs": 0,
+      "semantic_failure_scenario_runs": 3,
+      "convergence_rate": 0.0,
+      "stop_reason_distribution": {
+        "MAX_ROUNDS": 2,
+        "UNRESOLVED_DECISIONS": 1
+      }
+    },
+    {
+      "pair_id": "gemma3_27b__magistral_small_2509",
+      "artifact_kind": "compare",
+      "artifact_name": ".tmp/odr_pair_matrix_compare_gemma27b__magistral2509.json",
+      "scenario_runs": 2,
+      "structural_failure_scenario_runs": 2,
+      "semantic_failure_scenario_runs": 0,
+      "convergence_rate": 0.0,
+      "verdict": "FAIL_ODR_UNRELIABLE"
+    },
+    {
+      "pair_id": "qwen3_5_35b_a3b__gemma3_27b",
+      "artifact_kind": "baseline",
+      "artifact_name": ".tmp/odr_mixed_provider_baseline_qwen_gemma_reasoning_fix.json",
+      "scenario_runs": 3,
+      "structural_failure_scenario_runs": 3,
+      "semantic_failure_scenario_runs": 0,
+      "convergence_rate": 0.0
+    },
+    {
+      "pair_id": "qwen3_5_35b_a3b__gemma3_27b",
+      "artifact_kind": "compare",
+      "artifact_name": ".tmp/odr_mixed_provider_compare_qwen_gemma_reasoning_fix.json",
+      "scenario_runs": 2,
+      "structural_failure_scenario_runs": 2,
+      "semantic_failure_scenario_runs": 0,
+      "convergence_rate": 0.0,
+      "verdict": "FAIL_ODR_UNRELIABLE"
+    },
+    {
+      "pair_id": "gemma3_27b__qwen3_5_35b_a3b",
+      "artifact_kind": "baseline",
+      "artifact_name": ".tmp/odr_pair_matrix_baseline_gemma27b__qwen35a3b.json",
+      "scenario_runs": 3,
+      "structural_failure_scenario_runs": 3,
+      "semantic_failure_scenario_runs": 0,
+      "convergence_rate": 0.0
+    },
+    {
+      "pair_id": "qwen3_5_35b_a3b__magistral_small_2509",
+      "artifact_kind": "baseline",
+      "artifact_name": ".tmp/odr_pair_matrix_baseline_qwen35a3b__magistral2509.json",
+      "scenario_runs": 3,
+      "structural_failure_scenario_runs": 3,
+      "semantic_failure_scenario_runs": 0,
+      "convergence_rate": 0.0
+    },
+    {
+      "pair_id": "magistral_small_2509__qwen3_5_35b_a3b",
+      "artifact_kind": "baseline",
+      "artifact_name": ".tmp/odr_pair_matrix_baseline_magistral2509__qwen35a3b.json",
+      "scenario_runs": 3,
+      "structural_failure_scenario_runs": 3,
+      "semantic_failure_scenario_runs": 0,
+      "convergence_rate": 0.0
+    }
+  ]
+}

@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.16] - 2026-03-21 - "The Context Continuity Bootstrap Cut"
+
+### Added
+- **Context Continuity Lane Authority**: Added the new ContextContinuity lane requirements, implementation plan, pair pre-registration snapshot, machine-readable lane config, output schema, and a config-driven bootstrap harness for the active roadmap execution lane.
+- **Continuity Bootstrap Coverage**: Added targeted unit, contract, and integration coverage for continuity pair-budget reducers, control-mode isolation, and config-driven bootstrap execution.
+
+### Changed
+- **Mixed-Provider ODR Benchmarking**: Hardened the local model provider, ODR runtime-control path, and ODR benchmark scripts for per-role provider selection, truthful mixed-provider residency handling, and more accurate baseline interpretation.
+- **OpenAI-Compatible Reasoning Recovery**: Improved LM Studio/OpenAI-compatible response extraction and local prompting policy handling for reasoning-content-only responses and Qwen-family no-think prompt shaping, with expanded adapter test coverage.
+- **Roadmap And Archive Hygiene**: Promoted the ContextContinuity implementation lane into `Priority Now`, updated the project index, and archived the previous future techdebt `game-plan.md` under `docs/projects/archive/techdebt/game-plan.md`.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `python scripts/odr/prepare_odr_context_continuity_lane.py` to materialize the locked ContextContinuity bootstrap artifact before executing later continuity slices.
+
 ## [0.4.15] - 2026-03-19 - "The Governed Workload Proof Cut"
 
 ### Added

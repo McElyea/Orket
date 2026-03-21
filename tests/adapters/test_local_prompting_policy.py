@@ -138,3 +138,18 @@ async def test_resolve_local_prompting_policy_lmstudio_context_session_uses_runt
     telemetry = result.telemetry()
     assert telemetry["lmstudio_session_mode"] == "context"
     assert telemetry["lmstudio_session_id_present"] is True
+
+
+@pytest.mark.asyncio
+async def test_resolve_local_prompting_policy_adds_qwen_no_think_hint_for_openai_compat_non_reasoning() -> None:
+    result = await resolve_local_prompting_policy(
+        provider_backend="openai_compat",
+        model="qwen/qwen3.5-35b-a3b",
+        messages=[{"role": "user", "content": "Return the required four sections only."}],
+        runtime_context={"local_prompt_task_class": "concise_text"},
+    )
+
+    assert result.profile_id == "openai_compat.qwen.openai_messages.v1"
+    assert result.messages[-1]["content"].endswith("/no_think")
+    assert result.sampling_bundle["max_output_tokens"] == 1536
+    assert "reasoning_suppression:qwen_no_think_prompt_hint" in result.warnings

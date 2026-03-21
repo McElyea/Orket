@@ -42,6 +42,8 @@ Usage
     python scripts/odr/run_odr_single_vs_coordinated.py \\
         --architect-model qwen2.5-coder:7b \\
         --auditor-model qwen2.5:7b \\
+        --architect-provider ollama \\
+        --auditor-provider ollama \\
         --rounds 3 \\
         --out benchmarks/results/odr/single_vs_coordinated_7b.json
 
@@ -61,6 +63,7 @@ Environment variables
 ---------------------
     ORKET_LLM_PROVIDER        ollama (default) | openai_compat | lmstudio
     ORKET_LLM_OLLAMA_HOST     Ollama base URL
+    ORKET_LLM_OPENAI_BASE_URL OpenAI-compatible base URL
     ORKET_LLM_TEMPERATURE     Override temperature
     ORKET_BENCH_SEED          Override seed for determinism
 """
@@ -113,6 +116,20 @@ _CONSTRAINT_VERBS = re.compile(
     re.IGNORECASE,
 )
 _DECISION_REQUIRED = re.compile(r"DECISION_REQUIRED", re.IGNORECASE)
+
+
+def _resolve_role_provider(raw: str) -> str:
+    provider = str(raw or "").strip().lower() or str(os.getenv("ORKET_LLM_PROVIDER", "ollama")).strip().lower()
+    return provider or "ollama"
+
+
+def _resolve_role_base_url(*, provider: str, raw: str) -> str:
+    token = str(raw or "").strip()
+    if token:
+        return token
+    if provider in {"lmstudio", "openai_compat"}:
+        return str(os.getenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
+    return str(os.getenv("ORKET_LLM_OLLAMA_HOST", "http://localhost:11434")).strip()
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +336,8 @@ async def _run_single_shot(
     *,
     scenario_input: dict[str, Any],
     architect_model: str,
+    architect_provider: str,
+    architect_base_url: str,
     temperature: float,
     timeout: int,
 ) -> dict[str, Any]:
@@ -334,6 +353,8 @@ async def _run_single_shot(
         messages=messages,
         temperature=temperature,
         timeout=timeout,
+        provider_name=architect_provider,
+        base_url=architect_base_url,
     )
     raw_output = str(resp.content or "").strip()
 
@@ -350,6 +371,8 @@ async def _run_single_shot(
         "latency_ms": latency_ms,
         "provider_raw": _json_safe(resp.raw),
         "model_residency": _json_safe(residency_release),
+        "provider_name": architect_provider,
+        "base_url": architect_base_url,
     }
 
 
@@ -363,6 +386,10 @@ async def _run_coordinated(
     scenario_input: dict[str, Any],
     architect_model: str,
     auditor_model: str,
+    architect_provider: str,
+    auditor_provider: str,
+    architect_base_url: str,
+    auditor_base_url: str,
     rounds: int,
     odr_cfg: ReactorConfig,
     temperature: float,
@@ -391,6 +418,8 @@ async def _run_coordinated(
             messages=arch_msgs,
             temperature=temperature,
             timeout=timeout,
+            provider_name=architect_provider,
+            base_url=architect_base_url,
         )
         architect_raw = str(arch_resp.content or "").strip()
 
@@ -404,6 +433,8 @@ async def _run_coordinated(
             messages=aud_msgs,
             temperature=temperature,
             timeout=timeout,
+            provider_name=auditor_provider,
+            base_url=auditor_base_url,
         )
         auditor_raw = str(aud_resp.content or "").strip()
 
@@ -430,6 +461,10 @@ async def _run_coordinated(
                 "auditor_latency_ms": aud_latency_ms,
                 "architect_model_residency": _json_safe(arch_residency),
                 "auditor_model_residency": _json_safe(aud_residency),
+                "architect_provider": architect_provider,
+                "auditor_provider": auditor_provider,
+                "architect_base_url": architect_base_url,
+                "auditor_base_url": auditor_base_url,
             }
         )
 
@@ -451,6 +486,10 @@ async def _run_coordinated(
         "final_requirement_text": final_requirement_text,
         "analysis": final_analysis,
         "total_latency_ms": total_latency_ms,
+        "architect_provider": architect_provider,
+        "auditor_provider": auditor_provider,
+        "architect_base_url": architect_base_url,
+        "auditor_base_url": auditor_base_url,
         "odr_final_state": {
             "history_v": list(state.history_v),
             "history_round_count": len(state.history_rounds),
@@ -701,17 +740,29 @@ def _collect_ollama_version() -> str:
 
 
 def _collect_environment(
-    *, architect_model: str, auditor_model: str
+    *,
+    architect_model: str,
+    auditor_model: str,
+    architect_provider: str,
+    auditor_provider: str,
+    architect_base_url: str,
+    auditor_base_url: str,
 ) -> dict[str, Any]:
     return {
         "os": platform.system(),
         "arch": platform.machine(),
         "python_version": platform.python_version(),
         "ollama_version": _collect_ollama_version(),
-        "llm_provider": str(os.getenv("ORKET_LLM_PROVIDER", "ollama")),
+        "llm_provider": architect_provider if architect_provider == auditor_provider else "mixed",
+        "llm_provider_env": str(os.getenv("ORKET_LLM_PROVIDER", "ollama")),
         "ollama_host": str(os.getenv("ORKET_LLM_OLLAMA_HOST", "http://localhost:11434")),
+        "openai_base_url": str(os.getenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")),
         "architect_model": architect_model,
         "auditor_model": auditor_model,
+        "architect_provider": architect_provider,
+        "auditor_provider": auditor_provider,
+        "architect_base_url": architect_base_url,
+        "auditor_base_url": auditor_base_url,
     }
 
 
@@ -724,6 +775,10 @@ async def _run_pair(
     *,
     architect_model: str,
     auditor_model: str,
+    architect_provider: str,
+    auditor_provider: str,
+    architect_base_url: str,
+    auditor_base_url: str,
     scenario_inputs: list[dict[str, Any]],
     rounds: int,
     odr_cfg: ReactorConfig,
@@ -745,6 +800,8 @@ async def _run_pair(
             single_result = await _run_single_shot(
                 scenario_input=scenario_input,
                 architect_model=architect_model,
+                architect_provider=architect_provider,
+                architect_base_url=architect_base_url,
                 temperature=temperature,
                 timeout=timeout,
             )
@@ -776,6 +833,10 @@ async def _run_pair(
                 scenario_input=scenario_input,
                 architect_model=architect_model,
                 auditor_model=auditor_model,
+                architect_provider=architect_provider,
+                auditor_provider=auditor_provider,
+                architect_base_url=architect_base_url,
+                auditor_base_url=auditor_base_url,
                 rounds=rounds,
                 odr_cfg=odr_cfg,
                 temperature=temperature,
@@ -835,6 +896,10 @@ async def _run_pair(
     return {
         "architect_model": architect_model,
         "auditor_model": auditor_model,
+        "architect_provider": architect_provider,
+        "auditor_provider": auditor_provider,
+        "architect_base_url": architect_base_url,
+        "auditor_base_url": auditor_base_url,
         "started_at": started,
         "ended_at": ended,
         "scenarios": scenario_results,
@@ -855,6 +920,10 @@ def _parse_list(raw: str) -> list[str]:
 async def _main_async(args: argparse.Namespace) -> int:
     architect_models = _parse_list(args.architect_model)
     auditor_models = _parse_list(args.auditor_model)
+    architect_provider = _resolve_role_provider(args.architect_provider)
+    auditor_provider = _resolve_role_provider(args.auditor_provider)
+    architect_base_url = _resolve_role_base_url(provider=architect_provider, raw=args.architect_base_url)
+    auditor_base_url = _resolve_role_base_url(provider=auditor_provider, raw=args.auditor_base_url)
 
     if not architect_models:
         print("ERROR: --architect-model is required.", file=sys.stderr)
@@ -890,6 +959,8 @@ async def _main_async(args: argparse.Namespace) -> int:
     print("[COMPARE] Single-shot vs ODR-coordinated comparison", flush=True)
     print(f"  architect_models={architect_models}", flush=True)
     print(f"  auditor_models={auditor_models}", flush=True)
+    print(f"  architect_provider={architect_provider}", flush=True)
+    print(f"  auditor_provider={auditor_provider}", flush=True)
     print(f"  scenarios={[s['id'] for s in scenarios]}", flush=True)
     print(f"  rounds={args.rounds}  max_rounds={args.max_rounds}", flush=True)
     print(f"  temperature={args.temperature}  timeout={args.timeout}s", flush=True)
@@ -909,6 +980,10 @@ async def _main_async(args: argparse.Namespace) -> int:
             pair_result = await _run_pair(
                 architect_model=architect_model,
                 auditor_model=auditor_model,
+                architect_provider=architect_provider,
+                auditor_provider=auditor_provider,
+                architect_base_url=architect_base_url,
+                auditor_base_url=auditor_base_url,
                 scenario_inputs=scenario_inputs,
                 rounds=args.rounds,
                 odr_cfg=odr_cfg,
@@ -935,6 +1010,10 @@ async def _main_async(args: argparse.Namespace) -> int:
     environment = _collect_environment(
         architect_model=architect_models[0],
         auditor_model=auditor_models[0],
+        architect_provider=architect_provider,
+        auditor_provider=auditor_provider,
+        architect_base_url=architect_base_url,
+        auditor_base_url=auditor_base_url,
     )
 
     payload = {
@@ -945,6 +1024,10 @@ async def _main_async(args: argparse.Namespace) -> int:
         "config": {
             "architect_models": architect_models,
             "auditor_models": auditor_models,
+            "architect_provider": architect_provider,
+            "auditor_provider": auditor_provider,
+            "architect_base_url": architect_base_url,
+            "auditor_base_url": auditor_base_url,
             "scenario_ids": [s.get("id") for s in scenarios],
             "rounds": args.rounds,
             "max_rounds": args.max_rounds,
@@ -999,6 +1082,26 @@ def build_parser() -> argparse.ArgumentParser:
         "--scenario-ids",
         default="",
         help="Comma-separated scenario IDs. Empty = all.",
+    )
+    parser.add_argument(
+        "--architect-provider",
+        default="",
+        help="Architect provider override (ollama | lmstudio | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+    )
+    parser.add_argument(
+        "--auditor-provider",
+        default="",
+        help="Auditor provider override (ollama | lmstudio | openai_compat). Empty = ORKET_LLM_PROVIDER or ollama.",
+    )
+    parser.add_argument(
+        "--architect-base-url",
+        default="",
+        help="Optional architect provider base URL override.",
+    )
+    parser.add_argument(
+        "--auditor-base-url",
+        default="",
+        help="Optional auditor provider base URL override.",
     )
     parser.add_argument("--max-scenarios", type=int, default=0, help="Limit scenarios (0 = all).")
     parser.add_argument("--rounds", type=int, default=DEFAULT_ROUNDS)

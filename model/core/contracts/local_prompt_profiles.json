@@ -125,7 +125,7 @@
             "top_p": 0.9,
             "top_k": 40,
             "repeat_penalty": 1.05,
-            "max_output_tokens": 768,
+            "max_output_tokens": 1536,
             "seed_policy": "provider_default"
           },
           "reasoning": {
@@ -263,7 +263,7 @@
             "top_p": 0.9,
             "top_k": 40,
             "repeat_penalty": 1.05,
-            "max_output_tokens": 768,
+            "max_output_tokens": 1536,
             "seed_policy": "provider_default"
           },
           "reasoning": {

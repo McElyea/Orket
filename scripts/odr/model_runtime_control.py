@@ -154,10 +154,20 @@ async def complete_with_transient_provider(
     messages: list[dict[str, str]],
     temperature: float,
     timeout: int,
+    provider_name: str = "",
+    base_url: str = "",
+    api_key: str = "",
     swap_timeout_s: float = DEFAULT_SWAP_TIMEOUT_SEC,
     swap_poll_interval_s: float = DEFAULT_SWAP_POLL_INTERVAL_SEC,
 ) -> tuple[ModelResponse, int, dict[str, Any]]:
-    provider = LocalModelProvider(model=model, temperature=temperature, timeout=timeout)
+    provider = LocalModelProvider(
+        model=model,
+        temperature=temperature,
+        timeout=timeout,
+        provider=provider_name,
+        base_url=base_url,
+        api_key=api_key,
+    )
     started_at = time.perf_counter()
     response: ModelResponse | None = None
     release_payload: dict[str, Any] = {}

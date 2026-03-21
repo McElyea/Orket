@@ -145,6 +145,39 @@ def _apply_user_injection(messages: list[dict[str, str]]) -> list[dict[str, str]
     return [{"role": "user", "content": wrapper}, *non_system]
 
 
+def _apply_reasoning_suppression_hint(
+    messages: list[dict[str, str]],
+    *,
+    provider_backend: str,
+    model: str,
+    task_class: str,
+    profile_id: str,
+    allows_thinking_blocks: bool,
+) -> tuple[list[dict[str, str]], str | None]:
+    if provider_backend != "openai_compat":
+        return list(messages), None
+    if task_class == "reasoning" or allows_thinking_blocks:
+        return list(messages), None
+    if str(profile_id or "").strip() != "openai_compat.qwen.openai_messages.v1":
+        return list(messages), None
+    if "qwen" not in str(model or "").strip().lower():
+        return list(messages), None
+
+    resolved = [dict(message) for message in messages]
+    for index in range(len(resolved) - 1, -1, -1):
+        role = str((resolved[index] or {}).get("role") or "").strip().lower()
+        if role != "user":
+            continue
+        content = str((resolved[index] or {}).get("content") or "")
+        if "/no_think" in content:
+            return resolved, None
+        # LM Studio's Qwen family model cards document /no_think as the
+        # prompt-level reasoning suppression control for chat requests.
+        resolved[index]["content"] = f"{content.rstrip()}\n\n/no_think" if content.strip() else "/no_think"
+        return resolved, "qwen_no_think_prompt_hint"
+    return resolved, None
+
+
 def _dedupe_in_order(values: list[str]) -> list[str]:
     ordered: list[str] = []
     seen: set[str] = set()
@@ -371,6 +404,15 @@ async def resolve_local_prompting_policy(
     resolved_messages = _canonicalize_messages(messages)
     if resolved.profile.system_prompt_mode == "user_injection":
         resolved_messages = _apply_user_injection(resolved_messages)
+    reasoning_hint = None
+    resolved_messages, reasoning_hint = _apply_reasoning_suppression_hint(
+        resolved_messages,
+        provider_backend=provider_backend,
+        model=model,
+        task_class=task_class,
+        profile_id=resolved.profile.profile_id,
+        allows_thinking_blocks=bool(resolved.profile.allows_thinking_blocks),
+    )
     resolved_messages, trimmed_count = _trim_messages_by_budget(
         resolved_messages,
         context_budget_tokens=int(resolved.profile.context_budget_tokens),
@@ -383,6 +425,8 @@ async def resolve_local_prompting_policy(
     warnings: list[str] = []
     if trimmed_count > 0:
         warnings.append(f"context_trimmed:{trimmed_count}")
+    if reasoning_hint:
+        warnings.append(f"reasoning_suppression:{reasoning_hint}")
     if lmstudio_session_mode in {"context", "fixed"} and not lmstudio_session_id:
         warnings.append("lmstudio_session_id_missing")
     effective_stops = _effective_stops(provider_backend, resolved.profile, task_class)

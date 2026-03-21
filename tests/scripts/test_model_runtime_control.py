@@ -81,3 +81,48 @@ def test_release_model_residency_sync_reports_unsupported_provider() -> None:
 
     assert result["status"] == "unsupported"
     assert result["reason"] == "provider_not_supported"
+
+
+@pytest.mark.asyncio
+async def test_complete_with_transient_provider_threads_explicit_provider_overrides(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class _FakeProvider:
+        def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            captured.update(kwargs)
+            self.provider_name = "lmstudio"
+            self.provider_backend = "openai_compat"
+            self.openai_base_url = "http://127.0.0.1:1234/v1"
+            self.ollama_host = ""
+            self.model = "mistralai/magistral-small-2509"
+
+        async def complete(self, messages):  # type: ignore[no-untyped-def]
+            _ = messages
+            return control.ModelResponse(content="ok", raw={"provider_name": "lmstudio"})
+
+        async def close(self) -> None:
+            return None
+
+    async def _fake_release_model_residency(**kwargs):  # type: ignore[no-untyped-def]
+        return {"status": "released", **kwargs}
+
+    monkeypatch.setattr(control, "LocalModelProvider", _FakeProvider)
+    monkeypatch.setattr(control, "release_model_residency", _fake_release_model_residency)
+
+    response, _latency_ms, release = await control.complete_with_transient_provider(
+        model="mistralai/magistral-small-2509",
+        messages=[{"role": "user", "content": "hello"}],
+        temperature=0.1,
+        timeout=30,
+        provider_name="lmstudio",
+        base_url="http://127.0.0.1:1234/v1",
+        api_key="local-key",
+    )
+
+    assert response.content == "ok"
+    assert captured["provider"] == "lmstudio"
+    assert captured["base_url"] == "http://127.0.0.1:1234/v1"
+    assert captured["api_key"] == "local-key"
+    assert release["provider_name"] == "lmstudio"

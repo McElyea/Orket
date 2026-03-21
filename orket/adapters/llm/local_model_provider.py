@@ -58,20 +58,31 @@ def _map_provider_name(raw: str) -> str:
 class LocalModelProvider:
     """Asynchronous local model provider for ollama and openai-compatible backends."""
 
-    def __init__(self, model: str, temperature: float = 0.2, seed: Optional[int] = None, timeout: int = 300):
+    def __init__(
+        self,
+        model: str,
+        temperature: float = 0.2,
+        seed: Optional[int] = None,
+        timeout: int = 300,
+        *,
+        provider: str = "",
+        base_url: str = "",
+        api_key: str = "",
+    ):
         self.requested_model = str(model or "").strip()
         self.model = self.requested_model
         self.temperature = self._resolve_temperature_override(temperature)
         self.seed = self._resolve_seed_override(seed)
         self.timeout = timeout
-        provider_env = _read_provider_env()
+        self._provider_override = str(provider or "").strip().lower()
+        self._base_url_override = str(base_url or "").strip()
+        self._api_key_override = str(api_key or "").strip()
+        provider_env = self._provider_override or _read_provider_env()
         self.provider_backend = _map_provider_backend(provider_env)
         self.provider_name = _map_provider_name(provider_env)
         self.openai_base_url = self._resolve_openai_base_url()
-        self.openai_api_key = str(
-            os.getenv("ORKET_LLM_OPENAI_API_KEY") or os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY") or ""
-        ).strip()
-        self.ollama_host = str(os.getenv("ORKET_LLM_OLLAMA_HOST") or os.getenv("OLLAMA_HOST") or "").strip()
+        self.openai_api_key = self._resolve_openai_api_key()
+        self.ollama_host = self._resolve_ollama_host()
 
         if self.provider_backend == "openai_compat":
             self.client = httpx.AsyncClient(
@@ -127,18 +138,32 @@ class LocalModelProvider:
         return f"{base_session_id}-ctx{epoch}"
 
     def _resolve_provider_backend(self) -> str:
-        return _map_provider_backend(_read_provider_env())
+        return _map_provider_backend(self._provider_override or _read_provider_env())
 
     def _resolve_provider_name(self) -> str:
-        return _map_provider_name(_read_provider_env())
+        return _map_provider_name(self._provider_override or _read_provider_env())
 
     def _resolve_openai_base_url(self) -> str:
+        if self._base_url_override:
+            return normalize_openai_base_url(self._base_url_override, default="http://127.0.0.1:1234/v1")
         raw = str(
             os.getenv("ORKET_LLM_OPENAI_BASE_URL")
             or os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL")
             or "http://127.0.0.1:1234/v1"
         ).strip()
         return normalize_openai_base_url(raw, default="http://127.0.0.1:1234/v1")
+
+    def _resolve_openai_api_key(self) -> str:
+        if self._api_key_override:
+            return self._api_key_override
+        return str(
+            os.getenv("ORKET_LLM_OPENAI_API_KEY") or os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY") or ""
+        ).strip()
+
+    def _resolve_ollama_host(self) -> str:
+        if self._base_url_override:
+            return self._base_url_override
+        return str(os.getenv("ORKET_LLM_OLLAMA_HOST") or os.getenv("OLLAMA_HOST") or "").strip()
 
     async def complete(
         self,

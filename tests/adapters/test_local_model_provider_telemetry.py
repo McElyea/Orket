@@ -81,6 +81,24 @@ def test_local_model_provider_maps_provider_env_consistently(
     assert provider.provider_name == expected_name
 
 
+def test_local_model_provider_explicit_provider_override_beats_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: unit. Verifies per-instance provider overrides do not depend on global env."""
+    monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:9999/v1")
+
+    provider = LocalModelProvider(
+        model="dummy",
+        provider="lmstudio",
+        base_url="http://127.0.0.1:1234/v1",
+        api_key="test-key",
+    )
+
+    assert provider.provider_backend == "openai_compat"
+    assert provider.provider_name == "lmstudio"
+    assert provider.openai_base_url == "http://127.0.0.1:1234/v1"
+    assert provider.openai_api_key == "test-key"
+
+
 @pytest.mark.asyncio
 async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")

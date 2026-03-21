@@ -2,8 +2,120 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from typing import Any, Dict, List, Mapping
 from urllib.parse import urlparse
+
+
+_RECOVERY_STOP_MARKER = re.compile(
+    r"(?im)^\s*(?:(?:[*-]|(?:\d+\.))\s+)?(?:\*+)?"
+    r"(?:wait\b|let's\b|self-correction\b|final check\b|review against constraints\b|"
+    r"refining the output\b|final polish\b|final output generation\b|formatting\b)"
+)
+_ARCHITECT_LABELS = [
+    ("requirement", "### REQUIREMENT"),
+    ("changelog", "### CHANGELOG"),
+    ("assumptions", "### ASSUMPTIONS"),
+    ("open questions", "### OPEN_QUESTIONS"),
+]
+_AUDITOR_LABELS = [
+    ("critique", "### CRITIQUE"),
+    ("patches", "### PATCHES"),
+    ("edge cases", "### EDGE_CASES"),
+    ("test gaps", "### TEST_GAPS"),
+]
+
+
+def _normalize_recovery_label(value: str) -> str:
+    token = str(value or "").strip().lower().replace("_", " ")
+    return " ".join(token.split())
+
+
+def _clean_recovered_section_text(value: str) -> str:
+    normalized = str(value or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not normalized:
+        return ""
+    stop_match = _RECOVERY_STOP_MARKER.search(normalized)
+    if stop_match is not None:
+        normalized = normalized[: stop_match.start()].rstrip()
+    return normalized.strip()
+
+
+def _recover_labeled_sections(text: str, labels: list[tuple[str, str]]) -> str:
+    label_alternation = "|".join(re.escape(source) for source, _target in labels)
+    pattern = re.compile(
+        rf"(?im)^[ \t]*(?:[*-][ \t]*)?\*?(?P<label>{label_alternation})\*?[ \t]*:[ \t]*\*?[ \t]*"
+    )
+    matches = list(pattern.finditer(text))
+    if len(matches) < len(labels):
+        return ""
+    normalized_labels = [_normalize_recovery_label(source) for source, _target in labels]
+
+    for start_index in range(len(matches) - len(labels), -1, -1):
+        window = matches[start_index : start_index + len(labels)]
+        found_labels = [_normalize_recovery_label(match.group("label")) for match in window]
+        if found_labels != normalized_labels:
+            continue
+        rendered_sections: list[str] = []
+        for section_index, (_source, target_header) in enumerate(labels):
+            start = window[section_index].end()
+            if section_index + 1 < len(window):
+                end = window[section_index + 1].start()
+            else:
+                end = len(text)
+            chunk = _clean_recovered_section_text(text[start:end])
+            if not chunk:
+                rendered_sections = []
+                break
+            rendered_sections.append(f"{target_header}\n{chunk}")
+        if rendered_sections:
+            return "\n\n".join(rendered_sections)
+    return ""
+
+
+def _recover_header_sections(text: str, headers: list[str]) -> str:
+    header_alternation = "|".join(re.escape(header) for header in headers)
+    pattern = re.compile(rf"(?im)^[ \t]*(?P<header>{header_alternation})[ \t]*$")
+    matches = list(pattern.finditer(text))
+    if len(matches) < len(headers):
+        return ""
+    normalized_headers = [_normalize_recovery_label(header) for header in headers]
+
+    for start_index in range(len(matches) - len(headers), -1, -1):
+        window = matches[start_index : start_index + len(headers)]
+        found_headers = [_normalize_recovery_label(match.group("header")) for match in window]
+        if found_headers != normalized_headers:
+            continue
+        rendered_sections: list[str] = []
+        for section_index, header in enumerate(headers):
+            start = window[section_index].end()
+            if section_index + 1 < len(window):
+                end = window[section_index + 1].start()
+            else:
+                end = len(text)
+            chunk = _clean_recovered_section_text(text[start:end])
+            if not chunk:
+                rendered_sections = []
+                break
+            rendered_sections.append(f"{header}\n{chunk}")
+        if rendered_sections:
+            return "\n\n".join(rendered_sections)
+    return ""
+
+
+def recover_structured_reasoning_answer(reasoning_content: str) -> str:
+    normalized = str(reasoning_content or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not normalized:
+        return ""
+    for headers in ([target for _source, target in _ARCHITECT_LABELS], [target for _source, target in _AUDITOR_LABELS]):
+        recovered = _recover_header_sections(normalized, headers)
+        if recovered:
+            return recovered
+    for labels in (_ARCHITECT_LABELS, _AUDITOR_LABELS):
+        recovered = _recover_labeled_sections(normalized, labels)
+        if recovered:
+            return recovered
+    return normalized
 
 
 def normalize_openai_base_url(raw: str, *, default: str) -> str:
@@ -34,6 +146,20 @@ def validate_openai_messages(messages: List[Dict[str, Any]]) -> list[str]:
 
 
 def extract_openai_content(payload: Dict[str, Any]) -> str:
+    def _extract_text(value: Any) -> str:
+        if isinstance(value, str):
+            return value
+        if isinstance(value, list):
+            parts: list[str] = []
+            for item in value:
+                if not isinstance(item, dict):
+                    continue
+                text = item.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+            return "".join(parts)
+        return ""
+
     choices = payload.get("choices")
     if not isinstance(choices, list) or not choices:
         return ""
@@ -43,18 +169,11 @@ def extract_openai_content(payload: Dict[str, Any]) -> str:
     message = first.get("message")
     if not isinstance(message, dict):
         return ""
-    content = message.get("content")
-    if isinstance(content, str):
+    content = _extract_text(message.get("content"))
+    if content.strip():
         return content
-    if isinstance(content, list):
-        parts: list[str] = []
-        for item in content:
-            if isinstance(item, dict):
-                text = item.get("text")
-                if isinstance(text, str):
-                    parts.append(text)
-        return "".join(parts)
-    return ""
+    reasoning_content = _extract_text(message.get("reasoning_content"))
+    return recover_structured_reasoning_answer(reasoning_content)
 
 
 def extract_openai_tool_calls(payload: Dict[str, Any]) -> list[dict[str, Any]]:
