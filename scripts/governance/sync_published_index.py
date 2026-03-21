@@ -5,6 +5,18 @@ import json
 from pathlib import Path
 from typing import Any
 
+_OPTIONAL_GOVERNED_STRING_FIELDS = (
+    "claim_tier",
+    "compare_scope",
+    "operator_surface",
+    "policy_digest",
+    "control_bundle_ref",
+    "control_bundle_hash",
+    "artifact_manifest_ref",
+    "provenance_ref",
+    "determinism_class",
+)
+
 
 def _detect_lane(index: dict[str, Any], index_path: Path) -> str:
     root = str(index.get("root", "")).replace("\\", "/").rstrip("/")
@@ -29,6 +41,12 @@ def _load_index(path: Path) -> dict[str, Any]:
 def _require(condition: bool, code: str, detail: str) -> None:
     if not condition:
         raise SystemExit(f"{code} {detail}")
+
+
+def _optional_non_empty_string(row: dict[str, Any], key: str, artifact_id: str) -> None:
+    if key not in row:
+        return
+    _require(isinstance(row[key], str) and row[key], "E_ARTIFACT_GOVERNED_FIELD", f"{artifact_id}:{key}")
 
 
 def _validate_index(index: dict[str, Any], index_path: Path) -> None:
@@ -73,6 +91,12 @@ def _validate_index(index: dict[str, Any], index_path: Path) -> None:
         _require(all(isinstance(item, str) and item for item in row["signals"]), "E_ARTIFACT_SIGNALS", row["id"])
         _require(isinstance(row["source_path"], str) and row["source_path"], "E_ARTIFACT_SOURCE", row["id"])
         _require(isinstance(row["publish_reviewed"], bool), "E_ARTIFACT_REVIEWED", row["id"])
+        for key in _OPTIONAL_GOVERNED_STRING_FIELDS:
+            _optional_non_empty_string(row, key, row["id"])
+        if "policy_digest" in row:
+            _require(str(row["policy_digest"]).startswith("sha256:"), "E_ARTIFACT_POLICY_DIGEST", row["id"])
+        if "control_bundle_hash" in row:
+            _require(str(row["control_bundle_hash"]).startswith("sha256:"), "E_ARTIFACT_CONTROL_HASH", row["id"])
 
     _require(index["highlight_id"] in ids, "E_HIGHLIGHT_ID", index["highlight_id"])
 
@@ -95,6 +119,23 @@ def _render_sync_command(index: Path, readme: Path, action: str) -> str:
         "python scripts/governance/sync_published_index.py "
         f"--index {index.as_posix()} --readme {readme.as_posix()} --{action}"
     )
+
+
+def _render_governed_claim(row: dict[str, Any]) -> str:
+    claim_tier = str(row.get("claim_tier") or "").strip()
+    compare_scope = str(row.get("compare_scope") or "").strip()
+    operator_surface = str(row.get("operator_surface") or "").strip()
+    determinism_class = str(row.get("determinism_class") or "").strip()
+    parts: list[str] = []
+    if claim_tier and compare_scope:
+        parts.append(f"`{claim_tier}` on `{compare_scope}`")
+    elif claim_tier:
+        parts.append(f"`{claim_tier}`")
+    if operator_surface:
+        parts.append(f"surface `{operator_surface}`")
+    if determinism_class:
+        parts.append(f"class `{determinism_class}`")
+    return "<br>".join(parts)
 
 
 def _render_readme(index: dict[str, Any], *, lane: str, index_path: Path, readme_path: Path) -> str:
@@ -135,12 +176,13 @@ def _render_readme(index: dict[str, Any], *, lane: str, index_path: Path, readme
     lines.append("")
     lines.append("## Artifact Directory")
     lines.append("")
-    lines.append("| ID | Category | File | Title | What it proves | Key signals |")
-    lines.append("|---|---|---|---|---|---|")
+    lines.append("| ID | Category | File | Title | What it proves | Governed Claim | Key signals |")
+    lines.append("|---|---|---|---|---|---|---|")
     for row in artifacts:
         signals = ", ".join(f"`{item}`" for item in row["signals"])
+        governed_claim = _render_governed_claim(row)
         lines.append(
-            f"| {row['id']} | {row['category']} | `{row['path']}` | {row['title']} | {row['summary']} | {signals} |"
+            f"| {row['id']} | {row['category']} | `{row['path']}` | {row['title']} | {row['summary']} | {governed_claim} | {signals} |"
         )
 
     reading_paths = index.get("reading_paths", [])

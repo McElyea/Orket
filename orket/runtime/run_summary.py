@@ -111,6 +111,24 @@ def build_run_summary_payload(
     artifact_provenance = build_artifact_provenance_extension(artifacts=artifacts)
     if artifact_provenance is not None:
         payload[ARTIFACT_PROVENANCE_KEY] = artifact_provenance
+    cards_runtime = _build_cards_runtime_extension(artifacts=artifacts)
+    if cards_runtime:
+        payload["cards_runtime"] = cards_runtime
+        payload["execution_profile"] = str(cards_runtime.get("execution_profile") or "")
+        payload["stop_reason"] = str(cards_runtime.get("stop_reason") or "")
+        payload["odr_active"] = bool(cards_runtime.get("odr_active", False))
+        for key in (
+            "builder_seat_choice",
+            "reviewer_seat_choice",
+            "seat_coercion",
+            "artifact_contract",
+            "odr_valid",
+            "odr_pending_decisions",
+            "odr_stop_reason",
+            "odr_artifact_path",
+        ):
+            if key in cards_runtime:
+                payload[key] = cards_runtime[key]
     validate_run_summary_payload(payload)
     return payload
 
@@ -444,6 +462,13 @@ def _collect_packet1_facts(artifacts: dict[str, Any]) -> dict[str, Any]:
     if "actual_provider" not in packet1_facts:
         packet1_facts["actual_provider"] = packet1_facts.get("intended_provider")
     return packet1_facts
+
+
+def _build_cards_runtime_extension(*, artifacts: dict[str, Any]) -> dict[str, Any]:
+    value = artifacts.get("cards_runtime_facts")
+    if not isinstance(value, dict):
+        return {}
+    return {str(key).strip(): item for key, item in value.items() if str(key).strip()}
 
 
 def _normalize_packet1_facts(value: Any) -> dict[str, Any]:

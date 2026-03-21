@@ -5,6 +5,8 @@ import subprocess
 from pathlib import Path
 from typing import List
 
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -13,7 +15,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=["qwen2.5-coder:7b", "qwen2.5-coder:14b"],
+        default=[DEFAULT_LOCAL_MODEL, "qwen2.5-coder:14b"],
         help="Models for matrix and live acceptance loop.",
     )
     parser.add_argument("--iterations", type=int, default=1)

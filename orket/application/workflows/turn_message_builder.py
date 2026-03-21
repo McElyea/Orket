@@ -42,6 +42,13 @@ class MessageBuilder:
             "seat": context.get("role", role.name),
             "status": context.get("current_status"),
             "dependency_context": context.get("dependency_context", {}),
+            "execution_profile": context.get("execution_profile"),
+            "base_execution_profile": context.get("base_execution_profile"),
+            "builder_seat_choice": context.get("builder_seat_choice"),
+            "reviewer_seat_choice": context.get("reviewer_seat_choice"),
+            "seat_coercion": context.get("seat_coercion", {}),
+            "artifact_contract": context.get("artifact_contract", {}),
+            "odr_active": bool(context.get("odr_active", False)),
             "required_action_tools": context.get("required_action_tools", []),
             "required_statuses": context.get("required_statuses", []),
             "required_read_paths": required_read_paths,
@@ -60,6 +67,37 @@ class MessageBuilder:
         messages.append(
             {"role": "user", "content": f"Execution Context JSON:\n{json.dumps(execution_context, sort_keys=True)}"}
         )
+
+        artifact_contract = context.get("artifact_contract")
+        if isinstance(artifact_contract, dict) and artifact_contract:
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "Artifact Contract JSON:\n" + json.dumps(artifact_contract, sort_keys=True),
+                }
+            )
+
+        if bool(context.get("odr_active", False)):
+            odr_context = {
+                "odr_valid": context.get("odr_valid"),
+                "odr_pending_decisions": context.get("odr_pending_decisions"),
+                "odr_stop_reason": context.get("odr_stop_reason"),
+                "odr_artifact_path": context.get("odr_artifact_path"),
+            }
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "ODR Prebuild Summary JSON:\n" + json.dumps(odr_context, sort_keys=True),
+                }
+            )
+            odr_requirement = str(context.get("odr_requirement") or "").strip()
+            if odr_requirement:
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "ODR Refined Requirement:\n" + odr_requirement,
+                    }
+                )
 
         if bool(context.get("protocol_governed_enabled", False)):
             protocol_lines = [

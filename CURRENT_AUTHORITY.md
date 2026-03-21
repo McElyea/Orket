@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-19
+Last updated: 2026-03-20
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -41,13 +41,14 @@ It defines only the currently authoritative paths that agents and contributors m
 21. Canonical core release tag rule: every post-`0.4.0` versioned commit on pushed `main` must carry the matching annotated `v<major>.<minor>.<patch>` tag on that exact commit.
 22. Pytest sandbox fail-closed fixture: `tests/conftest.py`
 23. Determinism claim/gate policy: `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`
+24. Canonical runtime event artifact path: `agent_output/observability/runtime_events.jsonl`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-19",
+  "last_updated": "2026-03-20",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -139,9 +140,11 @@ It defines only the currently authoritative paths that agents and contributors m
       "staged_artifacts_readme": "benchmarks/staging/README.md",
       "published_artifacts_index": "benchmarks/published/index.json",
       "published_artifacts_readme": "benchmarks/published/README.md",
+      "runtime_event_artifact_path": "agent_output/observability/runtime_events.jsonl",
       "artifact_review_policy": "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
       "sources": [
         "docs/CONTRIBUTOR.md",
+        "docs/architecture/event_taxonomy.md",
         "docs/process/PUBLISHED_ARTIFACTS_POLICY.md"
       ]
     },

@@ -12,6 +12,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.core.cards_runtime_contract import ARTIFACT_EXECUTION_PROFILE
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from scripts.probes.probe_support import (
     applied_probe_env,
@@ -39,10 +41,36 @@ REQUESTED_ARTIFACTS = {
 }
 
 
+def _safe_token(value: str) -> str:
+    return "".join(ch.lower() if ch.isalnum() else "-" for ch in str(value or "").strip()).strip("-") or "probe"
+
+
+def _effective_session_id(args: argparse.Namespace, workspace: Path) -> str:
+    if str(args.session_id) != DEFAULT_SESSION_ID:
+        return str(args.session_id)
+    return f"{DEFAULT_SESSION_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+
+
+def _effective_build_id(args: argparse.Namespace, workspace: Path) -> str:
+    if str(args.build_id) != DEFAULT_BUILD_ID:
+        return str(args.build_id)
+    return f"{DEFAULT_BUILD_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+
+
+def _issue_id_map(args: argparse.Namespace, workspace: Path) -> dict[str, str]:
+    suffix = f"{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+    return {base_id: f"{base_id}-{suffix}" for base_id in REQUESTED_ARTIFACTS}
+
+
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 1 probe P-03: cards-engine multi-issue pipeline trace.")
     parser.add_argument("--workspace", default=".probe_workspace_p03")
-    parser.add_argument("--model", default="qwen2.5-coder:7b")
+    parser.add_argument(
+        "--execution-profile",
+        default=ARTIFACT_EXECUTION_PROFILE,
+        choices=(ARTIFACT_EXECUTION_PROFILE,),
+    )
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--provider", default="ollama")
     parser.add_argument("--ollama-host", default="")
     parser.add_argument("--temperature", type=float, default=0.0)
@@ -55,10 +83,10 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _issues() -> list[dict[str, Any]]:
+def _issues(execution_profile: str, issue_ids: dict[str, str]) -> list[dict[str, Any]]:
     return [
         {
-            "id": "P03-SCHEMA",
+            "id": issue_ids["P03-SCHEMA"],
             "summary": (
                 "Write agent_output/schema.json describing a task record with id, title, and status fields. "
                 "Then call update_issue_status with status code_review in the same response."
@@ -67,9 +95,17 @@ def _issues() -> list[dict[str, Any]]:
             "priority": 1.0,
             "status": "ready",
             "depends_on": [],
+            "params": {
+                "execution_profile": execution_profile,
+                "artifact_contract": {
+                    "kind": "artifact",
+                    "primary_output": REQUESTED_ARTIFACTS["P03-SCHEMA"],
+                    "required_write_paths": [REQUESTED_ARTIFACTS["P03-SCHEMA"]],
+                },
+            },
         },
         {
-            "id": "P03-WRITER",
+            "id": issue_ids["P03-WRITER"],
             "summary": (
                 "After the schema exists, write agent_output/writer.py with a Python function append_task(path, task) "
                 "that appends a task to a JSON list. Then call update_issue_status with status code_review."
@@ -77,10 +113,19 @@ def _issues() -> list[dict[str, Any]]:
             "seat": "coder",
             "priority": 2.0,
             "status": "ready",
-            "depends_on": ["P03-SCHEMA"],
+            "depends_on": [issue_ids["P03-SCHEMA"]],
+            "params": {
+                "execution_profile": execution_profile,
+                "artifact_contract": {
+                    "kind": "artifact",
+                    "primary_output": REQUESTED_ARTIFACTS["P03-WRITER"],
+                    "required_write_paths": [REQUESTED_ARTIFACTS["P03-WRITER"]],
+                    "required_read_paths": [REQUESTED_ARTIFACTS["P03-SCHEMA"]],
+                },
+            },
         },
         {
-            "id": "P03-READER",
+            "id": issue_ids["P03-READER"],
             "summary": (
                 "After the schema exists, write agent_output/reader.py with a Python function list_tasks(path) "
                 "that returns a parsed JSON list. Then call update_issue_status with status code_review."
@@ -88,7 +133,16 @@ def _issues() -> list[dict[str, Any]]:
             "seat": "coder",
             "priority": 2.0,
             "status": "ready",
-            "depends_on": ["P03-SCHEMA"],
+            "depends_on": [issue_ids["P03-SCHEMA"]],
+            "params": {
+                "execution_profile": execution_profile,
+                "artifact_contract": {
+                    "kind": "artifact",
+                    "primary_output": REQUESTED_ARTIFACTS["P03-READER"],
+                    "required_write_paths": [REQUESTED_ARTIFACTS["P03-READER"]],
+                    "required_read_paths": [REQUESTED_ARTIFACTS["P03-SCHEMA"]],
+                },
+            },
         },
     ]
 
@@ -181,12 +235,12 @@ def _policy_violation_reports(workspace: Path) -> list[dict[str, Any]]:
     return reports
 
 
-def _requested_artifact_rows(workspace: Path) -> list[dict[str, Any]]:
+def _requested_artifact_rows(workspace: Path, issue_ids: dict[str, str]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for issue_id, relative_path in REQUESTED_ARTIFACTS.items():
+    for base_id, relative_path in REQUESTED_ARTIFACTS.items():
         rows.append(
             {
-                "issue_id": issue_id,
+                "issue_id": issue_ids[base_id],
                 "path": relative_path,
                 "present": (workspace / relative_path).exists(),
             }
@@ -198,6 +252,8 @@ def _build_payload(
     *,
     args: argparse.Namespace,
     workspace: Path,
+    session_id: str,
+    build_id: str,
     issue_rows: list[Any],
     summary: dict[str, Any],
     lifecycle_events: list[dict[str, Any]],
@@ -205,11 +261,12 @@ def _build_payload(
     inventory: list[dict[str, Any]],
     pipeline_result: Any,
     run_error: Exception | None,
+    issue_ids: dict[str, str],
 ) -> dict[str, Any]:
-    turn_samples = _log_event_samples(workspace, str(args.session_id))
-    contract_samples = _contract_event_samples(workspace, str(args.session_id))
+    turn_samples = _log_event_samples(workspace, session_id)
+    contract_samples = _contract_event_samples(workspace, session_id)
     actual_order = _issue_order(runtime_event_rows)
-    expected_order = simulate_dynamic_priority_order(_issues())
+    expected_order = simulate_dynamic_priority_order(_issues(str(args.execution_profile), issue_ids))
     run_status = str(summary.get("status") or "")
     payload = {
         "schema_version": "phase1_probe.p03.v1",
@@ -222,8 +279,9 @@ def _build_payload(
         "requested_provider": str(args.provider),
         "requested_model": str(args.model),
         "workspace": str(workspace),
-        "session_id": str(args.session_id),
-        "build_id": str(args.build_id),
+        "session_id": session_id,
+        "build_id": build_id,
+        "execution_profile": str(args.execution_profile),
         "run_ledger_backend": "protocol_forced_by_probe",
         "pipeline_result": json_safe(pipeline_result),
         "run_summary": summary,
@@ -239,7 +297,7 @@ def _build_payload(
             "observed_issue_order": actual_order,
             "matches": actual_order == expected_order,
         },
-        "requested_artifacts": _requested_artifact_rows(workspace),
+        "requested_artifacts": _requested_artifact_rows(workspace, issue_ids),
         "policy_violations": _policy_violation_reports(workspace),
         "protocol_events": {
             "count": len(lifecycle_events),
@@ -264,8 +322,11 @@ def _build_payload(
 
 async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
     workspace = Path(str(args.workspace)).resolve()
+    session_id = _effective_session_id(args, workspace)
+    build_id = _effective_build_id(args, workspace)
+    issue_ids = _issue_id_map(args, workspace)
     workspace.mkdir(parents=True, exist_ok=True)
-    issues = _issues()
+    issues = _issues(str(args.execution_profile), issue_ids)
     write_probe_runtime_root(
         workspace,
         epic_id=EPIC_ID,
@@ -293,25 +354,27 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         try:
             pipeline_result = await pipeline.run_epic(
                 EPIC_ID,
-                session_id=str(args.session_id),
-                build_id=str(args.build_id),
+                session_id=session_id,
+                build_id=build_id,
             )
         except Exception as exc:  # noqa: BLE001
             run_error = exc
             if is_environment_blocker(exc):
                 raise
         try:
-            issue_rows = await pipeline.async_cards.get_by_build(str(args.build_id))
+            issue_rows = await pipeline.async_cards.get_by_build(build_id)
         except Exception:  # noqa: BLE001
             issue_rows = []
 
-    summary = run_summary(workspace, str(args.session_id))
-    lifecycle_events = protocol_events(workspace, str(args.session_id))
-    runtime_event_rows = runtime_events(workspace, str(args.session_id))
-    inventory = observability_inventory(workspace, str(args.session_id))
+    summary = run_summary(workspace, session_id)
+    lifecycle_events = protocol_events(workspace, session_id)
+    runtime_event_rows = runtime_events(workspace, session_id)
+    inventory = observability_inventory(workspace, session_id)
     return _build_payload(
         args=args,
         workspace=workspace,
+        session_id=session_id,
+        build_id=build_id,
         issue_rows=issue_rows,
         summary=summary,
         lifecycle_events=lifecycle_events,
@@ -319,6 +382,7 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         inventory=inventory,
         pipeline_result=pipeline_result,
         run_error=run_error,
+        issue_ids=issue_ids,
     )
 
 

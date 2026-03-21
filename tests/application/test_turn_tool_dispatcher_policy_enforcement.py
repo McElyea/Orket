@@ -290,7 +290,13 @@ async def test_tool_dispatcher_records_determinism_violation_event(tmp_path: Pat
     assert "E_DETERMINISM_VIOLATION" in str(exc.value)
     emitted = [entry for entry in events if entry.get("event") == "determinism_violation"]
     assert emitted
-    assert "E_DETERMINISM_VIOLATION" in str(emitted[0].get("payload", {}).get("error", ""))
+    payload = dict(emitted[0].get("payload") or {})
+    assert payload["error_code"] == "E_DETERMINISM_VIOLATION"
+    assert payload["determinism_class"] == "pure"
+    assert payload["capability_profile"] == "workspace"
+    assert payload["tool_contract_version"] == "1.0.0"
+    assert "tool_name_side_effect" in list(payload.get("side_effect_signal_keys") or [])
+    assert "E_DETERMINISM_VIOLATION" in str(payload.get("error", ""))
 
 
 # Layer: contract

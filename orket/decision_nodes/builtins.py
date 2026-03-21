@@ -10,6 +10,10 @@ from orket.decision_nodes.api_runtime_strategy_node import (
     DefaultApiRuntimeStrategyNode as _DefaultApiRuntimeStrategyNode,
 )
 from orket.decision_nodes.contracts import PlanningInput
+from orket.core.cards_runtime_contract import (
+    required_read_paths_for_seat as resolve_cards_required_read_paths,
+    required_write_paths_for_seat as resolve_cards_required_write_paths,
+)
 from orket.schema import CardStatus
 from orket.adapters.tools.default_strategy import compose_default_tool_map
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
@@ -629,9 +633,13 @@ class DefaultOrchestrationLoopPolicyNode:
             "reviewer": ["read_file", "update_issue_status"],
             "integrity_guard": ["update_issue_status"],
         }
+        resolved = list(seat_requirements.get(seat, []))
         if seat == "integrity_guard" and issue_seat in {"code_reviewer", "reviewer"}:
             return ["read_file", "update_issue_status"]
-        return seat_requirements.get(seat, [])
+        if issue is not None and resolve_cards_required_read_paths(seat_name=seat_name, issue=issue):
+            if "read_file" not in resolved:
+                resolved.insert(0, "read_file")
+        return resolved
 
     def required_statuses_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
         seat = (seat_name or "").strip().lower()
@@ -654,33 +662,12 @@ class DefaultOrchestrationLoopPolicyNode:
         return status_requirements.get(seat, [])
 
     def required_read_paths_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
-        seat = (seat_name or "").strip().lower()
         issue = _kwargs.get("issue")
-        issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
-        if seat in {"code_reviewer", "reviewer"}:
-            return [
-                "agent_output/requirements.txt",
-                "agent_output/main.py",
-            ]
-        if seat == "integrity_guard" and issue_seat in {"code_reviewer", "reviewer"}:
-            return [
-                "agent_output/requirements.txt",
-                "agent_output/design.txt",
-                "agent_output/main.py",
-                "agent_output/verification/runtime_verification.json",
-            ]
-        return []
+        return resolve_cards_required_read_paths(seat_name=seat_name, issue=issue)
 
     def required_write_paths_for_seat(self, seat_name: str, **_kwargs) -> List[str]:
-        seat = (seat_name or "").strip().lower()
-        seat_paths = {
-            "requirements_analyst": ["agent_output/requirements.txt"],
-            "architect": ["agent_output/design.txt"],
-            "coder": ["agent_output/main.py"],
-            "developer": ["agent_output/main.py"],
-            "evidence_reviewer": ["agent_output/source_attribution_receipt.json"],
-        }
-        return seat_paths.get(seat, [])
+        issue = _kwargs.get("issue")
+        return resolve_cards_required_write_paths(seat_name=seat_name, issue=issue)
 
     def gate_mode_for_seat(self, seat_name: str, **_kwargs) -> str:
         seat = (seat_name or "").strip().lower()

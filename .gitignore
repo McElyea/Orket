@@ -56,10 +56,12 @@ product/**/*.log
 .env
 project_dump*
 project_dump.py
+.tmp
 _review_stage/
 model/core/rocks/run_the_business.json
 docs/projects/OS/archive/idea.md
 docs/projects/future/high-level-ideas.md
+.probe_*
 
 # Infrastructure (Gitea, MySQL, Sandboxes)
 infrastructure/gitea/
@@ -79,6 +81,7 @@ orket_storage/
 .pytest_*
 .ruff_cache/
 benchmarks/results/**
+benchmarks/staging/**
 docs/internal/
 
 # SDK runtime data (user-local; not versioned)

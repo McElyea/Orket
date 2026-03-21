@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-03-18
+Last updated: 2026-03-19
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. runtime-gap remediation after Phase 1 closeout -- Plan: `docs/projects/techdebt/RG03182026/02-IMPLEMENTATION-PLAN.md`.
+None.
 
 ## Maintenance (Non-Priority)
 
@@ -29,5 +29,5 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
-| techdebt | maintenance | P2-recurring | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
+| techdebt | maintenance only | P2-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

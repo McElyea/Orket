@@ -20,6 +20,7 @@ from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_executor import WorkloadExecutor
 from orket.extensions.workload_loader import WorkloadLoader
 from orket.extensions.contracts import RunPlan
+from orket.extensions.governed_identity import build_governed_identity
 
 
 def test_extension_catalog_load_and_list(tmp_path: Path) -> None:
@@ -91,10 +92,27 @@ def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
     (artifact_root / "a.txt").write_text("hello", encoding="utf-8")
 
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
-    manifest = artifacts.build_artifact_manifest(artifact_root)
+    governed_identity = build_governed_identity(
+        operator_surface="extension_run_result_identity_v1",
+        policy_payload={"policy_surface_version": "test.v1"},
+        control_bundle={"input_identity": "plan-123"},
+    )
+    manifest = artifacts.build_artifact_manifest(
+        artifact_root,
+        plan_hash="plan-123",
+        governed_identity=governed_identity,
+    )
 
     assert manifest["files"][0]["path"] == "a.txt"
     assert len(manifest["manifest_sha256"]) == 64
+    assert manifest["claim_tier"] == "non_deterministic_lab_only"
+    assert manifest["compare_scope"] == "extension_workload_provenance_family_v1"
+    assert manifest["operator_surface"] == "extension_artifact_manifest_v1"
+    assert manifest["policy_digest"].startswith("sha256:")
+    assert manifest["control_bundle_hash"].startswith("sha256:")
+    assert manifest["plan_hash"] == "plan-123"
+    assert manifest["provenance_ref"] == "provenance.json"
+    assert manifest["determinism_class"] == "workspace"
 
 
 def test_workload_artifacts_validate_sdk_artifacts_rejects_prefix_escape(tmp_path: Path) -> None:

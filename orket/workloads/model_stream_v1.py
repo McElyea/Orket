@@ -4,6 +4,7 @@ import asyncio
 import os
 from typing import Any
 
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.streaming.contracts import CommitIntent, StreamEventType
 from orket.streaming.manager import InteractionContext
 from orket.streaming.model_provider import (
@@ -31,7 +32,7 @@ def _real_model_id(input_config: dict[str, Any], turn_params: dict[str, Any]) ->
     return str(
         input_config.get("model_id")
         or turn_params.get("model_id")
-        or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")
+        or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", DEFAULT_LOCAL_MODEL)
     ).strip()
 
 

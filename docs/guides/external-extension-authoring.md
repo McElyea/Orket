@@ -1,6 +1,6 @@
 # External Extension Authoring Guide
 
-Last updated: 2026-03-08
+Last updated: 2026-03-20
 Status: Active
 Owner: Orket Core
 
@@ -24,6 +24,26 @@ This template provides:
 2. `src/` extension module layout
 3. install, validate, and run scripts (Windows and Unix)
 4. CI template in `.gitea/workflows/ci.yml`
+
+## Migration Boundary
+
+This guide currently defines the migration boundary and conformance entrypoints. It does not yet claim a complete migration-pack rollout.
+
+Current boundary items:
+1. reference extension target: `docs/templates/external_extension/`
+2. canonical conformance entrypoints:
+   1. `python -m orket_extension_sdk.validate . --strict --json`
+   2. `orket ext validate . --strict --json`
+3. migration comparison mode: before/after validation against the same repository root
+4. deprecation/removal tracking stays explicit and table-driven until a follow-on migration lane ships the full pack
+
+## Deprecation Tracking Skeleton
+
+Use this table shape when a compatibility-only seam is scheduled for removal:
+
+| Legacy Seam | Replacement | Admission Rule | Removal Gate | Status |
+|---|---|---|---|---|
+| `<legacy entrypoint>` | `<canonical extension seam>` | `<who may still use it and why>` | `<what must pass before removal>` | `planned` |
 
 ## Required Repository Layout
 
@@ -92,4 +112,3 @@ The baseline sequence is:
 2. run SDK validation
 3. run import scan
 4. run tests
-

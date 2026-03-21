@@ -1,7 +1,7 @@
 # Orket — Next Phase Game Plan
 
 **Date:** 2026-03-18  
-**Status:** Working document; Phase 1 closed on 2026-03-18; Phase 2 next  
+**Status:** Working document; Phase 1 closed on 2026-03-18; RG03182026 remediation closed on 2026-03-18; Phase 2 closed on 2026-03-18 through AH03182026  
 **Thesis:** Small local models, coordinated and verified, can produce trustworthy output on real tasks without requiring frontier-scale VRAM.
 
 ---
@@ -169,14 +169,24 @@ The Phase 1 objective was to produce an honest map of current behavior, not to m
 - The cards/ODR integration question was answered with a structural audit instead of speculation.
 - The observed gaps are now explicit enough to define the next phase truthfully.
 
-**What Phase 1 established as current reality:**
+**What Phase 1 established as the pre-remediation baseline:**
 - The current small-project cards path is a governed builder/guard flow, not the draft single-role single-turn path.
 - The current `coder` seat is effectively constrained to `agent_output/main.py`, which blocks arbitrary requested artifact paths in cards runs.
 - The current cards run summary does not expose a canonical `stop_reason`.
 - The ODR loop is live but unstable with this model and prompt contract.
 - The ODR loop is not currently wired into the cards executor path.
 
-**Implication for Phase 2:** move forward assuming the current engine behavior above is the baseline truth. Phase 2 should harden auditability around that reality first, then decide which Phase 1 blockers must be remediated before Phase 3 workloads are credible.
+**Follow-on remediation:** [docs/projects/archive/techdebt/RG03182026/Closeout.md](docs/projects/archive/techdebt/RG03182026/Closeout.md) closed the bounded runtime-gap lane on 2026-03-18.
+
+**Current post-remediation runtime:**
+- Cards runs now expose explicit execution profiles: `builder_guard_app_v1`, `builder_guard_artifact_v1`, and the non-default `odr_prebuild_builder_guard_v1`.
+- The artifact profile no longer hard-wires `coder` to `agent_output/main.py`; live P-01 and P-03 runs completed against requested artifact paths with truthful run-summary routing.
+- Cards run summaries now expose canonical `stop_reason`.
+- The ODR five-run live baseline now stops through governed semantics only, with `UNRESOLVED_DECISIONS` across all five runs, one raw signature, and no unexpected hard `CODE_LEAK`.
+- ODR/cards integration now exists as an explicit prebuild path that emits direct ODR artifacts plus `odr_active`, `odr_valid`, `odr_pending_decisions`, and `odr_artifact_path`.
+- The ODR prebuild path remains non-default; valid, decision-complete `MAX_ROUNDS` outcomes now continue into the builder/guard cards flow, while invalid or decision-pending ODR outcomes still fail closed.
+
+**Implication for Phase 2:** move forward assuming the remediated runtime above is the current baseline truth. Phase 2 can focus on auditability and workload credibility without reopening the bounded Phase 1 runtime-gap lane.
 
 ---
 
@@ -184,7 +194,7 @@ The Phase 1 objective was to produce an honest map of current behavior, not to m
 
 Once Phase 0 (behavioral review closure) and Phase 1 (honest mapping) are complete, you have the information needed to decide what "a trustworthy audit record" looks like for Orket.
 
-The output of Phase 2 is a definition, not just more code. Specifically:
+Phase 2 closed with a durable definition and the audit operators that exercise it. Specifically:
 
 **The Minimum Auditable Record (MAR):** The smallest set of artifacts that, given a completed run, allows a person to independently verify:
 
@@ -195,9 +205,16 @@ The output of Phase 2 is a definition, not just more code. Specifically:
 
 Orket already generates most of this. The work of Phase 2 is ensuring it's complete, correct, and consistently present — not adding new things.
 
+**Phase 2 closeout (2026-03-18):**
+- The durable MAR authority now lives in [docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md](docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md).
+- The implementation lane and closeout archive now live in [docs/projects/archive/techdebt/AH03182026/Closeout.md](docs/projects/archive/techdebt/AH03182026/Closeout.md).
+- `scripts/audit/verify_run_completeness.py`, `scripts/audit/compare_two_runs.py`, and `scripts/audit/replay_turn.py` are now the canonical Phase 2 operators.
+- Live proof established `mar_complete=true` on one completed cards run and one ODR-enabled cards run, a governed equivalent-run compare result of `stable` on one canonical pair, and a truthful replay verdict of `diverged` on one preserved turn.
+- Phase 3 is no longer blocked on missing Phase 2 audit operators; determinism claims must remain scoped to actual S-02 and S-03 evidence.
+
 ---
 
-### Phase 2 Script Ideas
+### Phase 2 Required Operators
 
 **S-01: `scripts/audit/verify_run_completeness.py`**  
 Given a `session_id` and workspace, check whether all required MAR artifacts are present. Output a pass/fail report with specific missing items. This becomes the gold standard for "did a run produce a complete audit record."
@@ -206,7 +223,7 @@ Given a `session_id` and workspace, check whether all required MAR artifacts are
 Given two `session_id` values for the same input, compare their audit records and report where they diverge. This is the practical test for the determinism claim. Uses `first_diff_path` from `canon.py` for structural comparison. Note: this depends on W1-C (run_round immutability) and W1-B (canonicalization clarity) being resolved first.
 
 **S-03: `scripts/audit/replay_turn.py`**  
-Given a `session_id`, `issue_id`, and `turn_index`, load the persisted `messages.json` and re-run the model with the same input. Compare the new response to the original `model_response.txt`. Report whether the output is semantically equivalent or diverged. This tests whether model behavior is consistent over time for the same prompt — which is a practical question for anyone running repeated jobs.
+Given a `session_id`, `issue_id`, and `turn_index`, load the persisted `messages.json` and re-run the model with the same input. Compare the new response to the original `model_response.txt`. Report a structural replay verdict first, and keep any advisory semantic verdict additive rather than authoritative. This tests whether model behavior is consistent over time for the same prompt — which is a practical question for anyone running repeated jobs.
 
 ---
 
@@ -239,12 +256,12 @@ Given a large task that a 7B model would fail if attempted in one shot, automati
 
 | Question | Current Status | How to Answer |
 |---|---|---|
-| Does `run_round` work correctly with real Ollama output? | Partially: one live run reached `STABLE_DIFF_FLOOR`, but 4/5 live runs ended `FORMAT_VIOLATION`, so behavior is real but unstable | P-02 |
-| Does the Cards engine complete a single issue without error? | Yes, but only through the current small-project path (`coder` then `integrity_guard`) and with a hard-wired write to `agent_output/main.py` instead of the requested artifact path | P-01 |
-| Are observability artifacts consistently present after a run? | Partially: P-01 emitted the expected turn artifacts, but P-03 failed before requested workload artifacts were created | P-03 + W2-B fix |
-| Is ODR wired into the Cards turn executor? | No evidence of wiring in live artifacts or targeted cards-path code | P-04 |
-| Does a run produce a complete audit record? | Unknown | S-01 after Phase 2 |
-| Are two runs of the same input deterministic? | Claimed but untested end-to-end | S-02 after Phase 2 |
+| Does `run_round` work correctly with real Ollama output? | Governed baseline now improved: the five-run live P-02 baseline ended `UNRESOLVED_DECISIONS` in all 5 runs with one raw signature and no unexpected hard `CODE_LEAK` or repeated format failure | P-02 + RG03182026 closeout |
+| Does the Cards engine complete a single issue without error? | Yes on both app and artifact profiles; live P-01 now completes on `builder_guard_app_v1` and `builder_guard_artifact_v1` with truthful artifact contracts | P-01 + RG03182026 closeout |
+| Are observability artifacts consistently present after a run? | Yes for the bounded Phase 1 probe surfaces; live P-01, P-03, and P-04 all emitted the expected cards/ODR artifacts used for closeout | P-01, P-03, P-04 + RG03182026 closeout |
+| Is ODR wired into the Cards turn executor? | Yes, but only as an explicit non-default prebuild path; the normal cards path still runs without ODR and emits `odr_active=false` | P-04 + RG03182026 closeout |
+| Does a run produce a complete audit record? | Yes on the MAR v1 surface for the proven cards and ODR paths; `verify_run_completeness.py` now reports `mar_complete`, `replay_ready`, and missing evidence truthfully | S-01 + AH03182026 closeout |
+| Are two runs of the same input deterministic? | Evidence-scoped only: one canonical equivalent-run pair compared `stable`, while one preserved-turn replay structurally `diverged`; do not generalize beyond the recorded proof surface | S-02, S-03 + AH03182026 closeout |
 | Can a 7B model produce a useful code review under ODR coordination? | Unknown — this is the thesis | S-04 after Phases 1+2 |
 | Does task decomposition improve output quality over single-shot? | Unknown — this is the hypothesis | S-06 after all phases |
 
@@ -253,12 +270,12 @@ Given a large task that a 7B model would fail if attempted in one shot, automati
 ## Execution Order
 
 ```
-Phase 0 (Wave 1 bugs) → Phase 1 (closed: probes P-01 through P-04) → Phase 2 (active: Wave 2 bugs + S-01, S-02, S-03) → Phase 3 (S-04, S-05, S-06)
+Phase 0 (Wave 1 bugs) → Phase 1 (closed: probes P-01 through P-04) → Phase 2 (closed: MAR + S-01, S-02, S-03) → Phase 3 (S-04, S-05, S-06)
                                                                        ↑
                                                         Wave 2 items run in parallel here
 ```
 
-Phase 1 is now complete as a mapping exercise. The probes produced the honest starting point for everything after: not a success story, but a bounded description of what the engine currently does, where the audit record is already useful, and where the runtime still blocks credible workload claims.
+Phase 1 is now complete as a mapping exercise, and the bounded runtime-gap follow-on lane is also closed. The probes remain the historical baseline, while the current auditability baseline is the remediated cards and ODR surface recorded in the RG03182026 archive plus the Phase 2 MAR closeout in [docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md](docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md) and [docs/projects/archive/techdebt/AH03182026/Closeout.md](docs/projects/archive/techdebt/AH03182026/Closeout.md).
 
 ---
 
@@ -266,6 +283,6 @@ Phase 1 is now complete as a mapping exercise. The probes produced the honest st
 
 This plan is not a roadmap to build everything at once. It is a sequenced process for getting honest answers to honest questions about what Orket can do right now, then building on what actually works.
 
-If the Phase 1 probes reveal that the Cards engine is fundamentally broken with a real model, Phase 2 changes. If P-04 reveals that ODR is completely unwired from the execution engine, that becomes the most important gap to close before Phase 3. The probes are designed to surface reality, not confirm assumptions.
+The Phase 1 probes did surface cards-path and ODR integration gaps, and RG03182026 closed that bounded remediation lane before Phase 2 continues. The probes were designed to surface reality, not confirm assumptions.
 
 That's the point.

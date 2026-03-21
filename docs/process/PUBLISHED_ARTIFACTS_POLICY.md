@@ -1,6 +1,6 @@
 # Published Artifacts Policy
 
-Last reviewed: 2026-03-15
+Last reviewed: 2026-03-19
 
 ## Purpose
 Define how benchmark artifacts move from candidate staging to approved publication without drift between files and docs.
@@ -35,6 +35,18 @@ Top-level fields for either catalog:
 3. `root`
 4. `highlight_id`
 5. optional `reading_paths`
+
+Optional governed claim fields for artifact rows:
+1. `claim_tier`
+2. `compare_scope`
+3. `operator_surface`
+4. `policy_digest`
+5. `control_bundle_ref` or `control_bundle_hash`
+6. `artifact_manifest_ref`
+7. `provenance_ref`
+8. `determinism_class`
+
+When present, these fields are first-class publication consumer surfaces and must stay truthful to the underlying proof bundle. Rows that omit them remain transition-rule debt under [docs/specs/ORKET_DETERMINISM_GATE_POLICY.md](docs/specs/ORKET_DETERMINISM_GATE_POLICY.md).
 
 ## Staging Workflow (Mandatory For Agent-Proposed Artifacts)
 1. Copy candidate artifact(s) into the right category folder under `benchmarks/staging/`.

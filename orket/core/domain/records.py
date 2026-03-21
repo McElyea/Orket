@@ -24,6 +24,7 @@ class IssueRecord(BaseModel):
     status: CardStatus = CardStatus.READY
     assignee: Optional[str] = None
     note: Optional[str] = None
+    params: Dict[str, Any] = Field(default_factory=dict)
     depends_on: List[str] = Field(default_factory=list)
     retry_count: int = 0
     max_retries: int = 3

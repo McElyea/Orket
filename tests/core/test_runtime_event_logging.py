@@ -57,6 +57,37 @@ def test_log_event_runtime_artifact_skips_when_session_missing(tmp_path: Path) -
     assert not runtime_events_path.exists()
 
 
+def test_log_event_persists_structured_determinism_violation_fields(tmp_path: Path) -> None:
+    log_event(
+        "determinism_violation",
+        {
+            "session_id": "run-1",
+            "issue_id": "ISS-1",
+            "role": "coder",
+            "turn_index": 2,
+            "tool": "write_file",
+            "error": "E_DETERMINISM_VIOLATION: write_file declared pure but observed side effects",
+            "error_code": "E_DETERMINISM_VIOLATION",
+            "determinism_class": "pure",
+            "capability_profile": "workspace",
+            "tool_contract_version": "1.0.0",
+            "side_effect_signal_keys": ["tool_name_side_effect", "changed_files"],
+        },
+        workspace=tmp_path,
+    )
+
+    runtime_events_path = tmp_path / "agent_output" / "observability" / "runtime_events.jsonl"
+    lines = runtime_events_path.read_text(encoding="utf-8").strip().splitlines()
+    assert lines
+    artifact_event = json.loads(lines[-1])
+    assert artifact_event["event"] == "determinism_violation"
+    assert artifact_event["error_code"] == "E_DETERMINISM_VIOLATION"
+    assert artifact_event["determinism_class"] == "pure"
+    assert artifact_event["capability_profile"] == "workspace"
+    assert artifact_event["tool_contract_version"] == "1.0.0"
+    assert artifact_event["side_effect_signal_keys"] == ["tool_name_side_effect", "changed_files"]
+
+
 def test_log_event_isolated_per_workspace(tmp_path: Path) -> None:
     workspace_a = tmp_path / "workspace-a"
     workspace_b = tmp_path / "workspace-b"

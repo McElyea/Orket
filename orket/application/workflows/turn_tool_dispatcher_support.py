@@ -204,11 +204,24 @@ def determinism_violation_for_result(
     binding: dict[str, Any] | None,
     result: dict[str, Any] | None,
 ) -> str | None:
-    determinism_class = str((binding or {}).get("determinism_class") or "workspace").strip().lower()
+    details = determinism_violation_details_for_result(tool_name=tool_name, binding=binding, result=result)
+    if not isinstance(details, dict):
+        return None
+    return str(details.get("error") or "")
+
+
+def determinism_violation_details_for_result(
+    *,
+    tool_name: str,
+    binding: dict[str, Any] | None,
+    result: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    binding_payload = dict(binding or {})
+    determinism_class = str(binding_payload.get("determinism_class") or "workspace").strip().lower()
     if determinism_class != "pure":
         return None
 
-    side_effect_signals = False
+    side_effect_signal_keys: list[str] = []
     pure_conflict_tools = {
         "write_file",
         "delete_file",
@@ -217,7 +230,7 @@ def determinism_violation_for_result(
         "add_issue_comment",
     }
     if str(tool_name).strip() in pure_conflict_tools:
-        side_effect_signals = True
+        side_effect_signal_keys.append("tool_name_side_effect")
 
     payload = result if isinstance(result, dict) else {}
     for key in (
@@ -230,13 +243,19 @@ def determinism_violation_for_result(
         "external_calls",
     ):
         value = payload.get(key)
-        if value:
-            side_effect_signals = True
-            break
+        if value and key not in side_effect_signal_keys:
+            side_effect_signal_keys.append(key)
 
-    if not side_effect_signals:
+    if not side_effect_signal_keys:
         return None
-    return format_protocol_error(E_DETERMINISM_VIOLATION_PREFIX, f"{tool_name}:declared_pure")
+    return {
+        "error": format_protocol_error(E_DETERMINISM_VIOLATION_PREFIX, f"{tool_name}:declared_pure"),
+        "error_code": E_DETERMINISM_VIOLATION_PREFIX,
+        "determinism_class": determinism_class,
+        "capability_profile": str(binding_payload.get("capability_profile") or "workspace").strip().lower(),
+        "tool_contract_version": str(binding_payload.get("tool_contract_version") or "1.0.0").strip() or "1.0.0",
+        "side_effect_signal_keys": side_effect_signal_keys,
+    }
 
 
 def _normalized_tokens(value: Any) -> set[str]:

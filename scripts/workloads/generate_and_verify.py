@@ -16,6 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.core.cards_runtime_contract import ARTIFACT_EXECUTION_PROFILE
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from scripts.probes.probe_support import (
     applied_probe_env,
@@ -62,7 +63,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 3 workload S-05: cards-backed generate-and-verify probe.")
     parser.add_argument("--workspace", default=DEFAULT_WORKSPACE)
     parser.add_argument("--fixture", default=DEFAULT_FIXTURE)
-    parser.add_argument("--model", default="qwen2.5-coder:7b")
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--provider", default="ollama")
     parser.add_argument("--ollama-host", default="")
     parser.add_argument("--temperature", type=float, default=0.0)

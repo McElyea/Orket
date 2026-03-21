@@ -59,6 +59,30 @@ def test_build_guard_messages_includes_coverage_checklist() -> None:
     assert "Return exactly one JSON object" in messages[0]["content"]
 
 
+def test_build_governed_claim_payload_tracks_locked_scope() -> None:
+    module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
+
+    payload = module.build_governed_claim_payload(
+        provider="ollama",
+        model="qwen2.5-coder:14b",
+        prompt_profile="baseline_v2",
+        review_method="single_pass",
+        temperature=0.0,
+        seed=0,
+        timeout=180,
+        fixture_path=Path("scripts/workloads/fixtures/code_review_probe_v1/corrupt_order_processor.py"),
+        answer_key_path=Path("scripts/workloads/fixtures/code_review_probe_v1/human_review_answer_key.json"),
+    )
+
+    assert payload["claim_tier"] == "non_deterministic_lab_only"
+    assert payload["compare_scope"] == "workload_s04_fixture_v1"
+    assert payload["operator_surface"] == "workload_answer_key_scoring_verdict_v1"
+    assert payload["authoritative_truth_surface"] == "deterministic_fingerprint_plus_answer_key_scoring_v1"
+    assert payload["model_assistance_surface"] == "model_assisted_review_critique_v0"
+    assert payload["policy_digest"].startswith("sha256:")
+    assert payload["control_bundle_hash"].startswith("sha256:")
+
+
 def test_usage_responses_dedupes_single_pass() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe.py"))
     response = object()
@@ -129,7 +153,7 @@ def test_score_review_bundle_tracks_model_must_catch_hits(tmp_path: Path) -> Non
     )
 
     answer_key = Path("scripts/workloads/fixtures/code_review_probe_v1/human_review_answer_key.json")
-    report = module._score_review_bundle(artifact_dir=artifact_dir, answer_key_path=answer_key)
+    report = module.score_review_bundle(artifact_dir=artifact_dir, answer_key_path=answer_key)
 
     assert "RAW_PAYLOAD_EVAL" in report["model_hit_issue_ids"]
     assert "VERIFY_SIGNATURE_ALWAYS_TRUE" in report["model_hit_issue_ids"]

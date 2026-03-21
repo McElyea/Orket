@@ -19,6 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime_paths import resolve_live_acceptance_db_path
 
 DEFAULT_TEST = (
@@ -790,7 +791,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=[os.getenv("ORKET_LIVE_MODEL", "qwen2.5-coder:7b")],
+        default=[os.getenv("ORKET_LIVE_MODEL", DEFAULT_LOCAL_MODEL)],
         help="One or more Ollama model names.",
     )
     parser.add_argument(

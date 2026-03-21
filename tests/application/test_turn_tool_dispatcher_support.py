@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from orket.application.workflows.turn_tool_dispatcher_support import (
+    determinism_violation_details_for_result,
     determinism_violation_for_result,
     tool_policy_violation,
 )
@@ -79,3 +80,19 @@ def test_determinism_violation_for_result_allows_pure_without_side_effect_signal
         result={"ok": True},
     )
     assert violation is None
+
+
+# Layer: unit
+def test_determinism_violation_details_for_result_returns_structured_failure_payload() -> None:
+    details = determinism_violation_details_for_result(
+        tool_name="write_file",
+        binding={"determinism_class": "pure", "capability_profile": "workspace", "tool_contract_version": "2.0.0"},
+        result={"ok": True, "changed_files": ["a.txt"]},
+    )
+    assert isinstance(details, dict)
+    assert details["error_code"] == "E_DETERMINISM_VIOLATION"
+    assert details["determinism_class"] == "pure"
+    assert details["capability_profile"] == "workspace"
+    assert details["tool_contract_version"] == "2.0.0"
+    assert "tool_name_side_effect" in details["side_effect_signal_keys"]
+    assert "changed_files" in details["side_effect_signal_keys"]

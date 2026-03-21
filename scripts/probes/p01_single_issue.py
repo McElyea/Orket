@@ -12,6 +12,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.core.cards_runtime_contract import APP_EXECUTION_PROFILE, ARTIFACT_EXECUTION_PROFILE
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from scripts.probes.probe_support import (
     applied_probe_env,
@@ -32,7 +34,7 @@ ISSUE_ID = "P01-FIB-01"
 DEFAULT_SESSION_ID = "probe-p01-single-issue"
 DEFAULT_BUILD_ID = "build-probe-p01-single-issue"
 DEFAULT_OUTPUT = "benchmarks/results/probes/p01_single_issue.json"
-REQUESTED_ARTIFACT = "agent_output/fibonacci.py"
+DEFAULT_REQUESTED_ARTIFACT = "agent_output/fibonacci.py"
 ARTIFACT_NAMES = (
     "messages.json",
     "model_response.txt",
@@ -42,10 +44,36 @@ ARTIFACT_NAMES = (
 )
 
 
+def _safe_token(value: str) -> str:
+    return "".join(ch.lower() if ch.isalnum() else "-" for ch in str(value or "").strip()).strip("-") or "probe"
+
+
+def _effective_session_id(args: argparse.Namespace, workspace: Path) -> str:
+    if str(args.session_id) != DEFAULT_SESSION_ID:
+        return str(args.session_id)
+    return f"{DEFAULT_SESSION_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+
+
+def _effective_build_id(args: argparse.Namespace, workspace: Path) -> str:
+    if str(args.build_id) != DEFAULT_BUILD_ID:
+        return str(args.build_id)
+    return f"{DEFAULT_BUILD_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+
+
+def _effective_issue_id(args: argparse.Namespace, workspace: Path) -> str:
+    return f"{ISSUE_ID}-{_safe_token(workspace.name)}-{_safe_token(args.execution_profile)}"
+
+
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 1 probe P-01: bare minimum single-issue cards-engine run.")
     parser.add_argument("--workspace", default=".probe_workspace_p01")
-    parser.add_argument("--model", default="qwen2.5-coder:7b")
+    parser.add_argument(
+        "--execution-profile",
+        default=ARTIFACT_EXECUTION_PROFILE,
+        choices=(APP_EXECUTION_PROFILE, ARTIFACT_EXECUTION_PROFILE),
+    )
+    parser.add_argument("--artifact-path", default=DEFAULT_REQUESTED_ARTIFACT)
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--provider", default="ollama")
     parser.add_argument("--ollama-host", default="")
     parser.add_argument("--temperature", type=float, default=0.0)
@@ -58,11 +86,20 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _issue_payload() -> dict[str, Any]:
+def _issue_payload(args: argparse.Namespace, issue_id: str) -> dict[str, Any]:
+    artifact_path = str(args.artifact_path)
+    execution_profile = str(args.execution_profile)
+    artifact_contract = {
+        "kind": "app" if execution_profile == APP_EXECUTION_PROFILE else "artifact",
+        "primary_output": artifact_path,
+        "required_write_paths": [artifact_path],
+    }
+    if execution_profile == APP_EXECUTION_PROFILE:
+        artifact_contract["entrypoint_path"] = artifact_path
     return {
-        "id": ISSUE_ID,
+        "id": issue_id,
         "summary": (
-            "Write agent_output/fibonacci.py containing a Python function fibonacci_sequence(n) "
+            f"Write {artifact_path} containing a Python function fibonacci_sequence(n) "
             "that returns the Fibonacci sequence up to n terms. Then call update_issue_status "
             "with status code_review in the same response."
         ),
@@ -70,6 +107,10 @@ def _issue_payload() -> dict[str, Any]:
         "priority": 1.0,
         "status": "ready",
         "depends_on": [],
+        "params": {
+            "execution_profile": execution_profile,
+            "artifact_contract": artifact_contract,
+        },
     }
 
 
@@ -135,12 +176,15 @@ def _written_artifacts(summary: dict[str, Any]) -> list[str]:
 
 async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
     workspace = Path(str(args.workspace)).resolve()
+    session_id = _effective_session_id(args, workspace)
+    build_id = _effective_build_id(args, workspace)
+    issue_id = _effective_issue_id(args, workspace)
     workspace.mkdir(parents=True, exist_ok=True)
     write_probe_runtime_root(
         workspace,
         epic_id=EPIC_ID,
         environment_model=str(args.model),
-        issues=[_issue_payload()],
+        issues=[_issue_payload(args, issue_id)],
         temperature=float(args.temperature),
         seed=int(args.seed),
         timeout=int(args.timeout),
@@ -158,16 +202,16 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
             run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
         )
         pipeline_result = await pipeline.run_card(
-            ISSUE_ID,
-            session_id=str(args.session_id),
-            build_id=str(args.build_id),
+            issue_id,
+            session_id=session_id,
+            build_id=build_id,
         )
 
-    summary = run_summary(workspace, str(args.session_id))
-    lifecycle_events = protocol_events(workspace, str(args.session_id))
-    runtime_event_rows = runtime_events(workspace, str(args.session_id))
-    artifact_hits = collect_artifact_hits(workspace, str(args.session_id), ARTIFACT_NAMES)
-    turn_samples = _turn_event_samples(workspace, str(args.session_id))
+    summary = run_summary(workspace, session_id)
+    lifecycle_events = protocol_events(workspace, session_id)
+    runtime_event_rows = runtime_events(workspace, session_id)
+    artifact_hits = collect_artifact_hits(workspace, session_id, ARTIFACT_NAMES)
+    turn_samples = _turn_event_samples(workspace, session_id)
     run_status = str(summary.get("status") or "")
     written_artifacts = _written_artifacts(summary)
 
@@ -182,11 +226,15 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         "requested_provider": str(args.provider),
         "requested_model": str(args.model),
         "workspace": str(workspace),
-        "session_id": str(args.session_id),
-        "build_id": str(args.build_id),
+        "session_id": session_id,
+        "build_id": build_id,
+        "execution_profile": str(args.execution_profile),
+        "requested_artifact_path": str(args.artifact_path),
         "run_ledger_backend": "protocol_forced_by_probe",
         "pipeline_result": json_safe(pipeline_result),
         "run_summary": summary,
+        "run_summary_execution_profile": summary.get("execution_profile"),
+        "run_summary_artifact_contract": summary.get("artifact_contract"),
         "run_summary_stop_reason": summary.get("stop_reason"),
         "run_summary_has_stop_reason": "stop_reason" in summary,
         "artifact_hits": {
@@ -197,10 +245,10 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
             for name, paths in artifact_hits.items()
         },
         "artifact_observation": {
-            "requested_paths": [REQUESTED_ARTIFACT],
-            "requested_paths_present": [REQUESTED_ARTIFACT] if (workspace / REQUESTED_ARTIFACT).exists() else [],
+            "requested_paths": [str(args.artifact_path)],
+            "requested_paths_present": [str(args.artifact_path)] if (workspace / str(args.artifact_path)).exists() else [],
             "written_paths": written_artifacts,
-            "matches_requested": written_artifacts == [REQUESTED_ARTIFACT],
+            "matches_requested": written_artifacts == [str(args.artifact_path)],
         },
         "protocol_events": {
             "count": len(lifecycle_events),

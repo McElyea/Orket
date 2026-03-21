@@ -64,7 +64,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
 from orket.kernel.v1.odr.core import (  # noqa: E402
     DEFAULT_CODE_LEAK_PATTERNS,
     ReactorConfig,
@@ -72,13 +71,15 @@ from orket.kernel.v1.odr.core import (  # noqa: E402
     run_round,
 )
 from orket.kernel.v1.odr.metrics import diff_ratio  # noqa: E402
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402
+from scripts.odr.model_runtime_control import complete_with_transient_provider  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Defaults tuned for 7B models
 # ---------------------------------------------------------------------------
 
 DEFAULT_7B_ARCHITECTS = [
-    "qwen2.5-coder:7b",
+    DEFAULT_LOCAL_MODEL,
     "qwen2.5:7b",
 ]
 
@@ -250,6 +251,8 @@ def _auditor_messages(
         "- Be adversarial and specific.\n"
         "- Flag regressions, missing constraints, and hallucinated constants.\n"
         "- If the architect output contains code, flag it in CRITIQUE.\n"
+        "- When a required field can be resolved from task context, propose the concrete value with [REWRITE].\n"
+        "- Use [DECISION_REQUIRED] only when no reasonable default exists in the task context.\n"
     )
     user = (
         f"{_scenario_brief(scenario_input)}\n"
@@ -301,10 +304,12 @@ def _collect_host_environment() -> dict[str, Any]:
 async def _run_scenario_live(
     *,
     scenario_input: dict[str, Any],
-    architect_provider: LocalModelProvider,
-    auditor_provider: LocalModelProvider,
+    architect_model: str,
+    auditor_model: str,
     rounds: int,
     odr_cfg: ReactorConfig,
+    temperature: float,
+    timeout: int,
 ) -> tuple[dict[str, Any], ScenarioDiagnostics]:
     """
     Run one scenario through the ODR loop.
@@ -324,9 +329,12 @@ async def _run_scenario_live(
             prior_auditor_output=prior_auditor_output,
             round_index=round_index,
         )
-        arch_start = time.perf_counter()
-        arch_resp = await architect_provider.complete(arch_messages)
-        arch_latency_ms = int((time.perf_counter() - arch_start) * 1000)
+        arch_resp, arch_latency_ms, arch_residency = await complete_with_transient_provider(
+            model=architect_model,
+            messages=arch_messages,
+            temperature=temperature,
+            timeout=timeout,
+        )
         architect_raw = str(arch_resp.content or "").strip()
 
         aud_messages = _auditor_messages(
@@ -334,9 +342,12 @@ async def _run_scenario_live(
             architect_output=architect_raw,
             round_index=round_index,
         )
-        aud_start = time.perf_counter()
-        aud_resp = await auditor_provider.complete(aud_messages)
-        aud_latency_ms = int((time.perf_counter() - aud_start) * 1000)
+        aud_resp, aud_latency_ms, aud_residency = await complete_with_transient_provider(
+            model=auditor_model,
+            messages=aud_messages,
+            temperature=temperature,
+            timeout=timeout,
+        )
         auditor_raw = str(aud_resp.content or "").strip()
 
         pre_count = len(state.history_rounds)
@@ -387,6 +398,8 @@ async def _run_scenario_live(
                 "auditor_raw": auditor_raw,
                 "architect_provider_raw": _json_safe(arch_resp.raw),
                 "auditor_provider_raw": _json_safe(aud_resp.raw),
+                "architect_model_residency": _json_safe(arch_residency),
+                "auditor_model_residency": _json_safe(aud_residency),
                 "odr_trace_record": _json_safe(trace),
                 "state_stop_reason_after_round": state.stop_reason,
                 "architect_latency_ms": arch_latency_ms,
@@ -435,16 +448,6 @@ async def _run_pairing(
     temperature: float,
     timeout: int,
 ) -> tuple[dict[str, Any], list[ScenarioDiagnostics]]:
-    architect_provider = LocalModelProvider(
-        model=pairing.architect,
-        temperature=temperature,
-        timeout=timeout,
-    )
-    auditor_provider = LocalModelProvider(
-        model=pairing.auditor,
-        temperature=temperature,
-        timeout=timeout,
-    )
     scenarios_out: list[dict[str, Any]] = []
     diagnostics_out: list[ScenarioDiagnostics] = []
     started = datetime.now(UTC).isoformat()
@@ -455,10 +458,12 @@ async def _run_pairing(
         try:
             scenario_result, diag = await _run_scenario_live(
                 scenario_input=scenario_input,
-                architect_provider=architect_provider,
-                auditor_provider=auditor_provider,
+                architect_model=pairing.architect,
+                auditor_model=pairing.auditor,
                 rounds=rounds,
                 odr_cfg=odr_cfg,
+                temperature=temperature,
+                timeout=timeout,
             )
         except Exception as exc:  # noqa: BLE001
             print(f"    scenario={scenario_id} ERROR: {exc}", flush=True)
@@ -489,9 +494,6 @@ async def _run_pairing(
 
         scenarios_out.append(scenario_result)
         diagnostics_out.append(diag)
-
-    await architect_provider.close()
-    await auditor_provider.close()
 
     ended = datetime.now(UTC).isoformat()
     pairing_result = {
@@ -579,24 +581,65 @@ def _build_7b_summary(
 def _interpret_7b_results(rows: list[dict[str, Any]]) -> dict[str, Any]:
     """Produce a plain-language interpretation of the results for quick reading."""
     if not rows:
-        return {"verdict": "NO_DATA"}
+        return {"verdict": "NO_DATA", "failure_mode": "none", "dominant_stop_reason": "NONE"}
 
     best = rows[0]
     all_zero_convergence = all(r["convergence_rate"] == 0.0 for r in rows)
     high_code_leak = any(r["code_leak_rate"] > 0.5 for r in rows)
     high_format_violation = any(r["format_violation_rate"] > 0.5 for r in rows)
+    stop_reason_totals: dict[str, int] = {}
+    for row in rows:
+        distribution = row.get("stop_reason_distribution") or {}
+        if not isinstance(distribution, dict):
+            continue
+        for reason, count in distribution.items():
+            key = str(reason or "NONE")
+            try:
+                stop_reason_totals[key] = stop_reason_totals.get(key, 0) + int(count)
+            except (TypeError, ValueError):
+                continue
+    dominant_stop_reason = max(stop_reason_totals.items(), key=lambda item: item[1])[0] if stop_reason_totals else "NONE"
 
     if all_zero_convergence:
         verdict = "FAIL_NO_CONVERGENCE"
-        notes = [
-            "No model pair achieved ODR convergence across any scenario.",
-            "This indicates 7B models cannot reliably maintain the structured "
-            "REQUIREMENT/CHANGELOG/ASSUMPTIONS/OPEN_QUESTIONS format across rounds.",
-            "Recommended action: review FORMAT_VIOLATION rates and consider prompt hardening "
-            "before attempting task-level workloads.",
-        ]
+        if high_format_violation or dominant_stop_reason in {"FORMAT_VIOLATION", "SHAPE_VIOLATION"}:
+            failure_mode = "format_instability"
+            notes = [
+                "No model pair achieved ODR convergence across any scenario.",
+                "The dominant failure mode was format instability: 7B models did not reliably maintain the "
+                "required REQUIREMENT/CHANGELOG/ASSUMPTIONS/OPEN_QUESTIONS structure across rounds.",
+                "Recommended action: review FORMAT_VIOLATION rates and consider prompt hardening "
+                "before attempting task-level workloads.",
+            ]
+        elif dominant_stop_reason == "UNRESOLVED_DECISIONS":
+            failure_mode = "semantic_non_convergence_unresolved_decisions"
+            notes = [
+                "No model pair achieved ODR convergence across any scenario.",
+                "The dominant failure mode was semantic non-convergence: runs ended with unresolved required "
+                "decisions rather than structural format violations.",
+                "Recommended action: inspect OPEN_QUESTIONS growth, contradiction hits, and requirement "
+                "over-specification before attributing the failure to prompt formatting.",
+            ]
+        elif high_code_leak or dominant_stop_reason == "CODE_LEAK":
+            failure_mode = "code_leak"
+            notes = [
+                "No model pair achieved ODR convergence across any scenario.",
+                "The dominant failure mode was code leakage into requirement text rather than stable refinement.",
+                "Recommended action: reduce coder-model leakage or switch the architect role to a "
+                "general-purpose model before attempting task-level workloads.",
+            ]
+        else:
+            failure_mode = f"non_convergence_{dominant_stop_reason.lower()}"
+            notes = [
+                "No model pair achieved ODR convergence across any scenario.",
+                f"The dominant stop reason was {dominant_stop_reason}, indicating the failure mode was not "
+                "uniformly explained by format instability alone.",
+                "Recommended action: inspect the scenario-level stop reason distribution before drawing model "
+                "capability conclusions from the zero-convergence result.",
+            ]
     elif best["convergence_rate"] >= 0.6:
         verdict = "PASS_USABLE"
+        failure_mode = "none"
         notes = [
             f"Best pair {best['architect_model']} / {best['auditor_model']} "
             f"converged on {int(best['convergence_rate'] * 100)}% of scenarios.",
@@ -604,6 +647,7 @@ def _interpret_7b_results(rows: list[dict[str, Any]]) -> dict[str, Any]:
         ]
     else:
         verdict = "PARTIAL_MIXED"
+        failure_mode = "partial"
         notes = [
             f"Best pair achieved {int(best['convergence_rate'] * 100)}% convergence — "
             "usable but unreliable.",
@@ -625,6 +669,8 @@ def _interpret_7b_results(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
     return {
         "verdict": verdict,
+        "failure_mode": failure_mode,
+        "dominant_stop_reason": dominant_stop_reason,
         "best_pairing": {
             "architect": best["architect_model"],
             "auditor": best["auditor_model"],

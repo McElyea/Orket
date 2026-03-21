@@ -50,6 +50,11 @@ class CardMigrations:
         except aiosqlite.OperationalError:
             pass
 
+        try:
+            await conn.execute("ALTER TABLE issues ADD COLUMN params_json TEXT")
+        except aiosqlite.OperationalError:
+            pass
+
         await conn.execute(
             """
             CREATE TABLE IF NOT EXISTS comments (

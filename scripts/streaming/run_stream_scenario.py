@@ -18,6 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 import orket.interfaces.api as api_module
 from orket.streaming import StreamLawChecker, StreamLawViolation
 
@@ -141,7 +142,7 @@ def _provider_identity(*, resolved_model_id: str = "") -> dict[str, Any]:
         provider_name = str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
         if provider_name == "lmstudio":
             provider_name = "openai_compat"
-        model_id = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
+        model_id = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", DEFAULT_LOCAL_MODEL)).strip()
         if provider_name == "ollama":
             base_url = str(os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).strip()
         else:

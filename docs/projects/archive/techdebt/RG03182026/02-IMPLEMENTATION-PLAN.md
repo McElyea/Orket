@@ -1,12 +1,16 @@
 # RG03182026 Phase 1 Runtime Gap Implementation Plan
 
 Last updated: 2026-03-18
-Status: Active
+Status: Archived
 Owner: Orket Core
-Lane type: Active techdebt cycle
+Lane type: Archived techdebt cycle
+
+Archive note:
+1. Completed and archived on 2026-03-18.
+2. Closeout authority: [docs/projects/archive/techdebt/RG03182026/Closeout.md](docs/projects/archive/techdebt/RG03182026/Closeout.md)
 
 Requirements authority:
-1. [docs/projects/techdebt/RG03182026/01-REQUIREMENTS.md](docs/projects/techdebt/RG03182026/01-REQUIREMENTS.md)
+1. [docs/projects/archive/techdebt/RG03182026/01-REQUIREMENTS.md](docs/projects/archive/techdebt/RG03182026/01-REQUIREMENTS.md)
 
 ## Goal
 
@@ -270,6 +274,18 @@ Canonical live gates:
 
 ## Completion Gate
 
-1. The requirements conclusive gate in [docs/projects/techdebt/RG03182026/01-REQUIREMENTS.md](docs/projects/techdebt/RG03182026/01-REQUIREMENTS.md) is green.
+1. The requirements conclusive gate in [docs/projects/archive/techdebt/RG03182026/01-REQUIREMENTS.md](docs/projects/archive/techdebt/RG03182026/01-REQUIREMENTS.md) is green.
 2. The roadmap can continue to point at this plan until lane closeout.
 3. When the lane closes, archive the cycle under `docs/projects/archive/techdebt/RG03182026/`.
+
+## Completion Result
+
+The lane completion gate is green.
+
+1. Live P-01 app and artifact profile runs completed with truthful artifact writes and `stop_reason=completed`.
+2. Live P-03 artifact-profile execution completed and produced `agent_output/schema.json`, `agent_output/writer.py`, and `agent_output/reader.py` under `builder_guard_artifact_v1`.
+3. The five-run live P-02 baseline returned `UNRESOLVED_DECISIONS` in all five runs with one raw signature and no unexpected hard `CODE_LEAK` or repeated format failure.
+4. Live P-04 distinguished non-ODR and ODR-enabled cards paths; the ODR-enabled path emitted `odr_artifact_path`, `odr_valid`, `odr_pending_decisions`, and `odr_stop_reason`.
+5. `python scripts/governance/check_docs_project_hygiene.py` passed after archive closeout.
+6. The explicit ODR prebuild path remains non-default; accepted `MAX_ROUNDS` outcomes can continue when `odr_valid=true`, `odr_pending_decisions=0`, and `odr_accepted=true`, while non-accepted outcomes remain fail-closed.
+7. Auditor `REWRITE` patches are advisory unless they surface governed semantic invalidity, unresolved required decisions, contradiction, required-constraint regression, or another explicit blocking signal.

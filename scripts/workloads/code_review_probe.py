@@ -13,13 +13,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from scripts.probes.probe_support import applied_probe_env, is_environment_blocker, json_safe, now_utc_iso, write_report
-from scripts.reviewrun.score_answer_key import score_answer_key
+from scripts.workloads.code_review_probe_reporting import build_model_assisted_payload, quality_summary, score_review_bundle
 from scripts.workloads.code_review_probe_support import (
     DEFAULT_PROMPT_PROFILE,
     DEFAULT_REVIEW_METHOD,
     artifact_inventory,
+    build_governed_claim_payload,
     build_deterministic_payload,
     build_guard_messages,
     build_review_messages,
@@ -46,7 +48,7 @@ _usage_responses = usage_responses
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 3 workload S-04: standalone live code review probe.")
-    parser.add_argument("--model", default="qwen2.5-coder:7b")
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--provider", default="ollama")
     parser.add_argument("--ollama-host", default="")
     parser.add_argument("--fixture", default=DEFAULT_FIXTURE)
@@ -87,88 +89,6 @@ async def _complete_review(
     )
 
 
-def _build_model_assisted_payload(
-    *,
-    review_payload: dict[str, Any],
-    run_id: str,
-    model: str,
-    source_text: str,
-    prompt_profile: str,
-    review_method: str,
-) -> dict[str, Any]:
-    return {
-        **review_payload,
-        "model_id": str(model),
-        "prompt_profile": str(prompt_profile),
-        "review_method": str(review_method),
-        "contract_version": "review_critique_v0",
-        "snapshot_digest": sha256_text(source_text),
-        "policy_digest": sha256_text("workloads.s04_code_review_probe.v2"),
-        "run_id": str(run_id),
-    }
-
-
-def _score_review_bundle(*, artifact_dir: Path, answer_key_path: Path) -> dict[str, Any]:
-    score = score_answer_key(run_dir=artifact_dir, answer_key_path=answer_key_path)
-    score["model_missed_must_catch"] = [
-        str(row.get("issue_id") or "")
-        for row in list(score.get("issues") or [])
-        if bool(row.get("present")) and bool(row.get("must_catch")) and not bool(row.get("model_hit"))
-    ]
-    score["model_hit_issue_ids"] = [
-        str(row.get("issue_id") or "")
-        for row in list(score.get("issues") or [])
-        if bool(row.get("present")) and bool(row.get("model_hit"))
-    ]
-    score["deterministic_missed_must_catch"] = [
-        str(row.get("issue_id") or "")
-        for row in list(score.get("issues") or [])
-        if bool(row.get("present")) and bool(row.get("must_catch")) and not bool(row.get("deterministic_hit"))
-    ]
-    score["deterministic_hit_issue_ids"] = [
-        str(row.get("issue_id") or "")
-        for row in list(score.get("issues") or [])
-        if bool(row.get("present")) and bool(row.get("deterministic_hit"))
-    ]
-    return score
-
-
-def _quality_summary(score: dict[str, Any], *, contract_valid: bool) -> dict[str, Any]:
-    model = score.get("model_assisted") if isinstance(score.get("model_assisted"), dict) else {}
-    deterministic = score.get("deterministic") if isinstance(score.get("deterministic"), dict) else {}
-    missed = [str(item) for item in list(score.get("model_missed_must_catch") or []) if str(item).strip()]
-    coverage = float(model.get("coverage") or 0.0)
-    if not contract_valid:
-        verdict = "contract_invalid"
-    elif missed:
-        verdict = "missed_must_catch"
-    elif coverage > 0.0:
-        verdict = "all_must_catch_caught"
-    else:
-        verdict = "no_useful_hits"
-    return {
-        "quality_verdict": verdict,
-        "model_coverage": coverage,
-        "model_score": int(model.get("score") or 0),
-        "model_max_score": int(model.get("max_score") or 0),
-        "model_reasoning_score": int(model.get("reasoning_score") or 0),
-        "model_reasoning_max_score": int(model.get("reasoning_max_score") or 0),
-        "model_fix_score": int(model.get("fix_score") or 0),
-        "model_fix_max_score": int(model.get("fix_max_score") or 0),
-        "model_missed_must_catch": missed,
-        "model_hit_issue_ids": [str(item) for item in list(score.get("model_hit_issue_ids") or []) if str(item).strip()],
-        "deterministic_coverage": float(deterministic.get("coverage") or 0.0),
-        "deterministic_score": int(deterministic.get("score") or 0),
-        "deterministic_max_score": int(deterministic.get("max_score") or 0),
-        "deterministic_missed_must_catch": [
-            str(item) for item in list(score.get("deterministic_missed_must_catch") or []) if str(item).strip()
-        ],
-        "deterministic_hit_issue_ids": [
-            str(item) for item in list(score.get("deterministic_hit_issue_ids") or []) if str(item).strip()
-        ],
-    }
-
-
 def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(str(text), encoding="utf-8")
@@ -193,14 +113,16 @@ def _write_artifacts(
     model: str,
     prompt_profile: str,
     review_method: str,
+    policy_digest: str,
 ) -> dict[str, Any]:
-    critique_payload = _build_model_assisted_payload(
+    critique_payload = build_model_assisted_payload(
         review_payload=final_review,
         run_id=run_id,
         model=model,
         source_text=source_text,
         prompt_profile=prompt_profile,
         review_method=review_method,
+        policy_digest=policy_digest,
     )
     write_json(
         artifact_dir / "request.json",
@@ -228,7 +150,7 @@ def _write_artifacts(
         write_json(artifact_dir / "draft_review.json", initial_review)
         write_json(artifact_dir / "draft_model_response_raw.json", initial_response_raw)
         _write_text(artifact_dir / "draft_model_response.txt", initial_response_text)
-    score = _score_review_bundle(artifact_dir=artifact_dir, answer_key_path=answer_key_path)
+    score = score_review_bundle(artifact_dir=artifact_dir, answer_key_path=answer_key_path)
     write_json(artifact_dir / "score.json", score)
     return score
 
@@ -251,6 +173,17 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         prompt_profile=str(args.prompt_profile),
     )
     deterministic_payload = build_deterministic_payload(source_text=source_text, answer_key=answer_key)
+    governed_claim = build_governed_claim_payload(
+        provider=str(args.provider),
+        model=str(args.model),
+        prompt_profile=str(args.prompt_profile),
+        review_method=str(args.review_method),
+        temperature=float(args.temperature),
+        seed=int(args.seed),
+        timeout=int(args.timeout),
+        fixture_path=fixture_display_path,
+        answer_key_path=answer_key_path,
+    )
     run_id = _run_id()
     artifact_dir = workspace / "workloads" / "s04_code_review_probe" / run_id
     artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -320,13 +253,21 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         model=str(args.model),
         prompt_profile=str(args.prompt_profile),
         review_method=str(args.review_method),
+        policy_digest=str(governed_claim["policy_digest"]),
     )
-    quality = _quality_summary(score, contract_valid=contract_valid)
+    quality = quality_summary(score, contract_valid=contract_valid)
     observed_result = "partial success" if advisory_errors else "success"
     return {
         "schema_version": "workloads.s04_code_review_probe.v2",
         "recorded_at_utc": now_utc_iso(),
         "workload_id": "S-04",
+        "claim_tier": governed_claim["claim_tier"],
+        "compare_scope": governed_claim["compare_scope"],
+        "operator_surface": governed_claim["operator_surface"],
+        "policy_digest": governed_claim["policy_digest"],
+        "control_bundle_hash": governed_claim["control_bundle_hash"],
+        "authoritative_truth_surface": governed_claim["authoritative_truth_surface"],
+        "model_assistance_surface": governed_claim["model_assistance_surface"],
         "probe_status": "observed",
         "proof_kind": "live",
         "observed_path": "primary",
@@ -373,10 +314,28 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
 
 def _blocked_payload(args: argparse.Namespace, error: Exception) -> dict[str, Any]:
     blocked = is_environment_blocker(error)
+    governed_claim = build_governed_claim_payload(
+        provider=str(args.provider),
+        model=str(args.model),
+        prompt_profile=str(args.prompt_profile),
+        review_method=str(args.review_method),
+        temperature=float(args.temperature),
+        seed=int(args.seed),
+        timeout=int(args.timeout),
+        fixture_path=Path(str(args.fixture)),
+        answer_key_path=Path(str(args.answer_key)),
+    )
     return {
         "schema_version": "workloads.s04_code_review_probe.v2",
         "recorded_at_utc": now_utc_iso(),
         "workload_id": "S-04",
+        "claim_tier": governed_claim["claim_tier"],
+        "compare_scope": governed_claim["compare_scope"],
+        "operator_surface": governed_claim["operator_surface"],
+        "policy_digest": governed_claim["policy_digest"],
+        "control_bundle_hash": governed_claim["control_bundle_hash"],
+        "authoritative_truth_surface": governed_claim["authoritative_truth_surface"],
+        "model_assistance_surface": governed_claim["model_assistance_surface"],
         "probe_status": "blocked",
         "proof_kind": "live",
         "observed_path": "blocked" if blocked else "primary",

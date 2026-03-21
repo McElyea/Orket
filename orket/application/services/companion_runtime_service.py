@@ -11,6 +11,7 @@ from typing import Any, Literal
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.provider_runtime_target import list_provider_models
 from orket.services.profile_write_policy import ProfileWritePolicy
 from orket.services.scoped_memory_store import ScopedMemoryStore
@@ -61,7 +62,7 @@ class CompanionRuntimeService:
         self._project_root = project_root.resolve()
         self._extension_defaults = _default_companion_config()
         self._model_provider = model_provider or LocalModelCapabilityProvider(
-            model="qwen2.5-coder:7b",
+            model=DEFAULT_LOCAL_MODEL,
             temperature=0.2,
             seed=None,
         )

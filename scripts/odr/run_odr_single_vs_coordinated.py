@@ -84,7 +84,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
 from orket.kernel.v1.odr.core import (  # noqa: E402
     DEFAULT_CODE_LEAK_PATTERNS,
     ReactorConfig,
@@ -92,6 +91,8 @@ from orket.kernel.v1.odr.core import (  # noqa: E402
     run_round,
 )
 from orket.kernel.v1.odr.metrics import diff_ratio, jaccard_sim  # noqa: E402
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL  # noqa: E402
+from scripts.odr.model_runtime_control import complete_with_transient_provider  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -99,7 +100,7 @@ from orket.kernel.v1.odr.metrics import diff_ratio, jaccard_sim  # noqa: E402
 
 SCENARIO_ROOT = REPO_ROOT / "tests" / "kernel" / "v1" / "vectors" / "odr" / "refinement"
 
-DEFAULT_ARCHITECT = "qwen2.5-coder:7b"
+DEFAULT_ARCHITECT = DEFAULT_LOCAL_MODEL
 DEFAULT_AUDITOR = "qwen2.5:7b"
 DEFAULT_ROUNDS = 5
 DEFAULT_TEMPERATURE = 0.1
@@ -200,6 +201,8 @@ def _auditor_messages(
         "- Be adversarial and specific.\n"
         "- Flag regressions, missing constraints, and hallucinated constants.\n"
         "- If the architect output contains code, flag it in CRITIQUE.\n"
+        "- When a required field can be resolved from task context, propose the concrete value with [REWRITE].\n"
+        "- Use [DECISION_REQUIRED] only when no reasonable default exists in the task context.\n"
     )
     user = (
         f"{scenario_brief}\n"
@@ -315,7 +318,9 @@ def _json_safe(value: Any) -> Any:
 async def _run_single_shot(
     *,
     scenario_input: dict[str, Any],
-    architect_provider: LocalModelProvider,
+    architect_model: str,
+    temperature: float,
+    timeout: int,
 ) -> dict[str, Any]:
     """
     Run one single-shot call for a scenario.
@@ -324,9 +329,12 @@ async def _run_single_shot(
     brief = _scenario_brief(scenario_input)
     messages = _single_shot_messages(scenario_brief=brief)
 
-    start = time.perf_counter()
-    resp = await architect_provider.complete(messages)
-    latency_ms = int((time.perf_counter() - start) * 1000)
+    resp, latency_ms, residency_release = await complete_with_transient_provider(
+        model=architect_model,
+        messages=messages,
+        temperature=temperature,
+        timeout=timeout,
+    )
     raw_output = str(resp.content or "").strip()
 
     requirement_text = _extract_requirement_text(raw_output)
@@ -341,6 +349,7 @@ async def _run_single_shot(
         "analysis": analysis,
         "latency_ms": latency_ms,
         "provider_raw": _json_safe(resp.raw),
+        "model_residency": _json_safe(residency_release),
     }
 
 
@@ -352,10 +361,12 @@ async def _run_single_shot(
 async def _run_coordinated(
     *,
     scenario_input: dict[str, Any],
-    architect_provider: LocalModelProvider,
-    auditor_provider: LocalModelProvider,
+    architect_model: str,
+    auditor_model: str,
     rounds: int,
     odr_cfg: ReactorConfig,
+    temperature: float,
+    timeout: int,
 ) -> dict[str, Any]:
     """
     Run the full ODR loop for a scenario.
@@ -375,9 +386,12 @@ async def _run_coordinated(
             prior_auditor_output=prior_auditor_output,
             round_index=round_index,
         )
-        arch_start = time.perf_counter()
-        arch_resp = await architect_provider.complete(arch_msgs)
-        arch_latency_ms = int((time.perf_counter() - arch_start) * 1000)
+        arch_resp, arch_latency_ms, arch_residency = await complete_with_transient_provider(
+            model=architect_model,
+            messages=arch_msgs,
+            temperature=temperature,
+            timeout=timeout,
+        )
         architect_raw = str(arch_resp.content or "").strip()
 
         aud_msgs = _auditor_messages(
@@ -385,9 +399,12 @@ async def _run_coordinated(
             architect_output=architect_raw,
             round_index=round_index,
         )
-        aud_start = time.perf_counter()
-        aud_resp = await auditor_provider.complete(aud_msgs)
-        aud_latency_ms = int((time.perf_counter() - aud_start) * 1000)
+        aud_resp, aud_latency_ms, aud_residency = await complete_with_transient_provider(
+            model=auditor_model,
+            messages=aud_msgs,
+            temperature=temperature,
+            timeout=timeout,
+        )
         auditor_raw = str(aud_resp.content or "").strip()
 
         total_latency_ms += arch_latency_ms + aud_latency_ms
@@ -411,6 +428,8 @@ async def _run_coordinated(
                 "state_stop_reason_after_round": state.stop_reason,
                 "architect_latency_ms": arch_latency_ms,
                 "auditor_latency_ms": aud_latency_ms,
+                "architect_model_residency": _json_safe(arch_residency),
+                "auditor_model_residency": _json_safe(aud_residency),
             }
         )
 
@@ -711,13 +730,6 @@ async def _run_pair(
     temperature: float,
     timeout: int,
 ) -> dict[str, Any]:
-    architect_provider = LocalModelProvider(
-        model=architect_model, temperature=temperature, timeout=timeout
-    )
-    auditor_provider = LocalModelProvider(
-        model=auditor_model, temperature=temperature, timeout=timeout
-    )
-
     scenario_results: list[dict[str, Any]] = []
     comparisons: list[dict[str, Any]] = []
 
@@ -732,7 +744,9 @@ async def _run_pair(
         try:
             single_result = await _run_single_shot(
                 scenario_input=scenario_input,
-                architect_provider=architect_provider,
+                architect_model=architect_model,
+                temperature=temperature,
+                timeout=timeout,
             )
         except Exception as exc:  # noqa: BLE001
             print(f"      [single-shot] ERROR: {exc}", flush=True)
@@ -760,10 +774,12 @@ async def _run_pair(
         try:
             odr_result = await _run_coordinated(
                 scenario_input=scenario_input,
-                architect_provider=architect_provider,
-                auditor_provider=auditor_provider,
+                architect_model=architect_model,
+                auditor_model=auditor_model,
                 rounds=rounds,
                 odr_cfg=odr_cfg,
+                temperature=temperature,
+                timeout=timeout,
             )
         except Exception as exc:  # noqa: BLE001
             print(f"      [coordinated] ERROR: {exc}", flush=True)
@@ -812,9 +828,6 @@ async def _run_pair(
             }
         )
         comparisons.append(comparison)
-
-    await architect_provider.close()
-    await auditor_provider.close()
 
     ended = datetime.now(UTC).isoformat()
     aggregate = _build_aggregate_summary(comparisons)

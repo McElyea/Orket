@@ -65,6 +65,15 @@ class ExtensionRunResult:
     artifact_root: str
     provenance_path: str
     summary: dict[str, Any]
+    claim_tier: str = ""
+    compare_scope: str = ""
+    operator_surface: str = ""
+    policy_digest: str = ""
+    control_bundle_hash: str = ""
+    artifact_manifest_path: str = ""
+    artifact_manifest_hash: str = ""
+    provenance_hash: str = ""
+    determinism_class: str = ""
 
 
 @dataclass(frozen=True)

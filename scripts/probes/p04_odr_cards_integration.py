@@ -1,180 +1,323 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 from pathlib import Path
 from typing import Any
+import uuid
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.probes.probe_support import now_utc_iso, observability_inventory, run_summary, write_report
+from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
+from orket.core.cards_runtime_contract import ARTIFACT_EXECUTION_PROFILE, ODR_EXECUTION_PROFILE
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+from orket.runtime.execution_pipeline import ExecutionPipeline
+from scripts.probes.probe_support import (
+    applied_probe_env,
+    is_environment_blocker,
+    json_safe,
+    now_utc_iso,
+    protocol_events,
+    read_json,
+    run_summary,
+    runtime_events,
+    write_probe_runtime_root,
+    write_report,
+)
 
-DEFAULT_SESSION_ID = "probe-p03-epic-trace"
+EPIC_ID = "probe-p04-odr-cards-integration"
+DEFAULT_SESSION_ID = "probe-p04-odr-cards-integration"
+DEFAULT_BUILD_ID = "build-probe-p04-odr-cards-integration"
 DEFAULT_OUTPUT = "benchmarks/results/probes/p04_odr_cards_integration.json"
-ODR_SIGNALS = (
-    "history_rounds",
-    "stop_reason",
-    "CODE_LEAK",
-    "STABLE_DIFF_FLOOR",
-    "LOOP_DETECTED",
-    "FORMAT_VIOLATION",
-)
-CODE_PATTERNS = (
-    "run_round(",
-    "ReactorConfig",
-    "ReactorState",
-    "orket.kernel.v1.odr",
-    "history_rounds",
-    "CODE_LEAK",
-)
-CODE_SCAN_ROOTS = (
-    REPO_ROOT / "orket" / "application",
-    REPO_ROOT / "orket" / "runtime",
-    REPO_ROOT / "orket" / "orchestration",
-)
+
+
+def _safe_token(value: str) -> str:
+    return "".join(ch.lower() if ch.isalnum() else "-" for ch in str(value or "").strip()).strip("-") or "probe"
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Phase 1 probe P-04: ODR/cards integration audit.")
-    parser.add_argument("--workspace", default=".probe_workspace_p03")
+    parser = argparse.ArgumentParser(description="Phase 1 probe P-04: live ODR/cards integration proof.")
+    parser.add_argument("--workspace", default=".probe_workspace_p04")
     parser.add_argument("--session-id", default=DEFAULT_SESSION_ID)
+    parser.add_argument("--build-id", default=DEFAULT_BUILD_ID)
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
+    parser.add_argument("--provider", default="ollama")
+    parser.add_argument("--ollama-host", default="")
+    parser.add_argument("--temperature", type=float, default=0.0)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--json", action="store_true")
     return parser.parse_args(argv)
 
 
-def _scan_observability(workspace: Path, session_id: str) -> dict[str, Any]:
-    inventory = observability_inventory(workspace, session_id)
-    run_summary_payload = run_summary(workspace, session_id)
-    scan_targets = [workspace / item["path"] for item in inventory]
-    summary_path = workspace / "runs" / session_id / "run_summary.json"
-    if summary_path.exists():
-        scan_targets.append(summary_path)
+def _variant_token(root_workspace: Path) -> str:
+    # Cards persistence is durable across runs, so default probe IDs must be unique
+    # per invocation or reruns can reuse stale issue rows and cached odr_result data.
+    return f"{_safe_token(root_workspace.name)}-{uuid.uuid4().hex[:10]}"
 
-    hits: list[dict[str, Any]] = []
-    for path in scan_targets:
-        try:
-            text = path.read_text(encoding="utf-8")
-        except OSError:
+
+def _issue_id(*, variant_token: str, label: str) -> str:
+    return f"{label}-{variant_token}-issue"
+
+
+def _session_id(args: argparse.Namespace, *, variant_token: str, label: str) -> str:
+    if str(args.session_id) != DEFAULT_SESSION_ID:
+        return f"{args.session_id}-{label}"
+    return f"{DEFAULT_SESSION_ID}-{variant_token}-{label}"
+
+
+def _build_id(args: argparse.Namespace, *, variant_token: str, label: str) -> str:
+    if str(args.build_id) != DEFAULT_BUILD_ID:
+        return f"{args.build_id}-{label}"
+    return f"{DEFAULT_BUILD_ID}-{variant_token}-{label}"
+
+
+def _issue_payload(
+    *,
+    issue_id: str,
+    execution_profile: str,
+    artifact_path: str,
+    odr_max_rounds: int | None = None,
+) -> dict[str, Any]:
+    params: dict[str, Any] = {
+        "execution_profile": execution_profile,
+        "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": artifact_path,
+            "required_write_paths": [artifact_path],
+        },
+    }
+    if odr_max_rounds is not None:
+        params["odr_max_rounds"] = int(odr_max_rounds)
+    return {
+        "id": issue_id,
+        "summary": (
+            f"Write {artifact_path} containing a Python function add(a, b) that returns a + b. "
+            "Then call update_issue_status with status code_review in the same response."
+        ),
+        "seat": "coder",
+        "priority": 1.0,
+        "status": "ready",
+        "depends_on": [],
+        "params": params,
+    }
+
+
+def _event_counts(events: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in events:
+        name = str(row.get("event") or "").strip()
+        if not name:
             continue
-        matched = [signal for signal in ODR_SIGNALS if signal in text]
-        if not matched:
-            continue
-        hits.append(
-            {
-                "path": path.relative_to(workspace).as_posix(),
-                "signals": matched,
-            }
+        counts[name] = counts.get(name, 0) + 1
+    return counts
+
+
+def _variant_observation(workspace: Path, session_id: str) -> dict[str, Any]:
+    summary = run_summary(workspace, session_id)
+    runtime_rows = runtime_events(workspace, session_id)
+    odr_artifact_path = str(summary.get("odr_artifact_path") or "").strip()
+    odr_artifact_payload = {}
+    if odr_artifact_path:
+        artifact_file = workspace / odr_artifact_path
+        if artifact_file.exists():
+            payload = read_json(artifact_file)
+            if isinstance(payload, dict):
+                odr_artifact_payload = payload
+    return {
+        "run_summary": summary,
+        "protocol_events": {
+            "count": len(protocol_events(workspace, session_id)),
+        },
+        "runtime_events": {
+            "count": len(runtime_rows),
+            "event_counts": _event_counts(runtime_rows),
+        },
+        "odr_artifact_exists": bool(odr_artifact_payload),
+        "odr_artifact": {
+            "stop_reason": odr_artifact_payload.get("odr_stop_reason"),
+            "odr_valid": odr_artifact_payload.get("odr_valid"),
+            "history_round_count": len(odr_artifact_payload.get("history_rounds") or []),
+            "accepted": odr_artifact_payload.get("accepted"),
+        }
+        if odr_artifact_payload
+        else {},
+    }
+
+
+def _observed_result(non_odr: dict[str, Any], odr: dict[str, Any]) -> str:
+    non_odr_summary = non_odr.get("run_summary") if isinstance(non_odr.get("run_summary"), dict) else {}
+    odr_summary = odr.get("run_summary") if isinstance(odr.get("run_summary"), dict) else {}
+    odr_artifact = odr.get("odr_artifact") if isinstance(odr.get("odr_artifact"), dict) else {}
+    if (
+        non_odr_summary.get("odr_active") is False
+        and str(non_odr_summary.get("status") or "").strip() == "done"
+        and str(non_odr_summary.get("stop_reason") or "").strip() == "completed"
+        and odr_summary.get("odr_active") is True
+        and bool(odr_summary.get("odr_artifact_path"))
+        and str(odr_summary.get("status") or "").strip() == "done"
+        and str(odr_summary.get("stop_reason") or "").strip() == "completed"
+        and odr_artifact.get("accepted") is True
+    ):
+        return "success"
+    return "failure"
+
+
+async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
+    workspace = Path(str(args.workspace)).resolve()
+    workspace.mkdir(parents=True, exist_ok=True)
+    non_odr_workspace = workspace / "non_odr"
+    odr_workspace = workspace / "odr"
+    variant_token = _variant_token(workspace)
+    non_odr_issue_id = _issue_id(variant_token=variant_token, label="non-odr")
+    odr_issue_id = _issue_id(variant_token=variant_token, label="odr")
+    write_probe_runtime_root(
+        non_odr_workspace,
+        epic_id=EPIC_ID,
+        environment_model=str(args.model),
+        issues=[
+            _issue_payload(
+                issue_id=non_odr_issue_id,
+                execution_profile=ARTIFACT_EXECUTION_PROFILE,
+                artifact_path="agent_output/p04_non_odr.py",
+            ),
+        ],
+        temperature=float(args.temperature),
+        seed=int(args.seed),
+        timeout=int(args.timeout),
+    )
+    write_probe_runtime_root(
+        odr_workspace,
+        epic_id=EPIC_ID,
+        environment_model=str(args.model),
+        issues=[
+            _issue_payload(
+                issue_id=odr_issue_id,
+                execution_profile=ODR_EXECUTION_PROFILE,
+                artifact_path="agent_output/p04_odr.py",
+                odr_max_rounds=1,
+            ),
+        ],
+        temperature=float(args.temperature),
+        seed=int(args.seed),
+        timeout=int(args.timeout),
+    )
+
+    with applied_probe_env(
+        provider=str(args.provider),
+        ollama_host=str(args.ollama_host or "").strip() or None,
+        disable_sandbox=True,
+    ):
+        non_odr_pipeline = ExecutionPipeline(
+            workspace=non_odr_workspace,
+            department="core",
+            config_root=non_odr_workspace,
+            run_ledger_repo=AsyncProtocolRunLedgerRepository(non_odr_workspace),
+        )
+        odr_pipeline = ExecutionPipeline(
+            workspace=odr_workspace,
+            department="core",
+            config_root=odr_workspace,
+            run_ledger_repo=AsyncProtocolRunLedgerRepository(odr_workspace),
+        )
+        non_odr_session_id = _session_id(args, variant_token=variant_token, label="non-odr")
+        non_odr_build_id = _build_id(args, variant_token=variant_token, label="non-odr")
+        odr_session_id = _session_id(args, variant_token=variant_token, label="odr")
+        odr_build_id = _build_id(args, variant_token=variant_token, label="odr")
+        non_odr_result = await non_odr_pipeline.run_card(
+            non_odr_issue_id,
+            session_id=non_odr_session_id,
+            build_id=non_odr_build_id,
+        )
+        odr_result = await odr_pipeline.run_card(
+            odr_issue_id,
+            session_id=odr_session_id,
+            build_id=odr_build_id,
         )
 
+    non_odr_observation = _variant_observation(non_odr_workspace, non_odr_session_id)
+    odr_observation = _variant_observation(odr_workspace, odr_session_id)
+    observed_result = _observed_result(non_odr_observation, odr_observation)
     return {
-        "inventory_count": len(inventory),
-        "hits": hits,
-        "run_summary_present": bool(run_summary_payload),
-        "run_summary_has_stop_reason": "stop_reason" in run_summary_payload,
-    }
-
-
-def _scan_codebase() -> dict[str, Any]:
-    hits: list[dict[str, Any]] = []
-    for root in CODE_SCAN_ROOTS:
-        if not root.exists():
-            continue
-        for path in sorted(root.rglob("*.py")):
-            try:
-                lines = path.read_text(encoding="utf-8").splitlines()
-            except OSError:
-                continue
-            matched_rows: list[dict[str, Any]] = []
-            for line_number, line in enumerate(lines, start=1):
-                matched = [pattern for pattern in CODE_PATTERNS if pattern in line]
-                if not matched:
-                    continue
-                matched_rows.append(
-                    {
-                        "line": line_number,
-                        "patterns": matched,
-                        "text": line.strip(),
-                    }
-                )
-            if matched_rows:
-                hits.append(
-                    {
-                        "path": path.relative_to(REPO_ROOT).as_posix(),
-                        "matches": matched_rows,
-                    }
-                )
-    integration_hits = [row for row in hits if row["path"].startswith(("orket/application/", "orket/runtime/", "orket/orchestration/"))]
-    return {
-        "hits": hits,
-        "integration_hits": integration_hits,
-    }
-
-
-def _conclusion(observability_scan: dict[str, Any], code_scan: dict[str, Any]) -> dict[str, Any]:
-    artifact_hits = list(observability_scan.get("hits") or [])
-    integration_hits = list(code_scan.get("integration_hits") or [])
-    if artifact_hits:
-        return {
-            "integration_status": "artifacts_present",
-            "summary": "ODR fingerprints were found in cards-engine artifacts.",
-        }
-    if integration_hits:
-        return {
-            "integration_status": "code_path_detected_no_artifacts",
-            "summary": "Cards-engine code references ODR symbols, but the scanned run did not emit ODR artifacts.",
-        }
-    return {
-        "integration_status": "independent_subsystems",
-        "summary": "No ODR artifact fingerprints or cards-path code references were found.",
-    }
-
-
-def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
-    workspace = Path(str(args.workspace)).resolve()
-    observability_scan = _scan_observability(workspace, str(args.session_id))
-    code_scan = _scan_codebase()
-    conclusion = _conclusion(observability_scan, code_scan)
-    observed_path = "primary" if observability_scan.get("inventory_count") else "fallback"
-    return {
-        "schema_version": "phase1_probe.p04.v1",
+        "schema_version": "phase1_probe.p04.v2",
         "recorded_at_utc": now_utc_iso(),
         "probe_id": "P-04",
         "probe_status": "observed",
-        "proof_kind": "structural",
-        "observed_path": observed_path,
-        "observed_result": "success",
+        "proof_kind": "live",
+        "observed_path": "primary",
+        "observed_result": observed_result,
+        "requested_provider": str(args.provider),
+        "requested_model": str(args.model),
         "workspace": str(workspace),
-        "session_id": str(args.session_id),
-        "odr_signals": list(ODR_SIGNALS),
-        "observability_scan": observability_scan,
-        "code_scan": code_scan,
-        "conclusion": conclusion,
+        "variant_token": variant_token,
+        "variants": {
+            "non_odr": {
+                "workspace": str(non_odr_workspace),
+                "issue_id": non_odr_issue_id,
+                "session_id": non_odr_session_id,
+                "build_id": non_odr_build_id,
+                "pipeline_result": json_safe(non_odr_result),
+                **non_odr_observation,
+            },
+            "odr": {
+                "workspace": str(odr_workspace),
+                "issue_id": odr_issue_id,
+                "session_id": odr_session_id,
+                "build_id": odr_build_id,
+                "pipeline_result": json_safe(odr_result),
+                **odr_observation,
+            },
+        },
+    }
+
+
+def _blocked_payload(args: argparse.Namespace, error: Exception) -> dict[str, Any]:
+    blocked = is_environment_blocker(error)
+    return {
+        "schema_version": "phase1_probe.p04.v2",
+        "recorded_at_utc": now_utc_iso(),
+        "probe_id": "P-04",
+        "probe_status": "blocked",
+        "proof_kind": "live",
+        "observed_path": "blocked" if blocked else "primary",
+        "observed_result": "environment blocker" if blocked else "failure",
+        "requested_provider": str(args.provider),
+        "requested_model": str(args.model),
+        "workspace": str(Path(str(args.workspace)).resolve()),
+        "error_type": type(error).__name__,
+        "error": str(error),
     }
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     output_path = Path(str(args.output)).resolve()
-    payload = _run_probe(args)
+    try:
+        payload = asyncio.run(_run_probe(args))
+    except Exception as exc:  # noqa: BLE001
+        payload = _blocked_payload(args, exc)
+
     persisted = write_report(output_path, payload)
     if args.json:
         print(json.dumps({**persisted, "output_path": str(output_path)}, indent=2, ensure_ascii=True))
     else:
-        conclusion = persisted.get("conclusion") if isinstance(persisted.get("conclusion"), dict) else {}
         print(
             " ".join(
                 [
                     f"probe_status={persisted.get('probe_status')}",
-                    f"integration_status={conclusion.get('integration_status', '')}",
+                    f"observed_result={persisted.get('observed_result')}",
                     f"output={output_path}",
                 ]
             )
         )
-    return 0
+    observed = str(persisted.get("probe_status") or "") == "observed"
+    success = str(persisted.get("observed_result") or "") == "success"
+    return 0 if observed and success else 1
 
 
 if __name__ == "__main__":

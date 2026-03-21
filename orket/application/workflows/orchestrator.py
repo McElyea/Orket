@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from pathlib import Path
-from types import MethodType
 from typing import Any
 
 from orket.adapters.storage.async_repositories import AsyncPendingGateRepository
@@ -96,12 +95,185 @@ class Orchestrator:
         self.context_window = self.loop_policy_node.context_window(self.org)
         self.model_client_node = self.decision_nodes.resolve_model_client(self.org)
 
-    def __getattr__(self, name: str) -> Any:
+    def _resolve_architecture_mode(self, *args: Any, **kwargs: Any) -> Any:
         _sync_patchable_symbols()
-        target = getattr(orchestrator_ops, name, None)
-        if callable(target):
-            return MethodType(target, self)
-        raise AttributeError(name)
+        return orchestrator_ops._resolve_architecture_mode(self, *args, **kwargs)
+
+    def _resolve_frontend_framework_mode(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_frontend_framework_mode(self, *args, **kwargs)
+
+    def _resolve_architecture_pattern(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_architecture_pattern(self, *args, **kwargs)
+
+    def _resolve_project_surface_profile(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_project_surface_profile(self, *args, **kwargs)
+
+    def _resolve_small_project_builder_variant(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_small_project_builder_variant(self, *args, **kwargs)
+
+    def _resolve_protocol_governed_enabled(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_protocol_governed_enabled(self, *args, **kwargs)
+
+    def _resolve_protocol_max_response_bytes(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_protocol_max_response_bytes(self, *args, **kwargs)
+
+    def _resolve_protocol_max_tool_calls(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_protocol_max_tool_calls(self, *args, **kwargs)
+
+    def _resolve_protocol_determinism_context(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_protocol_determinism_context(self, *args, **kwargs)
+
+    def _resolve_local_prompting_mode(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_local_prompting_mode(self, *args, **kwargs)
+
+    def _resolve_local_prompting_allow_fallback(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_local_prompting_allow_fallback(self, *args, **kwargs)
+
+    def _resolve_local_prompting_fallback_profile_id(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_local_prompting_fallback_profile_id(self, *args, **kwargs)
+
+    def _resolve_workflow_profile(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_workflow_profile(self, *args, **kwargs)
+
+    async def _request_issue_transition(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._request_issue_transition(self, *args, **kwargs)
+
+    def _small_project_issue_threshold(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._small_project_issue_threshold(self, *args, **kwargs)
+
+    def _should_auto_inject_small_project_reviewer(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._should_auto_inject_small_project_reviewer(self, *args, **kwargs)
+
+    def _small_project_reviewer_seat_name(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._small_project_reviewer_seat_name(self, *args, **kwargs)
+
+    def _auto_inject_small_project_reviewer_seat(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._auto_inject_small_project_reviewer_seat(self, *args, **kwargs)
+
+    def _resolve_small_project_team_policy(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_small_project_team_policy(self, *args, **kwargs)
+
+    def _resolve_bool_flag(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_bool_flag(self, *args, **kwargs)
+
+    def _is_sandbox_disabled(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._is_sandbox_disabled(self, *args, **kwargs)
+
+    def _is_scaffolder_disabled(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._is_scaffolder_disabled(self, *args, **kwargs)
+
+    def _is_dependency_manager_disabled(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._is_dependency_manager_disabled(self, *args, **kwargs)
+
+    def _is_runtime_verifier_disabled(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._is_runtime_verifier_disabled(self, *args, **kwargs)
+
+    def _is_deployment_planner_disabled(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._is_deployment_planner_disabled(self, *args, **kwargs)
+
+    def _resolve_prompt_resolver_mode(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_prompt_resolver_mode(self, *args, **kwargs)
+
+    def _resolve_prompt_selection_policy(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_prompt_selection_policy(self, *args, **kwargs)
+
+    def _resolve_prompt_selection_strict(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_prompt_selection_strict(self, *args, **kwargs)
+
+    def _resolve_prompt_version_exact(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_prompt_version_exact(self, *args, **kwargs)
+
+    def _resolve_verification_scope_limits(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_verification_scope_limits(self, *args, **kwargs)
+
+    def _history_context(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._history_context(self, *args, **kwargs)
+
+    async def _propagate_dependency_blocks(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._propagate_dependency_blocks(self, *args, **kwargs)
+
+    async def _maybe_schedule_team_replan(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._maybe_schedule_team_replan(self, *args, **kwargs)
+
+    async def _execute_issue_turn(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._execute_issue_turn(self, *args, **kwargs)
+
+    def _validate_guard_rejection_payload(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._validate_guard_rejection_payload(self, *args, **kwargs)
+
+    async def _create_pending_gate_request(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._create_pending_gate_request(self, *args, **kwargs)
+
+    async def _create_pending_tool_approval_request(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._create_pending_tool_approval_request(self, *args, **kwargs)
+
+    def _build_turn_context(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._build_turn_context(self, *args, **kwargs)
+
+    async def _build_dependency_context(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._build_dependency_context(self, *args, **kwargs)
+
+    def _extract_guard_review_payload(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._extract_guard_review_payload(self, *args, **kwargs)
+
+    def _resolve_guard_event(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._resolve_guard_event(self, *args, **kwargs)
+
+    async def _dispatch_turn(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._dispatch_turn(self, *args, **kwargs)
+
+    async def _handle_failure(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return await orchestrator_ops._handle_failure(self, *args, **kwargs)
+
+    def _is_issue_idesign_enabled(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._is_issue_idesign_enabled(self, *args, **kwargs)
+
+    def _normalize_governance_violation_message(self, *args: Any, **kwargs: Any) -> Any:
+        _sync_patchable_symbols()
+        return orchestrator_ops._normalize_governance_violation_message(self, *args, **kwargs)
 
     async def verify_issue(self, issue_id: str, run_id: str | None = None) -> Any:
         _sync_patchable_symbols()

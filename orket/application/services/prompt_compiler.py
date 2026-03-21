@@ -115,11 +115,17 @@ class PromptCompiler:
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "coder": [
-                    "You MUST write implementation code using write_file(path='agent_output/main.py', ...).",
+                    (
+                        "You MUST write implementation code using write_file(path='<one of the required write paths "
+                        "from the Write Path Contract>', ...)."
+                    ),
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "developer": [
-                    "You MUST write implementation code using write_file(path='agent_output/main.py', ...).",
+                    (
+                        "You MUST write implementation code using write_file(path='<one of the required write paths "
+                        "from the Write Path Contract>', ...)."
+                    ),
                     "You MUST then call update_issue_status(status='code_review').",
                 ],
                 "code_reviewer": [

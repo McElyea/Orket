@@ -1631,11 +1631,8 @@ def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrat
         dependency_context={"depends_on": ["COD-1"], "dependency_count": 1, "dependency_statuses": {}, "unresolved_dependencies": []},
         resume_mode=False,
     )
-    assert context["required_read_paths"] == [
-        "agent_output/requirements.txt",
-        "agent_output/main.py",
-    ]
-    assert context["required_write_paths"] == []
+    assert context["required_read_paths"] == []
+    assert context["required_write_paths"] == ["agent_output/main.py"]
 
 
 def test_build_turn_context_includes_required_write_paths_for_coder(orchestrator):
@@ -1666,8 +1663,8 @@ def test_build_turn_context_non_final_guard_requires_done_status(orchestrator):
         resume_mode=False,
     )
     assert context["required_statuses"] == ["done"]
-    assert context["required_action_tools"] == ["update_issue_status"]
-    assert context["required_read_paths"] == []
+    assert context["required_action_tools"] == ["read_file", "update_issue_status"]
+    assert context["required_read_paths"] == ["agent_output/main.py"]
 
 
 def test_build_turn_context_final_guard_includes_read_contract(orchestrator):
@@ -1685,12 +1682,7 @@ def test_build_turn_context_final_guard_includes_read_contract(orchestrator):
     )
     assert context["required_statuses"] == ["done", "blocked"]
     assert context["required_action_tools"] == ["read_file", "update_issue_status"]
-    assert context["required_read_paths"] == [
-        "agent_output/requirements.txt",
-        "agent_output/design.txt",
-        "agent_output/main.py",
-        "agent_output/verification/runtime_verification.json",
-    ]
+    assert context["required_read_paths"] == ["agent_output/main.py"]
     assert context["runtime_verifier_ok"] is True
 
 
@@ -1917,6 +1909,11 @@ def test_resolve_small_project_builder_variant_from_user_settings(orchestrator, 
         lambda: {"small_project_builder_variant": "architect"},
     )
     assert orch._resolve_small_project_builder_variant() == "architect"
+
+
+def test_orchestrator_helper_methods_are_explicit_class_members() -> None:
+    assert "_resolve_architecture_mode" in Orchestrator.__dict__
+    assert "_build_dependency_context" in Orchestrator.__dict__
 
 
 def test_resolve_small_project_policy_maps_architect_to_lead_architect(orchestrator):

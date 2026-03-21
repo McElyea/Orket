@@ -49,7 +49,7 @@ CANONICAL_ROLE_DEFAULTS: Dict[str, Dict[str, Any]] = {
         "intent": "Implement functional logic from architecture guidance with deterministic tool calls.",
         "responsibilities": [
             "Read required artifacts before implementation updates.",
-            "Write implementation to agent_output/main.py.",
+            "Write implementation to the required path from the Write Path Contract.",
             "Call update_issue_status(status='code_review') after code updates.",
         ],
         "constraints": [

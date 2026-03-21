@@ -11,6 +11,11 @@ from pydantic import BaseModel, Field, ValidationError
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROMPT_PROFILE = "baseline_v2"
 DEFAULT_REVIEW_METHOD = "single_pass"
+S04_CLAIM_TIER = "non_deterministic_lab_only"
+S04_COMPARE_SCOPE = "workload_s04_fixture_v1"
+S04_OPERATOR_SURFACE = "workload_answer_key_scoring_verdict_v1"
+S04_AUTHORITATIVE_TRUTH_SURFACE = "deterministic_fingerprint_plus_answer_key_scoring_v1"
+S04_MODEL_ASSISTANCE_SURFACE = "model_assisted_review_critique_v0"
 
 _PROMPT_PROFILES: dict[str, dict[str, Any]] = {
     "baseline_v2": {
@@ -73,6 +78,11 @@ ReviewContract.model_rebuild()
 
 def sha256_text(text: str) -> str:
     return f"sha256:{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
+
+
+def sha256_json(payload: Any) -> str:
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    return f"sha256:{hashlib.sha256(raw).hexdigest()}"
 
 
 def load_text(path: Path) -> str:
@@ -293,6 +303,45 @@ def build_deterministic_payload(*, source_text: str, answer_key: dict[str, Any])
         "findings": findings,
         "executed_checks": executed_checks,
         "deterministic_lane_version": "s04_static_fingerprint_v1",
+    }
+
+
+def build_governed_claim_payload(
+    *,
+    provider: str,
+    model: str,
+    prompt_profile: str,
+    review_method: str,
+    temperature: float,
+    seed: int,
+    timeout: int,
+    fixture_path: Path,
+    answer_key_path: Path,
+) -> dict[str, str]:
+    policy_payload = {
+        "workload_schema_version": "workloads.s04_code_review_probe.v2",
+        "score_policy": "reviewrun.answer_key_scoring.v2",
+        "deterministic_lane_version": "s04_static_fingerprint_v1",
+        "prompt_profile": str(prompt_profile),
+        "review_method": str(review_method),
+    }
+    control_bundle = {
+        "provider": str(provider),
+        "model": str(model),
+        "temperature": float(temperature),
+        "seed": int(seed),
+        "timeout": int(timeout),
+        "fixture_path": fixture_path.as_posix(),
+        "answer_key_path": answer_key_path.as_posix(),
+    }
+    return {
+        "claim_tier": S04_CLAIM_TIER,
+        "compare_scope": S04_COMPARE_SCOPE,
+        "operator_surface": S04_OPERATOR_SURFACE,
+        "policy_digest": sha256_json(policy_payload),
+        "control_bundle_hash": sha256_json(control_bundle),
+        "authoritative_truth_surface": S04_AUTHORITATIVE_TRUTH_SURFACE,
+        "model_assistance_surface": S04_MODEL_ASSISTANCE_SURFACE,
     }
 
 

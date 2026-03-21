@@ -1,9 +1,13 @@
 # RG03182026 Phase 1 Runtime Gap Requirements
 
 Last updated: 2026-03-18
-Status: Active
+Status: Archived (requirements satisfied)
 Owner: Orket Core
 Lane type: Techdebt runtime gap remediation
+
+Archive note:
+1. Completed and archived on 2026-03-18.
+2. Closeout authority: [docs/projects/archive/techdebt/RG03182026/Closeout.md](docs/projects/archive/techdebt/RG03182026/Closeout.md)
 
 ## Purpose
 
@@ -56,6 +60,17 @@ This lane exists to resolve four truth gaps only:
 7. Local ODR baseline artifacts already show a semantic failure mode on `missing_constraint`: required retention and encryption constraints were allowed to drift into vague requirement prose, `ASSUMPTIONS`, and `OPEN_QUESTIONS`, and later auditor guidance tolerated or reinforced that demotion instead of forcing an explicit decision or a stricter rewrite.
 8. Phase 1 probe P-04 found no ODR fingerprints in cards-engine observability artifacts and no targeted cards-path code references to `run_round`, `ReactorConfig`, `ReactorState`, `history_rounds`, or `CODE_LEAK`.
 9. the current cards run summary does not expose a canonical `stop_reason`.
+
+## Closeout Result
+
+Resolved on 2026-03-18.
+
+1. `builder_guard_app_v1`, `builder_guard_artifact_v1`, and `odr_prebuild_builder_guard_v1` are now explicit runtime choices.
+2. Live P-01 app/artifact runs and live P-03 artifact runs completed against truthful artifact contracts, and cards run summary now exposes canonical `stop_reason`.
+3. The five-run live P-02 baseline returned `UNRESOLVED_DECISIONS` in all five runs with one raw signature and no unexpected hard `CODE_LEAK` or repeated format failure.
+4. Live P-04 distinguished non-ODR cards runs from ODR-enabled cards runs through direct cards artifacts and summary fields, including `odr_active`, `odr_valid`, `odr_pending_decisions`, and `odr_artifact_path`.
+5. The explicit ODR/cards path remains non-default; accepted `MAX_ROUNDS` outcomes can continue when `odr_valid=true`, `odr_pending_decisions=0`, and `odr_accepted=true`, while non-accepted outcomes remain fail-closed.
+6. Auditor `REWRITE` patches are advisory unless they surface governed semantic invalidity, unresolved required decisions, contradiction, required-constraint regression, or another explicit blocking signal.
 
 ## Resolution Goal
 

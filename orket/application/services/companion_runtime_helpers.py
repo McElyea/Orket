@@ -5,6 +5,7 @@ import os
 from datetime import UTC, datetime
 
 from orket.capabilities.sdk_llm_provider import LocalModelCapabilityProvider
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.truthful_memory_policy import render_scoped_memory_rows
 from orket.services.scoped_memory_store import ScopedMemoryRecord
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
@@ -119,7 +120,7 @@ def generate_with_provider_overrides(
     provider_override: str,
     model_override: str,
 ) -> GenerateResponse:
-    model = model_override or "qwen2.5-coder:7b"
+    model = model_override or DEFAULT_LOCAL_MODEL
     provider = provider_override.strip()
     previous_llm_provider = os.environ.get("ORKET_LLM_PROVIDER")
     previous_model_provider = os.environ.get("ORKET_MODEL_PROVIDER")

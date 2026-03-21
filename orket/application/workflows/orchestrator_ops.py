@@ -33,6 +33,7 @@ from orket.application.services.dependency_manager import (
 from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
 from orket.application.services.guard_agent import GuardAgent
 from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
+from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.deployment_planner import (
     DeploymentPlanner,
     DeploymentValidationError,
@@ -59,8 +60,10 @@ from orket.core.domain.guard_review import GuardReviewPayload
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.core.domain.verification_scope import build_verification_scope
 from orket.runtime.truthful_memory_policy import render_reference_context_rows
+from orket.runtime.settings import resolve_bool, resolve_str
 from orket.utils import sanitize_name
 from orket.settings import load_user_settings, load_user_preferences
+from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, resolve_cards_runtime
 
 
 async def _close_provider_transport(provider: Any) -> None:
@@ -70,6 +73,16 @@ async def _close_provider_transport(provider: Any) -> None:
     maybe_awaitable = close_method()
     if inspect.isawaitable(maybe_awaitable):
         await maybe_awaitable
+
+
+def _org_process_rules(org: Any) -> dict[str, Any]:
+    process_rules = getattr(org, "process_rules", None) if org else None
+    return process_rules if isinstance(process_rules, dict) else {}
+
+
+def _user_settings() -> dict[str, Any]:
+    settings = load_user_settings()
+    return settings if isinstance(settings, dict) else {}
 
 
 def _normalize_wait_reason_token(value: Any) -> str | None:
@@ -118,21 +131,27 @@ def _apply_issue_transition_locally(
 
 
 def _resolve_architecture_mode(self) -> str:
-    env_raw = (os.environ.get("ORKET_ARCHITECTURE_MODE") or "").strip()
-    process_raw = ""
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        process_raw = str(self.org.process_rules.get("architecture_mode", "")).strip()
-    user_raw = str(load_user_settings().get("architecture_mode", "")).strip()
-    return resolve_architecture_mode(env_raw, process_raw, user_raw)
+    user_settings = _user_settings()
+    raw = resolve_str(
+        "ORKET_ARCHITECTURE_MODE",
+        process_rules=_org_process_rules(self.org),
+        process_key="architecture_mode",
+        user_key="architecture_mode",
+        user_settings=user_settings,
+    )
+    return resolve_architecture_mode(raw, "", "")
 
 
 def _resolve_frontend_framework_mode(self) -> str:
-    env_raw = (os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE") or "").strip()
-    process_raw = ""
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        process_raw = str(self.org.process_rules.get("frontend_framework_mode", "")).strip()
-    user_raw = str(load_user_settings().get("frontend_framework_mode", "")).strip()
-    return resolve_frontend_framework_mode(env_raw, process_raw, user_raw)
+    user_settings = _user_settings()
+    raw = resolve_str(
+        "ORKET_FRONTEND_FRAMEWORK_MODE",
+        process_rules=_org_process_rules(self.org),
+        process_key="frontend_framework_mode",
+        user_key="frontend_framework_mode",
+        user_settings=user_settings,
+    )
+    return resolve_frontend_framework_mode(raw, "", "")
 
 
 def _resolve_architecture_pattern(self) -> str | None:
@@ -145,128 +164,142 @@ def _resolve_architecture_pattern(self) -> str | None:
 
 
 def _resolve_project_surface_profile(self) -> str:
-    env_raw = (os.environ.get("ORKET_PROJECT_SURFACE_PROFILE") or "").strip()
-    process_raw = ""
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        process_raw = str(self.org.process_rules.get("project_surface_profile", "")).strip()
-    user_raw = str(load_user_settings().get("project_surface_profile", "")).strip()
-    return resolve_project_surface_profile(env_raw, process_raw, user_raw)
+    user_settings = _user_settings()
+    raw = resolve_str(
+        "ORKET_PROJECT_SURFACE_PROFILE",
+        process_rules=_org_process_rules(self.org),
+        process_key="project_surface_profile",
+        user_key="project_surface_profile",
+        user_settings=user_settings,
+    )
+    return resolve_project_surface_profile(raw, "", "")
 
 
 def _resolve_small_project_builder_variant(self) -> str:
-    env_raw = (os.environ.get("ORKET_SMALL_PROJECT_BUILDER_VARIANT") or "").strip()
-    process_raw = ""
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        process_raw = str(self.org.process_rules.get("small_project_builder_variant", "")).strip()
-    user_raw = str(load_user_settings().get("small_project_builder_variant", "")).strip()
-    return resolve_small_project_builder_variant(env_raw, process_raw, user_raw)
+    user_settings = _user_settings()
+    raw = resolve_str(
+        "ORKET_SMALL_PROJECT_BUILDER_VARIANT",
+        process_rules=_org_process_rules(self.org),
+        process_key="small_project_builder_variant",
+        user_key="small_project_builder_variant",
+        user_settings=user_settings,
+    )
+    return resolve_small_project_builder_variant(raw, "", "")
 
 
 def _resolve_protocol_governed_enabled(self) -> bool:
-    env_raw = (
-        (os.environ.get("ORKET_PROTOCOL_GOVERNED_ENABLED") or os.environ.get("ORKET_PROTOCOL_GOVERNED") or "")
-        .strip()
-        .lower()
+    user_settings = _user_settings()
+    return resolve_bool(
+        "ORKET_PROTOCOL_GOVERNED_ENABLED",
+        "ORKET_PROTOCOL_GOVERNED",
+        process_rules=_org_process_rules(self.org),
+        process_key="protocol_governed_enabled",
+        user_key="protocol_governed_enabled",
+        user_settings=user_settings,
+        default=False,
     )
-    if env_raw in {"1", "true", "yes", "on", "enabled"}:
-        return True
-    if env_raw in {"0", "false", "no", "off", "disabled"}:
-        return False
-    process_raw = ""
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        process_raw = str(self.org.process_rules.get("protocol_governed_enabled", "")).strip().lower()
-    if process_raw in {"1", "true", "yes", "on", "enabled"}:
-        return True
-    if process_raw in {"0", "false", "no", "off", "disabled"}:
-        return False
-    user_raw = str(load_user_settings().get("protocol_governed_enabled", "")).strip().lower()
-    return user_raw in {"1", "true", "yes", "on", "enabled"}
 
 
 def _resolve_protocol_max_response_bytes(self) -> int:
-    values = [
-        os.environ.get("ORKET_PROTOCOL_MAX_RESPONSE_BYTES"),
-        (
-            self.org.process_rules.get("protocol_max_response_bytes")
-            if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
-            else None
-        ),
-        load_user_settings().get("protocol_max_response_bytes"),
-    ]
-    for value in values:
-        raw = str(value or "").strip()
-        if not raw:
-            continue
+    user_settings = _user_settings()
+    raw = resolve_str(
+        "ORKET_PROTOCOL_MAX_RESPONSE_BYTES",
+        process_rules=_org_process_rules(self.org),
+        process_key="protocol_max_response_bytes",
+        user_key="protocol_max_response_bytes",
+        user_settings=user_settings,
+    )
+    if raw:
         try:
-            parsed = int(raw)
+            return max(256, int(raw))
         except (TypeError, ValueError):
-            continue
-        return max(256, parsed)
+            pass
     return 8192
 
 
 def _resolve_protocol_max_tool_calls(self) -> int:
-    values = [
-        os.environ.get("ORKET_PROTOCOL_MAX_TOOL_CALLS"),
-        (
-            self.org.process_rules.get("protocol_max_tool_calls")
-            if self.org and isinstance(getattr(self.org, "process_rules", None), dict)
-            else None
-        ),
-        load_user_settings().get("protocol_max_tool_calls"),
-    ]
-    for value in values:
-        raw = str(value or "").strip()
-        if not raw:
-            continue
+    user_settings = _user_settings()
+    raw = resolve_str(
+        "ORKET_PROTOCOL_MAX_TOOL_CALLS",
+        process_rules=_org_process_rules(self.org),
+        process_key="protocol_max_tool_calls",
+        user_key="protocol_max_tool_calls",
+        user_settings=user_settings,
+    )
+    if raw:
         try:
-            parsed = int(raw)
+            return max(1, int(raw))
         except (TypeError, ValueError):
-            continue
-        return max(1, parsed)
+            pass
     return 8
 
 
 def _resolve_protocol_determinism_context(self) -> Dict[str, Any]:
-    process_rules = (
-        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
-    )
-    user_settings = load_user_settings()
+    process_rules = _org_process_rules(self.org)
+    user_settings = _user_settings()
     controls = resolve_protocol_determinism_controls(
         timezone_values=[
-            os.environ.get("ORKET_PROTOCOL_TIMEZONE"),
-            process_rules.get("protocol_timezone"),
-            user_settings.get("protocol_timezone"),
+            resolve_str(
+                "ORKET_PROTOCOL_TIMEZONE",
+                process_rules=process_rules,
+                process_key="protocol_timezone",
+                user_key="protocol_timezone",
+                user_settings=user_settings,
+            )
         ],
         locale_values=[
-            os.environ.get("ORKET_PROTOCOL_LOCALE"),
-            process_rules.get("protocol_locale"),
-            user_settings.get("protocol_locale"),
+            resolve_str(
+                "ORKET_PROTOCOL_LOCALE",
+                process_rules=process_rules,
+                process_key="protocol_locale",
+                user_key="protocol_locale",
+                user_settings=user_settings,
+            )
         ],
         network_mode_values=[
-            os.environ.get("ORKET_PROTOCOL_NETWORK_MODE"),
-            process_rules.get("protocol_network_mode"),
-            user_settings.get("protocol_network_mode"),
+            resolve_str(
+                "ORKET_PROTOCOL_NETWORK_MODE",
+                process_rules=process_rules,
+                process_key="protocol_network_mode",
+                user_key="protocol_network_mode",
+                user_settings=user_settings,
+            )
         ],
         network_allowlist_values=[
-            os.environ.get("ORKET_PROTOCOL_NETWORK_ALLOWLIST"),
-            process_rules.get("protocol_network_allowlist"),
-            user_settings.get("protocol_network_allowlist"),
+            resolve_str(
+                "ORKET_PROTOCOL_NETWORK_ALLOWLIST",
+                process_rules=process_rules,
+                process_key="protocol_network_allowlist",
+                user_key="protocol_network_allowlist",
+                user_settings=user_settings,
+            )
         ],
         clock_mode_values=[
-            os.environ.get("ORKET_PROTOCOL_CLOCK_MODE"),
-            process_rules.get("protocol_clock_mode"),
-            user_settings.get("protocol_clock_mode"),
+            resolve_str(
+                "ORKET_PROTOCOL_CLOCK_MODE",
+                process_rules=process_rules,
+                process_key="protocol_clock_mode",
+                user_key="protocol_clock_mode",
+                user_settings=user_settings,
+            )
         ],
         clock_artifact_ref_values=[
-            os.environ.get("ORKET_PROTOCOL_CLOCK_ARTIFACT_REF"),
-            process_rules.get("protocol_clock_artifact_ref"),
-            user_settings.get("protocol_clock_artifact_ref"),
+            resolve_str(
+                "ORKET_PROTOCOL_CLOCK_ARTIFACT_REF",
+                process_rules=process_rules,
+                process_key="protocol_clock_artifact_ref",
+                user_key="protocol_clock_artifact_ref",
+                user_settings=user_settings,
+            )
         ],
         env_allowlist_values=[
-            os.environ.get("ORKET_PROTOCOL_ENV_ALLOWLIST"),
-            process_rules.get("protocol_env_allowlist"),
-            user_settings.get("protocol_env_allowlist"),
+            resolve_str(
+                "ORKET_PROTOCOL_ENV_ALLOWLIST",
+                process_rules=process_rules,
+                process_key="protocol_env_allowlist",
+                user_key="protocol_env_allowlist",
+                user_settings=user_settings,
+            )
         ],
     )
     return {
@@ -285,59 +318,71 @@ def _resolve_protocol_determinism_context(self) -> Dict[str, Any]:
 
 
 def _resolve_local_prompting_mode(self) -> str:
-    process_rules = (
-        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
-    )
-    user_settings = load_user_settings()
+    process_rules = _org_process_rules(self.org)
+    user_settings = _user_settings()
     return resolve_local_prompting_mode(
-        os.environ.get("ORKET_LOCAL_PROMPTING_MODE"),
-        process_rules.get("local_prompting_mode"),
-        user_settings.get("local_prompting_mode"),
+        resolve_str(
+            "ORKET_LOCAL_PROMPTING_MODE",
+            process_rules=process_rules,
+            process_key="local_prompting_mode",
+            user_key="local_prompting_mode",
+            user_settings=user_settings,
+        ),
+        "",
+        "",
     )
 
 
 def _resolve_local_prompting_allow_fallback(self) -> bool:
-    process_rules = (
-        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
-    )
-    user_settings = load_user_settings()
+    process_rules = _org_process_rules(self.org)
+    user_settings = _user_settings()
     return bool(
         resolve_local_prompting_allow_fallback(
-            os.environ.get("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK"),
-            process_rules.get("local_prompting_allow_fallback"),
-            user_settings.get("local_prompting_allow_fallback"),
+            resolve_str(
+                "ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK",
+                process_rules=process_rules,
+                process_key="local_prompting_allow_fallback",
+                user_key="local_prompting_allow_fallback",
+                user_settings=user_settings,
+            ),
+            "",
+            "",
         )
     )
 
 
 def _resolve_local_prompting_fallback_profile_id(self) -> str:
-    process_rules = (
-        self.org.process_rules if self.org and isinstance(getattr(self.org, "process_rules", None), dict) else {}
-    )
-    user_settings = load_user_settings()
+    process_rules = _org_process_rules(self.org)
+    user_settings = _user_settings()
     return resolve_local_prompting_fallback_profile_id(
-        os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID"),
-        process_rules.get("local_prompting_fallback_profile_id"),
-        user_settings.get("local_prompting_fallback_profile_id"),
+        resolve_str(
+            "ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID",
+            process_rules=process_rules,
+            process_key="local_prompting_fallback_profile_id",
+            user_key="local_prompting_fallback_profile_id",
+            user_settings=user_settings,
+        ),
+        "",
+        "",
     )
 
 
 def _resolve_workflow_profile(self) -> str:
-    env_raw = (os.environ.get("ORKET_WORKFLOW_PROFILE") or "").strip().lower()
-    if env_raw in {"legacy_cards_v1", "project_task_v1"}:
-        return env_raw
-    process_raw = ""
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        process_raw = str(self.org.process_rules.get("workflow_profile", "")).strip().lower()
-    if process_raw in {"legacy_cards_v1", "project_task_v1"}:
-        return process_raw
-    default_env = (os.environ.get("ORKET_WORKFLOW_PROFILE_DEFAULT") or "").strip().lower()
-    if default_env in {"legacy_cards_v1", "project_task_v1"}:
-        return default_env
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        default_process = str(self.org.process_rules.get("workflow_profile_default", "")).strip().lower()
-        if default_process in {"legacy_cards_v1", "project_task_v1"}:
-            return default_process
+    process_rules = _org_process_rules(self.org)
+    raw = resolve_str(
+        "ORKET_WORKFLOW_PROFILE",
+        process_rules=process_rules,
+        process_key="workflow_profile",
+    ).lower()
+    if raw in {"legacy_cards_v1", "project_task_v1"}:
+        return raw
+    default_raw = resolve_str(
+        "ORKET_WORKFLOW_PROFILE_DEFAULT",
+        process_rules=process_rules,
+        process_key="workflow_profile_default",
+    ).lower()
+    if default_raw in {"legacy_cards_v1", "project_task_v1"}:
+        return default_raw
     return "legacy_cards_v1"
 
 
@@ -431,19 +476,12 @@ def _small_project_issue_threshold(self) -> int:
 
 
 def _should_auto_inject_small_project_reviewer(self) -> bool:
-    env_raw = (os.environ.get("ORKET_SMALL_PROJECT_AUTO_INJECT_REVIEWER") or "").strip().lower()
-    if env_raw in {"1", "true", "yes", "on"}:
-        return True
-    if env_raw in {"0", "false", "no", "off"}:
-        return False
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get("small_project_auto_inject_code_reviewer", False)
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            lowered = value.strip().lower()
-            return lowered in {"1", "true", "yes", "on"}
-    return False
+    return resolve_bool(
+        "ORKET_SMALL_PROJECT_AUTO_INJECT_REVIEWER",
+        process_rules=_org_process_rules(self.org),
+        process_key="small_project_auto_inject_code_reviewer",
+        default=False,
+    )
 
 
 def _small_project_reviewer_seat_name(self) -> str:
@@ -519,18 +557,12 @@ def _resolve_small_project_team_policy(self, epic: Any, team: Any) -> Dict[str, 
 
 
 def _resolve_bool_flag(self, env_key: str, org_key: str, default: bool = False) -> bool:
-    env_raw = (os.environ.get(env_key) or "").strip().lower()
-    if env_raw in {"1", "true", "yes", "on"}:
-        return True
-    if env_raw in {"0", "false", "no", "off"}:
-        return False
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get(org_key)
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            return value.strip().lower() in {"1", "true", "yes", "on"}
-    return default
+    return resolve_bool(
+        env_key,
+        process_rules=_org_process_rules(self.org),
+        process_key=org_key,
+        default=default,
+    )
 
 
 def _is_sandbox_disabled(self) -> bool:
@@ -554,53 +586,42 @@ def _is_deployment_planner_disabled(self) -> bool:
 
 
 def _resolve_prompt_resolver_mode(self) -> str:
-    env_raw = (os.environ.get("ORKET_PROMPT_RESOLVER_MODE") or "").strip().lower()
-    if env_raw in {"resolver", "compiler"}:
-        return env_raw
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = str(self.org.process_rules.get("prompt_resolver_mode", "")).strip().lower()
-        if value in {"resolver", "compiler"}:
-            return value
+    value = resolve_str(
+        "ORKET_PROMPT_RESOLVER_MODE",
+        process_rules=_org_process_rules(self.org),
+        process_key="prompt_resolver_mode",
+    ).lower()
+    if value in {"resolver", "compiler"}:
+        return value
     return "compiler"
 
 
 def _resolve_prompt_selection_policy(self) -> str:
-    env_raw = (os.environ.get("ORKET_PROMPT_SELECTION_POLICY") or "").strip().lower()
-    if env_raw in {"stable", "canary", "exact"}:
-        return env_raw
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = str(self.org.process_rules.get("prompt_selection_policy", "")).strip().lower()
-        if value in {"stable", "canary", "exact"}:
-            return value
+    value = resolve_str(
+        "ORKET_PROMPT_SELECTION_POLICY",
+        process_rules=_org_process_rules(self.org),
+        process_key="prompt_selection_policy",
+    ).lower()
+    if value in {"stable", "canary", "exact"}:
+        return value
     return "stable"
 
 
 def _resolve_prompt_selection_strict(self) -> bool:
-    env_raw = (os.environ.get("ORKET_PROMPT_SELECTION_STRICT") or "").strip().lower()
-    if env_raw in {"1", "true", "yes", "on"}:
-        return True
-    if env_raw in {"0", "false", "no", "off"}:
-        return False
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        value = self.org.process_rules.get("prompt_selection_strict")
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            lowered = value.strip().lower()
-            if lowered in {"1", "true", "yes", "on"}:
-                return True
-            if lowered in {"0", "false", "no", "off"}:
-                return False
-    return True
+    return resolve_bool(
+        "ORKET_PROMPT_SELECTION_STRICT",
+        process_rules=_org_process_rules(self.org),
+        process_key="prompt_selection_strict",
+        default=True,
+    )
 
 
 def _resolve_prompt_version_exact(self) -> str:
-    env_raw = (os.environ.get("ORKET_PROMPT_VERSION_EXACT") or "").strip()
-    if env_raw:
-        return env_raw
-    if self.org and isinstance(getattr(self.org, "process_rules", None), dict):
-        return str(self.org.process_rules.get("prompt_version_exact", "")).strip()
-    return ""
+    return resolve_str(
+        "ORKET_PROMPT_VERSION_EXACT",
+        process_rules=_org_process_rules(self.org),
+        process_key="prompt_version_exact",
+    )
 
 
 def _resolve_verification_scope_limits(self) -> Dict[str, int | None]:
@@ -1189,6 +1210,10 @@ async def _execute_issue_turn(
 ):
     """Executes a single turn for one issue."""
     issue = IssueConfig.model_validate(issue_data.model_dump())
+    issue.params = apply_epic_cards_runtime_defaults(
+        issue_params=getattr(issue, "params", None),
+        epic_params=getattr(epic, "params", None),
+    )
     is_review_turn = self.loop_policy_node.is_review_turn(issue.status)
     dependency_context = await self._build_dependency_context(issue)
     runtime_result = None
@@ -1340,6 +1365,35 @@ async def _execute_issue_turn(
         normalized_seat = str(seat_name or "").strip().lower()
         if normalized_seat not in {"code_reviewer", "reviewer", "integrity_guard"}:
             seat_name = str(small_policy["builder_seat"])
+    cards_runtime = resolve_cards_runtime(
+        issue=issue,
+        builder_seat=str(small_policy.get("builder_seat") or issue.seat),
+        reviewer_seat="integrity_guard",
+    )
+    invalid_profile_reason = str(cards_runtime.get("invalid_profile_reason") or "").strip()
+    if invalid_profile_reason:
+        await self._request_issue_transition(
+            issue=issue,
+            target_status=CardStatus.BLOCKED,
+            reason="governance_violation",
+            metadata={
+                "run_id": run_id,
+                "error": invalid_profile_reason,
+                "execution_profile": cards_runtime.get("execution_profile"),
+            },
+        )
+        log_event(
+            "cards_runtime_preflight_failed",
+            {
+                "run_id": run_id,
+                "issue_id": issue.id,
+                "execution_profile": cards_runtime.get("execution_profile"),
+                "artifact_contract": cards_runtime.get("artifact_contract"),
+                "error": invalid_profile_reason,
+            },
+            self.workspace,
+        )
+        return
 
     seat_obj = team.seats.get(sanitize_name(seat_name))
     if not seat_obj:
@@ -1402,6 +1456,53 @@ async def _execute_issue_turn(
         )
     dialect_name = prompt_strategy_node.select_dialect(selected_model)
     dialect = self.loader.load_asset("dialects", dialect_name, DialectConfig)
+    provider = self.model_client_node.create_provider(selected_model, env)
+    client = self.model_client_node.create_client(provider)
+    if bool(cards_runtime.get("odr_active")) and not is_review_turn:
+        odr_auditor_model = (
+            str(cards_runtime.get("odr_auditor_model") or "").strip()
+            or str(os.environ.get("ORKET_ODR_AUDITOR_MODEL") or "").strip()
+            or selected_model
+        )
+        odr_auditor_provider = None
+        try:
+            odr_auditor_provider = self.model_client_node.create_provider(odr_auditor_model, env)
+            odr_auditor_client = self.model_client_node.create_client(odr_auditor_provider)
+            odr_result = await run_cards_odr_prebuild(
+                workspace=self.workspace,
+                issue=issue,
+                run_id=run_id,
+                selected_model=selected_model,
+                cards_runtime=cards_runtime,
+                model_client=client,
+                auditor_client=odr_auditor_client,
+                async_cards=self.async_cards,
+            )
+        except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
+            await _close_provider_transport(provider)
+            raise
+        finally:
+            if odr_auditor_provider is not None:
+                await _close_provider_transport(odr_auditor_provider)
+        cards_runtime = resolve_cards_runtime(
+            issue=issue,
+            builder_seat=str(small_policy.get("builder_seat") or issue.seat),
+            reviewer_seat="integrity_guard",
+        )
+        await provider.clear_context()
+        if not bool(odr_result.get("odr_accepted")):
+            await self._request_issue_transition(
+                issue=issue,
+                target_status=CardStatus.BLOCKED,
+                reason="odr_prebuild_failed",
+                metadata={
+                    "run_id": run_id,
+                    "odr_stop_reason": odr_result.get("odr_stop_reason"),
+                    "execution_profile": cards_runtime.get("execution_profile"),
+                },
+            )
+            await _close_provider_transport(provider)
+            return
 
     # Compile Prompt
     skill = SkillConfig(
@@ -1440,6 +1541,7 @@ async def _execute_issue_turn(
         idesign_enabled=idesign_enabled,
         resume_mode=resume_mode,
         skill_tool_bindings=skill_tool_bindings,
+        cards_runtime=cards_runtime,
     )
     prompt_metadata: Dict[str, Any] = {
         "prompt_id": "legacy.prompt_compiler",
@@ -1519,10 +1621,8 @@ async def _execute_issue_turn(
         idesign_enabled=idesign_enabled,
         resume_mode=resume_mode,
         skill_tool_bindings=skill_tool_bindings,
+        cards_runtime=cards_runtime,
     )
-
-    provider = self.model_client_node.create_provider(selected_model, env)
-    client = self.model_client_node.create_client(provider)
     try:
         log_event(
             "orchestrator_dispatch",
@@ -1752,7 +1852,9 @@ def _build_turn_context(
     idesign_enabled: bool = False,
     resume_mode: bool = False,
     skill_tool_bindings: Optional[Dict[str, Dict[str, Any]]] = None,
+    cards_runtime: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    cards_runtime = dict(cards_runtime or resolve_cards_runtime(issue=issue))
     required_action_tools = []
     required_tools_fn = getattr(self.loop_policy_node, "required_action_tools_for_seat", None)
     if callable(required_tools_fn):
@@ -1994,6 +2096,18 @@ def _build_turn_context(
         "required_statuses": required_statuses,
         "required_read_paths": required_read_paths,
         "required_write_paths": required_write_paths,
+        "execution_profile": str(cards_runtime.get("execution_profile") or ""),
+        "base_execution_profile": str(cards_runtime.get("base_execution_profile") or ""),
+        "builder_seat_choice": str(cards_runtime.get("builder_seat_choice") or ""),
+        "reviewer_seat_choice": str(cards_runtime.get("reviewer_seat_choice") or ""),
+        "seat_coercion": dict(cards_runtime.get("seat_coercion") or {}),
+        "artifact_contract": dict(cards_runtime.get("artifact_contract") or {}),
+        "odr_active": bool(cards_runtime.get("odr_active")),
+        "odr_valid": cards_runtime.get("odr_valid"),
+        "odr_pending_decisions": cards_runtime.get("odr_pending_decisions"),
+        "odr_stop_reason": cards_runtime.get("odr_stop_reason"),
+        "odr_artifact_path": str(cards_runtime.get("odr_artifact_path") or ""),
+        "odr_requirement": str(cards_runtime.get("odr_requirement") or ""),
         "verification_scope": build_verification_scope(
             workspace=list(required_read_paths) + list(required_write_paths),
             active_context=list(required_read_paths or []),

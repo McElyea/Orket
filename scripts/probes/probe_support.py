@@ -170,19 +170,20 @@ def protocol_events(workspace: Path, session_id: str) -> list[dict[str, Any]]:
 
 def runtime_events(workspace: Path, session_id: str) -> list[dict[str, Any]]:
     path = Path(workspace) / "agent_output" / "observability" / "runtime_events.jsonl"
-    if not path.exists():
-        return []
     rows: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        payload = json.loads(line)
-        if not isinstance(payload, dict):
-            continue
-        if str(payload.get("session_id") or "").strip() != str(session_id).strip():
-            continue
-        rows.append(payload)
-    return rows
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            payload = json.loads(line)
+            if not isinstance(payload, dict):
+                continue
+            if str(payload.get("session_id") or "").strip() != str(session_id).strip():
+                continue
+            rows.append(payload)
+    if rows:
+        return rows
+    return [dict(row.get("data", {}).get("runtime_event") or {}) for row in workspace_log_records(workspace, session_id)]
 
 
 def workspace_log_records(

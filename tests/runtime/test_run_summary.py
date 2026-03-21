@@ -97,6 +97,37 @@ def test_run_summary_schema_contract_is_canonical() -> None:
 
 
 # Layer: contract
+def test_run_summary_emits_odr_cards_runtime_fields() -> None:
+    payload = build_run_summary_payload(
+        run_id="sess-summary-odr",
+        status="done",
+        failure_reason=None,
+        started_at=_STARTED_AT,
+        ended_at=_FINALIZED_AT,
+        tool_names=["workspace.read"],
+        artifacts={
+            "run_identity": {"run_id": "sess-summary-odr"},
+            "cards_runtime_facts": {
+                "execution_profile": "odr_prebuild_builder_guard_v1",
+                "stop_reason": "completed",
+                "odr_active": True,
+                "odr_valid": True,
+                "odr_pending_decisions": 0,
+                "odr_stop_reason": "STABLE_DIFF_FLOOR",
+                "odr_artifact_path": "observability/sess-summary-odr/ISSUE-1/odr_refinement.json",
+            },
+        },
+    )
+
+    assert payload["execution_profile"] == "odr_prebuild_builder_guard_v1"
+    assert payload["odr_active"] is True
+    assert payload["odr_valid"] is True
+    assert payload["odr_pending_decisions"] == 0
+    assert payload["odr_stop_reason"] == "STABLE_DIFF_FLOOR"
+    assert payload["odr_artifact_path"] == "observability/sess-summary-odr/ISSUE-1/odr_refinement.json"
+
+
+# Layer: contract
 @pytest.mark.asyncio
 async def test_generate_run_summary_for_finalize_uses_receipts_and_filtered_artifact_ids(tmp_path: Path) -> None:
     receipt_path = (

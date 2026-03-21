@@ -270,6 +270,42 @@ def _init_sdk_bad_artifact_repo(repo_root, *, mode):
     )
 
 
+def _assert_governed_identity(result) -> None:
+    provenance_path = Path(result.provenance_path)
+    artifact_manifest_path = Path(result.artifact_manifest_path)
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    artifact_manifest = json.loads(artifact_manifest_path.read_text(encoding="utf-8"))
+
+    assert result.claim_tier == "non_deterministic_lab_only"
+    assert result.compare_scope == "extension_workload_provenance_family_v1"
+    assert result.operator_surface == "extension_run_result_identity_v1"
+    assert result.policy_digest.startswith("sha256:")
+    assert result.control_bundle_hash.startswith("sha256:")
+    assert result.artifact_manifest_hash == f"sha256:{artifact_manifest['manifest_sha256']}"
+    assert result.provenance_hash.startswith("sha256:")
+    assert result.determinism_class == "workspace"
+
+    assert provenance["claim_tier"] == result.claim_tier
+    assert provenance["compare_scope"] == result.compare_scope
+    assert provenance["operator_surface"] == "extension_provenance_v1"
+    assert provenance["policy_digest"] == result.policy_digest
+    assert provenance["control_bundle_hash"] == result.control_bundle_hash
+    assert provenance["artifact_manifest_ref"] == "artifact_manifest.json"
+    assert provenance["artifact_manifest_hash"] == result.artifact_manifest_hash
+    assert provenance["provenance_ref"] == "provenance.json"
+    assert provenance["determinism_class"] == result.determinism_class
+    assert provenance["control_bundle"]["input_identity"] == result.plan_hash
+
+    assert artifact_manifest["claim_tier"] == result.claim_tier
+    assert artifact_manifest["compare_scope"] == result.compare_scope
+    assert artifact_manifest["operator_surface"] == "extension_artifact_manifest_v1"
+    assert artifact_manifest["policy_digest"] == result.policy_digest
+    assert artifact_manifest["control_bundle_hash"] == result.control_bundle_hash
+    assert artifact_manifest["plan_hash"] == result.plan_hash
+    assert artifact_manifest["provenance_ref"] == "provenance.json"
+    assert artifact_manifest["determinism_class"] == result.determinism_class
+
+
 def test_list_extensions_from_catalog(tmp_path):
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
@@ -436,6 +472,7 @@ async def test_run_workload_emits_provenance(tmp_path):
     assert "provenance.json" in result.provenance_path
     assert Path(result.provenance_path).exists()
     assert (Path(result.artifact_root) / "artifact_manifest.json").exists()
+    _assert_governed_identity(result)
 
 
 @pytest.mark.asyncio
@@ -522,6 +559,7 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
     assert provenance["input_config_redacted"]["item_count"] >= 1
     assert "payload_digest_sha256" in provenance["run_result_redacted"]
     assert "payload_digest_sha256" in provenance["summary_redacted"]
+    _assert_governed_identity(result)
 
 
 @pytest.mark.asyncio

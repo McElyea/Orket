@@ -136,6 +136,29 @@ async def test_serialization_edge_cases(repo):
     retrieved = await repo.get_by_id("EDGE")
     assert retrieved.depends_on == []
     assert retrieved.verification == {}
+    assert retrieved.params == {}
+
+
+@pytest.mark.asyncio
+async def test_save_and_get_issue_params_round_trip(repo):
+    issue = IssueRecord(
+        id="ISSUE-PARAMS",
+        summary="Persist runtime params",
+        seat="coder",
+        params={
+            "execution_profile": "builder_guard_artifact_v1",
+            "artifact_contract": {
+                "kind": "artifact",
+                "primary_output": "agent_output/fibonacci.py",
+                "required_write_paths": ["agent_output/fibonacci.py"],
+            },
+        },
+    )
+    await repo.save(issue)
+
+    retrieved = await repo.get_by_id("ISSUE-PARAMS")
+    assert retrieved is not None
+    assert retrieved.params == issue.params
 
 @pytest.mark.asyncio
 async def test_update_status_transaction_logging(repo):

@@ -166,15 +166,8 @@ def _log_path(workspace: Path, role: str | None = None) -> Path:
 
 RUNTIME_EVENT_SCHEMA_VERSION = "v1"
 RUNTIME_EVENT_ARTIFACT_EVENTS = {
-    "packet1_emission_failure",
-    "session_start",
-    "session_end",
-    "turn_start",
-    "turn_complete",
-    "turn_failed",
-    "runtime_verifier_completed",
-    "guard_retry_scheduled",
-    "guard_terminal_failure",
+    "determinism_violation", "packet1_emission_failure", "session_start", "session_end", "turn_start",
+    "turn_complete", "turn_failed", "runtime_verifier_completed", "guard_retry_scheduled", "guard_terminal_failure",
 }
 
 
@@ -194,6 +187,16 @@ def _build_runtime_event(event: str, data: dict[str, Any], role: str) -> dict[st
         "prompt_checksum": str(payload.get("prompt_checksum") or ""),
         "resolver_policy": str(payload.get("resolver_policy") or ""),
         "selection_policy": str(payload.get("selection_policy") or ""),
+        "execution_profile": str(payload.get("execution_profile") or ""),
+        "builder_seat_choice": str(payload.get("builder_seat_choice") or ""),
+        "reviewer_seat_choice": str(payload.get("reviewer_seat_choice") or ""),
+        "seat_coercion": payload.get("seat_coercion"),
+        "artifact_contract": payload.get("artifact_contract"),
+        "odr_active": bool(payload.get("odr_active", False)),
+        "odr_stop_reason": str(payload.get("odr_stop_reason") or ""),
+        "odr_valid": payload.get("odr_valid"),
+        "odr_pending_decisions": payload.get("odr_pending_decisions"),
+        "stop_reason": str(payload.get("stop_reason") or ""),
         "guard_contract": payload.get("guard_contract"),
         "guard_decision": payload.get("guard_decision"),
         "terminal_reason": (
@@ -202,8 +205,13 @@ def _build_runtime_event(event: str, data: dict[str, Any], role: str) -> dict[st
             else None
         ),
         "stage": str(payload.get("stage") or ""),
+        "tool": str(payload.get("tool") or ""),
         "error_type": str(payload.get("error_type") or ""),
-        "error": str(payload.get("error") or ""),
+        "error": str(payload.get("error") or ""), "error_code": str(payload.get("error_code") or ""),
+        "determinism_class": str(payload.get("determinism_class") or ""),
+        "capability_profile": str(payload.get("capability_profile") or ""),
+        "tool_contract_version": str(payload.get("tool_contract_version") or ""),
+        "side_effect_signal_keys": list(payload.get("side_effect_signal_keys") or []),
         "packet1_conformance": payload.get("packet1_conformance"),
         "duration_ms": int(payload.get("duration_ms") or 0),
         "tokens": payload.get("tokens"),

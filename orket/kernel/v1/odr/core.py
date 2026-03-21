@@ -11,6 +11,7 @@ from .leak_policy import (
 )
 from .metrics import diff_ratio, jaccard_sim
 from .parsers import normalize_newlines, parse_architect, parse_auditor
+from .semantic_validity import evaluate_semantic_validity
 
 
 @dataclass
@@ -39,10 +40,14 @@ class ReactorConfig:
 
 @dataclass(frozen=True)
 class ReactorState:
+    # `history_v` is the truthful attempt log. `valid_history_v` is the convergence trace.
     history_v: List[str] = field(default_factory=list)
     history_rounds: List[Dict[str, Any]] = field(default_factory=list)
     stable_count: int = 0
     stop_reason: Optional[str] = None
+    valid_history_v: List[str] = field(default_factory=list)
+    invalid_history_v: List[str] = field(default_factory=list)
+    invalid_stable_count: int = 0
 
 
 def check_code_leak(text: str, patterns: List[str]) -> bool:
@@ -74,6 +79,9 @@ def _state_with_record(
     stop_reason: Optional[str],
     history_v: List[str] | None = None,
     stable_count: int | None = None,
+    valid_history_v: List[str] | None = None,
+    invalid_history_v: List[str] | None = None,
+    invalid_stable_count: int | None = None,
 ) -> ReactorState:
     return replace(
         state,
@@ -81,7 +89,54 @@ def _state_with_record(
         history_rounds=[*state.history_rounds, record],
         stable_count=state.stable_count if stable_count is None else int(stable_count),
         stop_reason=stop_reason,
+        valid_history_v=list(state.valid_history_v if valid_history_v is None else valid_history_v),
+        invalid_history_v=list(state.invalid_history_v if invalid_history_v is None else invalid_history_v),
+        invalid_stable_count=(
+            state.invalid_stable_count if invalid_stable_count is None else int(invalid_stable_count)
+        ),
     )
+
+
+def _last_architect_data(state: ReactorState) -> Dict[str, Any] | None:
+    for row in reversed(state.history_rounds):
+        if str(row.get("validity_verdict") or "").strip().lower() != "valid":
+            continue
+        payload = row.get("architect_parsed")
+        if isinstance(payload, dict):
+            return dict(payload)
+    return None
+
+
+def _advance_history_metrics(
+    *,
+    history: List[str],
+    prior_stable_count: int,
+    cfg: ReactorConfig,
+    metrics: Dict[str, Any],
+    stable_count_key: str = "stable_count",
+) -> tuple[int, bool, bool]:
+    next_stable_count = int(prior_stable_count)
+    diff_hit = False
+    circ_hit = False
+
+    if len(history) >= 2:
+        previous = history[-2]
+        metrics["diff_ratio"] = diff_ratio(history[-1], previous)
+        if metrics["diff_ratio"] < float(cfg.diff_floor_pct):
+            next_stable_count += 1
+        else:
+            next_stable_count = 0
+        metrics[stable_count_key] = int(next_stable_count)
+        diff_hit = next_stable_count >= int(cfg.stable_rounds)
+
+    if len(history) >= 3:
+        sim_prev = jaccard_sim(history[-1], history[-2], int(cfg.shingle_k))
+        sim_loop = jaccard_sim(history[-1], history[-3], int(cfg.shingle_k))
+        metrics["sim_prev"] = sim_prev
+        metrics["sim_loop"] = sim_loop
+        circ_hit = sim_loop > (sim_prev + float(cfg.margin)) and sim_loop >= float(cfg.min_loop_sim)
+
+    return next_stable_count, diff_hit, circ_hit
 
 
 def run_round(
@@ -159,40 +214,68 @@ def run_round(
 
     architect_data = dict(architect_parse["data"])
     auditor_data = dict(auditor_parse["data"])
+    semantic = evaluate_semantic_validity(
+        architect_data=architect_data,
+        auditor_data=auditor_data,
+        previous_architect_data=_last_architect_data(state),
+    )
     current_requirement = str(architect_data["requirement"])
     history_v = [*state.history_v, current_requirement]
     n = len(history_v)
 
     metrics = _base_metrics(n=n, code_leak_hit=False, stable_count=state.stable_count)
+    metrics["counts_toward_convergence"] = semantic["validity_verdict"] == "valid"
+    metrics["accepted_stable_count"] = int(state.stable_count)
+    metrics["invalid_stable_count"] = int(state.invalid_stable_count)
+
     next_stable_count = state.stable_count
-
+    next_invalid_stable_count = state.invalid_stable_count
+    valid_history_v = list(state.valid_history_v)
+    invalid_history_v = list(state.invalid_history_v)
     diff_hit = False
-    if n >= 2:
-        prev_requirement = history_v[-2]
-        metrics["diff_ratio"] = diff_ratio(current_requirement, prev_requirement)
-        if metrics["diff_ratio"] < float(cfg.diff_floor_pct):
-            next_stable_count += 1
-        else:
-            next_stable_count = 0
-        metrics["stable_count"] = int(next_stable_count)
-        diff_hit = next_stable_count >= int(cfg.stable_rounds)
-
     circ_hit = False
-    if n >= 3:
-        sim_prev = jaccard_sim(history_v[-1], history_v[-2], int(cfg.shingle_k))
-        sim_loop = jaccard_sim(history_v[-1], history_v[-3], int(cfg.shingle_k))
-        metrics["sim_prev"] = sim_prev
-        metrics["sim_loop"] = sim_loop
-        circ_hit = sim_loop > (sim_prev + float(cfg.margin)) and sim_loop >= float(cfg.min_loop_sim)
 
+    if semantic["validity_verdict"] == "valid":
+        valid_history_v = [*state.valid_history_v, current_requirement]
+        next_stable_count, diff_hit, circ_hit = _advance_history_metrics(
+            history=valid_history_v,
+            prior_stable_count=state.stable_count,
+            cfg=cfg,
+            metrics=metrics,
+        )
+        next_invalid_stable_count = 0
+        metrics["accepted_stable_count"] = int(next_stable_count)
+        metrics["invalid_stable_count"] = 0
+    else:
+        next_stable_count = 0
+        metrics["stable_count"] = 0
+        metrics["accepted_stable_count"] = 0
+        invalid_history_v = [*state.invalid_history_v, current_requirement]
+        next_invalid_stable_count, diff_hit, circ_hit = _advance_history_metrics(
+            history=invalid_history_v,
+            prior_stable_count=state.invalid_stable_count,
+            cfg=cfg,
+            metrics=metrics,
+            stable_count_key="invalid_stable_count",
+        )
+        metrics["invalid_stable_count"] = int(next_invalid_stable_count)
+
+    # `max_rounds` is an attempt budget for the live loop, so invalid rounds count too.
     max_hit = n == int(cfg.max_rounds)
     stop_reason: Optional[str] = None
-    if circ_hit:
-        stop_reason = "LOOP_DETECTED"
-    elif diff_hit:
-        stop_reason = "STABLE_DIFF_FLOOR"
-    elif max_hit:
-        stop_reason = "MAX_ROUNDS"
+    if semantic["validity_verdict"] == "valid":
+        if circ_hit:
+            stop_reason = "LOOP_DETECTED"
+        elif diff_hit:
+            stop_reason = "STABLE_DIFF_FLOOR"
+        elif max_hit:
+            stop_reason = "MAX_ROUNDS"
+    else:
+        invalid_terminal = circ_hit or diff_hit or max_hit
+        if semantic["pending_decision_count"] > 0 and invalid_terminal:
+            stop_reason = "UNRESOLVED_DECISIONS"
+        elif invalid_terminal:
+            stop_reason = "INVALID_CONVERGENCE"
 
     record = {
         "round": round_idx,
@@ -204,6 +287,16 @@ def run_round(
         "auditor_parsed": auditor_data,
         "parse_errors": [],
         "metrics": metrics,
+        "validity_verdict": semantic["validity_verdict"],
+        "semantic_failures": semantic["semantic_failures"],
+        "pending_decision_count": semantic["pending_decision_count"],
+        "pending_decisions": semantic["pending_decisions"],
+        "contradiction_count": semantic["contradiction_count"],
+        "contradiction_hits": semantic["contradiction_hits"],
+        "constraint_demotion_violations": semantic["constraint_demotion_violations"],
+        "required_constraint_regressions": semantic["required_constraint_regressions"],
+        "repair_classes": semantic["repair_classes"],
+        "patch_classes": semantic["patch_classes"],
         "stop_reason": stop_reason,
     }
     record.update(leak_detection.as_trace_fields())
@@ -213,4 +306,7 @@ def run_round(
         stop_reason=stop_reason,
         history_v=history_v,
         stable_count=next_stable_count,
+        valid_history_v=valid_history_v,
+        invalid_history_v=invalid_history_v,
+        invalid_stable_count=next_invalid_stable_count,
     )

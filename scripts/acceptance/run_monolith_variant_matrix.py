@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
+
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
@@ -31,7 +33,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=["qwen2.5-coder:7b", "qwen2.5-coder:14b"],
+        default=[DEFAULT_LOCAL_MODEL, "qwen2.5-coder:14b"],
         help="Models passed to run_live_acceptance_loop.",
     )
     parser.add_argument("--iterations", type=int, default=1)

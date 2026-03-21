@@ -130,6 +130,7 @@ class AsyncCardRepository(CardRepository):
         summary = record.summary or "Unnamed Unit"
         v_json = json.dumps(record.verification)
         m_json = json.dumps(record.metrics)
+        p_json = json.dumps(record.params)
         d_json = json.dumps(record.depends_on)
 
         async def _op(conn: aiosqlite.Connection) -> None:
@@ -138,10 +139,10 @@ class AsyncCardRepository(CardRepository):
                 INSERT OR REPLACE INTO issues
                 (
                     id, session_id, build_id, seat, summary, type, priority, sprint,
-                    status, note, retry_count, max_retries, verification_json,
-                    metrics_json, depends_on_json, created_at
+                    status, assignee, note, retry_count, max_retries, verification_json,
+                    metrics_json, params_json, depends_on_json, created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record.id,
@@ -153,11 +154,13 @@ class AsyncCardRepository(CardRepository):
                     record.priority,
                     record.sprint,
                     record.status.value if hasattr(record.status, "value") else str(record.status),
+                    record.assignee,
                     record.note,
                     record.retry_count,
                     record.max_retries,
                     v_json,
                     m_json,
+                    p_json,
                     d_json,
                     record.created_at or datetime.now(UTC).isoformat(),
                 ),
@@ -201,7 +204,7 @@ class AsyncCardRepository(CardRepository):
         await self._execute(_op, row_factory=True, commit=True)
 
     def _deserialize_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
-        for field in ["verification_json", "metrics_json", "depends_on_json"]:
+        for field in ["verification_json", "metrics_json", "params_json", "depends_on_json"]:
             target = field.replace("_json", "")
             if row.get(field):
                 try:

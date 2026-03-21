@@ -1,6 +1,6 @@
 {
   "catalog_v": "1.0.0",
-  "updated_on": "2026-03-15",
+  "updated_on": "2026-03-19",
   "root": "benchmarks/staging",
   "highlight_id": "STAGE-GEN-007",
   "artifacts": [
@@ -115,6 +115,30 @@
       ],
       "source_path": "benchmarks/staging/General/truthful_runtime_packet2_repair_live_proof_qwen2_5_coder_7b_2026-03-15.json",
       "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-008",
+      "category": "General",
+      "path": "General/dg03192026_governed_evidence_bundle_2026-03-19.json",
+      "title": "DG03192026 Governed Evidence Bundle (Runtime Family + S-04)",
+      "summary": "Candidate governed evidence bundle tying the upgraded extension workload provenance family to the live S-04 code-review probe on a single staging consumer surface.",
+      "signals": [
+        "governed_evidence",
+        "extension_workload_provenance_family",
+        "s04_code_review_probe",
+        "deterministic_detector_primary",
+        "staging_governed_claim"
+      ],
+      "source_path": "benchmarks/staging/General/dg03192026_governed_evidence_bundle_2026-03-19.json",
+      "publish_reviewed": false,
+      "claim_tier": "non_deterministic_lab_only",
+      "compare_scope": "workload_s04_fixture_v1",
+      "operator_surface": "workload_answer_key_scoring_verdict_v1",
+      "policy_digest": "sha256:5638ca8f24f4ec5bd44afcba78e21b8e128e0e3ec6894bd7bdc399c97b6e1468",
+      "control_bundle_hash": "sha256:e47e2846b0ee813ca77be49f3af0a7636730a3b1666554a315b0cfb0ff87b345",
+      "artifact_manifest_ref": "General/dg03192026_extension_artifact_manifest_extract_2026-03-19.json",
+      "provenance_ref": "General/dg03192026_extension_provenance_extract_2026-03-19.json",
+      "determinism_class": "workspace"
     }
   ]
 }

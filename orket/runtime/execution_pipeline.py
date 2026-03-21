@@ -54,10 +54,12 @@ from orket.runtime.run_summary import (
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.runtime.deterministic_mode_contract import deterministic_mode_contract_snapshot
+from orket.runtime.settings import resolve_str
 from orket.runtime.state_transition_registry import validate_state_token
 from orket.runtime.workload_adapters import build_cards_workload_contract
 from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.runtime_paths import resolve_runtime_db_path
+from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults, summarize_cards_runtime_issues
 from orket.schema import (
     CardStatus,
     EnvironmentConfig,
@@ -159,24 +161,34 @@ class ExecutionPipeline:
         return str(value or "").strip()
 
     def _resolve_state_backend_mode(self) -> str:
-        env_raw = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip()
-        process_raw = self._process_rules_value("state_backend_mode")
-        user_raw = str(load_user_settings().get("state_backend_mode", "")).strip()
-        return resolve_state_backend_mode(env_raw, process_raw, user_raw)
+        user_settings = load_user_settings()
+        raw = resolve_str(
+            "ORKET_STATE_BACKEND_MODE",
+            process_rules=getattr(self.org, "process_rules", None),
+            process_key="state_backend_mode",
+            user_key="state_backend_mode",
+            user_settings=user_settings if isinstance(user_settings, dict) else None,
+        )
+        return resolve_state_backend_mode(raw, "", "")
 
     def _resolve_run_ledger_mode(self) -> str:
-        env_raw = (os.environ.get("ORKET_RUN_LEDGER_MODE") or "").strip()
-        process_raw = self._process_rules_value("run_ledger_mode")
-        user_raw = str(load_user_settings().get("run_ledger_mode", "")).strip()
-        return resolve_run_ledger_mode(env_raw, process_raw, user_raw)
+        user_settings = load_user_settings()
+        raw = resolve_str(
+            "ORKET_RUN_LEDGER_MODE",
+            process_rules=getattr(self.org, "process_rules", None),
+            process_key="run_ledger_mode",
+            user_key="run_ledger_mode",
+            user_settings=user_settings if isinstance(user_settings, dict) else None,
+        )
+        return resolve_run_ledger_mode(raw, "", "")
 
     def _validate_state_backend_mode(self) -> None:
         if self.state_backend_mode != "gitea":
             return
         # When backend mode is explicitly forced through env, require explicit env pilot
         # enablement as well to avoid hidden host/user setting leakage.
-        env_mode = (os.environ.get("ORKET_STATE_BACKEND_MODE") or "").strip().lower()
-        env_pilot_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
+        env_mode = resolve_str("ORKET_STATE_BACKEND_MODE").lower()
+        env_pilot_raw = resolve_str("ORKET_ENABLE_GITEA_STATE_PILOT")
         if env_mode == "gitea" and not env_pilot_raw:
             raise ValueError(
                 "State backend mode 'gitea' requires pilot enablement "
@@ -203,10 +215,15 @@ class ExecutionPipeline:
         )
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
-        env_raw = (os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT") or "").strip()
-        process_raw = self._process_rules_value("gitea_state_pilot_enabled")
-        user_raw = str(load_user_settings().get("gitea_state_pilot_enabled", "")).strip()
-        return bool(resolve_gitea_state_pilot_enabled(env_raw, process_raw, user_raw))
+        user_settings = load_user_settings()
+        raw = resolve_str(
+            "ORKET_ENABLE_GITEA_STATE_PILOT",
+            process_rules=getattr(self.org, "process_rules", None),
+            process_key="gitea_state_pilot_enabled",
+            user_key="gitea_state_pilot_enabled",
+            user_settings=user_settings if isinstance(user_settings, dict) else None,
+        )
+        return bool(resolve_gitea_state_pilot_enabled(raw, "", ""))
 
     async def run_card(self, card_id: str, **kwargs) -> Any:
         epics = await self.loader.list_assets_async("epics")
@@ -252,19 +269,19 @@ class ExecutionPipeline:
         user_settings = load_user_settings()
         effective_max_iterations = resolve_gitea_worker_max_iterations(
             max_iterations,
-            os.environ.get("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
+            resolve_str("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
             process_rules_get("gitea_worker_max_iterations"),
             user_settings.get("gitea_worker_max_iterations"),
         )
         effective_max_idle_streak = resolve_gitea_worker_max_idle_streak(
             max_idle_streak,
-            os.environ.get("ORKET_GITEA_WORKER_MAX_IDLE_STREAK"),
+            resolve_str("ORKET_GITEA_WORKER_MAX_IDLE_STREAK"),
             process_rules_get("gitea_worker_max_idle_streak"),
             user_settings.get("gitea_worker_max_idle_streak"),
         )
         effective_max_duration_seconds = resolve_gitea_worker_max_duration_seconds(
             max_duration_seconds,
-            os.environ.get("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS"),
+            resolve_str("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS"),
             process_rules_get("gitea_worker_max_duration_seconds"),
             user_settings.get("gitea_worker_max_duration_seconds"),
         )
@@ -317,12 +334,11 @@ class ExecutionPipeline:
         - force_none
         - architect_decides
         """
-        raw = ""
-        env_raw = (os.environ.get("ORKET_IDESIGN_MODE") or "").strip()
-        if env_raw:
-            raw = env_raw
-        else:
-            raw = self._process_rules_value("idesign_mode")
+        raw = resolve_str(
+            "ORKET_IDESIGN_MODE",
+            process_rules=getattr(self.org, "process_rules", None),
+            process_key="idesign_mode",
+        )
 
         normalized = raw.lower().replace("-", "_").replace(" ", "_")
         aliases = {
@@ -416,6 +432,10 @@ class ExecutionPipeline:
                 await self.async_cards.reset_build(active_build)
 
         for issue in epic.issues:
+            issue.params = apply_epic_cards_runtime_defaults(
+                issue_params=getattr(issue, "params", None),
+                epic_params=epic_params,
+            )
             if not any(ex.id == issue.id for ex in existing):
                 card_data = issue.model_dump(by_alias=True)
                 card_data.update(
@@ -921,6 +941,11 @@ class ExecutionPipeline:
         resolved_artifacts = dict(artifacts)
         repair_entries = await self._resolve_packet2_repair_entries(run_id=run_id)
         artifact_provenance_artifacts = await self._resolve_artifact_provenance_artifacts(run_id=run_id)
+        cards_runtime_artifacts = await self._resolve_cards_runtime_artifacts(
+            run_id=run_id,
+            session_status=session_status,
+            failure_reason=failure_reason,
+        )
         packet1_artifacts = await self._resolve_packet1_artifacts(
             run_id=run_id,
             repair_entries=repair_entries,
@@ -955,6 +980,8 @@ class ExecutionPipeline:
         }
         if merged_artifact_provenance_facts:
             resolved_artifacts["artifact_provenance_facts"] = merged_artifact_provenance_facts
+        if cards_runtime_artifacts:
+            resolved_artifacts.update(cards_runtime_artifacts)
         runtime_verification_path = str(packet1_artifacts.get("runtime_verification_path") or "").strip()
         if runtime_verification_path:
             resolved_artifacts["runtime_verification_path"] = runtime_verification_path
@@ -1145,6 +1172,92 @@ class ExecutionPipeline:
         except OSError:
             return []
         return [repairs_by_id[key] for key in sorted(repairs_by_id)]
+
+    async def _resolve_cards_runtime_artifacts(
+        self,
+        *,
+        run_id: str,
+        session_status: str,
+        failure_reason: str | None,
+    ) -> Dict[str, Any]:
+        log_path = self.workspace / "orket.log"
+        if not log_path.exists():
+            return {}
+        issues: Dict[str, Dict[str, Any]] = {}
+        try:
+            async with aiofiles.open(log_path, mode="r", encoding="utf-8") as handle:
+                async for line in handle:
+                    if not line.strip():
+                        continue
+                    try:
+                        payload = json.loads(line)
+                    except (ValueError, TypeError):
+                        continue
+                    if not isinstance(payload, dict):
+                        continue
+                    if str(payload.get("event") or "").strip() not in {
+                        "turn_start",
+                        "turn_complete",
+                        "turn_failed",
+                        "odr_prebuild_completed",
+                        "odr_prebuild_failed",
+                    }:
+                        continue
+                    data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+                    if str(data.get("session_id") or "").strip() != str(run_id):
+                        continue
+                    issue_id = str(data.get("issue_id") or "").strip()
+                    if not issue_id:
+                        continue
+                    row = issues.setdefault(issue_id, {"issue_id": issue_id})
+                    for key in (
+                        "execution_profile",
+                        "builder_seat_choice",
+                        "reviewer_seat_choice",
+                        "seat_coercion",
+                        "artifact_contract",
+                        "odr_active",
+                        "odr_stop_reason",
+                        "odr_valid",
+                        "odr_pending_decisions",
+                        "odr_artifact_path",
+                    ):
+                        if key not in data:
+                            continue
+                        value = data.get(key)
+                        if value is None:
+                            continue
+                        if isinstance(value, str) and not value.strip():
+                            continue
+                        if isinstance(value, (list, dict)) and not value:
+                            continue
+                        row[key] = value
+        except OSError:
+            return {}
+        summary = summarize_cards_runtime_issues(list(issues.values()))
+        if not summary:
+            return {}
+        summary["stop_reason"] = self._resolve_cards_stop_reason(
+            session_status=session_status,
+            failure_reason=failure_reason,
+        )
+        return {"cards_runtime_facts": summary}
+
+    @staticmethod
+    def _resolve_cards_stop_reason(*, session_status: str, failure_reason: str | None) -> str:
+        explicit_failure = str(failure_reason or "").strip()
+        if explicit_failure:
+            return explicit_failure
+        token = str(session_status or "").strip().lower()
+        if token == "done":
+            return "completed"
+        if token == "incomplete":
+            return "open_issues_remaining"
+        if token == "terminal_failure":
+            return "terminal_failure"
+        if token == "failed":
+            return "failed"
+        return token or "unknown"
 
     async def _resolve_artifact_provenance_entries(self, *, run_id: str) -> List[Dict[str, Any]]:
         receipt_entries = await self._resolve_artifact_provenance_entries_from_receipts(run_id=run_id)

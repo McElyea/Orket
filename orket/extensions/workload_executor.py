@@ -12,6 +12,13 @@ from orket_extension_sdk.workload import run_workload as sdk_run_workload
 from orket.streaming.contracts import CommitIntent, StreamEventType
 
 from .contracts import ExtensionRegistry, RunPlan
+from .governed_identity import (
+    EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
+    build_extension_control_bundle,
+    build_extension_policy_payload,
+    build_governed_identity,
+    digest_prefixed,
+)
 from .import_guard import ImportGuardContext
 from .models import ExtensionRecord, ExtensionRunResult, WorkloadRecord
 from .reproducibility import ReproducibilityEnforcer
@@ -77,13 +84,27 @@ class WorkloadExecutor:
             )
             await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload_id))
 
-        artifact_manifest = self.artifacts.build_artifact_manifest(artifact_root)
-        (artifact_root / "artifact_manifest.json").write_text(
-            json.dumps(artifact_manifest, indent=2, sort_keys=True),
-            encoding="utf-8",
+        governed_identity = self._build_governed_identity(
+            extension=extension,
+            workload_id=workload.workload_id,
+            workload_version=workload.workload_version,
+            workload_entrypoint="",
+            required_capabilities=[],
+            contract_style=extension.contract_style,
+            department=department,
+            input_identity=plan_hash,
         )
+        artifact_manifest = await asyncio.to_thread(
+            self.artifacts.build_artifact_manifest,
+            artifact_root,
+            plan_hash=plan_hash,
+            governed_identity=governed_identity,
+        )
+        artifact_manifest_path = artifact_root / "artifact_manifest.json"
+        await asyncio.to_thread(self._write_json_file, artifact_manifest_path, artifact_manifest)
 
-        provenance = self.artifacts.build_provenance(
+        provenance = await asyncio.to_thread(
+            self.artifacts.build_provenance,
             extension=extension,
             workload=workload,
             input_config=input_config,
@@ -93,9 +114,12 @@ class WorkloadExecutor:
             summary=summary,
             artifact_manifest=artifact_manifest,
             artifact_root=artifact_root,
+            department=department,
         )
         provenance_path = artifact_root / "provenance.json"
-        provenance_path.write_text(json.dumps(provenance, indent=2, sort_keys=True), encoding="utf-8")
+        await asyncio.to_thread(self._write_json_file, provenance_path, provenance)
+        artifact_manifest_hash = f"sha256:{str(artifact_manifest.get('manifest_sha256') or '').strip()}"
+        provenance_hash = await asyncio.to_thread(self._digest_file, provenance_path)
 
         return ExtensionRunResult(
             extension_id=extension.extension_id,
@@ -106,6 +130,15 @@ class WorkloadExecutor:
             artifact_root=str(artifact_root),
             provenance_path=str(provenance_path),
             summary=summary,
+            claim_tier=governed_identity["claim_tier"],
+            compare_scope=governed_identity["compare_scope"],
+            operator_surface=EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
+            policy_digest=governed_identity["policy_digest"],
+            control_bundle_hash=governed_identity["control_bundle_hash"],
+            artifact_manifest_path=str(artifact_manifest_path),
+            artifact_manifest_hash=artifact_manifest_hash,
+            provenance_hash=provenance_hash,
+            determinism_class=governed_identity["determinism_class"],
         )
 
     async def run_sdk_workload(
@@ -143,7 +176,7 @@ class WorkloadExecutor:
         with ImportGuardContext():
             sdk_workload = self.loader.load_sdk_workload(extension, workload)
             result = await self._invoke_sdk_workload(sdk_workload, sdk_ctx, dict(input_config))
-        self.artifacts.validate_sdk_artifacts(result, artifact_root)
+        await asyncio.to_thread(self.artifacts.validate_sdk_artifacts, result, artifact_root)
 
         run_result: dict[str, Any] = {
             "status": "ok" if result.ok else "error",
@@ -166,13 +199,27 @@ class WorkloadExecutor:
             )
             await interaction_context.request_commit(CommitIntent(type="turn_finalize", ref=workload.workload_id))
 
-        artifact_manifest = self.artifacts.build_artifact_manifest(artifact_root)
-        (artifact_root / "artifact_manifest.json").write_text(
-            json.dumps(artifact_manifest, indent=2, sort_keys=True),
-            encoding="utf-8",
+        governed_identity = self._build_governed_identity(
+            extension=extension,
+            workload_id=workload.workload_id,
+            workload_version=workload.workload_version,
+            workload_entrypoint=workload.entrypoint,
+            required_capabilities=list(workload.required_capabilities),
+            contract_style=workload.contract_style or extension.contract_style,
+            department=department,
+            input_identity=input_digest,
         )
+        artifact_manifest = await asyncio.to_thread(
+            self.artifacts.build_artifact_manifest,
+            artifact_root,
+            plan_hash=input_digest,
+            governed_identity=governed_identity,
+        )
+        artifact_manifest_path = artifact_root / "artifact_manifest.json"
+        await asyncio.to_thread(self._write_json_file, artifact_manifest_path, artifact_manifest)
 
-        provenance = self.artifacts.build_sdk_provenance(
+        provenance = await asyncio.to_thread(
+            self.artifacts.build_sdk_provenance,
             extension=extension,
             workload=workload,
             input_config=input_config,
@@ -184,7 +231,9 @@ class WorkloadExecutor:
             department=department,
         )
         provenance_path = artifact_root / "provenance.json"
-        provenance_path.write_text(json.dumps(provenance, indent=2, sort_keys=True), encoding="utf-8")
+        await asyncio.to_thread(self._write_json_file, provenance_path, provenance)
+        artifact_manifest_hash = f"sha256:{str(artifact_manifest.get('manifest_sha256') or '').strip()}"
+        provenance_hash = await asyncio.to_thread(self._digest_file, provenance_path)
 
         return ExtensionRunResult(
             extension_id=extension.extension_id,
@@ -195,6 +244,15 @@ class WorkloadExecutor:
             artifact_root=str(artifact_root),
             provenance_path=str(provenance_path),
             summary=summary,
+            claim_tier=governed_identity["claim_tier"],
+            compare_scope=governed_identity["compare_scope"],
+            operator_surface=EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
+            policy_digest=governed_identity["policy_digest"],
+            control_bundle_hash=governed_identity["control_bundle_hash"],
+            artifact_manifest_path=str(artifact_manifest_path),
+            artifact_manifest_hash=artifact_manifest_hash,
+            provenance_hash=provenance_hash,
+            determinism_class=governed_identity["determinism_class"],
         )
 
     def _compile_workload(
@@ -284,3 +342,59 @@ class WorkloadExecutor:
                 raise ValueError("E_SDK_WORKLOAD_RESULT_INVALID")
             return result
         return await asyncio.to_thread(sdk_run_workload, sdk_workload, sdk_ctx, input_payload)
+
+    def _build_governed_identity(
+        self,
+        *,
+        extension: ExtensionRecord,
+        workload_id: str,
+        workload_version: str,
+        workload_entrypoint: str,
+        required_capabilities: list[str],
+        contract_style: str,
+        department: str,
+        input_identity: str,
+    ) -> dict[str, Any]:
+        policy_payload = build_extension_policy_payload(
+            contract_style=contract_style,
+            security_mode=extension.security_mode,
+            security_profile=extension.security_profile,
+            security_policy_version=extension.security_policy_version,
+            reliable_mode_enabled=self.artifacts.reproducibility.reliable_mode_enabled(),
+            reliable_require_clean_git=self.artifacts.reliable_require_clean_git_enabled(),
+            provenance_verbose_enabled=self.artifacts.provenance_verbose_enabled(),
+            artifact_file_size_cap_bytes=self.artifacts.artifact_file_size_cap_bytes(),
+            artifact_total_size_cap_bytes=self.artifacts.artifact_total_size_cap_bytes(),
+        )
+        control_bundle = build_extension_control_bundle(
+            extension_id=extension.extension_id,
+            extension_version=extension.extension_version,
+            source_ref=extension.source_ref,
+            resolved_commit_sha=extension.resolved_commit_sha,
+            manifest_digest_sha256=extension.manifest_digest_sha256,
+            workload_id=workload_id,
+            workload_version=workload_version,
+            workload_entrypoint=workload_entrypoint,
+            required_capabilities=required_capabilities,
+            contract_style=contract_style,
+            department=department,
+            input_identity=input_identity,
+            security_mode=extension.security_mode,
+            security_profile=extension.security_profile,
+            security_policy_version=extension.security_policy_version,
+            reliable_mode_enabled=self.artifacts.reproducibility.reliable_mode_enabled(),
+        )
+        return build_governed_identity(
+            operator_surface=EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
+            policy_payload=policy_payload,
+            control_bundle=control_bundle,
+        )
+
+    @staticmethod
+    def _write_json_file(path: Path, payload: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(json.dumps(payload, indent=2, sort_keys=True).encode("utf-8"))
+
+    @staticmethod
+    def _digest_file(path: Path) -> str:
+        return digest_prefixed(path.read_bytes())

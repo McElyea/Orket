@@ -15,6 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.streaming import CommitOrchestrator, InteractionManager, StreamBus, StreamBusConfig
 from orket.streaming import StreamLawChecker, StreamLawViolation
 from orket.streaming.contracts import StreamEventType
@@ -59,7 +60,7 @@ def _resolved_model_id_from_events(events: list[dict[str, Any]]) -> str:
 def _provider_identity(*, resolved_model_id: str = "") -> dict[str, Any]:
     mode = str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
     provider_name = str(os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER", "ollama") or "ollama").strip().lower()
-    model_id = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", "qwen2.5-coder:7b")).strip()
+    model_id = str(resolved_model_id or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", DEFAULT_LOCAL_MODEL)).strip()
     if provider_name == "lmstudio":
         provider_name = "openai_compat"
     if provider_name == "ollama":

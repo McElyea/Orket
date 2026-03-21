@@ -16,6 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.orchestration.engine import OrchestrationEngine
+from orket.runtime.defaults import DEFAULT_LOCAL_MODEL
 from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
 
 try:
@@ -40,7 +41,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Record a live artifact-provenance proof artifact for truthful runtime Phase C packet-2.",
     )
-    parser.add_argument("--model", default=os.getenv("ORKET_LIVE_MODEL", "qwen2.5-coder:7b"))
+    parser.add_argument("--model", default=os.getenv("ORKET_LIVE_MODEL", DEFAULT_LOCAL_MODEL))
     parser.add_argument("--provider", default=os.getenv("ORKET_LLM_PROVIDER", "ollama"))
     parser.add_argument(
         "--output",
@@ -233,7 +234,7 @@ def record_truthful_runtime_artifact_provenance_live_proof(
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
-    model = str(args.model or "").strip() or "qwen2.5-coder:7b"
+    model = str(args.model or "").strip() or DEFAULT_LOCAL_MODEL
     provider = str(args.provider or "").strip() or "ollama"
     epic_id = str(args.epic_id or "").strip() or "truthful_runtime_artifact_provenance_live"
     output_path = Path(str(args.output)).resolve()

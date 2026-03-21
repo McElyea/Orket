@@ -31,7 +31,7 @@ from .turn_tool_dispatcher_protocol import (
 from .turn_tool_dispatcher_support import (
     as_positive_float,
     build_execution_capsule,
-    determinism_violation_for_result,
+    determinism_violation_details_for_result,
     missing_required_permissions,
     permission_values,
     resolve_skill_tool_binding,
@@ -328,7 +328,7 @@ class ToolDispatcher:
                         "ok": False,
                         "error": f"tool middleware returned non-dict result ({raw_type})",
                     }
-                determinism_violation = determinism_violation_for_result(
+                determinism_violation = determinism_violation_details_for_result(
                     tool_name=tool_name,
                     binding=binding,
                     result=result,
@@ -344,13 +344,23 @@ class ToolDispatcher:
                                 "turn_index": turn_index,
                                 "tool": tool_name,
                                 "operation_id": operation_id,
-                                "error": determinism_violation,
+                                "error": determinism_violation["error"],
+                                "error_code": determinism_violation["error_code"],
+                                "determinism_class": determinism_violation["determinism_class"],
+                                "capability_profile": determinism_violation["capability_profile"],
+                                "tool_contract_version": determinism_violation["tool_contract_version"],
+                                "side_effect_signal_keys": list(determinism_violation["side_effect_signal_keys"]),
                             },
                             self.workspace,
                         )
                     result = {
                         "ok": False,
-                        "error": determinism_violation,
+                        "error": determinism_violation["error"],
+                        "error_code": determinism_violation["error_code"],
+                        "determinism_class": determinism_violation["determinism_class"],
+                        "capability_profile": determinism_violation["capability_profile"],
+                        "tool_contract_version": determinism_violation["tool_contract_version"],
+                        "side_effect_signal_keys": list(determinism_violation["side_effect_signal_keys"]),
                     }
                 tool_call.result = result
                 if not protocol_replay_mode:

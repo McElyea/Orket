@@ -35,4 +35,4 @@ def jaccard_sim(a: str, b: str, k: int) -> float:
 
 
 def diff_ratio(curr: str, prev: str) -> float:
-    return abs(len(str(curr)) - len(str(prev))) / max(1, len(str(prev)))
+    return 1.0 - jaccard_sim(curr, prev, k=3)
