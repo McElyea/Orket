@@ -1,0 +1,104 @@
+{
+  "schema_version": "odr.context_continuity.v0_replay_contract.v1",
+  "last_updated": "2026-03-21",
+  "description": "Deterministic bounded replay-builder contract for ContextContinuity V0.",
+  "allowed_source_kinds": [
+    "current_canonical_artifact",
+    "accepted_decision_summary",
+    "rejected_path_summary",
+    "unresolved_issue_summary",
+    "invariant_summary",
+    "latest_architect_delta",
+    "latest_auditor_critique"
+  ],
+  "excluded_source_kinds": [
+    "compiled_shared_state",
+    "shared_state_snapshot",
+    "role_view_projection",
+    "vector_retrieval_hit",
+    "auxiliary_recall"
+  ],
+  "source_ordering": {
+    "kind_precedence": [
+      "current_canonical_artifact",
+      "accepted_decision_summary",
+      "rejected_path_summary",
+      "unresolved_issue_summary",
+      "invariant_summary",
+      "latest_architect_delta",
+      "latest_auditor_critique"
+    ],
+    "within_kind_order": "round_index_desc_then_artifact_id_asc"
+  },
+  "inclusion_precedence": [
+    "current_canonical_artifact",
+    "accepted_decision_summary",
+    "rejected_path_summary",
+    "unresolved_issue_summary",
+    "invariant_summary",
+    "latest_architect_delta",
+    "latest_auditor_critique"
+  ],
+  "per_kind_item_limit": {
+    "current_canonical_artifact": 1,
+    "accepted_decision_summary": 3,
+    "rejected_path_summary": 2,
+    "unresolved_issue_summary": 3,
+    "invariant_summary": 3,
+    "latest_architect_delta": 1,
+    "latest_auditor_critique": 1
+  },
+  "duplicate_suppression": {
+    "key": "artifact_kind + normalized_whitespace_text",
+    "retain": "newest_round_then_lowest_artifact_id"
+  },
+  "truncation_policy": {
+    "max_utf8_bytes": 1200,
+    "max_text_chars_per_item": 220,
+    "always_include_kinds": [
+      "current_canonical_artifact"
+    ],
+    "drop_order_low_to_high_precedence": [
+      "latest_auditor_critique",
+      "latest_architect_delta",
+      "invariant_summary",
+      "unresolved_issue_summary",
+      "rejected_path_summary",
+      "accepted_decision_summary"
+    ],
+    "overflow_behavior": "drop_lowest_precedence_non_required_items_before_failing"
+  },
+  "formatting_template": {
+    "title": "### REPLAY BLOCK",
+    "section_headers": {
+      "current_canonical_artifact": "Current Artifact",
+      "accepted_decision_summary": "Accepted Decisions",
+      "rejected_path_summary": "Rejected Paths",
+      "unresolved_issue_summary": "Open Issues",
+      "invariant_summary": "Invariants",
+      "latest_architect_delta": "Latest Architect Delta",
+      "latest_auditor_critique": "Latest Auditor Critique",
+      "causal_summary": "Causal Summary"
+    }
+  },
+  "loader_policy": {
+    "delivery_mode": "replay_block_verbatim_plus_role_focus",
+    "replay_block_position": "prefix",
+    "role_focus_header": "#### Role Focus",
+    "role_focus_by_role": {
+      "architect": "Use the replay block as authoritative continuity context for refinement. Preserve accepted decisions unless explicit supersession is provided.",
+      "auditor": "Use the replay block as authoritative continuity context for critique. Challenge gaps without reopening accepted decisions unless explicit supersession is justified."
+    }
+  },
+  "causal_summary_rule": {
+    "inputs": [
+      "latest_architect_delta",
+      "latest_auditor_critique"
+    ],
+    "emit_only_when_any_input_present": true,
+    "template": [
+      "Latest architect delta: {latest_architect_delta}",
+      "Latest auditor critique: {latest_auditor_critique}"
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "odr.model_role_fit.lane_config.v1",
+  "last_updated": "2026-03-21",
+  "requirements_authority": "odr_model_role_fit_requirements.md",
+  "implementation_authority": "odr_model_role_fit_implementation_plan.md",
+  "matrix_registry": "odr_model_role_fit_matrix_registry.json",
+  "output_schema": "odr_model_role_fit_output_schema.json",
+  "reused_v1_state_contract": "../../ContextContinuity/CC03212026/odr_context_continuity_v1_state_contract.json",
+  "reused_continuity_closeout": "../../ContextContinuity/CC03212026/Closeout.md",
+  "continuity_mode": "v1_compiled_shared_state",
+  "locked_budgets": [
+    5,
+    9
+  ],
+  "scenario_set": {
+    "id": "continuity_primary_v1",
+    "scenario_ids": [
+      "missing_constraint_resolved",
+      "overfitting"
+    ]
+  },
+  "structural_disqualification": {
+    "stop_reasons": [
+      "CODE_LEAK",
+      "FORMAT_VIOLATION"
+    ],
+    "max_failure_rate": 0.5
+  },
+  "top_pair_count_for_triples": 3,
+  "role_timeout_sec": 300,
+  "ranking_order": [
+    "higher convergence_rate",
+    "lower contradiction_rate",
+    "lower reopened_decision_rate",
+    "lower regression_rate",
+    "lower median_round_latency_ms",
+    "lower median_round_active_context_size_bytes",
+    "higher carry_forward_integrity"
+  ],
+  "artifact_paths": {
+    "root": "benchmarks/staging/odr/model_role_fit",
+    "bootstrap_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_lane_bootstrap.json",
+    "pair_inspectability_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_pair_inspectability.json",
+    "pair_compare_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_pair_compare.json",
+    "pair_verdict_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_pair_verdict.json",
+    "triple_inspectability_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_triple_inspectability.json",
+    "triple_compare_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_triple_compare.json",
+    "triple_verdict_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_triple_verdict.json",
+    "closeout_output": "benchmarks/staging/odr/model_role_fit/odr_model_role_fit_closeout.json"
+  }
+}

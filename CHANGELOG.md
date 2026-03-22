@@ -5,6 +5,27 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.17] - 2026-03-22 - "The Bounded ODR Role-Fit Follow-Up Cut"
+
+### Added
+- **Archived ODR Lane Authority**: Added the archived ContextContinuity and ODRModelRoleFit closeout/authority sets under `docs/projects/archive/ContextContinuity/CC03212026/` and `docs/projects/archive/ODRModelRoleFit/MRF03212026/`.
+- **ODR Role-Fit Follow-Up Lane**: Added a new active follow-up lane under `docs/projects/odr_role_fit_followup/` with a frozen reviewer-anchored plan, lane config, and narrowed architect matrix for `Command-R:35B`, `llama-3.3-70b-instruct`, and `mistralai/magistral-small-2509` against `gemma3:27b`.
+- **ODR Script Coverage Expansion**: Added contract/integration coverage for continuity compare/verdict/live-metric surfaces, model-role-fit triple runtime normalization, and the reviewer-anchored follow-up lane config.
+
+### Changed
+- **ContextContinuity Completion And Archive**: Completed the bounded ContextContinuity lane through compare/verdict/live-proof surfaces, archived the active lane docs, and updated the runtime defaults/tests to point at the archived authority paths.
+- **Model-Role Fit Harness Hardening**: Implemented the serial pair/triple role-fit harnesses, truthful execution-blocked reporting, resume-safe artifact handling, triple-config normalization for reused V1 state contracts, and narrower follow-up pair selection against the archived continuity substrate.
+- **V1 Shared-State Quality**: Hardened compiled shared-state extraction so fenced `orket-constraints` blocks are parsed deterministically, explicit unresolved issue summaries are preserved, and invariant/rejected-path state no longer degrades into JSON-fragment identities.
+- **Repo Hygiene**: Added top-level `pytest_tmp/` and `sandbox_pytest/` ignores so `git status` no longer emits permission warnings when unreadable temp subtrees are present.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use `python scripts/odr/prepare_odr_model_role_fit_live_proof.py --config docs/projects/odr_role_fit_followup/odr_role_fit_followup_lane_config.json` for the active reviewer-anchored architect bakeoff lane.
+
 ## [0.4.16] - 2026-03-21 - "The Context Continuity Bootstrap Cut"
 
 ### Added

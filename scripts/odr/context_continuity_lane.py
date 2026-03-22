@@ -12,13 +12,22 @@ DEFAULT_LANE_CONFIG_PATH = (
     REPO_ROOT
     / "docs"
     / "projects"
+    / "archive"
     / "ContextContinuity"
+    / "CC03212026"
     / "odr_context_continuity_lane_config.json"
 )
 REQUIRED_CONTINUITY_MODES = (
     "control_current_replay",
     "v0_log_derived_replay",
-    "v1_compiled_state",
+    "v1_compiled_shared_state",
+)
+REQUIRED_ARTIFACT_PATH_KEYS = (
+    "root",
+    "bootstrap_summary",
+    "inspectability_output",
+    "compare_output",
+    "verdict_output",
 )
 
 
@@ -105,14 +114,42 @@ def load_lane_config(path: Path | None = None) -> dict[str, Any]:
         for mode, items in mode_state_inputs.items()
     }
 
-    prereg_path = _resolve_path(config_path, str(payload.get("pre_registration_record") or ""))
-    output_schema_path = _resolve_path(config_path, str(payload.get("output_schema") or ""))
+    artifact_paths = dict(payload.get("artifact_paths") or {})
+    for key in REQUIRED_ARTIFACT_PATH_KEYS:
+        value = str(artifact_paths.get(key) or "").strip()
+        if not value:
+            raise ValueError(f"Lane config artifact_paths missing {key}.")
+    payload["artifact_paths"] = artifact_paths
+
+    raw_prereg = str(payload.get("pre_registration_record") or "").strip()
+    raw_output_schema = str(payload.get("output_schema") or "").strip()
+    raw_v0_replay_contract = str(payload.get("v0_replay_contract") or "").strip()
+    raw_v1_state_contract = str(payload.get("v1_state_contract") or "").strip()
+    if not raw_prereg:
+        raise ValueError("Lane config must declare pre_registration_record.")
+    if not raw_output_schema:
+        raise ValueError("Lane config must declare output_schema.")
+    if not raw_v0_replay_contract:
+        raise ValueError("Lane config must declare v0_replay_contract.")
+    if not raw_v1_state_contract:
+        raise ValueError("Lane config must declare v1_state_contract.")
+
+    prereg_path = _resolve_path(config_path, raw_prereg)
+    output_schema_path = _resolve_path(config_path, raw_output_schema)
+    v0_replay_contract_path = _resolve_path(config_path, raw_v0_replay_contract)
+    v1_state_contract_path = _resolve_path(config_path, raw_v1_state_contract)
     if not prereg_path.exists():
         raise FileNotFoundError(f"Pre-registration record not found: {prereg_path}")
     if not output_schema_path.exists():
         raise FileNotFoundError(f"Output schema not found: {output_schema_path}")
+    if not v0_replay_contract_path.exists():
+        raise FileNotFoundError(f"V0 replay contract not found: {v0_replay_contract_path}")
+    if not v1_state_contract_path.exists():
+        raise FileNotFoundError(f"V1 state contract not found: {v1_state_contract_path}")
     payload["pre_registration_record_path"] = str(prereg_path)
     payload["output_schema_path"] = str(output_schema_path)
+    payload["v0_replay_contract_path"] = str(v0_replay_contract_path)
+    payload["v1_state_contract_path"] = str(v1_state_contract_path)
     return payload
 
 
@@ -122,6 +159,14 @@ def load_pair_preregistration(config: dict[str, Any]) -> dict[str, Any]:
 
 def load_output_schema(config: dict[str, Any]) -> dict[str, Any]:
     return _read_json(Path(str(config["output_schema_path"])))
+
+
+def load_v0_replay_contract(config: dict[str, Any]) -> dict[str, Any]:
+    return _read_json(Path(str(config["v0_replay_contract_path"])))
+
+
+def load_v1_state_contract(config: dict[str, Any]) -> dict[str, Any]:
+    return _read_json(Path(str(config["v1_state_contract_path"])))
 
 
 def build_continuity_mode_registry(config: dict[str, Any]) -> list[dict[str, Any]]:
@@ -144,6 +189,12 @@ def build_pair_budget_aggregate(
     if not scenario_runs:
         raise ValueError("build_pair_budget_aggregate requires at least one scenario-run.")
 
+    token_samples = [
+        float(row["median_round_active_context_size_tokens"])
+        for row in scenario_runs
+        if row.get("median_round_active_context_size_tokens") is not None
+    ]
+
     return {
         "pair_id": pair_id,
         "locked_budget": int(locked_budget),
@@ -155,9 +206,12 @@ def build_pair_budget_aggregate(
         "regression_rate": sum(float(row["regression_count"]) for row in scenario_runs) / len(scenario_runs),
         "carry_forward_integrity": sum(float(row["carry_forward_integrity"]) for row in scenario_runs) / len(scenario_runs),
         "median_round_latency_ms": float(median(float(row["median_round_latency_ms"]) for row in scenario_runs)),
-        "median_round_active_context_size_tokens": float(
-            median(float(row["median_round_active_context_size_tokens"]) for row in scenario_runs)
+        "median_round_active_context_size_bytes": float(
+            median(float(row["median_round_active_context_size_bytes"]) for row in scenario_runs)
         ),
+        "median_round_active_context_size_tokens": float(
+            median(token_samples)
+        ) if token_samples else None,
     }
 
 
@@ -170,6 +224,12 @@ def build_primary_budget_aggregate(
     if not pair_budget_rows:
         raise ValueError("build_primary_budget_aggregate requires at least one pair-budget row.")
 
+    token_samples = [
+        float(row["median_round_active_context_size_tokens"])
+        for row in pair_budget_rows
+        if row.get("median_round_active_context_size_tokens") is not None
+    ]
+
     return {
         "locked_budget": int(locked_budget),
         "continuity_mode": str(continuity_mode),
@@ -180,19 +240,32 @@ def build_primary_budget_aggregate(
         "regression_rate": sum(float(row["regression_rate"]) for row in pair_budget_rows) / len(pair_budget_rows),
         "carry_forward_integrity": sum(float(row["carry_forward_integrity"]) for row in pair_budget_rows) / len(pair_budget_rows),
         "median_round_latency_ms": sum(float(row["median_round_latency_ms"]) for row in pair_budget_rows) / len(pair_budget_rows),
-        "median_round_active_context_size_tokens": sum(
-            float(row["median_round_active_context_size_tokens"]) for row in pair_budget_rows
+        "median_round_active_context_size_bytes": sum(
+            float(row["median_round_active_context_size_bytes"]) for row in pair_budget_rows
         ) / len(pair_budget_rows),
+        "median_round_active_context_size_tokens": sum(
+            token_samples
+        ) / len(token_samples) if token_samples else None,
     }
 
 
+def resolve_lane_artifact_path(config: dict[str, Any], artifact_key: str) -> Path:
+    artifact_paths = dict(config.get("artifact_paths") or {})
+    raw = str(artifact_paths.get(artifact_key) or "").strip()
+    if not raw:
+        raise KeyError(f"Lane config artifact_paths missing {artifact_key}.")
+    return (REPO_ROOT / raw).resolve()
+
+
 def resolve_default_output_path(config: dict[str, Any]) -> Path:
-    return (REPO_ROOT / str(config["artifact_paths"]["bootstrap_summary"])).resolve()
+    return resolve_lane_artifact_path(config, "bootstrap_summary")
 
 
 def build_bootstrap_payload(config: dict[str, Any]) -> dict[str, Any]:
     prereg = load_pair_preregistration(config)
     output_schema = load_output_schema(config)
+    v0_replay_contract = load_v0_replay_contract(config)
+    v1_state_contract = load_v1_state_contract(config)
     continuity_mode_registry = build_continuity_mode_registry(config)
     primary_pairs = [pair.as_dict() for pair in config["selected_primary_pairs"]]
     secondary_pairs = [pair.as_dict() for pair in config["secondary_sensitivity_pairs"]]
@@ -219,12 +292,15 @@ def build_bootstrap_payload(config: dict[str, Any]) -> dict[str, Any]:
             "config_path": str(config["config_path"]),
             "requirements_authority": str(config["requirements_authority"]),
             "implementation_authority": str(config["implementation_authority"]),
+            "v0_replay_contract_path": str(config["v0_replay_contract_path"]),
+            "v1_state_contract_path": str(config["v1_state_contract_path"]),
             "continuity_modes": list(config["continuity_modes"]),
             "locked_budgets": list(config["locked_budgets"]),
             "pair_scope": str(config["pair_scope"]),
             "scenario_set": dict(config["scenario_set"]),
             "artifact_paths": dict(config["artifact_paths"]),
             "control_freeze": dict(config["control_freeze"]),
+            "decision_thresholds": dict(config.get("decision_thresholds") or {}),
         },
         "pre_registration_snapshot": {
             "path": str(config["pre_registration_record_path"]),
@@ -237,6 +313,21 @@ def build_bootstrap_payload(config: dict[str, Any]) -> dict[str, Any]:
             "path": str(config["output_schema_path"]),
             "schema_version": str(output_schema.get("schema_version") or ""),
             "top_level_required": list(output_schema.get("top_level_required") or []),
+            "inspectability_top_level_required": list(output_schema.get("inspectability_top_level_required") or []),
+        },
+        "v0_replay_contract_snapshot": {
+            "path": str(config["v0_replay_contract_path"]),
+            "schema_version": str(v0_replay_contract.get("schema_version") or ""),
+            "allowed_source_kinds": list(v0_replay_contract.get("allowed_source_kinds") or []),
+            "excluded_source_kinds": list(v0_replay_contract.get("excluded_source_kinds") or []),
+        },
+        "v1_state_contract_snapshot": {
+            "path": str(config["v1_state_contract_path"]),
+            "schema_version": str(v1_state_contract.get("schema_version") or ""),
+            "allowed_item_states": list(v1_state_contract.get("allowed_item_states") or []),
+            "identity_evidence_allowed": list(
+                ((v1_state_contract.get("identity_evidence_rules") or {}).get("allowed") or [])
+            ),
         },
         "execution_scope": {
             "evidence_scope": str(prereg.get("matrix_scope") or config["pair_scope"]),

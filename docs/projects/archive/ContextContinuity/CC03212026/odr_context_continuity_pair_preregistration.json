@@ -1,10 +1,10 @@
 {
   "schema_version": "odr.context_continuity.pair_preregistration.v1",
   "last_updated": "2026-03-21",
-  "requirements_authority": "docs/projects/ContextContinuity/odr_context_continuity_requirements.md",
-  "implementation_authority": "docs/projects/ContextContinuity/odr_context_continuity_implementation_plan.md",
+  "requirements_authority": "docs/projects/archive/ContextContinuity/CC03212026/odr_context_continuity_requirements.md",
+  "implementation_authority": "docs/projects/archive/ContextContinuity/CC03212026/odr_context_continuity_implementation_plan.md",
   "selection_policy_reference": {
-    "path": "docs/projects/ContextContinuity/odr_context_continuity_requirements.md",
+    "path": "docs/projects/archive/ContextContinuity/CC03212026/odr_context_continuity_requirements.md",
     "sections": [
       "12.8",
       "12.9",

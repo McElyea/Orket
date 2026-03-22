@@ -1,0 +1,157 @@
+{
+  "schema_version": "odr.context_continuity.output_schema.v3",
+  "last_updated": "2026-03-21",
+  "description": "Lane-scoped output contract for ODR context continuity control, V0, and V1 comparison runs.",
+  "continuity_mode_enum": [
+    "control_current_replay",
+    "v0_log_derived_replay",
+    "v1_compiled_shared_state"
+  ],
+  "artifact_paths_required": [
+    "root",
+    "bootstrap_summary",
+    "inspectability_output",
+    "compare_output",
+    "verdict_output"
+  ],
+  "inspectability_top_level_required": [
+    "schema_version",
+    "generated_at",
+    "ended_at",
+    "lane_config_snapshot",
+    "evidence_scope",
+    "artifact_locations",
+    "scenario_run_artifacts"
+  ],
+  "inspectability_scenario_run_required": [
+    "pair_id",
+    "scenario_id",
+    "continuity_mode",
+    "locked_budget",
+    "round_artifacts"
+  ],
+  "inspectability_round_required": [
+    "round_index",
+    "continuity_mode",
+    "why_loaded_context_changed",
+    "source_inputs",
+    "mode_artifacts",
+    "predecessor_linkage",
+    "role_views"
+  ],
+  "inspectability_source_input_required": [
+    "artifact_id",
+    "artifact_kind",
+    "artifact_body",
+    "artifact_sha256",
+    "utf8_bytes"
+  ],
+  "inspectability_role_view_required": [
+    "role",
+    "loaded_context_artifact",
+    "derived_from",
+    "predecessor_linkage",
+    "role_view_projection"
+  ],
+  "evidence_scope_enum": [
+    "single_pair_bounded",
+    "primary_plus_sensitivity",
+    "full_matrix"
+  ],
+  "verdict_enum": [
+    "worthwhile_at_5_rounds",
+    "worthwhile_at_9_rounds",
+    "worthwhile_at_both_locked_budgets",
+    "continuity_quality_success_only",
+    "not_materially_worthwhile"
+  ],
+  "top_level_required": [
+    "schema_version",
+    "generated_at",
+    "ended_at",
+    "lane_config_snapshot",
+    "evidence_scope",
+    "scenario_set",
+    "continuity_modes",
+    "scenario_runs",
+    "pair_budget_aggregates",
+    "primary_budget_aggregates",
+    "budget_verdicts"
+  ],
+  "scenario_run_required": [
+    "scenario_id",
+    "pair_id",
+    "continuity_mode",
+    "locked_budget",
+    "converged",
+    "stop_reason",
+    "rounds_consumed",
+    "reopened_decision_count",
+    "contradiction_count",
+    "regression_count",
+    "carry_forward_integrity",
+    "median_round_latency_ms",
+    "median_round_active_context_size_bytes",
+    "median_round_active_context_size_tokens"
+  ],
+  "pair_budget_aggregate_required": [
+    "pair_id",
+    "continuity_mode",
+    "locked_budget",
+    "scenario_run_count",
+    "convergence_rate",
+    "reopened_decision_rate",
+    "contradiction_rate",
+    "regression_rate",
+    "carry_forward_integrity",
+    "median_round_latency_ms",
+    "median_round_active_context_size_bytes",
+    "median_round_active_context_size_tokens"
+  ],
+  "primary_budget_aggregate_required": [
+    "locked_budget",
+    "continuity_mode",
+    "pair_count",
+    "convergence_rate",
+    "reopened_decision_rate",
+    "contradiction_rate",
+    "regression_rate",
+    "carry_forward_integrity",
+    "median_round_latency_ms",
+    "median_round_active_context_size_bytes",
+    "median_round_active_context_size_tokens"
+  ],
+  "budget_verdict_required": [
+    "continuity_mode",
+    "locked_budget",
+    "pair_scope",
+    "evidence_scope",
+    "verdict",
+    "threshold_inputs",
+    "absolute_converged_case_delta",
+    "percentage_point_convergence_delta",
+    "disqualifying_regressions"
+  ],
+  "verdict_top_level_required": [
+    "schema_version",
+    "generated_at",
+    "ended_at",
+    "lane_config_snapshot",
+    "source_compare_artifact",
+    "pair_scope",
+    "evidence_scope",
+    "continuity_modes",
+    "budget_verdicts",
+    "summary"
+  ],
+  "verdict_summary_required": [
+    "by_mode"
+  ],
+  "verdict_mode_summary_required": [
+    "global_verdict",
+    "worthwhile_budgets",
+    "continuity_quality_success_only_budgets",
+    "non_worthwhile_budgets",
+    "verdicts_by_budget"
+  ]
+}

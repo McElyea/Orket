@@ -5,10 +5,12 @@
   "implementation_authority": "odr_context_continuity_implementation_plan.md",
   "pre_registration_record": "odr_context_continuity_pair_preregistration.json",
   "output_schema": "odr_context_continuity_output_schema.json",
+  "v0_replay_contract": "odr_context_continuity_v0_replay_contract.json",
+  "v1_state_contract": "odr_context_continuity_v1_state_contract.json",
   "continuity_modes": [
     "control_current_replay",
     "v0_log_derived_replay",
-    "v1_compiled_state"
+    "v1_compiled_shared_state"
   ],
   "locked_budgets": [
     5,
@@ -43,9 +45,29 @@
       "15"
     ]
   },
+  "decision_thresholds": {
+    "zero_tolerance_nonincrease_metrics": [
+      "reopened_decision_rate",
+      "contradiction_rate"
+    ],
+    "v0": {
+      "convergence_gain_min_percentage_points": 20.0,
+      "absolute_converged_case_delta_min": 1,
+      "max_active_context_size_ratio_vs_control": 2.0,
+      "max_latency_ratio_vs_control": 2.5
+    },
+    "v1": {
+      "convergence_gain_min_percentage_points": 10.0,
+      "absolute_converged_case_delta_min": 1,
+      "carry_forward_integrity_gain_min_percentage_points": 15.0,
+      "max_active_context_size_ratio_vs_v0": 1.5,
+      "max_latency_ratio_vs_v0": 1.75
+    }
+  },
   "artifact_paths": {
     "root": "benchmarks/staging/odr/context_continuity",
     "bootstrap_summary": "benchmarks/staging/odr/context_continuity/context_continuity_lane_bootstrap.json",
+    "inspectability_output": "benchmarks/staging/odr/context_continuity/context_continuity_inspectability.json",
     "compare_output": "benchmarks/staging/odr/context_continuity/context_continuity_compare.json",
     "verdict_output": "benchmarks/staging/odr/context_continuity/context_continuity_verdict.json"
   },
@@ -54,7 +76,7 @@
     "v0_log_derived_replay": [
       "replay_block"
     ],
-    "v1_compiled_state": [
+    "v1_compiled_shared_state": [
       "shared_state_snapshot",
       "role_view"
     ]

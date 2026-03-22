@@ -1,0 +1,63 @@
+{
+  "schema_version": "odr.model_role_fit.matrix_registry.v1",
+  "last_updated": "2026-03-22",
+  "inventory_freeze": {
+    "provider_models": [
+      {
+        "model_id": "gemma3:27b",
+        "provider": "ollama",
+        "role_eligibility": [
+          "reviewer"
+        ]
+      },
+      {
+        "model_id": "Command-R:35B",
+        "provider": "ollama",
+        "role_eligibility": [
+          "architect"
+        ]
+      },
+      {
+        "model_id": "llama-3.3-70b-instruct",
+        "provider": "lmstudio",
+        "role_eligibility": [
+          "architect"
+        ]
+      },
+      {
+        "model_id": "mistralai/magistral-small-2509",
+        "provider": "lmstudio",
+        "role_eligibility": [
+          "architect"
+        ]
+      }
+    ]
+  },
+  "primary_pairs": [
+    {
+      "pair_id": "command_r_35b__gemma3_27b",
+      "architect_model": "Command-R:35B",
+      "architect_provider": "ollama",
+      "reviewer_model": "gemma3:27b",
+      "reviewer_provider": "ollama",
+      "execution_order": 1
+    },
+    {
+      "pair_id": "llama_3_3_70b_instruct__gemma3_27b",
+      "architect_model": "llama-3.3-70b-instruct",
+      "architect_provider": "lmstudio",
+      "reviewer_model": "gemma3:27b",
+      "reviewer_provider": "ollama",
+      "execution_order": 2
+    },
+    {
+      "pair_id": "magistral_small_2509__gemma3_27b",
+      "architect_model": "mistralai/magistral-small-2509",
+      "architect_provider": "lmstudio",
+      "reviewer_model": "gemma3:27b",
+      "reviewer_provider": "ollama",
+      "execution_order": 3
+    }
+  ],
+  "preferred_triples": []
+}

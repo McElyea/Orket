@@ -79,6 +79,8 @@ backups/
 orket_storage/
 .smoke/
 .pytest_*
+pytest_tmp/
+sandbox_pytest/
 .ruff_cache/
 benchmarks/results/**
 benchmarks/staging/**

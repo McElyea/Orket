@@ -1,0 +1,60 @@
+{
+  "schema_version": "odr.context_continuity.v1_state_contract.v1",
+  "last_updated": "2026-03-21",
+  "description": "Deterministic compiled shared-state contract for ContextContinuity V1.",
+  "required_authority_categories": [
+    "current_canonical_artifact",
+    "accepted_decision",
+    "rejected_path",
+    "unresolved_issue",
+    "invariant",
+    "latest_architect_delta",
+    "latest_auditor_delta",
+    "causal_summary"
+  ],
+  "allowed_item_states": [
+    "unresolved",
+    "accepted",
+    "rejected",
+    "superseded"
+  ],
+  "allowed_transitions": [
+    "unresolved->accepted",
+    "unresolved->rejected",
+    "accepted->superseded",
+    "unresolved->superseded"
+  ],
+  "identity_evidence_rules": {
+    "allowed": [
+      "exact_normalized_text_match",
+      "explicit_prior_item_id",
+      "explicit_supersession_record"
+    ],
+    "disallowed": [
+      "semantic_similarity_matching",
+      "embedding_search",
+      "model_inferred_equivalence_without_anchored_evidence"
+    ],
+    "text_normalization": [
+      "strip_markdown_list_prefix",
+      "collapse_internal_whitespace",
+      "casefold",
+      "trim_terminal_punctuation"
+    ]
+  },
+  "supersession_requirements": [
+    "prior_item_id",
+    "successor_item_id",
+    "reason",
+    "round_index"
+  ],
+  "loader_policy": {
+    "delivery_mode": "compiled_state_projection_verbatim_plus_role_focus",
+    "projection_position": "prefix",
+    "role_focus_header": "#### Role Focus",
+    "role_focus_by_role": {
+      "architect": "Use the compiled shared state as authoritative continuity context for refinement. Preserve accepted decisions unless an explicit supersession record is provided.",
+      "auditor": "Use the compiled shared state as authoritative continuity context for critique. Challenge gaps without reopening accepted decisions unless an explicit supersession record is justified."
+    }
+  }
+}

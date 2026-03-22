@@ -1,0 +1,525 @@
+{
+  "schema_version": "odr.context_continuity.inspectability_input.v1",
+  "scenario_runs": [
+    {
+      "pair_id": "magistral_small_2509__gemma3_27b",
+      "scenario_id": "missing_constraint_resolved",
+      "continuity_mode": "control_current_replay",
+      "locked_budget": 5,
+      "rounds": [
+        {
+          "round_index": 0,
+          "why_loaded_context_changed": "Initial round seeded from the canonical requirement and latest critique only.",
+          "source_inputs": [
+            {
+              "artifact_id": "control_req_r0",
+              "artifact_kind": "current_canonical_artifact",
+              "authority_level": "authoritative",
+              "content": "The assistant stores local notes and must preserve user edits."
+            },
+            {
+              "artifact_id": "control_accept_r0",
+              "artifact_kind": "accepted_decision_summary",
+              "authority_level": "authoritative",
+              "content": "Persistence is local-only and does not sync externally."
+            },
+            {
+              "artifact_id": "control_critique_r0",
+              "artifact_kind": "latest_auditor_critique",
+              "authority_level": "authoritative",
+              "content": "Clarify whether state survives application restart."
+            }
+          ],
+          "mode_artifacts": {},
+          "role_views": [
+            {
+              "role": "architect",
+              "loaded_context": "Requirement: preserve user edits in local notes. Accepted: no external sync. Open issue: clarify restart persistence.",
+              "provider_request_token_count": 84,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "control_req_r0",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "control_accept_r0",
+                    "relationship": "included_acceptance"
+                  },
+                  {
+                    "source_input_id": "control_critique_r0",
+                    "relationship": "included_open_issue"
+                  }
+                ],
+                "mode_artifact_refs": []
+              }
+            },
+            {
+              "role": "auditor",
+              "loaded_context": "Audit the local-notes requirement. Preserve the no-external-sync decision and challenge missing restart-persistence detail.",
+              "provider_request_token_count": 81,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "control_req_r0",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "control_accept_r0",
+                    "relationship": "included_acceptance"
+                  },
+                  {
+                    "source_input_id": "control_critique_r0",
+                    "relationship": "included_prior_critique"
+                  }
+                ],
+                "mode_artifact_refs": []
+              }
+            }
+          ]
+        },
+        {
+          "round_index": 1,
+          "why_loaded_context_changed": "Round one includes the revised requirement text and the latest auditor objection.",
+          "source_inputs": [
+            {
+              "artifact_id": "control_req_r1",
+              "artifact_kind": "current_canonical_artifact",
+              "authority_level": "authoritative",
+              "content": "The assistant stores local notes, preserves user edits, and restores the last saved note state after application restart."
+            },
+            {
+              "artifact_id": "control_accept_r1",
+              "artifact_kind": "accepted_decision_summary",
+              "authority_level": "authoritative",
+              "content": "Persistence remains local-only with no external sync."
+            },
+            {
+              "artifact_id": "control_critique_r1",
+              "artifact_kind": "latest_auditor_critique",
+              "authority_level": "authoritative",
+              "content": "Confirm whether restart restoration applies only to the most recent saved state."
+            }
+          ],
+          "mode_artifacts": {},
+          "role_views": [
+            {
+              "role": "architect",
+              "loaded_context": "Requirement: restore the last saved note state after restart while preserving local-only storage. Open issue: scope restoration to the most recent saved state.",
+              "provider_request_token_count": 92,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "control_req_r1",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "control_accept_r1",
+                    "relationship": "included_acceptance"
+                  },
+                  {
+                    "source_input_id": "control_critique_r1",
+                    "relationship": "included_open_issue"
+                  }
+                ],
+                "mode_artifact_refs": []
+              }
+            },
+            {
+              "role": "auditor",
+              "loaded_context": "Audit the restart-restoration requirement, preserve the local-only decision, and verify that the saved-state scope is explicit.",
+              "provider_request_token_count": 86,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "control_req_r1",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "control_accept_r1",
+                    "relationship": "included_acceptance"
+                  },
+                  {
+                    "source_input_id": "control_critique_r1",
+                    "relationship": "included_prior_critique"
+                  }
+                ],
+                "mode_artifact_refs": []
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pair_id": "magistral_small_2509__gemma3_27b",
+      "scenario_id": "missing_constraint_resolved",
+      "continuity_mode": "v0_log_derived_replay",
+      "locked_budget": 5,
+      "rounds": [
+        {
+          "round_index": 0,
+          "why_loaded_context_changed": "Initial V0 round seeds the replay builder from the same authoritative inputs as control.",
+          "source_inputs": [
+            {
+              "artifact_id": "v0_req_r0",
+              "artifact_kind": "current_canonical_artifact",
+              "authority_level": "authoritative",
+              "content": "The assistant stores local notes and must preserve user edits."
+            },
+            {
+              "artifact_id": "v0_accept_r0",
+              "artifact_kind": "accepted_decision_summary",
+              "authority_level": "authoritative",
+              "content": "Persistence is local-only and does not sync externally."
+            },
+            {
+              "artifact_id": "v0_critique_r0",
+              "artifact_kind": "latest_auditor_critique",
+              "authority_level": "authoritative",
+              "content": "Clarify whether state survives application restart."
+            }
+          ],
+          "mode_artifacts": {
+            "replay_builder_input": {
+              "artifact_id": "v0_replay_r0",
+              "source_history": [
+                {
+                  "artifact_id": "v0_req_r0",
+                  "artifact_kind": "current_canonical_artifact",
+                  "authority_level": "authoritative",
+                  "content": "The assistant stores local notes and must preserve user edits.",
+                  "round_index": 0
+                },
+                {
+                  "artifact_id": "v0_accept_r0",
+                  "artifact_kind": "accepted_decision_summary",
+                  "authority_level": "authoritative",
+                  "content": "Persistence is local-only and does not sync externally.",
+                  "round_index": 0
+                },
+                {
+                  "artifact_id": "v0_critique_r0",
+                  "artifact_kind": "latest_auditor_critique",
+                  "authority_level": "authoritative",
+                  "content": "Clarify whether state survives application restart.",
+                  "round_index": 0
+                }
+              ]
+            }
+          },
+          "role_views": [
+            {
+              "role": "architect",
+              "role_focus": "Refine the requirement while preserving accepted local-only persistence and resolving restart persistence.",
+              "provider_request_token_count": 77,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v0_req_r0",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v0_accept_r0",
+                    "relationship": "included_acceptance"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v0_replay_r0",
+                    "relationship": "included_replay_summary"
+                  }
+                ]
+              }
+            },
+            {
+              "role": "auditor",
+              "role_focus": "Critique restart persistence while preserving the accepted local-only persistence decision.",
+              "provider_request_token_count": 74,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v0_req_r0",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v0_critique_r0",
+                    "relationship": "included_prior_critique"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v0_replay_r0",
+                    "relationship": "included_replay_summary"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "round_index": 1,
+          "why_loaded_context_changed": "The replay block now includes the revised requirement and the most recent scoped objection.",
+          "source_inputs": [
+            {
+              "artifact_id": "v0_req_r1",
+              "artifact_kind": "current_canonical_artifact",
+              "authority_level": "authoritative",
+              "content": "The assistant restores the last saved local note state after restart and preserves user edits."
+            },
+            {
+              "artifact_id": "v0_accept_r1",
+              "artifact_kind": "accepted_decision_summary",
+              "authority_level": "authoritative",
+              "content": "Persistence remains local-only with no external sync."
+            },
+            {
+              "artifact_id": "v0_critique_r1",
+              "artifact_kind": "latest_auditor_critique",
+              "authority_level": "authoritative",
+              "content": "Constrain restoration to the most recent saved state."
+            }
+          ],
+          "mode_artifacts": {
+            "replay_builder_input": {
+              "artifact_id": "v0_replay_r1",
+              "source_history": [
+                {
+                  "artifact_id": "v0_req_r1",
+                  "artifact_kind": "current_canonical_artifact",
+                  "authority_level": "authoritative",
+                  "content": "The assistant restores the last saved local note state after restart and preserves user edits.",
+                  "round_index": 1
+                },
+                {
+                  "artifact_id": "v0_accept_r1",
+                  "artifact_kind": "accepted_decision_summary",
+                  "authority_level": "authoritative",
+                  "content": "Persistence remains local-only with no external sync.",
+                  "round_index": 1
+                },
+                {
+                  "artifact_id": "v0_critique_r1",
+                  "artifact_kind": "latest_auditor_critique",
+                  "authority_level": "authoritative",
+                  "content": "Constrain restoration to the most recent saved state.",
+                  "round_index": 1
+                }
+              ]
+            }
+          },
+          "role_views": [
+            {
+              "role": "architect",
+              "role_focus": "Refine the requirement while keeping storage local-only and resolving the saved-state scope.",
+              "provider_request_token_count": 88,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v0_req_r1",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v0_accept_r1",
+                    "relationship": "included_acceptance"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v0_replay_r1",
+                    "relationship": "included_replay_summary"
+                  }
+                ]
+              }
+            },
+            {
+              "role": "auditor",
+              "role_focus": "Critique the saved-state scope without reopening the accepted local-only persistence decision.",
+              "provider_request_token_count": 84,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v0_req_r1",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v0_critique_r1",
+                    "relationship": "included_prior_critique"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v0_replay_r1",
+                    "relationship": "included_replay_summary"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pair_id": "magistral_small_2509__gemma3_27b",
+      "scenario_id": "missing_constraint_resolved",
+      "continuity_mode": "v1_compiled_shared_state",
+      "locked_budget": 5,
+      "rounds": [
+        {
+          "round_index": 0,
+          "why_loaded_context_changed": "Initial V1 round compiles the shared state from the authoritative requirement and critique inputs.",
+          "source_inputs": [
+            {
+              "artifact_id": "v1_req_r0",
+              "artifact_kind": "current_canonical_artifact",
+              "authority_level": "authoritative",
+              "content": "The assistant stores local notes and must preserve user edits."
+            },
+            {
+              "artifact_id": "v1_accept_r0",
+              "artifact_kind": "accepted_decision_summary",
+              "authority_level": "authoritative",
+              "content": "Persistence is local-only and does not sync externally."
+            },
+            {
+              "artifact_id": "v1_critique_r0",
+              "artifact_kind": "latest_auditor_critique",
+              "authority_level": "authoritative",
+              "content": "Clarify whether state survives application restart."
+            }
+          ],
+          "mode_artifacts": {
+            "shared_state_builder_input": {
+              "artifact_id": "v1_state_r0"
+            }
+          },
+          "role_views": [
+            {
+              "role": "architect",
+              "role_focus": "Refine the requirement while preserving accepted local-only persistence and resolving restart persistence.",
+              "provider_request_token_count": 78,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v1_req_r0",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v1_accept_r0",
+                    "relationship": "included_acceptance"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v1_state_r0",
+                    "relationship": "compiled_from_shared_state"
+                  }
+                ]
+              }
+            },
+            {
+              "role": "auditor",
+              "role_focus": "Verify restart survival while preserving the accepted local-only decision.",
+              "provider_request_token_count": 75,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v1_req_r0",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v1_critique_r0",
+                    "relationship": "included_prior_critique"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v1_state_r0",
+                    "relationship": "compiled_from_shared_state"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "round_index": 1,
+          "why_loaded_context_changed": "The compiled state now carries the restart-restoration decision and the narrowed saved-state scope.",
+          "source_inputs": [
+            {
+              "artifact_id": "v1_req_r1",
+              "artifact_kind": "current_canonical_artifact",
+              "authority_level": "authoritative",
+              "content": "The assistant restores the last saved local note state after restart and preserves user edits."
+            },
+            {
+              "artifact_id": "v1_accept_r1",
+              "artifact_kind": "accepted_decision_summary",
+              "authority_level": "authoritative",
+              "content": "Persistence remains local-only with no external sync."
+            },
+            {
+              "artifact_id": "v1_critique_r1",
+              "artifact_kind": "latest_auditor_critique",
+              "authority_level": "authoritative",
+              "content": "Constrain restoration to the most recent saved state."
+            }
+          ],
+          "mode_artifacts": {
+            "shared_state_builder_input": {
+              "artifact_id": "v1_state_r1"
+            }
+          },
+          "role_views": [
+            {
+              "role": "architect",
+              "role_focus": "Refine the requirement while keeping storage local-only, preserving edits, and scoping restoration to the most recent saved state.",
+              "provider_request_token_count": 87,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v1_req_r1",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v1_accept_r1",
+                    "relationship": "included_acceptance"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v1_state_r1",
+                    "relationship": "compiled_from_shared_state"
+                  }
+                ]
+              }
+            },
+            {
+              "role": "auditor",
+              "role_focus": "Verify that restart restoration is limited to the most recent saved state while preserving accepted local-only persistence.",
+              "provider_request_token_count": 85,
+              "derived_from": {
+                "source_input_refs": [
+                  {
+                    "source_input_id": "v1_req_r1",
+                    "relationship": "included_requirement"
+                  },
+                  {
+                    "source_input_id": "v1_critique_r1",
+                    "relationship": "included_prior_critique"
+                  }
+                ],
+                "mode_artifact_refs": [
+                  {
+                    "artifact_id": "v1_state_r1",
+                    "relationship": "compiled_from_shared_state"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

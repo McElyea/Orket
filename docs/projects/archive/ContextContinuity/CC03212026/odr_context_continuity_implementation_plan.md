@@ -1,10 +1,15 @@
 # ODR Context Continuity Implementation Plan
 
 Last updated: 2026-03-21
-Status: Active
+Status: Archived
 Owner: Orket Core
 
-Requirements authority: `docs/projects/ContextContinuity/odr_context_continuity_requirements.md`
+Archive note:
+
+1. Completed and archived on 2026-03-21.
+2. Closeout authority: [docs/projects/archive/ContextContinuity/CC03212026/Closeout.md](docs/projects/archive/ContextContinuity/CC03212026/Closeout.md)
+
+Requirements authority: `docs/projects/archive/ContextContinuity/CC03212026/odr_context_continuity_requirements.md`
 
 ## Objective
 
@@ -48,11 +53,29 @@ The lane is complete only when all of the following are true:
 6. the final report states whether the evidence is full-matrix, primary-plus-sensitivity, or `single-pair bounded`,
 7. live proof has been run on the qualified pre-registered pair set without silent fallback behavior.
 
+## Slice Status
+
+1. `CC-IMP-00` -- Completed. Machine-readable lane config, pair pre-registration, output schema, and bootstrap path are landed.
+2. `CC-IMP-01` -- Completed. Per-round inspectability artifacts, predecessor linkage, and role-view derivation surfaces are landed.
+3. `CC-IMP-02` -- Completed. The bounded V0 replay builder/loader path is landed and live control-vs-V0 proof exists at both locked budgets on the primary pair. Current verdict outcome: `not_materially_worthwhile` at 5 and 9 rounds.
+4. `CC-IMP-03` -- Completed. Deterministic compiled shared state, non-fuzzy continuity-item identity, role-view derivation, and V1 event accounting are landed.
+5. `CC-IMP-04` -- Completed. Control, V0, and V1 now run through the same compare/verdict path with live proof at both locked budgets. Current verdict outcome: neither V0 nor V1 is materially worthwhile on the locked primary pair.
+
 ## Execution Model
 
 Delivery uses five bounded slices. Each slice must ship its own code, proof, and closeout notes before the next slice claims success.
 
+Slice status snapshot:
+
+1. `CC-IMP-00`: completed
+2. `CC-IMP-01`: completed
+3. `CC-IMP-02`: completed
+4. `CC-IMP-03`: completed
+5. `CC-IMP-04`: completed
+
 ### CC-IMP-00: Control Freeze and Lane Bootstrap
+
+Status: Completed.
 
 Scope:
 
@@ -72,7 +95,7 @@ Scope:
 Deliverables:
 
 1. a frozen control continuity configuration or contract surface,
-2. a committed pre-registration record in `docs/projects/ContextContinuity/`,
+2. a committed pre-registration record in `docs/projects/archive/ContextContinuity/CC03212026/`,
 3. reusable reducers for scenario-run to pair-budget aggregation,
 4. a canonical rerunnable JSON output path using the repo diff-ledger convention,
 5. a committed machine-readable lane configuration artifact consumed by the comparison harness.
@@ -89,6 +112,8 @@ Exit criteria:
 2. pair selection inputs are locked before V0 or V1 comparisons begin.
 
 ### CC-IMP-01: Inspectability and Artifact Surfaces
+
+Status: Completed.
 
 Scope:
 
@@ -121,6 +146,8 @@ Exit criteria:
 2. artifact emission remains compatible with reruns and diff-ledger history.
 
 ### CC-IMP-02: V0 Bounded Replay Mode
+
+Status: Completed.
 
 Scope:
 
@@ -156,6 +183,8 @@ Exit criteria:
 
 ### CC-IMP-03: V1 Compiled Shared State
 
+Status: Completed.
+
 Scope:
 
 1. Implement the locked item state machine for unresolved, accepted, rejected, superseded, reopened, contradiction, and regression events.
@@ -182,7 +211,13 @@ Exit criteria:
 1. V1 can be audited round by round from source inputs to role-specific loaded context,
 2. V1 metrics are computed from the same scenario-run facts used by control and V0.
 
+Completion note:
+
+1. completed on 2026-03-21 with deterministic item identity, compiled shared-state artifacts, role-view derivation, and provider-backed live evidence through the common comparison harness.
+
 ### CC-IMP-04: Comparison Harness and Decision Reporting
+
+Status: Completed.
 
 Scope:
 
@@ -218,6 +253,11 @@ Exit criteria:
 
 1. the lane can state whether V0 is worthwhile, whether V1 is worthwhile, or whether neither is materially justified,
 2. the report can be reproduced from committed code, locked pair selection, and recorded artifacts only.
+
+Completion note:
+
+1. completed on 2026-03-21 with canonical staging compare and verdict artifacts for control, V0, and V1 at both locked budgets.
+2. current live outcome on the locked primary pair is `not_materially_worthwhile` for V0 at 5 and 9 rounds and `not_materially_worthwhile` for V1 at 5 and 9 rounds.
 
 ## Recommended Order of Work
 

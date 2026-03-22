@@ -1,9 +1,14 @@
 # ODR Context Continuity Requirements
 
 Last updated: 2026-03-21
-Status: Accepted for implementation planning
+Status: Archived (requirements satisfied)
 Owner: Orket Core
 Lane type: ODR continuity and convergence hardening
+
+Archive note:
+
+1. Completed and archived on 2026-03-21.
+2. Closeout authority: [docs/projects/archive/ContextContinuity/CC03212026/Closeout.md](docs/projects/archive/ContextContinuity/CC03212026/Closeout.md)
 
 ## 1. Objective
 

@@ -1,0 +1,72 @@
+{
+  "schema_version": "odr.model_role_fit.output_schema.v1",
+  "last_updated": "2026-03-21",
+  "required_artifacts": [
+    "bootstrap_output",
+    "pair_inspectability_output",
+    "pair_compare_output",
+    "pair_verdict_output",
+    "triple_inspectability_output",
+    "triple_compare_output",
+    "triple_verdict_output",
+    "closeout_output"
+  ],
+  "scenario_run_required_fields": [
+    "stop_reason",
+    "execution_status",
+    "rounds_consumed",
+    "median_round_active_context_size_bytes",
+    "median_round_active_context_size_tokens",
+    "converged",
+    "reopened_decision_count",
+    "contradiction_count",
+    "regression_count",
+    "carry_forward_integrity",
+    "median_round_latency_ms"
+  ],
+  "pair_compare_required_top_level": [
+    "schema_version",
+    "generated_at",
+    "lane_config_snapshot",
+    "continuity_mode",
+    "scenario_set",
+    "scenario_runs",
+    "pair_budget_aggregates",
+    "pair_summary_aggregates",
+    "pair_rankings",
+    "top_pairs_for_triples"
+  ],
+  "pair_verdict_required_top_level": [
+    "schema_version",
+    "generated_at",
+    "lane_config_snapshot",
+    "best_observed_pair",
+    "selected_pairs_for_triples",
+    "pair_verdicts"
+  ],
+  "triple_compare_required_top_level": [
+    "schema_version",
+    "generated_at",
+    "scenario_runs",
+    "triple_budget_aggregates",
+    "triple_summary_aggregates",
+    "triple_rankings"
+  ],
+  "triple_verdict_required_top_level": [
+    "schema_version",
+    "generated_at",
+    "admitted_triples",
+    "triple_verdicts"
+  ],
+  "closeout_required_top_level": [
+    "schema_version",
+    "generated_at",
+    "best_observed_pair",
+    "best_architect_model",
+    "best_reviewer_model",
+    "selected_pairs_for_triples",
+    "triple_phase_status",
+    "evidence_scope",
+    "residual_risk"
+  ]
+}

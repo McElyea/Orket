@@ -8,15 +8,37 @@ REAL_PREREG_PATH = (
     REPO_ROOT
     / "docs"
     / "projects"
+    / "archive"
     / "ContextContinuity"
+    / "CC03212026"
     / "odr_context_continuity_pair_preregistration.json"
 )
 REAL_SCHEMA_PATH = (
     REPO_ROOT
     / "docs"
     / "projects"
+    / "archive"
     / "ContextContinuity"
+    / "CC03212026"
     / "odr_context_continuity_output_schema.json"
+)
+REAL_V0_REPLAY_CONTRACT_PATH = (
+    REPO_ROOT
+    / "docs"
+    / "projects"
+    / "archive"
+    / "ContextContinuity"
+    / "CC03212026"
+    / "odr_context_continuity_v0_replay_contract.json"
+)
+REAL_V1_STATE_CONTRACT_PATH = (
+    REPO_ROOT
+    / "docs"
+    / "projects"
+    / "archive"
+    / "ContextContinuity"
+    / "CC03212026"
+    / "odr_context_continuity_v1_state_contract.json"
 )
 
 
@@ -30,10 +52,12 @@ def test_prepare_lane_bootstrap_uses_machine_readable_config(tmp_path: Path) -> 
         "implementation_authority": "odr_context_continuity_implementation_plan.md",
         "pre_registration_record": str(REAL_PREREG_PATH),
         "output_schema": str(REAL_SCHEMA_PATH),
+        "v0_replay_contract": str(REAL_V0_REPLAY_CONTRACT_PATH),
+        "v1_state_contract": str(REAL_V1_STATE_CONTRACT_PATH),
         "continuity_modes": [
             "control_current_replay",
             "v0_log_derived_replay",
-            "v1_compiled_state",
+            "v1_compiled_shared_state",
         ],
         "locked_budgets": [7],
         "scenario_set": {"id": "custom_scope", "scenario_ids": ["alpha", "beta", "gamma"]},
@@ -55,13 +79,14 @@ def test_prepare_lane_bootstrap_uses_machine_readable_config(tmp_path: Path) -> 
         "artifact_paths": {
             "root": str(tmp_path / "artifacts"),
             "bootstrap_summary": str(out_path),
+            "inspectability_output": str(tmp_path / "inspectability.json"),
             "compare_output": str(tmp_path / "compare.json"),
             "verdict_output": str(tmp_path / "verdict.json"),
         },
         "mode_state_inputs": {
             "control_current_replay": [],
             "v0_log_derived_replay": ["replay_block"],
-            "v1_compiled_state": ["shared_state_snapshot", "role_view"],
+            "v1_compiled_shared_state": ["shared_state_snapshot", "role_view"],
         },
         "control_freeze": {
             "mode_id": "control_current_replay",
