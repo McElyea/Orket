@@ -1,0 +1,67 @@
+{
+  "schema_version": "odr.round_cap_probe.registry.v1",
+  "last_updated": "2026-03-22",
+  "inventory_freeze": {
+    "provider_models": [
+      {
+        "model_id": "Command-R:35B",
+        "provider": "ollama"
+      },
+      {
+        "model_id": "gemma3:27b",
+        "provider": "ollama"
+      },
+      {
+        "model_id": "mistralai/magistral-small-2509",
+        "provider": "lmstudio"
+      }
+    ]
+  },
+  "probe_runs": [
+    {
+      "probe_id": "command_r_35b__gemma3_27b__missing_constraint_resolved__20",
+      "source_lane": "odr_loop_shape_hardening",
+      "source_config": "../../ODRLoopShapeHardening/LSH03222026/odr_loop_shape_hardening_lane_config.json",
+      "source_compare_artifact": "../../../../../benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_pair_compare.json",
+      "source_pair_id": "command_r_35b__gemma3_27b",
+      "source_locked_budget": 5,
+      "source_stop_reason": "MAX_ROUNDS",
+      "scenario_id": "missing_constraint_resolved",
+      "architect_model": "Command-R:35B",
+      "architect_provider": "ollama",
+      "reviewer_model": "gemma3:27b",
+      "reviewer_provider": "ollama",
+      "execution_order": 1
+    },
+    {
+      "probe_id": "magistral_small_2509__gemma3_27b__missing_constraint_resolved__20",
+      "source_lane": "odr_role_fit_followup",
+      "source_config": "../../ODRRoleFitFollowup/RFU03222026/odr_role_fit_followup_lane_config.json",
+      "source_compare_artifact": "../../../../../benchmarks/staging/odr/role_fit_followup/odr_role_fit_followup_pair_compare.json",
+      "source_pair_id": "magistral_small_2509__gemma3_27b",
+      "source_locked_budget": 9,
+      "source_stop_reason": "MAX_ROUNDS",
+      "scenario_id": "missing_constraint_resolved",
+      "architect_model": "mistralai/magistral-small-2509",
+      "architect_provider": "lmstudio",
+      "reviewer_model": "gemma3:27b",
+      "reviewer_provider": "ollama",
+      "execution_order": 2
+    },
+    {
+      "probe_id": "magistral_small_2509__gemma3_27b__overfitting__20",
+      "source_lane": "odr_role_fit_followup",
+      "source_config": "../../ODRRoleFitFollowup/RFU03222026/odr_role_fit_followup_lane_config.json",
+      "source_compare_artifact": "../../../../../benchmarks/staging/odr/role_fit_followup/odr_role_fit_followup_pair_compare.json",
+      "source_pair_id": "magistral_small_2509__gemma3_27b",
+      "source_locked_budget": 5,
+      "source_stop_reason": "MAX_ROUNDS",
+      "scenario_id": "overfitting",
+      "architect_model": "mistralai/magistral-small-2509",
+      "architect_provider": "lmstudio",
+      "reviewer_model": "gemma3:27b",
+      "reviewer_provider": "ollama",
+      "execution_order": 3
+    }
+  ]
+}

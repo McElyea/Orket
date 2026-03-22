@@ -1,12 +1,12 @@
 {
   "schema_version": "odr.model_role_fit.lane_config.v1",
   "last_updated": "2026-03-22",
-  "requirements_authority": "../archive/ODRModelRoleFit/MRF03212026/Closeout.md",
+  "requirements_authority": "../../ODRModelRoleFit/MRF03212026/Closeout.md",
   "implementation_authority": "odr_role_fit_followup_implementation_plan.md",
   "matrix_registry": "odr_role_fit_followup_matrix_registry.json",
-  "output_schema": "../archive/ODRModelRoleFit/MRF03212026/odr_model_role_fit_output_schema.json",
-  "reused_v1_state_contract": "../archive/ContextContinuity/CC03212026/odr_context_continuity_v1_state_contract.json",
-  "reused_continuity_closeout": "../archive/ContextContinuity/CC03212026/Closeout.md",
+  "output_schema": "../../ODRModelRoleFit/MRF03212026/odr_model_role_fit_output_schema.json",
+  "reused_v1_state_contract": "../../ContextContinuity/CC03212026/odr_context_continuity_v1_state_contract.json",
+  "reused_continuity_closeout": "../../ContextContinuity/CC03212026/Closeout.md",
   "continuity_mode": "v1_compiled_shared_state",
   "locked_budgets": [
     5,

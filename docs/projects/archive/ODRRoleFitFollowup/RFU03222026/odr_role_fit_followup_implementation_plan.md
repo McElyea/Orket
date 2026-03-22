@@ -1,7 +1,7 @@
 # ODR Role-Fit Follow-Up Implementation Plan
 
 Last updated: 2026-03-22
-Status: Active
+Status: Archived
 Owner: Orket Core
 
 Background authority:
@@ -94,5 +94,5 @@ The lane is complete only when:
    1. `Command-R:35B -> gemma3:27b`
    2. `llama-3.3-70b-instruct -> gemma3:27b`
    3. `mistralai/magistral-small-2509 -> gemma3:27b`
-4. `RFU-IMP-03` remains pending.
-   This follow-up lane intentionally leaves triples unconfigured until an explicit follow-on decision admits a triple phase under the narrowed evidence.
+4. `RFU-IMP-03` is completed.
+   No triple phase was admitted under the narrowed evidence, so the lane closes with bounded pair-only evidence instead of forcing a triple rerun without justification.

@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-03-21
+Last updated: 2026-03-22
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-1. ODR role-fit follow-up lane -- Plan: `docs/projects/odr_role_fit_followup/odr_role_fit_followup_implementation_plan.md`.
+No active implementation lanes.
 
 ## Maintenance (Non-Priority)
 
@@ -29,6 +29,5 @@ Every non-archive project under `docs/projects/` must appear here.
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
 | marshaller | future-hold | P3-scaffolding | `docs/projects/marshaller/` | Orket Core | Scaffolding-only; keep parked until requirements hardening is explicitly approved. |
-| odr_role_fit_followup | active | P1-current | `docs/projects/odr_role_fit_followup/` | Orket Core | Narrow follow-up lane: fix triple blocker, tighten V1 state substrate, then rerun the reviewer-anchored architect bakeoff. |
 | techdebt | maintenance only | P2-maintenance | `docs/projects/techdebt/` | Orket Core | Standing maintenance continues through `Recurring-Maintenance-Checklist.md` and `README.md`. |
 | future | staged+backlog-root | P3-backlog | `docs/projects/future/` | Orket Core | Incubation container for deferred lanes that are not yet part of an active non-archive project lane. |

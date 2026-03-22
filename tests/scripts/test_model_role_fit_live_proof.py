@@ -73,7 +73,15 @@ async def test_run_model_role_fit_live_proof_writes_artifacts_and_skips_triples_
             {"model_id": "mistralai/magistral-small-2509", "provider": "lmstudio", "status": "ok"},
         ]
 
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    raw["protocol_hardening"] = {
+        "architect_extra_rules": ["Resolve cited unresolved issues before introducing any new requirement theme."],
+        "auditor_extra_rules": ["Prefer closing or carrying forward existing issues over introducing new issue themes."],
+    }
+    config_path.write_text(json.dumps(raw, indent=2), encoding="utf-8")
+
     async def _fake_pair_run(*, pair, scenario_input, locked_budget, **_kwargs):
+        assert _kwargs["config"]["protocol_hardening"] == raw["protocol_hardening"]
         stop_reason = "STABLE_DIFF_FLOOR" if int(pair.execution_order) == 1 else "CODE_LEAK"
         converged = int(pair.execution_order) == 1
         return (

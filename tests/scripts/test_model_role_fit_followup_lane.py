@@ -5,7 +5,13 @@ from scripts.odr.model_role_fit_lane import load_lane_config, load_matrix_regist
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (
-    REPO_ROOT / "docs" / "projects" / "odr_role_fit_followup" / "odr_role_fit_followup_lane_config.json"
+    REPO_ROOT
+    / "docs"
+    / "projects"
+    / "archive"
+    / "ODRRoleFitFollowup"
+    / "RFU03222026"
+    / "odr_role_fit_followup_lane_config.json"
 )
 
 

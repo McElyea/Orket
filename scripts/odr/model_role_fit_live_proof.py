@@ -188,6 +188,7 @@ async def run_model_role_fit_live_proof(*, config_path: Path | None = None) -> d
         "config_path": str(config["config_path"]),
         "v1_state_contract_path": str(config["reused_v1_state_contract_path"]),
         "role_timeout_sec": int(config["role_timeout_sec"]),
+        "protocol_hardening": dict(config.get("protocol_hardening") or {}),
     }
     completed_pair_ids = completed_entity_ids(
         pair_compare_rows,

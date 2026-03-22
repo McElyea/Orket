@@ -1,0 +1,70 @@
+{
+  "schema_version": "odr.model_role_fit.lane_config.v1",
+  "last_updated": "2026-03-22",
+  "requirements_authority": "../../ODRModelRoleFit/MRF03212026/Closeout.md",
+  "implementation_authority": "odr_loop_shape_hardening_implementation_plan.md",
+  "matrix_registry": "odr_loop_shape_hardening_matrix_registry.json",
+  "output_schema": "../../ODRModelRoleFit/MRF03212026/odr_model_role_fit_output_schema.json",
+  "reused_v1_state_contract": "../../ContextContinuity/CC03212026/odr_context_continuity_v1_state_contract.json",
+  "reused_continuity_closeout": "../../ContextContinuity/CC03212026/Closeout.md",
+  "continuity_mode": "v1_compiled_shared_state",
+  "locked_budgets": [
+    5,
+    9
+  ],
+  "scenario_set": {
+    "id": "continuity_primary_v1",
+    "scenario_ids": [
+      "missing_constraint_resolved",
+      "overfitting"
+    ]
+  },
+  "structural_disqualification": {
+    "stop_reasons": [
+      "CODE_LEAK",
+      "FORMAT_VIOLATION"
+    ],
+    "max_failure_rate": 0.5
+  },
+  "top_pair_count_for_triples": 1,
+  "role_timeout_sec": 300,
+  "ranking_order": [
+    "higher convergence_rate",
+    "lower contradiction_rate",
+    "lower reopened_decision_rate",
+    "lower regression_rate",
+    "lower median_round_latency_ms",
+    "lower median_round_active_context_size_bytes",
+    "higher carry_forward_integrity"
+  ],
+  "protocol_hardening": {
+    "architect_extra_rules": [
+      "Resolve cited unresolved issues before introducing any new requirement theme.",
+      "Do not expand scope beyond issues explicitly grounded in the continuity context, prior auditor output, or a detected regression.",
+      "Each CHANGELOG bullet must name the issue or requirement clause it resolves, preserves, or leaves unresolved."
+    ],
+    "auditor_extra_rules": [
+      "Before raising a new objection, account for whether each unresolved issue from continuity context is resolved, still open, or blocked.",
+      "Each PATCHES bullet must cite an exact unresolved issue or architect phrase and must use only [REWRITE], [REMOVE], or [DECISION_REQUIRED].",
+      "Prefer closing or carrying forward existing issues over introducing new issue themes."
+    ],
+    "auditor_extra_rules_after_round": {
+      "round_number_gte": 2,
+      "rules": [
+        "After round 2, do not introduce a new issue theme unless the architect output created a contradiction, regression, or code leak risk.",
+        "If an issue is already concretely resolved in REQUIREMENT, do not reopen it."
+      ]
+    }
+  },
+  "artifact_paths": {
+    "root": "benchmarks/staging/odr/loop_shape_hardening",
+    "bootstrap_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_lane_bootstrap.json",
+    "pair_inspectability_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_pair_inspectability.json",
+    "pair_compare_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_pair_compare.json",
+    "pair_verdict_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_pair_verdict.json",
+    "triple_inspectability_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_triple_inspectability.json",
+    "triple_compare_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_triple_compare.json",
+    "triple_verdict_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_triple_verdict.json",
+    "closeout_output": "benchmarks/staging/odr/loop_shape_hardening/odr_loop_shape_hardening_closeout.json"
+  }
+}

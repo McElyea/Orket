@@ -1,0 +1,11 @@
+{
+  "schema_version": "odr.round_cap_probe.output_schema.v1",
+  "last_updated": "2026-03-22",
+  "required_artifacts": [
+    "bootstrap_output",
+    "inspectability_output",
+    "compare_output",
+    "verdict_output",
+    "closeout_output"
+  ]
+}

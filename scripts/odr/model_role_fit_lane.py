@@ -311,6 +311,7 @@ def build_lane_bootstrap_payload(
             "structural_disqualification": dict(config["structural_disqualification"]),
             "top_pair_count_for_triples": int(config["top_pair_count_for_triples"]),
             "role_timeout_sec": int(config["role_timeout_sec"]),
+            "protocol_hardening": dict(config.get("protocol_hardening") or {}),
         },
         "matrix_registry_snapshot": {
             "path": str(config["matrix_registry_path"]),

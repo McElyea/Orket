@@ -1,0 +1,33 @@
+{
+  "schema_version": "odr.model_role_fit.matrix_registry.v1",
+  "last_updated": "2026-03-22",
+  "inventory_freeze": {
+    "provider_models": [
+      {
+        "model_id": "Command-R:35B",
+        "provider": "ollama",
+        "role_eligibility": [
+          "architect"
+        ]
+      },
+      {
+        "model_id": "gemma3:27b",
+        "provider": "ollama",
+        "role_eligibility": [
+          "reviewer"
+        ]
+      }
+    ]
+  },
+  "primary_pairs": [
+    {
+      "pair_id": "command_r_35b__gemma3_27b",
+      "architect_model": "Command-R:35B",
+      "architect_provider": "ollama",
+      "reviewer_model": "gemma3:27b",
+      "reviewer_provider": "ollama",
+      "execution_order": 1
+    }
+  ],
+  "preferred_triples": []
+}

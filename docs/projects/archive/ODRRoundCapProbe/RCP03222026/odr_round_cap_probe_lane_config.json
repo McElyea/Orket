@@ -1,0 +1,19 @@
+{
+  "schema_version": "odr.round_cap_probe.lane_config.v1",
+  "last_updated": "2026-03-22",
+  "implementation_authority": "odr_round_cap_probe_implementation_plan.md",
+  "probe_registry": "odr_round_cap_probe_registry.json",
+  "output_schema": "odr_round_cap_probe_output_schema.json",
+  "reused_v1_state_contract": "../../ContextContinuity/CC03212026/odr_context_continuity_v1_state_contract.json",
+  "probe_budget": 20,
+  "continuity_mode": "v1_compiled_shared_state",
+  "role_timeout_sec": 300,
+  "artifact_paths": {
+    "root": "benchmarks/staging/odr/round_cap_probe",
+    "bootstrap_output": "benchmarks/staging/odr/round_cap_probe/odr_round_cap_probe_bootstrap.json",
+    "inspectability_output": "benchmarks/staging/odr/round_cap_probe/odr_round_cap_probe_inspectability.json",
+    "compare_output": "benchmarks/staging/odr/round_cap_probe/odr_round_cap_probe_compare.json",
+    "verdict_output": "benchmarks/staging/odr/round_cap_probe/odr_round_cap_probe_verdict.json",
+    "closeout_output": "benchmarks/staging/odr/round_cap_probe/odr_round_cap_probe_closeout.json"
+  }
+}

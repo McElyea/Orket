@@ -49,6 +49,19 @@ V1_AUDITOR_FOCUS = (
 )
 
 
+def _prompt_hardening_rules(config: dict[str, Any], *, role: str, round_number: int) -> list[str]:
+    policy = config.get("protocol_hardening")
+    if not isinstance(policy, dict):
+        return []
+    rows = [str(item).strip() for item in list(policy.get(f"{role}_extra_rules") or []) if str(item).strip()]
+    conditional = policy.get(f"{role}_extra_rules_after_round")
+    if isinstance(conditional, dict):
+        threshold = int(conditional.get("round_number_gte") or 0)
+        if int(round_number) >= threshold > 0:
+            rows.extend(str(item).strip() for item in list(conditional.get("rules") or []) if str(item).strip())
+    return rows
+
+
 def _prompt_bytes(messages: list[dict[str, str]]) -> int:
     return len(json.dumps(messages, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8"))
 
@@ -283,11 +296,13 @@ def _prepare_round_context(
         prior_auditor_output=prior_auditor_output,
         continuity_context=continuity_context_by_role["architect"],
     )
+    architect_rules = _prompt_hardening_rules(config, role="architect", round_number=round_number)
     architect_messages = [
         build_architect_messages(
             task=task,
             current_requirement=current_requirement,
             prior_auditor_output=prior_auditor_output,
+            extra_rules=architect_rules,
         )[0],
         {"role": "user", "content": architect_user},
     ]
@@ -296,6 +311,7 @@ def _prepare_round_context(
 
 async def _execute_round_turn(
     *,
+    config: dict[str, Any],
     pair: Any,
     task: str,
     auditor_continuity_context: str,
@@ -323,7 +339,11 @@ async def _execute_round_turn(
         architect_output=architect_raw,
         continuity_context=auditor_continuity_context,
     )
-    auditor_messages = [build_auditor_messages(task=task, architect_output=architect_raw)[0], {"role": "user", "content": auditor_user}]
+    auditor_rules = _prompt_hardening_rules(config, role="auditor", round_number=round_number)
+    auditor_messages = [
+        build_auditor_messages(task=task, architect_output=architect_raw, extra_rules=auditor_rules)[0],
+        {"role": "user", "content": auditor_user},
+    ]
     auditor_raw, _auditor_response_raw, auditor_latency_ms, auditor_prompt_tokens = await _call_role(
         model=str(pair.auditor_model),
         provider_name=str(pair.auditor_provider),
@@ -390,6 +410,7 @@ async def run_live_scenario_mode(
             auditor_prompt_tokens,
             auditor_messages,
         ) = await _execute_round_turn(
+            config=config,
             pair=pair,
             task=task,
             auditor_continuity_context=continuity_context_by_role["auditor"],

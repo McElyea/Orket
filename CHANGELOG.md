@@ -26,6 +26,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Required Operator or Extension-Author Action
 - Use `python scripts/odr/prepare_odr_model_role_fit_live_proof.py --config docs/projects/odr_role_fit_followup/odr_role_fit_followup_lane_config.json` for the active reviewer-anchored architect bakeoff lane.
 
+## [0.4.18] - 2026-03-22 - "The ODR Closeout And Hardening Cut"
+
+### Added
+- **Archived ODR Follow-On Lanes**: Added the archived authority and closeout sets for the round-cap probe, loop-shape hardening, and reviewer-anchored role-fit follow-up lanes under `docs/projects/archive/ODRRoundCapProbe/`, `docs/projects/archive/ODRLoopShapeHardening/`, and `docs/projects/archive/ODRRoleFitFollowup/`.
+- **Round-Cap Probe Harness**: Added the bounded serial rerun harness and coverage for replaying prior `MAX_ROUNDS` cases at a higher cap while preserving lane-scoped config and verdict discipline.
+- **Loop-Shape Contract Proof**: Added targeted prompt-contract and loop-shape lane coverage for injecting lane-scoped hardening rules into the live ODR path.
+
+### Changed
+- **ODR Roadmap Cleanup**: Closed the remaining active ODR lanes, removed them from `Priority Now`, and returned the roadmap to no active implementation lanes after bounded closeout.
+- **Live ODR Truthfulness**: Fixed the model-role-fit live runner so loop-shape `protocol_hardening` is actually passed into per-scenario runtime config, preventing mislabeled hardened runs.
+- **Archived Lane Path Repair**: Corrected archived ODR lane config references so archived loop-shape and role-fit authorities remain runnable after archive relocation.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the archived ODR lane authorities under `docs/projects/archive/` for historical replay and closeout evidence; there are no active ODR implementation lanes on the roadmap after this cut.
+
 ## [0.4.16] - 2026-03-21 - "The Context Continuity Bootstrap Cut"
 
 ### Added

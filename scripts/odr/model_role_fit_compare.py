@@ -167,6 +167,7 @@ def build_pair_compare_payload(
             "scenario_set": dict(config["scenario_set"]),
             "structural_disqualification": dict(config["structural_disqualification"]),
             "top_pair_count_for_triples": int(config["top_pair_count_for_triples"]),
+            "protocol_hardening": dict(config.get("protocol_hardening") or {}),
         },
         "scenario_runs": scenario_runs,
         "pair_budget_aggregates": pair_budget_aggregates,
