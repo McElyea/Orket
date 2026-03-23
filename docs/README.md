@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-03-19
+Last reviewed: 2026-03-22
 
 This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 
@@ -59,6 +59,7 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 32. `docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md`
 33. `docs/specs/TRUTHFUL_RUNTIME_MEMORY_TRUST_CONTRACT.md`
 34. `docs/specs/TRUTHFUL_RUNTIME_CONFORMANCE_GOVERNANCE_CONTRACT.md`
+35. `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -97,8 +98,9 @@ This index is the canonical map for `docs/*.md` (excluding `docs/projects/**`).
 7. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PHASE_C_CLOSEOUT_2026-03-16.md`
 8. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PHASE_D_CLOSEOUT_2026-03-17.md`
 9. `docs/architecture/CONTRACT_DELTA_TRUTHFUL_RUNTIME_PHASE_E_CLOSEOUT_2026-03-17.md`
-10. `docs/architecture/dependency_graph_snapshot.md`
-11. `docs/architecture/VOLATILITY_BASELINE.md`
+10. `docs/architecture/CONTRACT_DELTA_TERRAFORM_PLAN_REVIEWER_V1_2026-03-22.md`
+11. `docs/architecture/dependency_graph_snapshot.md`
+12. `docs/architecture/VOLATILITY_BASELINE.md`
 
 ## Projects
 1. Active plans: `docs/projects/<project>/`

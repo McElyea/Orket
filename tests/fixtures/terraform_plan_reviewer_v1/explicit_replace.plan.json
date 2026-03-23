@@ -1,0 +1,21 @@
+{
+  "format_version": "1.1",
+  "resource_changes": [
+    {
+      "address": "aws_security_group.web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_security_group",
+      "change": {
+        "actions": ["delete", "create"]
+      }
+    },
+    {
+      "address": "aws_lb.app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_lb",
+      "change": {
+        "actions": ["update"]
+      }
+    }
+  ]
+}

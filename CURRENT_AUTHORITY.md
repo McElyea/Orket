@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-20
+Last updated: 2026-03-22
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -42,13 +42,15 @@ It defines only the currently authoritative paths that agents and contributors m
 22. Pytest sandbox fail-closed fixture: `tests/conftest.py`
 23. Determinism claim/gate policy: `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`
 24. Canonical runtime event artifact path: `agent_output/observability/runtime_events.jsonl`
+25. Terraform plan reviewer durable spec: `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
+26. Terraform plan reviewer live smoke output path: `.orket/durable/observability/terraform_plan_review_live_smoke.json`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-20",
+  "last_updated": "2026-03-22",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -128,6 +130,7 @@ It defines only the currently authoritative paths that agents and contributors m
       ],
       "operating_principles_source": "docs/specs/ORKET_OPERATING_PRINCIPLES.md",
       "determinism_gate_policy_source": "docs/specs/ORKET_DETERMINISM_GATE_POLICY.md",
+      "terraform_plan_reviewer_v1_contract_source": "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
       "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
       "sources": [
         "docs/README.md",
@@ -141,11 +144,14 @@ It defines only the currently authoritative paths that agents and contributors m
       "published_artifacts_index": "benchmarks/published/index.json",
       "published_artifacts_readme": "benchmarks/published/README.md",
       "runtime_event_artifact_path": "agent_output/observability/runtime_events.jsonl",
+      "terraform_plan_review_live_smoke_output_path": ".orket/durable/observability/terraform_plan_review_live_smoke.json",
       "artifact_review_policy": "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
       "sources": [
+        "CURRENT_AUTHORITY.md",
         "docs/CONTRIBUTOR.md",
         "docs/architecture/event_taxonomy.md",
-        "docs/process/PUBLISHED_ARTIFACTS_POLICY.md"
+        "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
+        "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md"
       ]
     },
     "core_release_versioning": {

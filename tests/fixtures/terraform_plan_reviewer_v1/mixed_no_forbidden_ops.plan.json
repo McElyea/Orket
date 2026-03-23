@@ -1,0 +1,45 @@
+{
+  "format_version": "1.1",
+  "resource_changes": [
+    {
+      "address": "aws_cloudwatch_log_group.api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_cloudwatch_log_group",
+      "change": {
+        "actions": ["create"]
+      }
+    },
+    {
+      "address": "aws_iam_role.api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_iam_role",
+      "change": {
+        "actions": ["update"]
+      }
+    },
+    {
+      "address": "aws_appautoscaling_target.api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_appautoscaling_target",
+      "change": {
+        "actions": ["update"]
+      }
+    },
+    {
+      "address": "random_id.suffix",
+      "provider_name": "registry.terraform.io/hashicorp/random",
+      "type": "random_id",
+      "change": {
+        "actions": ["create"]
+      }
+    },
+    {
+      "address": "aws_cloudwatch_metric_alarm.cpu",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_cloudwatch_metric_alarm",
+      "change": {
+        "actions": ["no-op"]
+      }
+    }
+  ]
+}

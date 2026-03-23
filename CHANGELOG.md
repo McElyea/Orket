@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.19] - 2026-03-22 - "The Terraform Reviewer Governed Lane Cut"
+
+### Added
+- **Terraform Plan Reviewer Runtime**: Added the governed Terraform plan reviewer application service, deterministic analysis, artifact emission, and advisory-only model summary handling under `orket/application/terraform_review/`.
+- **Terraform Fixture And Proof Harness**: Added the locked Terraform fixture corpus, fake adapter support, targeted deterministic/service coverage, and the thin live AWS smoke runner with canonical output at `.orket/durable/observability/terraform_plan_review_live_smoke.json`.
+- **Terraform Durable Contract And Archive**: Added the durable contract `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`, the archived Terraform lane authority set under `docs/projects/archive/terraform-plan-review/TP03222026/`, and the matching contract delta record.
+
+### Changed
+- **Operator Guidance**: Updated `docs/RUNBOOK.md`, `docs/README.md`, and `CURRENT_AUTHORITY.md` so the Terraform reviewer operator path, durable contract, and smoke output location are discoverable from active repo authority docs.
+- **Governed Outcome Semantics**: Preserved distinct artifact outcomes for policy-blocked execution, degraded publication, ordinary runtime failure, and environment blockers across the Terraform reviewer lane.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the Terraform reviewer section in `docs/RUNBOOK.md` for the local governed proof command and `python scripts/reviewrun/run_terraform_plan_review_live_smoke.py` for the thin live AWS smoke path.
+
 ## [0.4.17] - 2026-03-22 - "The Bounded ODR Role-Fit Follow-Up Cut"
 
 ### Added

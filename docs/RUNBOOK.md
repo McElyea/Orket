@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-03-09
+Last reviewed: 2026-03-22
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -110,6 +110,52 @@ python scripts/benchmarks/check_volatility_boundaries.py
 python scripts/governance/sync_published_index.py --check
 ```
 
+## Terraform Plan Reviewer
+Authority: `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
+
+1. Local governed proof:
+```bash
+python -m pytest -q tests/application/test_terraform_plan_review_deterministic.py tests/application/test_terraform_plan_review_service.py tests/scripts/test_run_terraform_plan_review_live_smoke.py
+```
+Use this as the primary acceptance command for the Terraform plan reviewer lane. It proves the fixture corpus, fake adapter pack, governance artifact emission, and explicit violation probes locally.
+
+2. Thin live AWS smoke:
+```bash
+python scripts/reviewrun/run_terraform_plan_review_live_smoke.py
+```
+Required environment:
+   - `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI`
+   - `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID`
+   - `AWS_REGION` or `AWS_DEFAULT_REGION`
+
+Optional environment:
+   - `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TABLE`
+   - `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_CREATED_AT`
+   - `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_TRACE_REF`
+   - `ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_POLICY_BUNDLE_ID`
+
+3. Thin live AWS smoke with explicit flags:
+```bash
+python scripts/reviewrun/run_terraform_plan_review_live_smoke.py --plan-s3-uri s3://<bucket>/<key> --model-id anthropic.<model_id> --region <aws_region>
+```
+Optional flags:
+   - `--table-name TerraformReviews`
+   - `--out .orket/durable/observability/terraform_plan_review_live_smoke.json`
+   - `--execution-trace-ref terraform-plan-review-live-smoke`
+   - `--policy-bundle-id terraform_plan_reviewer_v1`
+
+4. Canonical smoke output:
+   - `.orket/durable/observability/terraform_plan_review_live_smoke.json`
+   - exit code `0` means observed result `success`
+   - exit code `1` means observed result was not `success`
+   - missing env, missing AWS dependencies, or unusable AWS credentials must report an explicit `environment blocker`, not false success
+
+5. Operator interpretation:
+   - `publish_decision = normal_publish` means deterministic analysis succeeded and the audit write path was allowed
+   - `publish_decision = degraded_publish` means deterministic analysis succeeded and summary generation failed
+   - `publish_decision = no_publish` means the run failed closed because deterministic analysis was incomplete, policy blocked execution, or the environment blocked proof
+   - `execution_status = blocked_by_policy` must be interpreted as policy enforcement, not generic runtime failure
+
 ## Tech Debt Cycle Reference
 1. Execute recurring maintenance cycles using:
    - `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
@@ -204,3 +250,4 @@ python scripts/replay/report_failure_modes.py --log workspace/default/orket.log 
 6. `docs/process/PUBLISHED_ARTIFACTS_POLICY.md`
 7. `docs/projects/techdebt/Recurring-Maintenance-Checklist.md`
 8. `docs/projects/techdebt/README.md`
+9. `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
