@@ -73,6 +73,11 @@ A lease is required whenever:
 3. cleanup depends on authoritative ownership
 4. mutation requires fencing or exclusivity
 
+### RL-05A. Lease publication
+
+Lease truth must be publishable as append-only snapshots.
+Where a stable logical `lease_id` survives renewal, expiry, uncertainty, or verified release, publication order must remain reconstructable through lease epoch plus publication timestamp without overwriting earlier lease truth.
+
 ### RL-06. Lease epoch fencing
 
 Lease mutation and resource mutation requiring exclusive control must use lease epoch or equivalent fencing semantics strong enough to prevent stale actors from claiming authority after recovery or retry.

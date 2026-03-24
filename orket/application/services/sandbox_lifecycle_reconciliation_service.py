@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
+from orket.application.services.sandbox_control_plane_reconciliation_service import (
+    SandboxControlPlaneReconciliationService,
+)
 from orket.application.services.sandbox_lifecycle_mutation_service import (
     SandboxLifecycleMutationResult,
     SandboxLifecycleMutationService,
@@ -18,6 +22,9 @@ from orket.core.domain.sandbox_lifecycle import (
     classify_reconciliation,
 )
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
+
+if TYPE_CHECKING:
+    from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 
 
 @dataclass(frozen=True)
@@ -45,9 +52,11 @@ class SandboxLifecycleReconciliationService:
         *,
         mutation_service: SandboxLifecycleMutationService,
         policy: SandboxLifecyclePolicy | None = None,
+        control_plane_publication: ControlPlanePublicationService | None = None,
     ):
         self.mutation_service = mutation_service
         self.policy = policy or SandboxLifecyclePolicy()
+        self.control_plane_publication = control_plane_publication
 
     async def reconcile_existing_record(
         self,
@@ -61,7 +70,7 @@ class SandboxLifecycleReconciliationService:
         if not plan.action_required:
             return None
         if plan.classification is ReconciliationClassification.RECLAIMABLE:
-            return await self.mutation_service.transition_state(
+            result = await self.mutation_service.transition_state(
                 sandbox_id=sandbox_id,
                 operation_id=operation_id,
                 expected_record_version=record.record_version,
@@ -72,8 +81,14 @@ class SandboxLifecycleReconciliationService:
                 next_lease_epoch=record.lease_epoch,
                 cleanup_due_at=plan.cleanup_due_at,
             )
+            await self._publish_reconciliation_state_change(
+                classification=plan.classification,
+                record=result.record,
+                observed_at=observation.observed_at,
+            )
+            return result
         if plan.classification is ReconciliationClassification.TERMINAL_LOST_RUNTIME:
-            return await self.mutation_service.transition_state(
+            result = await self.mutation_service.transition_state(
                 sandbox_id=sandbox_id,
                 operation_id=operation_id,
                 expected_record_version=record.record_version,
@@ -82,8 +97,13 @@ class SandboxLifecycleReconciliationService:
                 terminal_reason=TerminalReason.LOST_RUNTIME,
                 cleanup_due_at=plan.cleanup_due_at,
             )
+            await self._publish_lost_runtime_control_plane_closure(
+                record=result.record,
+                observed_at=observation.observed_at,
+            )
+            return result
         if plan.classification is ReconciliationClassification.CLEANED_EXTERNALLY:
-            return await self.mutation_service.transition_state(
+            result = await self.mutation_service.transition_state(
                 sandbox_id=sandbox_id,
                 operation_id=operation_id,
                 expected_record_version=record.record_version,
@@ -92,6 +112,12 @@ class SandboxLifecycleReconciliationService:
                 terminal_reason=TerminalReason.CLEANED_EXTERNALLY,
                 cleanup_state=CleanupState.COMPLETED,
             )
+            await self._publish_reconciliation_state_change(
+                classification=plan.classification,
+                record=result.record,
+                observed_at=observation.observed_at,
+            )
+            return result
         if plan.classification in {
             ReconciliationClassification.TERMINAL_AWAITING_CLEANUP,
             ReconciliationClassification.CLEANUP_OVERDUE,
@@ -233,6 +259,32 @@ class SandboxLifecycleReconciliationService:
         if record is None:
             raise SandboxLifecycleError(f"Sandbox lifecycle record not found: {sandbox_id}.")
         return record
+
+    async def _publish_lost_runtime_control_plane_closure(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> None:
+        if self.control_plane_publication is None:
+            return
+        publisher = SandboxControlPlaneReconciliationService(publication=self.control_plane_publication)
+        await publisher.publish_lost_runtime_reconciliation(record=record, observed_at=observed_at)
+
+    async def _publish_reconciliation_state_change(
+        self,
+        *,
+        classification: ReconciliationClassification,
+        record: SandboxLifecycleRecord,
+        observed_at: str,
+    ) -> None:
+        if self.control_plane_publication is None:
+            return
+        publisher = SandboxControlPlaneReconciliationService(publication=self.control_plane_publication)
+        if classification is ReconciliationClassification.RECLAIMABLE:
+            await publisher.publish_reclaimable_reconciliation(record=record, observed_at=observed_at)
+        elif classification is ReconciliationClassification.CLEANED_EXTERNALLY:
+            await publisher.publish_cleaned_externally_reconciliation(record=record, observed_at=observed_at)
 
     @staticmethod
     def _is_due(deadline: str | None, observed_at: str) -> bool:

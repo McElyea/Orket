@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-03-22
+Last updated: 2026-03-23
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -44,13 +44,14 @@ It defines only the currently authoritative paths that agents and contributors m
 24. Canonical runtime event artifact path: `agent_output/observability/runtime_events.jsonl`
 25. Terraform plan reviewer durable spec: `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
 26. Terraform plan reviewer live smoke output path: `.orket/durable/observability/terraform_plan_review_live_smoke.json`
+27. Canonical control-plane durable store path: `.orket/durable/db/control_plane_records.sqlite3` via `orket/runtime_paths.py`
 
 ## Machine-Readable Authority Map (v1)
 
 ```json
 {
   "version": 1,
-  "last_updated": "2026-03-22",
+  "last_updated": "2026-03-23",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -152,6 +153,23 @@ It defines only the currently authoritative paths that agents and contributors m
         "docs/architecture/event_taxonomy.md",
         "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
         "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md"
+      ]
+    },
+    "control_plane_storage": {
+      "default_db_path": ".orket/durable/db/control_plane_records.sqlite3",
+      "resolver": "orket/runtime_paths.py::resolve_control_plane_db_path",
+      "runtime_consumer": "orket/services/sandbox_orchestrator.py",
+      "runtime_published_record_families": [
+        "final_truth_record",
+        "reconciliation_record",
+        "lease_record"
+      ],
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "orket/runtime_paths.py",
+        "orket/services/sandbox_orchestrator.py",
+        "orket/application/services/sandbox_control_plane_lease_service.py",
+        "docs/projects/ControlPlane/orket_control_plane_packet/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md"
       ]
     },
     "core_release_versioning": {

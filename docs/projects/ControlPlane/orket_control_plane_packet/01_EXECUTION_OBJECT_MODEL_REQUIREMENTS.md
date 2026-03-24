@@ -177,13 +177,15 @@ A lease must carry at minimum:
 3. holder reference
 4. lease epoch
 5. granted timestamp
-6. expiry or TTL basis
-7. current status
-8. last confirmed observation
-9. revocation or transfer history
-10. cleanup eligibility rules
+6. lease publication timestamp
+7. expiry or TTL basis
+8. current status
+9. last confirmed observation
+10. revocation or transfer history
+11. cleanup eligibility rules
 
 Lease objects are mandatory where resource ownership must survive crashes, retries, or reconciliation.
+Lease publication must be append-only so a stable `lease_id` can retain durable history across renewal, expiry, uncertainty, and verified release.
 
 ### EO-09. Checkpoint
 

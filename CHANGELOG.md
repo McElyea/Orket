@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.20] - 2026-03-24 - "The Control Plane Lease Publication Cut"
+
+### Added
+- **Lease Publication Authority**: Added first-class lease publication helpers, append-only lease persistence, sandbox lease mapping services, and lease-focused contract/application coverage for the ControlPlane lane.
+- **Lease Contract Delta Record**: Added `docs/architecture/CONTRACT_DELTA_CONTROL_PLANE_LEASE_PUBLICATION_2026-03-23.md` to record the authority change introducing runtime-published lease records.
+
+### Changed
+- **Sandbox Runtime Truth Surface**: Extended the default sandbox runtime to publish durable `LeaseRecord` snapshots across claim, activation, renewal, reacquire, reconciliation, expiry, lost-runtime uncertainty, and cleanup release paths.
+- **ControlPlane Authority Docs**: Updated `CURRENT_AUTHORITY.md`, the ControlPlane packet, and event taxonomy docs so active authority matches the live lease-publication seam and durable control-plane SQLite storage path.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- Use the default sandbox orchestrator runtime path to populate `.orket/durable/db/control_plane_records.sqlite3` with lease, reconciliation, and final-truth records, and consult the updated ControlPlane packet for the current partial live authority boundary.
+
 ## [0.4.19] - 2026-03-22 - "The Terraform Reviewer Governed Lane Cut"
 
 ### Added

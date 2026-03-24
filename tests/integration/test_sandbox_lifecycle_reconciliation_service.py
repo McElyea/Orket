@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import pytest
 
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_lifecycle_mutation_service import SandboxLifecycleMutationService
 from orket.application.services.sandbox_lifecycle_reconciliation_service import (
     SandboxLifecycleReconciliationService,
     SandboxObservation,
+)
+from orket.core.domain import (
+    ClosureBasisClassification,
+    DivergenceClass,
+    LeaseStatus,
+    ResultClass,
+    SafeContinuationClass,
 )
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
@@ -40,9 +49,11 @@ def _record(**overrides) -> SandboxLifecycleRecord:
 @pytest.mark.asyncio
 async def test_reconciliation_transitions_active_missing_runtime_to_terminal_lost_runtime(tmp_path) -> None:
     repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     await repo.save_record(_record())
     service = SandboxLifecycleReconciliationService(
-        mutation_service=SandboxLifecycleMutationService(repo)
+        mutation_service=SandboxLifecycleMutationService(repo),
+        control_plane_publication=ControlPlanePublicationService(repository=control_plane_repo),
     )
 
     result = await service.reconcile_existing_record(
@@ -54,18 +65,32 @@ async def test_reconciliation_transitions_active_missing_runtime_to_terminal_los
         ),
     )
 
+    reconciliation = await control_plane_repo.get_reconciliation_record(
+        reconciliation_id="sandbox-reconciliation:run-1:00000004"
+    )
+    final_truth = await control_plane_repo.get_final_truth(run_id="run-1")
+    lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
+
     assert result is not None
     assert result.record.state is SandboxState.TERMINAL
     assert result.record.terminal_reason is TerminalReason.LOST_RUNTIME
     assert result.record.cleanup_due_at == "2026-03-12T00:10:00+00:00"
+    assert reconciliation is not None
+    assert lease is not None
+    assert lease.status is LeaseStatus.UNCERTAIN
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.BLOCKED
+    assert final_truth.closure_basis is ClosureBasisClassification.RECONCILIATION_CLOSED
 
 
 @pytest.mark.asyncio
 async def test_reconciliation_transitions_expired_active_record_to_reclaimable(tmp_path) -> None:
     repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     await repo.save_record(_record())
     service = SandboxLifecycleReconciliationService(
-        mutation_service=SandboxLifecycleMutationService(repo)
+        mutation_service=SandboxLifecycleMutationService(repo),
+        control_plane_publication=ControlPlanePublicationService(repository=control_plane_repo),
     )
 
     result = await service.reconcile_existing_record(
@@ -77,15 +102,26 @@ async def test_reconciliation_transitions_expired_active_record_to_reclaimable(t
         ),
     )
 
+    reconciliation = await control_plane_repo.get_reconciliation_record(
+        reconciliation_id="sandbox-reconciliation:run-1:00000004"
+    )
+    lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
+
     assert result is not None
     assert result.record.state is SandboxState.RECLAIMABLE
     assert result.record.terminal_reason is TerminalReason.LEASE_EXPIRED
     assert result.record.cleanup_due_at == "2026-03-11T02:10:00+00:00"
+    assert reconciliation is not None
+    assert lease is not None
+    assert lease.status is LeaseStatus.EXPIRED
+    assert reconciliation.divergence_class is DivergenceClass.OWNERSHIP_DIVERGED
+    assert reconciliation.safe_continuation_class is SafeContinuationClass.UNSAFE_TO_CONTINUE
 
 
 @pytest.mark.asyncio
 async def test_reconciliation_marks_terminal_absent_record_as_cleaned_externally(tmp_path) -> None:
     repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     await repo.save_record(
         _record(
             state=SandboxState.TERMINAL,
@@ -96,7 +132,8 @@ async def test_reconciliation_marks_terminal_absent_record_as_cleaned_externally
         )
     )
     service = SandboxLifecycleReconciliationService(
-        mutation_service=SandboxLifecycleMutationService(repo)
+        mutation_service=SandboxLifecycleMutationService(repo),
+        control_plane_publication=ControlPlanePublicationService(repository=control_plane_repo),
     )
 
     result = await service.reconcile_existing_record(
@@ -108,10 +145,20 @@ async def test_reconciliation_marks_terminal_absent_record_as_cleaned_externally
         ),
     )
 
+    reconciliation = await control_plane_repo.get_reconciliation_record(
+        reconciliation_id="sandbox-reconciliation:run-1:00000004"
+    )
+    lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
+
     assert result is not None
     assert result.record.state is SandboxState.CLEANED
     assert result.record.cleanup_state is CleanupState.COMPLETED
     assert result.record.terminal_reason is TerminalReason.CLEANED_EXTERNALLY
+    assert reconciliation is not None
+    assert lease is not None
+    assert lease.status is LeaseStatus.RELEASED
+    assert reconciliation.divergence_class is DivergenceClass.EXPECTED_EFFECT_OBSERVED
+    assert reconciliation.safe_continuation_class is SafeContinuationClass.TERMINAL_WITHOUT_CLEANUP
 
 
 @pytest.mark.asyncio

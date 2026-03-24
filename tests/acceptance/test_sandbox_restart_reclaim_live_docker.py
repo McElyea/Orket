@@ -10,6 +10,7 @@ import shutil
 import pytest
 
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
+from orket.core.domain import LeaseStatus
 from orket.core.domain.sandbox_lifecycle import SandboxState, TerminalReason
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
@@ -206,20 +207,33 @@ async def test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot
         )
 
         reclaimable = await orchestrator_a.reconcile_sandbox(sandbox.id)
+        expired_lease = await orchestrator_a.control_plane_repository.get_latest_lease_record(
+            lease_id=f"sandbox-lease:{sandbox.id}"
+        )
         reacquired = await orchestrator_b.reacquire_sandbox_ownership(sandbox.id)
+        reacquired_lease = await orchestrator_b.control_plane_repository.get_latest_lease_record(
+            lease_id=f"sandbox-lease:{sandbox.id}"
+        )
         before = await orchestrator_b.lifecycle_service.repository.get_record(sandbox.id)
         stale_health = await orchestrator_a.health_check(sandbox.id)
         after = await orchestrator_b.lifecycle_service.repository.get_record(sandbox.id)
 
         assert reclaimable["state"] == "reclaimable"
+        assert expired_lease is not None
+        assert expired_lease.status is LeaseStatus.EXPIRED
         assert reacquired["state"] == "active"
         assert reacquired["owner_instance_id"] == "runner-b"
+        assert reacquired_lease is not None
+        assert reacquired_lease.status is LeaseStatus.ACTIVE
         assert stale_health is False
         assert before is not None and after is not None
         assert after.owner_instance_id == "runner-b"
         assert after.lease_epoch == before.lease_epoch
 
         await orchestrator_b.delete_sandbox(sandbox.id)
+        released_lease = await orchestrator_b.control_plane_repository.get_latest_lease_record(
+            lease_id=f"sandbox-lease:{sandbox.id}"
+        )
         containers = await _docker_rows(
             "docker",
             "ps",
@@ -229,6 +243,8 @@ async def test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot
             "--format",
             "{{json .}}",
         )
+        assert released_lease is not None
+        assert released_lease.status is LeaseStatus.RELEASED
         assert containers == []
     finally:
         await _compose_cleanup(compose_path, compose_project)

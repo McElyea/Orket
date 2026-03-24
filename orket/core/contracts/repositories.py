@@ -7,7 +7,12 @@ from orket.core.contracts.control_plane_effect_journal_models import (
     CheckpointAcceptanceRecord,
     EffectJournalEntryRecord,
 )
-from orket.core.contracts.control_plane_models import FinalTruthRecord, RecoveryDecisionRecord
+from orket.core.contracts.control_plane_models import (
+    FinalTruthRecord,
+    LeaseRecord,
+    ReconciliationRecord,
+    RecoveryDecisionRecord,
+)
 from orket.schema import CardStatus
 
 
@@ -87,6 +92,29 @@ class ControlPlaneRecordRepository(ABC):
 
     @abstractmethod
     async def get_recovery_decision(self, *, decision_id: str) -> RecoveryDecisionRecord | None: ...
+
+    @abstractmethod
+    async def append_lease_record(
+        self,
+        *,
+        record: LeaseRecord,
+    ) -> LeaseRecord: ...
+
+    @abstractmethod
+    async def list_lease_records(self, *, lease_id: str) -> list[LeaseRecord]: ...
+
+    @abstractmethod
+    async def get_latest_lease_record(self, *, lease_id: str) -> LeaseRecord | None: ...
+
+    @abstractmethod
+    async def save_reconciliation_record(
+        self,
+        *,
+        record: ReconciliationRecord,
+    ) -> ReconciliationRecord: ...
+
+    @abstractmethod
+    async def get_reconciliation_record(self, *, reconciliation_id: str) -> ReconciliationRecord | None: ...
 
     @abstractmethod
     async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord: ...

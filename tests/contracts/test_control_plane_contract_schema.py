@@ -9,6 +9,7 @@ from orket.core.contracts import (
     CONTROL_PLANE_SNAPSHOT_VERSION_V1,
     AttemptRecord,
     FinalTruthRecord,
+    LeaseRecord,
     OperatorActionRecord,
     RecoveryDecisionRecord,
     ResolvedPolicySnapshot,
@@ -240,3 +241,8 @@ def test_attempt_record_accepts_failed_attempt_with_recovery_link() -> None:
     )
 
     assert record.recovery_decision_id == "recovery-4"
+
+
+def test_lease_record_schema_exposes_publication_timestamp() -> None:
+    required = set(LeaseRecord.model_json_schema().get("required", []))
+    assert "publication_timestamp" in required

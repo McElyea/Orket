@@ -7,6 +7,7 @@ from orket.core.contracts import (
     CheckpointRecord,
     EffectJournalEntryRecord,
     FinalTruthRecord,
+    LeaseRecord,
     OperatorActionRecord,
     ReconciliationRecord,
     RecoveryDecisionRecord,
@@ -24,6 +25,7 @@ from orket.core.domain import (
     ResidualUncertaintyClassification,
     ResultClass,
     SideEffectBoundaryClass,
+    build_lease_record,
     build_final_truth_record,
     build_recovery_decision,
     create_effect_journal_entry,
@@ -179,6 +181,64 @@ class ControlPlaneAuthorityService:
             checkpoint_acceptance=checkpoint_acceptance,
             reconciliation_record=reconciliation_record,
             idempotent_retry_permitted=idempotent_retry_permitted,
+        )
+
+    def publish_reconciliation(
+        self,
+        *,
+        reconciliation_id: str,
+        target_ref: str,
+        comparison_scope: str,
+        observed_refs: list[str] | None = None,
+        intended_refs: list[str] | None = None,
+        divergence_class,
+        residual_uncertainty_classification,
+        publication_timestamp: str,
+        safe_continuation_class,
+        operator_requirement=None,
+    ) -> ReconciliationRecord:
+        return ReconciliationRecord(
+            reconciliation_id=reconciliation_id,
+            target_ref=target_ref,
+            comparison_scope=comparison_scope,
+            observed_refs=list(observed_refs or ()),
+            intended_refs=list(intended_refs or ()),
+            divergence_class=divergence_class,
+            residual_uncertainty_classification=residual_uncertainty_classification,
+            publication_timestamp=publication_timestamp,
+            safe_continuation_class=safe_continuation_class,
+            operator_requirement=operator_requirement,
+        )
+
+    def publish_lease(
+        self,
+        *,
+        lease_id: str,
+        resource_id: str,
+        holder_ref: str,
+        lease_epoch: int,
+        publication_timestamp: str,
+        expiry_basis: str,
+        status,
+        cleanup_eligibility_rule: str,
+        granted_timestamp: str | None = None,
+        last_confirmed_observation: str | None = None,
+        source_reservation_id: str | None = None,
+        previous_record: LeaseRecord | None = None,
+    ) -> LeaseRecord:
+        return build_lease_record(
+            lease_id=lease_id,
+            resource_id=resource_id,
+            holder_ref=holder_ref,
+            lease_epoch=lease_epoch,
+            publication_timestamp=publication_timestamp,
+            expiry_basis=expiry_basis,
+            status=status,
+            cleanup_eligibility_rule=cleanup_eligibility_rule,
+            granted_timestamp=granted_timestamp,
+            last_confirmed_observation=last_confirmed_observation,
+            source_reservation_id=source_reservation_id,
+            previous_record=previous_record,
         )
 
     def publish_final_truth(

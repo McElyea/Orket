@@ -10,6 +10,8 @@ from orket.core.contracts import (
     CheckpointRecord,
     EffectJournalEntryRecord,
     FinalTruthRecord,
+    LeaseRecord,
+    ReconciliationRecord,
     RecoveryDecisionRecord,
 )
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
@@ -20,10 +22,13 @@ from orket.core.domain import (
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
+    DivergenceClass,
     EvidenceSufficiencyClassification,
+    LeaseStatus,
     RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
+    SafeContinuationClass,
     SideEffectBoundaryClass,
 )
 
@@ -36,6 +41,8 @@ class InMemoryControlPlaneRecordRepository(ControlPlaneRecordRepository):
         self.journal_by_run: dict[str, list[EffectJournalEntryRecord]] = {}
         self.acceptance_by_checkpoint: dict[str, CheckpointAcceptanceRecord] = {}
         self.recovery_by_id: dict[str, RecoveryDecisionRecord] = {}
+        self.leases_by_id: dict[str, list[LeaseRecord]] = {}
+        self.reconciliation_by_id: dict[str, ReconciliationRecord] = {}
         self.final_truth_by_run: dict[str, FinalTruthRecord] = {}
 
     async def append_effect_journal_entry(
@@ -75,6 +82,32 @@ class InMemoryControlPlaneRecordRepository(ControlPlaneRecordRepository):
 
     async def get_recovery_decision(self, *, decision_id: str) -> RecoveryDecisionRecord | None:
         return self.recovery_by_id.get(decision_id)
+
+    async def append_lease_record(
+        self,
+        *,
+        record: LeaseRecord,
+    ) -> LeaseRecord:
+        self.leases_by_id.setdefault(record.lease_id, []).append(record)
+        return record
+
+    async def list_lease_records(self, *, lease_id: str) -> list[LeaseRecord]:
+        return list(self.leases_by_id.get(lease_id, ()))
+
+    async def get_latest_lease_record(self, *, lease_id: str) -> LeaseRecord | None:
+        records = self.leases_by_id.get(lease_id, ())
+        return records[-1] if records else None
+
+    async def save_reconciliation_record(
+        self,
+        *,
+        record: ReconciliationRecord,
+    ) -> ReconciliationRecord:
+        self.reconciliation_by_id[record.reconciliation_id] = record
+        return record
+
+    async def get_reconciliation_record(self, *, reconciliation_id: str) -> ReconciliationRecord | None:
+        return self.reconciliation_by_id.get(reconciliation_id)
 
     async def save_final_truth(self, *, record: FinalTruthRecord) -> FinalTruthRecord:
         self.final_truth_by_run[record.run_id] = record
@@ -204,3 +237,60 @@ async def test_control_plane_publication_service_persists_final_truth() -> None:
 
     assert record.run_id == "run-1"
     assert (await repository.get_final_truth(run_id="run-1")) is not None
+
+
+@pytest.mark.asyncio
+async def test_control_plane_publication_service_persists_reconciliation_record() -> None:
+    repository = InMemoryControlPlaneRecordRepository()
+    service = ControlPlanePublicationService(repository=repository)
+
+    record = await service.publish_reconciliation(
+        reconciliation_id="recon-1",
+        target_ref="run-1",
+        comparison_scope="run_scope",
+        observed_refs=["obs-1"],
+        intended_refs=["intent-1"],
+        divergence_class=DivergenceClass.RESOURCE_STATE_DIVERGED,
+        residual_uncertainty_classification=ResidualUncertaintyClassification.UNRESOLVED,
+        publication_timestamp="2026-03-23T01:10:00+00:00",
+        safe_continuation_class=SafeContinuationClass.TERMINAL_WITHOUT_CLEANUP,
+    )
+
+    assert record.reconciliation_id == "recon-1"
+    assert (await repository.get_reconciliation_record(reconciliation_id="recon-1")) is not None
+
+
+@pytest.mark.asyncio
+async def test_control_plane_publication_service_persists_append_only_lease_history() -> None:
+    repository = InMemoryControlPlaneRecordRepository()
+    service = ControlPlanePublicationService(repository=repository)
+
+    first = await service.publish_lease(
+        lease_id="sandbox-lease:sb-1",
+        resource_id="sandbox-scope:sb-1",
+        holder_ref="sandbox-instance:runner-a",
+        lease_epoch=1,
+        publication_timestamp="2026-03-23T01:00:00+00:00",
+        expiry_basis="sandbox_lifecycle_policy:docker_sandbox_lifecycle.v1;expires_at=2026-03-23T01:05:00+00:00",
+        status=LeaseStatus.ACTIVE,
+        last_confirmed_observation="sandbox-lifecycle:sb-1:creating:1",
+        cleanup_eligibility_rule="sandbox_cleanup_policy:docker_sandbox_lifecycle.v1",
+    )
+    second = await service.publish_lease(
+        lease_id="sandbox-lease:sb-1",
+        resource_id="sandbox-scope:sb-1",
+        holder_ref="sandbox-instance:runner-a",
+        lease_epoch=1,
+        publication_timestamp="2026-03-23T01:02:00+00:00",
+        expiry_basis="sandbox_lifecycle_policy:docker_sandbox_lifecycle.v1;expires_at=2026-03-23T01:07:00+00:00",
+        status=LeaseStatus.ACTIVE,
+        last_confirmed_observation="sandbox-lifecycle:sb-1:active:2",
+        cleanup_eligibility_rule="sandbox_cleanup_policy:docker_sandbox_lifecycle.v1",
+    )
+
+    history = await repository.list_lease_records(lease_id="sandbox-lease:sb-1")
+
+    assert first.granted_timestamp == "2026-03-23T01:00:00+00:00"
+    assert second.granted_timestamp == first.granted_timestamp
+    assert len(history) == 2
+    assert history[-1].history_refs

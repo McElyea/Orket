@@ -4,11 +4,16 @@ import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
 from orket.application.services.sandbox_cleanup_authority_service import SandboxCleanupAuthorityService
 from orket.application.services.sandbox_cleanup_verification_service import SandboxCleanupVerificationService
+from orket.application.services.sandbox_control_plane_lease_service import (
+    SandboxControlPlaneLeaseError,
+    SandboxControlPlaneLeaseService,
+)
 from orket.application.services.sandbox_lifecycle_event_publisher import SandboxLifecycleEventPublisher
 from orket.application.services.sandbox_lifecycle_mutation_service import SandboxLifecycleMutationService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
@@ -30,6 +35,9 @@ from orket.core.domain.sandbox_lifecycle import (
 )
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
+if TYPE_CHECKING:
+    from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+
 
 class SandboxRuntimeLifecycleService:
     """Coordinates durable sandbox lifecycle state with live Docker observations."""
@@ -43,6 +51,7 @@ class SandboxRuntimeLifecycleService:
         docker_context: str,
         docker_host_id: str,
         policy: SandboxLifecyclePolicy | None = None,
+        control_plane_publication: ControlPlanePublicationService | None = None,
     ) -> None:
         self.repository = repository
         self.command_runner = command_runner
@@ -50,8 +59,13 @@ class SandboxRuntimeLifecycleService:
         self.docker_context = docker_context
         self.docker_host_id = docker_host_id
         self.policy = policy or SandboxLifecyclePolicy()
+        self.control_plane_publication = control_plane_publication
         self.mutations = SandboxLifecycleMutationService(repository)
-        self.reconciler = SandboxLifecycleReconciliationService(mutation_service=self.mutations, policy=self.policy)
+        self.reconciler = SandboxLifecycleReconciliationService(
+            mutation_service=self.mutations,
+            policy=self.policy,
+            control_plane_publication=self.control_plane_publication,
+        )
         self.views = SandboxLifecycleViewService(repository)
         self.event_publisher = SandboxLifecycleEventPublisher(repository=repository)
         self.terminal_evidence = SandboxTerminalEvidenceService()
@@ -90,6 +104,7 @@ class SandboxRuntimeLifecycleService:
             docker_host_id=self.docker_host_id,
         )
         await self.repository.save_record(record)
+        await self._publish_control_plane_lease(record=record, publication_timestamp=created_at)
         return record
 
     async def mark_create_accepted(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
@@ -111,6 +126,7 @@ class SandboxRuntimeLifecycleService:
         sandbox_id: str,
         compose_project: str,
     ) -> SandboxLifecycleRecord:
+        observed_at = self._now()
         record = await self._require_record(sandbox_id)
         record = await self._apply_record_copy(
             record=record,
@@ -121,7 +137,7 @@ class SandboxRuntimeLifecycleService:
                 )
             },
         )
-        return (
+        record = (
             await self.mutations.transition_state(
                 sandbox_id=sandbox_id,
                 operation_id=f"health-verified:{sandbox_id}",
@@ -132,29 +148,34 @@ class SandboxRuntimeLifecycleService:
                 expected_lease_epoch=1,
             )
         ).record
+        await self._publish_control_plane_lease(record=record, publication_timestamp=observed_at)
+        return record
 
     async def mark_start_failed(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
         record = await self._require_record(sandbox_id)
         if record.state is not SandboxState.STARTING:
             return record
-        return (
-            await self.mutations.transition_state(
-                sandbox_id=sandbox_id,
-                operation_id=f"startup-failure:{sandbox_id}",
-                expected_record_version=record.record_version,
-                event=LifecycleEvent.STARTUP_FAILURE,
-                next_state=SandboxState.TERMINAL,
+        observed_at = self._now()
+        return await self.terminal_outcomes.record_lifecycle_terminal_outcome(
+            sandbox_id=sandbox_id,
+            event=LifecycleEvent.STARTUP_FAILURE,
+            terminal_reason=TerminalReason.START_FAILED,
+            evidence_payload={
+                "kind": "sandbox_startup_failure_receipt",
+                "compose_project": record.compose_project,
+                "workspace_path": record.workspace_path,
+                "failure_stage": "initial_health_verification_failed",
+            },
+            operation_id_prefix="startup-failure",
+            expected_owner_instance_id=record.owner_instance_id,
+            expected_lease_epoch=record.lease_epoch,
+            terminal_at=observed_at,
+            cleanup_due_at=self.policy.cleanup_due_at_for(
+                state=SandboxState.TERMINAL,
                 terminal_reason=TerminalReason.START_FAILED,
-                expected_owner_instance_id=record.owner_instance_id,
-                expected_lease_epoch=record.lease_epoch,
-                terminal_at=self._now(),
-                cleanup_due_at=self.policy.cleanup_due_at_for(
-                    state=SandboxState.TERMINAL,
-                    terminal_reason=TerminalReason.START_FAILED,
-                    reference_time=self._now(),
-                ),
-            )
-        ).record
+                reference_time=observed_at,
+            ),
+        )
 
     async def mark_requires_reconciliation(self, *, sandbox_id: str, reason: str) -> SandboxLifecycleRecord:
         record = await self._require_record(sandbox_id)
@@ -189,18 +210,20 @@ class SandboxRuntimeLifecycleService:
                 cleanup_due_at=self._now(),
             )
         elif current.state is SandboxState.RECLAIMABLE:
-            current = (
-                await self.mutations.transition_state(
-                    sandbox_id=sandbox_id,
-                    operation_id=f"reclaim-terminal:{sandbox_id}",
-                    expected_record_version=current.record_version,
-                    event=LifecycleEvent.RECLAIM_TTL_ELAPSED,
-                    next_state=SandboxState.TERMINAL,
-                    terminal_reason=TerminalReason.LEASE_EXPIRED,
-                    terminal_at=current.terminal_at or self._now(),
-                    cleanup_due_at=self._now(),
-                )
-            ).record
+            current = await self.terminal_outcomes.record_policy_terminal_outcome(
+                sandbox_id=sandbox_id,
+                event=LifecycleEvent.RECLAIM_TTL_ELAPSED,
+                terminal_reason=TerminalReason.LEASE_EXPIRED,
+                evidence_payload={
+                    "kind": "sandbox_lease_expiry_terminal_receipt",
+                    "compose_project": current.compose_project,
+                    "workspace_path": current.workspace_path,
+                    "policy_match": "reclaim_ttl_elapsed",
+                },
+                operation_id_prefix="reclaim-terminal",
+                terminal_at=current.terminal_at or self._now(),
+                cleanup_due_at=self._now(),
+            )
         if current.state is not SandboxState.TERMINAL:
             raise ValueError(f"Sandbox {sandbox_id} is not cleanup-eligible from state {current.state.value}")
         if current.cleanup_state in {CleanupState.NONE, CleanupState.FAILED}:
@@ -242,7 +265,7 @@ class SandboxRuntimeLifecycleService:
         if record.state is SandboxState.ACTIVE:
             if record.owner_instance_id != self.instance_id:
                 raise SandboxLifecycleError("Sandbox heartbeat rejected for non-owner instance.")
-            return (
+            record = (
                 await self.mutations.renew_lease(
                     sandbox_id=sandbox_id,
                     operation_id=f"lease-renew:{sandbox_id}:{record.record_version}",
@@ -253,6 +276,11 @@ class SandboxRuntimeLifecycleService:
                     lease_expires_at=self._lease_expires_at(self._now()),
                 )
             ).record
+            await self._publish_control_plane_lease(
+                record=record,
+                publication_timestamp=record.last_heartbeat_at or self._now(),
+            )
+            return record
         return record
 
     async def reacquire_ownership(self, *, sandbox_id: str) -> SandboxLifecycleRecord:
@@ -267,7 +295,7 @@ class SandboxRuntimeLifecycleService:
             operation_id=f"reacquire-inventory:{sandbox_id}:{record.record_version}",
             updates={"managed_resource_inventory": self._inventory_from_resources(observed_resources)},
         )
-        return (
+        record = (
             await self.mutations.reacquire_ownership(
                 sandbox_id=sandbox_id,
                 operation_id=f"reacquire:{sandbox_id}:{record.record_version}",
@@ -278,6 +306,11 @@ class SandboxRuntimeLifecycleService:
                 lease_expires_at=self._lease_expires_at(self._now()),
             )
         ).record
+        await self._publish_control_plane_lease(
+            record=record,
+            publication_timestamp=record.last_heartbeat_at or self._now(),
+        )
+        return record
 
     async def handle_missing_runtime(self, *, sandbox_id: str) -> SandboxLifecycleRecord | None:
         record = await self._require_record(sandbox_id)
@@ -413,6 +446,20 @@ class SandboxRuntimeLifecycleService:
 
     def _lease_expires_at(self, now: str) -> str:
         return (datetime.fromisoformat(now) + timedelta(seconds=self.policy.lease_duration_seconds)).isoformat()
+
+    async def _publish_control_plane_lease(
+        self,
+        *,
+        record: SandboxLifecycleRecord,
+        publication_timestamp: str,
+    ) -> None:
+        if self.control_plane_publication is None:
+            return
+        publisher = SandboxControlPlaneLeaseService(publication=self.control_plane_publication)
+        try:
+            await publisher.publish_from_record(record=record, publication_timestamp=publication_timestamp)
+        except SandboxControlPlaneLeaseError:
+            return
 
     @staticmethod
     def _payload_hash(payload: dict[str, object]) -> str:

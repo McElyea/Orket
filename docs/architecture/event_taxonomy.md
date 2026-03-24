@@ -77,7 +77,9 @@ This document defines canonical runtime events and minimum fields.
    - `reason_code`, `required_evidence_ref`, `terminal_at`, `cleanup_due_at`, `state`, `cleanup_state`
 4. `sandbox.policy_terminal_outcome`
    - `reason_code`, `required_evidence_ref`, `terminal_at`, `cleanup_due_at`, `state`, `cleanup_state`
-5. `sandbox.cleanup_decision_evaluated`
+5. `sandbox.lifecycle_terminal_outcome`
+   - `reason_code`, `required_evidence_ref`, `terminal_at`, `cleanup_due_at`, `state`, `cleanup_state`
+6. `sandbox.cleanup_decision_evaluated`
    - `reason_code`, `policy_match`, `dry_run`, `cleanup_strategy`, `cleanup_result`, `compose_path_available`, `authority_reason_codes`, `fallback_resource_names`, `blocked_resource_names`
-6. `sandbox.cleanup_execution_result`
+7. `sandbox.cleanup_execution_result`
    - `reason_code`, `policy_match`, `dry_run`, `cleanup_strategy`, `cleanup_result`, `compose_path_available`, `authority_reason_codes`, `fallback_resource_names`, `blocked_resource_names`, `error`

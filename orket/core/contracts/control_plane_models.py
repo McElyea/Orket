@@ -217,6 +217,7 @@ class LeaseRecord(_ControlPlaneBaseModel):
     holder_ref: NonEmptyStr
     lease_epoch: int = Field(ge=0)
     granted_timestamp: NonEmptyStr
+    publication_timestamp: NonEmptyStr
     expiry_basis: NonEmptyStr
     status: LeaseStatus
     last_confirmed_observation: NonEmptyStr | None = None

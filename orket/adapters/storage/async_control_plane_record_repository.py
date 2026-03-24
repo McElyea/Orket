@@ -9,7 +9,12 @@ from orket.core.contracts.control_plane_effect_journal_models import (
     CheckpointAcceptanceRecord,
     EffectJournalEntryRecord,
 )
-from orket.core.contracts.control_plane_models import FinalTruthRecord, RecoveryDecisionRecord
+from orket.core.contracts.control_plane_models import (
+    FinalTruthRecord,
+    LeaseRecord,
+    ReconciliationRecord,
+    RecoveryDecisionRecord,
+)
 from orket.core.contracts.repositories import ControlPlaneRecordRepository
 
 
@@ -65,6 +70,47 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
                 run_id TEXT NOT NULL,
                 payload_json TEXT NOT NULL
             )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS lease_records (
+                lease_id TEXT NOT NULL,
+                lease_epoch INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                publication_timestamp TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                PRIMARY KEY (lease_id, lease_epoch, status, publication_timestamp)
+            )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_lease_records_latest
+            ON lease_records (lease_id, lease_epoch DESC, publication_timestamp DESC)
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_lease_records_resource
+            ON lease_records (resource_id, publication_timestamp)
+            """
+        )
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reconciliation_records (
+                reconciliation_id TEXT PRIMARY KEY,
+                target_ref TEXT NOT NULL,
+                publication_timestamp TEXT NOT NULL,
+                payload_json TEXT NOT NULL
+            )
+            """
+        )
+        await conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_reconciliation_target
+            ON reconciliation_records (target_ref, publication_timestamp)
             """
         )
         await conn.execute(
@@ -262,6 +308,132 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
             if row is None:
                 return None
             return RecoveryDecisionRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def append_lease_record(
+        self,
+        *,
+        record: LeaseRecord,
+    ) -> LeaseRecord:
+        payload_json = record.model_dump_json()
+
+        async def _op(conn: aiosqlite.Connection) -> LeaseRecord:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM lease_records
+                WHERE lease_id = ? AND lease_epoch = ? AND status = ? AND publication_timestamp = ?
+                """,
+                (
+                    record.lease_id,
+                    record.lease_epoch,
+                    record.status.value,
+                    record.publication_timestamp,
+                ),
+            )
+            existing = await cursor.fetchone()
+            if existing is not None:
+                existing_payload = str(existing["payload_json"] if isinstance(existing, aiosqlite.Row) else existing[0])
+                if existing_payload != payload_json:
+                    raise ControlPlaneRecordConflictError("lease_records composite key reused with different payload")
+                return LeaseRecord.model_validate_json(existing_payload)
+            await conn.execute(
+                """
+                INSERT INTO lease_records (
+                    lease_id, lease_epoch, status, publication_timestamp, resource_id, payload_json
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record.lease_id,
+                    record.lease_epoch,
+                    record.status.value,
+                    record.publication_timestamp,
+                    record.resource_id,
+                    payload_json,
+                ),
+            )
+            return record
+
+        return await self._execute(_op, row_factory=True, commit=True)
+
+    async def list_lease_records(self, *, lease_id: str) -> list[LeaseRecord]:
+        async def _op(conn: aiosqlite.Connection) -> list[LeaseRecord]:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM lease_records
+                WHERE lease_id = ?
+                ORDER BY lease_epoch ASC, publication_timestamp ASC, rowid ASC
+                """,
+                (lease_id,),
+            )
+            rows = await cursor.fetchall()
+            return [LeaseRecord.model_validate_json(str(row["payload_json"])) for row in rows]
+
+        return await self._execute(_op, row_factory=True)
+
+    async def get_latest_lease_record(self, *, lease_id: str) -> LeaseRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> LeaseRecord | None:
+            cursor = await conn.execute(
+                """
+                SELECT payload_json
+                FROM lease_records
+                WHERE lease_id = ?
+                ORDER BY lease_epoch DESC, publication_timestamp DESC, rowid DESC
+                LIMIT 1
+                """,
+                (lease_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return LeaseRecord.model_validate_json(str(row["payload_json"]))
+
+        return await self._execute(_op, row_factory=True)
+
+    async def save_reconciliation_record(
+        self,
+        *,
+        record: ReconciliationRecord,
+    ) -> ReconciliationRecord:
+        payload_json = record.model_dump_json()
+
+        async def _insert(conn: aiosqlite.Connection) -> ReconciliationRecord:
+            await conn.execute(
+                """
+                INSERT INTO reconciliation_records (
+                    reconciliation_id, target_ref, publication_timestamp, payload_json
+                ) VALUES (?, ?, ?, ?)
+                """,
+                (
+                    record.reconciliation_id,
+                    record.target_ref,
+                    record.publication_timestamp,
+                    payload_json,
+                ),
+            )
+            return record
+
+        return await self._insert_or_return_existing(
+            table="reconciliation_records",
+            id_field="reconciliation_id",
+            id_value=record.reconciliation_id,
+            payload_json=payload_json,
+            insert_op=_insert,
+            parse_existing=ReconciliationRecord.model_validate_json,
+        )
+
+    async def get_reconciliation_record(self, *, reconciliation_id: str) -> ReconciliationRecord | None:
+        async def _op(conn: aiosqlite.Connection) -> ReconciliationRecord | None:
+            cursor = await conn.execute(
+                "SELECT payload_json FROM reconciliation_records WHERE reconciliation_id = ?",
+                (reconciliation_id,),
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                return None
+            return ReconciliationRecord.model_validate_json(str(row["payload_json"]))
 
         return await self._execute(_op, row_factory=True)
 

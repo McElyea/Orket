@@ -8,11 +8,14 @@ from pathlib import Path
 
 import pytest
 
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandResult
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
+from orket.core.domain import ClosureBasisClassification, LeaseStatus, ResultClass
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 from orket.domain.verification import AGENT_OUTPUT_DIR
@@ -196,14 +199,19 @@ def _service(tmp_path: Path, runner: FakeRecoveryRunner) -> tuple[AsyncSandboxLi
 async def test_recovery_reconciles_blocked_starting_record_to_active_when_resources_exist(tmp_path) -> None:
     runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
     repo, recovery = _service(tmp_path, runner)
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    recovery.lifecycle_service.control_plane_publication = ControlPlanePublicationService(repository=control_plane_repo)
     recovery.lifecycle_service._now = staticmethod(lambda: "2026-03-11T00:01:00+00:00")
     await repo.save_record(_record())
 
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+    lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
 
     assert record.state is SandboxState.ACTIVE
     assert record.requires_reconciliation is False
     assert record.managed_resource_inventory.containers == ["orket-sandbox-sb-1-api-1"]
+    assert lease is not None
+    assert lease.status is LeaseStatus.ACTIVE
 
 
 @pytest.mark.asyncio
@@ -215,15 +223,22 @@ async def test_recovery_reconciles_blocked_starting_record_to_terminal_when_reso
         resources_present=False,
     )
     repo, recovery = _service(tmp_path, runner)
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    recovery.lifecycle_service.control_plane_publication = ControlPlanePublicationService(repository=control_plane_repo)
     recovery.lifecycle_service._now = staticmethod(lambda: "2026-03-11T00:01:00+00:00")
     await repo.save_record(_record())
 
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+    final_truth = await control_plane_repo.get_final_truth(run_id="run-1")
 
     assert record.state is SandboxState.TERMINAL
     assert record.cleanup_state is CleanupState.SCHEDULED
     assert record.terminal_reason is TerminalReason.START_FAILED
     assert record.requires_reconciliation is False
+    assert record.required_evidence_ref is not None
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.FAILED
+    assert final_truth.closure_basis is ClosureBasisClassification.NORMAL_EXECUTION
 
 
 @pytest.mark.asyncio
@@ -381,6 +396,8 @@ async def test_sweeper_cleans_verified_orphan_without_compose_path_via_fallback_
 async def test_reclaimable_record_due_for_reclaim_ttl_transitions_to_terminal_cleanup(tmp_path, monkeypatch) -> None:
     runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
     repo, recovery = _service(tmp_path, runner)
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    recovery.lifecycle_service.control_plane_publication = ControlPlanePublicationService(repository=control_plane_repo)
     monkeypatch.setattr(recovery.lifecycle_service, "_now", staticmethod(lambda: "2026-03-11T03:00:00+00:00"))
     await repo.save_record(
         _record(
@@ -395,16 +412,23 @@ async def test_reclaimable_record_due_for_reclaim_ttl_transitions_to_terminal_cl
     )
 
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+    final_truth = await control_plane_repo.get_final_truth(run_id="run-1")
 
     assert record.state is SandboxState.TERMINAL
     assert record.cleanup_state is CleanupState.SCHEDULED
     assert record.terminal_reason is TerminalReason.LEASE_EXPIRED
+    assert record.required_evidence_ref is not None
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.BLOCKED
+    assert final_truth.closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP
 
 
 @pytest.mark.asyncio
 async def test_recovery_terminalizes_active_record_when_hard_max_age_is_elapsed(tmp_path, monkeypatch) -> None:
     runner = FakeRecoveryRunner(compose_project="orket-sandbox-sb-1", sandbox_id="sb-1", run_id="run-1")
     repo, recovery = _service(tmp_path, runner)
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
+    recovery.lifecycle_service.control_plane_publication = ControlPlanePublicationService(repository=control_plane_repo)
     monkeypatch.setattr(recovery.lifecycle_service, "_now", staticmethod(lambda: "2026-03-11T03:00:00+00:00"))
     await repo.save_record(
         _record(
@@ -417,10 +441,14 @@ async def test_recovery_terminalizes_active_record_when_hard_max_age_is_elapsed(
     )
 
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
+    final_truth = await control_plane_repo.get_final_truth(run_id="run-1")
 
     assert record.state is SandboxState.TERMINAL
     assert record.cleanup_state is CleanupState.SCHEDULED
     assert record.terminal_reason is TerminalReason.HARD_MAX_AGE
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.BLOCKED
+    assert final_truth.closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP
 
 
 @pytest.mark.asyncio

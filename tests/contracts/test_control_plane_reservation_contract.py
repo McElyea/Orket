@@ -106,6 +106,7 @@ def test_promote_resource_reservation_to_lease() -> None:
         lease_id="lease-1",
         resource_id="resource:sb-1",
         granted_timestamp="2026-03-23T00:01:00+00:00",
+        publication_timestamp="2026-03-23T00:01:00+00:00",
         expiry_basis="ttl:300",
         cleanup_eligibility_rule="cleanup_on_terminal",
     )
@@ -134,6 +135,7 @@ def test_promote_non_resource_reservation_to_lease_rejected() -> None:
             lease_id="lease-4",
             resource_id="resource:none",
             granted_timestamp="2026-03-23T00:01:00+00:00",
+            publication_timestamp="2026-03-23T00:01:00+00:00",
             expiry_basis="ttl:300",
             cleanup_eligibility_rule="cleanup_on_terminal",
         )
@@ -170,6 +172,7 @@ def test_lease_record_accepts_promoted_reservation_reference() -> None:
         holder_ref="run-5",
         lease_epoch=0,
         granted_timestamp="2026-03-23T00:00:00+00:00",
+        publication_timestamp="2026-03-23T00:00:00+00:00",
         expiry_basis="ttl:300",
         status=LeaseStatus.ACTIVE,
         source_reservation_id="res-5",

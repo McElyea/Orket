@@ -8,6 +8,7 @@ from orket.core.contracts import (
     CheckpointRecord,
     EffectJournalEntryRecord,
     FinalTruthRecord,
+    LeaseRecord,
     OperatorActionRecord,
     ReconciliationRecord,
     RecoveryDecisionRecord,
@@ -19,10 +20,12 @@ from orket.core.domain import (
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
+    DivergenceClass,
     EvidenceSufficiencyClassification,
     RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
+    SafeContinuationClass,
     SideEffectBoundaryClass,
 )
 
@@ -178,6 +181,64 @@ class ControlPlanePublicationService:
             idempotent_retry_permitted=idempotent_retry_permitted,
         )
         return await self.repository.save_recovery_decision(decision=decision)
+
+    async def publish_reconciliation(
+        self,
+        *,
+        reconciliation_id: str,
+        target_ref: str,
+        comparison_scope: str,
+        observed_refs: list[str] | None = None,
+        intended_refs: list[str] | None = None,
+        divergence_class: DivergenceClass,
+        residual_uncertainty_classification: ResidualUncertaintyClassification,
+        publication_timestamp: str,
+        safe_continuation_class: SafeContinuationClass,
+    ) -> ReconciliationRecord:
+        record = self.authority.publish_reconciliation(
+            reconciliation_id=reconciliation_id,
+            target_ref=target_ref,
+            comparison_scope=comparison_scope,
+            observed_refs=observed_refs,
+            intended_refs=intended_refs,
+            divergence_class=divergence_class,
+            residual_uncertainty_classification=residual_uncertainty_classification,
+            publication_timestamp=publication_timestamp,
+            safe_continuation_class=safe_continuation_class,
+        )
+        return await self.repository.save_reconciliation_record(record=record)
+
+    async def publish_lease(
+        self,
+        *,
+        lease_id: str,
+        resource_id: str,
+        holder_ref: str,
+        lease_epoch: int,
+        publication_timestamp: str,
+        expiry_basis: str,
+        status,
+        cleanup_eligibility_rule: str,
+        granted_timestamp: str | None = None,
+        last_confirmed_observation: str | None = None,
+        source_reservation_id: str | None = None,
+    ) -> LeaseRecord:
+        previous_record = await self.repository.get_latest_lease_record(lease_id=lease_id)
+        record = self.authority.publish_lease(
+            lease_id=lease_id,
+            resource_id=resource_id,
+            holder_ref=holder_ref,
+            lease_epoch=lease_epoch,
+            publication_timestamp=publication_timestamp,
+            expiry_basis=expiry_basis,
+            status=status,
+            cleanup_eligibility_rule=cleanup_eligibility_rule,
+            granted_timestamp=granted_timestamp,
+            last_confirmed_observation=last_confirmed_observation,
+            source_reservation_id=source_reservation_id,
+            previous_record=previous_record,
+        )
+        return await self.repository.append_lease_record(record=record)
 
     async def publish_final_truth(
         self,

@@ -53,6 +53,11 @@ from .control_plane_final_truth import (
     terminality_basis_for_closure,
     validate_final_truth_publication,
 )
+from .control_plane_leases import (
+    ControlPlaneLeaseError,
+    build_lease_record,
+    lease_publication_ref,
+)
 from .control_plane_lifecycle import (
     ControlPlaneLifecycleError,
     RunTransitionRequirement,
@@ -94,6 +99,7 @@ __all__ = [
     "ControlPlaneCheckpointError",
     "ControlPlaneEffectJournalError",
     "ControlPlaneFinalTruthError",
+    "ControlPlaneLeaseError",
     "ClosureBasisClassification",
     "CompletionClassification",
     "ControlPlaneFailureClass",
@@ -137,12 +143,14 @@ __all__ = [
     "allowed_reservation_status_transitions",
     "allowed_run_transitions",
     "build_final_truth_record",
+    "build_lease_record",
     "build_recovery_decision",
     "compute_effect_journal_entry_digest",
     "create_effect_journal_entry",
     "get_run_transition_requirement",
     "is_terminal_attempt_state",
     "is_terminal_run_state",
+    "lease_publication_ref",
     "promote_reservation_to_lease",
     "terminality_basis_for_closure",
     "validate_checkpoint_acceptance",

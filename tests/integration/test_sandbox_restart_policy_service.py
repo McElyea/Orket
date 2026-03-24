@@ -7,13 +7,20 @@ import json
 import aiofiles
 import pytest
 
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandResult
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.application.services.sandbox_lifecycle_view_service import SandboxLifecycleViewService
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
+from orket.core.domain import (
+    AuthoritySourceClass,
+    ClosureBasisClassification,
+    ResultClass,
+)
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxLifecycleError, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
@@ -67,6 +74,7 @@ def _inspect_payload(*, restart_count: int, health_status: str | None) -> list[d
 @pytest.mark.asyncio
 async def test_restart_policy_terminalizes_active_record_and_projects_diagnostics(tmp_path) -> None:
     repo = AsyncSandboxLifecycleRepository(tmp_path / "sandbox_lifecycle.db")
+    control_plane_repo = AsyncControlPlaneRecordRepository(tmp_path / "control_plane.sqlite3")
     await repo.save_record(_record())
     policy = SandboxLifecyclePolicy(restart_threshold_count=5, restart_window_seconds=300, unhealthy_duration_seconds=1)
     lifecycle = SandboxRuntimeLifecycleService(
@@ -81,6 +89,7 @@ async def test_restart_policy_terminalizes_active_record_and_projects_diagnostic
         docker_context="desktop-linux",
         docker_host_id="host-a",
         policy=policy,
+        control_plane_publication=ControlPlanePublicationService(repository=control_plane_repo),
     )
     service = SandboxRestartPolicyService(lifecycle_service=lifecycle, policy=policy)
     lifecycle.terminal_evidence = SandboxTerminalEvidenceService(
@@ -101,6 +110,7 @@ async def test_restart_policy_terminalizes_active_record_and_projects_diagnostic
     stored = await repo.get_record("sb-1")
     events = await repo.list_events("sb-1")
     views = await SandboxLifecycleViewService(repo).list_views(observed_at="2026-03-11T00:00:03+00:00")
+    final_truth = await control_plane_repo.get_final_truth(run_id="run-1")
 
     assert stored is not None
     assert stored.state is SandboxState.TERMINAL
@@ -109,6 +119,10 @@ async def test_restart_policy_terminalizes_active_record_and_projects_diagnostic
     async with aiofiles.open(stored.required_evidence_ref, "r", encoding="utf-8") as handle:
         evidence = json.loads(await handle.read())
     assert evidence["payload"]["terminal_reason"] == "restart_loop"
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.FAILED
+    assert final_truth.closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP
+    assert AuthoritySourceClass.ADAPTER_OBSERVATION in final_truth.authority_sources
     assert any(event.event_type == "sandbox.restart_loop_classified" for event in events)
     assert any(event.event_type == "sandbox.workflow_terminal_outcome" for event in events)
     assert views[0].restart_summary["terminal_reason"] == "restart_loop"

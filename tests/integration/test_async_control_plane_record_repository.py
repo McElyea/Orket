@@ -19,10 +19,13 @@ from orket.core.domain import (
     ClosureBasisClassification,
     CompletionClassification,
     DegradationClassification,
+    DivergenceClass,
     EvidenceSufficiencyClassification,
+    LeaseStatus,
     RecoveryActionClass,
     ResidualUncertaintyClassification,
     ResultClass,
+    SafeContinuationClass,
     SideEffectBoundaryClass,
 )
 
@@ -85,6 +88,28 @@ async def test_async_control_plane_record_repository_persists_publication_flow(t
         target_checkpoint_id="checkpoint-1",
         new_attempt_id="attempt-2",
     )
+    lease = await service.publish_lease(
+        lease_id="sandbox-lease:sb-1",
+        resource_id="sandbox-scope:sb-1",
+        holder_ref="sandbox-instance:runner-a",
+        lease_epoch=1,
+        publication_timestamp="2026-03-23T01:22:15+00:00",
+        expiry_basis="sandbox_lifecycle_policy:docker_sandbox_lifecycle.v1;expires_at=2026-03-23T01:27:15+00:00",
+        status=LeaseStatus.ACTIVE,
+        last_confirmed_observation="sandbox-lifecycle:sb-1:active:2",
+        cleanup_eligibility_rule="sandbox_cleanup_policy:docker_sandbox_lifecycle.v1",
+    )
+    reconciliation = await service.publish_reconciliation(
+        reconciliation_id="recon-1",
+        target_ref="run-1",
+        comparison_scope="run_scope",
+        observed_refs=["obs-1"],
+        intended_refs=["intent-1"],
+        divergence_class=DivergenceClass.RESOURCE_STATE_DIVERGED,
+        residual_uncertainty_classification=ResidualUncertaintyClassification.UNRESOLVED,
+        publication_timestamp="2026-03-23T01:22:30+00:00",
+        safe_continuation_class=SafeContinuationClass.TERMINAL_WITHOUT_CLEANUP,
+    )
     final_truth = await service.publish_final_truth(
         final_truth_record_id="truth-1",
         run_id="run-1",
@@ -103,11 +128,15 @@ async def test_async_control_plane_record_repository_persists_publication_flow(t
     listed_entries = await repository.list_effect_journal_entries(run_id="run-1")
     loaded_acceptance = await repository.get_checkpoint_acceptance(checkpoint_id="checkpoint-1")
     loaded_decision = await repository.get_recovery_decision(decision_id="rd-1")
+    loaded_lease = await repository.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
+    loaded_reconciliation = await repository.get_reconciliation_record(reconciliation_id="recon-1")
     loaded_truth = await repository.get_final_truth(run_id="run-1")
 
     assert [entry.journal_entry_id for entry in listed_entries] == ["journal-1"]
     assert checkpoint_acceptance.acceptance_id == loaded_acceptance.acceptance_id
     assert decision.decision_id == loaded_decision.decision_id
+    assert lease.publication_timestamp == loaded_lease.publication_timestamp
+    assert reconciliation.reconciliation_id == loaded_reconciliation.reconciliation_id
     assert final_truth.final_truth_record_id == loaded_truth.final_truth_record_id
 
 

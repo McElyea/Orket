@@ -15,8 +15,10 @@ from typing import Any, Optional
 
 from orket.adapters.storage.async_executor_service import run_coroutine_blocking
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_sandbox_lifecycle_repository import AsyncSandboxLifecycleRepository
 from orket.adapters.storage.command_runner import CommandRunner
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
@@ -26,7 +28,7 @@ from orket.decision_nodes.registry import DecisionNodeRegistry
 from orket.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
 from orket.domain.verification import AGENT_OUTPUT_DIR
 from orket.logging import log_event
-from orket.runtime_paths import resolve_sandbox_lifecycle_db_path
+from orket.runtime_paths import resolve_control_plane_db_path, resolve_sandbox_lifecycle_db_path
 
 
 class SandboxOrchestrator:
@@ -41,6 +43,7 @@ class SandboxOrchestrator:
         command_runner: Optional[CommandRunner] = None,
         fs: Optional[AsyncFileTools] = None,
         lifecycle_db_path: Optional[str] = None,
+        control_plane_db_path: Optional[str] = None,
     ) -> None:
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
@@ -59,12 +62,20 @@ class SandboxOrchestrator:
         self.lifecycle_repository = AsyncSandboxLifecycleRepository(
             resolve_sandbox_lifecycle_db_path(lifecycle_db_path)
         )
+        resolved_control_plane_db_path = (
+            Path(lifecycle_db_path).with_name("control_plane_records.sqlite3")
+            if lifecycle_db_path and control_plane_db_path is None
+            else resolve_control_plane_db_path(control_plane_db_path)
+        )
+        self.control_plane_repository = AsyncControlPlaneRecordRepository(resolved_control_plane_db_path)
+        self.control_plane_publication = ControlPlanePublicationService(repository=self.control_plane_repository)
         self.lifecycle_service = SandboxRuntimeLifecycleService(
             repository=self.lifecycle_repository,
             command_runner=self.command_runner,
             instance_id=self.instance_id,
             docker_context=self.docker_context,
             docker_host_id=self.docker_host_id,
+            control_plane_publication=self.control_plane_publication,
         )
         self.lifecycle_recovery = SandboxRuntimeRecoveryService(lifecycle_service=self.lifecycle_service)
         self.restart_policy = SandboxRestartPolicyService(lifecycle_service=self.lifecycle_service)

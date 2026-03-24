@@ -156,6 +156,10 @@ class SandboxRuntimeCleanupService:
                 cleanup_state=CleanupState.COMPLETED,
             )
         ).record
+        await self.lifecycle_service._publish_control_plane_lease(
+            record=cleaned,
+            publication_timestamp=self.lifecycle_service._now(),
+        )
         await self.decision_service.emit_execution_result(
             decision=decision,
             observed_at=self.lifecycle_service._now(),

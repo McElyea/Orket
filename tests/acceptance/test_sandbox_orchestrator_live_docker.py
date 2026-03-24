@@ -9,6 +9,7 @@ import shutil
 
 import pytest
 
+from orket.core.domain import LeaseStatus
 from orket.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
@@ -102,15 +103,26 @@ async def test_live_create_health_and_cleanup_flow(tmp_path, monkeypatch) -> Non
             workspace_path=str(tmp_path),
         )
         record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        active_lease = await orchestrator.control_plane_repository.get_latest_lease_record(
+            lease_id=f"sandbox-lease:{sandbox.id}"
+        )
         assert sandbox.status.value == "running"
         assert record is not None
         assert record.state.value == "active"
         assert record.managed_resource_inventory.containers
+        assert active_lease is not None
+        assert active_lease.status is LeaseStatus.ACTIVE
         assert await orchestrator.health_check(sandbox.id) is True
 
         await orchestrator.delete_sandbox(sandbox.id)
 
         cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        released_lease = await orchestrator.control_plane_repository.get_latest_lease_record(
+            lease_id=f"sandbox-lease:{sandbox.id}"
+        )
+        lease_history = await orchestrator.control_plane_repository.list_lease_records(
+            lease_id=f"sandbox-lease:{sandbox.id}"
+        )
         containers = await _docker_rows(
             "docker",
             "ps",
@@ -142,6 +154,13 @@ async def test_live_create_health_and_cleanup_flow(tmp_path, monkeypatch) -> Non
         assert cleaned is not None
         assert cleaned.state.value == "cleaned"
         assert cleaned.cleanup_state.value == "completed"
+        assert released_lease is not None
+        assert released_lease.status is LeaseStatus.RELEASED
+        assert {record.status for record in lease_history} >= {
+            LeaseStatus.PENDING,
+            LeaseStatus.ACTIVE,
+            LeaseStatus.RELEASED,
+        }
         assert containers == []
         assert networks == []
         assert volumes == []

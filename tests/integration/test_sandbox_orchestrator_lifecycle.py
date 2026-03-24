@@ -8,6 +8,7 @@ import aiofiles
 import pytest
 
 from orket.adapters.storage.command_runner import CommandResult
+from orket.core.domain import ClosureBasisClassification, LeaseStatus, ResultClass
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
 from orket.domain.sandbox import SandboxRegistry, TechStack
@@ -133,6 +134,9 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
     )
 
     record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+    lease = await orchestrator.control_plane_repository.get_latest_lease_record(
+        lease_id=f"sandbox-lease:{sandbox_id}"
+    )
     views = await orchestrator.list_sandboxes()
 
     assert sandbox.status.value == "running"
@@ -141,6 +145,9 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
     assert record.managed_resource_inventory.containers == [f"{compose_project}-api-1"]
     assert record.managed_resource_inventory.networks == [f"{compose_project}_default"]
     assert record.managed_resource_inventory.managed_volumes == [f"{compose_project}_db-data"]
+    assert lease is not None
+    assert lease.status is LeaseStatus.ACTIVE
+    assert lease.lease_epoch == 1
     assert views[0]["sandbox_id"] == sandbox_id
     assert views[0]["compose_project"] == compose_project
     assert views[0]["state"] == "active"
@@ -171,6 +178,10 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     await orchestrator.delete_sandbox(sandbox_id)
 
     record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+    lease = await orchestrator.control_plane_repository.get_latest_lease_record(
+        lease_id=f"sandbox-lease:{sandbox_id}"
+    )
+    final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-2")
     events = await orchestrator.lifecycle_service.repository.list_events(sandbox_id)
 
     assert record is not None
@@ -178,9 +189,14 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
     assert record.cleanup_state.value == "completed"
     assert record.cleanup_attempts == 1
     assert record.required_evidence_ref is not None
+    assert lease is not None
+    assert lease.status is LeaseStatus.RELEASED
     async with aiofiles.open(record.required_evidence_ref, "r", encoding="utf-8") as handle:
         evidence = await handle.read()
     assert "sandbox_cancellation_receipt" in evidence
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.BLOCKED
+    assert final_truth.closure_basis is ClosureBasisClassification.CANCELLED_BY_AUTHORITY
     assert any(event.event_type == "sandbox.workflow_terminal_outcome" for event in events)
 
 
@@ -225,6 +241,53 @@ async def test_delete_sandbox_retries_terminal_records_after_a_failed_cleanup_at
     assert stored is not None
     assert stored.state.value == "cleaned"
     assert stored.cleanup_state.value == "completed"
+
+
+@pytest.mark.asyncio
+async def test_delete_reclaimable_sandbox_publishes_lease_expiry_final_truth(tmp_path) -> None:
+    sandbox_id = "sandbox-rock-2d"
+    compose_project = "orket-sandbox-rock-2d"
+    runner = FakeLifecycleRunner(
+        compose_project=compose_project,
+        sandbox_id=sandbox_id,
+        run_id="rock-2d",
+        down_returncode=1,
+    )
+    orchestrator = _orchestrator(tmp_path, runner)
+
+    sandbox = await orchestrator.create_sandbox(
+        rock_id="rock-2d",
+        project_name="Reclaimable Cleanup Sandbox",
+        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+        workspace_path=str(tmp_path),
+    )
+    record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+    assert record is not None
+    await orchestrator.lifecycle_service.repository.save_record(
+        record.model_copy(
+            update={
+                "state": SandboxState.RECLAIMABLE,
+                "record_version": record.record_version + 1,
+                "terminal_reason": TerminalReason.LEASE_EXPIRED,
+                "terminal_at": record.created_at,
+                "cleanup_due_at": record.created_at,
+            }
+        )
+    )
+
+    await orchestrator.delete_sandbox(sandbox.id)
+
+    stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+    final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-2d")
+    events = await orchestrator.lifecycle_service.repository.list_events(sandbox.id)
+
+    assert stored is not None
+    assert stored.state.value == "cleaned"
+    assert stored.required_evidence_ref is not None
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.BLOCKED
+    assert final_truth.closure_basis is ClosureBasisClassification.POLICY_TERMINAL_STOP
+    assert any(event.event_type == "sandbox.policy_terminal_outcome" for event in events)
 
 
 @pytest.mark.asyncio
@@ -305,8 +368,15 @@ async def test_create_sandbox_terminalizes_when_initial_runtime_never_reaches_ru
         )
 
     record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+    final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-4")
+    events = await orchestrator.lifecycle_service.repository.list_events(sandbox_id)
 
     assert record is not None
     assert record.state.value == "terminal"
     assert record.terminal_reason.value == "start_failed"
     assert record.cleanup_due_at is not None
+    assert record.required_evidence_ref is not None
+    assert final_truth is not None
+    assert final_truth.result_class is ResultClass.FAILED
+    assert final_truth.closure_basis is ClosureBasisClassification.NORMAL_EXECUTION
+    assert any(event.event_type == "sandbox.lifecycle_terminal_outcome" for event in events)

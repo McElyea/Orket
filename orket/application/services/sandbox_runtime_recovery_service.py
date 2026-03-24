@@ -68,18 +68,21 @@ class SandboxRuntimeRecoveryService:
             )
         if record.state is SandboxState.RECLAIMABLE:
             if record.cleanup_due_at and record.cleanup_due_at <= observed_at:
-                terminal = (
-                    await self.lifecycle_service.mutations.transition_state(
-                        sandbox_id=record.sandbox_id,
-                        operation_id=f"reclaim-ttl:{record.sandbox_id}:{record.record_version}",
-                        expected_record_version=record.record_version,
-                        event=LifecycleEvent.RECLAIM_TTL_ELAPSED,
-                        next_state=SandboxState.TERMINAL,
-                        terminal_reason=TerminalReason.LEASE_EXPIRED,
-                        terminal_at=record.terminal_at or observed_at,
-                        cleanup_due_at=observed_at,
-                    )
-                ).record
+                terminal = await self.lifecycle_service.terminal_outcomes.record_policy_terminal_outcome(
+                    sandbox_id=record.sandbox_id,
+                    event=LifecycleEvent.RECLAIM_TTL_ELAPSED,
+                    terminal_reason=TerminalReason.LEASE_EXPIRED,
+                    evidence_payload={
+                        "kind": "sandbox_lease_expiry_terminal_receipt",
+                        "compose_project": record.compose_project,
+                        "workspace_path": record.workspace_path,
+                        "policy_match": "reclaim_ttl_elapsed",
+                        "observed_at": observed_at,
+                    },
+                    operation_id_prefix="reclaim-ttl",
+                    terminal_at=record.terminal_at or observed_at,
+                    cleanup_due_at=observed_at,
+                )
                 return await self._schedule_cleanup_if_needed(record=terminal, observed_at=observed_at)
             return record
         if record.state not in {SandboxState.ACTIVE, SandboxState.TERMINAL}:
@@ -208,7 +211,7 @@ class SandboxRuntimeRecoveryService:
                 compose_project=current.compose_project
             )
             if self.runtime_inspector.all_core_services_running(container_rows):
-                return (
+                record = (
                     await self.lifecycle_service.mutations.transition_state(
                         sandbox_id=current.sandbox_id,
                         operation_id=f"reconcile-starting-active:{current.sandbox_id}:{current.record_version}",
@@ -217,30 +220,27 @@ class SandboxRuntimeRecoveryService:
                         next_state=SandboxState.ACTIVE,
                     )
                 ).record
-            return (
-                await self.lifecycle_service.mutations.transition_state(
-                    sandbox_id=current.sandbox_id,
-                    operation_id=f"reconcile-starting-failed-present:{current.sandbox_id}:{current.record_version}",
-                    expected_record_version=current.record_version,
-                    event=LifecycleEvent.STARTUP_FAILURE,
-                    next_state=SandboxState.TERMINAL,
-                    terminal_reason=TerminalReason.START_FAILED,
-                    terminal_at=observed_at,
-                    cleanup_due_at=self.lifecycle_service.policy.cleanup_due_at_for(
-                        state=SandboxState.TERMINAL,
-                        terminal_reason=TerminalReason.START_FAILED,
-                        reference_time=observed_at,
-                    ),
+                await self.lifecycle_service._publish_control_plane_lease(
+                    record=record,
+                    publication_timestamp=observed_at,
                 )
-            ).record
-        return (
-            await self.lifecycle_service.mutations.transition_state(
+                return record
+            return await self.lifecycle_service.terminal_outcomes.record_lifecycle_terminal_outcome(
                 sandbox_id=current.sandbox_id,
-                operation_id=f"reconcile-starting-failed:{current.sandbox_id}:{current.record_version}",
-                expected_record_version=current.record_version,
                 event=LifecycleEvent.STARTUP_FAILURE,
-                next_state=SandboxState.TERMINAL,
                 terminal_reason=TerminalReason.START_FAILED,
+                evidence_payload={
+                    "kind": "sandbox_startup_failure_receipt",
+                    "compose_project": current.compose_project,
+                    "workspace_path": current.workspace_path,
+                    "failure_stage": "reconciliation_present_but_core_services_not_running",
+                    "observed_at": observed_at,
+                    "docker_present": True,
+                    "managed_resources_observed": len(observed_resources),
+                },
+                operation_id_prefix="reconcile-starting-failed-present",
+                expected_owner_instance_id=current.owner_instance_id,
+                expected_lease_epoch=current.lease_epoch if current.owner_instance_id else None,
                 terminal_at=observed_at,
                 cleanup_due_at=self.lifecycle_service.policy.cleanup_due_at_for(
                     state=SandboxState.TERMINAL,
@@ -248,7 +248,28 @@ class SandboxRuntimeRecoveryService:
                     reference_time=observed_at,
                 ),
             )
-        ).record
+        return await self.lifecycle_service.terminal_outcomes.record_lifecycle_terminal_outcome(
+            sandbox_id=current.sandbox_id,
+            event=LifecycleEvent.STARTUP_FAILURE,
+            terminal_reason=TerminalReason.START_FAILED,
+            evidence_payload={
+                "kind": "sandbox_startup_failure_receipt",
+                "compose_project": current.compose_project,
+                "workspace_path": current.workspace_path,
+                "failure_stage": "reconciliation_absent_runtime",
+                "observed_at": observed_at,
+                "docker_present": False,
+            },
+            operation_id_prefix="reconcile-starting-failed",
+            expected_owner_instance_id=current.owner_instance_id,
+            expected_lease_epoch=current.lease_epoch if current.owner_instance_id else None,
+            terminal_at=observed_at,
+            cleanup_due_at=self.lifecycle_service.policy.cleanup_due_at_for(
+                state=SandboxState.TERMINAL,
+                terminal_reason=TerminalReason.START_FAILED,
+                reference_time=observed_at,
+            ),
+        )
 
     async def _clear_requires_reconciliation(
         self,

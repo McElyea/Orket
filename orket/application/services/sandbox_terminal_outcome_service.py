@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from orket.application.services.sandbox_control_plane_closure_service import SandboxControlPlaneClosureService
 from orket.core.domain.sandbox_lifecycle import LifecycleEvent, SandboxState, TerminalReason
 
 if TYPE_CHECKING:
@@ -65,6 +66,32 @@ class SandboxTerminalOutcomeService:
             cleanup_due_at=cleanup_due_at,
         )
 
+    async def record_lifecycle_terminal_outcome(
+        self,
+        *,
+        sandbox_id: str,
+        event: LifecycleEvent,
+        terminal_reason: TerminalReason,
+        evidence_payload: dict[str, object],
+        operation_id_prefix: str,
+        expected_owner_instance_id: str | None = None,
+        expected_lease_epoch: int | None = None,
+        terminal_at: str | None = None,
+        cleanup_due_at: str | None = None,
+    ):
+        return await self._record_terminal_outcome(
+            sandbox_id=sandbox_id,
+            event=event,
+            terminal_reason=terminal_reason,
+            evidence_payload=evidence_payload,
+            operation_id_prefix=operation_id_prefix,
+            event_type="sandbox.lifecycle_terminal_outcome",
+            expected_owner_instance_id=expected_owner_instance_id,
+            expected_lease_epoch=expected_lease_epoch,
+            terminal_at=terminal_at,
+            cleanup_due_at=cleanup_due_at,
+        )
+
     async def _record_terminal_outcome(
         self,
         *,
@@ -111,6 +138,10 @@ class SandboxTerminalOutcomeService:
                 cleanup_due_at=due_at,
             )
         ).record
+        publication = self.lifecycle_service.control_plane_publication
+        if publication is not None:
+            closure = SandboxControlPlaneClosureService(publication=publication)
+            await closure.publish_terminal_final_truth(record=terminal)
         await self.lifecycle_service.event_publisher.emit(
             sandbox_id=sandbox_id,
             created_at=observed_at,

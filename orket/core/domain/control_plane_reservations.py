@@ -70,6 +70,7 @@ _LEASE_STATUS_TRANSITIONS: dict[LeaseStatus, frozenset[LeaseStatus]] = {
     LeaseStatus.PENDING: frozenset(
         {
             LeaseStatus.ACTIVE,
+            LeaseStatus.RELEASED,
             LeaseStatus.REVOKED,
             LeaseStatus.EXPIRED,
             LeaseStatus.UNCERTAIN,
@@ -129,6 +130,7 @@ def promote_reservation_to_lease(
     lease_id: str,
     resource_id: str,
     granted_timestamp: str,
+    publication_timestamp: str | None = None,
     expiry_basis: str,
     cleanup_eligibility_rule: str,
 ) -> tuple[ReservationRecord, LeaseRecord]:
@@ -152,6 +154,7 @@ def promote_reservation_to_lease(
         holder_ref=reservation.holder_ref,
         lease_epoch=0,
         granted_timestamp=str(granted_timestamp).strip(),
+        publication_timestamp=str(publication_timestamp or granted_timestamp).strip(),
         expiry_basis=str(expiry_basis).strip(),
         status=LeaseStatus.ACTIVE,
         source_reservation_id=reservation.reservation_id,

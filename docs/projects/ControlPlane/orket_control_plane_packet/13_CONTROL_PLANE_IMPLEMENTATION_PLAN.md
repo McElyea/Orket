@@ -57,14 +57,18 @@ The current runtime has useful partial seams but not a unified control plane.
 The strongest current anchors are:
 1. run-start and run-summary artifacts
 2. sandbox lifecycle, reconciliation, and cleanup services
-3. truthful-runtime classification surfaces
+3. control-plane contract, publication, and persistence seams in `core`, `application`, and storage adapters
+4. sandbox terminal closure now partially publishing first-class `FinalTruthRecord` through workflow, policy, and lifecycle terminal-outcome paths
+5. sandbox `lost_runtime` reconciliation now partially publishing durable `ReconciliationRecord` plus reconciliation-closed final truth
+6. sandbox lifecycle now partially publishes first-class `LeaseRecord` history across initial claim, activation, renewal, reclaimable expiry, lost-runtime uncertainty, and verified cleanup on the default orchestrator path
 
 The highest-risk missing areas are:
-1. no first-class `Reservation`
-2. no first-class `Attempt`
-3. no first-class `FinalTruthRecord`
-4. fragmented recovery-decision and operator-action truth
-5. no normative effect journal
+1. reservation truth is not yet wired into admission and scheduling
+2. run and attempt records are not yet supervisor-owned durable runtime authorities
+3. final-truth and reconciliation publication are still partial across closure paths outside sandbox workflow, policy, lifecycle terminal outcomes, and `lost_runtime`
+4. recovery-decision and operator-action truth are still fragmented in live runtime behavior
+5. lease truth is still sandbox-specific and not yet shared by admission, scheduling, or non-sandbox runtime paths
+6. effect-journal and checkpoint authority are not yet consumed by live workload execution
 
 Implementation slices must reference [00B_CURRENT_STATE_CROSSWALK.md](docs/projects/ControlPlane/orket_control_plane_packet/00B_CURRENT_STATE_CROSSWALK.md) to name what current surface is being promoted, replaced, or declared missing.
 

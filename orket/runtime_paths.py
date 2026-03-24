@@ -42,6 +42,15 @@ def resolve_sandbox_lifecycle_db_path(db_path: str | None = None) -> str:
     return str(target)
 
 
+def resolve_control_plane_db_path(db_path: str | Path | None = None) -> Path:
+    if db_path is not None:
+        return Path(db_path)
+    target = durable_root() / "db" / "control_plane_records.sqlite3"
+    _migrate_legacy_file(legacy=Path.cwd() / "control_plane_records.sqlite3", target=target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    return target
+
+
 def resolve_sandbox_terminal_evidence_root(path: str | Path | None = None) -> Path:
     target = Path(path) if path is not None else (durable_root() / "sandbox_terminal_evidence")
     target.mkdir(parents=True, exist_ok=True)
