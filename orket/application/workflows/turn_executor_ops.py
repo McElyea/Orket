@@ -14,6 +14,7 @@ from orket.schema import IssueConfig, RoleConfig
 from .prompt_budget_guard import maybe_record_prompt_budget
 from .turn_executor_control_plane import (
     ensure_turn_control_plane_reentry_allowed_if_needed,
+    load_completed_turn_replay_if_needed,
     write_turn_checkpoint_and_publish_if_needed,
 )
 from .turn_failure_traces import emit_turn_failure_traces
@@ -111,6 +112,41 @@ async def execute_turn(
             role_name=role_name,
             context=context,
         )
+        completed_replay_turn = await load_completed_turn_replay_if_needed(
+            executor=executor,
+            issue_id=issue_id,
+            role_name=role_name,
+            context=context,
+        )
+        if completed_replay_turn is not None:
+            current_turn = completed_replay_turn
+            log_event(
+                "turn_complete",
+                {
+                    "issue_id": issue_id,
+                    "role": role_name,
+                    "tool_calls": len(completed_replay_turn.tool_calls),
+                    "tokens": executor._runtime_tokens_payload(completed_replay_turn),
+                    "session_id": session_id,
+                    "turn_index": turn_index,
+                    "turn_trace_id": turn_trace_id,
+                    "replayed_from_control_plane": True,
+                    "duration_ms": int((time.perf_counter() - started_at) * 1000),
+                },
+                executor.workspace,
+            )
+            await asyncio.to_thread(
+                executor._emit_memory_traces,
+                session_id=session_id,
+                issue_id=issue_id,
+                role_name=role_name,
+                turn_index=turn_index,
+                issue=issue,
+                role=role,
+                context=context,
+                turn=completed_replay_turn,
+            )
+            return TurnResult.succeeded(completed_replay_turn)
 
         messages = await executor._prepare_messages(issue, role, context, system_prompt)
         messages, middleware_outcome = executor.middleware.apply_before_prompt(

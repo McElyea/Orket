@@ -5,8 +5,12 @@ import hashlib
 import json
 from typing import Any
 
-from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
+from orket.application.services.turn_tool_control_plane_service import (
+    TurnToolControlPlaneError,
+    TurnToolControlPlaneService,
+)
 from orket.application.services.turn_tool_control_plane_support import (
+    attempt_id_for,
     digest,
     resource_refs,
     run_id_for,
@@ -16,10 +20,13 @@ from orket.application.services.turn_tool_control_plane_support import (
 from orket.application.workflows.protocol_hashing import hash_canonical_json
 from orket.core.contracts import CheckpointRecord
 from orket.core.domain import (
+    AttemptState,
     CheckpointReobservationClass,
     CheckpointResumabilityClass,
+    ResultClass,
+    RunState,
 )
-from orket.domain.execution import ExecutionTurn
+from orket.domain.execution import ExecutionTurn, ToolCall
 
 
 def _tool_calls_payload(turn: ExecutionTurn) -> list[dict[str, Any]]:
@@ -98,6 +105,153 @@ def _resource_dependencies(tool_calls: list[dict[str, Any]]) -> list[str]:
         if ref not in deduped:
             deduped.append(ref)
     return deduped
+
+
+async def load_completed_turn_replay_if_needed(
+    *,
+    executor: Any,
+    issue_id: str,
+    role_name: str,
+    context: dict[str, Any],
+) -> ExecutionTurn | None:
+    control_plane_service = _control_plane_service(executor)
+    if control_plane_service is None or bool(context.get("protocol_replay_mode")):
+        return None
+    run_id = run_id_for(
+        session_id=str(context.get("session_id", "unknown-session")),
+        issue_id=issue_id,
+        role_name=role_name,
+        turn_index=int(context.get("turn_index", 0)),
+    )
+    run = await control_plane_service.execution_repository.get_run_record(run_id=run_id)
+    if run is None:
+        return None
+    truth = await _load_successful_completed_truth(control_plane_service=control_plane_service, run=run)
+    if truth is None:
+        return None
+    attempt = await _load_completed_attempt(control_plane_service=control_plane_service, run_id=run_id, run=run)
+    steps = await control_plane_service.execution_repository.list_step_records(attempt_id=attempt.attempt_id)
+    if not steps:
+        raise TurnToolControlPlaneError(
+            f"completed governed turn {run.run_id} is missing durable step truth for artifact replay"
+        )
+    tool_calls = await _load_replayed_tool_calls(
+        executor=executor,
+        issue_id=issue_id,
+        role_name=role_name,
+        context=context,
+        steps=steps,
+    )
+    return ExecutionTurn(
+        role=role_name,
+        issue_id=issue_id,
+        content="",
+        tool_calls=tool_calls,
+        tokens_used=0,
+        raw={
+            "control_plane_replay": {
+                "artifact_reused": True,
+                "run_id": run.run_id,
+                "attempt_id": attempt.attempt_id,
+                "final_truth_record_id": truth.final_truth_record_id,
+                "authoritative_result_ref": truth.authoritative_result_ref,
+                "closure_basis": truth.closure_basis.value,
+            }
+        },
+        note="control_plane_completed_replay",
+    )
+
+
+async def _load_successful_completed_truth(
+    *,
+    control_plane_service: TurnToolControlPlaneService,
+    run: Any,
+):
+    if run.final_truth_record_id is None:
+        if run.lifecycle_state is RunState.COMPLETED:
+            raise TurnToolControlPlaneError(
+                f"completed governed turn {run.run_id} is missing durable final truth for artifact replay"
+            )
+        return None
+    truth = await control_plane_service.publication.repository.get_final_truth(run_id=run.run_id)
+    if truth is None:
+        raise TurnToolControlPlaneError(
+            f"governed turn run {run.run_id} carries final_truth_record_id without durable final truth"
+        )
+    if truth.result_class is ResultClass.SUCCESS and run.lifecycle_state is RunState.COMPLETED:
+        return truth
+    raise TurnToolControlPlaneError(
+        f"governed turn run {run.run_id} already closed with "
+        f"{truth.result_class.value} via {truth.closure_basis.value}; execution cannot continue"
+    )
+
+
+async def _load_completed_attempt(
+    *,
+    control_plane_service: TurnToolControlPlaneService,
+    run_id: str,
+    run: Any,
+):
+    attempt = await control_plane_service.execution_repository.get_attempt_record(
+        attempt_id=run.current_attempt_id or attempt_id_for(run_id=run_id)
+    )
+    if attempt is None:
+        raise TurnToolControlPlaneError(f"completed governed turn is missing current attempt: {run.run_id}")
+    if attempt.attempt_state is not AttemptState.COMPLETED:
+        raise TurnToolControlPlaneError(
+            f"completed governed turn {run.run_id} has non-completed attempt {attempt.attempt_id}"
+        )
+    return attempt
+
+
+async def _load_replayed_tool_calls(
+    *,
+    executor: Any,
+    issue_id: str,
+    role_name: str,
+    context: dict[str, Any],
+    steps: list[Any],
+) -> list[ToolCall]:
+    tool_calls: list[ToolCall] = []
+    session_id = str(context.get("session_id", "unknown-session"))
+    turn_index = int(context.get("turn_index", 0))
+    for step in steps:
+        operation_record = await asyncio.to_thread(
+            executor._load_operation_result,
+            session_id=session_id,
+            issue_id=issue_id,
+            role_name=role_name,
+            turn_index=turn_index,
+            operation_id=_operation_id_for_step(step),
+        )
+        if not isinstance(operation_record, dict):
+            raise TurnToolControlPlaneError(
+                f"completed governed turn step {step.step_id} is missing durable operation truth for artifact replay"
+            )
+        tool_name = str(operation_record.get("tool") or "").strip()
+        tool_args = operation_record.get("args")
+        result = operation_record.get("result")
+        if not tool_name or not isinstance(tool_args, dict) or not isinstance(result, dict):
+            raise TurnToolControlPlaneError(
+                f"completed governed turn step {step.step_id} has malformed operation truth for artifact replay"
+            )
+        tool_calls.append(
+            ToolCall(
+                tool=tool_name,
+                args=tool_args,
+                result=result,
+                error=str(result.get("error") or "").strip() or None,
+            )
+        )
+    return tool_calls
+
+
+def _operation_id_for_step(step: Any) -> str:
+    output_ref = str(getattr(step, "output_ref", "") or "").strip()
+    prefix = "turn-tool-result:"
+    if output_ref.startswith(prefix):
+        return output_ref[len(prefix) :]
+    return str(getattr(step, "step_id", "") or "").strip()
 
 
 async def write_turn_checkpoint_and_publish_if_needed(
@@ -252,5 +406,6 @@ async def ensure_turn_control_plane_reentry_allowed_if_needed(
 
 __all__ = [
     "ensure_turn_control_plane_reentry_allowed_if_needed",
+    "load_completed_turn_replay_if_needed",
     "write_turn_checkpoint_and_publish_if_needed",
 ]

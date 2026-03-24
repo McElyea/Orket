@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.22] - 2026-03-24 - "The Governed Turn Artifact Replay Cut"
+
+### Added
+- **Governed Turn Artifact Replay**: Added a completed-run control-plane replay helper that reconstructs successful governed turns from durable step and operation artifacts before prompt/model execution, plus deeper governed-turn integration proof for no-model and no-checkpoint-rewrite re-entry.
+
+### Changed
+- **Governed Turn Re-entry Semantics**: Successful governed re-entry now short-circuits before prompt/model work and before checkpoint snapshot rewrite instead of rerunning the model and only reusing finalized truth later.
+- **Authority Docs**: Updated `CURRENT_AUTHORITY.md` and the active ControlPlane packet docs so the governed turn lane truthfully describes artifact-backed successful re-entry on the current architecture.
+
+### Compatibility
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
+### Required Operator or Extension-Author Action
+- No manual migration is required; use the existing governed turn observability and control-plane SQLite artifacts as the canonical replay source on successful re-entry.
+
 ## [0.4.21] - 2026-03-24 - "The Control Plane Vertical Closeout Cut"
 
 ### Added

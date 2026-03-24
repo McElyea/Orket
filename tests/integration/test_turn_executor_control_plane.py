@@ -31,7 +31,11 @@ pytestmark = pytest.mark.integration
 
 
 class _Model:
+    def __init__(self) -> None:
+        self.calls = 0
+
     async def complete(self, _messages):
+        self.calls += 1
         return {
             "content": (
                 '{"content":"","tool_calls":[{"tool":"write_file","args":{"path":"agent_output/out.txt","content":"ok"}}]}'
@@ -207,10 +211,14 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
         workspace=Path(tmp_path),
         control_plane_service=control_plane,
     )
+    model = _Model()
     toolbox = _Toolbox()
 
-    first = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context())
-    second = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context(resume_mode=True))
+    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    snapshot_files_before = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
+    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
 
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     attempt_id = f"{run_id}:attempt:0001"
@@ -224,7 +232,11 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
 
     assert first.success is True
     assert second.success is True
+    assert model.calls == 1
     assert toolbox.calls == 1
+    assert second.turn is not None
+    assert second.turn.note == "control_plane_completed_replay"
+    assert snapshot_files_after == snapshot_files_before
     assert len(attempts) == 1
     assert len(steps) == 1
     assert len(effects) == 1
@@ -232,6 +244,43 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
     assert checkpoint_acceptance is not None
     assert checkpoint_acceptance.outcome is CheckpointAcceptanceOutcome.ACCEPTED
     assert checkpoint_acceptance.resumability_class is CheckpointResumabilityClass.RESUME_NEW_ATTEMPT_FROM_CHECKPOINT
+
+
+@pytest.mark.asyncio
+async def test_turn_executor_completed_governed_reentry_reuses_artifacts_before_model_without_resume_mode(
+    tmp_path: Path,
+) -> None:
+    control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
+    executor = TurnExecutor(
+        StateMachine(),
+        ToolGate(organization=None, workspace_root=Path(tmp_path)),
+        workspace=Path(tmp_path),
+        control_plane_service=control_plane,
+    )
+    model = _Model()
+    toolbox = _Toolbox()
+
+    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    turn_dir = Path(tmp_path) / "observability" / "run-1" / "ISSUE-1" / "001_developer"
+    snapshot_files_before = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
+    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
+    snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
+
+    run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
+    attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
+    effects = await control_plane.publication.repository.list_effect_journal_entries(run_id=run_id)
+
+    assert first.success is True
+    assert second.success is True
+    assert model.calls == 1
+    assert toolbox.calls == 1
+    assert second.turn is not None
+    assert second.turn.note == "control_plane_completed_replay"
+    assert second.turn.tool_calls[0].result is not None
+    assert second.turn.tool_calls[0].result.get("call_count") == 1
+    assert snapshot_files_after == snapshot_files_before
+    assert len(attempts) == 1
+    assert len(effects) == 1
 
 
 @pytest.mark.asyncio
